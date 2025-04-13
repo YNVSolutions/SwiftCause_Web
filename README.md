@@ -27,8 +27,8 @@ Modern Donation Platform for Nonprofits
 1.  **Clone the repository:**
 
     ```bash
-    git clone 
-    cd 
+    git clone https://github.com/Yashraghuvans/SwiftCause.git
+    cd SwiftCause
     ```
 
 2.  **Install dependencies:**
