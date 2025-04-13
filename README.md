@@ -1,3 +1,5 @@
+![logo](https://github.com/Yashraghuvans/SwiftCause/blob/main/public/banner.png)
+
 # Swift Cause
 
 Modern Donation Platform for Nonprofits
