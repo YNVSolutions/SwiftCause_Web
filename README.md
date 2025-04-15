@@ -4,7 +4,7 @@
 
 Modern Donation Platform for Nonprofits
 
-[Vercel](https://swift-cause-web.vercel.app)
+[Vercel]()
 
 ## Tech Stack
 
