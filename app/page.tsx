@@ -1,11 +1,14 @@
-import React from 'react'
+import React from "react";
+import NavBar from "./Components/Others/NavBar";
+import Main from "./Components/Others/Main";
 
-const page = () => {
+const Page = () => {
   return (
+    <div>
+      <NavBar />
+      <Main />
+    </div>
+  );
+};
 
-    <div className='w-full h-screen text-7xl sm:text-4xl md:text-5xl flex justify-center items-center bg-black text-gray-400'>Swift Caues IS UNDER CONSTRUCTION</div>
-
-  )
-}
-
-export default page
+export default Page;
