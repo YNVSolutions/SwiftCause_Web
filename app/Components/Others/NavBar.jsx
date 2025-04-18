@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 function Navbar() {
   return (
-    <header className="bg-black py-6">
+    <header className="bg-black py-6 fixed w-full z-999">
       <div className="container mx-auto flex justify-between items-center">
         <Link href="/" className="text-xl font-bold text-blue-500">
           Swift Cause
