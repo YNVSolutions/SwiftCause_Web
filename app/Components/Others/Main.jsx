@@ -3,8 +3,8 @@ import Link from 'next/link';
 
 function Main() {
   return (
-    <main className="bg-gray-900 pt-28 text-white h-screen">
-      <section className='flex justify-around items-center gap-5'>
+    <main className="bg-gray-900 pt-28 text-white">
+      <section className='flex justify-around items-center gap-5 flex-col md:flex-row'>
         <section className="container mx-auto text-center mb-16">
           <h1 className="text-4xl font-bold text-blue-500 mb-6">
             Modern Donation Platform for Nonprofits
@@ -22,22 +22,22 @@ function Main() {
             </Link>
           </div>
         </section>
-        <Image  src="/head_image.png" width={840} height={840} alt='header image'/>
+        <Image  src="/head_image.png" width={840} height={840} alt='header image' />
       </section>
       <section className="py-12">
         <div className="container mx-auto text-center">
           <h2 className="text-2xl font-bold mb-6  text-blue-500">Our Impact</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="p-6 rounded-md bg-gray-800">
-              <span className="text-3xl font-bold text-blue-400">₹XX Crore+</span>
+              <span className="text-3xl font-bold text-blue-400">₹100 Crore+</span>
               <p className="text-gray-400">Raised So Far</p>
             </div>
             <div className="p-6 rounded-md bg-gray-800">
-              <span className="text-3xl font-bold text-green-400">YY Lakh+</span>
+              <span className="text-3xl font-bold text-green-400">45 Lakh+</span>
               <p className="text-gray-400">Lives Impacted</p>
             </div>
             <div className="p-6 rounded-md bg-gray-800">
-              <span className="text-3xl font-bold text-indigo-400">ZZK+</span>
+              <span className="text-3xl font-bold text-indigo-400">120K+</span>
               <p className="text-gray-400">Fundraisers Hosted</p>
             </div>
           </div>
