@@ -10,8 +10,6 @@ function Navbar() {
         <nav className="space-x-6">
           <Link href="/" className="text-white hover:text-blue-300">Features</Link>
           <Link href="/" className="text-white hover:text-blue-300">Pricing</Link>
-          <Link href="/" className="text-white hover:text-blue-300">For Nonprofits</Link>
-          <Link href="/" className="text-white hover:text-blue-300">Developers</Link>
           <Link href="/" className="text-white hover:text-blue-300">Contact</Link>
           <button className="bg-blue-500 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
             Start Fundraising
