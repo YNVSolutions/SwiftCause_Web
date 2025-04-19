@@ -13,7 +13,7 @@ const Footer = () => {
                         <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4">
                             <a href="/" className="text-blue-300 hover:text-blue-400 transition-colors">Privacy Policy</a>
                             <span className="text-gray-700 hidden md:inline">|</span>
-                            <a href="/" className="text-blue-300 hover:text-blue-400 transition-colors">Terms of Service fluff off</a>
+                            <a href="/" className="text-blue-300 hover:text-blue-400 transition-colors">Terms of Service</a>
                             <span className="text-gray-700 hidden md:inline">|</span>
                             <a href="/" className="text-blue-300 hover:text-blue-400 transition-colors">Contact Us</a>
                         </div>
