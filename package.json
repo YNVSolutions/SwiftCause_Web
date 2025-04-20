@@ -10,10 +10,13 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.7.2",
+    "firebase": "^10.14.1",
+    "firebaseui": "^6.1.0",
     "lucide-react": "^0.492.0",
     "next": "15.3.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-router": "^7.5.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
