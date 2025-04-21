@@ -5,17 +5,19 @@ import Features from "./Components/Others/Features";
 import About from "./Components/Others/About";
 import Footer from "./Components/Others/Footer";
 import Login from "./Components/Auth/Login";
+import UserDashboard from "./Components/Dashboard/UserDashboard"
 
 const Page = () => {
   return (
     <>
       <div className="bg-black">
-        <NavBar />
+        {/*<NavBar />
         <Main />
         <About />
         <Features />
         <Login />
-        <Footer />
+        <Footer />*/}
+        <UserDashboard/>
       </div>
     </>
   );
