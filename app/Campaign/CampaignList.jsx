@@ -43,7 +43,7 @@ export default function CampaignList() {
     <div className="p-6 w-1/3">
       <h1 className="text-2xl font-bold mb-4">Campaigns</h1>
 
-      <div className="flex gap-3 mb-6">
+      <div className="flex gap-2 mb-6">
   {["all", "active", "upcoming", "completed"].map((status) => (
     <button
       key={status}
