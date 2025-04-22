@@ -1,8 +1,9 @@
+"use client";
 import React from 'react'
 import Header from './Others/Header'
 import Details from './Others/Details'
 import DonationList from './Others/DonationList'
-
+import DonationDetails from './Others/DonationDetails'
 const UserDashboard = () => {
     return (
         <>
@@ -10,6 +11,7 @@ const UserDashboard = () => {
                 <Header />
                 <Details />
                 <DonationList />
+                <DonationDetails/>
             </div>
         </>
     )
