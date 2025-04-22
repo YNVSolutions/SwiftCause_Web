@@ -20,7 +20,7 @@ export default function Login() {
             {
               provider: firebase.auth.GoogleAuthProvider.PROVIDER_ID,
               clientId:
-                "1014307338439-bs1a5tdftrciqjiphieqat77ub2f4dgd.apps.googleusercontent.com",
+                "373490483164-o6ggs2k0c6i9a14mgfqtdhv6biucttti.apps.googleusercontent.com",
             },
             {
               provider: firebase.auth.EmailAuthProvider.PROVIDER_ID,

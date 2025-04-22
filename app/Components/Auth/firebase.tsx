@@ -2,13 +2,13 @@ import { initializeApp } from "firebase/app";
 
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAB_4W-MdQ3LDz2lBTjK4QNMrP-8cNgqys",
-  authDomain: "swift-cause-web.firebaseapp.com",
-  projectId: "swift-cause-web",
-  storageBucket: "swift-cause-web.firebasestorage.app",
-  messagingSenderId: "1014307338439",
-  appId: "1:1014307338439:web:6dedefcb4e2948f543a6e2",
-  measurementId: "G-61MP035G3D"
+  apiKey: "AIzaSyBfU0qWYdW1zr7gPpNANMv8wjhFcOVo6s8",
+  authDomain: "swiftcause-app.firebaseapp.com",
+  projectId: "swiftcause-app",
+  storageBucket: "swiftcause-app.firebasestorage.app",
+  messagingSenderId: "373490483164",
+  appId: "1:373490483164:web:262ab335b78858ce555919",
+  measurementId: "G-5WPFP88SST"
 };
 
 
