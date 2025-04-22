@@ -10,7 +10,7 @@ const Page = () => {
   
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-gray-100">
       <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
       <CampaignList />
     </div>
