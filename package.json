@@ -11,11 +11,13 @@
   "dependencies": {
     "@faker-js/faker": "^9.7.0",
     "@fortawesome/fontawesome-free": "^6.7.2",
+    "chart.js": "^4.4.9",
     "firebase": "^10.14.1",
     "firebaseui": "^6.1.0",
     "lucide-react": "^0.492.0",
     "next": "15.3.0",
     "react": "^19.0.0",
+    "react-chartjs-2": "^5.3.0",
     "react-dom": "^19.0.0",
     "react-router": "^7.5.1",
     "recharts": "^2.15.3"
