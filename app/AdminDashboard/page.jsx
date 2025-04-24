@@ -1,9 +1,9 @@
 "use client";
 import React from "react";
 import { getFirestore, collection, addDoc } from "firebase/firestore";
-import { app } from "../Components/Auth/firebase.tsx";
-import CampaignList from "../Campaign/CampaignList.jsx";
-import AmountTrendChart from "../Campaign/AmountTrendChart.jsx";
+import { app } from "../Components/Auth/firebase";
+import CampaignList from "./Campaign/CampaignList.jsx";
+import AmountTrendChart from "./Campaign/AmountTrendChart.jsx";
 
 const firestore = getFirestore(app);
 

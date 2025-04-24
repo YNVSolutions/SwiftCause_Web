@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
-import { app } from "../Components/Auth/firebase"; // adjust if needed
+import { app } from "../../Components/Auth/firebase";
 import CampaignCard from "./CampaignCard";
 
 const db = getFirestore(app);

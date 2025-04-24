@@ -1,3 +1,4 @@
+import "../app/globals.css";
 import React from "react";
 import NavBar from "./Components/Others/NavBar";
 import Main from "./Components/Others/Main";
@@ -5,22 +6,23 @@ import Features from "./Components/Others/Features";
 import About from "./Components/Others/About";
 import Footer from "./Components/Others/Footer";
 import Login from "./Components/Auth/Login";
-import UserDashboard from "./Components/Dashboard/UserDashboard"
+// app\Components\Auth\Login.jsx
+// import UserDashboard from "./Components/UserDashboard";
 
-const Page = () => {
+const index = () => {
   return (
     <>
       <div className="bg-black">
-        {/*<NavBar />
+        <NavBar />
         <Main />
         <About />
         <Features />
         <Login />
-        <Footer />*/}
-        <UserDashboard/>
+        <Footer />
+        {/* <UserDashboard/> */}
       </div>
     </>
   );
 };
 
-export default Page;
+export default index;
