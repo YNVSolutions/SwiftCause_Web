@@ -9,7 +9,6 @@ const DonationGraph = () => {
   return (
     <>
       <div className='w-1/2'>
-        <h2 className="text-center text-2xl font-bold mb-4">Donation Distribution</h2>
         <Bar
           data={{
             labels: DonationData.map((data) => data.Orgination),
