@@ -8,7 +8,7 @@ function Navbar() {
           Swift Cause
         </Link>
         <nav className="space-x-6">
-          <Link href="/Dashboard" className="text-white hover:text-blue-300">Features</Link>
+          <Link href="/UserDashboard" className="text-white hover:text-blue-300">User Dashboard</Link>
           <Link href="/" className="text-white hover:text-blue-300">Pricing</Link>
           <Link href="/" className="text-white hover:text-blue-300">Contact</Link>
           <Link href="/UserDashboard" className="text-red-500 hover:text-blue-300">User-Dashboard</Link>
