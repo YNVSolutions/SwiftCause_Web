@@ -12,7 +12,7 @@ const donorLevels = [
 
 const userStats = {
   totalDonated: 12000,
-  totalDonations: 15,
+  totalDonations: 30,
 };
 
 const earnedBadges = [
