@@ -1,0 +1,30 @@
+[
+    {
+        "Orgination": "XYZ",
+        "Value": 1000
+    },
+    {
+        "Orgination": "ABC",
+        "Value": 2400
+    },
+    {
+        "Orgination": "EFG",
+        "Value": 3500
+    },
+    {
+        "Orgination": "HIJ",
+        "Value": 3400
+    },
+    {
+        "Orgination": "KLM",
+        "Value": 1200
+    },
+    {
+        "Orgination": "MPL",
+        "Value": 2200
+    },
+    {
+        "Orgination": "KBM",
+        "Value": 2800
+    }
+]
