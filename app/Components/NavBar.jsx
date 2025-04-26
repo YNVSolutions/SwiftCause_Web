@@ -13,8 +13,8 @@ function Navbar() {
         </Link>
 
         <nav className="hidden md:flex items-center space-x-6">
-          <Link href="/" className="text-white hover:text-blue-300 transition-colors">
-            Pricing
+          <Link href="/CampaignPage" className="text-white hover:text-blue-300 transition-colors">
+            Campaign
           </Link>
           <Link href="/Auth" className="text-white hover:text-blue-300 transition-colors">
             Sign In
@@ -49,11 +49,11 @@ function Navbar() {
             ✕
           </button>
           <Link
-            href="/"
+            href="/Page"
             onClick={() => setIsOpen(false)}
             className="text-white hover:text-blue-300 text-lg"
           >
-            Pricing
+            Campaign
           </Link>
           <Link
             href="/Auth"
