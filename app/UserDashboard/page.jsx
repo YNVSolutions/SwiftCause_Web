@@ -4,7 +4,7 @@ import Header from './Others/Header'
 import Details from './Others/Details'
 import DonationList from './Others/DonationList'
 import DonationDetails from './Others/DonationDetails'
-import RewardsAndBadge from './UserComponents/RewardsAndBadges'
+import RewardsAndBadge from './Others/RewardsAndBadges'
 const UserDashboard = () => {
     return (
         <>
