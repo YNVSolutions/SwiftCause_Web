@@ -31,11 +31,11 @@ function Main() {
           <h2 className="text-2xl font-bold mb-6  text-blue-500">Our Impact</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="p-6 rounded-md bg-gray-800">
-              <span className="text-3xl font-bold text-blue-400">₹100 Crore+</span>
+              <span className="text-3xl font-bold text-blue-400">$100 Million+</span>
               <p className="text-gray-400">Raised So Far</p>
             </div>
             <div className="p-6 rounded-md bg-gray-800">
-              <span className="text-3xl font-bold text-green-400">45 Lakh+</span>
+              <span className="text-3xl font-bold text-green-400">45 Thousand+</span>
               <p className="text-gray-400">Lives Impacted</p>
             </div>
             <div className="p-6 rounded-md bg-gray-800">
