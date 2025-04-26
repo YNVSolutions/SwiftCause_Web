@@ -37,11 +37,16 @@ const page = () => {
         <div className="w-24 h-24 mb-6 rounded-full overflow-hidden border-4 border-indigo-600">
           <Image src="/user-avatar.png" alt="User Avatar" width={96} height={96} className="object-cover" />
         </div>
-        <h2 className="text-2xl font-bold mb-1 text-indigo-400">John Doe</h2>
-        <p className="text-gray-400 text-sm mb-8">Fundraiser</p>
+        <h2 className="text-2xl font-bold mb-1 text-indigo-400">HeartReach Foundation</h2>
+        <p className="text-gray-400 text-sm mb-8">Charity Fundraiser</p>
         <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg w-full">
-          Edit Profile
+          Profile
         </button>
+        <div className="mt-6 font-medium">
+            <p>
+            HeartReach Foundation empowers communities through healthcare, education, disaster relief, and women’s initiatives. We believe compassion creates change and work together to build a brighter, more equitable future for all.
+            </p>
+        </div>
       </aside>
 
     
