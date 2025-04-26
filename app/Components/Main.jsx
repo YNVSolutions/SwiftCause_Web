@@ -14,15 +14,17 @@ function Main() {
             Built for nonprofits with a focus on mobile-first experiences and global reach.
           </p>
           <div className="flex justify-center space-x-4">
-            <button className="bg-blue-500 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-md focus:outline-none focus:shadow-outline">
-              Create a Campaign
-            </button>
-            <Link href="/LearnMore" className="inline-block text-blue-300 hover:text-blue-500 font-semibold py-3 px-6 border border-blue-300 rounded-md">
+            <Link href="/CampaignPage">
+              <button className="bg-blue-500 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-md focus:outline-none focus:shadow-outline">
+                Create a Campaign
+              </button>
+            </Link>
+            <Link href="/" className="inline-block text-blue-300 hover:text-blue-500 font-semibold py-3 px-6 border border-blue-300 rounded-md">
               Learn More
             </Link>
           </div>
         </section>
-        <Image  src="/head_image.png" width={840} height={840} alt='header image' />
+        <Image src="/head_image.png" width={840} height={840} alt='header image' />
       </section>
       <section className="py-12">
         <div className="container mx-auto text-center">
