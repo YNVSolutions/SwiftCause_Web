@@ -5,7 +5,7 @@ import firebase from "firebase/compat/app";
 import "firebaseui/dist/firebaseui.css";
 import { app } from "./firebase";
 import Image from "next/image";
-import NavBar from '../Components/NavBar'
+import NavBar from "../Components/NavBar";
 
 export default function Login() {
   useEffect(() => {
@@ -32,22 +32,33 @@ export default function Login() {
       });
     }
   }, []);
+
   return (
     <>
       <NavBar />
-      <div className="flex items-center justify-center bg-black min-h-screen">
-        <div className="flex justify-center items-center">
-          <Image src="/head_image.png" width={400} height={400} alt="img" />
+      <main className="flex flex-col-reverse lg:flex-row items-center justify-center min-h-screen bg-gradient-to-br from-black via-gray-900 to-black p-6">
+        {/* Left Section: Image */}
+        <div className="w-full lg:w-1/2 flex justify-center items-center p-4">
+          <Image
+            src="/head_image.png"
+            width={400}
+            height={400}
+            alt="Login Illustration"
+            className="rounded-2xl shadow-2xl object-contain"
+            priority
+          />
         </div>
-        <div className="flex justify-center items-center  ">
-          <div className="bg-gray-900 backdrop-blur-md rounded-xl p-8 sm:p-10  border-b-2 border-t-2 border-blue-500 shadow-lg">
-            <h2 className="text-2xl sm:text-3xl font-semibold text-white mb-6 text-center">
-              LogIn 
+
+        {/* Right Section: Login Form */}
+        <div className="w-full lg:w-1/2 flex justify-center items-center p-4">
+          <div className="w-full max-w-md bg-gray-900 bg-opacity-80 backdrop-blur-md rounded-2xl p-8 border border-blue-600 shadow-2xl">
+            <h2 className="text-3xl font-bold text-center text-white mb-8">
+              Welcome Back
             </h2>
             <div id="firebaseui-auth-container"></div>
           </div>
         </div>
-      </div>
+      </main>
     </>
   );
 }
