@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import Image from "next/image";
-
+import Link from "next/link";
 const campaigns = [
     {
         id: 1,
@@ -71,9 +71,11 @@ const page = () => {
                 </div>
                 <h2 className="text-2xl font-bold mb-1 text-indigo-400">Heart Reach</h2>
                 <p className="text-gray-400 text-sm mb-8">Foundation Fundraiser</p>
-                <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg w-full">
-                    Profile
-                </button>
+                <Link href='/AdminDashboard'>
+                    <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg w-full">
+                        Profile
+                    </button>
+                </Link>
                 <div className="mt-6 font-medium">
                     <p>
                         HeartReach Foundation empowers communities through healthcare, education, disaster relief, and women’s initiatives. We believe compassion creates change and work together to build a brighter, more equitable future for all.
