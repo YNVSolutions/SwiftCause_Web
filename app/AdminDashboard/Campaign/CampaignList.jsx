@@ -40,7 +40,7 @@ export default function CampaignList() {
   }, [filter]);
 
   return (
-    <div className="bg-gray-900 rounded-2xl p-6 shadow-xl border border-gray-800">
+    <div className="bg-gray-900 rounded-2xl p-6 shadow-xl border border-gray-800 h-[600px] flex flex-col">
       <h1 className="text-2xl font-bold text-white mb-4 tracking-tight">Campaigns</h1>
 
       <div className="flex gap-2 mb-6">
@@ -59,17 +59,17 @@ export default function CampaignList() {
         ))}
       </div>
 
-      {loading ? (
-        <p className="text-gray-400">Loading...</p>
-      ) : campaigns.length === 0 ? (
-        <p className="text-gray-400">No campaigns found for this filter.</p>
-      ) : (
-        <div className="space-y-4">
-          {campaigns.map((campaign) => (
+      <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+        {loading ? (
+          <p className="text-gray-400">Loading...</p>
+        ) : campaigns.length === 0 ? (
+          <p className="text-gray-400">No campaigns found for this filter.</p>
+        ) : (
+          campaigns.map((campaign) => (
             <CampaignCard key={campaign.id} campaign={campaign} />
-          ))}
-        </div>
-      )}
+          ))
+        )}
+      </div>
     </div>
   );
 }
