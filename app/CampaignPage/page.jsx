@@ -82,7 +82,9 @@ const page = () => {
                     </p>
                 </div>
                 <div className="mt-10">
-                    <button className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg w-full">Create Campaign</button>
+                    <Link href='/CreateCampaign'>
+                        <button className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg w-full">Create Campaign</button>
+                    </Link>
                 </div>
             </aside>
 
