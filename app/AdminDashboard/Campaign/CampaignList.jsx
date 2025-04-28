@@ -52,7 +52,7 @@ export default function CampaignList() {
           }
         `}
       </style>
-      <div className="bg-gray-900 rounded-2xl p-6 shadow-xl border border-gray-800 h-[600px] flex flex-col">
+      <div className="bg-gray-900 rounded-2xl p-6 shadow-xl border border-gray-800 h-[630px] flex flex-col">
         <h1 className="text-2xl font-bold text-white mb-4 tracking-tight">Campaigns</h1>
 
         <div className="flex gap-2 mb-6">
