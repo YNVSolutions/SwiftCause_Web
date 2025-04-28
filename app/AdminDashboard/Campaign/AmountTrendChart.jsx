@@ -53,7 +53,6 @@ const AmountTrendChart = ({ campaignId }) => {
           }),
           amount: total,
         }))
-
         .sort((a, b) => new Date(a.date) - new Date(b.date));
 
       setData(chartData);
@@ -63,11 +62,11 @@ const AmountTrendChart = ({ campaignId }) => {
   }, [campaignId]);
 
   return (
-    <div className="w-full h-96 bg-white rounded-xl p-4 shadow-md">
-      <h2 className="text-lg font-semibold mb-4">Donation Trend</h2>
+    <div className="w-full h-96 bg-gray-900 rounded-2xl p-6 shadow-xl border border-gray-800 transition-all duration-300 hover:shadow-2xl">
+      <h2 className="text-xl font-bold text-white mb-4 tracking-tight">Donation Trend</h2>
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ bottom: 30, top: 20 }}>
-          <CartesianGrid strokeDasharray="3 3" />
+        <LineChart data={data} margin={{ bottom: 40, top: 20, left: 10, right: 10 }}>
+          <CartesianGrid stroke="#374151" strokeDasharray="3 3" opacity={0.5} />
           <XAxis
             dataKey="date"
             angle={-45}
@@ -76,22 +75,37 @@ const AmountTrendChart = ({ campaignId }) => {
             height={60}
             style={{
               fontSize: "12px",
-              fill: "#6b7280", // Tailwind's gray-500
-              fontWeight: "bold",
+              fill: "#9ca3af", // Tailwind's gray-400
+              fontWeight: "500",
             }}
           />
-          <YAxis tickFormatter={(val) => `£${val}`} style={{
-    fontSize: "14px",
-    fill: "#6b7280", // Tailwind's gray-500
-    fontWeight: "bold",
-  }} />
-          <Tooltip formatter={(val) => `£${val}`} />
+          <YAxis
+            tickFormatter={(val) => `£${val}`}
+            style={{
+              fontSize: "12px",
+              fill: "#9ca3af", // Tailwind's gray-400
+              fontWeight: "500",
+            }}
+          />
+          <Tooltip
+            formatter={(val) => `£${val}`}
+            contentStyle={{
+              backgroundColor: "#1f2937", // Tailwind's gray-800
+              border: "none",
+              borderRadius: "8px",
+              color: "#fff",
+              fontWeight: "500",
+              padding: "8px 12px",
+            }}
+            itemStyle={{ color: "#fff" }}
+          />
           <Line
             type="monotone"
             dataKey="amount"
-            stroke="#22c55e"
-            strokeWidth={2}
-            dot={{ r: 3 }}
+            stroke="#10b981" // Tailwind's emerald-500
+            strokeWidth={3}
+            dot={{ r: 4, fill: "#10b981", stroke: "#fff", strokeWidth: 2 }}
+            activeDot={{ r: 6, fill: "#34d399", stroke: "#fff", strokeWidth: 2 }}
           />
         </LineChart>
       </ResponsiveContainer>
