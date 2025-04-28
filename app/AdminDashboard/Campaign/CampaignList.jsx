@@ -40,31 +40,31 @@ export default function CampaignList() {
   }, [filter]);
 
   return (
-    <div className="p-6 w-1/3">
-      <h1 className="text-2xl font-bold mb-4">Campaigns</h1>
+    <div className="bg-gray-900 rounded-2xl p-6 shadow-xl border border-gray-800">
+      <h1 className="text-2xl font-bold text-white mb-4 tracking-tight">Campaigns</h1>
 
       <div className="flex gap-2 mb-6">
-  {["all", "active", "upcoming", "completed"].map((status) => (
-    <button
-      key={status}
-      className={`px-4 py-2 rounded-full capitalize text-sm font-medium transition-all duration-200 ease-in-out ${
-        filter === status
-          ? "bg-gray-900 text-white shadow-sm"
-          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-      }`}
-      onClick={() => setFilter(status)}
-    >
-      {status}
-    </button>
-  ))}
-</div>
+        {["all", "active", "upcoming", "completed"].map((status) => (
+          <button
+            key={status}
+            className={`px-4 py-2 rounded-full capitalize text-sm font-medium transition-all duration-300 ease-in-out ${
+              filter === status
+                ? "bg-emerald-500 text-white shadow-md"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white"
+            }`}
+            onClick={() => setFilter(status)}
+          >
+            {status}
+          </button>
+        ))}
+      </div>
 
       {loading ? (
-        <p className="text-gray-500">Loading...</p>
+        <p className="text-gray-400">Loading...</p>
       ) : campaigns.length === 0 ? (
-        <p className="text-gray-500">No campaigns found for this filter.</p>
+        <p className="text-gray-400">No campaigns found for this filter.</p>
       ) : (
-        <div className="space-y-2 ">
+        <div className="space-y-4">
           {campaigns.map((campaign) => (
             <CampaignCard key={campaign.id} campaign={campaign} />
           ))}
