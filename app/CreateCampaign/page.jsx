@@ -2,11 +2,12 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import NavBar from '../Components/NavBar'
 import { useRouter } from 'next/navigation';
 import { storage, db } from '../Auth/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { collection, addDoc } from 'firebase/firestore';
-import { v4 as uuidv4 } from 'uuid'; 
+import { v4 as uuidv4 } from 'uuid';
 
 const Page = () => {
   const [image, setImage] = useState(null);
@@ -47,7 +48,7 @@ const Page = () => {
       await uploadBytes(imageRef, image);
       const imageUrl = await getDownloadURL(imageRef);
 
-      
+
       await addDoc(collection(db, "campaigns"), {
         campaignName,
         description,
@@ -75,7 +76,8 @@ const Page = () => {
 
   return (
     <>
-      <div className="flex flex-col md:flex-row h-screen bg-black text-white overflow-hidden">
+      
+      <div className="pt-20 flex flex-col md:flex-row h-screen bg-black text-white overflow-hidden">
         <aside className="w-full md:w-64 bg-gray-900 p-6 flex flex-col items-center">
           <div className="w-24 h-24 mb-6 rounded-full overflow-hidden border-4 border-blue-500">
             <Image src="/charity.png" alt="User Avatar" width={96} height={96} className="object-cover" />
