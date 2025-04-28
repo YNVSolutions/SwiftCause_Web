@@ -22,7 +22,7 @@ const TotalDonationsCard = ({ donations, className = "" }) => {
       className={`bg-gray-900 rounded-2xl p-6 shadow-xl border border-gray-800 transition-all duration-300 hover:shadow-2xl ${className}`}
     >
       <h3 className="text-lg font-semibold text-gray-300 mb-2">Total Donations</h3>
-      <p className="text-3xl font-bold text-white">₹{currentTotal.toLocaleString()}</p>
+      <p className="text-4xl font-bold text-white">£{currentTotal.toLocaleString()}</p>
       <p
         className={`text-sm font-medium ${
           isPositive ? "text-emerald-500" : "text-red-500"

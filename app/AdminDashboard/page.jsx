@@ -6,7 +6,8 @@ import CampaignList from "./Campaign/CampaignList.jsx";
 import AmountTrendChart from "./Campaign/AmountTrendChart.jsx";
 import TotalDonationsCard from "./Campaign/TotalDonationsCard.jsx";
 import TodaysDonationsCard from "./Campaign/TodaysDonationsCard.jsx";
-import GoalProgressPieChartCard from "./Campaign/GoalProgressPieChartCard.jsx";
+import TopCampaignsCard from "./Campaign/TopCampaignsCard.jsx";
+import DonationDistributionBarChart from "./Campaign/DonationDistributionBarChart.jsx";
 
 const firestore = getFirestore(app);
 
@@ -42,17 +43,31 @@ const Page = () => {
       <h1 className="text-3xl font-bold text-white mb-6 tracking-tight">
         Admin Dashboard
       </h1>
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <TotalDonationsCard donations={donations} className="flex-1" />
-        <TodaysDonationsCard donations={donations} className="flex-1" />
-        <GoalProgressPieChartCard campaigns={campaigns} donations={donations} className="flex-1" />
-      </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="lg:col-span-1">
-          <AmountTrendChart campaignId="cmp_002" />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 auto-rows-min min-h-[600px]">
+        <div className="h-[200px]">
+          <TotalDonationsCard
+            donations={donations}
+            currency="INR"
+            className="h-full"
+          />
         </div>
-        <div className="lg:col-span-1">
-          <CampaignList />
+        <div className="h-[200px]">
+          <TodaysDonationsCard donations={donations} className="h-full" />
+        </div>
+
+        <div className="row-span-3 col-start-3 row-start-1 flex flex-col gap-4">
+          <TopCampaignsCard campaigns={campaigns} donations={donations} />
+          <CampaignList className="flex-1" />
+        </div>
+
+        <div className="col-span-2">
+          <AmountTrendChart campaignId="cmp_002" className="h-[300px]" />
+        </div>
+        <div className="col-span-2">
+          <DonationDistributionBarChart
+            donations={donations}
+            className="h-[350px]"
+          />
         </div>
       </div>
     </div>
