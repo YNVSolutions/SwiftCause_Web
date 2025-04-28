@@ -5,9 +5,24 @@ import Link from 'next/link';
 
 const Page = () => {
   const [image, setImage] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
   const [campaignName, setCampaignName] = useState('');
   const [description, setDescription] = useState('');
   const [donationAmount, setDonationAmount] = useState('');
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    setImage(file);
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setPreviewUrl(null);
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -33,14 +48,10 @@ const Page = () => {
             </p>
           </div>
         </aside>
-
-        {/* Main Content */}
         <main className="flex-1 overflow-y-auto p-6 md:p-8">
           <h1 className="text-5xl font-bold text-blue-400 mb-10 text-center">
             Create Campaigns
           </h1>
-
-          {/* Create Campaign Form */}
           <div className="max-w-xl mx-auto bg-gray-900 text-white shadow-lg p-8 rounded-2xl border border-gray-500">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
@@ -48,7 +59,7 @@ const Page = () => {
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => setImage(e.target.files[0])}
+                  onChange={handleImageChange}
                   className="block w-full text-sm text-gray-400
                     file:mr-4 file:py-2 file:px-4
                     file:rounded-lg file:border-0
@@ -56,6 +67,15 @@ const Page = () => {
                     file:bg-blue-500 file:text-white
                     hover:file:bg-blue-600"
                 />
+                {previewUrl && (
+                  <div className="mt-4">
+                    <img
+                      src={previewUrl}
+                      alt="Preview"
+                      className="w-32 h-32 object-cover rounded-lg border-2 border-blue-400 transition-transform duration-300 hover:scale-110"
+                    />
+                  </div>
+                )}
               </div>
 
               <div>
