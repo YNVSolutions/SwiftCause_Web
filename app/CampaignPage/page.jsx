@@ -81,6 +81,9 @@ const page = () => {
                         HeartReach Foundation empowers communities through healthcare, education, disaster relief, and women’s initiatives. We believe compassion creates change and work together to build a brighter, more equitable future for all.
                     </p>
                 </div>
+                <div className="mt-10">
+                    <button className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg w-full">Create Campaign</button>
+                </div>
             </aside>
 
 
