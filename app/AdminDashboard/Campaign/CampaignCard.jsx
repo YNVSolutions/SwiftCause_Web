@@ -8,40 +8,39 @@ export default function CampaignCard({ campaign }) {
   ).toFixed(0);
 
   return (
-    <div className="bg-white rounded-2xl px-4 py-3">
+    <div className="bg-gray-900 rounded-2xl px-5 py-4 border border-gray-800 shadow-xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
       <div className="flex gap-4 items-center">
         <img
           src={
+            imageUrl ||
             "https://cdn.create.vista.com/downloads/d162ed88-d803-4856-8e5e-b0e509061370_640.jpeg"
           }
           alt={title}
-          className="w-12 h-12 object-cover rounded-md"
+          className="w-14 h-14 object-cover rounded-lg border border-gray-700"
         />
-
         <div className="flex-1">
-          <h2 className="text-lg font-semibold mb-2">{title}</h2>
+          <h2 className="text-lg font-bold text-white tracking-tight">{title}</h2>
         </div>
       </div>
-      <div className="py-2">
+      <div className="py-3">
         {/* Progress bar */}
-        <div className="w-full bg-gray-100 h-1 rounded-full mb-1 relative">
+        <div className="w-full bg-gray-700 h-1.5 rounded-full mb-2 relative overflow-hidden">
           <div
-            className="h-1 bg-emerald-400 rounded-full transition-all duration-300"
+            className="h-1.5 bg-emerald-500 rounded-full transition-all duration-500 ease-out"
             style={{ width: `${percentage}%` }}
           ></div>
         </div>
-
         {/* Amount display */}
         <div className="flex items-center justify-between">
-          <div className="flex">
-          <p className="text-md text-gray-800 font-bold">
-            £ {collectedAmount.toLocaleString()}
-          </p>
-          <p className="text-md text-gray-500">
-            /{goalAmount.toLocaleString()}
-          </p>
+          <div className="flex items-baseline gap-1">
+            <p className="text-md font-bold text-white">
+              £{collectedAmount.toLocaleString()}
+            </p>
+            <p className="text-sm text-gray-400">
+              /£{goalAmount.toLocaleString()}
+            </p>
           </div>
-          <p className="text-md text-gray-800 font-medium">
+          <p className="text-md font-semibold text-emerald-400">
             {percentage}%
           </p>
         </div>
