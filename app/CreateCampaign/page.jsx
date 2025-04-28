@@ -2,6 +2,11 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { storage, db } from '../Auth/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { collection, addDoc } from 'firebase/firestore';
+import { v4 as uuidv4 } from 'uuid'; 
 
 const Page = () => {
   const [image, setImage] = useState(null);
@@ -9,6 +14,9 @@ const Page = () => {
   const [campaignName, setCampaignName] = useState('');
   const [description, setDescription] = useState('');
   const [donationAmount, setDonationAmount] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const router = useRouter();
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -24,8 +32,45 @@ const Page = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!image) {
+      alert("Please upload an image!");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const imageRef = ref(storage, `campaignImages/${uuidv4()}-${image.name}`);
+      await uploadBytes(imageRef, image);
+      const imageUrl = await getDownloadURL(imageRef);
+
+      
+      await addDoc(collection(db, "campaigns"), {
+        campaignName,
+        description,
+        donationAmount: Number(donationAmount),
+        imageUrl,
+        createdAt: new Date(),
+      });
+
+      alert("Campaign created successfully!");
+      setCampaignName('');
+      setDescription('');
+      setDonationAmount('');
+      setImage(null);
+      setPreviewUrl(null);
+
+      router.push('/AdminDashboard');
+
+    } catch (error) {
+      console.error("Error creating campaign:", error);
+      alert("Failed to create campaign. Try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -48,10 +93,12 @@ const Page = () => {
             </p>
           </div>
         </aside>
+
         <main className="flex-1 overflow-y-auto p-6 md:p-8">
           <h1 className="text-5xl font-bold text-blue-400 mb-10 text-center">
             Create Campaigns
           </h1>
+
           <div className="max-w-xl mx-auto bg-gray-900 text-white shadow-lg p-8 rounded-2xl border border-gray-500">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
@@ -117,9 +164,10 @@ const Page = () => {
 
               <button
                 type="submit"
-                className="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg font-bold transition duration-300"
+                className="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg font-bold transition duration-300 disabled:opacity-50"
+                disabled={loading}
               >
-                Create Campaign
+                {loading ? "Creating..." : "Create Campaign"}
               </button>
             </form>
           </div>
