@@ -76,7 +76,9 @@ const Page = () => {
 
   return (
     <>
-      
+      <div className="fixed top-0 left-0 w-full z-50 bg-black">
+        <NavBar />
+      </div>
       <div className="pt-20 flex flex-col md:flex-row h-screen bg-black text-white overflow-hidden">
         <aside className="w-full md:w-64 bg-gray-900 p-6 flex flex-col items-center">
           <div className="w-24 h-24 mb-6 rounded-full overflow-hidden border-4 border-blue-500">
