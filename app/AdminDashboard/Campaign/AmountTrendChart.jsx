@@ -16,7 +16,7 @@ import {
   where,
   getDocs,
 } from "firebase/firestore";
-import { app } from "../../Components/Auth/firebase";
+import { app } from "../../Auth/firebase";
 
 const db = getFirestore(app);
 
