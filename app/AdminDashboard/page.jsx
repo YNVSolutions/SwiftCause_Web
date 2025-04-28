@@ -6,7 +6,7 @@ import CampaignList from "./Campaign/CampaignList.jsx";
 import AmountTrendChart from "./Campaign/AmountTrendChart.jsx";
 import TotalDonationsCard from "./Campaign/TotalDonationsCard.jsx";
 import TodaysDonationsCard from "./Campaign/TodaysDonationsCard.jsx";
-import DonationStatusPieChartCard from "./Campaign/DonationStatusPieChartCard.jsx";
+import GoalProgressPieChartCard from "./Campaign/GoalProgressPieChartCard.jsx";
 
 const firestore = getFirestore(app);
 
@@ -45,7 +45,7 @@ const Page = () => {
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
         <TotalDonationsCard donations={donations} className="flex-1" />
         <TodaysDonationsCard donations={donations} className="flex-1" />
-        <DonationStatusPieChartCard donations={donations} className="flex-1" />
+        <GoalProgressPieChartCard campaigns={campaigns} donations={donations} className="flex-1" />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="lg:col-span-1">
