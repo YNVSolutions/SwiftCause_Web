@@ -32,7 +32,7 @@ export default function CampaignCard({ campaign }) {
         {/* Amount display */}
         <div className="flex items-center justify-between">
           <div className="flex items-baseline gap-1">
-            <p className="text-md font-bold text-white">
+            <p className="text-md font-semibold text-white">
               £{collectedAmount.toLocaleString()}
             </p>
             <p className="text-sm text-gray-400">
