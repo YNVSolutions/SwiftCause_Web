@@ -85,7 +85,7 @@ const DonationDistributionBarChart = ({
               tickFormatter={(val) => `${val}`}
             />
 
-            <Tooltip
+            <Tooltip cursor={{fill: 'oklch(27.8% 0.033 256.848)'}}
               contentStyle={{
                 backgroundColor: "#1f2937",
                 border: "none",
@@ -93,6 +93,7 @@ const DonationDistributionBarChart = ({
                 padding: "12px 16px",
                 color: "#ffffff",
                 fontSize: "14px",
+                
                 
               }}
               formatter={(value, name) => {
