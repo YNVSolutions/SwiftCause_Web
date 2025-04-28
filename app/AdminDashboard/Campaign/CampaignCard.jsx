@@ -12,7 +12,6 @@ export default function CampaignCard({ campaign }) {
       <div className="flex gap-4 items-center">
         <img
           src={
-            imageUrl ||
             "https://cdn.create.vista.com/downloads/d162ed88-d803-4856-8e5e-b0e509061370_640.jpeg"
           }
           alt={title}
