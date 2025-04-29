@@ -14,7 +14,7 @@ function Main() {
             Built for nonprofits with a focus on mobile-first experiences and global reach.
           </p>
           <div className="flex justify-center space-x-4">
-            <Link href="/CampaignPage">
+            <Link href="/CreateCampaign">
               <button className="bg-blue-500 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-md focus:outline-none focus:shadow-outline">
                 Create a Campaign
               </button>
