@@ -13,7 +13,7 @@
     "@fortawesome/fontawesome-free": "^6.7.2",
     "chart.js": "^4.4.9",
     "date-fns": "^4.1.0",
-    "firebase": "^10.14.1",
+    "firebase": "^11.6.1",
     "firebaseui": "^6.1.0",
     "lucide-react": "^0.492.0",
     "motion": "^12.9.1",
