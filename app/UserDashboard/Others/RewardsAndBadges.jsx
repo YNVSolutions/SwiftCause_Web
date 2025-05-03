@@ -5,9 +5,9 @@ import { motion } from "framer-motion";
 import { Medal, Star } from "lucide-react";
 
 const donorLevels = [
-  { level: "Bronze", min: 0, max: 499 },
-  { level: "Silver", min: 500, max: 999 },
-  { level: "Gold", min: 1000, max: Infinity },
+  { level: "🥉 Bronze", min: 0, max: 499 },
+  { level: "🥈 Silver", min: 500, max: 999 },
+  { level: "🥇 Gold", min: 1000, max: Infinity },
 ];
 
 const userStats = {
