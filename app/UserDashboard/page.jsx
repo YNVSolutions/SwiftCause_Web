@@ -10,7 +10,9 @@ const UserDashboard = () => {
     return (
         <>
             <div className='min-h-screen bg-black'>
-                <Navbar />
+                <div className="fixed top-0 left-0 w-full z-50 bg-black">
+                    <Navbar />
+                </div>
                 <Header />
                 <Details />
                 <DonationList />
