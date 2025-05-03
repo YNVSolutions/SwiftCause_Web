@@ -4,7 +4,7 @@ const DonationList = () => {
     return (
         <>
             <header className='flex justify-center items-center w-full pt-5'>
-                <h1 className='text-4xl lg:text-4xl md:text-3xl sm:text-2xl font-semibold text-white'>Donation History</h1>
+                <h1 className='text-5xl lg:text-5xl md:text-4xl sm:text-3xl font-semibold text-white'>Donation History</h1>
             </header>
             <div
                 id='tasklist'
