@@ -8,7 +8,7 @@ const DonationGraph = () => {
 
   return (
     <>
-      <div className='w-1/2'>
+      <div className='w-full'>
         <Bar
           data={{
             labels: DonationData.map((data) => data.Orgination),
