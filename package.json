@@ -12,6 +12,7 @@
     "@faker-js/faker": "^9.7.0",
     "@fortawesome/fontawesome-free": "^6.7.2",
     "chart.js": "^4.4.9",
+    "date-fns": "^4.1.0",
     "firebase": "^11.6.1",
     "firebaseui": "^6.1.0",
     "lucide-react": "^0.492.0",
@@ -23,6 +24,7 @@
     "react-router": "^7.5.1",
     "recharts": "^2.15.3",
     "stripe": "^18.0.0"
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
