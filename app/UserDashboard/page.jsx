@@ -5,10 +5,12 @@ import Details from './Others/Details'
 import DonationList from './Others/DonationList'
 import DonationDetails from './Others/DonationDetails'
 import RewardsAndBadge from './Others/RewardsAndBadges'
+import Navbar from '../Components/NavBar'
 const UserDashboard = () => {
     return (
         <>
             <div className='min-h-screen bg-black'>
+                <Navbar />
                 <Header />
                 <Details />
                 <DonationList />
