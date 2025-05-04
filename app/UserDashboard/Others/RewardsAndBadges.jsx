@@ -5,9 +5,9 @@ import { motion } from "framer-motion";
 import { Medal, Star } from "lucide-react";
 
 const donorLevels = [
-  { level: "Bronze", min: 0, max: 499 },
-  { level: "Silver", min: 500, max: 999 },
-  { level: "Gold", min: 1000, max: Infinity },
+  { level: "🥉 Bronze", min: 0, max: 499 },
+  { level: "🥈 Silver", min: 500, max: 999 },
+  { level: "🥇 Gold", min: 1000, max: Infinity },
 ];
 
 const userStats = {
@@ -28,15 +28,15 @@ export default function RewardsAndBadges() {
   const donorLevel = getDonorLevel(userStats.totalDonated);
 
   return (
-    <div className="space-y-6 bg-black  p-6 text-white flex justify-around items-center">
-      <div className="bg-[#0f172a] rounded-2xl shadow-lg p-6">
+    <div className="space-y-6 bg-black p-6 text-white flex flex-wrap md:flex-nowrap justify-around items-center">
+      <div className="bg-[#0f172a] rounded-2xl shadow-lg p-6 w-full md:w-auto">
         <h2 className="text-xl font-semibold mb-2 text-blue-400">Your Donor Level</h2>
         <p className="text-3xl font-bold text-green-500">{donorLevel}</p>
         <p className="text-sm text-gray-300 mt-1">
           You've donated ${userStats.totalDonated} so far.
         </p>
       </div>
-      <div className="bg-[#0f172a] rounded-2xl shadow-lg p-6">
+      <div className="bg-[#0f172a] rounded-2xl shadow-lg p-6 w-full md:w-auto">
         <h2 className="text-xl font-semibold mb-4 text-gray-300">Your Badges</h2>
         <div className="flex flex-wrap gap-4">
           {earnedBadges.map((badge, i) => (

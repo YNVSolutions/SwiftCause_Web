@@ -1,30 +1,26 @@
 [
     {
-        "Orgination": "XYZ",
-        "Value": 1000
-    },
-    {
-        "Orgination": "ABC",
-        "Value": 2400
-    },
-    {
-        "Orgination": "EFG",
-        "Value": 3500
-    },
-    {
-        "Orgination": "HIJ",
-        "Value": 3400
-    },
-    {
-        "Orgination": "KLM",
-        "Value": 1200
-    },
-    {
-        "Orgination": "MPL",
+        "Orgination": "Helping Hands Foundation",
         "Value": 2200
     },
     {
-        "Orgination": "KBM",
-        "Value": 2800
+        "Orgination": "Bright Future Initiative",
+        "Value": 4800
+    },
+    {
+        "Orgination": "Care for All",
+        "Value": 2000
+    },
+    {
+        "Orgination": "Global Aid Network",
+        "Value": 1900
+    },
+    {
+        "Orgination": "Hope for Tomorrow",
+        "Value": 2000
+    },
+    {
+        "Orgination": "Unity in Action",
+        "Value": 1500
     }
 ]
