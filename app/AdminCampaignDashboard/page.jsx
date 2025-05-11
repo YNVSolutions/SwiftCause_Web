@@ -75,6 +75,7 @@ export default function AdminCampaignDashboard() {
           <div className="h-[200px] col-span-1">
             <TotalDonationsCard
               donations={donations}
+              campaignId={campaignId}
               currency="INR"
               className="h-full"
             />
@@ -83,7 +84,11 @@ export default function AdminCampaignDashboard() {
             <TodaysDonationsCard donations={donations} className="h-full" />
           </div>
           <div className="col-span-2">
-            <AmountTrendChart donations={donations} campaignId={campaignId} className="h-[300px]" />
+            <AmountTrendChart
+              donations={donations}
+              campaignId={campaignId}
+              className="h-[300px]"
+            />
           </div>
           <div className="col-span-2">
             <DonationDistributionBarChart
