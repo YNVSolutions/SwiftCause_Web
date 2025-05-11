@@ -9,59 +9,35 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  defs,
-  linearGradient,
-  stop,
 } from "recharts";
-import {
-  getFirestore,
-  collection,
-  query,
-  where,
-  getDocs,
-} from "firebase/firestore";
-import { app } from "../../Auth/firebase";
 
-const db = getFirestore(app);
-
-const AmountTrendChart = () => {
+const AmountTrendChart = ({ donations = [], campaignId = null }) => {
   const [data, setData] = useState([]);
 
   useEffect(() => {
-    const fetchDonations = async () => {
-      const q = query(
-        collection(db, "donations"),
-        where("paymentStatus", "==", "success")
-      );
+    const filtered = donations
+      .filter((d) => d.paymentStatus === "success")
+      .filter((d) => (campaignId ? d.campaignId === campaignId : true));
 
-      const snapshot = await getDocs(q);
-      const dailyTotals = {};
+    const dailyTotals = {};
 
-      snapshot.forEach((doc) => {
-        const { amount, timestamp } = doc.data();
-        const date = new Date(timestamp).toISOString().split("T")[0]; // YYYY-MM-DD
+    filtered.forEach(({ amount, timestamp }) => {
+      const date = new Date(timestamp).toISOString().split("T")[0];
+      dailyTotals[date] = (dailyTotals[date] || 0) + amount;
+    });
 
-        if (!dailyTotals[date]) {
-          dailyTotals[date] = 0;
-        }
-        dailyTotals[date] += amount;
-      });
+    const chartData = Object.entries(dailyTotals)
+      .map(([date, total]) => ({
+        date: new Date(date).toLocaleDateString("en-GB", {
+          day: "numeric",
+          month: "short",
+        }),
+        amount: total,
+      }))
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-      const chartData = Object.entries(dailyTotals)
-        .map(([date, total]) => ({
-          date: new Date(date).toLocaleDateString("en-GB", {
-            day: "numeric",
-            month: "short",
-          }),
-          amount: total,
-        }))
-        .sort((a, b) => new Date(a.date) - new Date(b.date));
-
-      setData(chartData);
-    };
-
-    fetchDonations();
-  }, []);
+    setData(chartData);
+  }, [donations, campaignId]);
 
   return (
     <div className="w-full h-96 bg-gray-900 rounded-2xl p-6 shadow-xl border border-gray-800 transition-all duration-300 hover:shadow-2xl">
@@ -124,7 +100,12 @@ const AmountTrendChart = () => {
             stroke="#10b981"
             strokeWidth={3}
             fill="url(#colorAmount)"
-            activeDot={{ r: 5, fill: "#34d399", stroke: "#fff", strokeWidth: 2 }}
+            activeDot={{
+              r: 5,
+              fill: "#34d399",
+              stroke: "#fff",
+              strokeWidth: 2,
+            }}
           />
         </AreaChart>
       </ResponsiveContainer>
