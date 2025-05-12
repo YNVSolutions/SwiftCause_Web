@@ -25,22 +25,28 @@ const Payment = () => {
         <div>
           <PaymentHeader />
         </div>
-        <div className="flex mt-7">
-        <div className='w-1/2'>
-          <Image src="/head_image.png" width={800} height={800} alt='donate'/>
-        </div>
-        <div  className='w-1/2'>
-          <Elements
-            stripe={stripePromise}
-            options={{
-              mode: 'payment',
-              amount: convertToSubcurrency(amount),
-              currency: 'usd',
-            }}
-          >
-            <CheckoutPage amount={amount} />
-          </Elements>
-        </div>
+        <div className="flex flex-col md:flex-row mt-7">
+          <div className="w-full md:w-1/2 flex justify-center">
+            <Image
+              src="/head_image.png"
+              width={800}
+              height={800}
+              alt="donate"
+              className="w-full max-w-[400px] md:max-w-none"
+            />
+          </div>
+          <div className="w-full md:w-1/2 mt-5 md:mt-0 px-4 md:px-0">
+            <Elements
+              stripe={stripePromise}
+              options={{
+                mode: 'payment',
+                amount: convertToSubcurrency(amount),
+                currency: 'usd',
+              }}
+            >
+              <CheckoutPage amount={amount} />
+            </Elements>
+          </div>
         </div>
       </div>
     </>
