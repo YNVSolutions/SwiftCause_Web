@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   PaymentElement,
   useStripe,
@@ -37,10 +37,11 @@ const CheckoutPage = ({ amount }: { amount: number }) => {
     event.preventDefault();
     setLoading(true);
     if (!stripe || !elements) {
+      setLoading(false);
       return;
     }
     const { error: submitError } = await elements.submit();
-    
+
     if (submitError) {
       setErrorMessage(submitError.message);
       setLoading(false);
@@ -50,27 +51,53 @@ const CheckoutPage = ({ amount }: { amount: number }) => {
       elements,
       clientSecret,
       confirmParams: {
-        return_url: `/success`,
+        return_url: `http://localhost:3000/PaymentSucess?amount=${amount}`,
       },
     });
+    if (confirmError) {
+      setErrorMessage(confirmError.message);
+      setLoading(false);
+      return;
+    }
+    setLoading(false);
   };
 
+  if (!stripe || !elements) {
+    return (
+      <div className="flex justify-center items-center ">
+
+        <div className="flex-col gap-4 w-full flex items-center justify-center">
+          <div
+            className="w-20 h-20 border-4 border-transparent text-blue-400 text-4xl animate-spin flex items-center justify-center border-t-blue-400 rounded-full"
+          >
+            <div
+              className="w-16 h-16 border-4 border-transparent text-red-400 text-2xl animate-spin flex items-center justify-center border-t-red-400 rounded-full"
+            ></div>
+          </div>
+        </div>
+
+      </div>
+    );
+  }
+
   return (
-    <form onSubmit={e=>handleSubmit} className=" p-2 rounded-md shadow-md ">
+    <form onSubmit={handleSubmit} className="p-2 rounded-md shadow-md">
       {clientSecret && <PaymentElement />}
       {errorMessage && (
         <div className="text-red-500 text-sm mt-2">
           {errorMessage}
         </div>
       )}
-      <button 
+      <button
         disabled={!stripe || loading}
-        type="submit" 
+        type="submit"
         className="mt-4 w-full bg-blue-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-600 transition duration-200"
+        aria-busy={loading}
       >
         {loading ? "Processing..." : `Donate $${amount}`}
       </button>
     </form>
-  )
+  );
 };
+
 export default CheckoutPage;
