@@ -8,6 +8,7 @@ import PaymentHeader from './Others/PaymentHeader';
 import NavBar from '../Components/NavBar';
 import Image from 'next/image';
 
+require('dotenv').config()
 if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
   throw new Error('NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is not defined');
 }
