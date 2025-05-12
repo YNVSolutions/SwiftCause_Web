@@ -25,7 +25,7 @@ function Navbar() {
           <Link href="/AdminDashboard" className="text-red-500 hover:text-blue-300 transition-colors">
             Admin Dashboard
           </Link>
-          <Link href='/CreateCampaign'>
+          <Link href='/Payment'>
             <button className="ml-4 bg-blue-500 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded transition-all">
               Start Fundraising
             </button>
