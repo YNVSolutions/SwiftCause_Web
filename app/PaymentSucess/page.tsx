@@ -1,14 +1,8 @@
 import React from 'react';
 import NavBar from '../Components/NavBar';
 
-interface PaymentSuccessPageProps {
-  searchParams: {
-    amount: string;
-  };
-}
-
-const PaymentSucess = ({ searchParams }: PaymentSuccessPageProps) => {
-  const { amount } = searchParams;
+const PaymentSucess = ({ searchParams }: { searchParams?: { amount?: string } }) => {
+  const amount = searchParams?.amount ?? '';
 
   return (
     <>
