@@ -1,13 +1,15 @@
 import React from "react";
+import Link from "next/link";
 
 export default function CampaignCard({ campaign }) {
-  const { title, collectedAmount = 0, goalAmount = 0, imageUrl } = campaign;
+  const { id, title, collectedAmount = 0, goalAmount = 0, imageUrl } = campaign;
   const percentage = Math.min(
     (collectedAmount / goalAmount) * 100,
     100
   ).toFixed(0);
 
   return (
+    <Link href={`/AdminCampaignDashboard?id=${id}`}>
     <div className="bg-gray-900 rounded-2xl px-5 py-4 border border-gray-800 shadow-xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
       <div className="flex gap-4 items-center">
         <img
@@ -45,5 +47,6 @@ export default function CampaignCard({ campaign }) {
         </div>
       </div>
     </div>
+    </Link>
   );
 }
