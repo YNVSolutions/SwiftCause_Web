@@ -61,7 +61,7 @@ const Page = () => {
         </div>
 
         <div className="col-span-2">
-          <AmountTrendChart  className="h-[300px]" />
+          <AmountTrendChart donations={donations} className="h-[300px]" />
         </div>
         <div className="col-span-2">
           <DonationDistributionBarChart

@@ -22,6 +22,10 @@
       "@/*": ["./*"]
     }
   },
+
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "app/PaymentSucess/page.jsx"],
+
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "app/AdminCampaignDashboard/page.jsx"],
+
   "exclude": ["node_modules"]
 }
