@@ -1,9 +1,7 @@
 import React from 'react';
 import NavBar from '../Components/NavBar';
 
-const PaymentSucess = ({ searchParams }: { searchParams?: { amount?: string } }) => {
-  const amount = searchParams?.amount ?? '';
-
+const PaymentSucess = () => {
   return (
     <>
       <NavBar />
@@ -18,7 +16,7 @@ const PaymentSucess = ({ searchParams }: { searchParams?: { amount?: string } })
               Thank You
             </p>
             <p className="px-10 text-[12px] sm:text-[14px] text-gray-700">
-              It’s so nice that you had donated ${amount} to Charity.
+              Your donation was successful.
             </p>
             <p className="font-serif text-[12px] sm:text-[14px] text-gray-700">
               Wishing you a fantastic day ahead!
