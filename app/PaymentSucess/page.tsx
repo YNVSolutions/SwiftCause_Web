@@ -1,5 +1,5 @@
 import React from 'react';
-import NavBar from '../components/NavBar';
+import NavBar from '../Components/NavBar';
 const PaymentSucess = ({ searchParams: { amount } }: { searchParams: { amount: string } }) => {
     return (
         <>
@@ -23,7 +23,7 @@ const PaymentSucess = ({ searchParams: { amount } }: { searchParams: { amount: s
                         <p className="font-sans text-[12px] text-gray-700 pt-5">SwiftCause</p>
                     </div>
                     <button
-                        className="seal bg-rose-500 text-red-800 w-12 aspect-square rounded-full z-40 text-[12px] flex items-center justify-center font-semibold [clip-path:polygon(50%_0%,_80%_10%,_100%_35%,_100%_70%,_80%_90%,_50%_100%,_20%_90%,_0%_70%,_0%_35%,_20%_10%)] group-hover:opacity-0 transition-all duration-1000 group-hover:scale-0 group-hover:rotate-180 border-4 border-rose-900"
+                        className="seal bg-rose-500 text-red-800 w-12 aspect-square rounded-full z-40 text-[12px] flex items-center justify-center font-semibold [clip-path:polygon(50%_0%,_80%_10%,_100%_35%,_100%_70%,_80%_90%,_50%_100%,_20%_90%,_0_70%,_0_35%,_20%_10%)] group-hover:opacity-0 transition-all duration-1000 group-hover:scale-0 group-hover:rotate-180 border-4 border-rose-900"
                         aria-label="Seal Button"
                     >
                         YNV
