@@ -18,6 +18,7 @@
     "dotenv": "^16.5.0",
     "firebase": "^10.14.1",
     "firebaseui": "^6.1.0",
+    "lightningcss": "^1.30.0",
     "lucide-react": "^0.492.0",
     "motion": "^12.9.1",
     "next": "^15.3.0",
