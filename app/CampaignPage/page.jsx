@@ -2,6 +2,7 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
+import Payment from "../Payment/page";
 const campaigns = [
     {
         id: 1,
@@ -124,7 +125,7 @@ const page = () => {
                     ))}
                 </div>
             </main>
-
+            
         </div>
     );
 };
