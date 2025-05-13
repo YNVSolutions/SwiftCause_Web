@@ -13,6 +13,7 @@
     "@fortawesome/fontawesome-free": "^6.7.2",
     "@stripe/react-stripe-js": "^3.7.0",
     "@stripe/stripe-js": "^7.3.0",
+    "@tailwindcss/oxide": "^4.1.6",
     "chart.js": "^4.4.9",
     "date-fns": "^4.1.0",
     "dotenv": "^16.5.0",
