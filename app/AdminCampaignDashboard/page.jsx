@@ -59,8 +59,14 @@ export default function AdminCampaignDashboard() {
     };
     fetchCampaign();
   }, [campaignId]);
+
+  const percentage = Math.min(
+    (campaign.collectedAmount / campaign.goalAmount) * 100,
+    100
+  ).toFixed(0);
+
   return loading ? (
-    <div className="flex flex-col items-center justify-center h-full ">
+    <div className="flex flex-col items-center justify-center h-full">
       <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
       <p className="mt-4 text-gray-300 font-medium animate-pulse">
         Loading Campaigns...
@@ -68,27 +74,55 @@ export default function AdminCampaignDashboard() {
     </div>
   ) : (
     <div className="text-white p-4 bg-gray-950">
-      <h1 className="text-3xl font-bold mb-4">{campaign.title}</h1>
+      {/* <h1 className="text-3xl font-bold mb-4">{campaign.title}</h1> */}
       {/* Main Content */}
       <main className="p-8 w-full">
         <h1 className="text-3xl font-bold text-white mb-6 tracking-tight">
           Campaign Dashboard
         </h1>
 
-        <div className="grid grid-cols-3  gap-6 auto-rows-min min-h-[600px]">
-          <div className="col-span-1 row-span-3 p-6">
-            <div className="flex justify-center">
+        <div className="grid grid-cols-3 gap-6 auto-rows-min min-h-[600px]">
+          <div className="col-span-1 row-span-3 p-6 bg-gray-900 rounded-2xl border border-gray-800 shadow-lg">
+            <div className="flex justify-center mb-4">
               <img
                 src={
-                  campaign.imageUrl || "https://cdn.create.vista.com/downloads/d162ed88-d803-4856-8e5e-b0e509061370_640.jpeg"
+                  campaign.imageUrl ||
+                  "https://cdn.create.vista.com/downloads/d162ed88-d803-4856-8e5e-b0e509061370_640.jpeg"
                 }
                 alt={campaign.title}
-                className="w-80 h-80 object-cover rounded-lg border border-gray-700"
+                className="w-80 h-80 object-cover rounded-lg border border-gray-600 shadow-md transition-transform duration-300 hover:scale-105"
               />
             </div>
 
-            <p className="text-white">{campaign.title}</p>
-            <p>{campaign.description}</p>
+            <h2 className="text-2xl font-semibold text-white mb-2 line-clamp-2">
+              {campaign.title}
+            </h2>
+            <p className="text-gray-300 text-sm mb-4 line-clamp-3">
+              {campaign.description}
+            </p>
+            <div className="py-3">
+              {/* Progress bar */}
+              <div className="w-full bg-gray-700 h-1.5 rounded-full mb-2 relative overflow-hidden">
+                <div
+                  className="h-1.5 bg-emerald-500 rounded-full transition-all duration-500 ease-out"
+                  style={{ width: `${percentage}%` }}
+                ></div>
+              </div>
+              {/* Amount display */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-baseline gap-1">
+                  <p className="text-md font-semibold text-white">
+                    £{campaign.collectedAmount.toLocaleString()}
+                  </p>
+                  <p className="text-sm text-gray-400">
+                    /£{campaign.goalAmount.toLocaleString()}
+                  </p>
+                </div>
+                <p className="text-md font-semibold text-emerald-400">
+                  {percentage}%
+                </p>
+              </div>
+            </div>
           </div>
           <div className="h-[200px] col-span-1">
             <TotalDonationsCard
