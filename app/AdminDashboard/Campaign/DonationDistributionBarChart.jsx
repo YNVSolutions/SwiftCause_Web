@@ -12,6 +12,17 @@ import {
   CartesianGrid,
 } from "recharts";
 
+function roundToNiceNumber(num) {
+  if (num <= 10) return 5;
+  const magnitude = Math.pow(10, Math.floor(Math.log10(num)));
+  const normalized = num / magnitude;
+
+  if (normalized <= 1) return 1 * magnitude;
+  if (normalized <= 2) return 2 * magnitude;
+  if (normalized <= 5) return 5 * magnitude;
+  return 10 * magnitude;
+}
+
 const DonationDistributionBarChart = ({
   donations = [],
   campaignId = null,
@@ -25,19 +36,26 @@ const DonationDistributionBarChart = ({
   if (filteredDonations.length === 0) return [];
 
   const amounts = filteredDonations.map((d) => d.amount || 0);
-  const minAmount = Math.min(...amounts);
+  const minAmount = Math.min(...amounts) ;
   const maxAmount = Math.max(...amounts);
 
-  const numBins = Math.min(7, Math.max(4, Math.floor(filteredDonations.length / 5)));
-  const binWidth = Math.ceil((maxAmount - minAmount) / numBins);
+  const minBins = 4;
+  const maxBins = 7;
+  const idealBinCount = Math.min(maxBins, Math.max(minBins, Math.floor(filteredDonations.length / 5)));
 
-  const dynamicRanges = Array.from({ length: numBins }, (_, i) => {
-    const min = minAmount + i * binWidth;
-    const max = i === numBins - 1 ? Infinity : min + binWidth - 1;
-    const label =
-      max === Infinity ? `£${min}+` : `£${min} - £${max}`;
-    return { min, max, label };
-  });
+  const rawBinWidth = (maxAmount - minAmount) / idealBinCount;
+  const niceBinWidth = roundToNiceNumber(rawBinWidth);
+
+  const start = Math.floor(minAmount / niceBinWidth) * niceBinWidth;
+  const end = Math.ceil(maxAmount / niceBinWidth) * niceBinWidth;
+
+  const dynamicRanges = [];
+  for (let i = start; i < end; i += niceBinWidth) {
+    const min = i;
+    const max = i + niceBinWidth - 1;
+    const label = max + 1 >= end ? `£${min}+` : `£${min} - £${max}`;
+    dynamicRanges.push({ min, max, label });
+  }
 
   const rangeData = dynamicRanges.map((range) => {
     const donationsInRange = filteredDonations.filter(
