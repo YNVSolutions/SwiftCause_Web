@@ -97,7 +97,6 @@ export default function AdminCampaignDashboard() {
       const campaignRef = doc(db, "campaigns", campaignId);
       await deleteDoc(campaignRef);
       alert("Campaign deleted successfully.");
-      // Optionally redirect or update UI after deletion
       window.location.href = "/admin/campaigns";
     } catch (err) {
       console.error("Error deleting campaign:", err);
@@ -157,7 +156,7 @@ export default function AdminCampaignDashboard() {
                   {campaign.tags.slice(0, 3).map((tag, index) => (
                     <span
                       key={index}
-                      className="inline-block bg-emerald-600 text-white text-xs font-medium px-2.5 py-1 rounded-full"
+                      className="inline-block bg-emerald-600 text-white text-xs font-medium px-2.5 py-1 rounded-full capitalize"
                     >
                       {tag}
                     </span>
@@ -227,7 +226,7 @@ export default function AdminCampaignDashboard() {
             {/* Action Buttons */}
             <div className="flex flex-col gap-2 mt-4 mb-4">
               <a
-                href="<somelink>"
+                href="/CreateCampaign"
                 className="bg-emerald-500 text-white text-center font-medium py-2 px-4 rounded-lg hover:bg-emerald-600 transition-colors duration-200"
               >
                 Edit Campaign
