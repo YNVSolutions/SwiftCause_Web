@@ -8,6 +8,7 @@ import {
   query,
   where,
   collection,
+  documentId,
 } from "firebase/firestore";
 import { app } from "../Auth/firebase";
 import AmountTrendChart from "../AdminDashboard/Campaign/AmountTrendChart";
@@ -22,7 +23,7 @@ export default function AdminCampaignDashboard() {
   const campaignId = searchParams.get("id");
   const [loading, setLoading] = useState(true);
 
-  const [campaign, setCampaign] = useState(null);
+  const [campaign, setCampaign] = useState([]);
   const [donations, setDonations] = useState([]);
 
   useEffect(() => {
@@ -30,7 +31,10 @@ export default function AdminCampaignDashboard() {
       setLoading(true);
       try {
         let q;
-        q = query(collection(db, "campaigns"), where("id", "==", campaignId));
+        q = query(
+          collection(db, "campaigns"),
+          where(documentId(), "==", campaignId)
+        );
 
         const snapshot = await getDocs(q);
         const data = snapshot.docs.map((doc) => ({
@@ -38,7 +42,7 @@ export default function AdminCampaignDashboard() {
           ...doc.data(),
         }));
 
-        setCampaign(data);
+        setCampaign(data[0]);
 
         const donationQuery = query(collection(db, "donations"));
         const donationSnapshot = await getDocs(donationQuery);
@@ -71,7 +75,21 @@ export default function AdminCampaignDashboard() {
           Campaign Dashboard
         </h1>
 
-        <div className="grid grid-cols-2  gap-6 auto-rows-min min-h-[600px]">
+        <div className="grid grid-cols-3  gap-6 auto-rows-min min-h-[600px]">
+          <div className="col-span-1 row-span-3 p-6">
+            <div className="flex justify-center">
+              <img
+                src={
+                  campaign.imageUrl || "https://cdn.create.vista.com/downloads/d162ed88-d803-4856-8e5e-b0e509061370_640.jpeg"
+                }
+                alt={campaign.title}
+                className="w-80 h-80 object-cover rounded-lg border border-gray-700"
+              />
+            </div>
+
+            <p className="text-white">{campaign.title}</p>
+            <p>{campaign.description}</p>
+          </div>
           <div className="h-[200px] col-span-1">
             <TotalDonationsCard
               donations={donations}
