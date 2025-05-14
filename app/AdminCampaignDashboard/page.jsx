@@ -1,4 +1,5 @@
 "use client";
+import React, { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
@@ -20,6 +21,7 @@ import DonationDistributionBarChart from "../AdminDashboard/Campaign/DonationDis
 
 const db = getFirestore(app);
 
+
 // Utility to format ISO dates to "Month Day, Year"
 const formatDate = (isoString) => {
   if (!isoString) return "N/A";
@@ -31,6 +33,7 @@ const formatDate = (isoString) => {
 };
 
 export default function AdminCampaignDashboard() {
+
   const searchParams = useSearchParams();
   const campaignId = searchParams.get("id");
   const [loading, setLoading] = useState(true);
@@ -290,5 +293,13 @@ export default function AdminCampaignDashboard() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function AdminCampaignDashboardPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <DashboardContent />
+    </Suspense>
   );
 }
