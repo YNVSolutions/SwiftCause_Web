@@ -296,10 +296,3 @@ export default function AdminCampaignDashboard() {
   );
 }
 
-export default function AdminCampaignDashboardPage() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <DashboardContent />
-    </Suspense>
-  );
-}
