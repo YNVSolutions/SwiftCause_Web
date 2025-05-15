@@ -1,31 +1,29 @@
 "use client";
-import React from 'react'
-import Header from './Others/Header'
-import Details from './Others/Details'
-import DonationList from './Others/DonationList'
-import DonationDetails from './Others/DonationDetails'
-import RewardsAndBadge from './Others/RewardsAndBadges'
-import Navbar from '../Components/NavBar'
-const UserDashboard = () => {
+import React from 'react';
+import InfoCard from './Others/InfoCard';
+import DonationTrend from './Others/DonationTrend';
+import DonationDistribution from './Others/DonationDistrbution';
+import TopCampaigns from './Others/TopCampaigns';
+import Campaigns from './Others/Campaigns';
+import NavBar from '../Components/NavBar';
+
+export default function Dashboard() {
     return (
         <>
-            <div className='min-h-screen bg-black'>
-                <div className="fixed top-0 left-0 w-full z-50 bg-black">
-                    <Navbar />
-                </div>
-                <Header />
-                <Details />
-                <DonationList />
-                <div className='min-h-screen'>
-                    <div className='text-5xl lg:text-5xl md:text-4xl sm:text-2xl text-white text-center font-semibold py-4'>
-                        <h1>Donation Analytics</h1>
+            <NavBar />
+            <div className="bg-black text-white min-h-screen p-6 md:p-10 mt-10">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="space-y-6 lg:col-span-2">
+                        <InfoCard />
+                        <DonationTrend />
+                        <DonationDistribution />
                     </div>
-                    <RewardsAndBadge />
-                    <DonationDetails />
+                    <div className="space-y-6">
+                        <TopCampaigns />
+                        <Campaigns />
+                    </div>
                 </div>
             </div>
         </>
-    )
+    );
 }
-
-export default UserDashboard
