@@ -19,8 +19,8 @@ function Main() {
                 Create a Campaign
               </button>
             </Link>
-            <Link href="/" className="inline-block text-blue-300 hover:text-blue-500 font-semibold py-3 px-6 border border-blue-300 rounded-md">
-              Learn More
+            <Link href="/CampaignPage" className="inline-block text-blue-300 hover:text-blue-500 font-semibold py-3 px-6 border border-blue-300 rounded-md">
+              View Campaigns
             </Link>
           </div>
         </section>
