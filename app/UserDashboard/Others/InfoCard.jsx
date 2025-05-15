@@ -17,7 +17,7 @@ const InfoCard = () => {
                 </div>
                 <div className="bg-gray-800 rounded-lg p-6 shadow-md">
                     <h2 className="text-lg font-semibold text-gray-400 mb-2">Today's Donations</h2>
-                    <h1 className="text-3xl md:text-4xl font-bold mb-1">{formatCurrency(1)}</h1>
+                    <h1 className="text-3xl md:text-4xl font-bold mb-1">{formatCurrency(21)}</h1>
                     <p className="text-sm text-green-400">+0.0% vs yesterday</p>
                 </div>
             </div>
