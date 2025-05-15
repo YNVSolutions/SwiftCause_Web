@@ -12,36 +12,65 @@ import {
   CartesianGrid,
 } from "recharts";
 
+function roundToNiceNumber(num) {
+  if (num <= 10) return 5;
+  const magnitude = Math.pow(10, Math.floor(Math.log10(num)));
+  const normalized = num / magnitude;
+
+  if (normalized <= 1) return 1 * magnitude;
+  if (normalized <= 2) return 2 * magnitude;
+  if (normalized <= 5) return 5 * magnitude;
+  return 10 * magnitude;
+}
+
 const DonationDistributionBarChart = ({
   donations = [],
   campaignId = null,
-  className = "",
-  ranges = [
-    { min: 0, max: 9, label: "Below £10" },
-    { min: 10, max: 49, label: "£10 - £50" },
-    { min: 50, max: 99, label: "£50 - £100" },
-    { min: 100, max: 499, label: "£100 - £500" },
-    { min: 500, max: Infinity, label: "£500+" },
-  ],
+  className = ""
 }) => {
   const data = useMemo(() => {
-    const filteredDonations = campaignId
-      ? donations.filter((d) => d.campaignId === campaignId)
-      : donations;
+  const filteredDonations = campaignId
+    ? donations.filter((d) => d.campaignId === campaignId)
+    : donations;
 
-    const rangeData = ranges.map((range) => {
-      const donationsInRange = filteredDonations.filter(
-        (d) => d.amount >= range.min && d.amount <= range.max
-      );
-      return {
-        name: range.label,
-        count: donationsInRange.length,
-        total: donationsInRange.reduce((sum, d) => sum + (d.amount || 0), 0),
-      };
-    });
+  if (filteredDonations.length === 0) return [];
 
-    return rangeData.filter((d) => d.count > 0);
-  }, [donations, campaignId, ranges]);
+  const amounts = filteredDonations.map((d) => d.amount || 0);
+  const minAmount = Math.min(...amounts) ;
+  const maxAmount = Math.max(...amounts);
+
+  const minBins = 4;
+  const maxBins = 7;
+  const idealBinCount = Math.min(maxBins, Math.max(minBins, Math.floor(filteredDonations.length / 5)));
+
+  const rawBinWidth = (maxAmount - minAmount) / idealBinCount;
+  const niceBinWidth = roundToNiceNumber(rawBinWidth);
+
+  const start = Math.floor(minAmount / niceBinWidth) * niceBinWidth;
+  const end = Math.ceil(maxAmount / niceBinWidth) * niceBinWidth;
+
+  const dynamicRanges = [];
+  for (let i = start; i < end; i += niceBinWidth) {
+    const min = i;
+    const max = i + niceBinWidth - 1;
+    const label = max + 1 >= end ? `£${min}+` : `£${min} - £${max}`;
+    dynamicRanges.push({ min, max, label });
+  }
+
+  const rangeData = dynamicRanges.map((range) => {
+    const donationsInRange = filteredDonations.filter(
+      (d) => d.amount >= range.min && d.amount <= range.max
+    );
+    return {
+      name: range.label,
+      count: donationsInRange.length,
+      total: donationsInRange.reduce((sum, d) => sum + (d.amount || 0), 0),
+    };
+  });
+
+  return rangeData.filter((d) => d.count > 0);
+}, [donations, campaignId]);
+
 
   return (
     <div
@@ -61,7 +90,7 @@ const DonationDistributionBarChart = ({
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={data}
-            margin={{ top: 10, right: 10, left: 10, bottom: 20 }}
+            margin={{ top: 20, right: 10, left: 10, bottom: 20 }}
             
           >
             <defs>
