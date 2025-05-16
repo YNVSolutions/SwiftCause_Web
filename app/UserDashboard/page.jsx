@@ -1,4 +1,7 @@
 "use client";
+import { useEffect, useState } from 'react';
+import { db } from '../Auth/firebase';
+import { collection, getDocs } from 'firebase/firestore';
 import React from 'react';
 import InfoCard from './Others/InfoCard';
 import DonationTrend from './Others/DonationTrend';
@@ -8,6 +11,11 @@ import Campaigns from './Others/Campaigns';
 import NavBar from '../Components/NavBar';
 
 export default function Dashboard() {
+    const [data, setData] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+
     return (
         <>
             <NavBar />
