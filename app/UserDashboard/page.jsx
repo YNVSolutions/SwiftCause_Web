@@ -34,7 +34,13 @@ export default function Dashboard() {
 
         fetchData();
     }, []);
-    
+    if (loading) {
+        return <p>Loading data...</p>;
+    }
+
+    if (error) {
+        return <p>Error loading data: {error.message}</p>;
+    }
 
     return (
         <>
