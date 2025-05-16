@@ -2,9 +2,9 @@ import React from 'react'
 import Image from 'next/image'
 const TopCampaigns = () => {
     const topCampaignsData = [
-        { id: 1, name: 'Stand-alone global analyzer', raised: 39947, image: '/images/campaign-1.png' },
-        { id: 2, name: 'Innovative value-added toolset', raised: 36646, image: '/images/campaign-2.png' },
-        { id: 3, name: 'Upgradable content-based hierarchy', raised: 36068, image: '/images/campaign-3.png' },
+        { id: 1, name: 'Stand-alone global analyzer', raised: 39947, image: '/demo1.png' },
+        { id: 2, name: 'Innovative value-added toolset', raised: 36646, image: '/demo2.png' },
+        { id: 3, name: 'Upgradable content-based hierarchy', raised: 36068, image: '/demo3.png' },
     ];
     const formatCurrency = (amount) => `£${amount.toLocaleString()}`;
     return (
@@ -17,10 +17,7 @@ const TopCampaigns = () => {
                             <div className="relative w-8 h-8 rounded-full overflow-hidden">
                                 {campaign.image && (
                                     <Image src={campaign.image} alt={campaign.name} layout="fill" objectFit="cover" />
-                                )}
-                                <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-teal-500 text-white text-xs font-semibold">
-                                    {campaign.id}
-                                </div>
+                                )}   
                             </div>
                             <div className="flex-grow">
                                 <h3 className="text-sm font-semibold">{campaign.name}</h3>
