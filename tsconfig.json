@@ -29,7 +29,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "app/PaymentSucess/page.jsx",
-    "app/AdminCampaignDashboard/page.jsx"
+    "app/AdminCampaignDashboard/AdminCampaignDashboard.jsx"
   ],
 
   "exclude": ["node_modules"]

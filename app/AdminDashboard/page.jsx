@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { getFirestore, collection, query, getDocs } from "firebase/firestore";
 import { app } from "../Auth/firebase";
 import CampaignList from "./Campaign/CampaignList.jsx";
