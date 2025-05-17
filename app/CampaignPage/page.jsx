@@ -56,15 +56,8 @@ const CampaignsPage = () => {
                 `}
                     style={{ maxWidth: "100vw" }}
                 >
-                    <div className="mt-6 w-full">
-                        <a href='/CreateCampaign'>
-                            <button className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg w-full">
-                                Create Campaign
-                            </button>
-                        </a>
-                    </div>
                     <div className="hidden md:block w-full">
-                        <h2 className="text-2xl font-bold mt-12 mb-6">Campaign Titles</h2>
+                        <h2 className="text-2xl font-bold mb-6 text-center text-blue-600">Campaign Titles</h2>
                         {data.map(campaign => (
                             <div key={campaign.id} className="bg-gray-700 rounded-md p-4 flex items-center space-x-4 gap-4 mb-4">
                                 <div className="relative w-12 h-12 rounded-md overflow-hidden">
@@ -88,12 +81,20 @@ const CampaignsPage = () => {
                             </div>
                         ))}
                     </div>
+                    <div className="mt-6 w-full">
+                        <a href='/UserDashboard'>
+                            <button className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg w-full">
+                                Dashboard
+                            </button>
+                        </a>
+                    </div>
                 </aside>
 
                 <main className="flex-1 overflow-y-auto p-6 md:p-8 pt-8 md:pt-10 md:ml-64">
-                    <h1 className="text-4xl font-bold text-blue-500 mb-10 text-center">
+                    <h1 className="text-4xl font-bold text-blue-500 mb-2 text-center">
                         Explore Campaigns
                     </h1>
+                    <h2 className="text-2xl font-bold mb-10 text-center">Give freely, heart takes flight.</h2>
                     <div className="flex flex-wrap justify-center items-center gap-8">
                         <AnimatePresence>
                             {data.map((campaign) => (
