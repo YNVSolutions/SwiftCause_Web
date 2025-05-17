@@ -2,7 +2,7 @@
 
 # Swift Cause
 
-Modern Donation Platform for Nonprofits
+Modern Donation Platform for UK-Based Nonprofits 
 
 [Vercel]()
 
