@@ -28,7 +28,24 @@ const Campaigns = ({ data }) => {
                             />
                         </div>
                         <div className="flex-grow">
-                            <h3 className="text-sm font-semibold">{campaign.title}</h3>
+                            <h3 className="text-sm font-semibold text-gray-200">{campaign.title}</h3>
+                            <p className="text-xs text-teal-400">£{campaign.collectedAmount}</p>
+                            <div className='flex items-center justify-between mt-2'>
+                                <p
+                                    className={
+                                        `p-1 rounded transition duration-300 text-white ` +
+                                        (campaign.status?.toLowerCase() === 'active'
+                                            ? 'bg-green-500 hover:bg-green-700'
+                                            : campaign.status?.toLowerCase() === 'paused'
+                                            ? 'bg-yellow-400 hover:bg-yellow-500 text-black'
+                                            : campaign.status?.toLowerCase() === 'upcoming'
+                                            ? 'bg-blue-500 hover:bg-blue-700'
+                                            : 'bg-red-500')
+                                    }
+                                >
+                                    {campaign.status}
+                                </p>
+                            </div>
                         </div>
                     </div>
                 ))}
