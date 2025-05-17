@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from '../Components/NavBar';
 import { db } from '../Auth/firebase';
 import { collection, getDocs } from 'firebase/firestore';
-
+import Loader from './Others/Loader';
 
 const CampaignsPage = () => {
     const [data, setData] = useState([]);
@@ -31,10 +31,10 @@ const CampaignsPage = () => {
         fetchData();
     }, []);
 
-   
+
 
     if (loading) {
-        return <p>Loading data...</p>;
+        return <><Loader /></>;
     }
 
     if (error) {
@@ -68,9 +68,19 @@ const CampaignsPage = () => {
                         {data.map(campaign => (
                             <div key={campaign.id} className="bg-gray-700 rounded-md p-4 flex items-center space-x-4 gap-4 mb-4">
                                 <div className="relative w-12 h-12 rounded-md overflow-hidden">
-                                    {campaign.image && (
-                                        <img src={campaign.coverImageUrl} alt={campaign.title} layout="fill" objectFit="cover" />
-                                    )}
+                                    {/*
+                                        database image calling url
+                                    <img
+                                        src={campaign.coverImageUrl}
+                                        alt={campaign.title}
+                                        className="object-cover w-12 h-12"
+                                    />
+                                    */}
+                                    <img
+                                        src='/demo5.png'
+                                        alt={campaign.title}
+                                        className="object-cover w-12 h-12"
+                                    />
                                 </div>
                                 <div className="flex-grow">
                                     <h3 className="text-sm font-semibold">{campaign.title}</h3>
@@ -108,7 +118,7 @@ const CampaignsPage = () => {
                                         <img
                                             src='/demo1.png'
                                             alt={campaign.title}
-                                            style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                                            className="object-cover w-full h-full"
                                         />
                                     </div>
                                     <div className="p-6 flex flex-col justify-between flex-1">
