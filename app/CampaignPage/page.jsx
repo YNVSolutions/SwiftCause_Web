@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from '../Components/NavBar';
 import { db } from '../Auth/firebase';
 import { collection, getDocs } from 'firebase/firestore';
-import Loader from './Others/Loader';
+import Loader from '../Components/Loader';
 
 const CampaignsPage = () => {
     const [data, setData] = useState([]);
