@@ -4,10 +4,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import NavBar from '../Components/NavBar'
 import { useRouter } from 'next/navigation';
-import { storage, db } from '../Auth/firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { collection, addDoc } from 'firebase/firestore';
-import { v4 as uuidv4 } from 'uuid';
 
 const Page = () => {
   const [image, setImage] = useState(null);
@@ -44,18 +40,7 @@ const Page = () => {
     setLoading(true);
 
     try {
-      const imageRef = ref(storage, `campaignImages/${uuidv4()}-${image.name}`);
-      await uploadBytes(imageRef, image);
-      const imageUrl = await getDownloadURL(imageRef);
-
-
-      await addDoc(collection(db, "campaigns"), {
-        campaignName,
-        description,
-        donationAmount: Number(donationAmount),
-        imageUrl,
-        createdAt: new Date(),
-      });
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       alert("Campaign created successfully!");
       setCampaignName('');
