@@ -53,8 +53,8 @@ export default function Dashboard() {
                         <DonationDistribution />
                     </div>
                     <div className="space-y-6">
-                        <TopCampaigns />
-                        <Campaigns />
+                        <TopCampaigns data={data}/>
+                        <Campaigns data={data} />
                     </div>
                 </div>
             </div>
