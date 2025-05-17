@@ -9,7 +9,7 @@ import DonationDistribution from './Others/DonationDistrbution';
 import TopCampaigns from './Others/TopCampaigns';
 import Campaigns from './Others/Campaigns';
 import NavBar from '../Components/NavBar';
-
+import Loader from '../Components/Loader';
 export default function Dashboard() {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -35,7 +35,7 @@ export default function Dashboard() {
         fetchData();
     }, []);
     if (loading) {
-        return <p>Loading data...</p>;
+        return <><Loader/></>;
     }
 
     if (error) {
