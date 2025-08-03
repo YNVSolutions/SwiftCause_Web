@@ -69,7 +69,7 @@
     "@typescript-eslint/parser": "^5.62.0",
     "@vitejs/plugin-react": "^4.7.0",
     "autoprefixer": "^10.4.21",
-    "dev": "tailwindcss -i ./src/styles/global.css -o ./dist/global.css --watch && vite",
+    "dev": "npx @tailwindcss/cli -i ./input.css -o ./output.css --watch",
     "eslint": "^8.53.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.4",
