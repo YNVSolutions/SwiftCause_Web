@@ -10,7 +10,6 @@ import { CampaignManagement } from './components/admin/CampaignManagement';
 import { KioskManagement } from './components/admin/KioskManagement';
 import { DonationManagement } from './components/admin/DonationManagement';
 import { UserManagement } from './components/admin/UserManagement';
-import './styles/globals.css';
 
 export type Screen = 
   | 'login' 
