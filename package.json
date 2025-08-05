@@ -4,7 +4,7 @@
   "description": "Comprehensive donation kiosk application with admin portal",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently \"vite\" \"tailwindcss -i ./src/styles/globals.css -o ./output.css --watch\"",
     "build": "vite build",
     "preview": "vite preview",
     "start": "vite",
@@ -69,6 +69,7 @@
     "@typescript-eslint/parser": "^5.62.0",
     "@vitejs/plugin-react": "^4.7.0",
     "autoprefixer": "^10.4.21",
+    "concurrently": "^9.2.0",
     "dev": "npx @tailwindcss/cli -i ./input.css -o ./output.css --watch",
     "eslint": "^8.53.0",
     "eslint-plugin-react-hooks": "^4.6.0",
