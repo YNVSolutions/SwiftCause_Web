@@ -21,6 +21,7 @@ Modern Donation Platform for UK-Based Nonprofits
 ## Author
 
 * [Dharmandra Singh](https://github.com/dp-singh) 
+* [Shipra Rawat](https://github.com/rwt-shipra)
 * [Manav](https://github.com/Manav0501) 
 * [Yash Raghuvanshi](https://github.com/Yashraghuvans) 
 * [Jitesh Singh](https://github.com/CodrJitesh)
