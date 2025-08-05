@@ -1,16 +1,14 @@
-import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { initializeApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBfU0qWYdW1zr7gPpNANMv8wjhFcOVo6s8",
-  authDomain: "swiftcause-app.firebaseapp.com",
-  projectId: "swiftcause-app",
-  storageBucket: "swiftcause-app.firebasestorage.app",
-  messagingSenderId: "373490483164",
-  appId: "1:373490483164:web:262ab335b78858ce555919",
-  measurementId: "G-5WPFP88SST"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
-
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
