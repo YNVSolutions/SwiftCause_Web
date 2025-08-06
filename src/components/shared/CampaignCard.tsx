@@ -88,8 +88,8 @@ export function CampaignCard({
               {onDonate && (
                 <Button 
                   onClick={onDonate}
-                  className="flex-1 h-8 sm:h-9 text-xs sm:text-sm"
                   size="sm"
+                  className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-1.5 rounded-xl transition-all duration-200 ease-in-out"
                 >
                   <Heart className="mr-1 h-3 w-3" />
                   Donate
@@ -165,7 +165,7 @@ export function CampaignCard({
           {onDonate && (
             <Button 
               onClick={onDonate}
-              className="flex-1 h-11 sm:h-12"
+              className="flex-1 h-11 sm:h-12 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-all duration-200 ease-in-out"
               size="lg"
             >
               <Heart className="mr-1 sm:mr-2 h-4 w-4" />
