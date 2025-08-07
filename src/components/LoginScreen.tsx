@@ -7,6 +7,10 @@ import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { ImageWithFallback } from './figma/ImageWithFallback';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../lib/firebase';
+
 import { 
   Shield, 
   Heart, 
@@ -47,7 +51,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
     accessCode: ''
   });
   const [adminCredentials, setAdminCredentials] = useState({
-    username: '',
+    email: '',
     password: ''
   });
   const [loginError, setLoginError] = useState('');
@@ -285,59 +289,52 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
     setShowQRScanner(false);
   };
 
-  const handleAdminSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoginError('');
-    
-    if (adminCredentials.password === '') {
-      setLoginError('Please enter your password.');
+const handleAdminSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoginError('');
+
+  const { email, password } = adminCredentials;
+
+  if (!email || !password) {
+    setLoginError('Please enter both email and password.');
+    return;
+  }
+
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const firebaseUser = userCredential.user;
+
+    // using the uid here to fetch
+    const userDocRef = doc(db, 'users', firebaseUser.uid);
+    const userSnap = await getDoc(userDocRef);
+
+    if (!userSnap.exists()) {
+      setLoginError('No user profile found for this account.');
       return;
     }
 
-    try {
-      // For demo purposes, we'll still use mock authentication for admin users
-      // In production, you would use AuthService.signInWithPassword()
-      
-      // Find user by username
-      const user = mockUsers.find(u => 
-        u.username.toLowerCase() === adminCredentials.username.toLowerCase() && 
-        u.isActive
-      );
-      
-      if (!user) {
-        setLoginError('Invalid username or user account is disabled.');
-        return;
-      }
+    const userData = userSnap.data() as User;
 
-      // Create admin session
-      const adminSession: AdminSession = {
-        user: {
-          ...user,
-          lastLogin: new Date().toISOString()
-        },
-        loginTime: new Date().toISOString()
-      };
-
-      onLogin('admin', adminSession);
-      
-      // For production use with real Supabase auth:
-      /*
-      const { session } = await AuthService.signInWithPassword(
-        adminCredentials.username + '@donatehub.com', // Append domain for email
-        adminCredentials.password
-      );
-      
-      if (session?.access_token) {
-        // Get user profile from backend
-        const userData = await ApiClient.getUsers(session.access_token);
-        // Create session and login...
-      }
-      */
-    } catch (error) {
-      console.error('Admin authentication error:', error);
-      setLoginError('Authentication failed. Please check your credentials.');
+    if (!userData.isActive) {
+      setLoginError('User account is disabled.');
+      return;
     }
-  };
+
+    // session creation
+    const adminSession: AdminSession = {
+      user: {
+        ...userData,
+        lastLogin: new Date().toISOString()
+      },
+      loginTime: new Date().toISOString()
+    };
+
+    onLogin('admin', adminSession);
+  } catch (error: any) {
+    console.error('Login error:', error);
+    setLoginError(error.message || 'Authentication failed. Please try again.');
+  }
+};
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -705,16 +702,16 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
 
                     <form onSubmit={handleAdminSubmit} className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="username" className="flex items-center space-x-2">
+                        <Label htmlFor="email" className="flex items-center space-x-2">
                           <UserCog className="w-4 h-4 text-gray-500" />
-                          <span>Username</span>
+                          <span>Email</span>
                         </Label>
                         <Input
-                          id="username"
+                          id="email"
                           type="text"
-                          placeholder="Enter admin username"
-                          value={adminCredentials.username}
-                          onChange={(e) => setAdminCredentials(prev => ({ ...prev, username: e.target.value }))}
+                          placeholder="Enter admin email"
+                          value={adminCredentials.email}
+                          onChange={(e) => setAdminCredentials(prev => ({ ...prev, email: e.target.value }))}
                           className="h-12"
                           required
                         />
