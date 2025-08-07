@@ -1,110 +1,86 @@
 import React, { useEffect, useState } from 'react';
+import { db } from '../../lib/firebase';
 import {
   collection,
   getDocs,
   updateDoc,
-  doc
+  doc,
+  DocumentData,
 } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
 
-interface Campaign {
-  id: string;
-  collectedAmount: number;
-  coverImageUrl: string;
-  createdBy: string;
-  currency: string;
-  description: string;
-  donationCount: number;
-  endDate: Date;
-  giftAidEnabled: boolean;
-  goalAmount: number;
-  lastUpdated: Date;
-  startDate: Date;
-  status: string;
-  tags: string[];
-  title: string;
-}
-
-export default function CampaignManagement() {
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [editId, setEditId] = useState<string | null>(null);
-
-  const campaignsRef = collection(db, 'campaigns');
+const CampaignManagement = () => {
+  const [campaigns, setCampaigns] = useState<DocumentData[]>([]);
+  const [editingField, setEditingField] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
     const fetchCampaigns = async () => {
-      const snapshot = await getDocs(campaignsRef);
-      const data: Campaign[] = snapshot.docs.map(docSnap => {
-        const data = docSnap.data();
-        return {
-          id: docSnap.id,
-          collectedAmount: data.collectedAmount,
-          coverImageUrl: data.coverImageUrl,
-          createdBy: data.createdBy,
-          currency: data.currency,
-          description: data.description,
-          donationCount: data.donationCount,
-          endDate: data.endDate.toDate(),
-          giftAidEnabled: data.giftAidEnabled,
-          goalAmount: data.goalAmount,
-          lastUpdated: data.lastUpdated?.toDate?.() || new Date(),
-          startDate: data.startDate.toDate(),
-          status: data.status,
-          tags: data.tags || [],
-          title: data.title
-        };
-      });
-      setCampaigns(data);
+      const querySnapshot = await getDocs(collection(db, 'campaigns'));
+      const docs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setCampaigns(docs);
     };
+
     fetchCampaigns();
   }, []);
 
-  const handleChange = (id: string, field: keyof Campaign, value: any) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, id: string, field: string) => {
     setCampaigns(prev =>
-      prev.map(c =>
-        c.id === id ? { ...c, [field]: value } : c
+      prev.map(campaign =>
+        campaign.id === id ? { ...campaign, [field]: e.target.value } : campaign
       )
     );
+    setEditingField(prev => ({ ...prev, [`${id}-${field}`]: e.target.value }));
   };
 
-  const saveChanges = async (id: string) => {
-    const campaign = campaigns.find(c => c.id === id);
-    if (!campaign) return;
-
-    const docRef = doc(db, 'campaigns', id);
-    const { id: _, ...campaignData } = campaign;
-
-    await updateDoc(docRef, campaignData);
-    setEditId(null);
+  const handleSave = async (id: string, field: string) => {
+    const campaignRef = doc(db, 'campaigns', id);
+    await updateDoc(campaignRef, {
+      [field]: editingField[`${id}-${field}`],
+    });
+    setEditingField(prev => {
+      const updated = { ...prev };
+      delete updated[`${id}-${field}`];
+      return updated;
+    });
   };
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Campaign Editor</h1>
-      {campaigns.map(c => (
-        <div key={c.id} className="border p-4 mb-4 rounded-md shadow">
-          {editId === c.id ? (
+      <h1 className="text-2xl font-bold mb-4">Campaign Management</h1>
+      <div className="space-y-8">
+        {campaigns.map((campaign) => (
+          <div key={campaign.id} className="border rounded-lg p-4 shadow-md">
             <div className="space-y-2">
-              <input value={c.title} onChange={e => handleChange(c.id, 'title', e.target.value)} className="border px-2 py-1 w-full" />
-              <textarea value={c.description} onChange={e => handleChange(c.id, 'description', e.target.value)} className="border px-2 py-1 w-full" />
-              <input value={c.collectedAmount} onChange={e => handleChange(c.id, 'collectedAmount', Number(e.target.value))} className="border px-2 py-1 w-full" />
-              <input value={c.goalAmount} onChange={e => handleChange(c.id, 'goalAmount', Number(e.target.value))} className="border px-2 py-1 w-full" />
-              <input value={c.status} onChange={e => handleChange(c.id, 'status', e.target.value)} className="border px-2 py-1 w-full" />
-              <button onClick={() => saveChanges(c.id)} className="bg-green-500 text-white px-4 py-1 rounded">Save</button>
-              <button onClick={() => setEditId(null)} className="ml-2 text-sm text-gray-500">Cancel</button>
+              {['title', 'description', 'collectedAmount', 'goalAmount', 'status'].map((field) => (
+                <div key={field} className="flex items-center">
+                  <label className="w-40 font-semibold capitalize">{field}:</label>
+                  {field === 'description' ? (
+                    <textarea
+                      value={campaign[field] || ''}
+                      onChange={(e) => handleChange(e, campaign.id, field)}
+                      className="border rounded p-2 flex-1"
+                    />
+                  ) : (
+                    <input
+                      type="text"
+                      value={campaign[field] || ''}
+                      onChange={(e) => handleChange(e, campaign.id, field)}
+                      className="border rounded p-2 flex-1"
+                    />
+                  )}
+                  <button
+                    onClick={() => handleSave(campaign.id, field)}
+                    className="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
+                  >
+                    Save
+                  </button>
+                </div>
+              ))}
             </div>
-          ) : (
-            <div>
-              <h2 className="text-xl font-semibold">{c.title}</h2>
-              <p>{c.description}</p>
-              <p><strong>Status:</strong> {c.status}</p>
-              <p><strong>Raised:</strong> {c.collectedAmount}</p>
-              <p><strong>Goal:</strong> {c.goalAmount}</p>
-              <button onClick={() => setEditId(c.id)} className="text-blue-500 mt-2">Edit</button>
-            </div>
-          )}
-        </div>
-      ))}
+          </div>
+        ))}
+      </div>
     </div>
   );
-}
+};
+
+export default CampaignManagement;
