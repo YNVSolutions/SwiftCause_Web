@@ -10,13 +10,16 @@ import {
 
 const CampaignManagement = () => {
   const [campaigns, setCampaigns] = useState<DocumentData[]>([]);
-  const [editingField, setEditingField] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
     const fetchCampaigns = async () => {
-      const querySnapshot = await getDocs(collection(db, 'campaigns'));
-      const docs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setCampaigns(docs);
+      try {
+        const querySnapshot = await getDocs(collection(db, 'campaigns'));
+        const docs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setCampaigns(docs);
+      } catch (error) {
+        console.error("Error fetching campaigns: ", error);
+      }
     };
 
     fetchCampaigns();
@@ -28,19 +31,21 @@ const CampaignManagement = () => {
         campaign.id === id ? { ...campaign, [field]: e.target.value } : campaign
       )
     );
-    setEditingField(prev => ({ ...prev, [`${id}-${field}`]: e.target.value }));
   };
 
   const handleSave = async (id: string, field: string) => {
-    const campaignRef = doc(db, 'campaigns', id);
-    await updateDoc(campaignRef, {
-      [field]: editingField[`${id}-${field}`],
-    });
-    setEditingField(prev => {
-      const updated = { ...prev };
-      delete updated[`${id}-${field}`];
-      return updated;
-    });
+    try {
+      const campaignToUpdate = campaigns.find(campaign => campaign.id === id);
+      if (campaignToUpdate) {
+        const campaignRef = doc(db, 'campaigns', id);
+        await updateDoc(campaignRef, {
+          [field]: campaignToUpdate[field],
+        });
+        console.log("Document successfully updated!");
+      }
+    } catch (error) {
+      console.error("Error updating document: ", error);
+    }
   };
 
   return (
