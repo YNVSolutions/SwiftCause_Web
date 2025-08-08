@@ -6,10 +6,10 @@ import { PaymentScreen } from './components/PaymentScreen';
 import { ResultScreen } from './components/ResultScreen';
 import { EmailConfirmationScreen } from './components/EmailConfirmationScreen';
 import { AdminDashboard } from './components/admin/AdminDashboard';
-import { CampaignManagement } from './components/admin/CampaignManagement';
 import { KioskManagement } from './components/admin/KioskManagement';
 import { DonationManagement } from './components/admin/DonationManagement';
 import { UserManagement } from './components/admin/UserManagement';
+import CampaignManagement from './components/admin/CampaignManagement';
 
 export type Screen = 
   | 'login' 
