@@ -11,14 +11,14 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 
-import { 
-  Shield, 
-  Heart, 
-  Users, 
-  Globe, 
-  TrendingUp, 
-  Award, 
-  CheckCircle, 
+import {
+  Shield,
+  Heart,
+  Users,
+  Globe,
+  TrendingUp,
+  Award,
+  CheckCircle,
   ArrowRight,
   DollarSign,
   MapPin,
@@ -239,11 +239,11 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
 
   const handleKioskLogin = async (kioskId: string, accessCode: string, loginMethod: 'qr' | 'manual' = 'manual') => {
     setLoginError('');
-    
+
     try {
       // Use Supabase API to authenticate kiosk
       const result = await ApiClient.authenticateKiosk(kioskId, accessCode);
-      
+
       if (result.success && result.kiosk) {
         // Create kiosk session
         const kioskSession: KioskSession = {
@@ -289,52 +289,52 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
     setShowQRScanner(false);
   };
 
-const handleAdminSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setLoginError('');
+  const handleAdminSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError('');
 
-  const { email, password } = adminCredentials;
+    const { email, password } = adminCredentials;
 
-  if (!email || !password) {
-    setLoginError('Please enter both email and password.');
-    return;
-  }
-
-  try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const firebaseUser = userCredential.user;
-
-    // using the uid here to fetch
-    const userDocRef = doc(db, 'users', firebaseUser.uid);
-    const userSnap = await getDoc(userDocRef);
-
-    if (!userSnap.exists()) {
-      setLoginError('No user profile found for this account.');
+    if (!email || !password) {
+      setLoginError('Please enter both email and password.');
       return;
     }
 
-    const userData = userSnap.data() as User;
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const firebaseUser = userCredential.user;
 
-    if (!userData.isActive) {
-      setLoginError('User account is disabled.');
-      return;
+      // using the uid here to fetch
+      const userDocRef = doc(db, 'users', firebaseUser.uid);
+      const userSnap = await getDoc(userDocRef);
+
+      if (!userSnap.exists()) {
+        setLoginError('No user profile found for this account.');
+        return;
+      }
+
+      const userData = userSnap.data() as User;
+
+      if (!userData.isActive) {
+        setLoginError('User account is disabled.');
+        return;
+      }
+
+      // session creation
+      const adminSession: AdminSession = {
+        user: {
+          ...userData,
+          lastLogin: new Date().toISOString()
+        },
+        loginTime: new Date().toISOString()
+      };
+
+      onLogin('admin', adminSession);
+    } catch (error: any) {
+      console.error('Login error:', error);
+      setLoginError(error.message || 'Authentication failed. Please try again.');
     }
-
-    // session creation
-    const adminSession: AdminSession = {
-      user: {
-        ...userData,
-        lastLogin: new Date().toISOString()
-      },
-      loginTime: new Date().toISOString()
-    };
-
-    onLogin('admin', adminSession);
-  } catch (error: any) {
-    console.error('Login error:', error);
-    setLoginError(error.message || 'Authentication failed. Please try again.');
-  }
-};
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -402,7 +402,7 @@ const handleAdminSubmit = async (e: React.FormEvent) => {
       rating: 5
     },
     {
-      name: "Mike R.", 
+      name: "Mike R.",
       role: "Monthly Supporter",
       text: "Transparent, secure, and incredibly user-friendly. Highly recommended.",
       rating: 5
@@ -417,15 +417,15 @@ const handleAdminSubmit = async (e: React.FormEvent) => {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 shadow-lg">
-                <Heart className="h-6 w-6 text-white" />
+              <div className="flex h-12 w-12 items-center justify-center shadow-lg">
+                <img src="/logo.png" className="h-12 w-12 rounded-xl" alt="My Logo" />
               </div>
               <div>
-                <h1 className="text-xl font-semibold text-gray-900">DonateHub</h1>
-                <p className="text-sm text-gray-600">Platform Access Portal</p>
+                <h1 className="text-xl font-semibold text-gray-900">Swift Cause</h1>
+                <p className="text-sm text-gray-600">Modern Donation Platform</p>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
                 <CheckCircle className="w-3 h-3 mr-1" />
@@ -460,13 +460,13 @@ const handleAdminSubmit = async (e: React.FormEvent) => {
               <TrendingUp className="w-4 h-4 mr-2" />
               Live platform monitoring
             </div>
-            
+
             <h2 className="text-4xl xl:text-5xl text-gray-900 mb-6 leading-tight">
               Powering <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">global</span> generosity
             </h2>
-            
+
             <p className="text-lg text-gray-600 mb-8">
-              Comprehensive donation management platform trusted by organizations worldwide. 
+              Comprehensive donation management platform trusted by organizations worldwide.
               Access your kiosk interface or admin dashboard to make a difference.
             </p>
 
@@ -482,7 +482,7 @@ const handleAdminSubmit = async (e: React.FormEvent) => {
                 </div>
                 <p className="text-sm text-gray-600">Total raised this year</p>
               </div>
-              
+
               <div className="bg-white rounded-xl p-6 shadow-sm border">
                 <div className="flex items-center justify-between mb-2">
                   <Users className="h-8 w-8 text-blue-600" />
@@ -493,7 +493,7 @@ const handleAdminSubmit = async (e: React.FormEvent) => {
                 </div>
                 <p className="text-sm text-gray-600">Generous donors</p>
               </div>
-              
+
               <div className="bg-white rounded-xl p-6 shadow-sm border">
                 <div className="flex items-center justify-between mb-2">
                   <Globe className="h-8 w-8 text-purple-600" />
@@ -504,7 +504,7 @@ const handleAdminSubmit = async (e: React.FormEvent) => {
                 </div>
                 <p className="text-sm text-gray-600">Active campaigns</p>
               </div>
-              
+
               <div className="bg-white rounded-xl p-6 shadow-sm border">
                 <div className="flex items-center justify-between mb-2">
                   <Settings className="h-8 w-8 text-orange-600" />
@@ -635,7 +635,7 @@ const handleAdminSubmit = async (e: React.FormEvent) => {
                           required
                         />
                       </div>
-                      
+
                       <div className="space-y-2">
                         <Label htmlFor="accessCode" className="flex items-center space-x-2">
                           <KeyRound className="w-4 h-4 text-gray-500" />
@@ -661,9 +661,9 @@ const handleAdminSubmit = async (e: React.FormEvent) => {
                           </div>
                         </div>
                       )}
-                      
-                      <Button 
-                        type="submit" 
+
+                      <Button
+                        type="submit"
                         className="w-full h-12 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white shadow-lg"
                         disabled={!kioskCredentials.kioskId || !kioskCredentials.accessCode}
                       >
@@ -716,7 +716,7 @@ const handleAdminSubmit = async (e: React.FormEvent) => {
                           required
                         />
                       </div>
-                      
+
                       <div className="space-y-2">
                         <Label htmlFor="password" className="flex items-center space-x-2">
                           <Shield className="w-4 h-4 text-gray-500" />
@@ -742,7 +742,7 @@ const handleAdminSubmit = async (e: React.FormEvent) => {
                           </div>
                         </div>
                       )}
-                      
+
                       <Button type="submit" className="w-full h-12 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg">
                         <UserCog className="mr-2 h-4 w-4" />
                         Access Admin Dashboard
@@ -792,7 +792,7 @@ const handleAdminSubmit = async (e: React.FormEvent) => {
                     </div>
                   </div>
                 )}
-                
+
                 {/* Support Information */}
                 <div className="pt-4 border-t text-center space-y-2">
                   <p className="text-sm text-gray-600">Need assistance?</p>
@@ -803,7 +803,7 @@ const handleAdminSubmit = async (e: React.FormEvent) => {
                     <span className="text-gray-300">•</span>
                     <span className="text-gray-600">24/7 Support</span>
                   </div>
-                  
+
                   <div className="flex items-center justify-center space-x-2 text-xs text-gray-500 pt-2">
                     <CheckCircle className="w-3 h-3 text-green-600" />
                     <span>Secure • Encrypted • Verified</span>
@@ -849,7 +849,7 @@ const handleAdminSubmit = async (e: React.FormEvent) => {
           </div>
         </div>
       </div>
-      
+
       {/* QR Scanner Modal */}
       <QRCodeScanner
         isActive={showQRScanner}
