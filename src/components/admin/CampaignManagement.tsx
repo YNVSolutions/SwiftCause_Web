@@ -87,9 +87,8 @@ const CampaignManagement = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
-      {/* Top Header */}
-      <div className="flex items-center justify-between p-4 bg-white border-b border-gray-200">
-        <div className="relative flex-1 mr-4">
+      <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-white border-b border-gray-200">
+        <div className="relative w-full sm:w-1/2 mb-4 sm:mb-0 sm:mr-4">
           <input
             type="text"
             placeholder="Search campaigns..."
@@ -99,7 +98,7 @@ const CampaignManagement = () => {
           />
           <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
         </div>
-        <div className="flex items-center space-x-4">
+        <div className="flex flex-wrap justify-center sm:justify-start items-center space-x-2 sm:space-x-4">
           <div className="relative">
             <button className="flex items-center px-4 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none">
               All Statuses <FaChevronDown className="ml-2 h-3 w-3 text-gray-500" />
@@ -113,17 +112,17 @@ const CampaignManagement = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto p-6">
-        {/* Section Header */}
+      <div className="max-w-7xl mx-auto p-4 sm:p-6">
+ 
         <div className="mb-6">
           <h2 className="text-xl font-semibold text-gray-800">Campaigns ({filteredCampaigns.length})</h2>
           <p className="text-gray-500 text-sm">Manage your donation campaigns</p>
         </div>
 
-        {/* Campaign List */}
+  
         <div className="bg-white rounded-xl shadow overflow-hidden">
-          {/* Table Header */}
-          <div className="grid grid-cols-10 text-sm font-medium text-gray-500 bg-gray-50 py-3 px-6 border-b border-gray-200">
+          
+          <div className="hidden md:grid grid-cols-10 text-sm font-medium text-gray-500 bg-gray-50 py-3 px-6 border-b border-gray-200">
             <div className="col-span-3">Campaign</div>
             <div className="col-span-2">Progress</div>
             <div className="col-span-2">Performance</div>
@@ -132,7 +131,7 @@ const CampaignManagement = () => {
             <div className="col-span-1 text-right">Actions</div>
           </div>
 
-          {/* Campaign Rows */}
+        
           <div className="divide-y divide-gray-200">
             {filteredCampaigns.map((campaign) => {
               const isEditing = editingId === campaign.id;
@@ -153,9 +152,9 @@ const CampaignManagement = () => {
                 : false;
 
               return (
-                <div key={campaign.id} className="grid grid-cols-10 items-center py-4 px-6 hover:bg-gray-50 transition-colors duration-150">
-                  {/* Campaign Column */}
-                  <div className="col-span-3 flex items-center space-x-3">
+                <div key={campaign.id} className="block md:grid md:grid-cols-10 items-center py-4 px-6 hover:bg-gray-50 transition-colors duration-150">
+               
+                  <div className="md:col-span-3 flex items-center space-x-3 mb-4 md:mb-0">
                     <img
                       src={currentCampaign?.coverImageUrl || 'https://via.placeholder.com/40'}
                       alt={currentCampaign?.title}
@@ -175,82 +174,78 @@ const CampaignManagement = () => {
                       <p className="text-xs text-gray-500">{campaign.category || 'Global Health'} &middot; Recurring &middot; Custom</p>
                     </div>
                   </div>
-
-                  {/* Progress Column */}
-                  <div className="col-span-2 space-y-1">
-                    {isEditing ? (
-                      <div className="flex space-x-2">
-                        <input
-                          type="text"
-                          value={currentCampaign?.collectedAmount || ''}
-                          onChange={(e) => handleChange(e, 'collectedAmount')}
-                          className="w-2/5 text-sm border border-gray-300 rounded-md p-1"
-                        />
-                        <input
-                          type="text"
-                          value={currentCampaign?.goalAmount || ''}
-                          onChange={(e) => handleChange(e, 'goalAmount')}
-                          className="w-2/5 text-sm border border-gray-300 rounded-md p-1"
-                        />
-                      </div>
-                    ) : (
-                      <>
-                        <p className="text-sm font-medium text-gray-800">${collected.toLocaleString()} <span className="text-gray-500 font-normal">({progress}%)</span></p>
-                        <div className="w-4/5 bg-gray-200 rounded-full h-2">
-                          <div
-                            className={`h-2 rounded-full transition-all duration-500 ${getProgressColor(progress)}`}
-                            style={{ width: `${Math.min(progress, 100)}%` }}
-                          ></div>
+                  <div className="grid grid-cols-2 gap-4 md:col-span-7 md:grid-cols-7 md:gap-0">
+                    <div className="col-span-1 md:col-span-2 space-y-1">
+                      <p className="text-sm font-medium text-gray-500 md:hidden">Progress</p>
+                      {isEditing ? (
+                        <div className="flex space-x-2">
+                          <input
+                            type="text"
+                            value={currentCampaign?.collectedAmount || ''}
+                            onChange={(e) => handleChange(e, 'collectedAmount')}
+                            className="w-2/5 text-sm border border-gray-300 rounded-md p-1"
+                          />
+                          <input
+                            type="text"
+                            value={currentCampaign?.goalAmount || ''}
+                            onChange={(e) => handleChange(e, 'goalAmount')}
+                            className="w-2/5 text-sm border border-gray-300 rounded-md p-1"
+                          />
                         </div>
-                        <p className="text-xs text-gray-500">Goal: ${goal.toLocaleString()}</p>
-                      </>
-                    )}
-                  </div>
-
-                  {/* Performance Column */}
-                  <div className="col-span-2 text-sm text-gray-800">
-                    <p>{donors} donors</p>
-                    <p>${avgDonation} avg</p>
-                    <p>~{conversion}% conv.</p>
-                  </div>
-
-                  {/* Status Column */}
-                  <div className="col-span-1">
-                    {isEditing ? (
-                      <select
-                        value={currentCampaign?.status || ''}
-                        onChange={(e) => handleChange(e, 'status')}
-                        className="w-full text-sm border border-gray-300 rounded-md p-1"
-                      >
-                        <option value="active">Active</option>
-                        <option value="paused">Paused</option>
-                      </select>
-                    ) : (
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(status)}`}>
-                        {status}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* End Date Column */}
-                  <div className="col-span-1 text-sm text-gray-800">
-                    <p>{endDate}</p>
-                    {isExpired && <p className="text-xs text-red-500">Expired</p>}
-                  </div>
-
-                  {/* Actions Column */}
-                  <div className="col-span-1 flex justify-end items-center space-x-2 text-gray-500">
-                    {isEditing ? (
-                      <>
-                        <button onClick={handleSave} className="p-2 text-green-600 hover:bg-gray-100 rounded-md"><FaSave className="h-4 w-4" /></button>
-                        <button onClick={handleCancelEdit} className="p-2 text-red-600 hover:bg-gray-100 rounded-md"><FaTimes className="h-4 w-4" /></button>
-                      </>
-                    ) : (
-                      <>
-                        <button onClick={() => handleEdit(campaign)} className="p-2 hover:bg-gray-100 rounded-md"><FaEdit className="h-4 w-4" /></button>
-                        <button className="p-2 hover:bg-gray-100 rounded-md"><FaEllipsisV className="h-4 w-4" /></button>
-                      </>
-                    )}
+                      ) : (
+                        <>
+                          <p className="text-sm font-medium text-gray-800">${collected.toLocaleString()} <span className="text-gray-500 font-normal">({progress}%)</span></p>
+                          <div className="w-4/5 bg-gray-200 rounded-full h-2">
+                            <div
+                              className={`h-2 rounded-full transition-all duration-500 ${getProgressColor(progress)}`}
+                              style={{ width: `${Math.min(progress, 100)}%` }}
+                            ></div>
+                          </div>
+                          <p className="text-xs text-gray-500">Goal: ${goal.toLocaleString()}</p>
+                        </>
+                      )}
+                    </div>
+                    <div className="col-span-1 md:col-span-2 text-sm text-gray-800">
+                      <p className="text-sm font-medium text-gray-500 md:hidden">Performance</p>
+                      <p>{donors} donors</p>
+                      <p>${avgDonation} avg</p>
+                      <p>~{conversion}% conv.</p>
+                    </div>
+                    <div className="col-span-1 md:col-span-1">
+                      <p className="text-sm font-medium text-gray-500 md:hidden">Status</p>
+                      {isEditing ? (
+                        <select
+                          value={currentCampaign?.status || ''}
+                          onChange={(e) => handleChange(e, 'status')}
+                          className="w-full text-sm border border-gray-300 rounded-md p-1"
+                        >
+                          <option value="active">Active</option>
+                          <option value="paused">Paused</option>
+                        </select>
+                      ) : (
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(status)}`}>
+                          {status}
+                        </span>
+                      )}
+                    </div>
+                    <div className="col-span-1 md:col-span-1 text-sm text-gray-800">
+                      <p className="text-sm font-medium text-gray-500 md:hidden">End Date</p>
+                      <p>{endDate}</p>
+                      {isExpired && <p className="text-xs text-red-500">Expired</p>}
+                    </div>
+                    <div className="col-span-2 md:col-span-1 flex justify-start md:justify-end items-center space-x-2 text-gray-500 mt-4 md:mt-0">
+                      {isEditing ? (
+                        <>
+                          <button onClick={handleSave} className="p-2 text-green-600 hover:bg-gray-100 rounded-md"><FaSave className="h-4 w-4" /></button>
+                          <button onClick={handleCancelEdit} className="p-2 text-red-600 hover:bg-gray-100 rounded-md"><FaTimes className="h-4 w-4" /></button>
+                        </>
+                      ) : (
+                        <>
+                          <button onClick={() => handleEdit(campaign)} className="p-2 hover:bg-gray-100 rounded-md"><FaEdit className="h-4 w-4" /></button>
+                          <button className="p-2 hover:bg-gray-100 rounded-md"><FaEllipsisV className="h-4 w-4" /></button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
