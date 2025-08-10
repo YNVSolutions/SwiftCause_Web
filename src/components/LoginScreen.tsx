@@ -431,17 +431,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                 <CheckCircle className="w-3 h-3 mr-1" />
                 System Online
               </Badge>
-              {isSupabaseConfigured() ? (
-                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                  <Database className="w-3 h-3 mr-1" />
-                  Supabase Connected
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-                  <AlertTriangle className="w-3 h-3 mr-1" />
-                  Demo Mode
-                </Badge>
-              )}
+              
               <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                 <Clock className="w-3 h-3 mr-1" />
                 24/7 Support
@@ -467,11 +457,10 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
 
             <p className="text-lg text-gray-600 mb-8">
               Comprehensive donation management platform trusted by organizations worldwide.
-              Access your kiosk interface or admin dashboard to make a difference.
             </p>
 
             {/* Live Statistics */}
-            <div className="grid grid-cols-2 gap-6 mb-8">
+            <div className="grid grid-cols-2 gap-6 mb-16">
               <div className="bg-white rounded-xl p-6 shadow-sm border">
                 <div className="flex items-center justify-between mb-2">
                   <DollarSign className="h-8 w-8 text-green-600" />
@@ -517,31 +506,6 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
               </div>
             </div>
 
-            {/* Featured Campaign Preview */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border mb-8">
-              <div className="flex items-start space-x-4">
-                <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
-                  <ImageWithFallback
-                    src="https://images.unsplash.com/photo-1541199249251-f713e6145474?w=100&h=100&fit=crop"
-                    alt="Featured campaign"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-medium text-gray-900 mb-1">Clean Water for All</h4>
-                  <p className="text-xs text-gray-600 mb-2">Help provide clean drinking water to communities in need</p>
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-gray-500">Progress</span>
-                      <span className="text-green-600">$32,500 raised</span>
-                    </div>
-                    <Progress value={65} className="h-1.5" />
-                    <div className="text-xs text-gray-500">65% of $50,000 goal</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {/* Testimonials */}
             <div className="space-y-4">
               {testimonials.map((testimonial, index) => (
@@ -569,8 +533,8 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
               <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 shadow-lg">
                 <Heart className="h-10 w-10 text-white" />
               </div>
-              <h2 className="text-2xl text-gray-900 mb-2">Welcome to DonateHub</h2>
-              <p className="text-gray-600">Access portal for kiosks and administration</p>
+              <h2 className="text-2xl text-gray-900 mb-2">Welcome to Swift Cause</h2>
+              <p className="text-gray-600">Access portal </p>
             </div>
 
             <Card className="bg-white/80 backdrop-blur-sm border-white/20 shadow-xl">
@@ -750,31 +714,6 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                       </Button>
                     </form>
 
-                    {/* Demo Account Info */}
-                    <div className="pt-4 border-t space-y-3">
-                      <h4 className="text-sm font-medium text-gray-900">Demo Accounts:</h4>
-                      <div className="space-y-2 text-xs text-gray-600">
-                        <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                          <span className="font-medium">admin</span>
-                          <Badge variant="outline" className="text-xs">Super Admin</Badge>
-                        </div>
-                        <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                          <span className="font-medium">manager</span>
-                          <Badge variant="outline" className="text-xs">Manager</Badge>
-                        </div>
-                        <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                          <span className="font-medium">operator</span>
-                          <Badge variant="outline" className="text-xs">Operator</Badge>
-                        </div>
-                        <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                          <span className="font-medium">viewer</span>
-                          <Badge variant="outline" className="text-xs">View Only</Badge>
-                        </div>
-                        <p className="text-center text-xs text-gray-500 pt-2">
-                          Use any password for demo accounts
-                        </p>
-                      </div>
-                    </div>
                   </TabsContent>
                 </Tabs>
 
@@ -798,7 +737,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                   <p className="text-sm text-gray-600">Need assistance?</p>
                   <div className="flex items-center justify-center space-x-4 text-sm">
                     <a href="tel:1-800-DONATE-1" className="text-indigo-600 hover:text-indigo-700 font-medium">
-                      📞 1-800-DONATE-1
+                      📩 ynvtech@gmail.com
                     </a>
                     <span className="text-gray-300">•</span>
                     <span className="text-gray-600">24/7 Support</span>
@@ -812,21 +751,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
               </CardContent>
             </Card>
 
-            {/* Configuration Notice */}
-            {!isSupabaseConfigured() && (
-              <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <div className="flex items-center space-x-2 mb-2">
-                  <AlertTriangle className="w-4 h-4 text-yellow-600" />
-                  <h4 className="text-sm font-medium text-yellow-800">Demo Mode Active</h4>
-                </div>
-                <p className="text-xs text-yellow-700 mb-2">
-                  Supabase not configured. Using mock data for demonstration.
-                </p>
-                <p className="text-xs text-yellow-600">
-                  To connect to Supabase, update the credentials in <code className="bg-yellow-100 px-1 rounded">utils/supabase/info.tsx</code>
-                </p>
-              </div>
-            )}
+            
 
             {/* Trust Indicators */}
             <div className="mt-6 text-center">
