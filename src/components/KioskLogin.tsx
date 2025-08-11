@@ -1,4 +1,6 @@
-import React, { useState} from 'react';
+import React, { useState, useEffect} from 'react';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../lib/firebase'; 
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -14,8 +16,6 @@ import {
 } from 'lucide-react';
 import { KioskSession, UserRole, Kiosk } from '../App';
 import { QRCodeScanner } from './QRCodeScanner';
-
-
 interface KioskLoginProps {
   onLogin: (role: UserRole, sessionData?: KioskSession) => void;
 }
@@ -27,58 +27,52 @@ export function KioskLogin({ onLogin }: KioskLoginProps) {
     accessCode: ''
   });
   const [loginError, setLoginError] = useState('');
+  const [availableKiosks, setAvailableKiosks] = useState<Kiosk[]>([]);
 
-  // Mock kiosks data
-  const availableKiosks: Kiosk[] = [
-    {
-      id: 'KIOSK-NYC-001',
-      name: 'Times Square Terminal',
-      location: 'Times Square, New York',
-      status: 'online',
-      accessCode: 'TS2024',
-      qrCode: 'KIOSK-NYC-001:TS2024',
-      assignedCampaigns: ['1', '2', '3'],
-      defaultCampaign: '1',
-      settings: {
+  // Fetch kiosks from Firestore
+  useEffect(() => {
+    const fetchKiosks = async () => {
+      try {
+        const snap = await getDocs(collection(db, 'kiosks'));
+        const kiosks: Kiosk[] = snap.docs.map(doc => ({
+          ...(doc.data() as Kiosk),
+          id: doc.id
+        }));
+        setAvailableKiosks(kiosks);
+      } catch (err) {
+        console.error('Error fetching kiosks:', err);
+        setLoginError('Failed to load kiosks. Please try again.');
+      }
+    };
+
+    fetchKiosks();
+  }, []);
+
+  const handleKioskLogin = (kioskId: string, accessCode: string, loginMethod: 'qr' | 'manual' = 'manual') => {
+    setLoginError('');
+
+    const kiosk = availableKiosks.find(k => k.id === kioskId && k.accessCode === accessCode);
+    console.log(availableKiosks)
+    if (!kiosk) {
+      setLoginError('Invalid Kiosk ID or Access Code.');
+      return;
+    }
+
+    const kioskSession: KioskSession = {
+      kioskId: kiosk.id,
+      kioskName: kiosk.name,
+      startTime: new Date().toISOString(),
+      assignedCampaigns: kiosk.assignedCampaigns || [],
+      settings: kiosk.settings || {
         displayMode: 'grid',
         showAllCampaigns: false,
         maxCampaignsDisplay: 6,
         autoRotateCampaigns: false
-      }
-    }
-  ];
+      },
+      loginMethod
+    };
 
-  const handleKioskLogin = async (kioskId: string, accessCode: string, loginMethod: 'qr' | 'manual' = 'manual') => {
-    setLoginError('');
-
-    try {
-      const kiosk = availableKiosks.find(k => k.id === kioskId && k.accessCode === accessCode);
-
-      if (!kiosk) {
-        setLoginError('Invalid Kiosk ID or Access Code.');
-        return;
-      }
-
-     
-      const kioskSession: KioskSession = {
-        kioskId: kiosk.id,
-        kioskName: kiosk.name,
-        startTime: new Date().toISOString(),
-        assignedCampaigns: kiosk.assignedCampaigns || [],
-        settings: kiosk.settings || {
-          displayMode: 'grid',
-          showAllCampaigns: false,
-          maxCampaignsDisplay: 6,
-          autoRotateCampaigns: false
-        },
-        loginMethod
-      };
-
-      onLogin('kiosk', kioskSession);
-    } catch (error) {
-      console.error('Kiosk authentication error:', error);
-      setLoginError(error instanceof Error ? error.message : 'Authentication failed. Please try again.');
-    }
+    onLogin('kiosk', kioskSession);
   };
 
   const handleKioskSubmit = (e: React.FormEvent) => {
@@ -100,7 +94,6 @@ export function KioskLogin({ onLogin }: KioskLoginProps) {
     setLoginError(error);
     setShowQRScanner(false);
   };
-
 
   return (
     <>
@@ -137,7 +130,7 @@ export function KioskLogin({ onLogin }: KioskLoginProps) {
             type="text"
             placeholder="e.g., KIOSK-NYC-001"
             value={kioskCredentials.kioskId}
-            onChange={(e) => setKioskCredentials(prev => ({ ...prev, kioskId: e.target.value.toUpperCase() }))}
+            onChange={(e) => setKioskCredentials(prev => ({ ...prev, kioskId: e.target.value }))}
             className="h-12"
             required
           />
