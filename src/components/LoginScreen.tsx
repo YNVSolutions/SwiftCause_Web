@@ -27,7 +27,7 @@ interface LoginScreenProps {
 }
 
 export function LoginScreen({ onLogin }: LoginScreenProps) {
-  const [activeTab, setActiveTab] = useState<'kiosk' | 'admin'>('kiosk');
+  const [activeTab, setActiveTab] = useState<'kiosk' | 'admin'>('admin');
 
   // Mock real-time statistics
   const [stats, setStats] = useState({
@@ -212,14 +212,15 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
               <CardContent className="space-y-6">
                 <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'kiosk' | 'admin')}>
                   <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="kiosk" className="flex items-center space-x-2">
-                      <Heart className="w-4 h-4" />
-                      <span>Kiosk</span>
-                    </TabsTrigger>
                     <TabsTrigger value="admin" className="flex items-center space-x-2">
                       <UserCog className="w-4 h-4" />
                       <span>Admin</span>
                     </TabsTrigger>
+                    <TabsTrigger value="kiosk" className="flex items-center space-x-2">
+                      <Heart className="w-4 h-4" />
+                      <span>Kiosk</span>
+                    </TabsTrigger>
+                    
                   </TabsList>
 
                   <TabsContent value="kiosk">
