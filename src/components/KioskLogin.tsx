@@ -8,20 +8,17 @@ import { Label } from './ui/label';
 import {
   Heart,
   AlertTriangle,
-  QrCode,
   Monitor,
   KeyRound,
   ArrowRight,
   Shield,
 } from 'lucide-react';
 import { KioskSession, UserRole, Kiosk } from '../App';
-import { QRCodeScanner } from './QRCodeScanner';
 interface KioskLoginProps {
   onLogin: (role: UserRole, sessionData?: KioskSession) => void;
 }
 
 export function KioskLogin({ onLogin }: KioskLoginProps) {
-  const [showQRScanner, setShowQRScanner] = useState(false);
   const [kioskCredentials, setKioskCredentials] = useState({
     kioskId: '',
     accessCode: ''
@@ -80,21 +77,6 @@ export function KioskLogin({ onLogin }: KioskLoginProps) {
     handleKioskLogin(kioskCredentials.kioskId, kioskCredentials.accessCode, 'manual');
   };
 
-  const handleQRScanSuccess = (qrData: string) => {
-    const [kioskId, accessCode] = qrData.split(':');
-    if (kioskId && accessCode) {
-      handleKioskLogin(kioskId, accessCode, 'qr');
-    } else {
-      setLoginError('Invalid QR code format. Please try scanning again.');
-    }
-    setShowQRScanner(false);
-  };
-
-  const handleQRScanError = (error: string) => {
-    setLoginError(error);
-    setShowQRScanner(false);
-  };
-
   return (
     <>
       <div className="text-center mb-4">
@@ -102,23 +84,8 @@ export function KioskLogin({ onLogin }: KioskLoginProps) {
           <Heart className="h-6 w-6 text-indigo-600" />
         </div>
         <h3 className="font-medium">Kiosk Access</h3>
-        <p className="text-sm text-gray-600">Scan QR code or enter kiosk credentials</p>
+        <p className="text-sm text-gray-600">Enter kiosk credentials</p>
       </div>
-
-      <div className="flex space-x-2 mb-6">
-        <Button
-          type="button"
-          onClick={() => setShowQRScanner(true)}
-          className="flex-1 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
-        >
-          <QrCode className="mr-2 h-4 w-4" />
-          Scan QR Code
-        </Button>
-        <div className="flex items-center justify-center px-3 text-sm text-gray-500">
-          or
-        </div>
-      </div>
-
       <form onSubmit={handleKioskSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="kioskId" className="flex items-center space-x-2">
@@ -171,31 +138,6 @@ export function KioskLogin({ onLogin }: KioskLoginProps) {
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
       </form>
-
-      <div className="text-center space-y-2 pt-4 border-t">
-        <p className="text-xs text-gray-600">
-          Find your kiosk ID and access code on the device label
-        </p>
-        <div className="flex items-center justify-center space-x-4 text-xs text-gray-500">
-          <div className="flex items-center space-x-1">
-            <QrCode className="w-3 h-3" />
-            <span>QR scan preferred</span>
-          </div>
-          <div className="flex items-center space-x-1">
-            <Shield className="w-3 h-3" />
-            <span>Secure access</span>
-          </div>
-        </div>
-      </div>
-      
-      {showQRScanner && (
-        <QRCodeScanner
-          isActive={showQRScanner}
-          onScanSuccess={handleQRScanSuccess}
-          onScanError={handleQRScanError}
-          onClose={() => setShowQRScanner(false)}
-        />
-      )}
     </>
   );
 }
