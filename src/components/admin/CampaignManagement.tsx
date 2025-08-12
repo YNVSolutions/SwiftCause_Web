@@ -17,9 +17,12 @@ import { Textarea } from '../ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { FaEdit, FaSearch, FaEllipsisV } from 'react-icons/fa';
-import { Settings } from 'lucide-react';
-
-
+import {
+  Plus,
+  ArrowLeft,
+  Settings,
+  Download,
+} from 'lucide-react';
 
 interface CampaignEditDialogProps {
   open: boolean;
@@ -207,6 +210,39 @@ const CampaignManagement = ({ onNavigate, onLogout, userSession, hasPermission }
   return (
     <>
       <div className="min-h-screen bg-gray-50 font-sans">
+         <header className="bg-white shadow-sm border-b">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <div className="flex items-center justify-between h-16">
+                    <div className="flex items-center space-x-4">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onNavigate('admin-dashboard')}
+                        className="flex items-center space-x-2"
+                      >
+                        <ArrowLeft className="w-4 h-4" />
+                        <span>Back to Dashboard</span>
+                      </Button>
+                      <div className="h-6 w-px bg-gray-300" />
+                      <div>
+                        <h1 className="text-xl font-semibold text-gray-900">Campaign Management</h1>
+                        <p className="text-sm text-gray-600">Configure and monitor Campaigns</p>
+                      </div>
+                    </div>
+        
+                    <div className="flex items-center space-x-4">
+                      <Button variant="outline" size="sm">
+                        <Download className="w-4 h-4 mr-2" />
+                        Export Logs
+                      </Button>
+                      <Button className="bg-indigo-600 hover:bg-indigo-700">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Campaign
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </header>
         <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-white border-b border-gray-200">
           <div className="relative w-full sm:w-1/2 mb-4 sm:mb-0 sm:mr-4">
             <input
