@@ -1,4 +1,4 @@
-![logo](https://github.com/Yashraghuvans/SwiftCause/blob/main/public/banner.png)
+![logo](https://github.com/YNVSolutions/SwiftCause_Web/blob/main/logo.png)
 
 # Swift Cause
 
