@@ -75,7 +75,7 @@ export function AdminLogin({ onLogin }: AdminLoginProps) {
         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-purple-100">
           <UserCog className="h-6 w-6 text-purple-600" />
         </div>
-        <h3 className="font-medium">Administrator Access</h3>
+        <h3 className="font-medium">User Access</h3>
         <p className="text-sm text-gray-600">For platform management and analytics</p>
       </div>
 
@@ -123,7 +123,7 @@ export function AdminLogin({ onLogin }: AdminLoginProps) {
 
         <Button type="submit" className="w-full h-12 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg">
           <UserCog className="mr-2 h-4 w-4" />
-          Access Admin Dashboard
+          Access Dashboard
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
       </form>

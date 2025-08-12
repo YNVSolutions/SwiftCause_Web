@@ -109,7 +109,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
       <div className="flex-1 flex">
         <div className="hidden lg:flex lg:w-1/2 xl:w-3/5 flex-col justify-center p-8 xl:p-16">
           <div className="max-w-lg">
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-3 mb-2">
               <div className="flex h-12 w-12 items-center justify-center">
                 <img src="/logo.png" className="h-12 w-12 rounded-xl shadow-md" alt="My Logo" />
               </div>
@@ -214,7 +214,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="admin" className="flex items-center space-x-2">
                       <UserCog className="w-4 h-4" />
-                      <span>Admin</span>
+                      <span>User</span>
                     </TabsTrigger>
                     <TabsTrigger value="kiosk" className="flex items-center space-x-2">
                       <Heart className="w-4 h-4" />
