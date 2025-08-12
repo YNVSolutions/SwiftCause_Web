@@ -1,5 +1,9 @@
-import { User } from '../../../App';
-
+import { User, UserPermissions } from '../../../App';
+const userPermissions : UserPermissions = {
+      permissions: [],
+      role: "super_admin",
+      description: "Full access to all features"
+    };
 export const MOCK_USERS: User[] = [
   {
     id: 'user-001',
@@ -7,39 +11,40 @@ export const MOCK_USERS: User[] = [
     email: 'admin@donatehub.com',
     role: 'admin',
     lastLogin: '2024-01-07T14:30:00Z',
-    kioskAccess: []
+    isActive: true,
+    permissions: userPermissions,
   },
   {
     id: 'user-002',
     username: 'kiosk_nyc_001',
     email: 'kiosk.nyc@donatehub.com',
     role: 'kiosk',
-    lastLogin: '2024-01-07T13:15:00Z',
-    kioskAccess: ['KIOSK-NYC-001']
+    isActive: true,
+    permissions: userPermissions,
   },
   {
     id: 'user-003',
     username: 'kiosk_la_002',
     email: 'kiosk.la@donatehub.com',
     role: 'kiosk',
-    lastLogin: '2024-01-07T12:45:00Z',
-    kioskAccess: ['KIOSK-LA-002']
+    isActive: true,
+    permissions: userPermissions,
   },
   {
     id: 'user-004',
     username: 'manager_west',
     email: 'manager.west@donatehub.com',
     role: 'admin',
-    lastLogin: '2024-01-06T16:20:00Z',
-    kioskAccess: []
+    isActive: true,
+    permissions: userPermissions,
   },
   {
     id: 'user-005',
     username: 'kiosk_multi',
     email: 'kiosk.multi@donatehub.com',
     role: 'kiosk',
-    lastLogin: '2024-01-06T09:30:00Z',
-    kioskAccess: ['KIOSK-CHI-003', 'KIOSK-MIA-004']
+    isActive: true,
+    permissions: userPermissions,
   }
 ];
 

@@ -53,39 +53,7 @@ export function UserTableRow({ user, onEdit, onDelete }: UserTableRowProps) {
         </div>
       </TableCell>
 
-      <TableCell>
-        {user.role === 'kiosk' ? (
-          <div className="space-y-1">
-            {user.kioskAccess && user.kioskAccess.length > 0 ? (
-              <>
-                <div className="flex items-center space-x-2">
-                  <Key className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm">{user.kioskAccess.length} kiosk{user.kioskAccess.length > 1 ? 's' : ''}</span>
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {user.kioskAccess.slice(0, 2).map(kioskId => (
-                    <Badge key={kioskId} variant="outline" className="text-xs">
-                      {kioskId}
-                    </Badge>
-                  ))}
-                  {user.kioskAccess.length > 2 && (
-                    <Badge variant="outline" className="text-xs">
-                      +{user.kioskAccess.length - 2} more
-                    </Badge>
-                  )}
-                </div>
-              </>
-            ) : (
-              <span className="text-sm text-gray-500">No access configured</span>
-            )}
-          </div>
-        ) : (
-          <div className="flex items-center space-x-2">
-            <Shield className="w-4 h-4 text-purple-600" />
-            <span className="text-sm text-gray-600">Full platform access</span>
-          </div>
-        )}
-      </TableCell>
+      
 
       <TableCell>
         <div className="flex items-center space-x-2">

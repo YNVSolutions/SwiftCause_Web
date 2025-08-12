@@ -1,16 +1,34 @@
-import React, { useState } from 'react';
-import { Button } from '../../ui/button';
-import { Input } from '../../ui/input';
-import { Label } from '../../ui/label';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../../ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../ui/card';
-import { Badge } from '../../ui/badge';
-import { Switch } from '../../ui/switch';
-import { Checkbox } from '../../ui/checkbox';
-import { Separator } from '../../ui/separator';
-import { ScrollArea } from '../../ui/scroll-area';
+import React, { useState } from "react";
+import { Button } from "../../ui/button";
+import { Input } from "../../ui/input";
+import { Label } from "../../ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "../../ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../../ui/card";
+import { Badge } from "../../ui/badge";
+import { Switch } from "../../ui/switch";
+import { Checkbox } from "../../ui/checkbox";
+import { Separator } from "../../ui/separator";
+import { ScrollArea } from "../../ui/scroll-area";
 import {
   Monitor,
   Settings,
@@ -29,9 +47,9 @@ import {
   Plus,
   Minus,
   RotateCcw,
-  Eye
-} from 'lucide-react';
-import { Kiosk, Campaign } from '../../../App';
+  Eye,
+} from "lucide-react";
+import { Kiosk, Campaign } from "../../../App";
 
 interface KioskCampaignAssignmentDialogProps {
   open: boolean;
@@ -46,35 +64,40 @@ export function KioskCampaignAssignmentDialog({
   onOpenChange,
   kiosk,
   onSave,
-  campaigns
+  campaigns,
 }: KioskCampaignAssignmentDialogProps) {
   const [formData, setFormData] = useState<Kiosk>(() => {
     if (kiosk) return { ...kiosk };
-    
+
     return {
-      id: '',
-      name: '',
-      location: '',
-      status: 'offline',
+      id: "",
+      name: "",
+      location: "",
+      status: "offline",
       assignedCampaigns: [],
-      defaultCampaign: '',
+      lastActive: "",
+      totalDonations: 0,
+      totalRaised: 0,
+      accessCode: "",
+      qrCode: "",
+      defaultCampaign: "",
       settings: {
-        displayMode: 'grid',
+        displayMode: "grid",
         showAllCampaigns: false,
         maxCampaignsDisplay: 6,
         autoRotateCampaigns: false,
-        rotationInterval: 30
-      }
+        rotationInterval: 30,
+      },
     };
   });
 
-  const [activeTab, setActiveTab] = useState('campaigns');
+  const [activeTab, setActiveTab] = useState("campaigns");
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0,
     }).format(amount);
   };
 
@@ -83,52 +106,52 @@ export function KioskCampaignAssignmentDialog({
     onOpenChange(false);
   };
 
-  const updateSettings = (updates: Partial<Kiosk['settings']>) => {
-    setFormData(prev => ({
+  const updateSettings = (updates: Partial<Kiosk["settings"]>) => {
+    setFormData((prev) => ({
       ...prev,
-      settings: { ...prev.settings!, ...updates }
+      settings: { ...prev.settings!, ...updates },
     }));
   };
 
   const toggleCampaignAssignment = (campaignId: string) => {
-    setFormData(prev => {
+    setFormData((prev) => {
       const assigned = prev.assignedCampaigns || [];
       const isAssigned = assigned.includes(campaignId);
-      
+
       const newAssigned = isAssigned
-        ? assigned.filter(id => id !== campaignId)
+        ? assigned.filter((id) => id !== campaignId)
         : [...assigned, campaignId];
 
       // If removing the default campaign, clear it
       let newDefault = prev.defaultCampaign;
       if (isAssigned && prev.defaultCampaign === campaignId) {
-        newDefault = newAssigned.length > 0 ? newAssigned[0] : '';
+        newDefault = newAssigned.length > 0 ? newAssigned[0] : "";
       }
 
       return {
         ...prev,
         assignedCampaigns: newAssigned,
-        defaultCampaign: newDefault
+        defaultCampaign: newDefault,
       };
     });
   };
 
   const setDefaultCampaign = (campaignId: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      defaultCampaign: campaignId
+      defaultCampaign: campaignId,
     }));
   };
 
-  const assignedCampaigns = campaigns.filter(c => 
+  const assignedCampaigns = campaigns.filter((c) =>
     formData.assignedCampaigns?.includes(c.id)
   );
 
-  const unassignedCampaigns = campaigns.filter(c => 
-    !formData.assignedCampaigns?.includes(c.id) && !c.isGlobal
+  const unassignedCampaigns = campaigns.filter(
+    (c) => !formData.assignedCampaigns?.includes(c.id) && !c.isGlobal
   );
 
-  const globalCampaigns = campaigns.filter(c => c.isGlobal);
+  const globalCampaigns = campaigns.filter((c) => c.isGlobal);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -139,21 +162,31 @@ export function KioskCampaignAssignmentDialog({
             <span>Configure Kiosk: {kiosk?.name}</span>
           </DialogTitle>
           <DialogDescription>
-            Manage campaign assignments and display settings for this kiosk device.
+            Manage campaign assignments and display settings for this kiosk
+            device.
           </DialogDescription>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="campaigns" className="flex items-center space-x-1">
+            <TabsTrigger
+              value="campaigns"
+              className="flex items-center space-x-1"
+            >
               <Target className="w-4 h-4" />
               <span className="hidden sm:inline">Campaigns</span>
             </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center space-x-1">
+            <TabsTrigger
+              value="settings"
+              className="flex items-center space-x-1"
+            >
               <Settings className="w-4 h-4" />
               <span className="hidden sm:inline">Display</span>
             </TabsTrigger>
-            <TabsTrigger value="preview" className="flex items-center space-x-1">
+            <TabsTrigger
+              value="preview"
+              className="flex items-center space-x-1"
+            >
               <Eye className="w-4 h-4" />
               <span className="hidden sm:inline">Preview</span>
             </TabsTrigger>
@@ -179,8 +212,11 @@ export function KioskCampaignAssignmentDialog({
                       </Badge>
                     </div>
                     <div className="space-y-3">
-                      {globalCampaigns.map(campaign => (
-                        <div key={campaign.id} className="flex items-center space-x-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                      {globalCampaigns.map((campaign) => (
+                        <div
+                          key={campaign.id}
+                          className="flex items-center space-x-4 p-4 bg-green-50 border border-green-200 rounded-lg"
+                        >
                           <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
                             <img
                               src={campaign.image}
@@ -189,12 +225,23 @@ export function KioskCampaignAssignmentDialog({
                             />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h5 className="font-medium text-green-900">{campaign.title}</h5>
-                            <p className="text-sm text-green-700">{campaign.category}</p>
+                            <h5 className="font-medium text-green-900">
+                              {campaign.title}
+                            </h5>
+                            <p className="text-sm text-green-700">
+                              {campaign.category}
+                            </p>
                             <div className="flex items-center space-x-4 mt-1 text-xs text-green-600">
-                              <span>{formatCurrency(campaign.raised)} raised</span>
+                              <span>
+                                {formatCurrency(campaign.raised)} raised
+                              </span>
                               <span>•</span>
-                              <span>{Math.round((campaign.raised / campaign.goal) * 100)}% funded</span>
+                              <span>
+                                {Math.round(
+                                  (campaign.raised / campaign.goal) * 100
+                                )}
+                                % funded
+                              </span>
                             </div>
                           </div>
                           <Badge className="bg-green-600 text-white">
@@ -221,7 +268,13 @@ export function KioskCampaignAssignmentDialog({
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setFormData(prev => ({ ...prev, assignedCampaigns: [], defaultCampaign: '' }))}
+                        onClick={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            assignedCampaigns: [],
+                            defaultCampaign: "",
+                          }))
+                        }
                       >
                         <Minus className="w-4 h-4 mr-1" />
                         Clear All
@@ -232,13 +285,20 @@ export function KioskCampaignAssignmentDialog({
                   {assignedCampaigns.length === 0 ? (
                     <div className="text-center p-8 border-2 border-dashed border-gray-300 rounded-lg">
                       <AlertCircle className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                      <p className="text-gray-600">No campaigns assigned to this kiosk</p>
-                      <p className="text-sm text-gray-500">Select campaigns from the available list below</p>
+                      <p className="text-gray-600">
+                        No campaigns assigned to this kiosk
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        Select campaigns from the available list below
+                      </p>
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {assignedCampaigns.map(campaign => (
-                        <div key={campaign.id} className="flex items-center space-x-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      {assignedCampaigns.map((campaign) => (
+                        <div
+                          key={campaign.id}
+                          className="flex items-center space-x-4 p-4 bg-blue-50 border border-blue-200 rounded-lg"
+                        >
                           <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
                             <img
                               src={campaign.image}
@@ -248,7 +308,9 @@ export function KioskCampaignAssignmentDialog({
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center space-x-2">
-                              <h5 className="font-medium text-blue-900">{campaign.title}</h5>
+                              <h5 className="font-medium text-blue-900">
+                                {campaign.title}
+                              </h5>
                               {formData.defaultCampaign === campaign.id && (
                                 <Badge className="bg-indigo-600 text-white text-xs">
                                   <Star className="w-3 h-3 mr-1" />
@@ -256,11 +318,20 @@ export function KioskCampaignAssignmentDialog({
                                 </Badge>
                               )}
                             </div>
-                            <p className="text-sm text-blue-700">{campaign.category}</p>
+                            <p className="text-sm text-blue-700">
+                              {campaign.category}
+                            </p>
                             <div className="flex items-center space-x-4 mt-1 text-xs text-blue-600">
-                              <span>{formatCurrency(campaign.raised)} raised</span>
+                              <span>
+                                {formatCurrency(campaign.raised)} raised
+                              </span>
                               <span>•</span>
-                              <span>{Math.round((campaign.raised / campaign.goal) * 100)}% funded</span>
+                              <span>
+                                {Math.round(
+                                  (campaign.raised / campaign.goal) * 100
+                                )}
+                                % funded
+                              </span>
                             </div>
                           </div>
                           <div className="flex items-center space-x-2">
@@ -277,7 +348,9 @@ export function KioskCampaignAssignmentDialog({
                             <Button
                               variant="destructive"
                               size="sm"
-                              onClick={() => toggleCampaignAssignment(campaign.id)}
+                              onClick={() =>
+                                toggleCampaignAssignment(campaign.id)
+                              }
                             >
                               <Minus className="w-4 h-4" />
                             </Button>
@@ -300,8 +373,11 @@ export function KioskCampaignAssignmentDialog({
                     </div>
                     <ScrollArea className="h-64">
                       <div className="space-y-3">
-                        {unassignedCampaigns.map(campaign => (
-                          <div key={campaign.id} className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                        {unassignedCampaigns.map((campaign) => (
+                          <div
+                            key={campaign.id}
+                            className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
+                          >
                             <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
                               <img
                                 src={campaign.image}
@@ -310,18 +386,31 @@ export function KioskCampaignAssignmentDialog({
                               />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h5 className="font-medium text-gray-900">{campaign.title}</h5>
-                              <p className="text-sm text-gray-600">{campaign.category}</p>
+                              <h5 className="font-medium text-gray-900">
+                                {campaign.title}
+                              </h5>
+                              <p className="text-sm text-gray-600">
+                                {campaign.category}
+                              </p>
                               <div className="flex items-center space-x-4 mt-1 text-xs text-gray-500">
-                                <span>{formatCurrency(campaign.raised)} raised</span>
+                                <span>
+                                  {formatCurrency(campaign.raised)} raised
+                                </span>
                                 <span>•</span>
-                                <span>{Math.round((campaign.raised / campaign.goal) * 100)}% funded</span>
+                                <span>
+                                  {Math.round(
+                                    (campaign.raised / campaign.goal) * 100
+                                  )}
+                                  % funded
+                                </span>
                               </div>
                             </div>
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => toggleCampaignAssignment(campaign.id)}
+                              onClick={() =>
+                                toggleCampaignAssignment(campaign.id)
+                              }
                             >
                               <Plus className="w-4 h-4 mr-1" />
                               Assign
@@ -350,8 +439,8 @@ export function KioskCampaignAssignmentDialog({
                     <div>
                       <Label htmlFor="displayMode">Display Layout</Label>
                       <Select
-                        value={formData.settings?.displayMode || 'grid'}
-                        onValueChange={(value: 'grid' | 'list' | 'carousel') => 
+                        value={formData.settings?.displayMode || "grid"}
+                        onValueChange={(value: "grid" | "list" | "carousel") =>
                           updateSettings({ displayMode: value })
                         }
                       >
@@ -382,14 +471,20 @@ export function KioskCampaignAssignmentDialog({
                     </div>
 
                     <div>
-                      <Label htmlFor="maxDisplay">Maximum Campaigns to Display</Label>
+                      <Label htmlFor="maxDisplay">
+                        Maximum Campaigns to Display
+                      </Label>
                       <Input
                         id="maxDisplay"
                         type="number"
                         min="1"
                         max="20"
                         value={formData.settings?.maxCampaignsDisplay || 6}
-                        onChange={(e) => updateSettings({ maxCampaignsDisplay: parseInt(e.target.value) || 6 })}
+                        onChange={(e) =>
+                          updateSettings({
+                            maxCampaignsDisplay: parseInt(e.target.value) || 6,
+                          })
+                        }
                         className="mt-2"
                       />
                       <p className="text-sm text-gray-500 mt-1">
@@ -402,37 +497,55 @@ export function KioskCampaignAssignmentDialog({
                     <div className="flex items-center justify-between">
                       <div>
                         <Label htmlFor="showAll">Show Global Campaigns</Label>
-                        <p className="text-sm text-gray-600">Include global campaigns in display</p>
+                        <p className="text-sm text-gray-600">
+                          Include global campaigns in display
+                        </p>
                       </div>
                       <Switch
                         id="showAll"
                         checked={formData.settings?.showAllCampaigns || false}
-                        onCheckedChange={(checked) => updateSettings({ showAllCampaigns: checked })}
+                        onCheckedChange={(checked) =>
+                          updateSettings({ showAllCampaigns: checked })
+                        }
                       />
                     </div>
 
                     <div className="flex items-center justify-between">
                       <div>
-                        <Label htmlFor="autoRotate">Auto-Rotate Campaigns</Label>
-                        <p className="text-sm text-gray-600">Automatically cycle through campaigns</p>
+                        <Label htmlFor="autoRotate">
+                          Auto-Rotate Campaigns
+                        </Label>
+                        <p className="text-sm text-gray-600">
+                          Automatically cycle through campaigns
+                        </p>
                       </div>
                       <Switch
                         id="autoRotate"
-                        checked={formData.settings?.autoRotateCampaigns || false}
-                        onCheckedChange={(checked) => updateSettings({ autoRotateCampaigns: checked })}
+                        checked={
+                          formData.settings?.autoRotateCampaigns || false
+                        }
+                        onCheckedChange={(checked) =>
+                          updateSettings({ autoRotateCampaigns: checked })
+                        }
                       />
                     </div>
 
                     {formData.settings?.autoRotateCampaigns && (
                       <div>
-                        <Label htmlFor="rotationInterval">Rotation Interval (seconds)</Label>
+                        <Label htmlFor="rotationInterval">
+                          Rotation Interval (seconds)
+                        </Label>
                         <Input
                           id="rotationInterval"
                           type="number"
                           min="10"
                           max="300"
                           value={formData.settings?.rotationInterval || 30}
-                          onChange={(e) => updateSettings({ rotationInterval: parseInt(e.target.value) || 30 })}
+                          onChange={(e) =>
+                            updateSettings({
+                              rotationInterval: parseInt(e.target.value) || 30,
+                            })
+                          }
                           className="mt-2"
                         />
                       </div>
@@ -463,38 +576,60 @@ export function KioskCampaignAssignmentDialog({
                         {formData.settings?.displayMode} layout
                       </Badge>
                     </div>
-                    
+
                     <div className="space-y-3">
                       <div className="text-sm text-gray-600">
-                        Available Campaigns: {(formData.assignedCampaigns?.length || 0) + globalCampaigns.length}
+                        Available Campaigns:{" "}
+                        {(formData.assignedCampaigns?.length || 0) +
+                          globalCampaigns.length}
                       </div>
-                      
+
                       {formData.defaultCampaign && (
                         <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-lg">
                           <div className="flex items-center space-x-2">
                             <Star className="w-4 h-4 text-indigo-600" />
-                            <span className="text-sm font-medium text-indigo-900">Featured Campaign</span>
+                            <span className="text-sm font-medium text-indigo-900">
+                              Featured Campaign
+                            </span>
                           </div>
                           <p className="text-sm text-indigo-700 mt-1">
-                            {campaigns.find(c => c.id === formData.defaultCampaign)?.title}
+                            {
+                              campaigns.find(
+                                (c) => c.id === formData.defaultCampaign
+                              )?.title
+                            }
                           </p>
                         </div>
                       )}
 
                       <div className="space-y-2">
-                        <h4 className="text-sm font-medium">Display Settings:</h4>
+                        <h4 className="text-sm font-medium">
+                          Display Settings:
+                        </h4>
                         <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
                           <div>Layout: {formData.settings?.displayMode}</div>
-                          <div>Max display: {formData.settings?.maxCampaignsDisplay}</div>
-                          <div>Global campaigns: {formData.settings?.showAllCampaigns ? 'Yes' : 'No'}</div>
-                          <div>Auto-rotate: {formData.settings?.autoRotateCampaigns ? 'Yes' : 'No'}</div>
+                          <div>
+                            Max display:{" "}
+                            {formData.settings?.maxCampaignsDisplay}
+                          </div>
+                          <div>
+                            Global campaigns:{" "}
+                            {formData.settings?.showAllCampaigns ? "Yes" : "No"}
+                          </div>
+                          <div>
+                            Auto-rotate:{" "}
+                            {formData.settings?.autoRotateCampaigns
+                              ? "Yes"
+                              : "No"}
+                          </div>
                         </div>
                       </div>
-                      
+
                       {formData.settings?.autoRotateCampaigns && (
                         <div className="p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
                           <Clock className="w-3 h-3 inline mr-1" />
-                          Campaigns rotate every {formData.settings.rotationInterval} seconds
+                          Campaigns rotate every{" "}
+                          {formData.settings.rotationInterval} seconds
                         </div>
                       )}
                     </div>
@@ -509,7 +644,7 @@ export function KioskCampaignAssignmentDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button 
+          <Button
             onClick={handleSave}
             className="bg-indigo-600 hover:bg-indigo-700"
           >

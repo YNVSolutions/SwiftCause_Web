@@ -12,9 +12,10 @@ import {
   Users,
   Shield,
   Activity,
-  Download
+  Download,
+  User as UserIcon,
 } from 'lucide-react';
-import { Screen, User, UserRole, AdminSession, Permission } from '../../App';
+import { Screen, User, UserRole, AdminSession, Permission, UserPermissions } from '../../App';
 import { MOCK_USERS, AVAILABLE_KIOSKS } from './data/mockUserData';
 import { calculateUserStats } from './utils/userManagementHelpers';
 import { CreateUserDialog } from './components/CreateUserDialog';
@@ -49,13 +50,19 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
   });
 
   const handleCreateUser = () => {
+    const userPermissions : UserPermissions = {
+      permissions: [],
+      role: "super_admin",
+      description: "Full access to all features"
+    };
     const user: User = {
       id: `user-${Date.now()}`,
       username: newUser.username,
       email: newUser.email,
       role: newUser.role,
       lastLogin: undefined,
-      kioskAccess: newUser.role === 'kiosk' ? newUser.kioskAccess : []
+      permissions: userPermissions,
+      isActive: true,
     };
 
     setUsers(prev => [user, ...prev]);

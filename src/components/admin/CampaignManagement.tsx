@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { db } from '../../lib/firebase';
+import { Screen, Kiosk, Campaign, AdminSession, Permission } from '../../App';
 import {
   collection,
   getDocs,
@@ -8,8 +9,14 @@ import {
   DocumentData,
 } from 'firebase/firestore';
 import { FaEdit, FaSave, FaTimes, FaSearch, FaChevronDown, FaEllipsisV } from 'react-icons/fa';
+interface CampaignManagementProps {
+  onNavigate: (screen: Screen) => void;
+  onLogout: () => void;
+  userSession: AdminSession;
+  hasPermission: (permission: Permission) => boolean;
+}
 
-const CampaignManagement = () => {
+const CampaignManagement = ({ onNavigate, onLogout, userSession, hasPermission }: CampaignManagementProps) => {
   const [campaigns, setCampaigns] = useState<DocumentData[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);

@@ -36,32 +36,7 @@ export function CampaignListScreen({ onSelectCampaign, onViewDetails, kioskSessi
             status: data.status,
             assignedKiosks: [], 
             isGlobal: true,     
-            configuration: {
-              predefinedAmounts: [25, 50, 100],
-              allowCustomAmount: true,
-              minCustomAmount: 1,
-              maxCustomAmount: 10000,
-              suggestedAmounts: [50, 100],
-              enableRecurring: true,
-              recurringIntervals: ['monthly'],
-              defaultRecurringInterval: 'monthly',
-              displayStyle: 'grid',
-              showProgressBar: true,
-              showDonorCount: true,
-              showRecentDonations: true,
-              maxRecentDonations: 5,
-              primaryCTAText: 'Donate Now',
-              secondaryCTAText: 'Learn More',
-              urgencyMessage: 'Support this cause!',
-              theme: 'default',
-              requiredFields: ['email'],
-              optionalFields: ['name', 'message'],
-              enableAnonymousDonations: true,
-              enableSocialSharing: true,
-              shareMessage: 'Join me in supporting this cause!',
-              enableDonorWall: true,
-              enableComments: true
-            }
+            configuration: {} as any
           };
         });
         setCampaigns(firebaseCampaigns);
@@ -85,7 +60,7 @@ export function CampaignListScreen({ onSelectCampaign, onViewDetails, kioskSessi
     const assignedCampaigns = campaigns.filter(c =>
       c.isGlobal || (c.assignedKiosks && c.assignedKiosks.includes(kioskSession.kioskId))
     );
-    const { maxCampaignsDisplay } = kioskSession.settings;
+    const { maxCampaignsDisplay } = kioskSession.settings || { maxCampaignsDisplay: 6 };
     return maxCampaignsDisplay && assignedCampaigns.length > maxCampaignsDisplay
       ? assignedCampaigns.slice(0, maxCampaignsDisplay)
       : assignedCampaigns;
@@ -159,8 +134,8 @@ export function CampaignListScreen({ onSelectCampaign, onViewDetails, kioskSessi
           </div>
         ) : (
           <div className={
-            kioskSession?.settings.displayMode === 'carousel' ? "space-y-4" :
-            kioskSession?.settings.displayMode === 'list' || !isDetailedView ? "grid grid-cols-1 gap-3 sm:gap-4" :
+            kioskSession?.settings?.displayMode === 'carousel' ? "space-y-4" :
+            kioskSession?.settings?.displayMode === 'list' || !isDetailedView ? "grid grid-cols-1 gap-3 sm:gap-4" :
             "grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6"
           }>
             {availableCampaigns.map(campaign => (
