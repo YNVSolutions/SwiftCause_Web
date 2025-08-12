@@ -27,7 +27,7 @@ interface LoginScreenProps {
 }
 
 export function LoginScreen({ onLogin }: LoginScreenProps) {
-  const [activeTab, setActiveTab] = useState<'kiosk' | 'admin'>('kiosk');
+  const [activeTab, setActiveTab] = useState<'kiosk' | 'admin'>('admin');
 
   // Mock real-time statistics
   const [stats, setStats] = useState({
@@ -106,41 +106,17 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      <header className="relative overflow-hidden bg-white/80 backdrop-blur-sm border-b">
-        <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/10 to-purple-600/10" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="flex h-12 w-12 items-center justify-center shadow-lg">
-                <img src="/logo.png" className="h-12 w-12 rounded-xl" alt="My Logo" />
+      <div className="flex-1 flex">
+        <div className="hidden lg:flex lg:w-1/2 xl:w-3/5 flex-col justify-center p-8 xl:p-16">
+          <div className="max-w-lg">
+            <div className="flex items-center space-x-3 mb-2">
+              <div className="flex h-12 w-12 items-center justify-center">
+                <img src="/logo.png" className="h-12 w-12 rounded-xl shadow-md" alt="My Logo" />
               </div>
               <div>
                 <h1 className="text-xl font-semibold text-gray-900">Swift Cause</h1>
                 <p className="text-sm text-gray-600">Modern Donation Platform</p>
               </div>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                <CheckCircle className="w-3 h-3 mr-1" />
-                System Online
-              </Badge>
-              
-              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                <Clock className="w-3 h-3 mr-1" />
-                24/7 Support
-              </Badge>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <div className="flex-1 flex">
-        <div className="hidden lg:flex lg:w-1/2 xl:w-3/5 flex-col justify-center p-8 xl:p-16">
-          <div className="max-w-lg">
-            <div className="inline-flex items-center px-3 py-1 rounded-full bg-indigo-100 text-indigo-800 text-sm mb-6">
-              <TrendingUp className="w-4 h-4 mr-2" />
-              Live platform monitoring
             </div>
 
             <h2 className="text-4xl xl:text-5xl text-gray-900 mb-6 leading-tight">
@@ -236,14 +212,15 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
               <CardContent className="space-y-6">
                 <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'kiosk' | 'admin')}>
                   <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="admin" className="flex items-center space-x-2">
+                      <UserCog className="w-4 h-4" />
+                      <span>User</span>
+                    </TabsTrigger>
                     <TabsTrigger value="kiosk" className="flex items-center space-x-2">
                       <Heart className="w-4 h-4" />
                       <span>Kiosk</span>
                     </TabsTrigger>
-                    <TabsTrigger value="admin" className="flex items-center space-x-2">
-                      <UserCog className="w-4 h-4" />
-                      <span>Admin</span>
-                    </TabsTrigger>
+                    
                   </TabsList>
 
                   <TabsContent value="kiosk">
@@ -286,24 +263,6 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                 </div>
               </CardContent>
             </Card>
-
-            <div className="mt-6 text-center">
-              <p className="text-xs text-gray-500 mb-3">Trusted by organizations worldwide</p>
-              <div className="flex items-center justify-center space-x-6 opacity-60">
-                <div className="flex items-center space-x-1">
-                  <Shield className="w-4 h-4" />
-                  <span className="text-xs">SSL Secured</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Award className="w-4 h-4" />
-                  <span className="text-xs">PCI Compliant</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <CheckCircle className="w-4 h-4" />
-                  <span className="text-xs">SOC 2 Certified</span>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
