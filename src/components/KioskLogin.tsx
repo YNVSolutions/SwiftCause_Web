@@ -1,6 +1,5 @@
 import React, { useState, useEffect} from 'react';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../lib/firebase'; 
+import { useKiosks } from '../hooks/useKiosks';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -24,26 +23,13 @@ export function KioskLogin({ onLogin }: KioskLoginProps) {
     accessCode: ''
   });
   const [loginError, setLoginError] = useState('');
-  const [availableKiosks, setAvailableKiosks] = useState<Kiosk[]>([]);
+  const { kiosks: availableKiosks, error: kiosksError } = useKiosks<Kiosk>();
 
-  // Fetch kiosks from Firestore
   useEffect(() => {
-    const fetchKiosks = async () => {
-      try {
-        const snap = await getDocs(collection(db, 'kiosks'));
-        const kiosks: Kiosk[] = snap.docs.map(doc => ({
-          ...(doc.data() as Kiosk),
-          id: doc.id
-        }));
-        setAvailableKiosks(kiosks);
-      } catch (err) {
-        console.error('Error fetching kiosks:', err);
-        setLoginError('Failed to load kiosks. Please try again.');
-      }
-    };
-
-    fetchKiosks();
-  }, []);
+    if (kiosksError) {
+      setLoginError('Failed to load kiosks. Please try again.');
+    }
+  }, [kiosksError]);
 
   const handleKioskLogin = (kioskId: string, accessCode: string, loginMethod: 'qr' | 'manual' = 'manual') => {
     setLoginError('');
