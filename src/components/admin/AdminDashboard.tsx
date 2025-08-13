@@ -34,16 +34,8 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { Screen, AdminSession, Permission } from '../../App';
-import { db } from '../../lib/firebase';
-import {
-  collection,
-  query,
-  orderBy,
-  limit,
-  getDocs,
-  DocumentData,
-  Timestamp,
-} from 'firebase/firestore';
+import { useCampaigns } from '../../hooks/useCampaigns';
+import { getAllCampaigns } from '../../api/firestoreService';
 
 interface AdminDashboardProps {
   onNavigate: (screen: Screen) => void;
@@ -58,9 +50,10 @@ const CHART_COLORS = ['#3B82F6', '#8B5CF6', '#EF4444', '#10B981', '#F59E0B', '#6
 export function AdminDashboard({ onNavigate, onLogout, userSession, hasPermission }: AdminDashboardProps) {
 
   const [refreshing, setRefreshing] = useState(false);
-  const [topCampaigns, setTopCampaigns] = useState<DocumentData[]>([]);
+  const [topCampaigns, setTopCampaigns] = useState<any[]>([]);
   const [goalComparisonData, setGoalComparisonData] = useState<any[]>([]);
   const [categoryData, setCategoryData] = useState<any[]>([]);
+  const { getTop } = useCampaigns<any>();
 
   // Mock dashboard data
   const [dashboardData, setDashboardData] = useState({
@@ -84,32 +77,22 @@ export function AdminDashboard({ onNavigate, onLogout, userSession, hasPermissio
   useEffect(() => {
     const fetchAllData = async () => {
       try {
-        const campaignsRef = collection(db, 'campaigns');
-        
-        
-        const topListQuery = query(campaignsRef, orderBy('collectedAmount', 'desc'), limit(4));
-        const topListSnapshot = await getDocs(topListQuery);
-        setTopCampaigns(topListSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        const topList = await getTop(4);
+        setTopCampaigns(topList);
 
-
-        const topChartQuery = query(campaignsRef, orderBy('collectedAmount', 'desc'), limit(5));
-        const topChartSnapshot = await getDocs(topChartQuery);
-        const comparisonData = topChartSnapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-                name: data.title,
-                Collected: data.collectedAmount || 0,
-                Goal: data.goalAmount || 0,
-            }
-        });
+        const topChart = await getTop(5);
+        const comparisonData = topChart.map((doc: any) => ({
+          name: doc.title,
+          Collected: doc.collectedAmount || 0,
+          Goal: doc.goalAmount || 0,
+        }));
         setGoalComparisonData(comparisonData);
-        
-   
-        const allCampaignsSnapshot = await getDocs(campaignsRef);
+
+        const allCampaigns = await getAllCampaigns();
         const tagCounts: { [key: string]: number } = {};
         let totalTags = 0;
-        allCampaignsSnapshot.forEach(doc => {
-          const tags = doc.data().tags;
+        allCampaigns.forEach((doc: any) => {
+          const tags = doc.tags;
           if (Array.isArray(tags) && tags.length > 0) {
             tags.forEach(tag => {
               tagCounts[tag] = (tagCounts[tag] || 0) + 1;
@@ -131,12 +114,11 @@ export function AdminDashboard({ onNavigate, onLogout, userSession, hasPermissio
         }
 
       } catch (error) {
-        console.error("Error fetching dashboard data: ", error);
+        console.error('Error fetching dashboard data: ', error);
       }
     };
-    
     fetchAllData();
-  }, []);
+  }, [getTop]);
 
   // Handlers and Formatters
   const handleRefresh = () => { /* ... */ };
