@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { CampaignCard } from './shared/CampaignCard';
 import { NavigationHeader } from './shared/NavigationHeader';
 import { Campaign, KioskSession } from '../App';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../lib/firebase'; 
+import { useCampaigns } from '../hooks/useCampaigns';
 
 interface CampaignListScreenProps {
   onSelectCampaign: (campaign: Campaign) => void;
@@ -13,45 +12,30 @@ interface CampaignListScreenProps {
 
 export function CampaignListScreen({ onSelectCampaign, onViewDetails, kioskSession }: CampaignListScreenProps) {
   const [isDetailedView, setIsDetailedView] = useState(true);
+  const { campaigns: rawCampaigns, loading, error } = useCampaigns<any>();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  // Fetch campaigns data
+  // Map raw firestore campaigns from hook into UI `Campaign` shape
   useEffect(() => {
-    const fetchCampaigns = async () => {
-      try {
-        setLoading(true);
-        const snapshot = await getDocs(collection(db, 'campaigns'));
-        const firebaseCampaigns = snapshot.docs.map(doc => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            title: data.title,
-            description: data.description,
-            goal: data.goalAmount,
-            raised: data.collectedAmount,
-            image: data.coverImageUrl,
-            category: data.tags?.[0] || 'General',
-            status: data.status,
-            assignedKiosks: [], 
-            isGlobal: true,     
-            configuration: {} as any
-          };
-        });
-        setCampaigns(firebaseCampaigns);
-        setError(null);
-      } catch (err) {
-        console.error('Failed to fetch campaigns from Firestore:', err);
-        setError('Failed to load campaigns. Please try again.');
-        setCampaigns(mockCampaigns);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCampaigns();
-  }, []);
+    if (!rawCampaigns) return;
+    const mapped = (rawCampaigns || []).map((doc: any) => {
+      const data = doc;
+      return {
+        id: data.id,
+        title: data.title,
+        description: data.description,
+        goal: data.goalAmount,
+        raised: data.collectedAmount,
+        image: data.coverImageUrl,
+        category: data.tags?.[0] || 'General',
+        status: data.status,
+        assignedKiosks: data.assignedKiosks || [],
+        isGlobal: data.isGlobal ?? true,
+        configuration: (data.configuration || {}) as any
+      } as Campaign;
+    });
+    setCampaigns(mapped);
+  }, [rawCampaigns]);
 
   const mockCampaigns: Campaign[] = [];
 
