@@ -1,13 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { db } from '../../lib/firebase';
 import { Screen, Kiosk, Campaign, AdminSession, Permission } from '../../App';
-import {
-  collection,
-  getDocs,
-  updateDoc,
-  doc,
-  DocumentData,
-} from 'firebase/firestore';
+import { useCampaigns } from '../../hooks/useCampaigns';
 import { FaEdit, FaSave, FaTimes, FaSearch, FaChevronDown, FaEllipsisV } from 'react-icons/fa';
 interface CampaignManagementProps {
   onNavigate: (screen: Screen) => void;
@@ -17,25 +10,17 @@ interface CampaignManagementProps {
 }
 
 const CampaignManagement = ({ onNavigate, onLogout, userSession, hasPermission }: CampaignManagementProps) => {
-  const [campaigns, setCampaigns] = useState<DocumentData[]>([]);
+  const [campaigns, setCampaigns] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editedCampaign, setEditedCampaign] = useState<DocumentData | null>(null);
+  const [editedCampaign, setEditedCampaign] = useState<any | null>(null);
 
+  const { campaigns: fetchedCampaigns, update } = useCampaigns<any>();
   useEffect(() => {
-    const fetchCampaigns = async () => {
-      try {
-        const querySnapshot = await getDocs(collection(db, 'campaigns'));
-        const docs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setCampaigns(docs);
-      } catch (error) {
-        console.error("Error fetching campaigns: ", error);
-      }
-    };
-    fetchCampaigns();
-  }, []);
+    setCampaigns(fetchedCampaigns);
+  }, [fetchedCampaigns]);
 
-  const handleEdit = (campaign: DocumentData) => {
+  const handleEdit = (campaign: any) => {
     setEditingId(campaign.id);
     setEditedCampaign({ ...campaign });
   };
@@ -54,8 +39,7 @@ const CampaignManagement = ({ onNavigate, onLogout, userSession, hasPermission }
   const handleSave = async () => {
     if (editedCampaign && editingId) {
       try {
-        const campaignRef = doc(db, 'campaigns', editingId);
-        await updateDoc(campaignRef, editedCampaign);
+        await update(editingId, editedCampaign);
         setCampaigns(prev =>
           prev.map(campaign =>
             campaign.id === editingId ? editedCampaign : campaign
