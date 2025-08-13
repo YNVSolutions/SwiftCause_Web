@@ -8,9 +8,7 @@ import {
   UserCog,
   ArrowRight,
 } from 'lucide-react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../lib/firebase';
+import { useAuth } from '../hooks/useAuth';
 import { UserRole, AdminSession, User } from '../App';
 
 interface AdminLoginProps {
@@ -18,6 +16,7 @@ interface AdminLoginProps {
 }
 
 export function AdminLogin({ onLogin }: AdminLoginProps) {
+  const { loading, error, user, login } = useAuth<any>();
   const [adminCredentials, setAdminCredentials] = useState({
     email: '',
     password: ''
@@ -36,18 +35,12 @@ export function AdminLogin({ onLogin }: AdminLoginProps) {
     }
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const firebaseUser = userCredential.user;
-
-      const userDocRef = doc(db, 'users', firebaseUser.uid);
-      const userSnap = await getDoc(userDocRef);
-
-      if (!userSnap.exists()) {
-        setLoginError('No user profile found for this account.');
-        return;
+      const profile = await login(email, password);
+      if (!profile) {
+        return; 
       }
 
-      const userData = userSnap.data() as User;
+      const userData = profile as User;
 
       if (!userData.isActive) {
         setLoginError('User account is disabled.');
@@ -65,7 +58,7 @@ export function AdminLogin({ onLogin }: AdminLoginProps) {
       onLogin('admin', adminSession);
     } catch (error: any) {
       console.error('Login error:', error);
-      setLoginError(error.message || 'Authentication failed. Please try again.');
+      setLoginError(error?.message || 'Authentication failed. Please try again.');
     }
   };
 
@@ -112,16 +105,16 @@ export function AdminLogin({ onLogin }: AdminLoginProps) {
           />
         </div>
 
-        {loginError && (
+        {(loginError || error) && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
             <div className="flex items-center space-x-2">
               <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0" />
-              <p className="text-sm text-red-700">{loginError}</p>
+              <p className="text-sm text-red-700">{loginError || error}</p>
             </div>
           </div>
         )}
 
-        <Button type="submit" className="w-full h-12 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg">
+        <Button type="submit" className="w-full h-12 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg" disabled={loading}>
           <UserCog className="mr-2 h-4 w-4" />
           Access Dashboard
           <ArrowRight className="ml-2 h-4 w-4" />
