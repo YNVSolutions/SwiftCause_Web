@@ -1,14 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { getKiosks, getCampaigns } from '../../api/firestoreService';
 import { db } from '../../lib/firebase';
-import {
-  collection,
-  getDocs,
-  updateDoc,
-  doc,
-  addDoc,
-  deleteDoc,
-  DocumentData,
-} from 'firebase/firestore';
+import { doc, updateDoc, addDoc, deleteDoc, collection } from 'firebase/firestore';
 import { Screen, Kiosk, Campaign, AdminSession, Permission } from '../../App';
 
 // UI Components
@@ -158,11 +151,11 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
     const fetchAllData = async () => {
       setIsLoading(true);
       try {
-        const kiosksSnapshot = await getDocs(collection(db, 'kiosks'));
-        setKiosks(kiosksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Kiosk)));
-        
-        const campaignsSnapshot = await getDocs(collection(db, 'campaigns'));
-        setCampaigns(campaignsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Campaign)));
+        const kiosks = await getKiosks();
+        setKiosks(kiosks as Kiosk[]);
+
+        const campaigns = await getCampaigns();
+        setCampaigns(campaigns as Campaign[]);
 
       } catch (error) {
         console.error("Error fetching data: ", error);
