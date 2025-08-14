@@ -19,8 +19,8 @@ import {
   Monitor,
 } from 'lucide-react';
 import { UserRole, KioskSession, AdminSession } from '../App';
-import { KioskLogin } from './KioskLogin';
-import { AdminLogin } from './AdminLogin';
+import { KioskLoginContainer } from '../features/auth/containers/KioskLoginContainer';
+import { AdminLoginContainer } from '../features/auth/containers/AdminLoginContainer';
 
 interface LoginScreenProps {
   onLogin: (role: UserRole, sessionData?: KioskSession | AdminSession) => void;
@@ -224,11 +224,11 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                   </TabsList>
 
                   <TabsContent value="kiosk">
-                    <KioskLogin onLogin={onLogin} />
+                    <KioskLoginContainer onLogin={onLogin} />
                   </TabsContent>
 
                   <TabsContent value="admin">
-                    <AdminLogin onLogin={onLogin} />
+                    <AdminLoginContainer onLogin={onLogin} />
                   </TabsContent>
                 </Tabs>
 
