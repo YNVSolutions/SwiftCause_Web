@@ -1,58 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { CampaignCard } from './shared/CampaignCard';
 import { NavigationHeader } from './shared/NavigationHeader';
 import { Campaign, KioskSession } from '../App';
-import { useCampaigns } from '../hooks/useCampaigns';
 
 interface CampaignListScreenProps {
+  campaigns: Campaign[];
+  loading: boolean;
+  error: string | null;
+  isDetailedView: boolean;
+  kioskSession?: KioskSession | null;
+  onViewToggle: (value: boolean) => void;
   onSelectCampaign: (campaign: Campaign) => void;
   onViewDetails: (campaign: Campaign) => void;
-  kioskSession?: KioskSession | null;
+  isDefaultCampaign: (campaignId: string) => boolean;
+  
 }
 
-export function CampaignListScreen({ onSelectCampaign, onViewDetails, kioskSession }: CampaignListScreenProps) {
-  const [isDetailedView, setIsDetailedView] = useState(true);
-  const { campaigns: rawCampaigns, loading, error } = useCampaigns();
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-
-  // Map raw campaigns from hook into UI shape
-  useEffect(() => {
-    if (!rawCampaigns) return;
-    const mapped = (rawCampaigns || []).map((data: any) => ({
-      id: data.id,
-      title: data.title,
-      description: data.description,
-      goal: data.goalAmount,
-      raised: data.collectedAmount,
-      image: data.coverImageUrl,
-      category: data.tags?.[0] || 'General',
-      status: data.status,
-      assignedKiosks: data.assignedKiosks || [],
-      isGlobal: data.isGlobal ?? true,
-      configuration: (data.configuration || {}) as any
-    }));
-    setCampaigns(mapped);
-  }, [rawCampaigns]);
-
-  const mockCampaigns: Campaign[] = [];
-
-  const getAvailableCampaigns = () => {
-    if (!kioskSession) return campaigns;
-    const assignedCampaigns = campaigns.filter(c =>
-      c.isGlobal || (c.assignedKiosks && c.assignedKiosks.includes(kioskSession.kioskId))
-    );
-    const { maxCampaignsDisplay } = kioskSession.settings || { maxCampaignsDisplay: 6 };
-    return maxCampaignsDisplay && assignedCampaigns.length > maxCampaignsDisplay
-      ? assignedCampaigns.slice(0, maxCampaignsDisplay)
-      : assignedCampaigns;
-  };
-
-  const availableCampaigns = getAvailableCampaigns();
-
-  const isDefaultCampaign = (campaignId: string) => {
-    if (!kioskSession) return false;
-    return kioskSession.assignedCampaigns[0] === campaignId;
-  };
+export function CampaignListScreen({ campaigns, loading, error, isDetailedView, kioskSession, onViewToggle, onSelectCampaign, onViewDetails, isDefaultCampaign }: CampaignListScreenProps) {
 
   if (loading) {
     return (
@@ -91,15 +55,15 @@ export function CampaignListScreen({ onSelectCampaign, onViewDetails, kioskSessi
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <NavigationHeader
+        <NavigationHeader
         title="Available Campaigns"
-        campaignCount={availableCampaigns.length}
+        campaignCount={campaigns.length}
         showViewToggle={true}
         isDetailedView={isDetailedView}
-        onViewToggle={setIsDetailedView}
+        onViewToggle={onViewToggle}
       />
       <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {availableCampaigns.length === 0 ? (
+        {campaigns.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-gray-400 mb-4">
               <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -115,11 +79,11 @@ export function CampaignListScreen({ onSelectCampaign, onViewDetails, kioskSessi
           </div>
         ) : (
           <div className={
-            kioskSession?.settings?.displayMode === 'carousel' ? "space-y-4" :
-            kioskSession?.settings?.displayMode === 'list' || !isDetailedView ? "grid grid-cols-1 gap-3 sm:gap-4" :
+            /* Container decides layout; default to grid/list based on isDetailedView */
+            !isDetailedView ? "grid grid-cols-1 gap-3 sm:gap-4" :
             "grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6"
           }>
-            {availableCampaigns.map(campaign => (
+            {campaigns.map(campaign => (
               <CampaignCard
                 key={campaign.id}
                 campaign={campaign}

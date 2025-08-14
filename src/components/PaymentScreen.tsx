@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -7,24 +7,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Badge } from './ui/badge';
 import { ArrowLeft, CreditCard, Shield, Lock } from 'lucide-react';
 import { Campaign, Donation, PaymentResult } from '../App';
-import { ApiClient } from '../utils/supabase/client';
 
 interface PaymentScreenProps {
   campaign: Campaign;
   donation: Donation;
-  onPaymentComplete: (result: PaymentResult) => void;
+  isProcessing: boolean;
+  paymentMethod: 'card' | 'paypal' | 'bank';
+  onPaymentMethodChange: (method: 'card' | 'paypal' | 'bank') => void;
+  cardData: { number: string; expiry: string; cvv: string; name: string };
+  onCardDataChange: (updater: (prev: { number: string; expiry: string; cvv: string; name: string }) => { number: string; expiry: string; cvv: string; name: string }) => void;
+  onFormatCardNumber: (value: string) => string;
+  onFormatExpiry: (value: string) => string;
+  onSubmit: (e: React.FormEvent) => void;
   onBack: () => void;
 }
 
-export function PaymentScreen({ campaign, donation, onPaymentComplete, onBack }: PaymentScreenProps) {
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('card');
-  const [cardData, setCardData] = useState({
-    number: '',
-    expiry: '',
-    cvv: '',
-    name: ''
-  });
+export function PaymentScreen({ campaign, donation, isProcessing, paymentMethod, onPaymentMethodChange, cardData, onCardDataChange, onFormatCardNumber, onFormatExpiry, onSubmit, onBack }: PaymentScreenProps) {
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -32,74 +30,6 @@ export function PaymentScreen({ campaign, donation, onPaymentComplete, onBack }:
       currency: 'USD',
       minimumFractionDigits: 2
     }).format(amount);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsProcessing(true);
-
-    try {
-      // Simulate payment processing delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // In a real app, you would process payment with a payment provider here
-      // For demo purposes, we'll simulate a 95% success rate
-      const success = Math.random() > 0.05;
-      
-      if (success) {
-        // Submit donation to Supabase
-        const result = await ApiClient.createDonation({
-          ...donation,
-          donorName: cardData.name,
-          paymentMethod: paymentMethod === 'card' ? 'Credit Card' : 
-                        paymentMethod === 'paypal' ? 'PayPal' : 'Bank Transfer'
-        });
-        
-        if (result.success) {
-          onPaymentComplete({
-            success: true,
-            transactionId: result.transactionId
-          });
-        } else {
-          throw new Error('Failed to process donation');
-        }
-      } else {
-        throw new Error('Payment processing failed');
-      }
-    } catch (error) {
-      console.error('Payment processing error:', error);
-      onPaymentComplete({
-        success: false,
-        error: error instanceof Error ? error.message : 'Payment processing failed. Please try again.'
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const formatCardNumber = (value: string) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    const matches = v.match(/\d{4,16}/g);
-    const match = matches && matches[0] || '';
-    const parts = [];
-
-    for (let i = 0, len = match.length; i < len; i += 4) {
-      parts.push(match.substring(i, i + 4));
-    }
-
-    if (parts.length) {
-      return parts.join(' ');
-    } else {
-      return v;
-    }
-  };
-
-  const formatExpiry = (value: string) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    if (v.length >= 2) {
-      return v.substring(0, 2) + '/' + v.substring(2, 4);
-    }
-    return v;
   };
 
   return (
@@ -130,10 +60,10 @@ export function PaymentScreen({ campaign, donation, onPaymentComplete, onBack }:
             </CardHeader>
             
             <CardContent className="p-3 sm:p-6 pt-0">
-              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+              <form onSubmit={onSubmit} className="space-y-4 sm:space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="paymentMethod" className="text-sm sm:text-base">Payment Method</Label>
-                  <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                  <Select value={paymentMethod} onValueChange={(v: any) => onPaymentMethodChange(v)}>
                     <SelectTrigger className="h-11 sm:h-12">
                       <SelectValue />
                     </SelectTrigger>
@@ -154,7 +84,7 @@ export function PaymentScreen({ campaign, donation, onPaymentComplete, onBack }:
                         type="text"
                         placeholder="John Doe"
                         value={cardData.name}
-                        onChange={(e) => setCardData(prev => ({ ...prev, name: e.target.value }))}
+                        onChange={(e) => onCardDataChange(prev => ({ ...prev, name: e.target.value }))}
                         required
                         disabled={isProcessing}
                         className="h-11 sm:h-12"
@@ -169,9 +99,9 @@ export function PaymentScreen({ campaign, donation, onPaymentComplete, onBack }:
                         type="text"
                         placeholder="1234 5678 9012 3456"
                         value={cardData.number}
-                        onChange={(e) => setCardData(prev => ({ 
+                        onChange={(e) => onCardDataChange(prev => ({ 
                           ...prev, 
-                          number: formatCardNumber(e.target.value) 
+                          number: onFormatCardNumber(e.target.value) 
                         }))}
                         maxLength={19}
                         required
@@ -190,9 +120,9 @@ export function PaymentScreen({ campaign, donation, onPaymentComplete, onBack }:
                           type="text"
                           placeholder="MM/YY"
                           value={cardData.expiry}
-                          onChange={(e) => setCardData(prev => ({ 
+                          onChange={(e) => onCardDataChange(prev => ({ 
                             ...prev, 
-                            expiry: formatExpiry(e.target.value) 
+                            expiry: onFormatExpiry(e.target.value) 
                           }))}
                           maxLength={5}
                           required
@@ -210,7 +140,7 @@ export function PaymentScreen({ campaign, donation, onPaymentComplete, onBack }:
                           type="text"
                           placeholder="123"
                           value={cardData.cvv}
-                          onChange={(e) => setCardData(prev => ({ 
+                          onChange={(e) => onCardDataChange(prev => ({ 
                             ...prev, 
                             cvv: e.target.value.replace(/\D/g, '').substring(0, 4) 
                           }))}

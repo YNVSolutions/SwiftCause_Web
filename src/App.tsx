@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { LoginScreen } from './components/LoginScreen';
-import { CampaignListScreen } from './components/CampaignListScreen';
+import { CampaignListContainer } from './features/campaigns/containers/CampaignListContainer';
 import { CampaignScreen } from './components/CampaignScreen';
-import { PaymentScreen } from './components/PaymentScreen';
+import { PaymentContainer } from './features/payment/containers/PaymentContainer';
 import { ResultScreen } from './components/ResultScreen';
 import { EmailConfirmationScreen } from './components/EmailConfirmationScreen';
 import { AdminDashboard } from './components/admin/AdminDashboard';
@@ -383,7 +383,7 @@ export default function App() {
       )}
       
       {currentScreen === 'campaigns' && (
-        <CampaignListScreen 
+        <CampaignListContainer 
           onSelectCampaign={(campaign) => handleCampaignSelect(campaign, 'donate')}
           onViewDetails={(campaign) => handleCampaignSelect(campaign, 'overview')}
           kioskSession={currentKioskSession}
@@ -401,7 +401,7 @@ export default function App() {
       )}
       
       {currentScreen === 'payment' && donation && selectedCampaign && (
-        <PaymentScreen 
+        <PaymentContainer 
           campaign={selectedCampaign}
           donation={donation}
           onPaymentComplete={handlePaymentSubmit}
