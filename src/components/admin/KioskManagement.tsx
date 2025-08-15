@@ -236,10 +236,8 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
         </main>
       </div>
 
-      <KioskEditDialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen} kiosk={editingKiosk} onSave={handleUpdateKiosk} />
-      
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[500px]"> {/* Adjusted max-width */}
           <DialogHeader><DialogTitle>Add New Kiosk</DialogTitle><DialogDescription>Configure a new donation kiosk for deployment.</DialogDescription></DialogHeader>
           <div className="space-y-4 py-4">
             <div><Label htmlFor="kioskName">Kiosk Name</Label><Input id="kioskName" value={newKiosk.name} onChange={(e) => setNewKiosk(p => ({ ...p, name: e.target.value }))} placeholder="Times Square Kiosk"/></div>
