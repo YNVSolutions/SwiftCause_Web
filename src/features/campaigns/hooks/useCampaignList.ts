@@ -11,10 +11,13 @@ export interface UseCampaignListReturn {
   availableCampaigns: Campaign[];
   isDefaultCampaign: (campaignId: string) => boolean;
   layoutMode: 'grid' | 'list' | 'carousel';
+  refreshCampaigns: () => Promise<void>;
+  autoRotateCampaigns: boolean;
+  rotationInterval: number;
 }
 
 export function useCampaignList(kioskSession?: KioskSession | null): UseCampaignListReturn {
-  const { campaigns: rawCampaigns, loading, error } = useCampaigns();
+  const { campaigns: rawCampaigns, loading, error, refresh } = useCampaigns();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [isDetailedView, setIsDetailedView] = useState(true);
 
@@ -37,22 +40,42 @@ export function useCampaignList(kioskSession?: KioskSession | null): UseCampaign
   }, [rawCampaigns]);
 
   const availableCampaigns = useMemo(() => {
-    if (!kioskSession) return campaigns;
-    const assignedCampaigns = campaigns.filter(c => c.isGlobal || (c.assignedKiosks && c.assignedKiosks.includes(kioskSession.kioskId)));
+    if (!kioskSession) return campaigns; // If no kiosk session, return all campaigns (e.g., for admin view)
+
+    let filtered = campaigns.filter(c => {
+      // Global campaigns are always available if showAllCampaigns is true, or if they are explicitly assigned
+      if (kioskSession.settings?.showAllCampaigns && c.isGlobal) return true;
+
+      // For non-global campaigns, or if showAllCampaigns is false, check if they are assigned to the current kiosk
+      return kioskSession.assignedCampaigns?.includes(c.id);
+    });
+
+    // Prioritize the default campaign by moving it to the front of the array
+    const defaultCampaignId = kioskSession.defaultCampaign;
+    if (defaultCampaignId) {
+      filtered = filtered.sort((a, b) => {
+        if (a.id === defaultCampaignId) return -1;
+        if (b.id === defaultCampaignId) return 1;
+        return 0;
+      });
+    }
+
     const { maxCampaignsDisplay } = kioskSession.settings || { maxCampaignsDisplay: 6 };
-    return maxCampaignsDisplay && assignedCampaigns.length > maxCampaignsDisplay
-      ? assignedCampaigns.slice(0, maxCampaignsDisplay)
-      : assignedCampaigns;
+    return maxCampaignsDisplay && filtered.length > maxCampaignsDisplay
+      ? filtered.slice(0, maxCampaignsDisplay)
+      : filtered;
   }, [campaigns, kioskSession]);
 
   const isDefaultCampaign = (campaignId: string) => {
     if (!kioskSession) return false;
-    return kioskSession.assignedCampaigns[0] === campaignId;
+    return kioskSession.defaultCampaign === campaignId;
   };
 
   const layoutMode: 'grid' | 'list' | 'carousel' = (kioskSession?.settings?.displayMode as any) || 'grid';
+  const autoRotateCampaigns: boolean = kioskSession?.settings?.autoRotateCampaigns ?? false;
+  const rotationInterval: number = kioskSession?.settings?.rotationInterval ?? 30;
 
-  return { campaigns, loading, error, isDetailedView, setIsDetailedView, availableCampaigns, isDefaultCampaign, layoutMode };
+  return { campaigns, loading, error, isDetailedView, setIsDetailedView, availableCampaigns, isDefaultCampaign, layoutMode, refreshCampaigns: refresh, autoRotateCampaigns, rotationInterval };
 }
 
 

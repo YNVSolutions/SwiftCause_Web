@@ -29,109 +29,6 @@ import {
 } from 'lucide-react';
 
 
-interface KioskEditDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  kiosk: Kiosk | null;
-  onSave: (updatedData: Partial<Kiosk>) => void;
-}
-
-const KioskEditDialog = ({ open, onOpenChange, kiosk, onSave }: KioskEditDialogProps) => {
-  const [formData, setFormData] = useState<Partial<Kiosk> | null>(null);
-
-  useEffect(() => {
-    if (kiosk) {
-      setFormData({
-        name: kiosk.name || '',
-        location: kiosk.location || '',
-        status: kiosk.status || 'offline',
-        accessCode: kiosk.accessCode || '',
-        deviceInfo: kiosk.deviceInfo || { model: '', os: '', screenSize: '' },
-      });
-    }
-  }, [kiosk]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => (prev ? { ...prev, [name]: value } : null));
-  };
-
-  const handleNestedChange = (e: React.ChangeEvent<HTMLInputElement>, parent: keyof Kiosk, field: string) => {
-    const { value } = e.target;
-    setFormData(prev => {
-        if (!prev) return null;
-        const parentObject = prev[parent] as any || {};
-        return {
-            ...prev,
-            [parent]: {
-                ...parentObject,
-                [field]: value
-            }
-        };
-    });
-  };
-
-  const handleSaveChanges = () => {
-    if (formData) onSave(formData);
-  };
-
-  if (!formData) return null;
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[650px]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center"><Settings className="mr-2 h-5 w-5" /> Edit Kiosk: {kiosk?.name}</DialogTitle>
-          <DialogDescription>Modify the details for this kiosk.</DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-6 py-4 max-h-[60vh] overflow-y-auto pr-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">Name</Label>
-                <Input id="name" name="name" value={formData.name} onChange={handleChange} className="col-span-3" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="location" className="text-right">Location</Label>
-                <Input id="location" name="location" value={formData.location} onChange={handleChange} className="col-span-3" />
-            </div>
-             <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="accessCode" className="text-right">Access Code</Label>
-                <Input id="accessCode" name="accessCode" value={formData.accessCode} onChange={handleChange} className="col-span-2" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="status" className="text-right">Status</Label>
-                <Select name="status" value={formData.status} onValueChange={(value) => handleChange({ target: { name: 'status', value } } as any)}>
-                    <SelectTrigger className="col-span-2"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="online">Online</SelectItem>
-                        <SelectItem value="offline">Offline</SelectItem>
-                        <SelectItem value="maintenance">Maintenance</SelectItem>
-                    </SelectContent>
-                </Select>
-            </div>
-            <hr className="my-2" /><h4 className="text-md font-semibold text-center">Device Info</h4>
-            <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="model" className="text-right">Model</Label>
-                <Input id="model" name="model" value={formData.deviceInfo?.model} onChange={(e) => handleNestedChange(e, 'deviceInfo', 'model')} className="col-span-3" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="os" className="text-right">OS</Label>
-                <Input id="os" name="os" value={formData.deviceInfo?.os} onChange={(e) => handleNestedChange(e, 'deviceInfo', 'os')} className="col-span-3" />
-            </div>
-             <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="screenSize" className="text-right">Screen</Label>
-                <Input id="screenSize" name="screenSize" value={formData.deviceInfo?.screenSize} onChange={(e) => handleNestedChange(e, 'deviceInfo', 'screenSize')} className="col-span-2" />
-            </div>
-        </div>
-        <div className="flex justify-end space-x-2 pt-4 border-t">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSaveChanges}>Save Changes</Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
-
 export function KioskManagement({ onNavigate, onLogout, userSession, hasPermission }: {
   onNavigate: (screen: Screen) => void;
   onLogout: () => void;
@@ -146,8 +43,6 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
 
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editingKiosk, setEditingKiosk] = useState<Kiosk | null>(null);
   const [newKiosk, setNewKiosk] = useState({ name: '', location: '', accessCode: '' });
 
 
@@ -193,21 +88,6 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
       setIsCreateDialogOpen(false);
     } catch (error) {
       console.error("Error adding kiosk: ", error);
-    }
-  };
-
-  const handleUpdateKiosk = async (updatedData: Partial<Kiosk>) => {
-    if (!editingKiosk) return;
-    const kioskId = editingKiosk.id;
-    try {
-        const kioskRef = doc(db, 'kiosks', kioskId);
-        await updateDoc(kioskRef, updatedData);
-        setKiosks(prev => prev.map(k => k.id === kioskId ? { ...k, ...updatedData } : k));
-    } catch (error) {
-        console.error("Error updating kiosk: ", error);
-    } finally {
-        setIsEditDialogOpen(false);
-        setEditingKiosk(null);
     }
   };
 
@@ -318,7 +198,34 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                         <TableCell>{getStatusBadge(kiosk.status)}</TableCell>
                         <TableCell><div className="space-y-1"><div className="flex items-center space-x-2"><DollarSign className="w-4 h-4 text-gray-400" /><span className="text-sm font-medium">{formatCurrency(kiosk.totalRaised || 0)}</span></div><div className="flex items-center space-x-2"><Users className="w-4 h-4 text-gray-400" /><span className="text-sm">{kiosk.totalDonations || 0} donations</span></div></div></TableCell>
                         <TableCell><div className="space-y-2"><div className="flex items-center space-x-2"><Target className="w-4 h-4 text-gray-400" /><span className="text-sm">{kiosk.assignedCampaigns?.length || 0} assigned</span></div>{kiosk.defaultCampaign && (<div className="flex items-center space-x-2"><Star className="w-4 h-4 text-yellow-500" /><span className="text-sm">{campaigns.find(c => c.id === kiosk.defaultCampaign)?.title?.slice(0, 20) || '...'}</span></div>)}</div></TableCell>
-                        <TableCell><div className="flex items-center space-x-1">{hasPermission('edit_kiosk') && <Button variant="ghost" size="sm" onClick={() => { setEditingKiosk(kiosk); setIsEditDialogOpen(true);}} title="Edit kiosk"><Edit className="w-4 h-4" /></Button>}{hasPermission('assign_campaigns') && <Button variant="ghost" size="sm" onClick={() => handleAssignCampaigns(kiosk)} title="Manage campaigns"><Target className="w-4 h-4" /></Button>}{hasPermission('delete_kiosk') && <Button variant="ghost" size="sm" onClick={() => handleDeleteKiosk(kiosk.id)} className="text-red-600 hover:text-red-700" title="Delete kiosk"><Trash2 className="w-4 h-4" /></Button>}</div></TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-1">
+                            {hasPermission('edit_kiosk') && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setAssigningKiosk(kiosk);
+                                  setIsAssignmentDialogOpen(true);
+                                }}
+                                title="Edit Kiosk Details & Campaigns"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                            )}
+                            {hasPermission('delete_kiosk') && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteKiosk(kiosk.id)}
+                                className="text-red-600 hover:text-red-700"
+                                title="Delete kiosk"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -329,10 +236,8 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
         </main>
       </div>
 
-      <KioskEditDialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen} kiosk={editingKiosk} onSave={handleUpdateKiosk} />
-      
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[500px]"> {/* Adjusted max-width */}
           <DialogHeader><DialogTitle>Add New Kiosk</DialogTitle><DialogDescription>Configure a new donation kiosk for deployment.</DialogDescription></DialogHeader>
           <div className="space-y-4 py-4">
             <div><Label htmlFor="kioskName">Kiosk Name</Label><Input id="kioskName" value={newKiosk.name} onChange={(e) => setNewKiosk(p => ({ ...p, name: e.target.value }))} placeholder="Times Square Kiosk"/></div>

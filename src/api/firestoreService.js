@@ -45,4 +45,9 @@ export async function getAllCampaigns() {
   return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
+export async function updateKiosk(kioskId, data) {
+  const ref = doc(db, 'kiosks', kioskId);
+  await updateDoc(ref, data);
+}
+
 
