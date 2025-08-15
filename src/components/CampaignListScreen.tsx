@@ -95,7 +95,7 @@ export function CampaignListScreen({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-        <NavigationHeader
+      <NavigationHeader
         title="Available Campaigns"
         campaignCount={campaigns.length}
         layoutMode={layoutMode} // Pass layoutMode to NavigationHeader
@@ -135,21 +135,21 @@ export function CampaignListScreen({
               rotationInterval={rotationInterval}
             />
           ) : (
-          <div className={
-            /* Container decides layout; default to grid/list based on isDetailedView */
+            <div className={
+              /* Container decides layout; default to grid/list based on isDetailedView */
               layoutMode === 'grid' ? "grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6" : "grid grid-cols-1 gap-3 sm:gap-4"
-          }>
-            {campaigns.map(campaign => (
-              <CampaignCard
-                key={campaign.id}
-                campaign={campaign}
+            }>
+              {campaigns.map(campaign => (
+                <CampaignCard
+                  key={campaign.id}
+                  campaign={campaign}
                   variant={layoutMode === 'grid' ? 'detailed' : 'compact'}
-                onDonate={() => onSelectCampaign(campaign)}
-                onViewDetails={() => onViewDetails(campaign)}
-                isDefault={isDefaultCampaign(campaign.id)}
-              />
-            ))}
-          </div>
+                  onDonate={() => onSelectCampaign(campaign)}
+                  onViewDetails={() => onViewDetails(campaign)}
+                  isDefault={isDefaultCampaign(campaign.id)}
+                />
+              ))}
+            </div>
           )
         )}
       </main>
