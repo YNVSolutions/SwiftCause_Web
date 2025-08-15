@@ -91,6 +91,22 @@ export function KioskCampaignAssignmentDialog({
     };
   });
 
+  useEffect(() => {
+    if (kiosk) {
+      setFormData({
+        ...kiosk,
+        settings: { // Ensure settings object exists and new properties are merged
+          displayMode: "grid",
+          showAllCampaigns: false,
+          maxCampaignsDisplay: 6,
+          autoRotateCampaigns: false,
+          rotationInterval: 30,
+          ...kiosk.settings, // Merge existing settings
+        },
+      });
+    }
+  }, [kiosk]);
+
   const [activeTab, setActiveTab] = useState("campaigns");
 
   const formatCurrency = (amount: number) => {
@@ -421,8 +437,57 @@ export function KioskCampaignAssignmentDialog({
                     </ScrollArea>
                   </div>
                 )}
-              </CardContent>
-            </Card>
+  
+              {/* Global Campaigns */}
+              {globalCampaigns.length > 0 && (
+                <div className="space-y-4 pt-6 border-t">
+                  <div className="flex items-center gap-3">
+                    <Globe className="w-5 h-5 text-green-600" />
+                    <h3 className="text-lg font-semibold">Global Campaigns</h3>
+                    <Badge variant="secondary" className="text-xs font-medium bg-green-100 text-green-800">
+                      Auto-assigned to all kiosks
+                    </Badge>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 gap-4">
+                    {globalCampaigns.map((campaign) => (
+                      <div
+                        key={campaign.id}
+                        className="flex items-center gap-4 p-6 bg-green-50 border border-green-200 rounded-xl"
+                      >
+                        <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 shadow-sm">
+                          <img
+                            src={campaign.image}
+                            alt={campaign.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-green-900 text-lg mb-1">
+                            {campaign.title}
+                          </h4>
+                          <p className="text-green-700 mb-2">{campaign.category}</p>
+                          <div className="flex items-center gap-4 text-sm text-green-600">
+                            <span className="font-medium">
+                              {formatCurrency(campaign.raised)} raised
+                            </span>
+                            <span className="text-green-400">•</span>
+                            <span>
+                              {Math.round((campaign.raised / campaign.goal) * 100)}% funded
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <Badge className="bg-green-600 text-white gap-1 flex-shrink-0">
+                          <Globe className="w-3 h-3" />
+                          Global
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">
