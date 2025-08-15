@@ -85,7 +85,7 @@ export function usePayment(
     isProcessing,
     paymentMethod,
     setPaymentMethod,
-    cardData: cardDataState,
+    cardData: cardData,
     setCardData,
     handleSubmit,
     formatCardNumber,
