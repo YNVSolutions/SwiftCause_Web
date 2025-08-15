@@ -267,6 +267,22 @@ export default function App() {
     navigate('login');
   };
 
+  const refreshCurrentKioskSession = async () => {
+    if (currentKioskSession?.kioskId) {
+      try {
+        const kioskRef = doc(db, 'kiosks', currentKioskSession.kioskId);
+        const kioskSnap = await getDoc(kioskRef);
+        if (kioskSnap.exists()) {
+          setCurrentKioskSession(prev => ({ ...prev!, ...kioskSnap.data() as Kiosk }));
+        } else {
+          console.warn("Kiosk document not found during refresh:", currentKioskSession.kioskId);
+        }
+      } catch (error) {
+        console.error("Error refreshing kiosk session:", error);
+      }
+    }
+  };
+
   const handleCampaignSelect = (campaign: Campaign, view: 'overview' | 'donate' = 'overview') => {
     setSelectedCampaign(campaign);
     setCampaignView(view);
