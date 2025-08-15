@@ -1,18 +1,19 @@
 import React from 'react';
 import { Button } from '../ui/button';
-import { ArrowLeft, Heart, LayoutGrid, List } from 'lucide-react';
+import { ArrowLeft, Heart, LayoutGrid, List, Shuffle } from 'lucide-react';
 
 interface NavigationHeaderProps {
   title: string;
   subtitle?: string;
   onBack?: () => void;
   backLabel?: string;
-  showViewToggle?: boolean;
-  isDetailedView?: boolean;
-  onViewToggle?: (detailed: boolean) => void;
+  showViewToggle?: boolean; 
   campaignCount?: number;
   rightContent?: React.ReactNode;
+  layoutMode?: 'grid' | 'list' | 'carousel'; // New prop for current layout
+  onLayoutChange?: (mode: 'grid' | 'list' | 'carousel') => void; // New prop for changing layout
 }
+
 
 export function NavigationHeader({
   title,
@@ -20,10 +21,10 @@ export function NavigationHeader({
   onBack,
   backLabel = "Back",
   showViewToggle = false,
-  isDetailedView = true,
-  onViewToggle,
   campaignCount,
-  rightContent
+  rightContent,
+  layoutMode = 'grid', // Default to grid
+  onLayoutChange,
 }: NavigationHeaderProps) {
   return (
     <header className="bg-white shadow-sm border-b">
@@ -54,23 +55,31 @@ export function NavigationHeader({
               </div>
             )}
             
-            {showViewToggle && onViewToggle && (
+            {showViewToggle && onLayoutChange && ( // Use onLayoutChange instead of onViewToggle
               <div className="flex items-center bg-gray-50 rounded-lg p-1">
                 <Button
-                  variant={!isDetailedView ? "default" : "ghost"}
+                  variant={layoutMode === 'grid' ? "default" : "ghost"}
                   size="sm"
-                  onClick={() => onViewToggle(false)}
-                  className={`h-8 px-3 ${!isDetailedView ? 'bg-indigo-600 text-white' : 'hover:bg-gray-100'}`}
+                  onClick={() => onLayoutChange('grid')}
+                  className={`h-8 px-3 ${layoutMode === 'grid' ? 'bg-indigo-600 text-white' : 'hover:bg-gray-100'}`}
                 >
                   <LayoutGrid className="h-4 w-4" />
                 </Button>
                 <Button
-                  variant={isDetailedView ? "default" : "ghost"}
+                  variant={layoutMode === 'list' ? "default" : "ghost"}
                   size="sm"
-                  onClick={() => onViewToggle(true)}
-                  className={`h-8 px-3 ${isDetailedView ? 'bg-indigo-600 text-white' : 'hover:bg-gray-100'}`}
+                  onClick={() => onLayoutChange('list')}
+                  className={`h-8 px-3 ${layoutMode === 'list' ? 'bg-indigo-600 text-white' : 'hover:bg-gray-100'}`}
                 >
                   <List className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={layoutMode === 'carousel' ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => onLayoutChange('carousel')}
+                  className={`h-8 px-3 ${layoutMode === 'carousel' ? 'bg-indigo-600 text-white' : 'hover:bg-gray-100'}`}
+                >
+                  <Shuffle className="h-4 w-4" />
                 </Button>
               </div>
             )}
