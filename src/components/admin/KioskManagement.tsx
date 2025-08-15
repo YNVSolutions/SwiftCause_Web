@@ -43,8 +43,6 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
 
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editingKiosk, setEditingKiosk] = useState<Kiosk | null>(null);
   const [newKiosk, setNewKiosk] = useState({ name: '', location: '', accessCode: '' });
 
 
@@ -90,21 +88,6 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
       setIsCreateDialogOpen(false);
     } catch (error) {
       console.error("Error adding kiosk: ", error);
-    }
-  };
-
-  const handleUpdateKiosk = async (updatedData: Partial<Kiosk>) => {
-    if (!editingKiosk) return;
-    const kioskId = editingKiosk.id;
-    try {
-        const kioskRef = doc(db, 'kiosks', kioskId);
-        await updateDoc(kioskRef, updatedData);
-        setKiosks(prev => prev.map(k => k.id === kioskId ? { ...k, ...updatedData } : k));
-    } catch (error) {
-        console.error("Error updating kiosk: ", error);
-    } finally {
-        setIsEditDialogOpen(false);
-        setEditingKiosk(null);
     }
   };
 
