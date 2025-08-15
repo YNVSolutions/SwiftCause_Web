@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { CampaignCard } from './shared/CampaignCard';
 import { NavigationHeader } from './shared/NavigationHeader';
-import { Campaign, KioskSession } from '../App';
+import { Campaign, KioskSession, Kiosk } from '../App';
+import { Button } from './ui/button'; // Import Button component
+import { RotateCcw, LogOut, ChevronLeft, ChevronRight } from 'lucide-react'; // Import icons
+import { updateKiosk } from '../api/firestoreService';
 
 interface CampaignListScreenProps {
   campaigns: Campaign[];
@@ -13,10 +16,47 @@ interface CampaignListScreenProps {
   onSelectCampaign: (campaign: Campaign) => void;
   onViewDetails: (campaign: Campaign) => void;
   isDefaultCampaign: (campaignId: string) => boolean;
-  
+  onLogout: () => void;
+  refreshCampaigns: () => Promise<void>;
+  layoutMode: 'grid' | 'list' | 'carousel';
+  autoRotateCampaigns: boolean;
+  rotationInterval: number;
+  refreshCurrentKioskSession: () => Promise<void>; // Added refreshCurrentKioskSession prop
 }
 
-export function CampaignListScreen({ campaigns, loading, error, isDetailedView, kioskSession, onViewToggle, onSelectCampaign, onViewDetails, isDefaultCampaign }: CampaignListScreenProps) {
+export function CampaignListScreen({
+  campaigns,
+  loading,
+  error,
+  isDetailedView,
+  kioskSession,
+  onViewToggle,
+  onSelectCampaign,
+  onViewDetails,
+  isDefaultCampaign,
+  onLogout,
+  refreshCampaigns,
+  layoutMode,
+  autoRotateCampaigns,
+  rotationInterval,
+  refreshCurrentKioskSession,
+}: CampaignListScreenProps) {
+
+  const handleRefresh = async () => {
+    await refreshCampaigns();
+    await refreshCurrentKioskSession();
+  };
+
+  const handleLayoutChange = async (newLayout: 'grid' | 'list' | 'carousel') => {
+    if (kioskSession && kioskSession.kioskId) {
+      try {
+        await updateKiosk(kioskSession.kioskId, { settings: { ...kioskSession.settings, displayMode: newLayout } });
+        await refreshCurrentKioskSession(); // Refresh kiosk session to get updated settings
+      } catch (e) {
+        console.error("Failed to update kiosk display mode:", e);
+      }
+    }
+  };
 
   if (loading) {
     return (
