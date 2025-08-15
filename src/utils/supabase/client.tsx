@@ -10,8 +10,10 @@ export const supabase = isSupabaseConfigured()
 // Re-export the configuration check function
 export { isSupabaseConfigured };
 
-// API utility functions for making requests to our Edge Function server
-const API_BASE_URL = 'https://' + projectId + '.supabase.co/functions/v1/make-server-d9a2164e';
+// API utility functions for making requests to our backend server
+const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://' + projectId + '.supabase.co/functions/v1/make-server-d9a2164e'
+  : 'http://localhost:3001';
 
 export class ApiClient {
   private static async request<T>(
@@ -295,6 +297,33 @@ export class ApiClient {
     return this.request<{ success: boolean; donation: any; transactionId: string }>('/donations', {
       method: 'POST',
       body: JSON.stringify(donationData),
+    });
+  }
+
+  // Stripe Payment Intents
+  static async createPaymentIntent(paymentData: {
+    amount: number;
+    currency: string;
+    campaignId: string;
+    donationData: any;
+  }) {
+    if (!isSupabaseConfigured()) {
+      // Return mock payment intent for demo
+      return {
+        success: true,
+        clientSecret: 'pi_mock_secret_' + Date.now() + '_secret_' + Math.random().toString(36).substr(2, 9),
+        paymentIntentId: 'pi_mock_' + Date.now()
+      };
+    }
+
+    return this.request<{ 
+      success: boolean; 
+      clientSecret: string; 
+      paymentIntentId: string;
+      error?: string;
+    }>('/stripe/create-payment-intent', {
+      method: 'POST',
+      body: JSON.stringify(paymentData),
     });
   }
 
