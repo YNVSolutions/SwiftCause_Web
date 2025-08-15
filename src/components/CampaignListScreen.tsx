@@ -125,24 +125,123 @@ export function CampaignListScreen({
             </p>
           </div>
         ) : (
+          layoutMode === 'carousel' ? (
+            <CampaignCarousel
+              campaigns={campaigns}
+              onSelectCampaign={onSelectCampaign}
+              onViewDetails={onViewDetails}
+              isDefaultCampaign={isDefaultCampaign}
+              autoRotate={autoRotateCampaigns}
+              rotationInterval={rotationInterval}
+            />
+          ) : (
           <div className={
             /* Container decides layout; default to grid/list based on isDetailedView */
-            !isDetailedView ? "grid grid-cols-1 gap-3 sm:gap-4" :
-            "grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6"
+              layoutMode === 'grid' ? "grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6" : "grid grid-cols-1 gap-3 sm:gap-4"
           }>
             {campaigns.map(campaign => (
               <CampaignCard
                 key={campaign.id}
                 campaign={campaign}
-                variant={isDetailedView ? 'detailed' : 'compact'}
+                  variant={layoutMode === 'grid' ? 'detailed' : 'compact'}
                 onDonate={() => onSelectCampaign(campaign)}
                 onViewDetails={() => onViewDetails(campaign)}
                 isDefault={isDefaultCampaign(campaign.id)}
               />
             ))}
           </div>
+          )
         )}
       </main>
     </div>
   );
 }
+
+interface CampaignCarouselProps {
+  campaigns: Campaign[];
+  onSelectCampaign: (campaign: Campaign) => void;
+  onViewDetails: (campaign: Campaign) => void;
+  isDefaultCampaign: (campaignId: string) => boolean;
+  autoRotate: boolean;
+  rotationInterval: number;
+}
+
+const CampaignCarousel = ({
+  campaigns,
+  onSelectCampaign,
+  onViewDetails,
+  isDefaultCampaign,
+  autoRotate,
+  rotationInterval,
+}: CampaignCarouselProps) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (autoRotate && campaigns.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % campaigns.length);
+      }, rotationInterval * 1000);
+      return () => clearInterval(interval);
+    }
+  }, [autoRotate, campaigns.length, rotationInterval]);
+
+  const goToNext = () => {
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % campaigns.length);
+  };
+
+  const goToPrevious = () => {
+    setCurrentIndex(
+      (prevIndex) => (prevIndex - 1 + campaigns.length) % campaigns.length
+    );
+  };
+
+  if (campaigns.length === 0) {
+    return null; // Or some placeholder
+  }
+
+  const currentCampaign = campaigns[currentIndex];
+
+  return (
+    <div className="relative w-full overflow-hidden rounded-lg shadow-lg aspect-video flex items-center justify-center p-4">
+      <button
+        onClick={goToPrevious}
+        className="absolute left-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full z-10"
+      >
+        <ChevronLeft className="w-6 h-6" />
+      </button>
+      <button
+        onClick={goToNext}
+        className="absolute right-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full z-10"
+      >
+        <ChevronRight className="w-6 h-6" />
+      </button>
+      <div
+        className="flex transition-transform duration-500 ease-in-out"
+        style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+      >
+        {campaigns.map((campaign, index) => (
+          <div key={campaign.id} className="w-full flex-shrink-0">
+            <CampaignCard
+              campaign={campaign}
+              variant="detailed"
+              onDonate={() => onSelectCampaign(campaign)}
+              onViewDetails={() => onViewDetails(campaign)}
+              isDefault={isDefaultCampaign(campaign.id)}
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* Navigation Dots (optional) */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
+        {campaigns.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => setCurrentIndex(index)}
+            className={`h-2 w-2 rounded-full ${index === currentIndex ? 'bg-white' : 'bg-gray-400'}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
