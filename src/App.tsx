@@ -10,6 +10,7 @@ import { KioskManagement } from './components/admin/KioskManagement';
 import { DonationManagement } from './components/admin/DonationManagement';
 import { UserManagement } from './components/admin/UserManagement';
 import CampaignManagement from './components/admin/CampaignManagement';
+import { doc, getDoc, db } from './lib/firebase';
 
 export type Screen = 
   | 'login' 
@@ -222,8 +223,9 @@ export interface KioskSession {
   kioskName: string;
   startTime: string;
   assignedCampaigns: string[];
+  defaultCampaign?: string; 
   settings: Kiosk['settings'];
-  loginMethod: 'qr' | 'manual'; // Track how user logged in
+  loginMethod: 'qr' | 'manual'; 
 }
 
 export interface AdminSession {
@@ -403,6 +405,8 @@ export default function App() {
           onSelectCampaign={(campaign) => handleCampaignSelect(campaign, 'donate')}
           onViewDetails={(campaign) => handleCampaignSelect(campaign, 'overview')}
           kioskSession={currentKioskSession}
+          onLogout={handleLogout}
+          refreshCurrentKioskSession={refreshCurrentKioskSession}
         />
       )}
       
