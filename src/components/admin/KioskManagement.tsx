@@ -198,7 +198,34 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                         <TableCell>{getStatusBadge(kiosk.status)}</TableCell>
                         <TableCell><div className="space-y-1"><div className="flex items-center space-x-2"><DollarSign className="w-4 h-4 text-gray-400" /><span className="text-sm font-medium">{formatCurrency(kiosk.totalRaised || 0)}</span></div><div className="flex items-center space-x-2"><Users className="w-4 h-4 text-gray-400" /><span className="text-sm">{kiosk.totalDonations || 0} donations</span></div></div></TableCell>
                         <TableCell><div className="space-y-2"><div className="flex items-center space-x-2"><Target className="w-4 h-4 text-gray-400" /><span className="text-sm">{kiosk.assignedCampaigns?.length || 0} assigned</span></div>{kiosk.defaultCampaign && (<div className="flex items-center space-x-2"><Star className="w-4 h-4 text-yellow-500" /><span className="text-sm">{campaigns.find(c => c.id === kiosk.defaultCampaign)?.title?.slice(0, 20) || '...'}</span></div>)}</div></TableCell>
-                        <TableCell><div className="flex items-center space-x-1">{hasPermission('edit_kiosk') && <Button variant="ghost" size="sm" onClick={() => { setEditingKiosk(kiosk); setIsEditDialogOpen(true);}} title="Edit kiosk"><Edit className="w-4 h-4" /></Button>}{hasPermission('assign_campaigns') && <Button variant="ghost" size="sm" onClick={() => handleAssignCampaigns(kiosk)} title="Manage campaigns"><Target className="w-4 h-4" /></Button>}{hasPermission('delete_kiosk') && <Button variant="ghost" size="sm" onClick={() => handleDeleteKiosk(kiosk.id)} className="text-red-600 hover:text-red-700" title="Delete kiosk"><Trash2 className="w-4 h-4" /></Button>}</div></TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-1">
+                            {hasPermission('edit_kiosk') && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setAssigningKiosk(kiosk);
+                                  setIsAssignmentDialogOpen(true);
+                                }}
+                                title="Edit Kiosk Details & Campaigns"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                            )}
+                            {hasPermission('delete_kiosk') && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteKiosk(kiosk.id)}
+                                className="text-red-600 hover:text-red-700"
+                                title="Delete kiosk"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
