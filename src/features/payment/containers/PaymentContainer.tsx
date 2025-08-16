@@ -1,7 +1,7 @@
-import React from 'react';
-import { PaymentScreen } from '../../../components/PaymentScreen';
+import React, { useState, useEffect } from 'react';
+import { StripeProvider } from '../../../providers/StripeProvider';
+import { CheckoutForm } from '../../../components/CheckoutForm';
 import { Campaign, Donation, PaymentResult } from '../../../App';
-import { usePayment } from '../hooks/usePayment';
 
 interface PaymentContainerProps {
   campaign: Campaign;
@@ -10,32 +10,117 @@ interface PaymentContainerProps {
   onBack: () => void;
 }
 
-export function PaymentContainer({ campaign, donation, onPaymentComplete, onBack }: PaymentContainerProps) {
-  const {
-    isProcessing,
-    paymentMethod,
-    setPaymentMethod,
-    cardData,
-    setCardData,
-    handleSubmit,
-    formatCardNumber,
-    formatExpiry
-  } = usePayment(campaign, donation, onPaymentComplete);
+export function PaymentContainer({ 
+  campaign, 
+  donation, 
+  onPaymentComplete, 
+  onBack 
+}: PaymentContainerProps) {
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const createPaymentIntent = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        // Import Firebase Functions dynamically
+        const { getFunctions, httpsCallable } = await import('firebase/functions');
+        const functions = getFunctions();
+        const createPaymentIntent = httpsCallable(functions, 'createPaymentIntent');
+
+        // Create payment intent on the server
+        const result = await createPaymentIntent({
+          amount: donation.amount,
+          currency: 'usd',
+          campaignId: campaign.id,
+          donationData: {
+            donorEmail: donation.donorEmail,
+            donorName: donation.donorName,
+            isRecurring: donation.isRecurring,
+            recurringInterval: donation.recurringInterval,
+            kioskId: donation.kioskId,
+          },
+        });
+
+        const data = result.data as any;
+
+        if (data.success && data.clientSecret) {
+          setClientSecret(data.clientSecret);
+        } else {
+          throw new Error(data.error || 'Failed to create payment intent');
+        }
+      } catch (err: any) {
+        setError(err.message || 'Failed to initialize payment');
+        console.error('Error creating payment intent:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    createPaymentIntent();
+  }, [campaign.id, donation]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Initializing payment...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="text-red-600 mb-4">
+            <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Payment Error</h3>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={onBack}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!clientSecret) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">Unable to initialize payment. Please try again.</p>
+          <button
+            onClick={onBack}
+            className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <PaymentScreen
-      campaign={campaign}
-      donation={donation}
-      isProcessing={isProcessing}
-      paymentMethod={paymentMethod}
-      onPaymentMethodChange={setPaymentMethod}
-      cardData={cardData}
-      onCardDataChange={setCardData}
-      onFormatCardNumber={formatCardNumber}
-      onFormatExpiry={formatExpiry}
-      onSubmit={handleSubmit}
-      onBack={onBack}
-    />
+    <StripeProvider clientSecret={clientSecret}>
+      <CheckoutForm
+        campaign={campaign}
+        donation={donation}
+        onPaymentComplete={onPaymentComplete}
+        onBack={onBack}
+      />
+    </StripeProvider>
   );
 }
 
