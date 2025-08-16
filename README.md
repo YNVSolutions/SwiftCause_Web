@@ -29,46 +29,108 @@ Modern Donation Platform for UK-Based Nonprofits
 
 ## Setup
 
-1.  **Clone the repository:**
-
-    ```bash
-    git clone https://github.com/Yashraghuvans/SwiftCause.git
-    cd SwiftCause
-    ```
-
-2.  **Install dependencies:**
-
-    Using npm:
-
-    ```bash
-    npm install
-    ```
-
-    Using pnpm:
-
-    ```bash
-    pnpm install
-    ```
-
 ## Run Locally
 
-1.  **Start the development server:**
+### 1. Clone the Repository
 
-    Using npm:
+```bash
+git clone https://github.com/Yashraghuvans/SwiftCause.git
+cd SwiftCause
+```
 
-    ```bash
-    npm run dev
-    ```
+### 2. Install Dependencies
 
-    Using pnpm:
+```bash
 
-    ```bash
-    pnpm dev
-    ```
+npm install
 
-2.  **Open your browser:**
 
-    Navigate to `http://localhost:3000` to view the application.
+cd functions
+npm install
+cd ..
+```
+
+### 3. Environment Setup
+
+Create a `.env` file in the root directory with your environment variables.
+
+
+### 4. Firebase Setup
+
+#### 4.1 Login to Firebase
+
+```bash
+firebase login
+```
+
+#### 4.2 Set Firebase Project
+
+```bash
+firebase use swiftcause-app
+```
+
+#### 4.3 Deploy Firebase Functions
+
+```bash
+
+firebase deploy --only functions
+```
+
+### 5. Start Development Server
+
+```bash
+npm run dev
+```
+
+The application will be available at: **http://localhost:5173**
+
+## 🧪 Testing the Application
+
+Use these Stripe test card numbers:
+
+| Card Type | Number | Expected Result |
+|-----------|--------|-----------------|
+| **Success** | `4242 4242 4242 4242` | Payment succeeds |
+| **Decline** | `4000 0000 0000 0002` | Payment declined |
+| **Insufficient Funds** | `4000 0000 0000 9995` | Insufficient funds |
+| **Expired Card** | `4000 0000 0000 0069` | Expired card error |
+
+**Test Card Details:**
+- **Expiry Date**: Any future date (e.g., `12/25`)
+- **CVC**: Any 3 digits (e.g., `123`)
+- **ZIP**: Any 5 digits (e.g., `12345`)
+
+
+### Build for Production
+
+```bash
+npm run build
+
+firebase deploy --only hosting
+```
+
+## 📁 Project Structure
+
+```
+SwiftCause/
+├── src/                    # Frontend source code
+│   ├── components/         # React components
+│   ├── features/           # Feature-based modules
+│   ├── providers/          # Context providers
+│   ├── lib/               # Utility libraries
+│   └── App.tsx            # Main application component
+├── functions/              # Firebase Functions
+│   ├── src/               # TypeScript source
+│   ├── package.json       # Functions dependencies
+│   └── tsconfig.json      # TypeScript config
+├── public/                # Static assets
+├── dist/                  # Build output
+├── firebase.json          # Firebase configuration
+├── .firebaserc           # Firebase project settings
+└── package.json          # Frontend dependencies
+```
+
+
 
 
 ## Visual Studio Code 
