@@ -6,11 +6,6 @@ export interface UsePaymentReturn {
   isProcessing: boolean;
   paymentMethod: 'card' | 'paypal' | 'bank';
   setPaymentMethod: (method: 'card' | 'paypal' | 'bank') => void;
-  cardData: { number: string; expiry: string; cvv: string; name: string };
-  setCardData: (updater: (prev: { number: string; expiry: string; cvv: string; name: string }) => { number: string; expiry: string; cvv: string; name: string }) => void;
-  handleSubmit: (e: React.FormEvent) => Promise<void>;
-  formatCardNumber: (value: string) => string;
-  formatExpiry: (value: string) => string;
 }
 
 export function usePayment(
@@ -20,11 +15,6 @@ export function usePayment(
 ): UsePaymentReturn {
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'paypal' | 'bank'>('card');
-  const [cardData, setCardDataState] = useState({ number: '', expiry: '', cvv: '', name: '' });
-
-  const setCardData = useCallback((updater: (prev: { number: string; expiry: string; cvv: string; name: string }) => { number: string; expiry: string; cvv: string; name: string }) => {
-    setCardDataState(prev => updater(prev));
-  }, []);
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +28,7 @@ export function usePayment(
       if (success) {
         const result = await ApiClient.createDonation({
           ...donation,
-          donorName: cardData.name,
+          // donorName: cardData.name, // This is no longer collected here
           paymentMethod: paymentMethod === 'card' ? 'Credit Card' : paymentMethod === 'paypal' ? 'PayPal' : 'Bank Transfer'
         });
 
@@ -48,48 +38,20 @@ export function usePayment(
           throw new Error('Failed to process donation');
         }
       } else {
-        throw new Error('Payment processing failed');
+        onPaymentComplete({ success: false, error: 'Payment processing failed. Please try again.' });
       }
     } catch (error: any) {
       onPaymentComplete({ success: false, error: error?.message || 'Payment processing failed. Please try again.' });
     } finally {
       setIsProcessing(false);
     }
-  }, [donation, cardData.name, paymentMethod, onPaymentComplete]);
+  }, [donation, paymentMethod, onPaymentComplete]);
 
-  const formatCardNumber = useCallback((value: string) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    const matches = v.match(/\d{4,16}/g);
-    const match = (matches && matches[0]) || '';
-    const parts: string[] = [];
-
-    for (let i = 0, len = match.length; i < len; i += 4) {
-      parts.push(match.substring(i, i + 4));
-    }
-
-    if (parts.length) {
-      return parts.join(' ');
-    }
-    return v;
-  }, []);
-
-  const formatExpiry = useCallback((value: string) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    if (v.length >= 2) {
-      return v.substring(0, 2) + '/' + v.substring(2, 4);
-    }
-    return v;
-  }, []);
 
   return {
     isProcessing,
     paymentMethod,
     setPaymentMethod,
-    cardData: cardDataState,
-    setCardData,
-    handleSubmit,
-    formatCardNumber,
-    formatExpiry
   };
 }
 
