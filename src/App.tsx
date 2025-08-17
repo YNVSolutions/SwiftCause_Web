@@ -433,7 +433,6 @@ export default function App() {
             setCampaignView('donate');
             navigate('campaign');
           }}
-          onPaymentSuccess={handlePaymentSuccess}
         />
       )}
 

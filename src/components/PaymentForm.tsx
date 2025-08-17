@@ -1,85 +1,66 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
+import { Button } from './ui/button';
+import { Alert, AlertDescription, AlertTitle } from './ui/alert';
+import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
 
 interface PaymentFormProps {
-  onPaymentSuccess: (paymentIntentId: string) => void;
+  loading: boolean;
+  error: string | null;
+  onSubmit: () => Promise<void>;
 }
 
-const PaymentForm: React.FC<PaymentFormProps> = ({ onPaymentSuccess }) => {
+const PaymentForm: React.FC<PaymentFormProps> = ({ loading, error, onSubmit }) => {
   const stripe = useStripe();
   const elements = useElements();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    setLoading(true);
-    setError(null);
-
     if (!stripe || !elements) {
       return;
     }
-
-    const cardElement = elements.getElement(CardElement);
-
-    if (!cardElement) {
-      return;
-    }
-
-    try {
-      const response = await fetch('https://createkioskpaymentintent-j2f5w4qwxq-uc.a.run.app', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ amount: 1000 }), // Example amount in cents
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Error from backend:', errorData);
-        setError(typeof errorData === 'string' ? errorData : errorData.error?.message || errorData.message || JSON.stringify(errorData) || 'Failed to create Payment Intent');
-        setLoading(false);
-        return;
-      }
-
-      const { clientSecret } = await response.json();
-      console.log('Received clientSecret:', clientSecret);
-
-      if (!clientSecret) {
-        setError('Client secret not received from backend.');
-        setLoading(false);
-        return;
-      }
-
-      const { paymentIntent, error } = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: {
-          card: cardElement,
-        },
-      });
-
-      if (error) {
-        setError(error.message || 'An unknown error occurred');
-      } else if (paymentIntent && paymentIntent.status === 'succeeded') {
-        onPaymentSuccess(paymentIntent.id);
-      } else {
-        setError('Payment not successful.');
-      }
-    } catch (err: any) {
-      console.error('Fetch or Stripe error:', err);
-      setError(err.message || 'An unexpected error occurred.');
-    } finally {
-      setLoading(false);
-    }
+    await onSubmit();
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <CardElement />
-      <button type="submit" disabled={!stripe || loading}>
-        {loading ? 'Processing...' : 'Pay'}
-      </button>
-      {error && <div style={{ color: 'red' }}>{error}</div>}
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="border p-3 rounded-md bg-white shadow-sm">
+        <CardElement options={{
+          style: {
+            base: {
+              fontSize: '16px',
+              color: '#333',
+              '::placeholder': {
+                color: '#aab7c4',
+              },
+            },
+            invalid: {
+              color: '#fa755a',
+              iconColor: '#fa755a',
+            },
+          },
+        }} />
+      </div>
+      <Button type="submit" disabled={!stripe || loading} className="w-full">
+        {loading ? (
+          <span className="flex items-center justify-center">
+            <svg className="animate-spin h-5 w-5 mr-3 text-white" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Processing...
+          </span>
+        ) : (
+          'Pay Now'
+        )}
+      </Button>
+      {error && (
+        <Alert variant="destructive">
+          <ExclamationTriangleIcon className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
     </form>
   );
 };

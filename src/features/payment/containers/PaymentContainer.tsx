@@ -8,25 +8,23 @@ interface PaymentContainerProps {
   donation: Donation;
   onPaymentComplete: (result: PaymentResult) => void;
   onBack: () => void;
-  onPaymentSuccess: (paymentIntentId: string) => void;
 }
 
-export function PaymentContainer({ campaign, donation, onPaymentComplete, onBack, onPaymentSuccess }: PaymentContainerProps) {
+export function PaymentContainer({ campaign, donation, onPaymentComplete, onBack }: PaymentContainerProps) {
   const {
     isProcessing,
-    paymentMethod,
-    setPaymentMethod,
-  } = usePayment(campaign, donation, onPaymentComplete);
+    error,
+    handlePaymentSubmit,
+  } = usePayment(onPaymentComplete);
 
   return (
     <PaymentScreen
       campaign={campaign}
       donation={donation}
       isProcessing={isProcessing}
-      paymentMethod={paymentMethod}
-      onPaymentMethodChange={setPaymentMethod}
+      error={error}
+      handlePaymentSubmit={handlePaymentSubmit}
       onBack={onBack}
-      onPaymentSuccess={onPaymentSuccess}
     />
   );
 }
