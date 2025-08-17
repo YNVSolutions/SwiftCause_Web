@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Badge } from './ui/badge';
 import { ArrowLeft, CreditCard, Shield, Lock } from 'lucide-react';
 import { Campaign, Donation, PaymentResult } from '../App';
+import PaymentForm from './PaymentForm';
 
 interface PaymentScreenProps {
   campaign: Campaign;
@@ -14,15 +15,11 @@ interface PaymentScreenProps {
   isProcessing: boolean;
   paymentMethod: 'card' | 'paypal' | 'bank';
   onPaymentMethodChange: (method: 'card' | 'paypal' | 'bank') => void;
-  cardData: { number: string; expiry: string; cvv: string; name: string };
-  onCardDataChange: (updater: (prev: { number: string; expiry: string; cvv: string; name: string }) => { number: string; expiry: string; cvv: string; name: string }) => void;
-  onFormatCardNumber: (value: string) => string;
-  onFormatExpiry: (value: string) => string;
-  onSubmit: (e: React.FormEvent) => void;
   onBack: () => void;
+  onPaymentSuccess: (paymentIntentId: string) => void;
 }
 
-export function PaymentScreen({ campaign, donation, isProcessing, paymentMethod, onPaymentMethodChange, cardData, onCardDataChange, onFormatCardNumber, onFormatExpiry, onSubmit, onBack }: PaymentScreenProps) {
+export function PaymentScreen({ campaign, donation, isProcessing, paymentMethod, onPaymentMethodChange, onBack, onPaymentSuccess }: PaymentScreenProps) {
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -60,7 +57,10 @@ export function PaymentScreen({ campaign, donation, isProcessing, paymentMethod,
             </CardHeader>
             
             <CardContent className="p-3 sm:p-6 pt-0">
-              <form onSubmit={onSubmit} className="space-y-4 sm:space-y-6">
+              {paymentMethod === 'card' ? (
+                <PaymentForm onPaymentSuccess={onPaymentSuccess} />
+              ) : (
+                <form onSubmit={(e) => { e.preventDefault(); /* Handle other payment methods */ }} className="space-y-4 sm:space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="paymentMethod" className="text-sm sm:text-base">Payment Method</Label>
                   <Select value={paymentMethod} onValueChange={(v: any) => onPaymentMethodChange(v)}>
@@ -74,87 +74,6 @@ export function PaymentScreen({ campaign, donation, isProcessing, paymentMethod,
                     </SelectContent>
                   </Select>
                 </div>
-
-                {paymentMethod === 'card' && (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="cardName" className="text-sm sm:text-base">Cardholder Name</Label>
-                      <Input
-                        id="cardName"
-                        type="text"
-                        placeholder="John Doe"
-                        value={cardData.name}
-                        onChange={(e) => onCardDataChange(prev => ({ ...prev, name: e.target.value }))}
-                        required
-                        disabled={isProcessing}
-                        className="h-11 sm:h-12"
-                        autoComplete="cc-name"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="cardNumber" className="text-sm sm:text-base">Card Number</Label>
-                      <Input
-                        id="cardNumber"
-                        type="text"
-                        placeholder="1234 5678 9012 3456"
-                        value={cardData.number}
-                        onChange={(e) => onCardDataChange(prev => ({ 
-                          ...prev, 
-                          number: onFormatCardNumber(e.target.value) 
-                        }))}
-                        maxLength={19}
-                        required
-                        disabled={isProcessing}
-                        className="h-11 sm:h-12"
-                        autoComplete="cc-number"
-                        inputMode="numeric"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="expiry" className="text-sm sm:text-base">Expiry Date</Label>
-                        <Input
-                          id="expiry"
-                          type="text"
-                          placeholder="MM/YY"
-                          value={cardData.expiry}
-                          onChange={(e) => onCardDataChange(prev => ({ 
-                            ...prev, 
-                            expiry: onFormatExpiry(e.target.value) 
-                          }))}
-                          maxLength={5}
-                          required
-                          disabled={isProcessing}
-                          className="h-11 sm:h-12"
-                          autoComplete="cc-exp"
-                          inputMode="numeric"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="cvv" className="text-sm sm:text-base">CVV</Label>
-                        <Input
-                          id="cvv"
-                          type="text"
-                          placeholder="123"
-                          value={cardData.cvv}
-                          onChange={(e) => onCardDataChange(prev => ({ 
-                            ...prev, 
-                            cvv: e.target.value.replace(/\D/g, '').substring(0, 4) 
-                          }))}
-                          maxLength={4}
-                          required
-                          disabled={isProcessing}
-                          className="h-11 sm:h-12"
-                          autoComplete="cc-csc"
-                          inputMode="numeric"
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
 
                 {paymentMethod === 'paypal' && (
                   <div className="p-3 sm:p-4 border rounded-lg text-center">
@@ -179,10 +98,10 @@ export function PaymentScreen({ campaign, donation, isProcessing, paymentMethod,
                   </span>
                 </div>
 
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   disabled={isProcessing}
-                  size="lg" 
+                  size="lg"
                   className="w-full h-12 sm:h-14 text-sm sm:text-base"
                 >
                   {isProcessing ? (
@@ -198,6 +117,7 @@ export function PaymentScreen({ campaign, donation, isProcessing, paymentMethod,
                   )}
                 </Button>
               </form>
+              )}
             </CardContent>
           </Card>
 
