@@ -8,18 +8,14 @@ interface PaymentContainerProps {
   donation: Donation;
   onPaymentComplete: (result: PaymentResult) => void;
   onBack: () => void;
+  onPaymentSuccess: (paymentIntentId: string) => void;
 }
 
-export function PaymentContainer({ campaign, donation, onPaymentComplete, onBack }: PaymentContainerProps) {
+export function PaymentContainer({ campaign, donation, onPaymentComplete, onBack, onPaymentSuccess }: PaymentContainerProps) {
   const {
     isProcessing,
     paymentMethod,
     setPaymentMethod,
-    cardData,
-    setCardData,
-    handleSubmit,
-    formatCardNumber,
-    formatExpiry
   } = usePayment(campaign, donation, onPaymentComplete);
 
   return (
@@ -29,12 +25,8 @@ export function PaymentContainer({ campaign, donation, onPaymentComplete, onBack
       isProcessing={isProcessing}
       paymentMethod={paymentMethod}
       onPaymentMethodChange={setPaymentMethod}
-      cardData={cardData}
-      onCardDataChange={setCardData}
-      onFormatCardNumber={formatCardNumber}
-      onFormatExpiry={formatExpiry}
-      onSubmit={handleSubmit}
       onBack={onBack}
+      onPaymentSuccess={onPaymentSuccess}
     />
   );
 }
