@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { LoginScreen } from './components/LoginScreen';
 import { CampaignListContainer } from './features/campaigns/containers/CampaignListContainer';
 import { CampaignScreen } from './components/CampaignScreen';
-import { PaymentContainer } from './features/payment/containers/PaymentContainer';
+import { StripePaymentContainer } from './features/payment/containers/StripePaymentContainer';
 import { ResultScreen } from './components/ResultScreen';
 import { EmailConfirmationScreen } from './components/EmailConfirmationScreen';
 import { AdminDashboard } from './components/admin/AdminDashboard';
@@ -421,7 +421,7 @@ export default function App() {
       )}
       
       {currentScreen === 'payment' && donation && selectedCampaign && (
-        <PaymentContainer 
+        <StripePaymentContainer 
           campaign={selectedCampaign}
           donation={donation}
           onPaymentComplete={handlePaymentSubmit}
