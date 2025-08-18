@@ -13,27 +13,17 @@ interface PaymentContainerProps {
 export function PaymentContainer({ campaign, donation, onPaymentComplete, onBack }: PaymentContainerProps) {
   const {
     isProcessing,
-    paymentMethod,
-    setPaymentMethod,
-    cardData,
-    setCardData,
-    handleSubmit,
-    formatCardNumber,
-    formatExpiry
-  } = usePayment(campaign, donation, onPaymentComplete);
+    error,
+    handlePaymentSubmit,
+  } = usePayment(onPaymentComplete);
 
   return (
     <PaymentScreen
       campaign={campaign}
       donation={donation}
       isProcessing={isProcessing}
-      paymentMethod={paymentMethod}
-      onPaymentMethodChange={setPaymentMethod}
-      cardData={cardData}
-      onCardDataChange={setCardData}
-      onFormatCardNumber={formatCardNumber}
-      onFormatExpiry={formatExpiry}
-      onSubmit={handleSubmit}
+      error={error}
+      handlePaymentSubmit={handlePaymentSubmit}
       onBack={onBack}
     />
   );

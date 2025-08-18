@@ -1,96 +1,89 @@
-import { useCallback, useMemo, useState } from 'react';
-import { ApiClient } from '../../../utils/supabase/client';
-import { Campaign, Donation, PaymentResult } from '../../../App';
+import { useState, useCallback } from 'react';
+import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
+import { PaymentResult } from '../../../App'; // Adjust path if needed
 
-export interface UsePaymentReturn {
+interface UsePaymentReturn {
   isProcessing: boolean;
-  paymentMethod: 'card' | 'paypal' | 'bank';
-  setPaymentMethod: (method: 'card' | 'paypal' | 'bank') => void;
-  cardData: { number: string; expiry: string; cvv: string; name: string };
-  setCardData: (updater: (prev: { number: string; expiry: string; cvv: string; name: string }) => { number: string; expiry: string; cvv: string; name: string }) => void;
-  handleSubmit: (e: React.FormEvent) => Promise<void>;
-  formatCardNumber: (value: string) => string;
-  formatExpiry: (value: string) => string;
+  error: string | null;
+  handlePaymentSubmit: () => Promise<void>;
 }
 
-export function usePayment(
-  campaign: Campaign,
-  donation: Donation,
-  onPaymentComplete: (result: PaymentResult) => void
-): UsePaymentReturn {
+export function usePayment(onPaymentComplete: (result: PaymentResult) => void): UsePaymentReturn {
+  const stripe = useStripe();
+  const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'paypal' | 'bank'>('card');
-  const [cardData, setCardDataState] = useState({ number: '', expiry: '', cvv: '', name: '' });
+  const [error, setError] = useState<string | null>(null);
 
-  const setCardData = useCallback((updater: (prev: { number: string; expiry: string; cvv: string; name: string }) => { number: string; expiry: string; cvv: string; name: string }) => {
-    setCardDataState(prev => updater(prev));
-  }, []);
-
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handlePaymentSubmit = useCallback(async () => {
     setIsProcessing(true);
+    setError(null);
+
+    if (!stripe || !elements) {
+      setError('Stripe.js has not loaded.');
+      setIsProcessing(false);
+      return;
+    }
+
+    const cardElement = elements.getElement(CardElement);
+
+    if (!cardElement) {
+      setError('Card details not found.');
+      setIsProcessing(false);
+      return;
+    }
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const response = await fetch('https://createkioskpaymentintent-j2f5w4qwxq-uc.a.run.app', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ amount: 1000 }), // Use amount from props in a real app
+      });
 
-      const success = Math.random() > 0.05;
-
-      if (success) {
-        const result = await ApiClient.createDonation({
-          ...donation,
-          donorName: cardData.name,
-          paymentMethod: paymentMethod === 'card' ? 'Credit Card' : paymentMethod === 'paypal' ? 'PayPal' : 'Bank Transfer'
-        });
-
-        if (result.success) {
-          onPaymentComplete({ success: true, transactionId: result.transactionId });
-        } else {
-          throw new Error('Failed to process donation');
-        }
-      } else {
-        throw new Error('Payment processing failed');
+      if (!response.ok) {
+        const errorData = await response.json();
+        const errorMessage = typeof errorData === 'string' ? errorData : errorData.error?.message || errorData.message || JSON.stringify(errorData) || 'Failed to create Payment Intent';
+        setError(errorMessage);
+        setIsProcessing(false);
+        return;
       }
-    } catch (error: any) {
-      onPaymentComplete({ success: false, error: error?.message || 'Payment processing failed. Please try again.' });
+
+      const { clientSecret } = await response.json();
+
+      if (!clientSecret) {
+        setError('Client secret not received from backend.');
+        setIsProcessing(false);
+        return;
+      }
+
+      const { paymentIntent, error: stripeError } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: cardElement,
+        },
+      });
+
+      if (stripeError) {
+        setError(stripeError.message || 'An unknown error occurred during payment confirmation.');
+        onPaymentComplete({ success: false, error: stripeError.message || 'Payment failed.' });
+      } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+        onPaymentComplete({ success: true, transactionId: paymentIntent.id });
+      } else {
+        setError('Payment not successful.');
+        onPaymentComplete({ success: false, error: 'Payment not successful.' });
+      }
+    } catch (err: any) {
+      console.error('Fetch or Stripe error:', err);
+      setError(err.message || 'An unexpected error occurred.');
+      onPaymentComplete({ success: false, error: err.message || 'An unexpected error occurred.' });
     } finally {
       setIsProcessing(false);
     }
-  }, [donation, cardData.name, paymentMethod, onPaymentComplete]);
-
-  const formatCardNumber = useCallback((value: string) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    const matches = v.match(/\d{4,16}/g);
-    const match = (matches && matches[0]) || '';
-    const parts: string[] = [];
-
-    for (let i = 0, len = match.length; i < len; i += 4) {
-      parts.push(match.substring(i, i + 4));
-    }
-
-    if (parts.length) {
-      return parts.join(' ');
-    }
-    return v;
-  }, []);
-
-  const formatExpiry = useCallback((value: string) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    if (v.length >= 2) {
-      return v.substring(0, 2) + '/' + v.substring(2, 4);
-    }
-    return v;
-  }, []);
+  }, [stripe, elements, onPaymentComplete]);
 
   return {
     isProcessing,
-    paymentMethod,
-    setPaymentMethod,
-    cardData: cardDataState,
-    setCardData,
-    handleSubmit,
-    formatCardNumber,
-    formatExpiry
+    error,
+    handlePaymentSubmit,
   };
 }
-
-
