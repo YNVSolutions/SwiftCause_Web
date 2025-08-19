@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { useCampaigns } from './useCampaigns';
 
 export function useCampaignManagement() {
-  const { campaigns, updateWithImage, loading, error } = useCampaigns();
+  const { campaigns, updateWithImage, create, createWithImage, loading, error } = useCampaigns();
   const [uploadingImage, setUploadingImage] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -54,6 +54,8 @@ export function useCampaignManagement() {
     handleImageUpload,
     clearImageSelection,
     setImagePreviewUrl,
-    updateWithImage
+    updateWithImage,
+    create,
+    createWithImage
   };
 }
