@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { getCampaigns, getTopCampaigns, getAllCampaigns, updateCampaign, updateCampaignWithImage } from '../api/firestoreService';
+import { getCampaigns, getTopCampaigns, getAllCampaigns, updateCampaign, updateCampaignWithImage, createCampaign, createCampaignWithImage } from '../api/firestoreService';
 
 export function useCampaigns() {
   const [loading, setLoading] = useState(true);
@@ -38,9 +38,29 @@ export function useCampaigns() {
     return await getTopCampaigns(limitCount);
   }, []);
 
+  const create = useCallback(async (data: any) => {
+    try {
+      const newCampaign = await createCampaign(data);
+      setCampaigns(prev => [...prev, newCampaign]);
+      return newCampaign;
+    } catch (error) {
+      throw error;
+    }
+  }, []);
+
+  const createWithImage = useCallback(async (data: any, imageFile: File | null = null) => {
+    try {
+      const newCampaign = await createCampaignWithImage(data, imageFile);
+      setCampaigns(prev => [...prev, newCampaign]);
+      return newCampaign;
+    } catch (error) {
+      throw error;
+    }
+  }, []);
+
   useEffect(() => {
     refresh();
   }, [refresh]);
 
-  return { loading, error, campaigns, refresh, update, updateWithImage, getTop };
+  return { loading, error, campaigns, refresh, update, updateWithImage, getTop, create, createWithImage };
 }
