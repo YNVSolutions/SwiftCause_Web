@@ -5,6 +5,7 @@ import {
   doc,
   getDoc,
   updateDoc,
+  addDoc,
   query,
   orderBy,
   limit
@@ -71,4 +72,36 @@ export async function getAllCampaigns() {
 export async function updateKiosk(kioskId: string, data: any) {
   const ref = doc(db, 'kiosks', kioskId);
   await updateDoc(ref, data);
+}
+
+export async function createCampaign(data: any) {
+  const campaignsRef = collection(db, 'campaigns');
+  const docRef = await addDoc(campaignsRef, data);
+  return { id: docRef.id, ...data };
+}
+
+export async function createCampaignWithImage(data: any, imageFile: File | null = null) {
+  let imageUrl = data.coverImageUrl || '';
+  
+  if (imageFile) {
+    try {
+      const tempId = Date.now().toString();
+      imageUrl = await uploadCampaignCoverImage(imageFile, tempId);
+    } catch (error) {
+      throw new Error(`Failed to upload image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+  
+  const campaignData = {
+    ...data,
+    coverImageUrl: imageUrl,
+    collectedAmount: 0,
+    donationCount: 0,
+    createdAt: new Date(),
+    status: data.status || 'active'
+  };
+  
+  const campaignsRef = collection(db, 'campaigns');
+  const docRef = await addDoc(campaignsRef, campaignData);
+  return { id: docRef.id, ...campaignData };
 }
