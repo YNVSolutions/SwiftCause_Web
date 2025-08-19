@@ -1,14 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { db } from '../../lib/firebase';
+import React, { useEffect, useState, useRef } from 'react';
 import { Screen, AdminSession, Permission } from '../../App';
-import {
-  collection,
-  getDocs,
-  updateDoc,
-  doc,
-  DocumentData,
-  Timestamp,
-} from 'firebase/firestore';
+import { DocumentData, Timestamp } from 'firebase/firestore';
+import { useCampaignManagement } from '../../hooks/useCampaignManagement';
 
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -16,7 +9,7 @@ import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { FaEdit, FaSearch, FaEllipsisV } from 'react-icons/fa';
+import { FaEdit, FaSearch, FaEllipsisV, FaUpload, FaImage } from 'react-icons/fa';
 import {
   Plus,
   ArrowLeft,
@@ -31,9 +24,25 @@ interface CampaignEditDialogProps {
   onSave: (updatedData: DocumentData) => void;
 }
 
+interface CampaignAddDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: (newData: DocumentData) => void;
+}
+
 const CampaignEditDialog = ({ open, onOpenChange, campaign, onSave }: CampaignEditDialogProps) => {
   const [formData, setFormData] = useState<DocumentData | null>(null);
-
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const {
+    uploadingImage,
+    selectedImage,
+    imagePreview,
+    handleImageSelect,
+    handleImageUpload,
+    clearImageSelection,
+    setImagePreviewUrl
+  } = useCampaignManagement();
 
   useEffect(() => {
     if (campaign) {
@@ -45,20 +54,49 @@ const CampaignEditDialog = ({ open, onOpenChange, campaign, onSave }: CampaignEd
         tags: Array.isArray(campaign.tags) ? campaign.tags.join(', ') : '',
         startDate: campaign.startDate?.seconds ? new Date(campaign.startDate.seconds * 1000).toISOString().split('T')[0] : '',
         endDate: campaign.endDate?.seconds ? new Date(campaign.endDate.seconds * 1000).toISOString().split('T')[0] : '',
+        coverImageUrl: campaign.coverImageUrl || '',
       };
       setFormData(editableData);
+      setImagePreviewUrl(campaign.coverImageUrl || null);
     }
-  }, [campaign]);
+  }, [campaign, setImagePreviewUrl]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => (prev ? { ...prev, [name]: value } : null));
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleImageSelect(file);
+    }
+  };
+
+  const handleUploadImage = async () => {
+    if (!selectedImage || !campaign || !formData) return;
+    
+    try {
+      const updatedData = await handleImageUpload(campaign.id, formData);
+      if (updatedData) {
+        setFormData(prev => (prev ? { ...prev, coverImageUrl: updatedData.coverImageUrl } : null));
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload image. Please try again.';
+      alert(errorMessage);
+    }
+  };
+
   const handleSaveChanges = () => {
     if (formData) {
       onSave(formData);
     }
+  };
+
+  const handleDialogClose = () => {
+    clearImageSelection();
+    onOpenChange(false);
   };
 
   if (!formData) return null;
@@ -83,6 +121,66 @@ const CampaignEditDialog = ({ open, onOpenChange, campaign, onSave }: CampaignEd
           <div className="grid grid-cols-4 items-start gap-4">
             <Label htmlFor="description" className="text-right pt-2">Description</Label>
             <Textarea id="description" name="description" value={formData.description} onChange={handleChange} className="col-span-3" rows={3} />
+          </div>
+
+          <div className="grid grid-cols-4 items-start gap-4">
+            <Label className="text-right pt-2">Cover Image</Label>
+            <div className="col-span-3 space-y-4">
+              
+              {imagePreview && (
+                <div className="flex items-center space-x-4">
+                  <img
+                    src={imagePreview}
+                    alt="Campaign cover"
+                    className="w-20 h-20 object-cover rounded-lg border"
+                  />
+                  <div className="text-sm text-gray-600">
+                    <p>Current cover image</p>
+                  </div>
+                </div>
+              )}
+              
+             
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center space-x-2"
+                  >
+                    <FaImage className="w-4 h-4" />
+                    <span>Select Image</span>
+                  </Button>
+                  
+                  {selectedImage && (
+                    <Button
+                      type="button"
+                      onClick={handleUploadImage}
+                      disabled={uploadingImage}
+                      className="flex items-center space-x-2"
+                    >
+                      <FaUpload className={`w-4 h-4 ${uploadingImage ? 'animate-spin' : ''}`} />
+                      <span>{uploadingImage ? 'Uploading...' : 'Upload Image'}</span>
+                    </Button>
+                  )}
+                </div>
+                
+                {selectedImage && (
+                  <div className="text-sm text-gray-600">
+                    <p>Selected: {selectedImage.name}</p>
+                    <p>Size: {(selectedImage.size / 1024 / 1024).toFixed(2)} MB</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-4 items-center gap-4">
@@ -118,8 +216,227 @@ const CampaignEditDialog = ({ open, onOpenChange, campaign, onSave }: CampaignEd
 
         </div>
         <div className="flex justify-end space-x-2 pt-4 border-t">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSaveChanges}>Save Changes</Button>
+          <Button variant="outline" onClick={handleDialogClose} disabled={uploadingImage}>Cancel</Button>
+          <Button onClick={handleSaveChanges} disabled={uploadingImage}>
+            {uploadingImage ? 'Uploading...' : 'Save Changes'}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const CampaignAddDialog = ({ open, onOpenChange, onSave }: CampaignAddDialogProps) => {
+  const [formData, setFormData] = useState<DocumentData>({
+    title: '',
+    description: '',
+    status: 'active',
+    goalAmount: 0,
+    tags: '',
+    startDate: '',
+    endDate: '',
+    coverImageUrl: ''
+  });
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const {
+    uploadingImage,
+    selectedImage,
+    imagePreview,
+    handleImageSelect,
+    clearImageSelection,
+    setImagePreviewUrl
+  } = useCampaignManagement();
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleImageSelect(file);
+    }
+  };
+
+  const handleSaveChanges = () => {
+    if (formData.title && formData.description) {
+      onSave(formData);
+    }
+  };
+
+  const handleDialogClose = () => {
+    setFormData({
+      title: '',
+      description: '',
+      status: 'active',
+      goalAmount: 0,
+      tags: '',
+      startDate: '',
+      endDate: '',
+      coverImageUrl: ''
+    });
+    clearImageSelection();
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[600px]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center">
+            <Plus className="mr-2 h-5 w-5" /> Add New Campaign
+          </DialogTitle>
+          <DialogDescription>
+            Fill in the details below to create a new campaign.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-6 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="title" className="text-right">Title *</Label>
+            <Input 
+              id="title" 
+              name="title" 
+              value={formData.title} 
+              onChange={handleChange} 
+              className="col-span-3" 
+              placeholder="Enter campaign title"
+            />
+          </div>
+
+          <div className="grid grid-cols-4 items-start gap-4">
+            <Label htmlFor="description" className="text-right pt-2">Description *</Label>
+            <Textarea 
+              id="description" 
+              name="description" 
+              value={formData.description} 
+              onChange={handleChange} 
+              className="col-span-3" 
+              rows={3} 
+              placeholder="Enter campaign description"
+            />
+          </div>
+
+          <div className="grid grid-cols-4 items-start gap-4">
+            <Label className="text-right pt-2">Cover Image</Label>
+            <div className="col-span-3 space-y-4">
+              {imagePreview && (
+                <div className="flex items-center space-x-4">
+                  <img
+                    src={imagePreview}
+                    alt="Campaign cover"
+                    className="w-20 h-20 object-cover rounded-lg border"
+                  />
+                  <div className="text-sm text-gray-600">
+                    <p>Selected image</p>
+                  </div>
+                </div>
+              )}
+              
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center space-x-2"
+                  >
+                    <FaImage className="w-4 h-4" />
+                    <span>Select Image</span>
+                  </Button>
+                </div>
+                
+                {selectedImage && (
+                  <div className="text-sm text-gray-600">
+                    <p>Selected: {selectedImage.name}</p>
+                    <p>Size: {(selectedImage.size / 1024 / 1024).toFixed(2)} MB</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="tags" className="text-right">Tags</Label>
+            <Input 
+              id="tags" 
+              name="tags" 
+              value={formData.tags} 
+              onChange={handleChange} 
+              className="col-span-3" 
+              placeholder="health, education, etc."
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-x-4 gap-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="goalAmount">Fundraising Goal ($)</Label>
+              <Input 
+                id="goalAmount" 
+                name="goalAmount" 
+                type="number" 
+                value={formData.goalAmount} 
+                onChange={handleChange} 
+                placeholder="0"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <Select 
+                name="status" 
+                value={formData.status} 
+                onValueChange={(value) => handleChange({ target: { name: 'status', value } } as any)}
+              >
+                <SelectTrigger id="status">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="paused">Paused</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="startDate">Start Date</Label>
+              <Input 
+                id="startDate" 
+                name="startDate" 
+                type="date" 
+                value={formData.startDate} 
+                onChange={handleChange} 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="endDate">End Date</Label>
+              <Input 
+                id="endDate" 
+                name="endDate" 
+                type="date" 
+                value={formData.endDate} 
+                onChange={handleChange} 
+              />
+            </div>
+          </div>
+        </div>
+        <div className="flex justify-end space-x-2 pt-4 border-t">
+          <Button variant="outline" onClick={handleDialogClose} disabled={uploadingImage}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSaveChanges} 
+            disabled={uploadingImage || !formData.title || !formData.description}
+          >
+            Create Campaign
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
@@ -135,23 +452,12 @@ interface CampaignManagementProps {
 }
 
 const CampaignManagement = ({ onNavigate, onLogout, userSession, hasPermission }: CampaignManagementProps) => {
-  const [campaigns, setCampaigns] = useState<DocumentData[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<DocumentData | null>(null);
-
-  useEffect(() => {
-    const fetchCampaigns = async () => {
-      try {
-        const querySnapshot = await getDocs(collection(db, 'campaigns'));
-        const docs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setCampaigns(docs);
-      } catch (error) {
-        console.error("Error fetching campaigns: ", error);
-      }
-    };
-    fetchCampaigns();
-  }, []);
+  
+  const { campaigns, updateWithImage, createWithImage } = useCampaignManagement();
 
   const handleEditClick = (campaign: DocumentData) => {
     setEditingCampaign(campaign);
@@ -163,7 +469,6 @@ const CampaignManagement = ({ onNavigate, onLogout, userSession, hasPermission }
 
     const campaignId = editingCampaign.id;
     try {
-        const campaignRef = doc(db, 'campaigns', campaignId);
         const dataToSave: { [key: string]: any } = {
           title: updatedData.title,
           description: updatedData.description,
@@ -174,17 +479,35 @@ const CampaignManagement = ({ onNavigate, onLogout, userSession, hasPermission }
 
         if (updatedData.startDate) dataToSave.startDate = Timestamp.fromDate(new Date(updatedData.startDate));
         if (updatedData.endDate) dataToSave.endDate = Timestamp.fromDate(new Date(updatedData.endDate));
+        if (updatedData.coverImageUrl) dataToSave.coverImageUrl = updatedData.coverImageUrl;
 
-        await updateDoc(campaignRef, dataToSave);
-
-        setCampaigns(prev =>
-            prev.map(c => c.id === campaignId ? { ...c, ...dataToSave } : c)
-        );
+        await updateWithImage(campaignId, dataToSave);
     } catch (error) {
         console.error("Error updating document: ", error);
     } finally {
         setIsEditDialogOpen(false);
         setEditingCampaign(null);
+    }
+  };
+
+  const handleAddCampaign = async (newData: DocumentData) => {
+    try {
+        const dataToSave: { [key: string]: any } = {
+          title: newData.title,
+          description: newData.description,
+          status: newData.status,
+          goalAmount: Number(newData.goalAmount),
+          tags: newData.tags.split(',').map((t: string) => t.trim()).filter(Boolean),
+        };
+
+        if (newData.startDate) dataToSave.startDate = Timestamp.fromDate(new Date(newData.startDate));
+        if (newData.endDate) dataToSave.endDate = Timestamp.fromDate(new Date(newData.endDate));
+
+        await createWithImage(dataToSave);
+    } catch (error) {
+        console.error("Error creating campaign: ", error);
+    } finally {
+        setIsAddDialogOpen(false);
     }
   };
 
@@ -235,7 +558,10 @@ const CampaignManagement = ({ onNavigate, onLogout, userSession, hasPermission }
                         <Download className="w-4 h-4 mr-2" />
                         Export Logs
                       </Button>
-                      <Button className="bg-indigo-600 hover:bg-indigo-700">
+                      <Button 
+                        className="bg-indigo-600 hover:bg-indigo-700"
+                        onClick={() => setIsAddDialogOpen(true)}
+                      >
                         <Plus className="w-4 h-4 mr-2" />
                         Add Campaign
                       </Button>
@@ -288,11 +614,16 @@ const CampaignManagement = ({ onNavigate, onLogout, userSession, hasPermission }
                 return (
                   <div key={campaign.id} className="block md:grid md:grid-cols-10 items-center py-4 px-6 hover:bg-gray-50 transition-colors duration-150">
                     <div className="md:col-span-3 flex items-center space-x-3 mb-4 md:mb-0">
-                      <img
-                        src={campaign.coverImageUrl || 'https://via.placeholder.com/40'}
-                        alt={campaign.title}
-                        className="w-10 h-10 object-cover rounded-md flex-shrink-0"
-                      />
+                      <div className="relative">
+                        <img
+                          src={campaign.coverImageUrl || 'https://via.placeholder.com/40'}
+                          alt={campaign.title}
+                          className="w-10 h-10 object-cover rounded-md flex-shrink-0"
+                        />
+                        {campaign.coverImageUrl && (
+                          <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                        )}
+                      </div>
                       <div>
                         <p className="text-sm font-medium text-gray-900">{campaign.title}</p>
                         <p className="text-xs text-gray-500">{(campaign.tags || []).join(' · ')}</p>
@@ -345,6 +676,12 @@ const CampaignManagement = ({ onNavigate, onLogout, userSession, hasPermission }
         onOpenChange={setIsEditDialogOpen}
         campaign={editingCampaign}
         onSave={handleSave}
+      />
+      
+      <CampaignAddDialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        onSave={handleAddCampaign}
       />
     </>
   );
