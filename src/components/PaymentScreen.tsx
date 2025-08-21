@@ -10,6 +10,7 @@ import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
 import { ChevronDown } from "lucide-react";
+import { Textarea } from "./ui/textarea"; // Import Textarea component
 
 interface PaymentScreenProps {
   campaign: Campaign;
@@ -34,12 +35,10 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
   const [donorName, setDonorName] = React.useState('');
   const [donorEmail, setDonorEmail] = React.useState('');
   const [donorPhone, setDonorPhone] = React.useState('');
+  const [donorMessage, setDonorMessage] = React.useState(''); // New state for donor message
 
   const handleSubmit = async () => {
-    console.log('PaymentScreen - handleSubmit: isAnonymous', isAnonymous);
-    console.log('PaymentScreen - handleSubmit: donorName', donorName);
-    console.log('PaymentScreen - handleSubmit: donorEmail', donorEmail);
-    console.log('PaymentScreen - handleSubmit: donorPhone', donorPhone);
+
 
     const metadata = {
       campaignId: campaign.id,
@@ -47,7 +46,8 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
       donationAmount: donation.amount,
       isRecurring: donation.isRecurring,
       isAnonymous: isAnonymous,
-      ...(isAnonymous ? {} : { donorName, donorEmail, donorPhone }), // Use donorName, donorEmail, donorPhone
+      kioskId: donation.kioskId || null, // Include kioskId from donation object
+      ...(isAnonymous ? {} : { donorName, donorEmail, donorPhone, donorMessage }), // Include donorMessage if not anonymous
     };
     console.log('PaymentScreen - handleSubmit: Final metadata object', metadata);
     await handlePaymentSubmit(donation.amount, metadata, 'USD');
@@ -166,6 +166,7 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
                         setDonorName('');
                         setDonorEmail('');
                         setDonorPhone('');
+                        setDonorMessage(''); // Clear message if anonymous
                       }
                     }}
                     className="h-5 w-5"
@@ -208,6 +209,16 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
                         value={donorPhone}
                         onChange={(e) => setDonorPhone(e.target.value)}
                         className="mt-2 p-3 text-base"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="donorMessage" className="text-base font-medium">Message (Optional)</Label>
+                      <Textarea
+                        id="donorMessage"
+                        placeholder="Leave a message with your donation (e.g., in memory of someone)"
+                        value={donorMessage}
+                        onChange={(e) => setDonorMessage(e.target.value)}
+                        className="mt-2 p-3 text-base min-h-[80px]"
                       />
                     </div>
                   </CollapsibleContent>
