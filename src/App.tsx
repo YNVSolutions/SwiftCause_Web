@@ -286,13 +286,17 @@ export default function App() {
     }
   };
 
-  const handleCampaignSelect = (campaign: Campaign, view: 'overview' | 'donate' = 'overview') => {
+  const handleCampaignSelect = (campaign: Campaign, initialShowDetails: boolean = false) => {
     setSelectedCampaign(campaign);
-    setCampaignView(view);
+    // The 'campaign' screen in CampaignScreen.tsx now handles both overview and donate views
+    // The initialShowDetails flag will tell CampaignScreen whether to show details expanded
+    setCampaignView(initialShowDetails ? 'overview' : 'donate'); // This prop is now primarily for CampaignScreen's internal logic
     navigate('campaign');
   };
 
   const handleCampaignViewChange = (view: 'overview' | 'donate') => {
+    // This function might become redundant if CampaignScreen fully manages its internal view
+    // But keeping it for now in case internal view toggling is still desired.
     setCampaignView(view);
   };
 
@@ -407,8 +411,8 @@ export default function App() {
 
       {currentScreen === 'campaigns' && (
         <CampaignListContainer
-          onSelectCampaign={(campaign) => handleCampaignSelect(campaign, 'donate')}
-          onViewDetails={(campaign) => handleCampaignSelect(campaign, 'overview')}
+          onSelectCampaign={(campaign) => handleCampaignSelect(campaign, false)} // Donate button
+          onViewDetails={(campaign) => handleCampaignSelect(campaign, true)} // Info button, show details
           kioskSession={currentKioskSession}
           onLogout={handleLogout}
           refreshCurrentKioskSession={refreshCurrentKioskSession}
@@ -418,7 +422,7 @@ export default function App() {
       {currentScreen === 'campaign' && selectedCampaign && (
         <CampaignScreen
           campaign={selectedCampaign}
-          view={campaignView}
+          initialShowDetails={campaignView === 'overview'} // Pass initialShowDetails based on campaignView
           onSubmit={handleDonationSubmit}
           onBack={handleBackFromCampaign}
           onViewChange={handleCampaignViewChange}
