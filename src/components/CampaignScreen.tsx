@@ -373,18 +373,6 @@ export function CampaignScreen({
                   </div>
                 )}
 
-                {/* Anonymous donation option */}
-                {config.enableAnonymousDonations && (
-                  <div className="flex items-center justify-center space-x-2 p-3 bg-gray-50 rounded-lg">
-                    <Checkbox
-                      id="anonymous"
-                      checked={donorInfo.isAnonymous}
-                      onCheckedChange={(checked) => setDonorInfo({ isAnonymous: checked as boolean })}
-                    />
-                    <Label htmlFor="anonymous" className="text-sm">Make this donation anonymous</Label>
-                  </div>
-                )}
-
                 {/* Summary */}
                 {isValidAmount() && (
                   <div className="p-4 rounded-lg border-2 bg-blue-50 border-blue-200">
