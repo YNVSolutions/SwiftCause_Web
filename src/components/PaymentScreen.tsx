@@ -31,19 +31,25 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
   };
 
   const [isAnonymous, setIsAnonymous] = React.useState(true);
-  const [name, setName] = React.useState('');
-  const [email, setEmail] = React.useState('');
-  const [phone, setPhone] = React.useState('');
+  const [donorName, setDonorName] = React.useState('');
+  const [donorEmail, setDonorEmail] = React.useState('');
+  const [donorPhone, setDonorPhone] = React.useState('');
 
   const handleSubmit = async () => {
+    console.log('PaymentScreen - handleSubmit: isAnonymous', isAnonymous);
+    console.log('PaymentScreen - handleSubmit: donorName', donorName);
+    console.log('PaymentScreen - handleSubmit: donorEmail', donorEmail);
+    console.log('PaymentScreen - handleSubmit: donorPhone', donorPhone);
+
     const metadata = {
       campaignId: campaign.id,
       campaignTitle: campaign.title,
       donationAmount: donation.amount,
       isRecurring: donation.isRecurring,
       isAnonymous: isAnonymous,
-      ...(isAnonymous ? {} : { name, email, phone }),
+      ...(isAnonymous ? {} : { donorName, donorEmail, donorPhone }), // Use donorName, donorEmail, donorPhone
     };
+    console.log('PaymentScreen - handleSubmit: Final metadata object', metadata);
     await handlePaymentSubmit(donation.amount, metadata, 'USD');
   };
 
@@ -157,9 +163,9 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
                     onCheckedChange={(checked) => {
                       setIsAnonymous(!!checked);
                       if (checked) {
-                        setName('');
-                        setEmail('');
-                        setPhone('');
+                        setDonorName('');
+                        setDonorEmail('');
+                        setDonorPhone('');
                       }
                     }}
                     className="h-5 w-5"
@@ -177,8 +183,8 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
                         id="name"
                         type="text"
                         placeholder="Your name"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
+                        value={donorName}
+                        onChange={(e) => setDonorName(e.target.value)}
                         className="mt-2 p-3 text-base"
                       />
                     </div>
@@ -188,8 +194,8 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
                         id="email"
                         type="email"
                         placeholder="your.email@example.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        value={donorEmail}
+                        onChange={(e) => setDonorEmail(e.target.value)}
                         className="mt-2 p-3 text-base"
                       />
                     </div>
@@ -199,8 +205,8 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
                         id="phone"
                         type="tel"
                         placeholder="Your phone number"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
+                        value={donorPhone}
+                        onChange={(e) => setDonorPhone(e.target.value)}
                         className="mt-2 p-3 text-base"
                       />
                     </div>

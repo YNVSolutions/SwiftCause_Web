@@ -16,6 +16,7 @@ export function usePayment(onPaymentComplete: (result: PaymentResult) => void): 
   const [error, setError] = useState<string | null>(null);
 
   const handlePaymentSubmit = useCallback(async (amount: number, metadata: any, currency: string) => {
+    console.log('usePayment - handlePaymentSubmit: received metadata', metadata);
     setIsProcessing(true);
     setError(null);
 
