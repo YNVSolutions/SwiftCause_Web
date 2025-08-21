@@ -154,6 +154,7 @@ export interface Donation {
   timestamp?: string;
   kioskId?: string;
   transactionId?: string;
+  isGiftAid?: boolean;
 }
 
 export interface PaymentResult {
