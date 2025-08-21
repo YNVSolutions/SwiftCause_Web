@@ -182,7 +182,7 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
                       <Input
                         id="name"
                         type="text"
-                        placeholder="John Doe"
+                        placeholder="Your name"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         className="mt-2 p-3 text-base"
@@ -193,7 +193,7 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
                       <Input
                         id="email"
                         type="email"
-                        placeholder="john.doe@example.com"
+                        placeholder="your.email@example.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="mt-2 p-3 text-base"
@@ -204,7 +204,7 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
                       <Input
                         id="phone"
                         type="tel"
-                        placeholder="+1 (555) 123-4567"
+                        placeholder="Your phone number"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         className="mt-2 p-3 text-base"
