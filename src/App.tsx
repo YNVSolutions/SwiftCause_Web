@@ -248,13 +248,15 @@ export default function App() {
     setCurrentScreen(screen);
   };
 
-  const handleLogin = (role: UserRole, sessionData?: KioskSession | AdminSession) => {
+  const handleLogin = async (role: UserRole, sessionData?: KioskSession | AdminSession) => {
     setUserRole(role);
     if (role === 'admin') {
       setCurrentAdminSession(sessionData as AdminSession);
       navigate('admin-dashboard');
     } else {
       setCurrentKioskSession(sessionData as KioskSession);
+      await refreshCurrentKioskSession((sessionData as KioskSession).kioskId);
+      console.log('App.tsx - After refreshCurrentKioskSession, currentKioskSession:', currentKioskSession);
       navigate('campaigns');
     }
   };
@@ -270,15 +272,16 @@ export default function App() {
     navigate('login');
   };
 
-  const refreshCurrentKioskSession = async () => {
-    if (currentKioskSession?.kioskId) {
+  const refreshCurrentKioskSession = async (kioskIdToRefresh?: string) => {
+    const targetKioskId = kioskIdToRefresh || currentKioskSession?.kioskId;
+    if (targetKioskId) {
       try {
-        const kioskRef = doc(db, 'kiosks', currentKioskSession.kioskId);
+        const kioskRef = doc(db, 'kiosks', targetKioskId);
         const kioskSnap = await getDoc(kioskRef);
         if (kioskSnap.exists()) {
           setCurrentKioskSession(prev => ({ ...prev!, ...kioskSnap.data() as Kiosk }));
         } else {
-          console.warn("Kiosk document not found during refresh:", currentKioskSession.kioskId);
+          console.warn("Kiosk document not found during refresh:", targetKioskId);
         }
       } catch (error) {
         console.error("Error refreshing kiosk session:", error);
