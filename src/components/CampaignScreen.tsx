@@ -128,12 +128,6 @@ export function CampaignScreen({
 
   const estimatedDonors = Math.floor(campaign.raised / 25);
 
-  // Mock recent donations for display
-  const recentDonations = [
-    { name: 'Sarah M.', amount: 100, time: '2 minutes ago', isAnonymous: false },
-    { name: 'Anonymous', amount: 50, time: '5 minutes ago', isAnonymous: true },
-    { name: 'Michael C.', amount: 250, time: '12 minutes ago', isAnonymous: false }
-  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -186,24 +180,7 @@ export function CampaignScreen({
                 </div>
               )}
 
-              {config.showRecentDonations && recentDonations.length > 0 && (
-                <div className="border-t pt-4">
-                  <h4 className="font-medium mb-3">Recent Donations</h4>
-                  <div className="space-y-2">
-                    {recentDonations.slice(0, 3).map((donation, index) => (
-                      <div key={index} className="flex justify-between items-center text-sm">
-                        <span className="text-gray-600">
-                          {donation.isAnonymous ? 'Anonymous' : donation.name}
-                        </span>
-                        <div className="text-right">
-                          <div className="font-medium">{formatCurrency(donation.amount)}</div>
-                          <div className="text-xs text-gray-500">{donation.time}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+              
             </CardContent>
           </Card>
 
@@ -236,114 +213,59 @@ export function CampaignScreen({
 
                 {showDetails && (
                   <div className="grid grid-cols-1 gap-6 mb-6">
-                    {campaign.longDescription && (
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>About This Campaign</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-3 text-sm text-muted-foreground">
-                            <p>{campaign.longDescription}</p>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )}
-
-                    {campaign.videoUrl && (
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>Campaign Video</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="aspect-video w-full rounded-md overflow-hidden">
-                            <iframe
-                              src={campaign.videoUrl.replace('watch?v=', 'embed/')}
-                              frameBorder="0"
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                              allowFullScreen
-                              className="w-full h-full"
-                            ></iframe>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )}
-
-                    {campaign.galleryImages && campaign.galleryImages.length > 0 && (
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>Campaign Gallery</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="grid grid-cols-2 gap-2">
-                            {campaign.galleryImages.map((img, idx) => (
-                              <ImageWithFallback key={idx} src={img} alt={`${campaign.title} gallery image ${idx + 1}`} className="w-full h-auto rounded-md object-cover" />
-                            ))}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )}
-
-                    {campaign.organizationInfo && (
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>About {campaign.organizationInfo.name}</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-2 text-sm text-muted-foreground">
-                            <p>{campaign.organizationInfo.description}</p>
-                            {campaign.organizationInfo.website && (
-                              <a href={campaign.organizationInfo.website} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">
-                                Visit Website
-                              </a>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )}
-
-                    {campaign.impactMetrics && (
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>Impact Metrics</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-2 text-sm">
-                            {campaign.impactMetrics.peopleHelped && (
-                              <p className="flex items-center"><Users className="h-4 w-4 mr-2 text-indigo-600"/> {campaign.impactMetrics.peopleHelped.toLocaleString()} people helped</p>
-                            )}
-                            {campaign.impactMetrics.itemsProvided && (
-                              <p className="flex items-center"><Gift className="h-4 w-4 mr-2 text-indigo-600"/> {campaign.impactMetrics.itemsProvided.toLocaleString()} items provided</p>
-                            )}
-                            {campaign.impactMetrics.customMetric && (
-                              <p className="flex items-center"><Target className="h-4 w-4 mr-2 text-indigo-600"/> {campaign.impactMetrics.customMetric.value.toLocaleString()} {campaign.impactMetrics.customMetric.unit} {campaign.impactMetrics.customMetric.label}</p>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )}
-
                     <Card>
                       <CardHeader>
-                        <CardTitle>How Your Donation Helps</CardTitle>
+                        <CardTitle>About This Campaign</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between py-1">
-                            <span className="font-medium">$25</span>
-                            <span className="text-muted-foreground">Basic support package</span>
-                          </div>
-                          <div className="flex justify-between py-1">
-                            <span className="font-medium">$50</span>
-                            <span className="text-muted-foreground">Extended assistance</span>
-                          </div>
-                          <div className="flex justify-between py-1">
-                            <span className="font-medium">$100</span>
-                            <span className="text-muted-foreground">Comprehensive care</span>
-                          </div>
-                          <div className="flex justify-between py-1">
-                            <span className="font-medium">$250</span>
-                            <span className="text-muted-foreground">Community impact</span>
-                          </div>
+                        <div className="space-y-3 text-sm text-muted-foreground">
+                          <p>
+                            {campaign.longDescription || 'This campaign is dedicated to making a significant impact. Your support will provide essential resources and foster lasting positive change within the community.'}
+                          </p>
+                          {campaign.videoUrl && (
+                            <div className="aspect-video w-full rounded-md overflow-hidden">
+                              <iframe
+                                src={campaign.videoUrl.replace('watch?v=', 'embed/')}
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                                className="w-full h-full"
+                                title="Campaign Video"
+                              ></iframe>
+                            </div>
+                          )}
+                          {campaign.galleryImages && campaign.galleryImages.length > 0 && (
+                            <div className="grid grid-cols-2 gap-2">
+                              {campaign.galleryImages.map((img, idx) => (
+                                <ImageWithFallback key={idx} src={img} alt={`${campaign.title} gallery image ${idx + 1}`} className="w-full h-auto rounded-md object-cover" />
+                              ))}
+                            </div>
+                          )}
+                          {campaign.organizationInfo && (
+                            <div className="space-y-2">
+                              <h5 className="font-semibold text-gray-800 mt-3">About the Organization: {campaign.organizationInfo.name}</h5>
+                              <p>{campaign.organizationInfo.description}</p>
+                              {campaign.organizationInfo.website && (
+                                <a href={campaign.organizationInfo.website} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">
+                                  Visit Website
+                                </a>
+                              )}
+                            </div>
+                          )}
+                          {campaign.impactMetrics && (
+                            <div className="space-y-2">
+                              <h5 className="font-semibold text-gray-800 mt-3">Impact Metrics</h5>
+                              {campaign.impactMetrics.peopleHelped && (
+                                <p className="flex items-center"><Users className="h-4 w-4 mr-2 text-indigo-600"/> {campaign.impactMetrics.peopleHelped.toLocaleString()} people helped</p>
+                              )}
+                              {campaign.impactMetrics.itemsProvided && (
+                                <p className="flex items-center"><Gift className="h-4 w-4 mr-2 text-indigo-600"/> {campaign.impactMetrics.itemsProvided.toLocaleString()} items provided</p>
+                              )}
+                              {campaign.impactMetrics.customMetric && (
+                                <p className="flex items-center"><Target className="h-4 w-4 mr-2 text-indigo-600"/> {campaign.impactMetrics.customMetric.value.toLocaleString()} {campaign.impactMetrics.customMetric.unit} {campaign.impactMetrics.customMetric.label}</p>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
