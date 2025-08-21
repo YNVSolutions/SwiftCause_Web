@@ -100,15 +100,17 @@ export function CampaignListScreen({
         campaignCount={campaigns.length}
         layoutMode={layoutMode} // Pass layoutMode to NavigationHeader
         onLayoutChange={handleLayoutChange} // Pass onLayoutChange to NavigationHeader
+        rightContent={
+          <div className="flex items-center space-x-2">
+            <Button variant="outline" onClick={handleRefresh}>
+              <RotateCcw className="w-4 h-4 mr-2" /> Refresh Data
+            </Button>
+            <Button variant="outline" onClick={onLogout}>
+              <LogOut className="w-4 h-4 mr-2" /> Logout
+            </Button>
+          </div>
+        }
       />
-      <div className="flex justify-end p-4 space-x-2">
-        <Button variant="outline" onClick={handleRefresh}>
-          <RotateCcw className="w-4 h-4 mr-2" /> Refresh Data
-        </Button>
-        <Button variant="outline" onClick={onLogout}>
-          <LogOut className="w-4 h-4 mr-2" /> Logout
-        </Button>
-      </div>
       <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         {campaigns.length === 0 ? (
           <div className="text-center py-12">
