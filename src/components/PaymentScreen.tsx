@@ -170,12 +170,6 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
                 </div>
 
                 <Collapsible open={!isAnonymous} onOpenChange={(open) => !open && setIsAnonymous(true)} className="space-y-4">
-                  <CollapsibleTrigger asChild className="w-full">
-                    <Button variant="outline" className="w-full justify-between pr-4 pl-4 py-3 text-base font-medium rounded-lg">
-                      <span>Your Details (Optional)</span>
-                      {!isAnonymous && <ChevronDown className="h-5 w-5 ml-2 text-gray-600" />}
-                    </Button>
-                  </CollapsibleTrigger>
                   <CollapsibleContent className="space-y-4">
                     <div>
                       <Label htmlFor="name" className="text-base font-medium">Full Name</Label>
