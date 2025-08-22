@@ -20,8 +20,7 @@ import {
   Clock,
   CreditCard,
   CheckCircle,
-  AlertCircle,
-  FileText
+  AlertCircle
 } from 'lucide-react';
 import { Screen, AdminSession, Permission, Donation } from '../../App';
 import { getDonations } from '../../hooks/donationsService';
@@ -94,11 +93,11 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
   });
 
   const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency.toUpperCase(),
-      minimumFractionDigits: 2
-    }).format(amount);
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currency.toUpperCase(),
+        minimumFractionDigits: 2
+      }).format(amount);
   };
 
   const getStatusBadge = (status: string) => {
@@ -146,7 +145,6 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
 
     const headers = Object.keys(data[0]).join(',');
     const csvContent = data.map(row => Object.values(row).map(value => {
-      // Handle values that might contain commas or newlines by wrapping them in quotes
       const stringValue = String(value);
       return `"${stringValue.replace(/"/g, '""')}"`;
     }).join(',')).join('\n');
@@ -195,10 +193,6 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
               >
                 <Download className="w-4 h-4 mr-2" />
                 Export CSV
-              </Button>
-              <Button variant="outline" size="sm">
-                <FileText className="w-4 h-4 mr-2" />
-                Generate Report
               </Button>
             </div>
           </div>
