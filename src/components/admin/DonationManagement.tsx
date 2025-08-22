@@ -37,7 +37,7 @@ interface FetchedDonation extends Omit<Donation, 'timestamp'> {
   paymentStatus: string;
   platform: string;
   stripePaymentIntentId: string;
-  timestamp: string; // The formatted string
+  timestamp: string;
 }
 
 interface DonationManagementProps {
@@ -58,7 +58,6 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
   const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
   const [showCalendar, setShowCalendar] = useState(false);
 
-  // Fetch donations on component mount
   useEffect(() => {
     const fetchDonationData = async () => {
       try {
@@ -76,7 +75,6 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
     fetchDonationData();
   }, []);
 
-  // Mock campaigns data for the filter select dropdown
   const campaigns = [
     { id: '1', title: 'Clean Water for All' },
     { id: '2', title: 'Education for Every Child' },
@@ -140,6 +138,32 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
       : 0,
   };
 
+  const exportToCsv = (data: FetchedDonation[]) => {
+    if (data.length === 0) {
+      alert("No data to export.");
+      return;
+    }
+
+    const headers = Object.keys(data[0]).join(',');
+    const csvContent = data.map(row => Object.values(row).map(value => {
+      // Handle values that might contain commas or newlines by wrapping them in quotes
+      const stringValue = String(value);
+      return `"${stringValue.replace(/"/g, '""')}"`;
+    }).join(',')).join('\n');
+
+    const csv = `${headers}\n${csvContent}`;
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `donations_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -164,7 +188,11 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
             </div>
 
             <div className="flex items-center space-x-4">
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => exportToCsv(donations)}
+              >
                 <Download className="w-4 h-4 mr-2" />
                 Export CSV
               </Button>
