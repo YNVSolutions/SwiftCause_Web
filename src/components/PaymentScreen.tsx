@@ -5,13 +5,19 @@ import { Badge } from './ui/badge';
 import { ArrowLeft, CreditCard, Shield, Lock, CreditCard as CreditCardIcon } from 'lucide-react';
 import { Campaign, Donation, PaymentResult } from '../App';
 import PaymentForm from './PaymentForm';
+import { Checkbox } from './ui/checkbox';
+import { Label } from './ui/label';
+import { Input } from './ui/input';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
+import { ChevronDown } from "lucide-react";
+import { Textarea } from "./ui/textarea"; // Import Textarea component
 
 interface PaymentScreenProps {
   campaign: Campaign;
   donation: Donation;
   isProcessing: boolean;
   error: string | null;
-  handlePaymentSubmit: () => Promise<void>;
+  handlePaymentSubmit: (amount: number, metadata: any, currency: string) => Promise<void>;
   onBack: () => void;
 }
 
@@ -23,6 +29,28 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
       currency: 'USD',
       minimumFractionDigits: 2
     }).format(amount);
+  };
+
+  const [isAnonymous, setIsAnonymous] = React.useState(true);
+  const [donorName, setDonorName] = React.useState('');
+  const [donorEmail, setDonorEmail] = React.useState('');
+  const [donorPhone, setDonorPhone] = React.useState('');
+  const [donorMessage, setDonorMessage] = React.useState(''); // New state for donor message
+
+  const handleSubmit = async () => {
+
+
+    const metadata = {
+      campaignId: campaign.id,
+      campaignTitle: campaign.title,
+      donationAmount: donation.amount,
+      isRecurring: donation.isRecurring,
+      isAnonymous: isAnonymous,
+      kioskId: donation.kioskId || null, // Include kioskId from donation object
+      ...(isAnonymous ? {} : { donorName, donorEmail, donorPhone, donorMessage }), // Include donorMessage if not anonymous
+    };
+    console.log('PaymentScreen - handleSubmit: Final metadata object', metadata);
+    await handlePaymentSubmit(donation.amount, metadata, 'USD');
   };
 
   return (
@@ -37,32 +65,32 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-10">
         {/* Mobile-first layout: stack on small screens */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-10">
           {/* Payment Form - Priority on mobile */}
           <Card className="lg:order-1">
-            <CardHeader className="p-3 sm:p-6">
-              <CardTitle className="flex items-center text-base sm:text-xl">
-                <CreditCard className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+            <CardHeader className="p-6 sm:p-8 pb-4">
+              <CardTitle className="flex items-center text-xl sm:text-2xl font-bold mb-1">
+                <CreditCard className="mr-3 h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />
                 Payment Information
               </CardTitle>
-              <CardDescription className="text-sm sm:text-base">
+              <CardDescription className="text-sm sm:text-base text-gray-600">
                 Complete your donation securely
               </CardDescription>
             </CardHeader>
             
-            <CardContent className="p-3 sm:p-6 pt-0">
-              <div className="space-y-4 sm:space-y-6">
-                <div className="space-y-2">
-                  <p className="text-sm sm:text-base font-medium mb-2">Select Payment Method</p>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <CardContent className="p-6 sm:p-8 pt-0">
+              <div className="space-y-6 sm:space-y-8">
+                <div className="space-y-3">
+                  <p className="text-base sm:text-lg font-medium">Select Payment Method</p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <Card 
-                      className={`cursor-pointer border-primary ring-2 ring-primary`}
+                      className={`cursor-pointer border-primary ring-2 ring-primary transition-all duration-200 hover:shadow-lg`}
                     >
-                      <CardContent className="flex flex-col items-center justify-center p-4">
-                        <CreditCardIcon className="h-8 w-8 mb-2" />
-                        <span className="text-sm font-medium">Card</span>
+                      <CardContent className="flex flex-col items-center justify-center p-5">
+                        <CreditCardIcon className="h-9 w-9 mb-3 text-indigo-600" />
+                        <span className="text-base font-medium">Card</span>
                       </CardContent>
                     </Card>
                   </div>
@@ -71,63 +99,130 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
                 <PaymentForm 
                   loading={isProcessing}
                   error={error}
-                  onSubmit={handlePaymentSubmit}
+                  onSubmit={handleSubmit}
                 />
 
-                <div className="flex items-start space-x-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <Shield className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span className="text-xs sm:text-sm text-green-700">
+                <div className="flex items-start space-x-3 p-4 bg-green-50 border border-green-200 rounded-lg text-sm sm:text-base">
+                  <Shield className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                  <span className="text-green-700 leading-relaxed">
                     Your payment information is encrypted and secure. We use industry-standard security measures.
                   </span>
                 </div>
-
               </div>
             </CardContent>
           </Card>
 
           {/* Order Summary - Condensed on mobile */}
           <Card className="lg:order-2">
-            <CardHeader className="p-3 sm:p-6">
-              <CardTitle className="text-base sm:text-xl">Donation Summary</CardTitle>
+            <CardHeader className="p-6 sm:p-8 pb-4">
+              <CardTitle className="text-xl sm:text-2xl font-bold mb-1">Donation Summary</CardTitle>
             </CardHeader>
             
-            <CardContent className="p-3 sm:p-6 pt-0 space-y-3 sm:space-y-4">
-              <div className="space-y-2 sm:space-y-3">
+            <CardContent className="p-6 sm:p-8 pt-0 space-y-4 sm:space-y-6">
+              <div className="space-y-3 sm:space-y-4 mb-6">
                 <div className="flex justify-between items-start">
-                  <span className="text-xs sm:text-sm text-muted-foreground">Campaign:</span>
-                  <span className="text-xs sm:text-sm text-right max-w-[60%]">{campaign.title}</span>
+                  <span className="text-sm sm:text-base text-muted-foreground">Campaign:</span>
+                  <span className="text-base sm:text-lg text-right font-medium max-w-[65%]">{campaign.title}</span>
                 </div>
                 
                 <div className="flex justify-between items-center">
-                  <span className="text-xs sm:text-sm text-muted-foreground">Category:</span>
-                  <Badge variant="secondary" className="text-xs">{campaign.category}</Badge>
+                  <span className="text-sm sm:text-base text-muted-foreground">Category:</span>
+                  <Badge variant="secondary" className="text-sm px-3 py-1">{campaign.category}</Badge>
                 </div>
                 
                 <div className="flex justify-between items-center">
-                  <span className="text-xs sm:text-sm text-muted-foreground">Donation Amount:</span>
-                  <span className="text-sm sm:text-lg">{formatCurrency(donation.amount)}</span>
+                  <span className="text-sm sm:text-base text-muted-foreground">Donation Amount:</span>
+                  <span className="text-lg sm:text-2xl font-bold text-indigo-700">{formatCurrency(donation.amount)}</span>
                 </div>
                 
                 {donation.isRecurring && (
                   <div className="flex justify-between items-center">
-                    <span className="text-xs sm:text-sm text-muted-foreground">Frequency:</span>
-                    <Badge variant="outline" className="text-xs">Monthly</Badge>
+                    <span className="text-sm sm:text-base text-muted-foreground">Frequency:</span>
+                    <Badge variant="outline" className="text-sm px-3 py-1">Monthly</Badge>
                   </div>
                 )}
                 
               </div>
               
-              <hr />
+              <hr className="mb-6 border-gray-200"/>
               
-              <div className="flex justify-between text-sm sm:text-lg">
+              <div className="flex justify-between text-lg sm:text-2xl font-bold mb-6 text-gray-900">
                 <span>Total:</span>
                 <span>{formatCurrency(donation.amount)}</span>
               </div>
               
-              <div className="text-xs sm:text-sm text-muted-foreground">
-                <p>
-                  Your donation helps make a real difference. Thank you for your generosity!
+              <div className="space-y-5 pt-6 border-t border-gray-200">
+                <h4 className="text-xl font-bold text-gray-800">Donor Information</h4>
+                <p className="text-base text-muted-foreground leading-relaxed">
+                  Sharing your details is completely optional. You can choose to stay anonymous.
                 </p>
+                <div className="flex items-center space-x-3">
+                  <Checkbox
+                    id="anonymous"
+                    checked={isAnonymous}
+                    onCheckedChange={(checked) => {
+                      setIsAnonymous(!!checked);
+                      if (checked) {
+                        setDonorName('');
+                        setDonorEmail('');
+                        setDonorPhone('');
+                        setDonorMessage(''); // Clear message if anonymous
+                      }
+                    }}
+                    className="h-5 w-5"
+                  />
+                  <Label htmlFor="anonymous" className="text-lg font-medium cursor-pointer text-gray-800">
+                    Donate Anonymously
+                  </Label>
+                </div>
+
+                <Collapsible open={!isAnonymous} onOpenChange={(open) => !open && setIsAnonymous(true)} className="space-y-4">
+                  <CollapsibleContent className="space-y-4">
+                    <div>
+                      <Label htmlFor="name" className="text-base font-medium">Full Name</Label>
+                      <Input
+                        id="name"
+                        type="text"
+                        placeholder="Your name"
+                        value={donorName}
+                        onChange={(e) => setDonorName(e.target.value)}
+                        className="mt-2 p-3 text-base"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="email" className="text-base font-medium">Email (Optional)</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="your.email@example.com"
+                        value={donorEmail}
+                        onChange={(e) => setDonorEmail(e.target.value)}
+                        className="mt-2 p-3 text-base"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="phone" className="text-base font-medium">Phone (Optional)</Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        placeholder="Your phone number"
+                        value={donorPhone}
+                        onChange={(e) => setDonorPhone(e.target.value)}
+                        className="mt-2 p-3 text-base"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="donorMessage" className="text-base font-medium">Message (Optional)</Label>
+                      <Textarea
+                        id="donorMessage"
+                        placeholder="Leave a message with your donation (e.g., in memory of someone)"
+                        value={donorMessage}
+                        onChange={(e) => setDonorMessage(e.target.value)}
+                        className="mt-2 p-3 text-base min-h-[80px]"
+                      />
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
               </div>
             </CardContent>
           </Card>

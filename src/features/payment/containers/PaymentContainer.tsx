@@ -11,11 +11,11 @@ interface PaymentContainerProps {
 }
 
 export function PaymentContainer({ campaign, donation, onPaymentComplete, onBack }: PaymentContainerProps) {
-  const {
-    isProcessing,
-    error,
-    handlePaymentSubmit,
-  } = usePayment(onPaymentComplete);
+  const { isProcessing, error, handlePaymentSubmit: processPayment } = usePayment(onPaymentComplete);
+
+  const submitPayment = async (amount: number, metadata: any, currency: string) => {
+    await processPayment(amount, metadata, currency);
+  };
 
   return (
     <PaymentScreen
@@ -23,7 +23,7 @@ export function PaymentContainer({ campaign, donation, onPaymentComplete, onBack
       donation={donation}
       isProcessing={isProcessing}
       error={error}
-      handlePaymentSubmit={handlePaymentSubmit}
+      handlePaymentSubmit={submitPayment}
       onBack={onBack}
     />
   );

@@ -10,8 +10,8 @@ import { Campaign } from '../../App';
 interface CampaignCardProps {
   campaign: Campaign;
   variant?: 'compact' | 'detailed';
-  onDonate?: () => void;
-  onViewDetails?: () => void;
+  onDonate?: (campaign: Campaign) => void; // Modified to pass campaign object
+  onViewDetails?: (campaign: Campaign, initialShowDetails: boolean) => void; // Modified to pass campaign and initialShowDetails
   isDefault?: boolean;
 }
 
@@ -87,7 +87,7 @@ export function CampaignCard({
             <div className="flex gap-2 mt-2 sm:mt-3">
               {onDonate && (
                 <Button 
-                  onClick={onDonate}
+                  onClick={() => onDonate(campaign)}
                   size="sm"
                   className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-1.5 rounded-xl transition-all duration-200 ease-in-out"
                 >
@@ -99,7 +99,7 @@ export function CampaignCard({
               {onViewDetails && (
                 <Button 
                   variant="outline" 
-                  onClick={onViewDetails}
+                  onClick={() => onViewDetails(campaign, true)}
                   className="h-8 sm:h-9 px-2 sm:px-3"
                   size="sm"
                 >
@@ -164,7 +164,7 @@ export function CampaignCard({
         <div className="flex gap-2 sm:gap-3">
           {onDonate && (
             <Button 
-              onClick={onDonate}
+              onClick={() => onDonate(campaign)}
               className="flex-1 h-11 sm:h-12 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-all duration-200 ease-in-out"
               size="lg"
             >
@@ -177,7 +177,7 @@ export function CampaignCard({
           {onViewDetails && (
             <Button 
               variant="outline" 
-              onClick={onViewDetails}
+              onClick={() => onViewDetails(campaign, true)}
               className="h-11 sm:h-12 px-3 sm:px-4"
               size="lg"
             >

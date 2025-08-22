@@ -154,6 +154,7 @@ export interface Donation {
   timestamp?: string;
   kioskId?: string;
   transactionId?: string;
+  isGiftAid?: boolean;
 }
 
 export interface PaymentResult {
@@ -247,13 +248,15 @@ export default function App() {
     setCurrentScreen(screen);
   };
 
-  const handleLogin = (role: UserRole, sessionData?: KioskSession | AdminSession) => {
+  const handleLogin = async (role: UserRole, sessionData?: KioskSession | AdminSession) => {
     setUserRole(role);
     if (role === 'admin') {
       setCurrentAdminSession(sessionData as AdminSession);
       navigate('admin-dashboard');
     } else {
       setCurrentKioskSession(sessionData as KioskSession);
+      await refreshCurrentKioskSession((sessionData as KioskSession).kioskId);
+      console.log('App.tsx - After refreshCurrentKioskSession, currentKioskSession:', currentKioskSession);
       navigate('campaigns');
     }
   };
@@ -269,15 +272,16 @@ export default function App() {
     navigate('login');
   };
 
-  const refreshCurrentKioskSession = async () => {
-    if (currentKioskSession?.kioskId) {
+  const refreshCurrentKioskSession = async (kioskIdToRefresh?: string) => {
+    const targetKioskId = kioskIdToRefresh || currentKioskSession?.kioskId;
+    if (targetKioskId) {
       try {
-        const kioskRef = doc(db, 'kiosks', currentKioskSession.kioskId);
+        const kioskRef = doc(db, 'kiosks', targetKioskId);
         const kioskSnap = await getDoc(kioskRef);
         if (kioskSnap.exists()) {
           setCurrentKioskSession(prev => ({ ...prev!, ...kioskSnap.data() as Kiosk }));
         } else {
-          console.warn("Kiosk document not found during refresh:", currentKioskSession.kioskId);
+          console.warn("Kiosk document not found during refresh:", targetKioskId);
         }
       } catch (error) {
         console.error("Error refreshing kiosk session:", error);
@@ -285,13 +289,17 @@ export default function App() {
     }
   };
 
-  const handleCampaignSelect = (campaign: Campaign, view: 'overview' | 'donate' = 'overview') => {
+  const handleCampaignSelect = (campaign: Campaign, initialShowDetails: boolean = false) => {
     setSelectedCampaign(campaign);
-    setCampaignView(view);
+    // The 'campaign' screen in CampaignScreen.tsx now handles both overview and donate views
+    // The initialShowDetails flag will tell CampaignScreen whether to show details expanded
+    setCampaignView(initialShowDetails ? 'overview' : 'donate'); // This prop is now primarily for CampaignScreen's internal logic
     navigate('campaign');
   };
 
   const handleCampaignViewChange = (view: 'overview' | 'donate') => {
+    // This function might become redundant if CampaignScreen fully manages its internal view
+    // But keeping it for now in case internal view toggling is still desired.
     setCampaignView(view);
   };
 
@@ -406,8 +414,8 @@ export default function App() {
 
       {currentScreen === 'campaigns' && (
         <CampaignListContainer
-          onSelectCampaign={(campaign) => handleCampaignSelect(campaign, 'donate')}
-          onViewDetails={(campaign) => handleCampaignSelect(campaign, 'overview')}
+          onSelectCampaign={(campaign) => handleCampaignSelect(campaign, false)} // Donate button
+          onViewDetails={(campaign) => handleCampaignSelect(campaign, true)} // Info button, show details
           kioskSession={currentKioskSession}
           onLogout={handleLogout}
           refreshCurrentKioskSession={refreshCurrentKioskSession}
@@ -417,7 +425,7 @@ export default function App() {
       {currentScreen === 'campaign' && selectedCampaign && (
         <CampaignScreen
           campaign={selectedCampaign}
-          view={campaignView}
+          initialShowDetails={campaignView === 'overview'} // Pass initialShowDetails based on campaignView
           onSubmit={handleDonationSubmit}
           onBack={handleBackFromCampaign}
           onViewChange={handleCampaignViewChange}

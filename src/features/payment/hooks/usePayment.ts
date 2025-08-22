@@ -1,11 +1,12 @@
 import { useState, useCallback } from 'react';
 import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
 import { PaymentResult } from '../../../App'; // Adjust path if needed
+import { Campaign, Donation } from '../../../App';
 
 interface UsePaymentReturn {
   isProcessing: boolean;
   error: string | null;
-  handlePaymentSubmit: () => Promise<void>;
+  handlePaymentSubmit: (amount: number, metadata: any, currency: string) => Promise<void>;
 }
 
 export function usePayment(onPaymentComplete: (result: PaymentResult) => void): UsePaymentReturn {
@@ -14,7 +15,8 @@ export function usePayment(onPaymentComplete: (result: PaymentResult) => void): 
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handlePaymentSubmit = useCallback(async () => {
+  const handlePaymentSubmit = useCallback(async (amount: number, metadata: any, currency: string) => {
+    console.log('usePayment - handlePaymentSubmit: received metadata', metadata);
     setIsProcessing(true);
     setError(null);
 
@@ -38,7 +40,7 @@ export function usePayment(onPaymentComplete: (result: PaymentResult) => void): 
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ amount: 1000 }), // Use amount from props in a real app
+        body: JSON.stringify({ amount: amount, metadata: metadata, currency: currency }), // Use amount, metadata and currency from props
       });
 
       if (!response.ok) {
