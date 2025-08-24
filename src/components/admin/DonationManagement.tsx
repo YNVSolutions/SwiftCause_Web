@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
@@ -11,7 +11,6 @@ import {
   Search,
   ArrowLeft,
   Download,
-  Filter,
   Calendar as CalendarIcon,
   DollarSign,
   Users,
@@ -21,120 +20,59 @@ import {
   Clock,
   CreditCard,
   CheckCircle,
-  AlertCircle,
-  FileText
+  AlertCircle
 } from 'lucide-react';
-import { Screen, Donation, AdminSession, Permission } from '../../App';
+import { Screen, AdminSession, Permission, Donation } from '../../App';
+import { getDonations } from '../../hooks/donationsService';
+
+interface FetchedDonation extends Omit<Donation, 'timestamp'> {
+  id: string;
+  amount: number;
+  campaignId: string;
+  currency: string;
+  donorId: string;
+  donorName: string;
+  isGiftAid: boolean;
+  paymentStatus: string;
+  platform: string;
+  stripePaymentIntentId: string;
+  timestamp: string;
+}
 
 interface DonationManagementProps {
   onNavigate: (screen: Screen) => void;
   onLogout: () => void;
   userSession: AdminSession;
-  hasPermission: (permission: Permission) => boolean;
+  hasPermission: (permission: Permission) => void;
 }
 
 export function DonationManagement({ onNavigate, onLogout, userSession, hasPermission }: DonationManagementProps) {
+  const [donations, setDonations] = useState<FetchedDonation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [campaignFilter, setCampaignFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
   const [showCalendar, setShowCalendar] = useState(false);
 
-  // Mock donations data
-  const [donations] = useState<(Donation & {
-    id: string;
-    donorName: string;
-    donorEmail: string;
-    timestamp: string;
-    kioskId: string;
-    transactionId: string;
-    status: 'completed' | 'pending' | 'failed' | 'refunded';
-    campaignTitle: string;
-    paymentMethod: string;
-    processingFee: number;
-    netAmount: number;
-  })[]>([
-    {
-      id: 'DON-001',
-      campaignId: '1',
-      campaignTitle: 'Clean Water for All',
-      amount: 250,
-      isRecurring: false,
-      donorName: 'Sarah Johnson',
-      donorEmail: 'sarah.j@email.com',
-      timestamp: '2024-01-07T14:30:00Z',
-      kioskId: 'KIOSK-NYC-001',
-      transactionId: 'TXN-7891234567',
-      status: 'completed',
-      paymentMethod: 'Credit Card',
-      processingFee: 7.50,
-      netAmount: 242.50
-    },
-    {
-      id: 'DON-002',
-      campaignId: '2',
-      campaignTitle: 'Education for Every Child',
-      amount: 100,
-      isRecurring: true,
-      donorName: 'Michael Chen',
-      donorEmail: 'mchen@email.com',
-      timestamp: '2024-01-07T13:15:00Z',
-      kioskId: 'KIOSK-LA-002',
-      transactionId: 'TXN-7891234568',
-      status: 'completed',
-      paymentMethod: 'Debit Card',
-      processingFee: 3.00,
-      netAmount: 97.00
-    },
-    {
-      id: 'DON-003',
-      campaignId: '3',
-      campaignTitle: 'Emergency Disaster Relief',
-      amount: 500,
-      isRecurring: false,
-      donorName: 'Emily Rodriguez',
-      donorEmail: 'e.rodriguez@email.com',
-      timestamp: '2024-01-07T12:45:00Z',
-      kioskId: 'KIOSK-CHI-003',
-      transactionId: 'TXN-7891234569',
-      status: 'completed',
-      paymentMethod: 'Credit Card',
-      processingFee: 15.00,
-      netAmount: 485.00
-    },
-    {
-      id: 'DON-004',
-      campaignId: '1',
-      campaignTitle: 'Clean Water for All',
-      amount: 75,
-      isRecurring: false,
-      donorName: 'David Wilson',
-      donorEmail: 'dwilson@email.com',
-      timestamp: '2024-01-07T11:20:00Z',
-      kioskId: 'KIOSK-NYC-001',
-      transactionId: 'TXN-7891234570',
-      status: 'pending',
-      paymentMethod: 'Credit Card',
-      processingFee: 2.25,
-      netAmount: 72.75
-    },
-    {
-      id: 'DON-005',
-      campaignId: '4',
-      campaignTitle: 'Local Food Bank Support',
-      amount: 150,
-      isRecurring: true,
-      donorName: 'Lisa Thompson',
-      donorEmail: 'lisa.t@email.com',
-      timestamp: '2024-01-06T16:30:00Z',
-      kioskId: 'KIOSK-MIA-004',
-      transactionId: 'TXN-7891234571',
-      status: 'failed',
-      paymentMethod: 'Credit Card',
-      processingFee: 0,
-      netAmount: 0
-    }
-  ]);
+  useEffect(() => {
+    const fetchDonationData = async () => {
+      try {
+        setLoading(true);
+        const data = await getDonations();
+        setDonations(data as FetchedDonation[]);
+        setError(null);
+      } catch (err) {
+        setError("Failed to load donations. Please try again.");
+        console.error("Error fetching donations:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDonationData();
+  }, []);
 
   const campaigns = [
     { id: '1', title: 'Clean Water for All' },
@@ -144,36 +82,31 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
   ];
 
   const filteredDonations = donations.filter(donation => {
-    const matchesSearch = donation.donorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         donation.donorEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         donation.transactionId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         donation.campaignTitle.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || donation.status === statusFilter;
+    const matchesSearch = (donation.donorName && donation.donorName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                         (donation.stripePaymentIntentId && donation.stripePaymentIntentId.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                         (donation.campaignId && donation.campaignId.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesStatus = statusFilter === 'all' || donation.paymentStatus === statusFilter;
     const matchesCampaign = campaignFilter === 'all' || donation.campaignId === campaignFilter;
     const matchesDate = !dateFilter || new Date(donation.timestamp).toDateString() === dateFilter.toDateString();
     
     return matchesSearch && matchesStatus && matchesCampaign && matchesDate;
   });
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2
-    }).format(amount);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
+  const formatCurrency = (amount: number, currency: string) => {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currency.toUpperCase(),
+        minimumFractionDigits: 2
+      }).format(amount);
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'completed':
+      case 'success':
         return (
           <Badge className="bg-green-100 text-green-800 border-green-200">
             <CheckCircle className="w-3 h-3 mr-1" />
-            Completed
+            Success
           </Badge>
         );
       case 'pending':
@@ -190,27 +123,43 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
             Failed
           </Badge>
         );
-      case 'refunded':
-        return (
-          <Badge className="bg-gray-100 text-gray-800 border-gray-200">
-            <FileText className="w-3 h-3 mr-1" />
-            Refunded
-          </Badge>
-        );
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
   };
 
   const totalStats = {
-    totalAmount: filteredDonations.reduce((sum, d) => sum + (d.status === 'completed' ? d.amount : 0), 0),
+    totalAmount: filteredDonations.reduce((sum, d) => sum + (d.paymentStatus === 'success' ? d.amount : 0), 0),
     totalDonations: filteredDonations.length,
-    completedDonations: filteredDonations.filter(d => d.status === 'completed').length,
+    completedDonations: filteredDonations.filter(d => d.paymentStatus === 'success').length,
     avgDonation: filteredDonations.length > 0 
       ? filteredDonations.reduce((sum, d) => sum + d.amount, 0) / filteredDonations.length 
       : 0,
-    totalFees: filteredDonations.reduce((sum, d) => sum + (d.status === 'completed' ? d.processingFee : 0), 0),
-    netAmount: filteredDonations.reduce((sum, d) => sum + (d.status === 'completed' ? d.netAmount : 0), 0)
+  };
+
+  const exportToCsv = (data: FetchedDonation[]) => {
+    if (data.length === 0) {
+      alert("No data to export.");
+      return;
+    }
+
+    const headers = Object.keys(data[0]).join(',');
+    const csvContent = data.map(row => Object.values(row).map(value => {
+      const stringValue = String(value);
+      return `"${stringValue.replace(/"/g, '""')}"`;
+    }).join(',')).join('\n');
+
+    const csv = `${headers}\n${csvContent}`;
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `donations_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -237,13 +186,13 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
             </div>
 
             <div className="flex items-center space-x-4">
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => exportToCsv(donations)}
+              >
                 <Download className="w-4 h-4 mr-2" />
                 Export CSV
-              </Button>
-              <Button variant="outline" size="sm">
-                <FileText className="w-4 h-4 mr-2" />
-                Generate Report
               </Button>
             </div>
           </div>
@@ -259,10 +208,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                 <div>
                   <p className="text-sm font-medium text-gray-600">Total Raised</p>
                   <p className="text-2xl font-semibold text-gray-900">
-                    {formatCurrency(totalStats.totalAmount)}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Net: {formatCurrency(totalStats.netAmount)}
+                    {formatCurrency(totalStats.totalAmount, 'gbp')}
                   </p>
                 </div>
                 <DollarSign className="h-8 w-8 text-green-600" />
@@ -293,7 +239,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                 <div>
                   <p className="text-sm font-medium text-gray-600">Average Donation</p>
                   <p className="text-2xl font-semibold text-gray-900">
-                    {formatCurrency(totalStats.avgDonation)}
+                    {formatCurrency(totalStats.avgDonation, 'gbp')}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">Per transaction</p>
                 </div>
@@ -308,10 +254,10 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                 <div>
                   <p className="text-sm font-medium text-gray-600">Processing Fees</p>
                   <p className="text-2xl font-semibold text-gray-900">
-                    {formatCurrency(totalStats.totalFees)}
+                    N/A
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    {((totalStats.totalFees / totalStats.totalAmount) * 100).toFixed(1)}% of total
+                    (Fees are not in the fetched data)
                   </p>
                 </div>
                 <CreditCard className="h-8 w-8 text-purple-600" />
@@ -342,10 +288,9 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="success">Success</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="failed">Failed</SelectItem>
-                  <SelectItem value="refunded">Refunded</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -404,85 +349,98 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
             <CardDescription>All donation transactions and their details</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Donor & Transaction</TableHead>
-                    <TableHead>Campaign</TableHead>
-                    <TableHead>Amount & Fees</TableHead>
-                    <TableHead>Payment Details</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Date & Location</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredDonations.map((donation) => (
-                    <TableRow key={donation.id}>
-                      <TableCell>
-                        <div className="space-y-1">
-                          <div className="flex items-center space-x-2">
-                            <Users className="w-4 h-4 text-gray-400" />
-                            <span className="font-medium">{donation.donorName}</span>
-                          </div>
-                          <p className="text-sm text-gray-500">{donation.donorEmail}</p>
-                          <p className="text-xs font-mono text-gray-400">{donation.transactionId}</p>
-                        </div>
-                      </TableCell>
-
-                      <TableCell>
-                        <div className="space-y-1">
-                          <p className="font-medium text-gray-900">{donation.campaignTitle}</p>
-                          {donation.isRecurring && (
-                            <Badge variant="outline" className="text-xs">
-                              Recurring
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-
-                      <TableCell>
-                        <div className="space-y-1">
-                          <p className="text-lg font-semibold text-gray-900">
-                            {formatCurrency(donation.amount)}
-                          </p>
-                          <div className="text-xs text-gray-500">
-                            <p>Fee: {formatCurrency(donation.processingFee)}</p>
-                            <p>Net: {formatCurrency(donation.netAmount)}</p>
-                          </div>
-                        </div>
-                      </TableCell>
-
-                      <TableCell>
-                        <div className="space-y-1">
-                          <div className="flex items-center space-x-2">
-                            <CreditCard className="w-4 h-4 text-gray-400" />
-                            <span className="text-sm">{donation.paymentMethod}</span>
-                          </div>
-                        </div>
-                      </TableCell>
-
-                      <TableCell>{getStatusBadge(donation.status)}</TableCell>
-
-                      <TableCell>
-                        <div className="space-y-1">
-                          <div className="flex items-center space-x-2">
-                            <Clock className="w-3 h-3 text-gray-400" />
-                            <span className="text-sm">{formatDate(donation.timestamp)}</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <MapPin className="w-3 h-3 text-gray-400" />
-                            <Badge variant="secondary" className="text-xs">
-                              {donation.kioskId}
-                            </Badge>
-                          </div>
-                        </div>
-                      </TableCell>
+            {loading ? (
+              <div className="flex items-center justify-center p-8">
+                <span className="animate-spin h-8 w-8 border-4 rounded-full border-t-transparent border-blue-500"></span>
+                <p className="ml-4 text-lg text-gray-600">Loading donations...</p>
+              </div>
+            ) : error ? (
+              <div className="flex items-center justify-center p-8">
+                <AlertCircle className="h-8 w-8 text-red-500" />
+                <p className="ml-4 text-lg text-red-600">{error}</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Donor & Transaction</TableHead>
+                      <TableHead>Campaign</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Payment Details</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Date & Platform</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredDonations.map((donation) => (
+                      <TableRow key={donation.id}>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <div className="flex items-center space-x-2">
+                              <Users className="w-4 h-4 text-gray-400" />
+                              <span className="font-medium">{donation.donorName || 'Anonymous'}</span>
+                            </div>
+                            <p className="text-sm text-gray-500">{donation.donorId}</p>
+                            <p className="text-xs font-mono text-gray-400">{donation.stripePaymentIntentId}</p>
+                          </div>
+                        </TableCell>
+
+                        <TableCell>
+                          <div className="space-y-1">
+                            <p className="font-medium text-gray-900">{donation.campaignId}</p>
+                            {donation.isGiftAid && (
+                              <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-200 text-xs">
+                                Gift Aid
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+
+                        <TableCell>
+                          <div className="space-y-1">
+                            <p className="text-lg font-semibold text-gray-900">
+                              {formatCurrency(donation.amount, donation.currency)}
+                            </p>
+                          </div>
+                        </TableCell>
+
+                        <TableCell>
+                          <div className="space-y-1">
+                            <div className="flex items-center space-x-2">
+                              <CreditCard className="w-4 h-4 text-gray-400" />
+                              <span className="text-sm">{donation.platform}</span>
+                            </div>
+                          </div>
+                        </TableCell>
+
+                        <TableCell>{getStatusBadge(donation.paymentStatus)}</TableCell>
+
+                        <TableCell>
+                          <div className="space-y-1">
+                            <div className="flex items-center space-x-2">
+                              <Clock className="w-3 h-3 text-gray-400" />
+                              <span className="text-sm">{donation.timestamp}</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <MapPin className="w-3 h-3 text-gray-400" />
+                              <Badge variant="secondary" className="text-xs">
+                                {donation.platform}
+                              </Badge>
+                            </div>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+            {!loading && filteredDonations.length === 0 && (
+              <div className="flex items-center justify-center p-8 text-gray-500">
+                No donations found.
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
