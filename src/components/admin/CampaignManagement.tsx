@@ -34,9 +34,63 @@ const CampaignDialog = ({ open, onOpenChange, campaign, onSave }: CampaignDialog
     startDate: '',
     endDate: '',
     coverImageUrl: '',
+    // New fields for advanced settings (initial subset)
+    category: '',
+    organizationId: '',
+    longDescription: '',
+    videoUrl: '',
+    // Adding more fields for advanced settings
+    assignedKiosks: '', // Stored as comma-separated string
+    isGlobal: false,
+    galleryImages: '', // Stored as comma-separated string
+    organizationInfoName: '',
+    organizationInfoDescription: '',
+    organizationInfoWebsite: '',
+    organizationInfoLogo: '',
+    impactMetricsPeopleHelped: 0,
+    impactMetricsItemsProvided: 0,
+    impactMetricsCustomMetricLabel: '',
+    impactMetricsCustomMetricValue: 0,
+    impactMetricsCustomMetricUnit: '',
+
+    // CampaignConfiguration fields - flattened for form handling (initial subset)
+    predefinedAmounts: '', // comma-separated
+    allowCustomAmount: true,
+    minCustomAmount: 1,
+    maxCustomAmount: 1000,
+    // Adding more CampaignConfiguration fields
+    suggestedAmounts: '', // comma-separated
+    enableRecurring: false,
+    recurringIntervals: '', // comma-separated
+    defaultRecurringInterval: 'monthly',
+    recurringDiscount: 0,
+    // Adding Display Settings fields
+    displayStyle: 'grid',
+    showProgressBar: true,
+    showDonorCount: true,
+    showRecentDonations: true,
+    maxRecentDonations: 5,
+    // Adding Call-to-Action fields
+    primaryCTAText: 'Donate Now',
+    secondaryCTAText: '',
+    urgencyMessage: '',
+    // Adding Visual Customization fields
+    accentColor: '#4F46E5',
+    backgroundImage: '',
+    theme: 'default',
+    // Adding Form Configuration fields
+    requiredFields: '', // comma-separated
+    optionalFields: '', // comma-separated
+    enableAnonymousDonations: true,
+    // Adding Social Features fields
+    enableSocialSharing: true,
+    shareMessage: '',
+    enableDonorWall: true,
+    enableComments: true,
   };
 
   const [formData, setFormData] = useState<DocumentData>(initialFormData);
+  const [activeTab, setActiveTab] = useState<'basic' | 'advanced'>('basic');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isEditMode = !!campaign;
 
@@ -61,6 +115,60 @@ const CampaignDialog = ({ open, onOpenChange, campaign, onSave }: CampaignDialog
         startDate: campaign.startDate?.seconds ? new Date(campaign.startDate.seconds * 1000).toISOString().split('T')[0] : '',
         endDate: campaign.endDate?.seconds ? new Date(campaign.endDate.seconds * 1000).toISOString().split('T')[0] : '',
         coverImageUrl: campaign.coverImageUrl || '',
+        
+        // New fields for advanced settings (initial subset)
+        category: campaign.category || '',
+        organizationId: campaign.organizationId || '',
+        longDescription: campaign.longDescription || '',
+        videoUrl: campaign.videoUrl || '',
+        // Adding more fields for advanced settings
+        assignedKiosks: Array.isArray(campaign.assignedKiosks) ? campaign.assignedKiosks.join(', ') : '',
+        isGlobal: campaign.isGlobal || false,
+        galleryImages: Array.isArray(campaign.galleryImages) ? campaign.galleryImages.join(', ') : '',
+        organizationInfoName: campaign.organizationInfo?.name || '',
+        organizationInfoDescription: campaign.organizationInfo?.description || '',
+        organizationInfoWebsite: campaign.organizationInfo?.website || '',
+        organizationInfoLogo: campaign.organizationInfo?.logo || '',
+        impactMetricsPeopleHelped: campaign.impactMetrics?.peopleHelped || 0,
+        impactMetricsItemsProvided: campaign.impactMetrics?.itemsProvided || 0,
+        impactMetricsCustomMetricLabel: campaign.impactMetrics?.customMetric?.label || '',
+        impactMetricsCustomMetricValue: campaign.impactMetrics?.customMetric?.value || 0,
+        impactMetricsCustomMetricUnit: campaign.impactMetrics?.customMetric?.unit || '',
+
+        // CampaignConfiguration fields
+        predefinedAmounts: Array.isArray(campaign.configuration?.predefinedAmounts) ? campaign.configuration.predefinedAmounts.join(', ') : '',
+        allowCustomAmount: campaign.configuration?.allowCustomAmount ?? true,
+        minCustomAmount: campaign.configuration?.minCustomAmount ?? 1,
+        maxCustomAmount: campaign.configuration?.maxCustomAmount ?? 1000,
+        // Adding more CampaignConfiguration fields
+        suggestedAmounts: Array.isArray(campaign.configuration?.suggestedAmounts) ? campaign.configuration.suggestedAmounts.join(', ') : '',
+        enableRecurring: campaign.configuration?.enableRecurring ?? false,
+        recurringIntervals: Array.isArray(campaign.configuration?.recurringIntervals) ? campaign.configuration.recurringIntervals.join(', ') : '',
+        defaultRecurringInterval: campaign.configuration?.defaultRecurringInterval || 'monthly',
+        recurringDiscount: campaign.configuration?.recurringDiscount ?? 0,
+        // Adding Display Settings fields
+        displayStyle: campaign.configuration?.displayStyle || 'grid',
+        showProgressBar: campaign.configuration?.showProgressBar ?? true,
+        showDonorCount: campaign.configuration?.showDonorCount ?? true,
+        showRecentDonations: campaign.configuration?.showRecentDonations ?? true,
+        maxRecentDonations: campaign.configuration?.maxRecentDonations ?? 5,
+        // Adding Call-to-Action fields
+        primaryCTAText: campaign.configuration?.primaryCTAText || 'Donate Now',
+        secondaryCTAText: campaign.configuration?.secondaryCTAText || '',
+        urgencyMessage: campaign.configuration?.urgencyMessage || '',
+        // Adding Visual Customization fields
+        accentColor: campaign.configuration?.accentColor || '#4F46E5',
+        backgroundImage: campaign.configuration?.backgroundImage || '',
+        theme: campaign.configuration?.theme || 'default',
+        // Adding Form Configuration fields
+        requiredFields: Array.isArray(campaign.configuration?.requiredFields) ? campaign.configuration.requiredFields.join(', ') : '',
+        optionalFields: Array.isArray(campaign.configuration?.optionalFields) ? campaign.configuration.optionalFields.join(', ') : '',
+        enableAnonymousDonations: campaign.configuration?.enableAnonymousDonations ?? true,
+        // Adding Social Features fields
+        enableSocialSharing: campaign.configuration?.enableSocialSharing ?? true,
+        shareMessage: campaign.configuration?.shareMessage || '',
+        enableDonorWall: campaign.configuration?.enableDonorWall ?? true,
+        enableComments: campaign.configuration?.enableComments ?? true,
       };
       setFormData(editableData);
       setImagePreviewUrl(campaign.coverImageUrl || null);
@@ -71,8 +179,8 @@ const CampaignDialog = ({ open, onOpenChange, campaign, onSave }: CampaignDialog
   }, [campaign, isEditMode, setImagePreviewUrl]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target as HTMLInputElement; // Cast to HTMLInputElement to access 'checked' for checkboxes
+    setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -128,146 +236,319 @@ const CampaignDialog = ({ open, onOpenChange, campaign, onSave }: CampaignDialog
             {dialogDescription}
           </DialogDescription>
         </DialogHeader>
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+            <button
+              className={`${activeTab === 'basic' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'} whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
+              onClick={() => setActiveTab('basic')}
+            >
+              Basic Info
+            </button>
+            <button
+              className={`${activeTab === 'advanced' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'} whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
+              onClick={() => setActiveTab('advanced')}
+            >
+              Advanced Settings
+            </button>
+          </nav>
+        </div>
+
         <div className="grid gap-6 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="title" className="text-right">Title {isEditMode ? '' : '*'}</Label>
-            <Input
-              id="title"
-              name="title"
-              value={formData.title}
-              onChange={handleChange}
-              className="col-span-3"
-              placeholder="Enter campaign title"
-            />
-          </div>
+          {activeTab === 'basic' && (
+            <>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="title" className="text-right">Title {isEditMode ? '' : '*'}</Label>
+                <Input
+                  id="title"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  className="col-span-3"
+                  placeholder="Enter campaign title"
+                />
+              </div>
 
-          <div className="grid grid-cols-4 items-start gap-4">
-            <Label htmlFor="description" className="text-right pt-2">Description {isEditMode ? '' : '*'}</Label>
-            <Textarea
-              id="description"
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              className="col-span-3"
-              rows={3}
-              placeholder="Enter campaign description"
-            />
-          </div>
+              <div className="grid grid-cols-4 items-start gap-4">
+                <Label htmlFor="description" className="text-right pt-2">Description {isEditMode ? '' : '*'}</Label>
+                <Textarea
+                  id="description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  className="col-span-3"
+                  rows={3}
+                  placeholder="Enter campaign description"
+                />
+              </div>
 
-          <div className="grid grid-cols-4 items-start gap-4">
-            <Label className="text-right pt-2">Cover Image</Label>
-            <div className="col-span-3 space-y-4">
-              {imagePreview && (
-                <div className="flex items-center space-x-4">
-                  <img
-                    src={imagePreview}
-                    alt="Campaign cover"
-                    className="w-20 h-20 object-cover rounded-lg border"
-                  />
-                  <div className="text-sm text-gray-600">
-                    <p>{isEditMode ? 'Current cover image' : 'Selected image'}</p>
-                  </div>
-                </div>
-              )}
-              <div className="space-y-3">
-                <div className="flex items-center space-x-3">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileSelect}
-                    className="hidden"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center space-x-2"
-                  >
-                    <FaImage className="w-4 h-4" />
-                    <span>Select Image</span>
-                  </Button>
-                  {selectedImage && isEditMode && (
-                    <Button
-                      type="button"
-                      onClick={handleSaveChanges} // Image upload is now part of save
-                      disabled={uploadingImage}
-                      className="flex items-center space-x-2"
-                    >
-                      <FaUpload className={`w-4 h-4 ${uploadingImage ? 'animate-spin' : ''}`} />
-                      <span>{uploadingImage ? 'Uploading...' : 'Upload Image'}</span>
-                    </Button>
+              <div className="grid grid-cols-4 items-start gap-4">
+                <Label className="text-right pt-2">Cover Image</Label>
+                <div className="col-span-3 space-y-4">
+                  {imagePreview && (
+                    <div className="flex items-center space-x-4">
+                      <img
+                        src={imagePreview}
+                        alt="Campaign cover"
+                        className="w-20 h-20 object-cover rounded-lg border"
+                      />
+                      <div className="text-sm text-gray-600">
+                        <p>{isEditMode ? 'Current cover image' : 'Selected image'}</p>
+                      </div>
+                    </div>
                   )}
-                </div>
-                {selectedImage && (
-                  <div className="text-sm text-gray-600">
-                    <p>Selected: {selectedImage.name}</p>
-                    <p>Size: {(selectedImage.size / 1024 / 1024).toFixed(2)} MB</p>
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-3">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex items-center space-x-2"
+                      >
+                        <FaImage className="w-4 h-4" />
+                        <span>Select Image</span>
+                      </Button>
+                      {selectedImage && isEditMode && (
+                        <Button
+                          type="button"
+                          onClick={handleSaveChanges} // Image upload is now part of save
+                          disabled={uploadingImage}
+                          className="flex items-center space-x-2"
+                        >
+                          <FaUpload className={`w-4 h-4 ${uploadingImage ? 'animate-spin' : ''}`} />
+                          <span>{uploadingImage ? 'Uploading...' : 'Upload Image'}</span>
+                        </Button>
+                      )}
+                    </div>
+                    {selectedImage && (
+                      <div className="text-sm text-gray-600">
+                        <p>Selected: {selectedImage.name}</p>
+                        <p>Size: {(selectedImage.size / 1024 / 1024).toFixed(2)} MB</p>
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
-            </div>
-          </div>
 
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="tags" className="text-right">Tags</Label>
-            <Input
-              id="tags"
-              name="tags"
-              value={formData.tags}
-              onChange={handleChange}
-              className="col-span-3"
-              placeholder="health, education, etc."/>
-          </div>
-
-          <div className="grid grid-cols-2 gap-x-4 gap-y-6">
-              <div className="space-y-2">
-                 <Label htmlFor="goalAmount">Fundraising Goal ($)</Label>
-                 <Input
-                   id="goalAmount"
-                   name="goalAmount"
-                   type="number"
-                   value={formData.goalAmount}
-                   onChange={handleChange}
-                   placeholder="0"
-                 />
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="tags" className="text-right">Tags</Label>
+                <Input
+                  id="tags"
+                  name="tags"
+                  value={formData.tags}
+                  onChange={handleChange}
+                  className="col-span-3"
+                  placeholder="health, education, etc."/>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
-                 <Select
-                   name="status"
-                   value={formData.status}
-                   onValueChange={(value) => handleChange({ target: { name: 'status', value } } as any)}>
-                    <SelectTrigger id="status"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="paused">Paused</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
-                    </SelectContent>
+
+              <div className="grid grid-cols-2 gap-x-4 gap-y-6">
+                  <div className="space-y-2">
+                     <Label htmlFor="goalAmount">Fundraising Goal ($)</Label>
+                     <Input
+                       id="goalAmount"
+                       name="goalAmount"
+                       type="number"
+                       value={formData.goalAmount}
+                       onChange={handleChange}
+                       placeholder="0"
+                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="status">Status</Label>
+                     <Select
+                       name="status"
+                       value={formData.status}
+                       onValueChange={(value) => handleChange({ target: { name: 'status', value } } as any)}>
+                        <SelectTrigger id="status"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="paused">Paused</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                        </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                      <Label htmlFor="startDate">Start Date</Label>
+                      <Input
+                        id="startDate"
+                        name="startDate"
+                        type="date"
+                        value={formData.startDate}
+                        onChange={handleChange}
+                      />
+                  </div>
+                   <div className="space-y-2">
+                      <Label htmlFor="endDate">End Date</Label>
+                      <Input
+                        id="endDate"
+                        name="endDate"
+                        type="date"
+                        value={formData.endDate}
+                        onChange={handleChange}
+                      />
+                  </div>
+               </div>
+            </>
+          )}
+
+          {activeTab === 'advanced' && (
+            <div className="space-y-6 max-h-[500px] overflow-y-auto">
+              <h3 className="text-lg font-semibold text-gray-900">General Advanced Settings</h3>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="category" className="text-right">Category</Label>
+                <Input id="category" name="category" value={formData.category} onChange={handleChange} className="col-span-3" placeholder="e.g., Environment, Education"/>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="organizationId" className="text-right">Organization ID</Label>
+                <Input id="organizationId" name="organizationId" value={formData.organizationId} onChange={handleChange} className="col-span-3" placeholder="Unique ID for organization"/>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="isGlobal" className="text-right">Global Campaign</Label>
+                <input type="checkbox" id="isGlobal" name="isGlobal" checked={formData.isGlobal} onChange={handleChange} className="col-span-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"/>
+              </div>
+              <div className="grid grid-cols-4 items-start gap-4">
+                <Label htmlFor="longDescription" className="text-right pt-2">Long Description</Label>
+                <Textarea id="longDescription" name="longDescription" value={formData.longDescription} onChange={handleChange} className="col-span-3" rows={5} placeholder="Provide a more detailed description of the campaign."/>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="videoUrl" className="text-right">Video URL</Label>
+                <Input id="videoUrl" name="videoUrl" value={formData.videoUrl} onChange={handleChange} className="col-span-3" placeholder="Optional YouTube URL"/>
+              </div>
+
+              <h3 className="text-lg font-semibold text-gray-900 mt-8">Organization Information</h3>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="organizationInfoName" className="text-right">Org. Name</Label>
+                <Input id="organizationInfoName" name="organizationInfoName" value={formData.organizationInfoName} onChange={handleChange} className="col-span-3" placeholder="Organization Name"/>
+              </div>
+              <div className="grid grid-cols-4 items-start gap-4">
+                <Label htmlFor="organizationInfoDescription" className="text-right pt-2">Org. Description</Label>
+                <Textarea id="organizationInfoDescription" name="organizationInfoDescription" value={formData.organizationInfoDescription} onChange={handleChange} className="col-span-3" rows={3} placeholder="Description of the organization"/>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="organizationInfoWebsite" className="text-right">Org. Website</Label>
+                <Input id="organizationInfoWebsite" name="organizationInfoWebsite" value={formData.organizationInfoWebsite} onChange={handleChange} className="col-span-3" placeholder="Organization Website URL"/>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="organizationInfoLogo" className="text-right">Org. Logo URL</Label>
+                <Input id="organizationInfoLogo" name="organizationInfoLogo" value={formData.organizationInfoLogo} onChange={handleChange} className="col-span-3" placeholder="URL to organization logo"/>
+              </div>
+
+              <h3 className="text-lg font-semibold text-gray-900 mt-8">Pricing Options</h3>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="predefinedAmounts" className="text-right">Predefined Amounts</Label>
+                <Input id="predefinedAmounts" name="predefinedAmounts" value={formData.predefinedAmounts} onChange={handleChange} className="col-span-3" placeholder="Comma-separated numbers, e.g., 10,25,50"/>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="allowCustomAmount" className="text-right">Allow Custom Amount</Label>
+                <input type="checkbox" id="allowCustomAmount" name="allowCustomAmount" checked={formData.allowCustomAmount} onChange={handleChange} className="col-span-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"/>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="minCustomAmount" className="text-right">Min Custom Amount</Label>
+                <Input id="minCustomAmount" name="minCustomAmount" type="number" value={formData.minCustomAmount} onChange={handleChange} className="col-span-3" placeholder="1"/>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="maxCustomAmount" className="text-right">Max Custom Amount</Label>
+                <Input id="maxCustomAmount" name="maxCustomAmount" type="number" value={formData.maxCustomAmount} onChange={handleChange} className="col-span-3" placeholder="1000"/>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="suggestedAmounts" className="text-right">Suggested Amounts</Label>
+                <Input id="suggestedAmounts" name="suggestedAmounts" value={formData.suggestedAmounts} onChange={handleChange} className="col-span-3" placeholder="Comma-separated numbers, e.g., 100,250"/>
+              </div>
+
+              <h3 className="text-lg font-semibold text-gray-900 mt-8">Subscription Settings</h3>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="enableRecurring" className="text-right">Enable Recurring</Label>
+                <input type="checkbox" id="enableRecurring" name="enableRecurring" checked={formData.enableRecurring} onChange={handleChange} className="col-span-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"/>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="recurringIntervals" className="text-right">Recurring Intervals</Label>
+                <Input id="recurringIntervals" name="recurringIntervals" value={formData.recurringIntervals} onChange={handleChange} className="col-span-3" placeholder="Comma-separated: monthly, quarterly, yearly"/>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="defaultRecurringInterval" className="text-right">Default Recurring Interval</Label>
+                <Select name="defaultRecurringInterval" value={formData.defaultRecurringInterval} onValueChange={(value) => handleChange({ target: { name: 'defaultRecurringInterval', value } } as any)}>
+                  <SelectTrigger id="defaultRecurringInterval" className="col-span-3"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                    <SelectItem value="quarterly">Quarterly</SelectItem>
+                    <SelectItem value="yearly">Yearly</SelectItem>
+                  </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                  <Label htmlFor="startDate">Start Date</Label>
-                  <Input
-                    id="startDate"
-                    name="startDate"
-                    type="date"
-                    value={formData.startDate}
-                    onChange={handleChange}
-                  />
-              </div>
-               <div className="space-y-2">
-                  <Label htmlFor="endDate">End Date</Label>
-                  <Input
-                    id="endDate"
-                    name="endDate"
-                    type="date"
-                    value={formData.endDate}
-                    onChange={handleChange}
-                  />
-              </div>
-           </div>
 
+              <h3 className="text-lg font-semibold text-gray-900 mt-8">Display Settings</h3>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="displayStyle" className="text-right">Display Style</Label>
+                <Select name="displayStyle" value={formData.displayStyle} onValueChange={(value) => handleChange({ target: { name: 'displayStyle', value } } as any)}>
+                  <SelectTrigger id="displayStyle" className="col-span-3"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="grid">Grid</SelectItem>
+                    <SelectItem value="list">List</SelectItem>
+                    <SelectItem value="carousel">Carousel</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="showProgressBar" className="text-right">Show Progress Bar</Label>
+                <input type="checkbox" id="showProgressBar" name="showProgressBar" checked={formData.showProgressBar} onChange={handleChange} className="col-span-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"/>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="showDonorCount" className="text-right">Show Donor Count</Label>
+                <input type="checkbox" id="showDonorCount" name="showDonorCount" checked={formData.showDonorCount} onChange={handleChange} className="col-span-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"/>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="showRecentDonations" className="text-right">Show Recent Donations</Label>
+                <input type="checkbox" id="showRecentDonations" name="showRecentDonations" checked={formData.showRecentDonations} onChange={handleChange} className="col-span-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"/>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="maxRecentDonations" className="text-right">Max Recent Donations</Label>
+                <Input id="maxRecentDonations" name="maxRecentDonations" type="number" value={formData.maxRecentDonations} onChange={handleChange} className="col-span-3" placeholder="5"/>
+              </div>
+
+              <h3 className="text-lg font-semibold text-gray-900 mt-8">Call-to-Action</h3>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="primaryCTAText" className="text-right">Primary CTA Text</Label>
+                <Input id="primaryCTAText" name="primaryCTAText" value={formData.primaryCTAText} onChange={handleChange} className="col-span-3" placeholder="e.g., Donate Now"/>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="secondaryCTAText" className="text-right">Secondary CTA Text</Label>
+                <Input id="secondaryCTAText" name="secondaryCTAText" value={formData.secondaryCTAText} onChange={handleChange} className="col-span-3" placeholder="e.g., Learn More"/>
+              </div>
+              <div className="grid grid-cols-4 items-start gap-4">
+                <Label htmlFor="urgencyMessage" className="text-right pt-2">Urgency Message</Label>
+                <Textarea id="urgencyMessage" name="urgencyMessage" value={formData.urgencyMessage} onChange={handleChange} className="col-span-3" rows={2} placeholder="e.g., Only 10 days left to reach our goal!"/>
+              </div>
+
+              <h3 className="text-lg font-semibold text-gray-900 mt-8">Visual Customization</h3>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="accentColor" className="text-right">Accent Color</Label>
+                <Input id="accentColor" name="accentColor" type="color" value={formData.accentColor} onChange={handleChange} className="col-span-3 h-8 w-1/4"/>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="backgroundImage" className="text-right">Background Image URL</Label>
+                <Input id="backgroundImage" name="backgroundImage" value={formData.backgroundImage} onChange={handleChange} className="col-span-3" placeholder="URL to background image"/>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="theme" className="text-right">Theme</Label>
+                <Select name="theme" value={formData.theme} onValueChange={(value) => handleChange({ target: { name: 'theme', value } } as any)}>
+                  <SelectTrigger id="theme" className="col-span-3"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="default">Default</SelectItem>
+                    <SelectItem value="minimal">Minimal</SelectItem>
+                    <SelectItem value="vibrant">Vibrant</SelectItem>
+                    <SelectItem value="elegant">Elegant</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+            </div>
+          )}
         </div>
         <div className="flex justify-end space-x-2 pt-4 border-t">
           <Button variant="outline" onClick={handleDialogClose} disabled={uploadingImage}>Cancel</Button>
@@ -310,6 +591,57 @@ const CampaignManagement = ({ onNavigate, onLogout, userSession, hasPermission }
         goalAmount: Number(data.goalAmount),
         tags: data.tags.split(',').map((t: string) => t.trim()).filter(Boolean),
         coverImageUrl: data.coverImageUrl || '',
+        category: data.category || '',
+        organizationId: data.organizationId || '',
+        assignedKiosks: data.assignedKiosks.split(',').map((t: string) => t.trim()).filter(Boolean),
+        isGlobal: data.isGlobal,
+        longDescription: data.longDescription || '',
+        videoUrl: data.videoUrl || '',
+        galleryImages: data.galleryImages.split(',').map((t: string) => t.trim()).filter(Boolean),
+        organizationInfo: {
+          name: data.organizationInfoName || '',
+          description: data.organizationInfoDescription || '',
+          website: data.organizationInfoWebsite || undefined,
+          logo: data.organizationInfoLogo || undefined,
+        },
+        impactMetrics: {
+          peopleHelped: Number(data.impactMetricsPeopleHelped) || undefined,
+          itemsProvided: Number(data.impactMetricsItemsProvided) || undefined,
+          customMetric: (data.impactMetricsCustomMetricLabel || data.impactMetricsCustomMetricValue || data.impactMetricsCustomMetricUnit) ? {
+            label: data.impactMetricsCustomMetricLabel || '',
+            value: Number(data.impactMetricsCustomMetricValue) || 0,
+            unit: data.impactMetricsCustomMetricUnit || '',
+          } : undefined,
+        },
+        configuration: {
+          predefinedAmounts: data.predefinedAmounts.split(',').map(Number).filter(Boolean),
+          allowCustomAmount: data.allowCustomAmount,
+          minCustomAmount: Number(data.minCustomAmount),
+          maxCustomAmount: Number(data.maxCustomAmount),
+          suggestedAmounts: data.suggestedAmounts.split(',').map(Number).filter(Boolean),
+          enableRecurring: data.enableRecurring,
+          recurringIntervals: data.recurringIntervals.split(',').map((t: string) => t.trim()).filter(Boolean),
+          defaultRecurringInterval: data.defaultRecurringInterval,
+          recurringDiscount: Number(data.recurringDiscount),
+          displayStyle: data.displayStyle,
+          showProgressBar: data.showProgressBar,
+          showDonorCount: data.showDonorCount,
+          showRecentDonations: data.showRecentDonations,
+          maxRecentDonations: Number(data.maxRecentDonations),
+          primaryCTAText: data.primaryCTAText || '',
+          secondaryCTAText: data.secondaryCTAText || undefined,
+          urgencyMessage: data.urgencyMessage || undefined,
+          accentColor: data.accentColor || undefined,
+          backgroundImage: data.backgroundImage || undefined,
+          theme: data.theme || 'default',
+          requiredFields: data.requiredFields.split(',').map((t: string) => t.trim()).filter(Boolean),
+          optionalFields: data.optionalFields.split(',').map((t: string) => t.trim()).filter(Boolean),
+          enableAnonymousDonations: data.enableAnonymousDonations,
+          enableSocialSharing: data.enableSocialSharing,
+          shareMessage: data.shareMessage || undefined,
+          enableDonorWall: data.enableDonorWall,
+          enableComments: data.enableComments,
+        }
       };
 
       if (data.startDate) dataToSave.startDate = Timestamp.fromDate(new Date(data.startDate));
