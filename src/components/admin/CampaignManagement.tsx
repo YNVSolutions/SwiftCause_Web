@@ -17,23 +17,29 @@ import {
   Download,
 } from 'lucide-react';
 
-interface CampaignEditDialogProps {
+interface CampaignDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  campaign: DocumentData | null;
-  onSave: (updatedData: DocumentData) => void;
+  campaign?: DocumentData | null; // Optional campaign for editing
+  onSave: (data: DocumentData, isNew: boolean, campaignId?: string) => Promise<void>;
 }
 
-interface CampaignAddDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSave: (newData: DocumentData) => void;
-}
+const CampaignDialog = ({ open, onOpenChange, campaign, onSave }: CampaignDialogProps) => {
+  const initialFormData = {
+    title: '',
+    description: '',
+    status: 'active',
+    goalAmount: 0,
+    tags: '',
+    startDate: '',
+    endDate: '',
+    coverImageUrl: '',
+  };
 
-const CampaignEditDialog = ({ open, onOpenChange, campaign, onSave }: CampaignEditDialogProps) => {
-  const [formData, setFormData] = useState<DocumentData | null>(null);
+  const [formData, setFormData] = useState<DocumentData>(initialFormData);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+  const isEditMode = !!campaign;
+
   const {
     uploadingImage,
     selectedImage,
@@ -45,7 +51,7 @@ const CampaignEditDialog = ({ open, onOpenChange, campaign, onSave }: CampaignEd
   } = useCampaignManagement();
 
   useEffect(() => {
-    if (campaign) {
+    if (isEditMode && campaign) {
       const editableData = {
         title: campaign.title || '',
         description: campaign.description || '',
@@ -58,195 +64,11 @@ const CampaignEditDialog = ({ open, onOpenChange, campaign, onSave }: CampaignEd
       };
       setFormData(editableData);
       setImagePreviewUrl(campaign.coverImageUrl || null);
+    } else if (!isEditMode) {
+      setFormData(initialFormData);
+      setImagePreviewUrl(null);
     }
-  }, [campaign, setImagePreviewUrl]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => (prev ? { ...prev, [name]: value } : null));
-  };
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      handleImageSelect(file);
-    }
-  };
-
-  const handleUploadImage = async () => {
-    if (!selectedImage || !campaign || !formData) return;
-    
-    try {
-      const updatedData = await handleImageUpload(campaign.id, formData);
-      if (updatedData) {
-        setFormData(prev => (prev ? { ...prev, coverImageUrl: updatedData.coverImageUrl } : null));
-      }
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to upload image. Please try again.';
-      alert(errorMessage);
-    }
-  };
-
-  const handleSaveChanges = () => {
-    if (formData) {
-      onSave(formData);
-    }
-  };
-
-  const handleDialogClose = () => {
-    clearImageSelection();
-    onOpenChange(false);
-  };
-
-  if (!formData) return null;
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center">
-            <Settings className="mr-2 h-5 w-5" /> Edit Campaign: {campaign?.title}
-          </DialogTitle>
-          <DialogDescription>
-            Make changes to your campaign below. Click save when you're done.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-6 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="title" className="text-right">Title</Label>
-            <Input id="title" name="title" value={formData.title} onChange={handleChange} className="col-span-3" />
-          </div>
-
-          <div className="grid grid-cols-4 items-start gap-4">
-            <Label htmlFor="description" className="text-right pt-2">Description</Label>
-            <Textarea id="description" name="description" value={formData.description} onChange={handleChange} className="col-span-3" rows={3} />
-          </div>
-
-          <div className="grid grid-cols-4 items-start gap-4">
-            <Label className="text-right pt-2">Cover Image</Label>
-            <div className="col-span-3 space-y-4">
-              
-              {imagePreview && (
-                <div className="flex items-center space-x-4">
-                  <img
-                    src={imagePreview}
-                    alt="Campaign cover"
-                    className="w-20 h-20 object-cover rounded-lg border"
-                  />
-                  <div className="text-sm text-gray-600">
-                    <p>Current cover image</p>
-                  </div>
-                </div>
-              )}
-              
-             
-              <div className="space-y-3">
-                <div className="flex items-center space-x-3">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileSelect}
-                    className="hidden"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center space-x-2"
-                  >
-                    <FaImage className="w-4 h-4" />
-                    <span>Select Image</span>
-                  </Button>
-                  
-                  {selectedImage && (
-                    <Button
-                      type="button"
-                      onClick={handleUploadImage}
-                      disabled={uploadingImage}
-                      className="flex items-center space-x-2"
-                    >
-                      <FaUpload className={`w-4 h-4 ${uploadingImage ? 'animate-spin' : ''}`} />
-                      <span>{uploadingImage ? 'Uploading...' : 'Upload Image'}</span>
-                    </Button>
-                  )}
-                </div>
-                
-                {selectedImage && (
-                  <div className="text-sm text-gray-600">
-                    <p>Selected: {selectedImage.name}</p>
-                    <p>Size: {(selectedImage.size / 1024 / 1024).toFixed(2)} MB</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="tags" className="text-right">Tags</Label>
-            <Input id="tags" name="tags" value={formData.tags} onChange={handleChange} className="col-span-3" placeholder="health, education, etc."/>
-          </div>
-
-          <div className="grid grid-cols-2 gap-x-4 gap-y-6">
-              <div className="space-y-2">
-                 <Label htmlFor="goalAmount">Fundraising Goal ($)</Label>
-                 <Input id="goalAmount" name="goalAmount" type="number" value={formData.goalAmount} onChange={handleChange} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
-                 <Select name="status" value={formData.status} onValueChange={(value) => handleChange({ target: { name: 'status', value } } as any)}>
-                    <SelectTrigger id="status"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="paused">Paused</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
-                    </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                  <Label htmlFor="startDate">Start Date</Label>
-                  <Input id="startDate" name="startDate" type="date" value={formData.startDate} onChange={handleChange} />
-              </div>
-               <div className="space-y-2">
-                  <Label htmlFor="endDate">End Date</Label>
-                  <Input id="endDate" name="endDate" type="date" value={formData.endDate} onChange={handleChange} />
-              </div>
-           </div>
-
-        </div>
-        <div className="flex justify-end space-x-2 pt-4 border-t">
-          <Button variant="outline" onClick={handleDialogClose} disabled={uploadingImage}>Cancel</Button>
-          <Button onClick={handleSaveChanges} disabled={uploadingImage}>
-            {uploadingImage ? 'Uploading...' : 'Save Changes'}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
-const CampaignAddDialog = ({ open, onOpenChange, onSave }: CampaignAddDialogProps) => {
-  const [formData, setFormData] = useState<DocumentData>({
-    title: '',
-    description: '',
-    status: 'active',
-    goalAmount: 0,
-    tags: '',
-    startDate: '',
-    endDate: '',
-    coverImageUrl: ''
-  });
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  const {
-    uploadingImage,
-    selectedImage,
-    imagePreview,
-    handleImageSelect,
-    clearImageSelection,
-    setImagePreviewUrl
-  } = useCampaignManagement();
+  }, [campaign, isEditMode, setImagePreviewUrl]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -260,60 +82,74 @@ const CampaignAddDialog = ({ open, onOpenChange, onSave }: CampaignAddDialogProp
     }
   };
 
-  const handleSaveChanges = () => {
-    if (formData.title && formData.description) {
-      onSave(formData);
+  const handleSaveChanges = async () => {
+    if (!formData.title || !formData.description) {
+      alert('Title and Description are required.');
+      return;
     }
+
+    let finalData = { ...formData };
+    if (selectedImage) {
+      try {
+        const uploadedData = await handleImageUpload(campaign?.id, formData);
+        if (uploadedData) {
+          finalData = { ...finalData, coverImageUrl: uploadedData.coverImageUrl };
+        }
+      } catch (error) {
+        console.error('Error uploading image:', error);
+        alert('Failed to upload image. Please try again.');
+        return;
+      }
+    }
+    
+    await onSave(finalData, !isEditMode, campaign?.id);
+    handleDialogClose();
   };
 
   const handleDialogClose = () => {
-    setFormData({
-      title: '',
-      description: '',
-      status: 'active',
-      goalAmount: 0,
-      tags: '',
-      startDate: '',
-      endDate: '',
-      coverImageUrl: ''
-    });
     clearImageSelection();
+    setFormData(initialFormData); // Reset for add mode
     onOpenChange(false);
   };
+
+  const dialogTitle = isEditMode ? `Edit Campaign: ${campaign?.title}` : 'Add New Campaign';
+  const dialogDescription = isEditMode ? 'Make changes to your campaign below. Click save when you\'re done.' : 'Fill in the details below to create a new campaign.';
+  const saveButtonText = isEditMode ? 'Save Changes' : 'Create Campaign';
+  const isSaveDisabled = uploadingImage || !formData.title || !formData.description;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle className="flex items-center">
-            <Plus className="mr-2 h-5 w-5" /> Add New Campaign
+            {isEditMode ? <Settings className="mr-2 h-5 w-5" /> : <Plus className="mr-2 h-5 w-5" />} {dialogTitle}
           </DialogTitle>
           <DialogDescription>
-            Fill in the details below to create a new campaign.
+            {dialogDescription}
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-6 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="title" className="text-right">Title *</Label>
-            <Input 
-              id="title" 
-              name="title" 
-              value={formData.title} 
-              onChange={handleChange} 
-              className="col-span-3" 
+            <Label htmlFor="title" className="text-right">Title {isEditMode ? '' : '*'}</Label>
+            <Input
+              id="title"
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+              className="col-span-3"
               placeholder="Enter campaign title"
             />
           </div>
 
           <div className="grid grid-cols-4 items-start gap-4">
-            <Label htmlFor="description" className="text-right pt-2">Description *</Label>
-            <Textarea 
-              id="description" 
-              name="description" 
-              value={formData.description} 
-              onChange={handleChange} 
-              className="col-span-3" 
-              rows={3} 
+            <Label htmlFor="description" className="text-right pt-2">Description {isEditMode ? '' : '*'}</Label>
+            <Textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              className="col-span-3"
+              rows={3}
               placeholder="Enter campaign description"
             />
           </div>
@@ -329,11 +165,10 @@ const CampaignAddDialog = ({ open, onOpenChange, onSave }: CampaignAddDialogProp
                     className="w-20 h-20 object-cover rounded-lg border"
                   />
                   <div className="text-sm text-gray-600">
-                    <p>Selected image</p>
+                    <p>{isEditMode ? 'Current cover image' : 'Selected image'}</p>
                   </div>
                 </div>
               )}
-              
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
                   <input
@@ -352,8 +187,18 @@ const CampaignAddDialog = ({ open, onOpenChange, onSave }: CampaignAddDialogProp
                     <FaImage className="w-4 h-4" />
                     <span>Select Image</span>
                   </Button>
+                  {selectedImage && isEditMode && (
+                    <Button
+                      type="button"
+                      onClick={handleSaveChanges} // Image upload is now part of save
+                      disabled={uploadingImage}
+                      className="flex items-center space-x-2"
+                    >
+                      <FaUpload className={`w-4 h-4 ${uploadingImage ? 'animate-spin' : ''}`} />
+                      <span>{uploadingImage ? 'Uploading...' : 'Upload Image'}</span>
+                    </Button>
+                  )}
                 </div>
-                
                 {selectedImage && (
                   <div className="text-sm text-gray-600">
                     <p>Selected: {selectedImage.name}</p>
@@ -366,76 +211,68 @@ const CampaignAddDialog = ({ open, onOpenChange, onSave }: CampaignAddDialogProp
 
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="tags" className="text-right">Tags</Label>
-            <Input 
-              id="tags" 
-              name="tags" 
-              value={formData.tags} 
-              onChange={handleChange} 
-              className="col-span-3" 
-              placeholder="health, education, etc."
-            />
+            <Input
+              id="tags"
+              name="tags"
+              value={formData.tags}
+              onChange={handleChange}
+              className="col-span-3"
+              placeholder="health, education, etc."/>
           </div>
 
           <div className="grid grid-cols-2 gap-x-4 gap-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="goalAmount">Fundraising Goal ($)</Label>
-              <Input 
-                id="goalAmount" 
-                name="goalAmount" 
-                type="number" 
-                value={formData.goalAmount} 
-                onChange={handleChange} 
-                placeholder="0"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select 
-                name="status" 
-                value={formData.status} 
-                onValueChange={(value) => handleChange({ target: { name: 'status', value } } as any)}
-              >
-                <SelectTrigger id="status">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="paused">Paused</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="startDate">Start Date</Label>
-              <Input 
-                id="startDate" 
-                name="startDate" 
-                type="date" 
-                value={formData.startDate} 
-                onChange={handleChange} 
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="endDate">End Date</Label>
-              <Input 
-                id="endDate" 
-                name="endDate" 
-                type="date" 
-                value={formData.endDate} 
-                onChange={handleChange} 
-              />
-            </div>
-          </div>
+              <div className="space-y-2">
+                 <Label htmlFor="goalAmount">Fundraising Goal ($)</Label>
+                 <Input
+                   id="goalAmount"
+                   name="goalAmount"
+                   type="number"
+                   value={formData.goalAmount}
+                   onChange={handleChange}
+                   placeholder="0"
+                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                 <Select
+                   name="status"
+                   value={formData.status}
+                   onValueChange={(value) => handleChange({ target: { name: 'status', value } } as any)}>
+                    <SelectTrigger id="status"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="paused">Paused</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                    </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                  <Label htmlFor="startDate">Start Date</Label>
+                  <Input
+                    id="startDate"
+                    name="startDate"
+                    type="date"
+                    value={formData.startDate}
+                    onChange={handleChange}
+                  />
+              </div>
+               <div className="space-y-2">
+                  <Label htmlFor="endDate">End Date</Label>
+                  <Input
+                    id="endDate"
+                    name="endDate"
+                    type="date"
+                    value={formData.endDate}
+                    onChange={handleChange}
+                  />
+              </div>
+           </div>
+
         </div>
         <div className="flex justify-end space-x-2 pt-4 border-t">
-          <Button variant="outline" onClick={handleDialogClose} disabled={uploadingImage}>
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleSaveChanges} 
-            disabled={uploadingImage || !formData.title || !formData.description}
-          >
-            Create Campaign
+          <Button variant="outline" onClick={handleDialogClose} disabled={uploadingImage}>Cancel</Button>
+          <Button onClick={handleSaveChanges} disabled={isSaveDisabled}>
+            {saveButtonText}
           </Button>
         </div>
       </DialogContent>
@@ -464,50 +301,32 @@ const CampaignManagement = ({ onNavigate, onLogout, userSession, hasPermission }
     setIsEditDialogOpen(true);
   };
 
-  const handleSave = async (updatedData: DocumentData) => {
-    if (!editingCampaign) return;
-
-    const campaignId = editingCampaign.id;
+  const handleSave = async (data: DocumentData, isNew: boolean, campaignId?: string) => {
     try {
-        const dataToSave: { [key: string]: any } = {
-          title: updatedData.title,
-          description: updatedData.description,
-          status: updatedData.status,
-          goalAmount: Number(updatedData.goalAmount),
-          tags: updatedData.tags.split(',').map((t: string) => t.trim()).filter(Boolean),
-        };
+      const dataToSave: { [key: string]: any } = {
+        title: data.title,
+        description: data.description,
+        status: data.status,
+        goalAmount: Number(data.goalAmount),
+        tags: data.tags.split(',').map((t: string) => t.trim()).filter(Boolean),
+        coverImageUrl: data.coverImageUrl || '',
+      };
 
-        if (updatedData.startDate) dataToSave.startDate = Timestamp.fromDate(new Date(updatedData.startDate));
-        if (updatedData.endDate) dataToSave.endDate = Timestamp.fromDate(new Date(updatedData.endDate));
-        if (updatedData.coverImageUrl) dataToSave.coverImageUrl = updatedData.coverImageUrl;
+      if (data.startDate) dataToSave.startDate = Timestamp.fromDate(new Date(data.startDate));
+      if (data.endDate) dataToSave.endDate = Timestamp.fromDate(new Date(data.endDate));
 
-        await updateWithImage(campaignId, dataToSave);
-    } catch (error) {
-        console.error("Error updating document: ", error);
-    } finally {
-        setIsEditDialogOpen(false);
-        setEditingCampaign(null);
-    }
-  };
-
-  const handleAddCampaign = async (newData: DocumentData) => {
-    try {
-        const dataToSave: { [key: string]: any } = {
-          title: newData.title,
-          description: newData.description,
-          status: newData.status,
-          goalAmount: Number(newData.goalAmount),
-          tags: newData.tags.split(',').map((t: string) => t.trim()).filter(Boolean),
-        };
-
-        if (newData.startDate) dataToSave.startDate = Timestamp.fromDate(new Date(newData.startDate));
-        if (newData.endDate) dataToSave.endDate = Timestamp.fromDate(new Date(newData.endDate));
-
+      if (isNew) {
         await createWithImage(dataToSave);
+      } else if (campaignId) {
+        await updateWithImage(campaignId, dataToSave);
+      }
     } catch (error) {
-        console.error("Error creating campaign: ", error);
+      console.error(isNew ? "Error creating campaign: " : "Error updating document: ", error);
+      alert(`Failed to ${isNew ? 'create' : 'update'} campaign. Please try again.`);
     } finally {
-        setIsAddDialogOpen(false);
+      setIsEditDialogOpen(false);
+      setIsAddDialogOpen(false);
+      setEditingCampaign(null);
     }
   };
 
@@ -671,17 +490,17 @@ const CampaignManagement = ({ onNavigate, onLogout, userSession, hasPermission }
         </div>
       </div>
       
-      <CampaignEditDialog
+      <CampaignDialog
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
         campaign={editingCampaign}
         onSave={handleSave}
       />
       
-      <CampaignAddDialog
+      <CampaignDialog
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
-        onSave={handleAddCampaign}
+        onSave={(data, isNew) => handleSave(data, isNew, undefined)}
       />
     </>
   );
