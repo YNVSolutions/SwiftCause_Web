@@ -1,11 +1,28 @@
 import { useState, useCallback } from 'react';
 import { useCampaigns } from './useCampaigns';
+import { storage } from '../lib/firebase'; // Import storage
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'; // Import storage functions
 
 export function useCampaignManagement() {
   const { campaigns, updateWithImage, create, createWithImage, loading, error } = useCampaigns();
   const [uploadingImage, setUploadingImage] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  const uploadFile = useCallback(async (file: File, path: string) => {
+    if (!file) return null;
+    const storageRef = ref(storage, path);
+    const uploadTask = uploadBytes(storageRef, file);
+
+    try {
+      const snapshot = await uploadTask;
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      return downloadURL;
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      throw new Error("Failed to upload file.");
+    }
+  }, []);
 
   const handleImageSelect = useCallback((file: File) => {
     if (file) {
@@ -23,7 +40,10 @@ export function useCampaignManagement() {
     
     setUploadingImage(true);
     try {
-      const updatedData = await updateWithImage(campaignId, campaignData, selectedImage);
+      const filePath = `campaigns/${campaignId}/coverImage/${selectedImage.name}`;
+      const downloadURL = await uploadFile(selectedImage, filePath);
+
+      const updatedData = await updateWithImage(campaignId, { ...campaignData, coverImageUrl: downloadURL });
       setImagePreview(updatedData.coverImageUrl);
       setSelectedImage(null);
       return updatedData;
@@ -32,7 +52,7 @@ export function useCampaignManagement() {
     } finally {
       setUploadingImage(false);
     }
-  }, [selectedImage, updateWithImage]);
+  }, [selectedImage, updateWithImage, uploadFile]);
 
   const clearImageSelection = useCallback(() => {
     setSelectedImage(null);
@@ -56,6 +76,7 @@ export function useCampaignManagement() {
     setImagePreviewUrl,
     updateWithImage,
     create,
-    createWithImage
+    createWithImage,
+    uploadFile
   };
 }
