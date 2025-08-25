@@ -24,9 +24,9 @@ export function useCampaigns() {
     setCampaigns(prev => prev.map(c => (c.id === id ? { ...c, ...data } : c)));
   }, []);
 
-  const updateWithImage = useCallback(async (id: string, data: any, imageFile: File | null = null) => {
+  const updateWithImage = useCallback(async (id: string, data: any) => {
     try {
-      const updatedData = await updateCampaignWithImage(id, data, imageFile);
+      const updatedData = await updateCampaignWithImage(id, data);
       setCampaigns(prev => prev.map(c => (c.id === id ? { ...c, ...updatedData } : c)));
       return updatedData;
     } catch (error) {
@@ -48,9 +48,9 @@ export function useCampaigns() {
     }
   }, []);
 
-  const createWithImage = useCallback(async (data: any, imageFile: File | null = null) => {
+  const createWithImage = useCallback(async (data: any) => {
     try {
-      const newCampaign = await createCampaignWithImage(data, imageFile);
+      const newCampaign = await createCampaignWithImage(data);
       setCampaigns(prev => [...prev, newCampaign]);
       return newCampaign;
     } catch (error) {
