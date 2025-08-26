@@ -1354,7 +1354,7 @@ const CampaignManagement = ({
             </Select>
 
             <Popover open={showCalendar} onOpenChange={setShowCalendar}>
-              <PopoverTrigger asChild>
+              <PopoverTrigger>
                 <Button variant="outline" className="justify-start text-left font-normal w-full">
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {dateFilter ? dateFilter.toLocaleDateString() : "Filter by Date"}
