@@ -29,6 +29,9 @@ import {
   FaImage,
 } from "react-icons/fa";
 import { Plus, ArrowLeft, Settings, Download } from "lucide-react";
+import { Calendar } from "../ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { Calendar as CalendarIcon } from "lucide-react";
 
 interface CampaignDialogProps {
   open: boolean;
@@ -52,7 +55,7 @@ const CampaignDialog = ({
     description: "",
     status: "active",
     goalAmount: 0,
-    tags: "",
+    tags: [],
     startDate: "",
     endDate: "",
     coverImageUrl: "",
@@ -1028,6 +1031,12 @@ const CampaignManagement = ({
     null
   );
 
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [sortOrder, setSortOrder] = useState("endDate");
+  const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
+  const [showCalendar, setShowCalendar] = useState(false);
+
   const { campaigns, updateWithImage, createWithImage } =
     useCampaignManagement();
 
@@ -1206,9 +1215,38 @@ const CampaignManagement = ({
     return "bg-blue-500";
   };
 
-  const filteredCampaigns = campaigns.filter((campaign) =>
-    campaign.title?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const uniqueCategories = Array.from(new Set(campaigns.map(c => c.category).filter(Boolean)));
+
+  const filteredAndSortedCampaigns = campaigns
+    .filter((campaign) => {
+      const matchesSearch = campaign.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            campaign.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            campaign.tags?.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+      const matchesStatus = statusFilter === "all" || campaign.status === statusFilter;
+      const matchesCategory = categoryFilter === "all" || campaign.category === categoryFilter;
+      const matchesDate = !dateFilter || (campaign.endDate && new Date(campaign.endDate.seconds * 1000).toDateString() === dateFilter.toDateString());
+      return matchesSearch && matchesStatus && matchesCategory && matchesDate;
+    })
+    .sort((a, b) => {
+      switch (sortOrder) {
+        case "title":
+          return a.title.localeCompare(b.title);
+        case "endDate":
+          // Assuming endDate is a Timestamp object, convert to Date for comparison
+          const dateA = a.endDate?.seconds ? new Date(a.endDate.seconds * 1000).getTime() : 0;
+          const dateB = b.endDate?.seconds ? new Date(b.endDate.seconds * 1000).getTime() : 0;
+          return dateA - dateB;
+        case "goalAmount":
+          return (a.goalAmount || 0) - (b.goalAmount || 0);
+        case "createdAt": // Assuming createdAt is also a Timestamp or string that can be compared
+          // Need to parse createdAt if it's a string, or convert if Timestamp
+          const createdA = a.createdAt?.seconds ? new Date(a.createdAt.seconds * 1000).getTime() : 0;
+          const createdB = b.createdAt?.seconds ? new Date(b.createdAt.seconds * 1000).getTime() : 0;
+          return createdA - createdB;
+        default:
+          return 0;
+      }
+    });
 
   return (
     <>
@@ -1253,27 +1291,100 @@ const CampaignManagement = ({
             </div>
           </div>
         </header>
-        <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-white border-b border-gray-200">
-          <div className="relative w-full sm:w-1/2 mb-4 sm:mb-0 sm:mr-4">
-            <input
-              type="text"
-              placeholder="Search campaigns..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          </div>
-        </div>
+        
 
         <div className="max-w-7xl mx-auto p-4 sm:p-6">
           <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-800">
-              Campaigns ({filteredCampaigns.length})
+              Campaigns ({filteredAndSortedCampaigns.length})
             </h2>
             <p className="text-gray-500 text-sm">
               Manage your donation campaigns
             </p>
+          </div>
+
+          {/* Filters and Sorting */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+            <div className="lg:col-span-2">
+              <div className="relative">
+                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Search campaigns..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="paused">Paused</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by Category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {uniqueCategories.map(category => (
+                  <SelectItem key={category} value={category}>{category}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={sortOrder} onValueChange={setSortOrder}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="endDate">End Date</SelectItem>
+                <SelectItem value="title">Title</SelectItem>
+                <SelectItem value="goalAmount">Goal Amount</SelectItem>
+                <SelectItem value="createdAt">Created Date</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Popover open={showCalendar} onOpenChange={setShowCalendar}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="justify-start text-left font-normal w-full">
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dateFilter ? dateFilter.toLocaleDateString() : "Filter by Date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={dateFilter}
+                  onSelect={(date) => {
+                    setDateFilter(date);
+                    setShowCalendar(false);
+                  }}
+                  initialFocus
+                />
+                <div className="p-3 border-t">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setDateFilter(undefined);
+                      setShowCalendar(false);
+                    }}
+                    className="w-full"
+                  >
+                    Clear Date Filter
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div className="bg-white rounded-xl shadow overflow-hidden">
@@ -1287,7 +1398,7 @@ const CampaignManagement = ({
             </div>
 
             <div className="divide-y divide-gray-200">
-              {filteredCampaigns.map((campaign) => {
+              {filteredAndSortedCampaigns.map((campaign) => {
                 const collected = Number(campaign.collectedAmount) || 0;
                 const goal = Number(campaign.goalAmount) || 1;
                 const progress = Math.round((collected / goal) * 100);
