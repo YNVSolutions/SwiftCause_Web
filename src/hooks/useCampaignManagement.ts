@@ -43,7 +43,12 @@ export function useCampaignManagement() {
       const filePath = `campaigns/${campaignId}/coverImage/${selectedImage.name}`;
       const downloadURL = await uploadFile(selectedImage, filePath);
 
-      const updatedData = await updateWithImage(campaignId, { ...campaignData, coverImageUrl: downloadURL });
+      let updatedData;
+      if (campaignId) {
+        updatedData = await updateWithImage(campaignId, { ...campaignData, coverImageUrl: downloadURL });
+      } else {
+        updatedData = await createWithImage({ ...campaignData, coverImageUrl: downloadURL });
+      }
       setImagePreview(updatedData.coverImageUrl);
       setSelectedImage(null);
       return updatedData;

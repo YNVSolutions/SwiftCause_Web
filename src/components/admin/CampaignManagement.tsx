@@ -310,6 +310,68 @@ const CampaignDialog = ({
     }
   };
 
+  const handleCoverImageUpload = async () => {
+    if (selectedImage) {
+      try {
+        const uploadedData = await handleImageUpload(campaign?.id, formData);
+        if (uploadedData && uploadedData.coverImageUrl) {
+          setFormData((prev) => ({ ...prev, coverImageUrl: uploadedData.coverImageUrl }));
+          setImagePreviewUrl(uploadedData.coverImageUrl); // Update preview with uploaded URL
+        }
+      } catch (error) {
+        console.error("Error uploading cover image:", error);
+        alert("Failed to upload cover image. Please try again.");
+      }
+    }
+  };
+
+  const handleOrganizationLogoUpload = async () => {
+    if (selectedOrganizationLogo) {
+      try {
+        const url = await uploadFile(
+          selectedOrganizationLogo,
+          `campaigns/${campaign?.id || "new"}/organizationLogo/${
+            selectedOrganizationLogo.name
+          }`
+        );
+        if (url) {
+          setFormData((prev) => ({ ...prev, organizationInfoLogo: url }));
+          setOrganizationLogoPreview(url); // Update preview with uploaded URL
+        }
+      } catch (error) {
+        console.error("Error uploading organization logo:", error);
+        alert("Failed to upload organization logo. Please try again.");
+      }
+    }
+  };
+
+  const handleGalleryImagesUpload = async () => {
+    if (selectedGalleryImages.length > 0) {
+      const imageUrls: string[] = [];
+      for (const file of selectedGalleryImages) {
+        try {
+          const url = await uploadFile(
+            file,
+            `campaigns/${campaign?.id || "new"}/galleryImages/${file.name}`
+          );
+          if (url) {
+            imageUrls.push(url);
+          }
+        } catch (error) {
+          console.error(`Error uploading gallery image ${file.name}:`, error);
+          alert(
+            `Failed to upload gallery image ${file.name}. Please try again.`
+          );
+          return;
+        }
+      }
+      if (imageUrls.length > 0) {
+        setFormData((prev) => ({ ...prev, galleryImages: imageUrls.join(",") }));
+        setGalleryImagePreviews(imageUrls); // Update preview with uploaded URLs
+      }
+    }
+  };
+
   const handleSaveChanges = async () => {
     if (!formData.title || !formData.description) {
       alert("Title and Description are required.");
@@ -317,24 +379,9 @@ const CampaignDialog = ({
     }
 
     let finalData = { ...formData };
-    if (selectedImage) {
-      try {
-        const uploadedData = await handleImageUpload(campaign?.id, formData);
-        if (uploadedData) {
-          finalData = {
-            ...finalData,
-            coverImageUrl: uploadedData.coverImageUrl,
-          };
-        }
-      } catch (error) {
-        console.error("Error uploading cover image:", error);
-        alert("Failed to upload cover image. Please try again.");
-        return;
-      }
-    }
 
     // Upload organization logo
-    if (selectedOrganizationLogo) {
+    if (selectedOrganizationLogo && !finalData.organizationInfoLogo) { // Only upload if not already uploaded
       try {
         const url = await uploadFile(
           selectedOrganizationLogo,
@@ -353,7 +400,7 @@ const CampaignDialog = ({
     }
 
     // Upload gallery images
-    if (selectedGalleryImages.length > 0) {
+    if (selectedGalleryImages.length > 0 && !finalData.galleryImages) { // Only upload if not already uploaded
       const imageUrls: string[] = [];
       for (const file of selectedGalleryImages) {
         try {
@@ -395,7 +442,9 @@ const CampaignDialog = ({
     : "Fill in the details below to create a new campaign.";
   const saveButtonText = isEditMode ? "Save Changes" : "Create Campaign";
   const isSaveDisabled =
-    uploadingImage || !formData.title || !formData.description;
+    uploadingImage || !formData.title || !formData.description ||
+    (selectedOrganizationLogo && !formData.organizationInfoLogo) ||
+    (selectedGalleryImages.length > 0 && !formData.galleryImages);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -506,10 +555,10 @@ const CampaignDialog = ({
                         <FaImage className="w-4 h-4" />
                         <span>Select Image</span>
                       </Button>
-                      {selectedImage && isEditMode && (
+                      {selectedImage && !formData.coverImageUrl && (
                         <Button
                           type="button"
-                          onClick={handleSaveChanges} // Image upload is now part of save
+                          onClick={handleCoverImageUpload}
                           disabled={uploadingImage}
                           className="flex items-center space-x-2"
                         >
@@ -519,7 +568,7 @@ const CampaignDialog = ({
                             }`}
                           />
                           <span>
-                            {uploadingImage ? "Uploading..." : "Upload Image"}
+                            {uploadingImage ? "Uploading..." : "Upload Cover Image"}
                           </span>
                         </Button>
                       )}
@@ -829,6 +878,21 @@ const CampaignDialog = ({
                         <FaImage className="w-4 h-4" />
                         <span>Select Logo</span>
                       </Button>
+                      {selectedOrganizationLogo && (
+                        <Button
+                          type="button"
+                          onClick={handleOrganizationLogoUpload}
+                          disabled={uploadingImage}
+                          className="flex items-center space-x-2"
+                        >
+                          <FaUpload
+                            className={`w-4 h-4 ${uploadingImage ? "animate-spin" : ""}`}
+                          />
+                          <span>
+                            {uploadingImage ? "Uploading..." : "Upload Org. Logo"}
+                          </span>
+                        </Button>
+                      )}
                     </div>
                     {selectedOrganizationLogo && (
                       <div className="text-sm text-gray-600">
