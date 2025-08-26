@@ -103,7 +103,7 @@ export interface Campaign {
   description: string;
   goal: number;
   raised: number;
-  image: string;
+  coverImageUrl: string;
   category: string;
   status?: 'active' | 'paused' | 'completed';
   createdAt?: string;
