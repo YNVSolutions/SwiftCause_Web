@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Screen, AdminSession, Permission } from "../../App";
 import { DocumentData, Timestamp } from "firebase/firestore";
 import { useCampaignManagement } from "../../hooks/useCampaignManagement";
@@ -27,10 +27,22 @@ import {
   FaEllipsisV,
   FaUpload,
   FaImage,
+  FaTrashAlt, // Added FaTrashAlt
 } from "react-icons/fa";
 import { Plus, ArrowLeft, Settings, Download } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "../ui/alert-dialog";
 import { Calendar as CalendarIcon } from "lucide-react";
 
 interface CampaignDialogProps {
@@ -1036,9 +1048,35 @@ const CampaignManagement = ({
   const [sortOrder, setSortOrder] = useState("endDate");
   const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [campaignToDelete, setCampaignToDelete] = useState<DocumentData | null>(null);
+  const [confirmDeleteInput, setConfirmDeleteInput] = useState("");
 
-  const { campaigns, updateWithImage, createWithImage } =
+  const { campaigns, updateWithImage, createWithImage, remove } =
     useCampaignManagement();
+
+  const handleDeleteClick = (campaign: DocumentData) => {
+    setCampaignToDelete(campaign);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (campaignToDelete && confirmDeleteInput === campaignToDelete.title) {
+      try {
+        await remove(campaignToDelete.id);
+        setIsDeleteDialogOpen(false);
+        setCampaignToDelete(null);
+        setConfirmDeleteInput("");
+        // Optionally, show a success toast or message
+      } catch (error) {
+        console.error("Error deleting campaign:", error);
+        // Optionally, show an error toast or message
+      }
+    } else {
+      // Optionally, show an error message if input doesn't match
+      console.log("Confirmation input does not match campaign title.");
+    }
+  };
 
   // Helper function to remove undefined properties from an object
   const removeUndefined = (obj: any): any => {
@@ -1495,8 +1533,12 @@ const CampaignManagement = ({
                             <FaEdit className="h-4 w-4" />
                           </button>
                         )}
-                        <button className="p-2 hover:bg-gray-100 rounded-md">
-                          <FaEllipsisV className="h-4 w-4" />
+                        <button
+                          onClick={() => handleDeleteClick(campaign)}
+                          className="p-2 hover:bg-red-100 rounded-md text-red-500"
+                          title="Delete"
+                        >
+                          <FaTrashAlt className="h-4 w-4" />
                         </button>
                       </div>
                     </div>
@@ -1520,6 +1562,36 @@ const CampaignManagement = ({
         onOpenChange={setIsAddDialogOpen}
         onSave={(data, isNew) => handleSave(data, isNew, undefined)}
       />
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the campaign
+              <span className="font-bold"> {campaignToDelete?.title} </span>
+              and remove all its associated data.
+              Please type "{campaignToDelete?.title}" to confirm.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Input
+            placeholder={campaignToDelete?.title}
+            value={confirmDeleteInput}
+            onChange={(e) => setConfirmDeleteInput(e.target.value)}
+            className="mt-2"
+          />
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={confirmDeleteInput !== campaignToDelete?.title}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };

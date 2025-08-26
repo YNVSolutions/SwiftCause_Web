@@ -4,7 +4,7 @@ import { storage } from '../lib/firebase'; // Import storage
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'; // Import storage functions
 
 export function useCampaignManagement() {
-  const { campaigns, updateWithImage, create, createWithImage, loading, error } = useCampaigns();
+  const { campaigns, updateWithImage, create, createWithImage, loading, error, remove } = useCampaigns();
   const [uploadingImage, setUploadingImage] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -82,6 +82,7 @@ export function useCampaignManagement() {
     updateWithImage,
     create,
     createWithImage,
-    uploadFile
+    uploadFile,
+    remove // Exposed the remove function
   };
 }
