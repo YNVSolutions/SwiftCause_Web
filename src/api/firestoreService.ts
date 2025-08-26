@@ -10,7 +10,6 @@ import {
   orderBy,
   limit
 } from 'firebase/firestore';
-import { uploadCampaignCoverImage } from '../lib/imageUpload';
 
 export async function getCampaigns() {
   const snapshot = await getDocs(collection(db, 'campaigns'));
@@ -28,25 +27,9 @@ export async function updateCampaign(campaignId: string, data: any) {
 }
 
 export async function updateCampaignWithImage(campaignId: string, data: any, imageFile: File | null = null) {
-  let imageUrl = data.coverImageUrl;
-  
-  if (imageFile) {
-    try {
-      imageUrl = await uploadCampaignCoverImage(imageFile, campaignId);
-    } catch (error) {
-      throw new Error(`Failed to upload image: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  }
-  
-  const updateData = {
-    ...data,
-    coverImageUrl: imageUrl
-  };
-  
   const ref = doc(db, 'campaigns', campaignId);
-  await updateDoc(ref, updateData);
-  
-  return updateData;
+  await updateDoc(ref, data);
+  return data;
 }
 
 export async function getUserById(userId: string) {
@@ -81,20 +64,8 @@ export async function createCampaign(data: any) {
 }
 
 export async function createCampaignWithImage(data: any, imageFile: File | null = null) {
-  let imageUrl = data.coverImageUrl || '';
-  
-  if (imageFile) {
-    try {
-      const tempId = Date.now().toString();
-      imageUrl = await uploadCampaignCoverImage(imageFile, tempId);
-    } catch (error) {
-      throw new Error(`Failed to upload image: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  }
-  
   const campaignData = {
     ...data,
-    coverImageUrl: imageUrl,
     collectedAmount: 0,
     donationCount: 0,
     createdAt: new Date(),

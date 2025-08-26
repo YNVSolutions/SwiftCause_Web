@@ -25,7 +25,3 @@ export const uploadImage = async (file: File, path: string): Promise<string> => 
   }
 };
 
-export const uploadCampaignCoverImage = async (file: File, campaignId: string): Promise<string> => {
-  const path = `campaigns/${campaignId}/cover-image-${Date.now()}`;
-  return uploadImage(file, path);
-};
