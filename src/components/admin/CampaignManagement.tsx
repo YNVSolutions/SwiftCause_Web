@@ -1286,6 +1286,31 @@ const CampaignManagement = ({
       }
     });
 
+  const exportToCsv = (data: DocumentData[]) => {
+    if (data.length === 0) {
+      alert("No campaign data to export.");
+      return;
+    }
+
+    const headers = Object.keys(data[0]).join(',');
+    const csvContent = data.map(row => Object.values(row).map(value => {
+      const stringValue = String(value);
+      return `"${stringValue.replace(/"/g, '""')}"`;
+    }).join(',')).join('\n');
+
+    const csv = `${headers}\n${csvContent}`;
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `campaigns_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <>
       <div className="min-h-screen bg-gray-50 font-sans">
@@ -1314,7 +1339,7 @@ const CampaignManagement = ({
               </div>
 
               <div className="flex items-center space-x-4">
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={() => exportToCsv(filteredAndSortedCampaigns)}>
                   <Download className="w-4 h-4 mr-2" />
                   Export Logs
                 </Button>
