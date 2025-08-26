@@ -91,16 +91,8 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
 
   const testimonials = [
     {
-      name: "Sarah M.",
-      role: "Regular Donor",
+      name: "Winston Churchill",
       text: "We make a living by what we get, but we make a life by what we give.",
-      rating: 5
-    },
-    {
-      name: "Mike R.",
-      role: "Monthly Supporter",
-      text: "Transparent, secure, and incredibly user-friendly. Highly recommended.",
-      rating: 5
     }
   ];
 
