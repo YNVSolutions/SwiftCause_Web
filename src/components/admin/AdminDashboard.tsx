@@ -184,12 +184,7 @@ export function AdminDashboard({ onNavigate, onLogout, userSession, hasPermissio
                         <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
                         <span>Refresh</span>
                     </Button>
-                    <div className="flex items-center space-x-2">
-                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                        <CheckCircle className="w-3 h-3 mr-1" />
-                        All Systems Online
-                        </Badge>
-                    </div>
+                    
                     <Button variant="ghost" size="sm" onClick={onLogout} className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
                         <LogOut className="w-4 h-4" />
                         <span>Logout</span>
@@ -208,8 +203,8 @@ export function AdminDashboard({ onNavigate, onLogout, userSession, hasPermissio
             <div className="flex items-center space-x-3">
                 {hasPermission('create_campaign') && (
                 <Button onClick={() => onNavigate('admin-campaigns')} className="bg-indigo-600 hover:bg-indigo-700">
-                    <Plus className="w-4 h-4 mr-2" />
-                    New Campaign
+                    <Settings className="w-4 h-4 mr-2" />
+                    Manage Campaigns
                 </Button>
                 )}
                 {hasPermission('view_kiosks') && (
