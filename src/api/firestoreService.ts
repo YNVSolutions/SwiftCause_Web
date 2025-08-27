@@ -8,7 +8,8 @@ import {
   addDoc,
   query,
   orderBy,
-  limit
+  limit,
+  Timestamp
 } from 'firebase/firestore';
 
 export async function getCampaigns() {
@@ -75,4 +76,11 @@ export async function createCampaignWithImage(data: any, imageFile: File | null 
   const campaignsRef = collection(db, 'campaigns');
   const docRef = await addDoc(campaignsRef, campaignData);
   return { id: docRef.id, ...campaignData };
+}
+
+export async function getRecentDonations(limitCount: number) {
+  const donationsRef = collection(db, 'donations');
+  const q = query(donationsRef, orderBy('timestamp', 'desc'), limit(limitCount));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 }
