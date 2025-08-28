@@ -29,7 +29,7 @@ export function useCampaignList(kioskSession?: KioskSession | null): UseCampaign
       description: data.description,
       goal: data.goalAmount,
       raised: data.raised,
-      image: data.image,
+      coverImageUrl: data.coverImageUrl,
       category: data.tags?.[0] || 'General',
       status: data.status,
       assignedKiosks: data.assignedKiosks || [],

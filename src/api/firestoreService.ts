@@ -9,6 +9,7 @@ import {
   query,
   orderBy,
   limit,
+  deleteDoc,
   Timestamp
 } from 'firebase/firestore';
 
@@ -76,6 +77,11 @@ export async function createCampaignWithImage(data: any, imageFile: File | null 
   const campaignsRef = collection(db, 'campaigns');
   const docRef = await addDoc(campaignsRef, campaignData);
   return { id: docRef.id, ...campaignData };
+}
+
+export async function deleteCampaign(campaignId: string) {
+  const ref = doc(db, 'campaigns', campaignId);
+  await deleteDoc(ref);
 }
 
 export async function getRecentDonations(limitCount: number) {

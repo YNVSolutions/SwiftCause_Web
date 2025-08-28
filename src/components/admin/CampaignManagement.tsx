@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Screen, AdminSession, Permission } from "../../App";
 import { DocumentData, Timestamp } from "firebase/firestore";
 import { useCampaignManagement } from "../../hooks/useCampaignManagement";
@@ -27,8 +27,23 @@ import {
   FaEllipsisV,
   FaUpload,
   FaImage,
+  FaTrashAlt, // Added FaTrashAlt
 } from "react-icons/fa";
 import { Plus, ArrowLeft, Settings, Download } from "lucide-react";
+import { Calendar } from "../ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "../ui/alert-dialog";
+import { Calendar as CalendarIcon } from "lucide-react";
 
 interface CampaignDialogProps {
   open: boolean;
@@ -52,7 +67,7 @@ const CampaignDialog = ({
     description: "",
     status: "active",
     goalAmount: 0,
-    tags: "",
+    tags: [],
     startDate: "",
     endDate: "",
     coverImageUrl: "",
@@ -310,6 +325,68 @@ const CampaignDialog = ({
     }
   };
 
+  const handleCoverImageUpload = async () => {
+    if (selectedImage) {
+      try {
+        const uploadedData = await handleImageUpload(campaign?.id, formData);
+        if (uploadedData && uploadedData.coverImageUrl) {
+          setFormData((prev) => ({ ...prev, coverImageUrl: uploadedData.coverImageUrl }));
+          setImagePreviewUrl(uploadedData.coverImageUrl); // Update preview with uploaded URL
+        }
+      } catch (error) {
+        console.error("Error uploading cover image:", error);
+        alert("Failed to upload cover image. Please try again.");
+      }
+    }
+  };
+
+  const handleOrganizationLogoUpload = async () => {
+    if (selectedOrganizationLogo) {
+      try {
+        const url = await uploadFile(
+          selectedOrganizationLogo,
+          `campaigns/${campaign?.id || "new"}/organizationLogo/${
+            selectedOrganizationLogo.name
+          }`
+        );
+        if (url) {
+          setFormData((prev) => ({ ...prev, organizationInfoLogo: url }));
+          setOrganizationLogoPreview(url); // Update preview with uploaded URL
+        }
+      } catch (error) {
+        console.error("Error uploading organization logo:", error);
+        alert("Failed to upload organization logo. Please try again.");
+      }
+    }
+  };
+
+  const handleGalleryImagesUpload = async () => {
+    if (selectedGalleryImages.length > 0) {
+      const imageUrls: string[] = [];
+      for (const file of selectedGalleryImages) {
+        try {
+          const url = await uploadFile(
+            file,
+            `campaigns/${campaign?.id || "new"}/galleryImages/${file.name}`
+          );
+          if (url) {
+            imageUrls.push(url);
+          }
+        } catch (error) {
+          console.error(`Error uploading gallery image ${file.name}:`, error);
+          alert(
+            `Failed to upload gallery image ${file.name}. Please try again.`
+          );
+          return;
+        }
+      }
+      if (imageUrls.length > 0) {
+        setFormData((prev) => ({ ...prev, galleryImages: imageUrls.join(",") }));
+        setGalleryImagePreviews(imageUrls); // Update preview with uploaded URLs
+      }
+    }
+  };
+
   const handleSaveChanges = async () => {
     if (!formData.title || !formData.description) {
       alert("Title and Description are required.");
@@ -317,24 +394,9 @@ const CampaignDialog = ({
     }
 
     let finalData = { ...formData };
-    if (selectedImage) {
-      try {
-        const uploadedData = await handleImageUpload(campaign?.id, formData);
-        if (uploadedData) {
-          finalData = {
-            ...finalData,
-            coverImageUrl: uploadedData.coverImageUrl,
-          };
-        }
-      } catch (error) {
-        console.error("Error uploading cover image:", error);
-        alert("Failed to upload cover image. Please try again.");
-        return;
-      }
-    }
 
     // Upload organization logo
-    if (selectedOrganizationLogo) {
+    if (selectedOrganizationLogo && !finalData.organizationInfoLogo) { // Only upload if not already uploaded
       try {
         const url = await uploadFile(
           selectedOrganizationLogo,
@@ -353,7 +415,7 @@ const CampaignDialog = ({
     }
 
     // Upload gallery images
-    if (selectedGalleryImages.length > 0) {
+    if (selectedGalleryImages.length > 0 && !finalData.galleryImages) { // Only upload if not already uploaded
       const imageUrls: string[] = [];
       for (const file of selectedGalleryImages) {
         try {
@@ -395,7 +457,9 @@ const CampaignDialog = ({
     : "Fill in the details below to create a new campaign.";
   const saveButtonText = isEditMode ? "Save Changes" : "Create Campaign";
   const isSaveDisabled =
-    uploadingImage || !formData.title || !formData.description;
+    uploadingImage || !formData.title || !formData.description ||
+    (selectedOrganizationLogo && !formData.organizationInfoLogo) ||
+    (selectedGalleryImages.length > 0 && !formData.galleryImages);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -506,10 +570,10 @@ const CampaignDialog = ({
                         <FaImage className="w-4 h-4" />
                         <span>Select Image</span>
                       </Button>
-                      {selectedImage && isEditMode && (
+                      {selectedImage && !formData.coverImageUrl && (
                         <Button
                           type="button"
-                          onClick={handleSaveChanges} // Image upload is now part of save
+                          onClick={handleCoverImageUpload}
                           disabled={uploadingImage}
                           className="flex items-center space-x-2"
                         >
@@ -519,7 +583,7 @@ const CampaignDialog = ({
                             }`}
                           />
                           <span>
-                            {uploadingImage ? "Uploading..." : "Upload Image"}
+                            {uploadingImage ? "Uploading..." : "Upload Cover Image"}
                           </span>
                         </Button>
                       )}
@@ -829,6 +893,21 @@ const CampaignDialog = ({
                         <FaImage className="w-4 h-4" />
                         <span>Select Logo</span>
                       </Button>
+                      {selectedOrganizationLogo && (
+                        <Button
+                          type="button"
+                          onClick={handleOrganizationLogoUpload}
+                          disabled={uploadingImage}
+                          className="flex items-center space-x-2"
+                        >
+                          <FaUpload
+                            className={`w-4 h-4 ${uploadingImage ? "animate-spin" : ""}`}
+                          />
+                          <span>
+                            {uploadingImage ? "Uploading..." : "Upload Org. Logo"}
+                          </span>
+                        </Button>
+                      )}
                     </div>
                     {selectedOrganizationLogo && (
                       <div className="text-sm text-gray-600">
@@ -964,8 +1043,40 @@ const CampaignManagement = ({
     null
   );
 
-  const { campaigns, updateWithImage, createWithImage } =
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [sortOrder, setSortOrder] = useState("endDate");
+  const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [campaignToDelete, setCampaignToDelete] = useState<DocumentData | null>(null);
+  const [confirmDeleteInput, setConfirmDeleteInput] = useState("");
+
+  const { campaigns, updateWithImage, createWithImage, remove } =
     useCampaignManagement();
+
+  const handleDeleteClick = (campaign: DocumentData) => {
+    setCampaignToDelete(campaign);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (campaignToDelete && confirmDeleteInput === campaignToDelete.title) {
+      try {
+        await remove(campaignToDelete.id);
+        setIsDeleteDialogOpen(false);
+        setCampaignToDelete(null);
+        setConfirmDeleteInput("");
+        // Optionally, show a success toast or message
+      } catch (error) {
+        console.error("Error deleting campaign:", error);
+        // Optionally, show an error toast or message
+      }
+    } else {
+      // Optionally, show an error message if input doesn't match
+      console.log("Confirmation input does not match campaign title.");
+    }
+  };
 
   // Helper function to remove undefined properties from an object
   const removeUndefined = (obj: any): any => {
@@ -1142,9 +1253,63 @@ const CampaignManagement = ({
     return "bg-blue-500";
   };
 
-  const filteredCampaigns = campaigns.filter((campaign) =>
-    campaign.title?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const uniqueCategories = Array.from(new Set(campaigns.map(c => c.category).filter(Boolean)));
+
+  const filteredAndSortedCampaigns = campaigns
+    .filter((campaign) => {
+      const matchesSearch = campaign.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            campaign.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            campaign.tags?.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+      const matchesStatus = statusFilter === "all" || campaign.status === statusFilter;
+      const matchesCategory = categoryFilter === "all" || campaign.category === categoryFilter;
+      const matchesDate = !dateFilter || (campaign.endDate && new Date(campaign.endDate.seconds * 1000).toDateString() === dateFilter.toDateString());
+      return matchesSearch && matchesStatus && matchesCategory && matchesDate;
+    })
+    .sort((a, b) => {
+      switch (sortOrder) {
+        case "title":
+          return a.title.localeCompare(b.title);
+        case "endDate":
+          // Assuming endDate is a Timestamp object, convert to Date for comparison
+          const dateA = a.endDate?.seconds ? new Date(a.endDate.seconds * 1000).getTime() : 0;
+          const dateB = b.endDate?.seconds ? new Date(b.endDate.seconds * 1000).getTime() : 0;
+          return dateA - dateB;
+        case "goalAmount":
+          return (a.goalAmount || 0) - (b.goalAmount || 0);
+        case "createdAt": // Assuming createdAt is also a Timestamp or string that can be compared
+          // Need to parse createdAt if it's a string, or convert if Timestamp
+          const createdA = a.createdAt?.seconds ? new Date(a.createdAt.seconds * 1000).getTime() : 0;
+          const createdB = b.createdAt?.seconds ? new Date(b.createdAt.seconds * 1000).getTime() : 0;
+          return createdA - createdB;
+        default:
+          return 0;
+      }
+    });
+
+  const exportToCsv = (data: DocumentData[]) => {
+    if (data.length === 0) {
+      alert("No campaign data to export.");
+      return;
+    }
+
+    const headers = Object.keys(data[0]).join(',');
+    const csvContent = data.map(row => Object.values(row).map(value => {
+      const stringValue = String(value);
+      return `"${stringValue.replace(/"/g, '""')}"`;
+    }).join(',')).join('\n');
+
+    const csv = `${headers}\n${csvContent}`;
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `campaigns_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <>
@@ -1174,7 +1339,7 @@ const CampaignManagement = ({
               </div>
 
               <div className="flex items-center space-x-4">
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={() => exportToCsv(filteredAndSortedCampaigns)}>
                   <Download className="w-4 h-4 mr-2" />
                   Export Logs
                 </Button>
@@ -1189,27 +1354,100 @@ const CampaignManagement = ({
             </div>
           </div>
         </header>
-        <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-white border-b border-gray-200">
-          <div className="relative w-full sm:w-1/2 mb-4 sm:mb-0 sm:mr-4">
-            <input
-              type="text"
-              placeholder="Search campaigns..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          </div>
-        </div>
+        
 
         <div className="max-w-7xl mx-auto p-4 sm:p-6">
           <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-800">
-              Campaigns ({filteredCampaigns.length})
+              Campaigns ({filteredAndSortedCampaigns.length})
             </h2>
             <p className="text-gray-500 text-sm">
               Manage your donation campaigns
             </p>
+          </div>
+
+          {/* Filters and Sorting */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+            <div className="lg:col-span-2">
+              <div className="relative">
+                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Search campaigns..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="paused">Paused</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by Category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {uniqueCategories.map(category => (
+                  <SelectItem key={category} value={category}>{category}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={sortOrder} onValueChange={setSortOrder}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="endDate">End Date</SelectItem>
+                <SelectItem value="title">Title</SelectItem>
+                <SelectItem value="goalAmount">Goal Amount</SelectItem>
+                <SelectItem value="createdAt">Created Date</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Popover open={showCalendar} onOpenChange={setShowCalendar}>
+              <PopoverTrigger>
+                <Button variant="outline" className="justify-start text-left font-normal w-full">
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dateFilter ? dateFilter.toLocaleDateString() : "Filter by Date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={dateFilter}
+                  onSelect={(date) => {
+                    setDateFilter(date);
+                    setShowCalendar(false);
+                  }}
+                  initialFocus
+                />
+                <div className="p-3 border-t">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setDateFilter(undefined);
+                      setShowCalendar(false);
+                    }}
+                    className="w-full"
+                  >
+                    Clear Date Filter
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div className="bg-white rounded-xl shadow overflow-hidden">
@@ -1223,7 +1461,7 @@ const CampaignManagement = ({
             </div>
 
             <div className="divide-y divide-gray-200">
-              {filteredCampaigns.map((campaign) => {
+              {filteredAndSortedCampaigns.map((campaign) => {
                 const collected = Number(campaign.collectedAmount) || 0;
                 const goal = Number(campaign.goalAmount) || 1;
                 const progress = Math.round((collected / goal) * 100);
@@ -1320,8 +1558,12 @@ const CampaignManagement = ({
                             <FaEdit className="h-4 w-4" />
                           </button>
                         )}
-                        <button className="p-2 hover:bg-gray-100 rounded-md">
-                          <FaEllipsisV className="h-4 w-4" />
+                        <button
+                          onClick={() => handleDeleteClick(campaign)}
+                          className="p-2 hover:bg-red-100 rounded-md text-red-500"
+                          title="Delete"
+                        >
+                          <FaTrashAlt className="h-4 w-4" />
                         </button>
                       </div>
                     </div>
@@ -1345,6 +1587,36 @@ const CampaignManagement = ({
         onOpenChange={setIsAddDialogOpen}
         onSave={(data, isNew) => handleSave(data, isNew, undefined)}
       />
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the campaign
+              <span className="font-bold"> {campaignToDelete?.title} </span>
+              and remove all its associated data.
+              Please type "{campaignToDelete?.title}" to confirm.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Input
+            placeholder={campaignToDelete?.title}
+            value={confirmDeleteInput}
+            onChange={(e) => setConfirmDeleteInput(e.target.value)}
+            className="mt-2"
+          />
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={confirmDeleteInput !== campaignToDelete?.title}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };

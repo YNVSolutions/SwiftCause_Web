@@ -407,7 +407,7 @@ export function KioskCampaignAssignmentDialog({
                       >
                         <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 shadow-sm">
                           <img
-                            src={campaign.image}
+                            src={campaign.coverImageUrl}
                             alt={campaign.title}
                             className="w-full h-full object-cover"
                           />
@@ -483,7 +483,7 @@ export function KioskCampaignAssignmentDialog({
                         >
                           <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 shadow-sm">
                             <img
-                              src={campaign.image}
+                              src={campaign.coverImageUrl}
                               alt={campaign.title}
                               className="w-full h-full object-cover"
                             />
@@ -540,7 +540,7 @@ export function KioskCampaignAssignmentDialog({
                       >
                         <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 shadow-sm">
                           <img
-                            src={campaign.image}
+                            src={campaign.coverImageUrl}
                             alt={campaign.title}
                             className="w-full h-full object-cover"
                           />

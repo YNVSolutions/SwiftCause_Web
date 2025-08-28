@@ -58,7 +58,7 @@ export function CampaignConfigurationDialog({
       description: '',
       goal: 10000,
       raised: 0,
-      image: '',
+      coverImageUrl: '',
       category: '',
       status: 'active' as const,
       createdAt: new Date().toISOString().split('T')[0],
@@ -291,8 +291,8 @@ export function CampaignConfigurationDialog({
                     <Label htmlFor="image">Image URL</Label>
                     <Input
                       id="image"
-                      value={formData.image}
-                      onChange={(e) => setFormData(prev => ({ ...prev, image: e.target.value }))}
+                      value={formData.coverImageUrl}
+                      onChange={(e) => setFormData(prev => ({ ...prev, coverImageUrl: e.target.value }))}
                       placeholder="https://example.com/image.jpg"
                     />
                   </div>

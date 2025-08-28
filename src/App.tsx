@@ -103,8 +103,9 @@ export interface Campaign {
   description: string;
   goal: number;
   raised: number;
-  image: string;
+  coverImageUrl: string;
   category: string;
+  tags?: string[]; // Added tags property as an optional array of strings
   status?: 'active' | 'paused' | 'completed';
   createdAt?: string;
   endDate?: string;
