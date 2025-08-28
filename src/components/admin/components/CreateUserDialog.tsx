@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import { Checkbox } from '../../ui/checkbox';
 import { UserRole } from '../../../App';
-import { AVAILABLE_KIOSKS } from '../data/mockUserData';
+
 
 interface CreateUserDialogProps {
   open: boolean;
@@ -85,28 +85,7 @@ export function CreateUserDialog({
             </Select>
           </div>
 
-          {newUser.role === 'kiosk' && (
-            <div>
-              <Label>Kiosk Access Permissions</Label>
-              <div className="grid grid-cols-2 gap-3 mt-2 p-4 border rounded-lg bg-gray-50">
-                {AVAILABLE_KIOSKS.map(kioskId => (
-                  <div key={kioskId} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={kioskId}
-                      checked={newUser.kioskAccess.includes(kioskId)}
-                      onCheckedChange={(checked) => onKioskAccessChange(kioskId, checked as boolean)}
-                    />
-                    <Label htmlFor={kioskId} className="text-sm cursor-pointer">
-                      {kioskId}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs text-gray-500 mt-2">
-                Select which kiosks this user can access and manage.
-              </p>
-            </div>
-          )}
+
         </div>
 
         <div className="flex justify-end space-x-2 pt-4">
