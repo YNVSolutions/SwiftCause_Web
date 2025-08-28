@@ -1,4 +1,3 @@
-import { Badge } from '../../ui/badge';
 import { UserRole, User } from '../../../App';
 import { UserCog, Settings, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 

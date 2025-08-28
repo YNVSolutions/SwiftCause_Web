@@ -91,16 +91,8 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
 
   const testimonials = [
     {
-      name: "Sarah M.",
-      role: "Regular Donor",
-      text: "The easiest way to make a difference. I love seeing the real-time impact!",
-      rating: 5
-    },
-    {
-      name: "Mike R.",
-      role: "Monthly Supporter",
-      text: "Transparent, secure, and incredibly user-friendly. Highly recommended.",
-      rating: 5
+      name: "Winston Churchill",
+      text: "We make a living by what we get, but we make a life by what we give.",
     }
   ];
 
@@ -176,14 +168,10 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
             <div className="space-y-4">
               {testimonials.map((testimonial, index) => (
                 <div key={index} className="bg-white/60 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                  <div className="flex items-center space-x-1 mb-2">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                    ))}
-                  </div>
+                  <div className="w-12 h-1 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full my-3"></div>
                   <p className="text-sm text-gray-700 mb-2">"{testimonial.text}"</p>
                   <div className="text-xs text-gray-600">
-                    <span className="font-medium">{testimonial.name}</span> • {testimonial.role}
+                    <span className="font-medium">{testimonial.name}</span>
                   </div>
                 </div>
               ))}

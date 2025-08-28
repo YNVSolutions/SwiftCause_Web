@@ -10,6 +10,7 @@ import {
   orderBy,
   limit,
   deleteDoc,
+  Timestamp
 } from 'firebase/firestore';
 
 export async function getCampaigns() {
@@ -81,4 +82,11 @@ export async function createCampaignWithImage(data: any, imageFile: File | null 
 export async function deleteCampaign(campaignId: string) {
   const ref = doc(db, 'campaigns', campaignId);
   await deleteDoc(ref);
+}
+
+export async function getRecentDonations(limitCount: number) {
+  const donationsRef = collection(db, 'donations');
+  const q = query(donationsRef, orderBy('timestamp', 'desc'), limit(limitCount));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 }
