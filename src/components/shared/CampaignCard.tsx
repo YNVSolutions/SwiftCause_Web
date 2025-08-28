@@ -42,7 +42,7 @@ export function CampaignCard({
         <div className="flex">
           <div className="w-24 h-24 sm:w-32 sm:h-32 relative overflow-hidden flex-shrink-0">
             <ImageWithFallback 
-              src={campaign.image}
+              src={campaign.coverImageUrl}
               alt={campaign.title}
               className="w-full h-full object-cover"
             />
@@ -119,7 +119,7 @@ export function CampaignCard({
     }`}>
       <div className="aspect-[16/10] sm:aspect-video relative overflow-hidden">
         <ImageWithFallback 
-          src={campaign.image}
+          src={campaign.coverImageUrl}
           alt={campaign.title}
           className="w-full h-full object-cover"
         />

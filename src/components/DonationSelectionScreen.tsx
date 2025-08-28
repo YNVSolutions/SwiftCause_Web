@@ -175,7 +175,7 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
           <Card className="lg:col-span-1">
             <div className="aspect-[16/10] relative overflow-hidden rounded-t-lg">
               <ImageWithFallback 
-                src={campaign.image}
+                src={campaign.coverImageUrl}
                 alt={campaign.title}
                 className="w-full h-full object-cover"
               />

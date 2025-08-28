@@ -200,6 +200,27 @@ export function AdminDashboard({ onNavigate, onLogout, userSession, hasPermissio
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-between mb-8">
+            <div>
+                <h2 className="text-2xl text-gray-900">Overview</h2>
+                <p className="text-gray-600">Monitor your donation platform performance</p>
+            </div>
+            <div className="flex items-center space-x-3">
+                {hasPermission('create_campaign') && (
+                <Button onClick={() => onNavigate('admin-campaigns')} className="bg-indigo-600 hover:bg-indigo-700">
+                    <Settings className="w-4 h-4 mr-2" />
+                    Manage Campaigns
+                </Button>
+                )}
+                {hasPermission('view_kiosks') && (
+                <Button variant="outline" onClick={() => onNavigate('admin-kiosks')}>
+                    <Settings className="w-4 h-4 mr-2" />
+                    Manage Kiosks
+                </Button>
+                )}
+            </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <Card>
                 <CardContent className="p-6">

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { getCampaigns, getTopCampaigns, getAllCampaigns, updateCampaign, updateCampaignWithImage, createCampaign, createCampaignWithImage } from '../api/firestoreService';
+import { getCampaigns, getTopCampaigns, getAllCampaigns, updateCampaign, updateCampaignWithImage, createCampaign, createCampaignWithImage, deleteCampaign } from '../api/firestoreService';
 
 export function useCampaigns() {
   const [loading, setLoading] = useState(true);
@@ -58,9 +58,14 @@ export function useCampaigns() {
     }
   }, []);
 
+  const remove = useCallback(async (id: string) => {
+    await deleteCampaign(id);
+    setCampaigns(prev => prev.filter(c => c.id !== id));
+  }, []);
+
   useEffect(() => {
     refresh();
   }, [refresh]);
 
-  return { loading, error, campaigns, refresh, update, updateWithImage, getTop, create, createWithImage };
+  return { loading, error, campaigns, refresh, update, updateWithImage, getTop, create, createWithImage, remove };
 }
