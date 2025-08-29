@@ -11,11 +11,13 @@ import { DonationManagement } from './components/admin/DonationManagement';
 import { UserManagement } from './components/admin/UserManagement';
 import CampaignManagement from './components/admin/CampaignManagement';
 import { doc, getDoc, db } from './lib/firebase';
+import { HomePage } from './components/HomePage';
 
 export type Screen =
+  | 'home'
   | 'login'
   | 'campaigns'
-  | 'campaign' // Unified campaign screen (details + donation)
+  | 'campaign'
   | 'payment'
   | 'result'
   | 'email-confirmation'
@@ -25,9 +27,8 @@ export type Screen =
   | 'admin-donations'
   | 'admin-users';
 
+// ... (All other type definitions remain the same)
 export type UserRole = 'kiosk' | 'admin';
-
-// Granular permission system
 export type Permission =
   | 'view_dashboard'
   | 'view_campaigns'
@@ -47,56 +48,40 @@ export type Permission =
   | 'delete_user'
   | 'manage_permissions'
   | 'system_admin';
-
 export interface UserPermissions {
   permissions: Permission[];
   role: 'super_admin' | 'admin' | 'manager' | 'operator' | 'viewer';
   description: string;
 }
-
 export interface CampaignConfiguration {
-  // Pricing Options
   predefinedAmounts: number[];
   allowCustomAmount: boolean;
   minCustomAmount: number;
   maxCustomAmount: number;
   suggestedAmounts: number[];
-
-  // Subscription Settings
   enableRecurring: boolean;
   recurringIntervals: ('monthly' | 'quarterly' | 'yearly')[];
   defaultRecurringInterval: 'monthly' | 'quarterly' | 'yearly';
-  recurringDiscount?: number; // percentage discount for recurring
-
-  // Display Settings
+  recurringDiscount?: number;
   displayStyle: 'grid' | 'list' | 'carousel';
   showProgressBar: boolean;
   showDonorCount: boolean;
   showRecentDonations: boolean;
   maxRecentDonations: number;
-
-  // Call-to-Action
   primaryCTAText: string;
   secondaryCTAText?: string;
   urgencyMessage?: string;
-
-  // Visual Customization
   accentColor?: string;
   backgroundImage?: string;
   theme: 'default' | 'minimal' | 'vibrant' | 'elegant';
-
-  // Form Configuration
   requiredFields: ('email' | 'name' | 'phone' | 'address')[];
   optionalFields: ('email' | 'name' | 'phone' | 'address' | 'message')[];
   enableAnonymousDonations: boolean;
-
-  // Social Features
   enableSocialSharing: boolean;
   shareMessage?: string;
   enableDonorWall: boolean;
   enableComments: boolean;
 }
-
 export interface Campaign {
   id: string;
   title: string;
@@ -105,20 +90,14 @@ export interface Campaign {
   raised: number;
   coverImageUrl: string;
   category: string;
-  tags?: string[]; // Added tags property as an optional array of strings
+  tags?: string[];
   status?: 'active' | 'paused' | 'completed';
   createdAt?: string;
   endDate?: string;
   organizationId?: string;
-
-  // Enhanced configuration
   configuration: CampaignConfiguration;
-
-  // Kiosk Assignment
-  assignedKiosks?: string[]; // Array of kiosk IDs
-  isGlobal?: boolean; // If true, shows on all kiosks
-
-  // Additional campaign content
+  assignedKiosks?: string[];
+  isGlobal?: boolean;
   longDescription?: string;
   videoUrl?: string;
   galleryImages?: string[];
@@ -128,8 +107,6 @@ export interface Campaign {
     website?: string;
     logo?: string;
   };
-
-  // Impact metrics
   impactMetrics?: {
     peopleHelped?: number;
     itemsProvided?: number;
@@ -140,7 +117,6 @@ export interface Campaign {
     };
   };
 }
-
 export interface Donation {
   campaignId: string;
   amount: number;
@@ -157,13 +133,11 @@ export interface Donation {
   transactionId?: string;
   isGiftAid?: boolean;
 }
-
 export interface PaymentResult {
   success: boolean;
   transactionId?: string;
   error?: string;
 }
-
 export interface Kiosk {
   id: string;
   name: string;
@@ -172,31 +146,23 @@ export interface Kiosk {
   lastActive?: string;
   totalDonations?: number;
   totalRaised?: number;
-  accessCode: string; // Required for authentication
-  qrCode?: string; // QR code data for quick login
-
-  // Campaign Assignment
-  assignedCampaigns?: string[]; // Array of campaign IDs
-  defaultCampaign?: string; // Default campaign to highlight
-
-  // Kiosk Configuration
+  accessCode: string;
+  qrCode?: string;
+  assignedCampaigns?: string[];
+  defaultCampaign?: string;
   settings?: {
     displayMode: 'grid' | 'list' | 'carousel';
-    showAllCampaigns: boolean; // If true, shows global campaigns too
+    showAllCampaigns: boolean;
     maxCampaignsDisplay: number;
     autoRotateCampaigns: boolean;
-    rotationInterval?: number; // in seconds
+    rotationInterval?: number;
   };
-
-  // Hardware/Location Details
   deviceInfo?: {
     model?: string;
     os?: string;
     screenSize?: string;
     touchCapable?: boolean;
   };
-
-  // Operational Details
   operatingHours?: {
     monday?: { open: string; close: string; };
     tuesday?: { open: string; close: string; };
@@ -207,7 +173,6 @@ export interface Kiosk {
     sunday?: { open: string; close: string; };
   };
 }
-
 export interface User {
   id: string;
   username: string;
@@ -219,7 +184,6 @@ export interface User {
   department?: string;
   createdAt?: string;
 }
-
 export interface KioskSession {
   kioskId: string;
   kioskName: string;
@@ -229,14 +193,14 @@ export interface KioskSession {
   settings: Kiosk['settings'];
   loginMethod: 'qr' | 'manual';
 }
-
 export interface AdminSession {
   user: User;
   loginTime: string;
 }
 
+
 export default function App() {
-  const [currentScreen, setCurrentScreen] = useState<Screen>('login');
+  const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [campaignView, setCampaignView] = useState<'overview' | 'donate'>('overview');
@@ -249,6 +213,15 @@ export default function App() {
     setCurrentScreen(screen);
   };
 
+  const handleGoToLogin = () => {
+    navigate('login');
+  };
+  
+ 
+  const handleGoBackToHome = () => {
+    navigate('home');
+  };
+
   const handleLogin = async (role: UserRole, sessionData?: KioskSession | AdminSession) => {
     setUserRole(role);
     if (role === 'admin') {
@@ -257,11 +230,11 @@ export default function App() {
     } else {
       setCurrentKioskSession(sessionData as KioskSession);
       await refreshCurrentKioskSession((sessionData as KioskSession).kioskId);
-      console.log('App.tsx - After refreshCurrentKioskSession, currentKioskSession:', currentKioskSession);
       navigate('campaigns');
     }
   };
 
+ 
   const handleLogout = () => {
     setUserRole(null);
     setSelectedCampaign(null);
@@ -272,7 +245,6 @@ export default function App() {
     setCampaignView('overview');
     navigate('login');
   };
-
   const refreshCurrentKioskSession = async (kioskIdToRefresh?: string) => {
     const targetKioskId = kioskIdToRefresh || currentKioskSession?.kioskId;
     if (targetKioskId) {
@@ -289,44 +261,29 @@ export default function App() {
       }
     }
   };
-
   const handleCampaignSelect = (campaign: Campaign, initialShowDetails: boolean = false) => {
     setSelectedCampaign(campaign);
-    // The 'campaign' screen in CampaignScreen.tsx now handles both overview and donate views
-    // The initialShowDetails flag will tell CampaignScreen whether to show details expanded
-    setCampaignView(initialShowDetails ? 'overview' : 'donate'); // This prop is now primarily for CampaignScreen's internal logic
+    setCampaignView(initialShowDetails ? 'overview' : 'donate');
     navigate('campaign');
   };
-
   const handleCampaignViewChange = (view: 'overview' | 'donate') => {
-    // This function might become redundant if CampaignScreen fully manages its internal view
-    // But keeping it for now in case internal view toggling is still desired.
     setCampaignView(view);
   };
-
   const handleDonationSubmit = (donationData: Donation) => {
-    // Add kiosk ID to donation if available
-    const donationWithKiosk = {
-      ...donationData,
-      kioskId: currentKioskSession?.kioskId
-    };
+    const donationWithKiosk = { ...donationData, kioskId: currentKioskSession?.kioskId };
     setDonation(donationWithKiosk);
     navigate('payment');
   };
-
   const handlePaymentSubmit = (result: PaymentResult) => {
     setPaymentResult(result);
     navigate('result');
   };
-
   const handleEmailConfirmation = () => {
     navigate('email-confirmation');
   };
-
   const handlePaymentSuccess = (paymentIntentId: string) => {
     handlePaymentSubmit({ success: true, transactionId: paymentIntentId });
   };
-
   const handleReturnToStart = () => {
     setSelectedCampaign(null);
     setDonation(null);
@@ -338,7 +295,6 @@ export default function App() {
       navigate('campaigns');
     }
   };
-
   const handleBackFromCampaign = () => {
     if (campaignView === 'donate') {
       setCampaignView('overview');
@@ -346,15 +302,21 @@ export default function App() {
       navigate('campaigns');
     }
   };
-
-  // Permission checking utility
   const hasPermission = (permission: Permission): boolean => {
     if (!currentAdminSession) return false;
     return currentAdminSession.user.permissions.permissions.includes(permission) ||
            currentAdminSession.user.permissions.permissions.includes('system_admin');
   };
 
-  // Render admin screens
+  if (currentScreen === 'home') {
+    return (
+      <HomePage
+        onLogin={handleGoToLogin}
+        onSignup={handleGoToLogin}
+      />
+    );
+  }
+
   if (userRole === 'admin' && currentAdminSession) {
     return (
       <div className="min-h-screen bg-background">
@@ -366,7 +328,6 @@ export default function App() {
             hasPermission={hasPermission}
           />
         )}
-
         {currentScreen === 'admin-campaigns' && (
           <CampaignManagement
             onNavigate={navigate}
@@ -375,7 +336,6 @@ export default function App() {
             hasPermission={hasPermission}
           />
         )}
-
         {currentScreen === 'admin-kiosks' && (
           <KioskManagement
             onNavigate={navigate}
@@ -384,7 +344,6 @@ export default function App() {
             hasPermission={hasPermission}
           />
         )}
-
         {currentScreen === 'admin-donations' && (
           <DonationManagement
             onNavigate={navigate}
@@ -393,7 +352,6 @@ export default function App() {
             hasPermission={hasPermission}
           />
         )}
-
         {currentScreen === 'admin-users' && (
           <UserManagement
             onNavigate={navigate}
@@ -406,17 +364,17 @@ export default function App() {
     );
   }
 
-  // Render kiosk screens
   return (
     <div className="min-h-screen bg-background">
       {currentScreen === 'login' && (
-        <LoginScreen onLogin={handleLogin} />
+      
+        <LoginScreen onLogin={handleLogin} onGoBackToHome={handleGoBackToHome} />
       )}
 
       {currentScreen === 'campaigns' && (
         <CampaignListContainer
-          onSelectCampaign={(campaign) => handleCampaignSelect(campaign, false)} // Donate button
-          onViewDetails={(campaign) => handleCampaignSelect(campaign, true)} // Info button, show details
+          onSelectCampaign={(campaign) => handleCampaignSelect(campaign, false)}
+          onViewDetails={(campaign) => handleCampaignSelect(campaign, true)}
           kioskSession={currentKioskSession}
           onLogout={handleLogout}
           refreshCurrentKioskSession={refreshCurrentKioskSession}
@@ -426,7 +384,7 @@ export default function App() {
       {currentScreen === 'campaign' && selectedCampaign && (
         <CampaignScreen
           campaign={selectedCampaign}
-          initialShowDetails={campaignView === 'overview'} // Pass initialShowDetails based on campaignView
+          initialShowDetails={campaignView === 'overview'}
           onSubmit={handleDonationSubmit}
           onBack={handleBackFromCampaign}
           onViewChange={handleCampaignViewChange}
