@@ -180,14 +180,32 @@ export function CampaignScreen({
                 </div>
               )}
 
-              
+              {campaign.organizationInfo && (
+                <div className="space-y-3 mt-4 p-4 border rounded-lg bg-gray-50">
+                  <h5 className="font-bold text-gray-800">About {campaign.organizationInfo.name}</h5>
+                  {campaign.organizationInfo.logo && (
+                    <ImageWithFallback
+                      src={campaign.organizationInfo.logo}
+                      alt={`${campaign.organizationInfo.name} logo`}
+                      className="w-16 h-16 object-contain rounded-full mb-2"
+                    />
+                  )}
+                  <p className="text-sm text-gray-600">{campaign.organizationInfo.description}</p>
+                  {campaign.organizationInfo.website && (
+                    <a href={campaign.organizationInfo.website} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline text-sm">
+                      Visit Website
+                    </a>
+                  )}
+                </div>
+              )}
+
             </CardContent>
           </Card>
 
           {/* Donation Form and Expanded Details */}
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="flex items-center text-xl">
+          <Card className="lg:col-span-2 shadow-lg">
+            <CardHeader className="px-6 py-4 border-b">
+              <CardTitle className="flex items-center text-2xl font-bold text-gray-800">
                 <Heart className="mr-3 h-6 w-6 text-indigo-600" />
                 {config.primaryCTAText}
               </CardTitle>
@@ -239,17 +257,6 @@ export function CampaignScreen({
                               {campaign.galleryImages.map((img, idx) => (
                                 <ImageWithFallback key={idx} src={img} alt={`${campaign.title} gallery image ${idx + 1}`} className="w-full h-auto rounded-md object-cover" />
                               ))}
-                            </div>
-                          )}
-                          {campaign.organizationInfo && (
-                            <div className="space-y-2">
-                              <h5 className="font-semibold text-gray-800 mt-3">About the Organization: {campaign.organizationInfo.name}</h5>
-                              <p>{campaign.organizationInfo.description}</p>
-                              {campaign.organizationInfo.website && (
-                                <a href={campaign.organizationInfo.website} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">
-                                  Visit Website
-                                </a>
-                              )}
                             </div>
                           )}
                           {campaign.impactMetrics && (
