@@ -519,7 +519,12 @@ const CampaignDialog = ({
   const handleDialogClose = () => {
     clearImageSelection();
     setFormData(initialFormData); // Reset for add mode
-    onOpenChange(false);
+    // Clear advanced image selections/previews
+    setSelectedOrganizationLogo(null);
+    setOrganizationLogoPreview(null);
+    setSelectedGalleryImages([]);
+    setGalleryImagePreviews([]);
+    // Removed onOpenChange(false) to prevent infinite loop
   };
 
   const dialogTitle = isEditMode
@@ -1676,14 +1681,26 @@ const CampaignManagement = ({
 
       <CampaignDialog
         open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
+        onOpenChange={(open) => {
+          setIsEditDialogOpen(open);
+          if (!open) {
+            // Call handleDialogClose only when the dialog is closing
+            setEditingCampaign(null); // Additionally reset editing campaign state
+          }
+        }}
         campaign={editingCampaign}
         onSave={handleSave}
       />
 
       <CampaignDialog
         open={isAddDialogOpen}
-        onOpenChange={setIsAddDialogOpen}
+        onOpenChange={(open) => {
+          setIsAddDialogOpen(open);
+          if (!open) {
+            // Call handleDialogClose only when the dialog is closing
+            // No need to reset editingCampaign for add dialog
+          }
+        }}
         onSave={(data, isNew) => handleSave(data, isNew, undefined)}
       />
 
