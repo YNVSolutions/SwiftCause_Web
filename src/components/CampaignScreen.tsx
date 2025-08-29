@@ -128,6 +128,15 @@ export function CampaignScreen({
 
   const estimatedDonors = Math.floor(campaign.raised / 25);
 
+  const getYouTubeVideoId = (url: string) => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    if (match && match[2].length === 11) {
+      return match[2];
+    }
+    return null;
+  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -243,7 +252,7 @@ export function CampaignScreen({
                           {campaign.videoUrl && (
                             <div className="aspect-video w-full rounded-md overflow-hidden">
                               <iframe
-                                src={campaign.videoUrl.replace('watch?v=', 'embed/')}
+                                src={`https://www.youtube.com/embed/${getYouTubeVideoId(campaign.videoUrl)}?modestbranding=1&rel=0`}
                                 frameBorder="0"
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 allowFullScreen
