@@ -2,6 +2,8 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Screen, AdminSession, Permission } from "../../App";
 import { DocumentData, Timestamp } from "firebase/firestore";
 import { useCampaignManagement } from "../../hooks/useCampaignManagement";
+import { deleteFile } from "../../lib/firebase"; // Import deleteFile
+import * as firebaseService from "../../api/firestoreService"; // Import firebaseService
 
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -28,6 +30,7 @@ import {
   FaUpload,
   FaImage,
   FaTrashAlt, // Added FaTrashAlt
+  FaPlus, // Import FaPlus
 } from "react-icons/fa";
 import { Plus, ArrowLeft, Settings, Download } from "lucide-react";
 import { Calendar } from "../ui/calendar";
@@ -311,6 +314,13 @@ const CampaignDialog = ({
         reader.readAsDataURL(file);
       } else if (inputName === "galleryImages") {
         const newFiles = Array.from(files);
+
+        // Limit to a maximum of 4 images including existing ones
+        if (selectedGalleryImages.length + newFiles.length > 4) {
+          alert("You can only upload a maximum of 4 gallery images.");
+          return;
+        }
+
         setSelectedGalleryImages((prev) => [...prev, ...newFiles]);
         newFiles.forEach((file) => {
           const reader = new FileReader();
@@ -363,7 +373,25 @@ const CampaignDialog = ({
   const handleGalleryImagesUpload = async () => {
     if (selectedGalleryImages.length > 0) {
       const imageUrls: string[] = [];
-      for (const file of selectedGalleryImages) {
+      // Combine existing gallery images with newly selected ones for upload
+      const allImagesToUpload = [
+        ...(formData.galleryImages
+          ? String(formData.galleryImages).split(",").filter(Boolean)
+          : []), // Existing URLs
+        ...selectedGalleryImages, // New files
+      ];
+
+      // Filter out any files that are already URLs (meaning they are existing images)
+      const filesToUpload = allImagesToUpload.filter(
+        (item) => typeof item !== "string"
+      ) as File[];
+
+      // Keep track of existing URLs that are not being deleted
+      const existingUrls = allImagesToUpload.filter(
+        (item) => typeof item === "string"
+      ) as string[];
+
+      for (const file of filesToUpload) {
         try {
           const url = await uploadFile(
             file,
@@ -380,10 +408,55 @@ const CampaignDialog = ({
           return;
         }
       }
-      if (imageUrls.length > 0) {
-        setFormData((prev) => ({ ...prev, galleryImages: imageUrls.join(",") }));
-        setGalleryImagePreviews(imageUrls); // Update preview with uploaded URLs
+      if (imageUrls.length > 0 || existingUrls.length > 0) {
+        const finalGalleryImages = [...existingUrls, ...imageUrls];
+        setFormData((prev) => ({
+          ...prev,
+          galleryImages: finalGalleryImages.join(","),
+        }));
+        setGalleryImagePreviews(finalGalleryImages); // Update preview with uploaded URLs
+        setSelectedGalleryImages([]); // Clear selected files after upload
       }
+    }
+  };
+
+  const handleDeleteGalleryImage = async (imageToDelete: string, index: number) => {
+    if (!campaign?.id) {
+      // If it's a new campaign and the image hasn't been uploaded yet, just remove from state
+      setGalleryImagePreviews((prev) => prev.filter((_, i) => i !== index));
+      setSelectedGalleryImages((prev) => prev.filter((_, i) => i !== index));
+      setFormData((prev) => ({
+        ...prev,
+        galleryImages: (prev.galleryImages as string)
+          .split(",")
+          .filter((img) => img !== imageToDelete)
+          .join(","),
+      }));
+      return;
+    }
+
+    try {
+      // Attempt to delete from storage
+      await deleteFile(imageToDelete); // Call the deleteFile function
+
+      // Remove from form data and previews
+      const updatedGalleryImages = (formData.galleryImages as string)
+        .split(",")
+        .filter((img) => img !== imageToDelete);
+      setFormData((prev) => ({
+        ...prev,
+        galleryImages: updatedGalleryImages.join(","),
+      }));
+      setGalleryImagePreviews(updatedGalleryImages);
+
+      // Also update selectedGalleryImages if the deleted image was a newly selected file
+      setSelectedGalleryImages((prev) =>
+        prev.filter((file) => URL.createObjectURL(file) !== imageToDelete)
+      );
+      alert("Image deleted successfully.");
+    } catch (error) {
+      console.error("Error deleting gallery image:", error);
+      alert("Failed to delete image. Please try again.");
     }
   };
 
@@ -749,12 +822,20 @@ const CampaignDialog = ({
                   {galleryImagePreviews.length > 0 && (
                     <div className="flex flex-wrap gap-2">
                       {galleryImagePreviews.map((src, index) => (
-                        <img
-                          key={index}
-                          src={src}
-                          alt={`Gallery preview ${index + 1}`}
-                          className="w-20 h-20 object-cover rounded-lg border"
-                        />
+                        <div key={index} className="relative group">
+                          <img
+                            src={src}
+                            alt={`Gallery preview ${index + 1}`}
+                            className="w-20 h-20 object-cover rounded-lg border"
+                          />
+                          <button
+                            onClick={() => handleDeleteGalleryImage(src, index)}
+                            className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Delete"
+                          >
+                            <FaTrashAlt className="h-4 w-4" />
+                          </button>
+                        </div>
                       ))}
                     </div>
                   )}
@@ -776,10 +857,28 @@ const CampaignDialog = ({
                           document.getElementById("galleryImagesInput")?.click()
                         }
                         className="flex items-center space-x-2"
+                        disabled={galleryImagePreviews.length >= 4}
                       >
-                        <FaImage className="w-4 h-4" />
-                        <span>Select Gallery Images</span>
+                        <FaPlus className="w-4 h-4" />
+                        <span>Add Image</span>
                       </Button>
+                      {selectedGalleryImages.length > 0 && (
+                        <Button
+                          type="button"
+                          onClick={handleGalleryImagesUpload}
+                          disabled={uploadingImage}
+                          className="flex items-center space-x-2"
+                        >
+                          <FaUpload
+                            className={`w-4 h-4 ${
+                              uploadingImage ? "animate-spin" : ""
+                            }`}
+                          />
+                          <span>
+                            {uploadingImage ? "Uploading..." : "Upload Images"}
+                          </span>
+                        </Button>
+                      )}
                     </div>
                     {selectedGalleryImages.length > 0 && (
                       <div className="text-sm text-gray-600">
