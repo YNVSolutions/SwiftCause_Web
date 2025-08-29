@@ -70,7 +70,7 @@ const CampaignDialog = ({
     title: "",
     description: "",
     status: "active",
-    goalAmount: 0,
+    goal: 0,
     tags: [],
     startDate: "",
     endDate: "",
@@ -170,7 +170,7 @@ const CampaignDialog = ({
         title: campaign.title || "",
         description: campaign.description || "",
         status: campaign.status || "active",
-        goalAmount: campaign.goalAmount || 0,
+        goal: campaign.goal || 0,
         tags: Array.isArray(campaign.tags) ? campaign.tags.join(", ") : "",
         startDate: campaign.startDate?.seconds
           ? new Date(campaign.startDate.seconds * 1000)
@@ -701,12 +701,12 @@ const CampaignDialog = ({
 
               <div className="grid grid-cols-2 gap-x-4 gap-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="goalAmount">Fundraising Goal ($)</Label>
+                  <Label htmlFor="goal">Fundraising Goal ($)</Label>
                   <Input
-                    id="goalAmount"
-                    name="goalAmount"
+                    id="goal"
+                    name="goal"
                     type="number"
-                    value={formData.goalAmount}
+                    value={formData.goal}
                     onChange={handleChange}
                     placeholder="0"
                   />
@@ -1214,7 +1214,7 @@ const CampaignManagement = ({
         title: data.title,
         description: data.description,
         status: data.status,
-        goalAmount: Number(data.goalAmount),
+        goal: Number(data.goal),
         tags: data.tags
           .split(",")
           .map((t: string) => t.trim())
@@ -1366,8 +1366,8 @@ const CampaignManagement = ({
           const dateA = a.endDate?.seconds ? new Date(a.endDate.seconds * 1000).getTime() : 0;
           const dateB = b.endDate?.seconds ? new Date(b.endDate.seconds * 1000).getTime() : 0;
           return dateA - dateB;
-        case "goalAmount":
-          return (a.goalAmount || 0) - (b.goalAmount || 0);
+        case "goal":
+          return (a.goal || 0) - (b.goal || 0);
         case "createdAt": // Assuming createdAt is also a Timestamp or string that can be compared
           // Need to parse createdAt if it's a string, or convert if Timestamp
           const createdA = a.createdAt?.seconds ? new Date(a.createdAt.seconds * 1000).getTime() : 0;
@@ -1503,7 +1503,7 @@ const CampaignManagement = ({
               <SelectContent>
                 <SelectItem value="endDate">End Date</SelectItem>
                 <SelectItem value="title">Title</SelectItem>
-                <SelectItem value="goalAmount">Goal Amount</SelectItem>
+                <SelectItem value="goal">Goal Amount</SelectItem>
                 <SelectItem value="createdAt">Created Date</SelectItem>
               </SelectContent>
             </Select>
@@ -1554,8 +1554,8 @@ const CampaignManagement = ({
 
             <div className="divide-y divide-gray-200">
               {filteredAndSortedCampaigns.map((campaign) => {
-                const collected = Number(campaign.collectedAmount) || 0;
-                const goal = Number(campaign.goalAmount) || 1;
+                const collected = Number(campaign.raised) || 0;
+                const goal = Number(campaign.goal) || 1;
                 const progress = Math.round((collected / goal) * 100);
                 const donors = campaign.donationCount || 0;
                 const avgDonation =

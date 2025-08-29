@@ -110,6 +110,7 @@ export interface Campaign {
   createdAt?: string;
   endDate?: string;
   organizationId?: string;
+  donationCount?: number;
 
   // Enhanced configuration
   configuration: CampaignConfiguration;
