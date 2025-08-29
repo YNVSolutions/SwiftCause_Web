@@ -15,13 +15,17 @@ interface CampaignCardProps {
   isDefault?: boolean;
 }
 
-export function CampaignCard({ 
-  campaign, 
-  variant = 'detailed', 
-  onDonate, 
+export function CampaignCard({
+  campaign,
+  variant = 'detailed',
+  onDonate,
   onViewDetails,
-  isDefault = false 
+  isDefault = false
 }: CampaignCardProps) {
+  if (!campaign.raised) {
+    campaign.raised = 0;
+  }
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -31,6 +35,7 @@ export function CampaignCard({
   };
 
   const getProgressPercentage = (raised: number, goal: number) => {
+    if (!raised) return 0;
     return Math.min((raised / goal) * 100, 100);
   };
 
@@ -41,7 +46,7 @@ export function CampaignCard({
       }`}>
         <div className="flex">
           <div className="w-24 h-24 sm:w-32 sm:h-32 relative overflow-hidden flex-shrink-0">
-            <ImageWithFallback 
+            <ImageWithFallback
               src={campaign.coverImageUrl}
               alt={campaign.title}
               className="w-full h-full object-cover"
@@ -62,7 +67,7 @@ export function CampaignCard({
               </div>
             )}
           </div>
-          
+
           <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between">
             <div className="space-y-1 sm:space-y-2">
               <div className="flex items-start justify-between gap-2">
@@ -71,7 +76,7 @@ export function CampaignCard({
                   {campaign.category}
                 </Badge>
               </div>
-              
+
               <div className="space-y-1">
                 <div className="flex justify-between text-xs sm:text-sm">
                   <span className="text-muted-foreground">Raised</span>
@@ -83,10 +88,10 @@ export function CampaignCard({
                 </div>
               </div>
             </div>
-            
+
             <div className="flex gap-2 mt-2 sm:mt-3">
               {onDonate && (
-                <Button 
+                <Button
                   onClick={() => onDonate(campaign)}
                   size="sm"
                   className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-1.5 rounded-xl transition-all duration-200 ease-in-out"
@@ -95,10 +100,10 @@ export function CampaignCard({
                   Donate
                 </Button>
               )}
-              
+
               {onViewDetails && (
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => onViewDetails(campaign, true)}
                   className="h-8 sm:h-9 px-2 sm:px-3"
                   size="sm"
@@ -118,7 +123,7 @@ export function CampaignCard({
       isDefault ? 'ring-2 ring-indigo-500 ring-opacity-50' : ''
     }`}>
       <div className="aspect-[16/10] sm:aspect-video relative overflow-hidden">
-        <ImageWithFallback 
+        <ImageWithFallback
           src={campaign.coverImageUrl}
           alt={campaign.title}
           className="w-full h-full object-cover"
@@ -138,14 +143,14 @@ export function CampaignCard({
           </Badge>
         )}
       </div>
-      
+
       <CardHeader className="p-4 sm:p-6">
         <CardTitle className="line-clamp-1 text-base sm:text-lg">{campaign.title}</CardTitle>
         <p className="line-clamp-2 text-sm sm:text-base text-muted-foreground">
           {campaign.description}
         </p>
       </CardHeader>
-      
+
       <CardContent className="p-4 sm:p-6 pt-0 space-y-4">
         <div className="space-y-2">
           <div className="flex justify-between text-xs sm:text-sm">
@@ -155,15 +160,15 @@ export function CampaignCard({
           <Progress value={getProgressPercentage(campaign.raised, campaign.goal)} className="h-2" />
           <div className="flex justify-between text-xs sm:text-sm">
             <span className="text-muted-foreground">
-              {getProgressPercentage(campaign.raised, campaign.goal).toFixed(1)}% of goal
+              {campaign.goal ? getProgressPercentage(campaign.raised, campaign.goal).toFixed(1) + "% of goal" : 'N/A'}
             </span>
-            <span className="text-muted-foreground">Goal: {formatCurrency(campaign.goal)}</span>
+            <span className="text-muted-foreground">Goal: { campaign.goal ? formatCurrency(campaign.goal) : 'N/A'}</span>
           </div>
         </div>
-        
+
         <div className="flex gap-2 sm:gap-3">
           {onDonate && (
-            <Button 
+            <Button
               onClick={() => onDonate(campaign)}
               className="flex-1 h-11 sm:h-12 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-all duration-200 ease-in-out"
               size="lg"
@@ -173,10 +178,10 @@ export function CampaignCard({
               <ArrowRight className="ml-1 sm:ml-2 h-4 w-4" />
             </Button>
           )}
-          
+
           {onViewDetails && (
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => onViewDetails(campaign, true)}
               className="h-11 sm:h-12 px-3 sm:px-4"
               size="lg"

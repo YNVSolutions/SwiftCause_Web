@@ -171,8 +171,8 @@ export function CampaignScreen({
                     <span>Raised: {formatCurrency(campaign.raised)}</span>
                     <span>Goal: {formatCurrency(campaign.goal)}</span>
                   </div>
-                  <Progress value={getProgressPercentage(campaign.raised, campaign.goal)} className="h-2" />
-                  <p className="text-sm text-gray-600">{getProgressPercentage(campaign.raised, campaign.goal).toFixed(1)}% funded</p>
+                  <Progress value={getProgressPercentage(campaign.raised || 0, campaign.goal || 0)} className="h-2" />
+                  <p className="text-sm text-gray-600">{getProgressPercentage(campaign.raised || 0, campaign.goal || 0).toFixed(1)}% funded</p>
                 </div>
               )}
 
