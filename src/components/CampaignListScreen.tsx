@@ -102,25 +102,25 @@ export function CampaignListScreen({
         onLayoutChange={handleLayoutChange} // Pass onLayoutChange to NavigationHeader
         rightContent={
           <div className="flex items-center space-x-2">
-            <Button variant="outline" onClick={handleRefresh}>
+            <Button onClick={handleRefresh} className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-md rounded-lg flex items-center gap-2">
               <RotateCcw className="w-4 h-4 mr-2" /> Refresh Data
             </Button>
-            <Button variant="outline" onClick={onLogout}>
+            <Button onClick={onLogout} className="bg-red-500 hover:bg-red-600 text-white shadow-md rounded-lg flex items-center gap-2">
               <LogOut className="w-4 h-4 mr-2" /> Logout
             </Button>
           </div>
         }
       />
-      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-md border border-gray-100 mt-4">
         {campaigns.length === 0 ? (
-          <div className="text-center py-12">
+          <div className="flex flex-col items-center justify-center py-12 bg-white/80 rounded-xl shadow-md max-w-lg mx-auto text-center">
             <div className="text-gray-400 mb-4">
-              <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="mx-auto h-12 w-12 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No Campaigns Available</h3>
-            <p className="text-gray-600">
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Campaigns Available</h3>
+            <p className="text-gray-500">
               {kioskSession
                 ? `No campaigns have been assigned to ${kioskSession.kioskName}. Please contact your administrator.`
                 : 'No active campaigns are currently available.'}
@@ -139,7 +139,7 @@ export function CampaignListScreen({
           ) : (
             <div className={
               /* Container decides layout; default to grid/list based on isDetailedView */
-              layoutMode === 'grid' ? "grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6" : "grid grid-cols-1 gap-3 sm:gap-4"
+              layoutMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "flex flex-col space-y-4"
             }>
               {campaigns.map(campaign => (
                 <CampaignCard
@@ -204,43 +204,48 @@ const CampaignCarousel = ({
   const currentCampaign = campaigns[currentIndex];
 
   return (
-    <div className="relative w-full overflow-hidden rounded-lg shadow-lg aspect-video flex items-center justify-center p-4">
+    <div className="relative w-full overflow-hidden bg-white/80 backdrop-blur-sm rounded-2xl shadow-md border border-gray-100 p-4">
       <button
         onClick={goToPrevious}
-        className="absolute left-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full z-10"
+        className="absolute left-4 top-1/2 -translate-y-1/2 bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-full shadow-md transition z-10"
       >
         <ChevronLeft className="w-6 h-6" />
       </button>
       <button
         onClick={goToNext}
-        className="absolute right-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full z-10"
+        className="absolute right-4 top-1/2 -translate-y-1/2 bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-full shadow-md transition z-10"
       >
         <ChevronRight className="w-6 h-6" />
       </button>
-      <div
-        className="flex transition-transform duration-500 ease-in-out"
-        style={{ transform: `translateX(-${currentIndex * 100}%)` }}
-      >
-        {campaigns.map((campaign, index) => (
-          <div key={campaign.id} className="w-full flex-shrink-0">
-            <CampaignCard
-              campaign={campaign}
-              variant="detailed"
-              onDonate={() => onSelectCampaign(campaign)}
-              onViewDetails={() => onViewDetails(campaign)}
-              isDefault={isDefaultCampaign(campaign.id)}
-            />
-          </div>
-        ))}
+      
+      <div className="w-full overflow-hidden">
+        <div
+          className="flex transition-transform duration-500 ease-in-out"
+          style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+        >
+          {campaigns.map((campaign, index) => (
+            <div key={campaign.id} className="w-full flex-shrink-0 px-4">
+              <div className="max-w-2xl mx-auto">
+                <CampaignCard
+                  campaign={campaign}
+                  variant="detailed"
+                  onDonate={() => onSelectCampaign(campaign)}
+                  onViewDetails={() => onViewDetails(campaign)}
+                  isDefault={isDefaultCampaign(campaign.id)}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Navigation Dots (optional) */}
+      {/* Navigation Dots */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
         {campaigns.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentIndex(index)}
-            className={`h-2 w-2 rounded-full ${index === currentIndex ? 'bg-white' : 'bg-gray-400'}`}
+            className={`h-3 w-3 rounded-full transition-colors duration-300 ${index === currentIndex ? 'bg-indigo-600' : 'bg-gray-300'}`}
           />
         ))}
       </div>
