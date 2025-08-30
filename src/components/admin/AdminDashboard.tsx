@@ -453,7 +453,6 @@ export function AdminDashboard({ onNavigate, onLogout, userSession, hasPermissio
             </CollapsibleContent>
           </Collapsible>
         </div>
-      
 
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -545,19 +544,46 @@ export function AdminDashboard({ onNavigate, onLogout, userSession, hasPermissio
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="flex flex-col">
             <CardHeader>
               <CardTitle>Campaign Categories</CardTitle>
             </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie data={categoryData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value" nameKey="name">
-                    {categoryData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
-                  </Pie>
-                  <Tooltip formatter={(value, name) => [`${value}%`, name]} />
-                </PieChart>
-              </ResponsiveContainer>
+            <CardContent className="flex-1 flex flex-col">
+              <div className="flex-1">
+                <ResponsiveContainer width="100%" height={220}>
+                  <PieChart>
+                    <Pie
+                      data={categoryData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={100}
+                      paddingAngle={5}
+                      dataKey="value"
+                      nameKey="name"
+                    >
+                      {categoryData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
+                    </Pie>
+                    <Tooltip formatter={(value, name) => [`${value}%`, name]} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="mt-4 border-t pt-4">
+                <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                  {categoryData.map((entry) => (
+                    <div key={entry.name} className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2 truncate">
+                        <span
+                          className="h-3 w-3 rounded-sm flex-shrink-0"
+                          style={{ backgroundColor: entry.color }}
+                        />
+                        <span className="text-gray-600 truncate">{entry.name}</span>
+                      </div>
+                      <span className="font-semibold text-gray-800">{entry.value}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
