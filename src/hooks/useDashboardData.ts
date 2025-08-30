@@ -1,13 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { getAllCampaigns, getKiosks, getRecentDonations } from '../api/firestoreService';
 import { DocumentData, Timestamp } from 'firebase/firestore';
-
-interface Campaign {
-  id: string;
-  collectedAmount?: number;
-  donationCount?: number;
-  status?: 'active' | 'paused' | 'completed';
-}
+import { Campaign } from '../../App';
 
 interface Kiosk {
   id: string;
@@ -21,7 +15,7 @@ interface Donation {
   amount: number;
   campaignId: string;
   timestamp: Timestamp;
-  platform?: string; 
+  platform?: string; // This might be kioskId
 }
 
 interface DashboardStats {
@@ -31,7 +25,7 @@ interface DashboardStats {
   activeKiosks: number;
 }
 
-interface Activity {
+export interface Activity {
   id: string;
   type: 'donation' | 'campaign' | 'kiosk';
   message: string;
@@ -39,7 +33,7 @@ interface Activity {
   kioskId?: string;
 }
 
-interface Alert {
+export interface Alert {
   id: string;
   type: 'warning' | 'info' | 'error';
   message: string;
@@ -47,8 +41,6 @@ interface Alert {
 }
 
 export function useDashboardData() {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<DashboardStats>({
     totalRaised: 0,
     totalDonations: 0,
@@ -57,6 +49,8 @@ export function useDashboardData() {
   });
   const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
@@ -69,8 +63,7 @@ export function useDashboardData() {
         getRecentDonations(5) as Promise<Donation[]> 
       ]);
 
-      
-      const totalRaised = campaignsData.reduce((acc, campaign: Campaign) => acc + (Number(campaign.collectedAmount) || 0), 0);
+      const totalRaised = campaignsData.reduce((acc, campaign: Campaign) => acc + (Number(campaign.raised) || 0), 0);
       const totalDonations = campaignsData.reduce((acc, campaign: Campaign) => acc + (Number(campaign.donationCount) || 0), 0);
       
       const activeCampaigns = campaignsData.filter((c: Campaign) => c.status === 'active').length;
