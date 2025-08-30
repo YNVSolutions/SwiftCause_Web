@@ -22,7 +22,7 @@ import {
   Settings,
   Heart,
   Globe,
-  Activity,
+  Activity as ActivityIcon, // Renamed to avoid conflict
   AlertCircle,
   CheckCircle,
   ArrowUp,
@@ -33,7 +33,7 @@ import {
   Download,
   RefreshCw
 } from 'lucide-react';
-import { Screen, AdminSession, Permission } from '../../App';
+import { Screen, AdminSession, Permission, Campaign } from '../../App';
 import { db } from '../../lib/firebase';
 import {
   collection,
@@ -43,7 +43,7 @@ import {
   getDocs,
   DocumentData,
 } from 'firebase/firestore';
-import { useDashboardData } from '../../hooks/useDashboardData';
+import { useDashboardData, Activity, Alert } from '../../hooks/useDashboardData';
 
 interface AdminDashboardProps {
   onNavigate: (screen: Screen) => void;
@@ -64,7 +64,7 @@ export function AdminDashboard({ onNavigate, onLogout, userSession, hasPermissio
     refreshDashboard
   } = useDashboardData();
 
-  const [topCampaigns, setTopCampaigns] = useState<DocumentData[]>([]);
+  const [topCampaigns, setTopCampaigns] = useState<Campaign[]>([]);
   const [goalComparisonData, setGoalComparisonData] = useState<any[]>([]);
   const [categoryData, setCategoryData] = useState<any[]>([]);
 
@@ -72,18 +72,18 @@ export function AdminDashboard({ onNavigate, onLogout, userSession, hasPermissio
     const fetchChartData = async () => {
       try {
         const campaignsRef = collection(db, 'campaigns');
-        const topListQuery = query(campaignsRef, orderBy('collectedAmount', 'desc'), limit(4));
+        const topListQuery = query(campaignsRef, orderBy('raised', 'desc'), limit(4));
         const topListSnapshot = await getDocs(topListQuery);
-        setTopCampaigns(topListSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        setTopCampaigns(topListSnapshot.docs.map(doc => ({ ...doc.data() as Campaign })));
 
-        const topChartQuery = query(campaignsRef, orderBy('collectedAmount', 'desc'), limit(5));
+        const topChartQuery = query(campaignsRef, orderBy('raised', 'desc'), limit(5));
         const topChartSnapshot = await getDocs(topChartQuery);
         const comparisonData = topChartSnapshot.docs.map(doc => {
-            const data = doc.data();
+            const data = doc.data() as Campaign;
             return {
                 name: data.title,
-                Collected: data.collectedAmount || 0,
-                Goal: data.goalAmount || 0,
+                Collected: data.raised || 0,
+                Goal: data.goal || 0,
             }
         });
         setGoalComparisonData(comparisonData);
@@ -92,7 +92,7 @@ export function AdminDashboard({ onNavigate, onLogout, userSession, hasPermissio
         const tagCounts: { [key: string]: number } = {};
         let totalTags = 0;
         allCampaignsSnapshot.forEach(doc => {
-          const tags = doc.data().tags;
+          const tags = (doc.data() as Campaign).tags;
           if (Array.isArray(tags) && tags.length > 0) {
             tags.forEach(tag => {
               tagCounts[tag] = (tagCounts[tag] || 0) + 1;
@@ -111,11 +111,14 @@ export function AdminDashboard({ onNavigate, onLogout, userSession, hasPermissio
 
       } catch (error) {
         console.error("Error fetching chart data: ", error);
+      } finally {
+        // Ensure loading is set to false even if there's an error
+        // You might also want to call refreshDashboard here if the chart data depends on it
       }
     };
 
     fetchChartData();
-  }, []);
+  }, [refreshDashboard]); // Add refreshDashboard to dependency array
 
   const handleRefresh = () => {
     refreshDashboard();
@@ -152,7 +155,7 @@ export function AdminDashboard({ onNavigate, onLogout, userSession, hasPermissio
       case 'donation': return <Heart className="w-4 h-4 text-green-600" />;
       case 'campaign': return <TrendingUp className="w-4 h-4 text-blue-600" />;
       case 'kiosk': return <Settings className="w-4 h-4 text-orange-600" />;
-      default: return <Activity className="w-4 h-4 text-gray-600" />;
+      default: return <ActivityIcon className="w-4 h-4 text-gray-600" />;
     }
   };
 
@@ -160,7 +163,7 @@ export function AdminDashboard({ onNavigate, onLogout, userSession, hasPermissio
     switch (type) {
       case 'warning': return <AlertCircle className="w-4 h-4 text-yellow-600" />;
       case 'success': return <CheckCircle className="w-4 h-4 text-green-600" />;
-      default: return <Activity className="w-4 h-4 text-blue-600" />;
+      default: return <ActivityIcon className="w-4 h-4 text-blue-600" />;
     }
   };
 
@@ -321,9 +324,9 @@ export function AdminDashboard({ onNavigate, onLogout, userSession, hasPermissio
               </CardHeader>
               <CardContent>
               <div className="space-y-4">
-                {topCampaigns.length > 0 ? topCampaigns.map((campaign) => {
-                  const collected = campaign.collectedAmount || 0;
-                  const goal = campaign.goalAmount || 1;
+                {topCampaigns.length > 0 ? topCampaigns.map((campaign: Campaign) => {
+                  const collected = campaign.raised || 0;
+                  const goal = campaign.goal || 1;
                   const progress = Math.round((collected / goal) * 100);
                   return (
                     <div key={campaign.id} className="space-y-2">
@@ -351,7 +354,7 @@ export function AdminDashboard({ onNavigate, onLogout, userSession, hasPermissio
                 </CardHeader>
                 <CardContent>
                 <div className="space-y-4">
-                    {recentActivities.map((activity) => (
+                    {recentActivities.map((activity: Activity) => (
                     <div key={activity.id} className="flex items-start space-x-3">
                         <div className="flex-shrink-0 mt-0.5">{getActivityIcon(activity.type)}</div>
                         <div className="flex-1 min-w-0">
@@ -375,7 +378,7 @@ export function AdminDashboard({ onNavigate, onLogout, userSession, hasPermissio
                 </CardHeader>
                 <CardContent>
                 <div className="space-y-3">
-                    {alerts.map((alert) => (
+                    {alerts.map((alert: Alert) => (
                     <div key={alert.id} className="flex items-start space-x-3 p-3 rounded-lg bg-gray-50">
                         <div className="flex-shrink-0 mt-0.5">{getAlertIcon(alert.type)}</div>
                         <p className="text-sm text-gray-900">{alert.message}</p>
