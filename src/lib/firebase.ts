@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
-import { getStorage } from 'firebase/storage';
+import { getStorage, ref, deleteObject } from 'firebase/storage'; // Import ref and deleteObject
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -17,4 +17,16 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
 
-export { db, auth, storage, doc, getDoc, updateDoc };
+// Function to delete a file from Firebase Storage
+const deleteFile = async (fileUrl: string) => {
+  try {
+    const fileRef = ref(storage, fileUrl);
+    await deleteObject(fileRef);
+    console.log(`File deleted successfully: ${fileUrl}`);
+  } catch (error) {
+    console.error(`Error deleting file ${fileUrl}:`, error);
+    throw error; // Re-throw the error for handling in the calling component
+  }
+};
+
+export { db, auth, storage, doc, getDoc, updateDoc, deleteFile };

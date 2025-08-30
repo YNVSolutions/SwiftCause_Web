@@ -2,6 +2,9 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Screen, AdminSession, Permission } from "../../App";
 import { DocumentData, Timestamp } from "firebase/firestore";
 import { useCampaignManagement } from "../../hooks/useCampaignManagement";
+import { deleteFile } from "../../lib/firebase"; // Import deleteFile
+import * as firebaseService from "../../api/firestoreService"; // Import firebaseService
+import UploadButton from "../shared/UploadButton"; // Import the new UploadButton component
 
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -28,6 +31,7 @@ import {
   FaUpload,
   FaImage,
   FaTrashAlt, // Added FaTrashAlt
+  FaPlus, // Import FaPlus
 } from "react-icons/fa";
 import { Plus, ArrowLeft, Settings, Download } from "lucide-react";
 import { Calendar } from "../ui/calendar";
@@ -66,7 +70,7 @@ const CampaignDialog = ({
     title: "",
     description: "",
     status: "active",
-    goalAmount: 0,
+    goal: 0,
     tags: [],
     startDate: "",
     endDate: "",
@@ -156,13 +160,17 @@ const CampaignDialog = ({
     []
   );
 
+  // New states for specific image upload loading
+  const [isUploadingOrganizationLogo, setIsUploadingOrganizationLogo] = useState(false);
+  const [isUploadingGalleryImages, setIsUploadingGalleryImages] = useState(false);
+
   useEffect(() => {
     if (isEditMode && campaign) {
       const editableData = {
         title: campaign.title || "",
         description: campaign.description || "",
         status: campaign.status || "active",
-        goalAmount: campaign.goalAmount || 0,
+        goal: campaign.goal || 0,
         tags: Array.isArray(campaign.tags) ? campaign.tags.join(", ") : "",
         startDate: campaign.startDate?.seconds
           ? new Date(campaign.startDate.seconds * 1000)
@@ -311,6 +319,13 @@ const CampaignDialog = ({
         reader.readAsDataURL(file);
       } else if (inputName === "galleryImages") {
         const newFiles = Array.from(files);
+
+        // Limit to a maximum of 4 images including existing ones
+        if (selectedGalleryImages.length + newFiles.length > 4) {
+          alert("You can only upload a maximum of 4 gallery images.");
+          return;
+        }
+
         setSelectedGalleryImages((prev) => [...prev, ...newFiles]);
         newFiles.forEach((file) => {
           const reader = new FileReader();
@@ -342,6 +357,7 @@ const CampaignDialog = ({
 
   const handleOrganizationLogoUpload = async () => {
     if (selectedOrganizationLogo) {
+      setIsUploadingOrganizationLogo(true); // Set loading state
       try {
         const url = await uploadFile(
           selectedOrganizationLogo,
@@ -356,34 +372,107 @@ const CampaignDialog = ({
       } catch (error) {
         console.error("Error uploading organization logo:", error);
         alert("Failed to upload organization logo. Please try again.");
+      } finally {
+        setIsUploadingOrganizationLogo(false); // Reset loading state
       }
     }
   };
 
   const handleGalleryImagesUpload = async () => {
     if (selectedGalleryImages.length > 0) {
-      const imageUrls: string[] = [];
-      for (const file of selectedGalleryImages) {
-        try {
-          const url = await uploadFile(
-            file,
-            `campaigns/${campaign?.id || "new"}/galleryImages/${file.name}`
-          );
-          if (url) {
-            imageUrls.push(url);
+      setIsUploadingGalleryImages(true); // Set loading state
+      try {
+        const imageUrls: string[] = [];
+        // Combine existing gallery images with newly selected ones for upload
+        const allImagesToUpload = [
+          ...(formData.galleryImages
+            ? String(formData.galleryImages).split(",").filter(Boolean)
+            : []), // Existing URLs
+          ...selectedGalleryImages, // New files
+        ];
+
+        // Filter out any files that are already URLs (meaning they are existing images)
+        const filesToUpload = allImagesToUpload.filter(
+          (item) => typeof item !== "string"
+        ) as File[];
+
+        // Keep track of existing URLs that are not being deleted
+        const existingUrls = allImagesToUpload.filter(
+          (item) => typeof item === "string"
+        ) as string[];
+
+        for (const file of filesToUpload) {
+          try {
+            const url = await uploadFile(
+              file,
+              `campaigns/${campaign?.id || "new"}/galleryImages/${file.name}`
+            );
+            if (url) {
+              imageUrls.push(url);
+            }
+          } catch (error) {
+            console.error(`Error uploading gallery image ${file.name}:`, error);
+            alert(
+              `Failed to upload gallery image ${file.name}. Please try again.`
+            );
+            return;
           }
-        } catch (error) {
-          console.error(`Error uploading gallery image ${file.name}:`, error);
-          alert(
-            `Failed to upload gallery image ${file.name}. Please try again.`
-          );
-          return;
         }
+        if (imageUrls.length > 0 || existingUrls.length > 0) {
+          const finalGalleryImages = [...existingUrls, ...imageUrls];
+          setFormData((prev) => ({
+            ...prev,
+            galleryImages: finalGalleryImages.join(","),
+          }));
+          setGalleryImagePreviews(finalGalleryImages); // Update preview with uploaded URLs
+          setSelectedGalleryImages([]); // Clear selected files after upload
+        }
+      } catch (error) {
+        console.error("Error uploading gallery images:", error);
+        alert("Failed to upload gallery images. Please try again.");
+      } finally {
+        setIsUploadingGalleryImages(false); // Reset loading state
       }
-      if (imageUrls.length > 0) {
-        setFormData((prev) => ({ ...prev, galleryImages: imageUrls.join(",") }));
-        setGalleryImagePreviews(imageUrls); // Update preview with uploaded URLs
-      }
+    }
+  };
+
+  const handleDeleteGalleryImage = async (imageToDelete: string, index: number) => {
+    if (!campaign?.id) {
+      // If it's a new campaign and the image hasn't been uploaded yet, just remove from state
+      setGalleryImagePreviews((prev) => prev.filter((_, i) => i !== index));
+      setSelectedGalleryImages((prev) => prev.filter((_, i) => i !== index));
+      setFormData((prev) => ({
+        ...prev,
+        galleryImages: (prev.galleryImages as string)
+          .split(",")
+          .filter((img) => img !== imageToDelete)
+          .join(","),
+      }));
+      return;
+    }
+
+    try {
+      // Attempt to delete from storage
+      await deleteFile(imageToDelete); // Call the deleteFile function
+
+      // Remove from form data and previews
+      const updatedGalleryImages = (formData.galleryImages as string)
+        .split(",")
+        .filter((img) => img !== imageToDelete);
+      setFormData((prev) => ({
+        ...prev,
+        galleryImages: updatedGalleryImages.join(","),
+      }));
+      setGalleryImagePreviews(updatedGalleryImages);
+
+      // Also update selectedGalleryImages if the deleted image was a newly selected file
+      setSelectedGalleryImages((prev) =>
+        prev.filter((file) => URL.createObjectURL(file) !== imageToDelete)
+      );
+      alert("Image deleted successfully.");
+    } catch (error) {
+      console.error("Error deleting gallery image:", error);
+      alert("Failed to delete image. Please try again.");
     }
   };
 
@@ -446,7 +535,12 @@ const CampaignDialog = ({
   const handleDialogClose = () => {
     clearImageSelection();
     setFormData(initialFormData); // Reset for add mode
-    onOpenChange(false);
+    // Clear advanced image selections/previews
+    setSelectedOrganizationLogo(null);
+    setOrganizationLogoPreview(null);
+    setSelectedGalleryImages([]);
+    setGalleryImagePreviews([]);
+    // Removed onOpenChange(false) to prevent infinite loop
   };
 
   const dialogTitle = isEditMode
@@ -570,22 +664,12 @@ const CampaignDialog = ({
                         <FaImage className="w-4 h-4" />
                         <span>Select Image</span>
                       </Button>
-                      {selectedImage && !formData.coverImageUrl && (
-                        <Button
-                          type="button"
+                      {selectedImage && (
+                        <UploadButton
                           onClick={handleCoverImageUpload}
-                          disabled={uploadingImage}
-                          className="flex items-center space-x-2"
-                        >
-                          <FaUpload
-                            className={`w-4 h-4 ${
-                              uploadingImage ? "animate-spin" : ""
-                            }`}
-                          />
-                          <span>
-                            {uploadingImage ? "Uploading..." : "Upload Cover Image"}
-                          </span>
-                        </Button>
+                          disabled={false}
+                          isUploading={uploadingImage}
+                        />
                       )}
                     </div>
                     {selectedImage && (
@@ -617,12 +701,12 @@ const CampaignDialog = ({
 
               <div className="grid grid-cols-2 gap-x-4 gap-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="goalAmount">Fundraising Goal ($)</Label>
+                  <Label htmlFor="goal">Fundraising Goal ($)</Label>
                   <Input
-                    id="goalAmount"
-                    name="goalAmount"
+                    id="goal"
+                    name="goal"
                     type="number"
-                    value={formData.goalAmount}
+                    value={formData.goal}
                     onChange={handleChange}
                     placeholder="0"
                   />
@@ -749,12 +833,20 @@ const CampaignDialog = ({
                   {galleryImagePreviews.length > 0 && (
                     <div className="flex flex-wrap gap-2">
                       {galleryImagePreviews.map((src, index) => (
-                        <img
-                          key={index}
-                          src={src}
-                          alt={`Gallery preview ${index + 1}`}
-                          className="w-20 h-20 object-cover rounded-lg border"
-                        />
+                        <div key={index} className="relative group">
+                          <img
+                            src={src}
+                            alt={`Gallery preview ${index + 1}`}
+                            className="w-20 h-20 object-cover rounded-lg border"
+                          />
+                          <button
+                            onClick={() => handleDeleteGalleryImage(src, index)}
+                            className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Delete"
+                          >
+                            <FaTrashAlt className="h-4 w-4" />
+                          </button>
+                        </div>
                       ))}
                     </div>
                   )}
@@ -776,10 +868,18 @@ const CampaignDialog = ({
                           document.getElementById("galleryImagesInput")?.click()
                         }
                         className="flex items-center space-x-2"
+                        disabled={galleryImagePreviews.length >= 4}
                       >
-                        <FaImage className="w-4 h-4" />
-                        <span>Select Gallery Images</span>
+                        <FaPlus className="w-4 h-4" />
+                        <span>Add Image</span>
                       </Button>
+                      {selectedGalleryImages.length > 0 && (
+                        <UploadButton
+                          onClick={handleGalleryImagesUpload}
+                          disabled={false}
+                          isUploading={isUploadingGalleryImages}
+                        />
+                      )}
                     </div>
                     {selectedGalleryImages.length > 0 && (
                       <div className="text-sm text-gray-600">
@@ -894,19 +994,11 @@ const CampaignDialog = ({
                         <span>Select Logo</span>
                       </Button>
                       {selectedOrganizationLogo && (
-                        <Button
-                          type="button"
+                        <UploadButton
                           onClick={handleOrganizationLogoUpload}
-                          disabled={uploadingImage}
-                          className="flex items-center space-x-2"
-                        >
-                          <FaUpload
-                            className={`w-4 h-4 ${uploadingImage ? "animate-spin" : ""}`}
-                          />
-                          <span>
-                            {uploadingImage ? "Uploading..." : "Upload Org. Logo"}
-                          </span>
-                        </Button>
+                          disabled={false}
+                          isUploading={isUploadingOrganizationLogo}
+                        />
                       )}
                     </div>
                     {selectedOrganizationLogo && (
@@ -1122,7 +1214,7 @@ const CampaignManagement = ({
         title: data.title,
         description: data.description,
         status: data.status,
-        goalAmount: Number(data.goalAmount),
+        goal: Number(data.goal),
         tags: data.tags
           .split(",")
           .map((t: string) => t.trim())
@@ -1274,8 +1366,8 @@ const CampaignManagement = ({
           const dateA = a.endDate?.seconds ? new Date(a.endDate.seconds * 1000).getTime() : 0;
           const dateB = b.endDate?.seconds ? new Date(b.endDate.seconds * 1000).getTime() : 0;
           return dateA - dateB;
-        case "goalAmount":
-          return (a.goalAmount || 0) - (b.goalAmount || 0);
+        case "goal":
+          return (a.goal || 0) - (b.goal || 0);
         case "createdAt": // Assuming createdAt is also a Timestamp or string that can be compared
           // Need to parse createdAt if it's a string, or convert if Timestamp
           const createdA = a.createdAt?.seconds ? new Date(a.createdAt.seconds * 1000).getTime() : 0;
@@ -1411,7 +1503,7 @@ const CampaignManagement = ({
               <SelectContent>
                 <SelectItem value="endDate">End Date</SelectItem>
                 <SelectItem value="title">Title</SelectItem>
-                <SelectItem value="goalAmount">Goal Amount</SelectItem>
+                <SelectItem value="goal">Goal Amount</SelectItem>
                 <SelectItem value="createdAt">Created Date</SelectItem>
               </SelectContent>
             </Select>
@@ -1462,8 +1554,8 @@ const CampaignManagement = ({
 
             <div className="divide-y divide-gray-200">
               {filteredAndSortedCampaigns.map((campaign) => {
-                const collected = Number(campaign.collectedAmount) || 0;
-                const goal = Number(campaign.goalAmount) || 1;
+                const collected = Number(campaign.raised) || 0;
+                const goal = Number(campaign.goal) || 1;
                 const progress = Math.round((collected / goal) * 100);
                 const donors = campaign.donationCount || 0;
                 const avgDonation =
@@ -1577,14 +1669,26 @@ const CampaignManagement = ({
 
       <CampaignDialog
         open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
+        onOpenChange={(open) => {
+          setIsEditDialogOpen(open);
+          if (!open) {
+            // Call handleDialogClose only when the dialog is closing
+            setEditingCampaign(null); // Additionally reset editing campaign state
+          }
+        }}
         campaign={editingCampaign}
         onSave={handleSave}
       />
 
       <CampaignDialog
         open={isAddDialogOpen}
-        onOpenChange={setIsAddDialogOpen}
+        onOpenChange={(open) => {
+          setIsAddDialogOpen(open);
+          if (!open) {
+            // Call handleDialogClose only when the dialog is closing
+            // No need to reset editingCampaign for add dialog
+          }
+        }}
         onSave={(data, isNew) => handleSave(data, isNew, undefined)}
       />
 
