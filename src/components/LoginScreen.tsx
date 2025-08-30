@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Badge } from './ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-
+import { Button } from './ui/button';
 
 import {
   Shield,
@@ -17,6 +17,8 @@ import {
   Star,
   UserCog,
   Monitor,
+  ArrowLeft,
+  Home,
 } from 'lucide-react';
 import { UserRole, KioskSession, AdminSession } from '../App';
 import { KioskLoginContainer } from '../features/auth/containers/KioskLoginContainer';
@@ -24,9 +26,10 @@ import { AdminLoginContainer } from '../features/auth/containers/AdminLoginConta
 
 interface LoginScreenProps {
   onLogin: (role: UserRole, sessionData?: KioskSession | AdminSession) => void;
+  onGoBackToHome: () => void;
 }
 
-export function LoginScreen({ onLogin }: LoginScreenProps) {
+export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
   const [activeTab, setActiveTab] = useState<'kiosk' | 'admin'>('admin');
 
   // Mock real-time statistics
@@ -87,8 +90,6 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
     }
   ];
 
-
-
   const testimonials = [
     {
       name: "Winston Churchill",
@@ -101,7 +102,11 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
       <div className="flex-1 flex">
         <div className="hidden lg:flex lg:w-1/2 xl:w-3/5 flex-col justify-center p-8 xl:p-16">
           <div className="max-w-lg">
-            <div className="flex items-center space-x-3 mb-2">
+            <Button onClick={onGoBackToHome} variant="ghost" size="icon" className="absolute top-4 left-4 text-gray-500 hover:text-gray-800">
+                  <ArrowLeft className="w-5 h-5" />
+                  <span className="sr-only">Back to Home</span>
+                </Button>
+            <button onClick={onGoBackToHome} className="flex items-center space-x-3 mb-2 text-left hover:opacity-80 transition-opacity">
               <div className="flex h-12 w-12 items-center justify-center">
                 <img src="/logo.png" className="h-12 w-12 rounded-xl shadow-md" alt="My Logo" />
               </div>
@@ -109,7 +114,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                 <h1 className="text-xl font-semibold text-gray-900">Swift Cause</h1>
                 <p className="text-sm text-gray-600">Modern Donation Platform</p>
               </div>
-            </div>
+            </button>
 
             <h2 className="text-4xl xl:text-5xl text-gray-900 mb-6 leading-tight">
               Powering <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">global</span> generosity
@@ -190,7 +195,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
             </div>
 
             <Card className="bg-white/80 backdrop-blur-sm border-white/20 shadow-xl">
-              <CardHeader className="text-center space-y-2">
+              <CardHeader className="relative text-center space-y-2 pt-12">
                 <CardTitle className="text-xl lg:text-2xl">Platform Access</CardTitle>
                 <CardDescription className="text-sm lg:text-base">
                   Choose your access type to continue
@@ -208,7 +213,6 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                       <Heart className="w-4 h-4" />
                       <span>Kiosk</span>
                     </TabsTrigger>
-                    
                   </TabsList>
 
                   <TabsContent value="kiosk">
@@ -237,7 +241,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                 <div className="pt-4 border-t text-center space-y-2">
                   <p className="text-sm text-gray-600">Need assistance?</p>
                   <div className="flex items-center justify-center space-x-4 text-sm">
-                    <a href="tel:1-800-DONATE-1" className="text-indigo-600 hover:text-indigo-700 font-medium">
+                    <a href="mailto:ynvtech@gmail.com" className="text-indigo-600 hover:text-indigo-700 font-medium">
                       📩 ynvtech@gmail.com
                     </a>
                     <span className="text-gray-300">•</span>
