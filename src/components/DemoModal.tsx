@@ -160,7 +160,7 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="!max-w-[95vw] !w-[95vw] max-h-[95vh] overflow-hidden p-0 sm:!max-w-[95vw] sm:!w-[95vw]">
+      <DialogContent className="!max-w-[95vw] !w-[95vw] max-h-[95vh] flex flex-col p-0 sm:!max-w-[95vw] sm:!w-[95vw]">
         {/* Header */}
         <div className="p-8 pb-6 border-b bg-gradient-to-r from-indigo-50 to-blue-50">
           <DialogHeader>
