@@ -41,6 +41,7 @@ import {
   HelpCircle,
   Star,
   ChevronDown,
+  ChevronUp, // Added ChevronUp
   ChevronRight,
   Monitor,
   QrCode,
@@ -88,6 +89,7 @@ export function AdminDashboard({ onNavigate, onLogout, userSession, hasPermissio
   const [categoryData, setCategoryData] = useState<any[]>([]);
   const [showFeatures, setShowFeatures] = useState(true);
   const [showGettingStarted, setShowGettingStarted] = useState(true);
+  const [isLegendExpanded, setIsLegendExpanded] = useState(false); // State for legend
 
   // Platform features data
   const platformFeatures = [
@@ -293,6 +295,8 @@ export function AdminDashboard({ onNavigate, onLogout, userSession, hasPermissio
       default: return <Activity className="w-4 h-4 text-blue-600" />;
     }
   };
+
+  const displayedCategories = isLegendExpanded ? categoryData : categoryData.slice(0, 6);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -570,7 +574,7 @@ export function AdminDashboard({ onNavigate, onLogout, userSession, hasPermissio
               </div>
               <div className="mt-4 border-t pt-4">
                 <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-                  {categoryData.map((entry) => (
+                  {displayedCategories.map((entry) => (
                     <div key={entry.name} className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2 truncate">
                         <span
@@ -583,6 +587,24 @@ export function AdminDashboard({ onNavigate, onLogout, userSession, hasPermissio
                     </div>
                   ))}
                 </div>
+                {categoryData.length > 6 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full mt-3 text-indigo-600 hover:text-indigo-700"
+                    onClick={() => setIsLegendExpanded(!isLegendExpanded)}
+                  >
+                    {isLegendExpanded ? (
+                      <span className="flex items-center">
+                        Show Less <ChevronUp className="w-4 h-4 ml-1" />
+                      </span>
+                    ) : (
+                      <span className="flex items-center">
+                        Show More <ChevronDown className="w-4 h-4 ml-1" />
+                      </span>
+                    )}
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
