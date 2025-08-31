@@ -96,6 +96,7 @@ export interface Campaign {
   endDate?: string;
   organizationId?: string;
   donationCount?: number;
+  donationCount?: number;
   configuration: CampaignConfiguration;
   assignedKiosks?: string[];
   isGlobal?: boolean;

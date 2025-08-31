@@ -218,12 +218,14 @@ export function AdminDashboard({ onNavigate, onLogout, userSession, hasPermissio
             Collected: data.collectedAmount || 0,
             Goal: data.goalAmount || 0,
           }
+
             const data = doc.data() as Campaign;
             return {
                 name: data.title,
                 Collected: data.raised || 0,
                 Goal: data.goal || 0,
             }
+
         });
         setGoalComparisonData(comparisonData);
 
@@ -699,6 +701,7 @@ export function AdminDashboard({ onNavigate, onLogout, userSession, hasPermissio
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2"><AlertCircle className="w-5 h-5 text-yellow-600" /><span>System Alerts</span></CardTitle>
