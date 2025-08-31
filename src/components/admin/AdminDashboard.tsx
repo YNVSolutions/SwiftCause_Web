@@ -24,15 +24,13 @@ import {
   Settings,
   Heart,
   Globe,
-  Activity as ActivityIcon, // Renamed to avoid conflict
+  Activity as ActivityIcon,
   AlertCircle,
   CheckCircle,
-  ArrowUp,
   Database,
   UserCog,
   LogOut,
   Plus,
-  Download,
   RefreshCw,
   Smartphone,
   CreditCard,
@@ -41,7 +39,7 @@ import {
   HelpCircle,
   Star,
   ChevronDown,
-  ChevronUp, // Added ChevronUp
+  ChevronUp,
   ChevronRight,
   Monitor,
   QrCode,
@@ -61,7 +59,6 @@ import {
   orderBy,
   limit,
   getDocs,
-  DocumentData,
 } from 'firebase/firestore';
 import { useDashboardData, Activity, Alert } from '../../hooks/useDashboardData';
 
@@ -89,7 +86,7 @@ export function AdminDashboard({ onNavigate, onLogout, userSession, hasPermissio
   const [categoryData, setCategoryData] = useState<any[]>([]);
   const [showFeatures, setShowFeatures] = useState(true);
   const [showGettingStarted, setShowGettingStarted] = useState(true);
-  const [isLegendExpanded, setIsLegendExpanded] = useState(false); // State for legend
+  const [isLegendExpanded, setIsLegendExpanded] = useState(false);
 
   // Platform features data
   const platformFeatures = [
@@ -206,26 +203,17 @@ export function AdminDashboard({ onNavigate, onLogout, userSession, hasPermissio
         const campaignsRef = collection(db, 'campaigns');
         const topListQuery = query(campaignsRef, orderBy('raised', 'desc'), limit(4));
         const topListSnapshot = await getDocs(topListQuery);
-        setTopCampaigns(topListSnapshot.docs.map(doc => ({ ...doc.data() as Campaign })));
+        setTopCampaigns(topListSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Campaign)));
 
         const topChartQuery = query(campaignsRef, orderBy('raised', 'desc'), limit(5));
         const topChartSnapshot = await getDocs(topChartQuery);
         const comparisonData = topChartSnapshot.docs.map(doc => {
-
-          const data = doc.data();
+          const data = doc.data() as Campaign;
           return {
             name: data.title,
-            Collected: data.collectedAmount || 0,
-            Goal: data.goalAmount || 0,
+            Collected: data.raised || 0,
+            Goal: data.goal || 0,
           }
-
-            const data = doc.data() as Campaign;
-            return {
-                name: data.title,
-                Collected: data.raised || 0,
-                Goal: data.goal || 0,
-            }
-
         });
         setGoalComparisonData(comparisonData);
 
@@ -249,17 +237,13 @@ export function AdminDashboard({ onNavigate, onLogout, userSession, hasPermissio
           }));
           setCategoryData(formattedCategoryData);
         }
-
       } catch (error) {
         console.error("Error fetching chart data: ", error);
-      } finally {
-        // Ensure loading is set to false even if there's an error
-        // You might also want to call refreshDashboard here if the chart data depends on it
       }
     };
 
     fetchChartData();
-  }, [refreshDashboard]); // Add refreshDashboard to dependency array
+  }, [refreshDashboard]);
 
   const handleRefresh = () => {
     refreshDashboard();
@@ -270,7 +254,7 @@ export function AdminDashboard({ onNavigate, onLogout, userSession, hasPermissio
 
   const formatLargeCurrency = (amount: number) => {
     if (amount === 0) return '$0';
-    if (!amount || typeof amount !== 'number') return '...';
+    if (typeof amount !== 'number') return '...';
 
     const tiers = [
       { value: 1e12, name: 'T' },
@@ -283,9 +267,7 @@ export function AdminDashboard({ onNavigate, onLogout, userSession, hasPermissio
 
     if (tier) {
       const value = (amount / tier.value).toFixed(1);
-      const [integerPart, decimalPart] = value.split('.');
-      const paddedInteger = integerPart.padStart(3, '0');
-      return `$ ${paddedInteger}.${decimalPart} ${tier.name}`;
+      return `$${value}${tier.name}`;
     }
 
     return formatCurrency(amount);
@@ -309,6 +291,15 @@ export function AdminDashboard({ onNavigate, onLogout, userSession, hasPermissio
   };
 
   const displayedCategories = isLegendExpanded ? categoryData : categoryData.slice(0, 6);
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-red-50 text-red-700">
+        <AlertCircle className="w-6 h-6 mr-2" />
+        <p>Error loading dashboard data: {error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -665,7 +656,7 @@ export function AdminDashboard({ onNavigate, onLogout, userSession, hasPermissio
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentActivities.map((activity) => (
+                {recentActivities.map((activity: Activity) => (
                   <div key={activity.id} className="flex items-start space-x-3">
                     <div className="flex-shrink-0 mt-0.5">{getActivityIcon(activity.type)}</div>
                     <div className="flex-1 min-w-0">
@@ -674,24 +665,6 @@ export function AdminDashboard({ onNavigate, onLogout, userSession, hasPermissio
                         <p className="text-xs text-gray-500">{activity.timestamp}</p>
                         {activity.kioskId && (<Badge variant="secondary" className="text-xs">{activity.kioskId}</Badge>)}
                       </div>
-              </CardContent>
-            </Card>
-            <Card>
-                <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
-                </CardHeader>
-                <CardContent>
-                <div className="space-y-4">
-                    {recentActivities.map((activity: Activity) => (
-                    <div key={activity.id} className="flex items-start space-x-3">
-                        <div className="flex-shrink-0 mt-0.5">{getActivityIcon(activity.type)}</div>
-                        <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-900">{activity.message}</p>
-                        <div className="flex items-center space-x-2 mt-1">
-                            <p className="text-xs text-gray-500">{activity.timestamp}</p>
-                            {activity.kioskId && (<Badge variant="secondary" className="text-xs">{activity.kioskId}</Badge>)}
-                        </div>
-                        </div>
                     </div>
                   </div>
                 ))}
@@ -701,14 +674,13 @@ export function AdminDashboard({ onNavigate, onLogout, userSession, hasPermissio
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2"><AlertCircle className="w-5 h-5 text-yellow-600" /><span>System Alerts</span></CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {alerts.map((alert) => (
+                {alerts.map((alert: Alert) => (
                   <div key={alert.id} className="flex items-start space-x-3 p-3 rounded-lg bg-gray-50">
                     <div className="flex-shrink-0 mt-0.5">{getAlertIcon(alert.type)}</div>
                     <p className="text-sm text-gray-900">{alert.message}</p>
@@ -730,34 +702,6 @@ export function AdminDashboard({ onNavigate, onLogout, userSession, hasPermissio
               </div>
             </CardContent>
           </Card>
-            <Card>
-                <CardHeader>
-                <CardTitle className="flex items-center space-x-2"><AlertCircle className="w-5 h-5 text-yellow-600" /><span>System Alerts</span></CardTitle>
-                </CardHeader>
-                <CardContent>
-                <div className="space-y-3">
-                    {alerts.map((alert: Alert) => (
-                    <div key={alert.id} className="flex items-start space-x-3 p-3 rounded-lg bg-gray-50">
-                        <div className="flex-shrink-0 mt-0.5">{getAlertIcon(alert.type)}</div>
-                        <p className="text-sm text-gray-900">{alert.message}</p>
-                    </div>
-                    ))}
-                </div>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-                </CardHeader>
-                <CardContent>
-                <div className="grid grid-cols-1 gap-3">
-                    {hasPermission('view_campaigns') && <Button variant="outline" className="justify-start h-12" onClick={() => onNavigate('admin-campaigns')}><Database className="w-4 h-4 mr-3" />Manage Campaigns</Button>}
-                    {hasPermission('view_kiosks') && <Button variant="outline" className="justify-start h-12" onClick={() => onNavigate('admin-kiosks')}><Settings className="w-4 h-4 mr-3" />Configure Kiosks</Button>}
-                    {hasPermission('view_donations') && <Button variant="outline" className="justify-start h-12" onClick={() => onNavigate('admin-donations')}><TrendingUp className="w-4 h-4 mr-3" />View Donations</Button>}
-                    {hasPermission('view_users') && <Button variant="outline" className="justify-start h-12" onClick={() => onNavigate('admin-users')}><UserCog className="w-4 h-4 mr-3" />User Management</Button>}
-                </div>
-                </CardContent>
-            </Card>
         </div>
       </main>
     </div>
