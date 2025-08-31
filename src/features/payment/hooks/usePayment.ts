@@ -40,7 +40,7 @@ export function usePayment(onPaymentComplete: (result: PaymentResult) => void): 
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ amount: amount, metadata: metadata, currency: currency }), // Use amount, metadata and currency from props
+        body: JSON.stringify({ amount: Math.round(amount * 100), metadata: metadata, currency: currency }), // Use amount, metadata and currency from props
       });
 
       if (!response.ok) {

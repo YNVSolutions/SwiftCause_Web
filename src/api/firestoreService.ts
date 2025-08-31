@@ -43,7 +43,7 @@ export async function getUserById(userId: string) {
 
 export async function getTopCampaigns(limitCount: number) {
   const campaignsRef = collection(db, 'campaigns');
-  const q = query(campaignsRef, orderBy('collectedAmount', 'desc'), limit(limitCount));
+  const q = query(campaignsRef, orderBy('raised', 'desc'), limit(limitCount));
   const snapshot = await getDocs(q);
   return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 }
@@ -61,14 +61,14 @@ export async function updateKiosk(kioskId: string, data: any) {
 
 export async function createCampaign(data: any) {
   const campaignsRef = collection(db, 'campaigns');
-  const docRef = await addDoc(campaignsRef, data);
-  return { id: docRef.id, ...data };
+  const docRef = await addDoc(campaignsRef, { ...data, raised: data.raised || 0 });
+  return { id: docRef.id, ...data, raised: data.raised || 0 };
 }
 
 export async function createCampaignWithImage(data: any, imageFile: File | null = null) {
   const campaignData = {
     ...data,
-    collectedAmount: 0,
+    raised: 0,
     donationCount: 0,
     createdAt: new Date(),
     status: data.status || 'active'

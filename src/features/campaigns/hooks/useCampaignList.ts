@@ -23,20 +23,7 @@ export function useCampaignList(kioskSession?: KioskSession | null): UseCampaign
 
   useEffect(() => {
     if (!rawCampaigns) return;
-    const mapped = (rawCampaigns || []).map((data: any) => ({
-      id: data.id,
-      title: data.title,
-      description: data.description,
-      goal: data.goalAmount,
-      raised: data.raised,
-      coverImageUrl: data.coverImageUrl,
-      category: data.tags?.[0] || 'General',
-      status: data.status,
-      assignedKiosks: data.assignedKiosks || [],
-      isGlobal: data.isGlobal ?? true,
-      configuration: (data.configuration || {}) as any
-    }));
-    setCampaigns(mapped);
+    setCampaigns(rawCampaigns);
   }, [rawCampaigns]);
 
   const availableCampaigns = useMemo(() => {

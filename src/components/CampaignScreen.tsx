@@ -128,6 +128,15 @@ export function CampaignScreen({
 
   const estimatedDonors = Math.floor(campaign.raised / 25);
 
+  const getYouTubeVideoId = (url: string) => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    if (match && match[2].length === 11) {
+      return match[2];
+    }
+    return null;
+  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -162,8 +171,8 @@ export function CampaignScreen({
                     <span>Raised: {formatCurrency(campaign.raised)}</span>
                     <span>Goal: {formatCurrency(campaign.goal)}</span>
                   </div>
-                  <Progress value={getProgressPercentage(campaign.raised, campaign.goal)} className="h-2" />
-                  <p className="text-sm text-gray-600">{getProgressPercentage(campaign.raised, campaign.goal).toFixed(1)}% funded</p>
+                  <Progress value={getProgressPercentage(campaign.raised || 0, campaign.goal || 0)} className="h-2" />
+                  <p className="text-sm text-gray-600">{getProgressPercentage(campaign.raised || 0, campaign.goal || 0).toFixed(1)}% funded</p>
                 </div>
               )}
 
@@ -180,14 +189,32 @@ export function CampaignScreen({
                 </div>
               )}
 
-              
+              {campaign.organizationInfo && (
+                <div className="space-y-3 mt-4 p-4 border rounded-lg bg-gray-50">
+                  <h5 className="font-bold text-gray-800">About {campaign.organizationInfo.name}</h5>
+                  {campaign.organizationInfo.logo && (
+                    <ImageWithFallback
+                      src={campaign.organizationInfo.logo}
+                      alt={`${campaign.organizationInfo.name} logo`}
+                      className="w-16 h-16 object-contain rounded-full mb-2"
+                    />
+                  )}
+                  <p className="text-sm text-gray-600">{campaign.organizationInfo.description}</p>
+                  {campaign.organizationInfo.website && (
+                    <a href={campaign.organizationInfo.website} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline text-sm">
+                      Visit Website
+                    </a>
+                  )}
+                </div>
+              )}
+
             </CardContent>
           </Card>
 
           {/* Donation Form and Expanded Details */}
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="flex items-center text-xl">
+          <Card className="lg:col-span-2 shadow-lg">
+            <CardHeader className="px-6 py-4 border-b">
+              <CardTitle className="flex items-center text-2xl font-bold text-gray-800">
                 <Heart className="mr-3 h-6 w-6 text-indigo-600" />
                 {config.primaryCTAText}
               </CardTitle>
@@ -225,7 +252,7 @@ export function CampaignScreen({
                           {campaign.videoUrl && (
                             <div className="aspect-video w-full rounded-md overflow-hidden">
                               <iframe
-                                src={campaign.videoUrl.replace('watch?v=', 'embed/')}
+                                src={`https://www.youtube.com/embed/${getYouTubeVideoId(campaign.videoUrl)}?modestbranding=1&rel=0`}
                                 frameBorder="0"
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 allowFullScreen
@@ -239,17 +266,6 @@ export function CampaignScreen({
                               {campaign.galleryImages.map((img, idx) => (
                                 <ImageWithFallback key={idx} src={img} alt={`${campaign.title} gallery image ${idx + 1}`} className="w-full h-auto rounded-md object-cover" />
                               ))}
-                            </div>
-                          )}
-                          {campaign.organizationInfo && (
-                            <div className="space-y-2">
-                              <h5 className="font-semibold text-gray-800 mt-3">About the Organization: {campaign.organizationInfo.name}</h5>
-                              <p>{campaign.organizationInfo.description}</p>
-                              {campaign.organizationInfo.website && (
-                                <a href={campaign.organizationInfo.website} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">
-                                  Visit Website
-                                </a>
-                              )}
                             </div>
                           )}
                           {campaign.impactMetrics && (
