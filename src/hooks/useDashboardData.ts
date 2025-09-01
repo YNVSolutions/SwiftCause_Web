@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { getAllCampaigns, getKiosks, getRecentDonations } from '../api/firestoreService';
 import { DocumentData, Timestamp } from 'firebase/firestore';
-import { Campaign } from '../../App';
+import { Campaign } from '../App';
 
 interface Kiosk {
   id: string;
