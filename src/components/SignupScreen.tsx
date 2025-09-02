@@ -35,6 +35,8 @@ import {
   Clock,
   DollarSign
 } from 'lucide-react';
+import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
 interface SignupScreenProps {
   onSignup: (data: SignupFormData) => void;
@@ -67,6 +69,9 @@ interface SignupFormData {
   agreeToTerms: boolean;
   agreeToMarketing: boolean;
 }
+
+const auth = getAuth();
+const firestore = getFirestore();
 
 export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
   const [currentStep, setCurrentStep] = useState(1);
@@ -176,9 +181,39 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
     setCurrentStep(prev => Math.max(prev - 1, 1));
   };
 
+  const handleSignup = async (data: SignupFormData) => {
+    try {
+      // Create user with email and password
+      const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+      const userId = userCredential.user.uid;
+
+      // Save user data to Firestore
+      await setDoc(doc(firestore, 'users', userId), {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        phone: data.phone,
+        organizationId: data.organizationName, // Link to organization
+      });
+
+      // Save organization data to Firestore
+      await setDoc(doc(firestore, 'organizations', data.organizationName), {
+        name: data.organizationName,
+        type: data.organizationType,
+        size: data.organizationSize,
+        website: data.website,
+      });
+
+      alert('Signup successful!');
+    } catch (error) {
+      console.error('Signup error:', error);
+      alert(`Signup failed: ${error}`);
+    }
+  };
+
   const handleSubmit = () => {
     if (validateStep(currentStep)) {
-      onSignup(formData);
+      handleSignup(formData);
     }
   };
 
