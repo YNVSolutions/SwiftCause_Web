@@ -190,7 +190,7 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
         username: `${data.firstName} ${data.lastName}`,
         email: data.email,
         role: 'admin',
-        permissions: ['view_dashboard', 'manage_permissions', 'create_user', 'edit_user', 'delete_user'],
+        permissions: ['view_dashboard', 'manage_permissions', 'create_user', 'edit_user', 'delete_user', 'view_campaigns', 'create_campaign', 'edit_campaign', 'delete_campaign', 'view_kiosks', 'create_kiosk', 'edit_kiosk', 'delete_kiosk', 'assign_campaigns', 'view_donations', 'export_donations', 'view_users'], 
         isActive: true,
         createdAt: new Date().toISOString(),
         organizationId: data.organizationId
