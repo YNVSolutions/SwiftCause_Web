@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -28,14 +28,68 @@ import {
   Award,
   TrendingUp,
   Target,
+  BarChart3,
   Lock,
   Cloud,
   CheckSquare,
+  Clock,
   DollarSign
 } from 'lucide-react';
 
-export function SignupScreen() {
-  const currentStep = 1; // Statically set to the first step
+interface SignupScreenProps {
+  onSignup: (data: SignupFormData) => void;
+  onBack: () => void;
+  onLogin: () => void;
+}
+
+interface SignupFormData {
+  // Personal Information
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  
+  // Organization Information
+  organizationName: string;
+  organizationType: string;
+  organizationSize: string;
+  website?: string;
+  
+  // Account Setup
+  password: string;
+  confirmPassword: string;
+  
+  // Preferences
+  interestedFeatures: string[];
+  hearAboutUs: string;
+  
+  // Legal
+  agreeToTerms: boolean;
+  agreeToMarketing: boolean;
+}
+
+export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errors, setErrors] = useState<Partial<SignupFormData>>({});
+  
+  const [formData, setFormData] = useState<SignupFormData>({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    organizationName: '',
+    organizationType: '',
+    organizationSize: '',
+    website: '',
+    password: '',
+    confirmPassword: '',
+    interestedFeatures: [],
+    hearAboutUs: '',
+    agreeToTerms: false,
+    agreeToMarketing: false
+  });
 
   const organizationTypes = [
     'Non-profit Organization',
@@ -73,6 +127,68 @@ export function SignupScreen() {
     'Partner recommendation',
     'Other'
   ];
+
+  const updateFormData = (field: keyof SignupFormData, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({
+        ...prev,
+        [field]: undefined
+      }));
+    }
+  };
+
+  const validateStep = (step: number): boolean => {
+    const newErrors: Partial<SignupFormData> = {};
+
+    if (step === 1) {
+      if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
+      if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
+      if (!formData.email.trim()) newErrors.email = 'Email is required';
+      else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
+      if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
+    } else if (step === 2) {
+      if (!formData.organizationName.trim()) newErrors.organizationName = 'Organization name is required';
+      if (!formData.organizationType) newErrors.organizationType = 'Organization type is required';
+      if (!formData.organizationSize) newErrors.organizationSize = 'Organization size is required';
+    } else if (step === 3) {
+      if (!formData.password) newErrors.password = 'Password is required';
+      else if (formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
+      if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
+    } 
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleNext = () => {
+    if (validateStep(currentStep)) {
+      setCurrentStep(prev => Math.min(prev + 1, 4));
+    }
+  };
+
+  const handlePrevious = () => {
+    setCurrentStep(prev => Math.max(prev - 1, 1));
+  };
+
+  const handleSubmit = () => {
+    if (validateStep(currentStep)) {
+      onSignup(formData);
+    }
+  };
+
+  const toggleFeature = (featureId: string) => {
+    const current = formData.interestedFeatures;
+    const updated = current.includes(featureId)
+      ? current.filter(id => id !== featureId)
+      : [...current, featureId];
+    updateFormData('interestedFeatures', updated);
+  };
 
   const benefits = [
     {
@@ -151,6 +267,9 @@ export function SignupScreen() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-3">
+              <div className="h-10 w-10">
+               
+              </div>
               <div>
                 <h1 className="text-xl font-semibold text-gray-900">Swift Cause</h1>
                 <p className="text-xs text-gray-600">Account Registration</p>
@@ -158,13 +277,13 @@ export function SignupScreen() {
             </div>
             
             <div className="flex items-center space-x-4">
-              <Button variant="ghost" onClick={() => {}} className="flex items-center space-x-2">
+              <Button variant="ghost" onClick={onBack} className="flex items-center space-x-2">
                 <ArrowLeft className="w-4 h-4" />
                 <span>Back to Home</span>
               </Button>
               <div className="text-sm text-gray-600">
                 Already have an account?{' '}
-                <button onClick={() => {}} className="text-indigo-600 hover:text-indigo-700 font-medium">
+                <button onClick={onLogin} className="text-indigo-600 hover:text-indigo-700 font-medium">
                   Sign in
                 </button>
               </div>
@@ -301,6 +420,9 @@ export function SignupScreen() {
             <div className="w-full max-w-md">
               {/* Mobile header */}
               <div className="lg:hidden text-center mb-8">
+                <div className="mx-auto mb-4 h-16 w-16">
+                  
+                </div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">Create Your Account</h2>
                 <p className="text-gray-600">Join the fundraising revolution</p>
               </div>
@@ -333,18 +455,32 @@ export function SignupScreen() {
                           <Label htmlFor="firstName">First Name</Label>
                           <Input
                             id="firstName"
-                            value=""
-                            onChange={() => {}}
+                            value={formData.firstName}
+                            onChange={(e) => updateFormData('firstName', e.target.value)}
+                            className={errors.firstName ? 'border-red-500' : ''}
                           />
+                          {errors.firstName && (
+                            <p className="text-xs text-red-600 flex items-center">
+                              <AlertCircle className="w-3 h-3 mr-1" />
+                              {errors.firstName}
+                            </p>
+                          )}
                         </div>
                         
                         <div className="space-y-2">
                           <Label htmlFor="lastName">Last Name</Label>
                           <Input
                             id="lastName"
-                            value=""
-                            onChange={() => {}}
+                            value={formData.lastName}
+                            onChange={(e) => updateFormData('lastName', e.target.value)}
+                            className={errors.lastName ? 'border-red-500' : ''}
                           />
+                          {errors.lastName && (
+                            <p className="text-xs text-red-600 flex items-center">
+                              <AlertCircle className="w-3 h-3 mr-1" />
+                              {errors.lastName}
+                            </p>
+                          )}
                         </div>
                       </div>
 
@@ -355,12 +491,18 @@ export function SignupScreen() {
                           <Input
                             id="email"
                             type="email"
-                            value=""
-                            onChange={() => {}}
-                            className="pl-10"
+                            value={formData.email}
+                            onChange={(e) => updateFormData('email', e.target.value)}
+                            className={`pl-10 ${errors.email ? 'border-red-500' : ''}`}
                             placeholder="you@organization.com"
                           />
                         </div>
+                        {errors.email && (
+                          <p className="text-xs text-red-600 flex items-center">
+                            <AlertCircle className="w-3 h-3 mr-1" />
+                            {errors.email}
+                          </p>
+                        )}
                       </div>
 
                       <div className="space-y-2">
@@ -370,21 +512,285 @@ export function SignupScreen() {
                           <Input
                             id="phone"
                             type="tel"
-                            value=""
-                            onChange={() => {}}
-                            className="pl-10"
+                            value={formData.phone}
+                            onChange={(e) => updateFormData('phone', e.target.value)}
+                            className={`pl-10 ${errors.phone ? 'border-red-500' : ''}`}
                             placeholder="+1 (555) 123-4567"
+                          />
+                        </div>
+                        {errors.phone && (
+                          <p className="text-xs text-red-600 flex items-center">
+                            <AlertCircle className="w-3 h-3 mr-1" />
+                            {errors.phone}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Step 2: Organization Information */}
+                  {currentStep === 2 && (
+                    <div className="space-y-4">
+                      <div className="text-center mb-6">
+                        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100">
+                          <Building className="h-6 w-6 text-blue-600" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900">Organization Details</h3>
+                        <p className="text-sm text-gray-600">Tell us about your organization</p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="organizationName">Organization Name</Label>
+                        <div className="relative">
+                          <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                          <Input
+                            id="organizationName"
+                            value={formData.organizationName}
+                            onChange={(e) => updateFormData('organizationName', e.target.value)}
+                            className={`pl-10 ${errors.organizationName ? 'border-red-500' : ''}`}
+                            placeholder="Your Organization Name"
+                          />
+                        </div>
+                        {errors.organizationName && (
+                          <p className="text-xs text-red-600 flex items-center">
+                            <AlertCircle className="w-3 h-3 mr-1" />
+                            {errors.organizationName}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="organizationType">Organization Type</Label>
+                        <Select 
+                          value={formData.organizationType} 
+                          onValueChange={(value) => updateFormData('organizationType', value)}
+                        >
+                          <SelectTrigger className={errors.organizationType ? 'border-red-500' : ''}>
+                            <SelectValue placeholder="Select organization type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {organizationTypes.map((type) => (
+                              <SelectItem key={type} value={type}>{type}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {errors.organizationType && (
+                          <p className="text-xs text-red-600 flex items-center">
+                            <AlertCircle className="w-3 h-3 mr-1" />
+                            {errors.organizationType}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="organizationSize">Organization Size</Label>
+                        <Select 
+                          value={formData.organizationSize} 
+                          onValueChange={(value) => updateFormData('organizationSize', value)}
+                        >
+                          <SelectTrigger className={errors.organizationSize ? 'border-red-500' : ''}>
+                            <SelectValue placeholder="Select organization size" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {organizationSizes.map((size) => (
+                              <SelectItem key={size} value={size}>{size}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {errors.organizationSize && (
+                          <p className="text-xs text-red-600 flex items-center">
+                            <AlertCircle className="w-3 h-3 mr-1" />
+                            {errors.organizationSize}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="website">Website (Optional)</Label>
+                        <div className="relative">
+                          <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                          <Input
+                            id="website"
+                            type="url"
+                            value={formData.website}
+                            onChange={(e) => updateFormData('website', e.target.value)}
+                            className="pl-10"
+                            placeholder="https://www.organization.com"
                           />
                         </div>
                       </div>
                     </div>
                   )}
 
-                  
+                  {/* Step 3: Account Security */}
+                  {currentStep === 3 && (
+                    <div className="space-y-4">
+                      <div className="text-center mb-6">
+                        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-green-100">
+                          <Shield className="h-6 w-6 text-green-600" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900">Account Security</h3>
+                        <p className="text-sm text-gray-600">Create a secure password</p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="password">Password</Label>
+                        <div className="relative">
+                          <Input
+                            id="password"
+                            type={showPassword ? 'text' : 'password'}
+                            value={formData.password}
+                            onChange={(e) => updateFormData('password', e.target.value)}
+                            className={`pr-10 ${errors.password ? 'border-red-500' : ''}`}
+                            placeholder="Create a strong password"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </Button>
+                        </div>
+                        {errors.password && (
+                          <p className="text-xs text-red-600 flex items-center">
+                            <AlertCircle className="w-3 h-3 mr-1" />
+                            {errors.password}
+                          </p>
+                        )}
+                        <p className="text-xs text-gray-600">Must be at least 8 characters</p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="confirmPassword">Confirm Password</Label>
+                        <div className="relative">
+                          <Input
+                            id="confirmPassword"
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            value={formData.confirmPassword}
+                            onChange={(e) => updateFormData('confirmPassword', e.target.value)}
+                            className={`pr-10 ${errors.confirmPassword ? 'border-red-500' : ''}`}
+                            placeholder="Confirm your password"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          >
+                            {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </Button>
+                        </div>
+                        {errors.confirmPassword && (
+                          <p className="text-xs text-red-600 flex items-center">
+                            <AlertCircle className="w-3 h-3 mr-1" />
+                            {errors.confirmPassword}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Step 4: Preferences & Terms */}
+                  {currentStep === 4 && (
+                    <div className="space-y-6">
+                      <div className="text-center mb-6">
+                        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-purple-100">
+                          <Target className="h-6 w-6 text-purple-600" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900">Almost Done!</h3>
+                        <p className="text-sm text-gray-600">Tell us what you're interested in</p>
+                      </div>
+
+                      <div className="space-y-4">
+                        <Label>Features you're interested in (optional)</Label>
+                        <div className="grid grid-cols-1 gap-3">
+                          {featureOptions.map((feature) => (
+                            <div 
+                              key={feature.id} 
+                              className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                                formData.interestedFeatures.includes(feature.id)
+                                  ? 'border-indigo-500 bg-indigo-50'
+                                  : 'border-gray-200 hover:border-gray-300'
+                              }`}
+                              onClick={() => toggleFeature(feature.id)}
+                            >
+                              <div className="flex items-center space-x-3">
+                                <Checkbox
+                                  checked={formData.interestedFeatures.includes(feature.id)}
+                                  onChange={() => toggleFeature(feature.id)}
+                                />
+                                <div>
+                                  <div className="font-medium text-sm">{feature.label}</div>
+                                  <div className="text-xs text-gray-600">{feature.description}</div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>How did you hear about us?</Label>
+                        <Select 
+                          value={formData.hearAboutUs} 
+                          onValueChange={(value) => updateFormData('hearAboutUs', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select an option" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {hearAboutUsOptions.map((option) => (
+                              <SelectItem key={option} value={option}>{option}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-4 pt-4 border-t">
+                        <div className="flex items-start space-x-3">
+                          <Checkbox
+                            id="agreeToTerms"
+                            checked={formData.agreeToTerms}
+                            onCheckedChange={(checked) => updateFormData('agreeToTerms', checked)}
+                          />
+                          <div className="text-sm">
+                            <label htmlFor="agreeToTerms" className="cursor-pointer">
+                              I agree to the{' '}
+                              <a href="#" className="text-indigo-600 hover:underline">Terms of Service</a>
+                              {' '}and{' '}
+                              <a href="#" className="text-indigo-600 hover:underline">Privacy Policy</a>
+                            </label>
+                            {errors.agreeToTerms && (
+                              <p className="text-xs text-red-600 flex items-center mt-1">
+                                <AlertCircle className="w-3 h-3 mr-1" />
+                                {errors.agreeToTerms}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-start space-x-3">
+                          <Checkbox
+                            id="agreeToMarketing"
+                            checked={formData.agreeToMarketing}
+                            onCheckedChange={(checked) => updateFormData('agreeToMarketing', checked)}
+                          />
+                          <label htmlFor="agreeToMarketing" className="text-sm cursor-pointer">
+                            I'd like to receive updates about new features and fundraising tips
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Navigation Buttons */}
                   <div className="flex items-center justify-between pt-4">
                     {currentStep > 1 ? (
-                      <Button variant="outline" onClick={() => {}}>
+                      <Button variant="outline" onClick={handlePrevious}>
                         <ArrowLeft className="w-4 h-4 mr-2" />
                         Previous
                       </Button>
@@ -393,12 +799,12 @@ export function SignupScreen() {
                     )}
 
                     {currentStep < 4 ? (
-                      <Button onClick={() => {}} className="bg-indigo-600 hover:bg-indigo-700">
+                      <Button onClick={handleNext} className="bg-indigo-600 hover:bg-indigo-700">
                         Next
                         <ArrowRight className="w-4 h-4 ml-2" />
                       </Button>
                     ) : (
-                      <Button onClick={() => {}} className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white">
+                      <Button onClick={handleSubmit} className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white">
                         Create Account
                         <CheckCircle className="w-4 h-4 ml-2" />
                       </Button>
