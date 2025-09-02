@@ -49,12 +49,12 @@ interface SignupFormData {
   firstName: string;
   lastName: string;
   email: string;
-  phone: string;
   
   // Organization Information
   organizationName: string;
   organizationType: string;
   organizationSize: string;
+  organizationId: string; // Added organizationId
   website?: string;
   
   // Account Setup
@@ -83,10 +83,10 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
     firstName: '',
     lastName: '',
     email: '',
-    phone: '',
     organizationName: '',
     organizationType: '',
     organizationSize: '',
+    organizationId: '', // Added organizationId
     website: '',
     password: '',
     confirmPassword: '',
@@ -156,7 +156,6 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
       if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
       if (!formData.email.trim()) newErrors.email = 'Email is required';
       else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
-      if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
     } else if (step === 2) {
       if (!formData.organizationName.trim()) newErrors.organizationName = 'Organization name is required';
       if (!formData.organizationType) newErrors.organizationType = 'Organization type is required';
@@ -181,39 +180,48 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
     setCurrentStep(prev => Math.max(prev - 1, 1));
   };
 
+  // Updated handleSignup to include initial data for permissions and isActive
   const handleSignup = async (data: SignupFormData) => {
     try {
-      // Create user with email and password
       const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
       const userId = userCredential.user.uid;
 
-      // Save user data to Firestore
       await setDoc(doc(firestore, 'users', userId), {
-        firstName: data.firstName,
-        lastName: data.lastName,
+        username: `${data.firstName} ${data.lastName}`,
         email: data.email,
-        phone: data.phone,
-        organizationId: data.organizationName, // Link to organization
+        role: 'admin',
+        permissions: ['view_dashboard', 'manage_permissions', 'create_user', 'edit_user', 'delete_user'],
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        organizationId: data.organizationId
       });
 
-      // Save organization data to Firestore
-      await setDoc(doc(firestore, 'organizations', data.organizationName), {
+      await setDoc(doc(firestore, 'organizations', data.organizationId), {
         name: data.organizationName,
         type: data.organizationType,
         size: data.organizationSize,
         website: data.website,
+        createdAt: new Date().toISOString()
       });
 
       alert('Signup successful!');
     } catch (error) {
-      console.error('Signup error:', error);
-      alert(`Signup failed: ${error}`);
+      if (error instanceof Error) {
+        console.error('Signup error:', error);
+        alert(`Signup failed: ${error.message}`);
+      } else {
+        console.error('Unknown signup error:', error);
+        alert('Signup failed due to an unknown error.');
+      }
     }
   };
 
   const handleSubmit = () => {
     if (validateStep(currentStep)) {
-      handleSignup(formData);
+      handleSignup({
+        ...formData,
+        organizationId: formData.organizationName.replace(/\s+/g, '-').toLowerCase() // Generate organizationId
+      });
     }
   };
 
@@ -536,27 +544,6 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
                           <p className="text-xs text-red-600 flex items-center">
                             <AlertCircle className="w-3 h-3 mr-1" />
                             {errors.email}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="phone">Phone Number</Label>
-                        <div className="relative">
-                          <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                          <Input
-                            id="phone"
-                            type="tel"
-                            value={formData.phone}
-                            onChange={(e) => updateFormData('phone', e.target.value)}
-                            className={`pl-10 ${errors.phone ? 'border-red-500' : ''}`}
-                            placeholder="+1 (555) 123-4567"
-                          />
-                        </div>
-                        {errors.phone && (
-                          <p className="text-xs text-red-600 flex items-center">
-                            <AlertCircle className="w-3 h-3 mr-1" />
-                            {errors.phone}
                           </p>
                         )}
                       </div>
