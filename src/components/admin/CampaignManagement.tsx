@@ -773,19 +773,6 @@ const CampaignDialog = ({
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="organizationId" className="text-right">
-                  Organization ID
-                </Label>
-                <Input
-                  id="organizationId"
-                  name="organizationId"
-                  value={formData.organizationId}
-                  onChange={handleChange}
-                  className="col-span-3"
-                  placeholder="Unique ID for organization"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="isGlobal" className="text-right">
                   Global Campaign
                 </Label>
@@ -1221,7 +1208,7 @@ const CampaignManagement = ({
           .filter(Boolean),
         coverImageUrl: data.coverImageUrl || "",
         category: data.category || "",
-        organizationId: data.organizationId || "",
+        organizationId: userSession.user.organizationId || "",
         assignedKiosks: data.assignedKiosks
           .split(",")
           .map((t: string) => t.trim())
