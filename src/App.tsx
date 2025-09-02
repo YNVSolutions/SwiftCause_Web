@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { LoginScreen } from './components/LoginScreen';
+import { SignupScreen } from './components/SignupScreen';
 import { CampaignListContainer } from './features/campaigns/containers/CampaignListContainer';
 import { CampaignScreen } from './components/CampaignScreen';
 import { PaymentContainer } from './features/payment/containers/PaymentContainer';
@@ -16,6 +17,7 @@ import { HomePage } from './components/HomePage';
 export type Screen =
   | 'home'
   | 'login'
+  | 'signup'
   | 'campaigns'
   | 'campaign'
   | 'payment'
@@ -198,6 +200,31 @@ export interface AdminSession {
   user: User;
   loginTime: string;
 }
+export interface SignupFormData {
+  // Personal Information
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  
+  // Organization Information
+  organizationName: string;
+  organizationType: string;
+  organizationSize: string;
+  website?: string;
+  
+  // Account Setup
+  password: string;
+  confirmPassword: string;
+  
+  // Preferences
+  interestedFeatures: string[];
+  hearAboutUs: string;
+  
+  // Legal
+  agreeToTerms: boolean;
+  agreeToMarketing: boolean;
+}
 
 
 export default function App() {
@@ -216,6 +243,10 @@ export default function App() {
 
   const handleGoToLogin = () => {
     navigate('login');
+  };
+
+  const handleGoToSignup = () => {
+    navigate('signup');
   };
   
  
@@ -303,6 +334,20 @@ export default function App() {
       navigate('campaigns');
     }
   };
+  const handleSignup = (signupData: SignupFormData) => {
+    // In a real app, this would make an API call to create the account
+    console.log('Signup data:', signupData);
+    
+    // For demo purposes, simulate successful signup and redirect to login
+    // You could also automatically log them in here
+    navigate('login');
+    
+    // TODO: Implement actual signup logic with Supabase
+    // - Create user account
+    // - Send verification email
+    // - Set up organization
+    // - Create initial admin session
+  };
   const hasPermission = (permission: Permission): boolean => {
     if (!currentAdminSession) return false;
     return currentAdminSession.user.permissions.permissions.includes(permission) ||
@@ -313,7 +358,16 @@ export default function App() {
     return (
       <HomePage
         onLogin={handleGoToLogin}
-        onSignup={handleGoToLogin}
+        onSignup={handleGoToSignup}
+      />
+    );
+  }
+  if (currentScreen === 'signup') {
+    return (
+      <SignupScreen
+        onSignup={handleSignup}
+        onBack={() => navigate('home')}
+        onLogin={() => navigate('login')}
       />
     );
   }
