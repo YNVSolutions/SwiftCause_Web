@@ -10,12 +10,17 @@ import {
   orderBy,
   limit,
   deleteDoc,
-  Timestamp
+  Timestamp,
+  where
 } from 'firebase/firestore';
 
-export async function getCampaigns() {
-  const snapshot = await getDocs(collection(db, 'campaigns'));
-  return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+export async function getCampaigns(organizationId?: string) {
+  let campaignsCollection: any = collection(db, 'campaigns');
+  if (organizationId) {
+    campaignsCollection = query(campaignsCollection, where("organizationId", "==", organizationId));
+  }
+  const snapshot = await getDocs(campaignsCollection);
+  return snapshot.docs.map(d => ({ id: d.id, ...(d.data() as object) }));
 }
 
 export async function getKiosks() {

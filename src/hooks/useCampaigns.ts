@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getCampaigns, getTopCampaigns, getAllCampaigns, updateCampaign, updateCampaignWithImage, createCampaign, createCampaignWithImage, deleteCampaign } from '../api/firestoreService';
 
-export function useCampaigns() {
+export function useCampaigns(organizationId?: string) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [campaigns, setCampaigns] = useState<any[]>([]);
@@ -10,14 +10,14 @@ export function useCampaigns() {
     setLoading(true);
     setError(null);
     try {
-      const list = await getCampaigns();
+      const list = await getCampaigns(organizationId);
       setCampaigns(list);
     } catch (e) {
       setError('Failed to load campaigns. Please try again.');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [organizationId]);
 
   const update = useCallback(async (id: string, data: any) => {
     await updateCampaign(id, data);
@@ -65,7 +65,7 @@ export function useCampaigns() {
 
   useEffect(() => {
     refresh();
-  }, [refresh]);
+  }, [refresh, organizationId]);
 
   return { loading, error, campaigns, refresh, update, updateWithImage, getTop, create, createWithImage, remove };
 }

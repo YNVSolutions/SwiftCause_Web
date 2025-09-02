@@ -1145,7 +1145,7 @@ const CampaignManagement = ({
   const [confirmDeleteInput, setConfirmDeleteInput] = useState("");
 
   const { campaigns, updateWithImage, createWithImage, remove } =
-    useCampaignManagement();
+    useCampaignManagement(userSession.user.organizationId);
 
   const handleDeleteClick = (campaign: DocumentData) => {
     setCampaignToDelete(campaign);
