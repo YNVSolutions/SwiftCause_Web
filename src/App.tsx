@@ -190,6 +190,7 @@ export interface User {
   isActive: boolean; // User is active by default
   createdAt?: string;
   lastLogin?: string;
+  organizationId?: string;
 }
 export interface KioskSession {
   kioskId: string;
