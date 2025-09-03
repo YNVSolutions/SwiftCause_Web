@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { LoginScreen } from './components/LoginScreen';
+import { SignupScreen } from './components/SignupScreen';
 import { CampaignListContainer } from './features/campaigns/containers/CampaignListContainer';
 import { CampaignScreen } from './components/CampaignScreen';
 import { PaymentContainer } from './features/payment/containers/PaymentContainer';
@@ -12,10 +13,16 @@ import { UserManagement } from './components/admin/UserManagement';
 import CampaignManagement from './components/admin/CampaignManagement';
 import { doc, getDoc, db } from './lib/firebase';
 import { HomePage } from './components/HomePage';
+import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getFirestore, setDoc } from 'firebase/firestore';
+
+const auth = getAuth();
+const firestore = getFirestore();
 
 export type Screen =
   | 'home'
   | 'login'
+  | 'signup'
   | 'campaigns'
   | 'campaign'
   | 'payment'
@@ -28,7 +35,7 @@ export type Screen =
   | 'admin-users';
 
 // ... (All other type definitions remain the same)
-export type UserRole = 'kiosk' | 'admin';
+export type UserRole = 'super_admin' | 'admin' | 'manager' | 'operator' | 'viewer';
 export type Permission =
   | 'view_dashboard'
   | 'view_campaigns'
@@ -178,12 +185,12 @@ export interface User {
   id: string;
   username: string;
   email: string;
-  role: UserRole;
-  permissions: UserPermissions;
-  lastLogin?: string;
-  isActive: boolean;
-  department?: string;
+  role: UserRole; // Singular role
+  permissions: Permission[]; // Array of permissions
+  isActive: boolean; // User is active by default
   createdAt?: string;
+  lastLogin?: string;
+  organizationId?: string;
 }
 export interface KioskSession {
   kioskId: string;
@@ -197,6 +204,31 @@ export interface KioskSession {
 export interface AdminSession {
   user: User;
   loginTime: string;
+}
+export interface SignupFormData {
+  // Personal Information
+  firstName: string;
+  lastName: string;
+  email: string;
+  
+  // Organization Information
+  organizationName: string;
+  organizationType: string;
+  organizationSize: string;
+  organizationId: string; // Added organizationId
+  website?: string;
+  
+  // Account Setup
+  password: string;
+  confirmPassword: string;
+  
+  // Preferences
+  interestedFeatures: string[];
+  hearAboutUs: string;
+  
+  // Legal
+  agreeToTerms: boolean;
+  agreeToMarketing: boolean;
 }
 
 
@@ -216,6 +248,10 @@ export default function App() {
 
   const handleGoToLogin = () => {
     navigate('login');
+  };
+
+  const handleGoToSignup = () => {
+    navigate('signup');
   };
   
  
@@ -303,17 +339,60 @@ export default function App() {
       navigate('campaigns');
     }
   };
+  const handleSignup = async (signupData: SignupFormData) => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, signupData.email, signupData.password);
+      const userId = userCredential.user.uid;
+
+      await setDoc(doc(firestore, 'users', userId), {
+        username: `${signupData.firstName} ${signupData.lastName}`,
+        email: signupData.email,
+        role: 'admin',
+        permissions: ['view_dashboard', 'manage_permissions', 'create_user', 'edit_user', 'delete_user'],
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        organizationId: signupData.organizationId
+      });
+
+      await setDoc(doc(firestore, 'organizations', signupData.organizationId), {
+        name: signupData.organizationName,
+        type: signupData.organizationType,
+        size: signupData.organizationSize,
+        website: signupData.website,
+        createdAt: new Date().toISOString()
+      });
+
+      alert('Signup successful!');
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error('Signup error:', error);
+        alert(`Signup failed: ${error.message}`);
+      } else {
+        console.error('Unknown signup error:', error);
+        alert('Signup failed due to an unknown error.');
+      }
+    }
+  };
   const hasPermission = (permission: Permission): boolean => {
     if (!currentAdminSession) return false;
-    return currentAdminSession.user.permissions.permissions.includes(permission) ||
-           currentAdminSession.user.permissions.permissions.includes('system_admin');
+    return currentAdminSession.user.permissions.includes(permission) ||
+           currentAdminSession.user.permissions.includes('system_admin');
   };
 
   if (currentScreen === 'home') {
     return (
       <HomePage
         onLogin={handleGoToLogin}
-        onSignup={handleGoToLogin}
+        onSignup={handleGoToSignup}
+      />
+    );
+  }
+  if (currentScreen === 'signup') {
+    return (
+      <SignupScreen
+        onSignup={handleSignup}
+        onBack={() => navigate('home')}
+        onLogin={() => navigate('login')}
       />
     );
   }

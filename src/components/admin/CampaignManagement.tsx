@@ -773,21 +773,8 @@ const CampaignDialog = ({
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="organizationId" className="text-right">
-                  Organization ID
-                </Label>
-                <Input
-                  id="organizationId"
-                  name="organizationId"
-                  value={formData.organizationId}
-                  onChange={handleChange}
-                  className="col-span-3"
-                  placeholder="Unique ID for organization"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="isGlobal" className="text-right">
-                  Global Campaign
+                  Show on all kiosks
                 </Label>
                 <input
                   type="checkbox"
@@ -896,118 +883,6 @@ const CampaignDialog = ({
                               (sum, file) => sum + file.size,
                               0
                             ) /
-                            1024 /
-                            1024
-                          ).toFixed(2)}{" "}
-                          MB
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <h3 className="text-lg font-semibold text-gray-900 mt-8">
-                Organization Information
-              </h3>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="organizationInfoName" className="text-right">
-                  Org. Name
-                </Label>
-                <Input
-                  id="organizationInfoName"
-                  name="organizationInfoName"
-                  value={formData.organizationInfoName}
-                  onChange={handleChange}
-                  className="col-span-3"
-                  placeholder="Organization Name"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-start gap-4">
-                <Label
-                  htmlFor="organizationInfoDescription"
-                  className="text-right pt-2"
-                >
-                  Org. Description
-                </Label>
-                <Textarea
-                  id="organizationInfoDescription"
-                  name="organizationInfoDescription"
-                  value={formData.organizationInfoDescription}
-                  onChange={handleChange}
-                  className="col-span-3"
-                  rows={3}
-                  placeholder="Description of the organization"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="organizationInfoWebsite" className="text-right">
-                  Org. Website
-                </Label>
-                <Input
-                  id="organizationInfoWebsite"
-                  name="organizationInfoWebsite"
-                  value={formData.organizationInfoWebsite}
-                  onChange={handleChange}
-                  className="col-span-3"
-                  placeholder="Organization Website URL"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="organizationInfoLogo" className="text-right">
-                  Org. Logo
-                </Label>
-                <div className="col-span-3 space-y-4">
-                  {organizationLogoPreview && (
-                    <div className="flex items-center space-x-4">
-                      <img
-                        src={organizationLogoPreview}
-                        alt="Organization logo preview"
-                        className="w-20 h-20 object-cover rounded-lg border"
-                      />
-                      <div className="text-sm text-gray-600">
-                        <p>Current logo</p>
-                      </div>
-                    </div>
-                  )}
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-3">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        name="organizationInfoLogo"
-                        onChange={handleFileSelect}
-                        className="hidden"
-                        id="organizationInfoLogoInput"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() =>
-                          document
-                            .getElementById("organizationInfoLogoInput")
-                            ?.click()
-                        }
-                        className="flex items-center space-x-2"
-                      >
-                        <FaImage className="w-4 h-4" />
-                        <span>Select Logo</span>
-                      </Button>
-                      {selectedOrganizationLogo && (
-                        <UploadButton
-                          onClick={handleOrganizationLogoUpload}
-                          disabled={false}
-                          isUploading={isUploadingOrganizationLogo}
-                        />
-                      )}
-                    </div>
-                    {selectedOrganizationLogo && (
-                      <div className="text-sm text-gray-600">
-                        <p>Selected: {selectedOrganizationLogo.name}</p>
-                        <p>
-                          Size:{" "}
-                          {(
-                            selectedOrganizationLogo.size /
                             1024 /
                             1024
                           ).toFixed(2)}{" "}
@@ -1145,7 +1020,7 @@ const CampaignManagement = ({
   const [confirmDeleteInput, setConfirmDeleteInput] = useState("");
 
   const { campaigns, updateWithImage, createWithImage, remove } =
-    useCampaignManagement();
+    useCampaignManagement(userSession.user.organizationId);
 
   const handleDeleteClick = (campaign: DocumentData) => {
     setCampaignToDelete(campaign);
@@ -1221,7 +1096,7 @@ const CampaignManagement = ({
           .filter(Boolean),
         coverImageUrl: data.coverImageUrl || "",
         category: data.category || "",
-        organizationId: data.organizationId || "",
+        organizationId: userSession.user.organizationId || "",
         assignedKiosks: data.assignedKiosks
           .split(",")
           .map((t: string) => t.trim())
