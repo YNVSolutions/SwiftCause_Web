@@ -233,23 +233,7 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
     updateFormData('interestedFeatures', updated);
   };
 
-  const benefits = [
-    {
-      icon: <Zap className="w-5 h-5 text-yellow-600" />,
-      title: 'Quick Setup',
-      description: 'Get started in under 10 minutes'
-    },
-    {
-      icon: <Shield className="w-5 h-5 text-green-600" />,
-      title: '14-Day Free Trial',
-      description: 'No credit card required'
-    },
-    {
-      icon: <Award className="w-5 h-5 text-blue-600" />,
-      title: 'Dedicated Support',
-      description: 'Expert onboarding assistance'
-    }
-  ];
+ 
 
   const platformStats = [
     {
