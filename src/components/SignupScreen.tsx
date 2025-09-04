@@ -428,34 +428,6 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
                 <span>Preferences</span>
               </div>
             </div>
-
-            {/* Testimonial */}
-            <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200">
-              <CardContent className="p-6">
-                <div className="flex items-center space-x-1 mb-3">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                  ))}
-                </div>
-                <p className="text-gray-700 mb-4 italic">
-                  "Swift Cause transformed our entire donation process. Setup was incredibly easy and our donations increased by 340% in the first quarter!"
-                </p>
-                <div className="flex items-start space-x-3">
-                  <div className="w-12 h-12 rounded-full overflow-hidden">
-                    <ImageWithFallback
-                      src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face"
-                      alt="Sarah Chen"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-gray-900">Sarah Chen</div>
-                    <div className="text-sm text-gray-600">Development Director</div>
-                    <div className="text-sm text-indigo-600">Global Health Initiative</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
           {/* Right side - Registration Form */}
