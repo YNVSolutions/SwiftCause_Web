@@ -25,6 +25,7 @@ import { useUsers } from '../../hooks/useUsers';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../ui/dialog';
 import { Label } from '../ui/label';
 import { Checkbox } from '../ui/checkbox';
+import { Tooltip } from '../ui/tooltip';
 
 interface UserTableRowProps {
   user: User;
@@ -146,6 +147,21 @@ const EditUserDialog: React.FC<EditUserDialogProps> = ({ user, onUpdate, onDelet
               onChange={(e) => setEditedUser({ ...editedUser, email: e.target.value })}
             />
           </div>
+          <div>
+            <Label htmlFor="role">Role</Label>
+            <Select value={editedUser.role} onValueChange={(value) => setEditedUser({ ...editedUser, role: value as UserRole })}>
+              <SelectTrigger id="role">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="super_admin">Super Admin</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="manager">Manager</SelectItem>
+                <SelectItem value="operator">Operator</SelectItem>
+                <SelectItem value="viewer">Viewer</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="flex items-center space-x-2">
             <Checkbox
               id="isActive"
@@ -195,43 +211,52 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [editingUser, setEditingUser] = useState<User | null>(null);
-
-
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [newUser, setNewUser] = useState({
     username: '',
     email: '',
-    role: 'kiosk' as UserRole,
-    kioskAccess: [] as string[]
+    password: '',
+    role: 'viewer' as UserRole,
+    permissions: [] as Permission[],
   });
+
+  const allPermissions: Permission[] = [
+    'create_campaign', 'view_campaigns', 'edit_campaign', 'view_dashboard',
+    'edit_user', 'manage_permissions', 'assign_campaigns', 'view_donations',
+    'create_kiosk', 'edit_kiosk', 'delete_kiosk', 'export_donations',
+    'view_users', 'system_admin', 'delete_campaign', 'view_kiosks',
+    'create_user', 'delete_user'
+  ];
+
   const handleCreateUser = () => {
+    // TODO: Implement backend logic to create user in Firebase Auth and Firestore
     const user: User = {
       id: `user-${Date.now()}`,
       username: newUser.username,
       email: newUser.email,
       role: newUser.role,
       lastLogin: undefined,
-      permissions: [],
+      permissions: newUser.permissions,
       isActive: true,
       organizationId: userSession.user.organizationId,
     };
-    console.log("Create user functionality not implemented for live data.");
+    console.log('TODO: Create user in backend', user, 'Password:', newUser.password);
+    setCreateDialogOpen(false);
+    setNewUser({ username: '', email: '', password: '', role: 'viewer', permissions: [] });
+    refreshUsers();
   };
-  const handleKioskAccessChange = (kioskId: string, checked: boolean) => {
 
-    if (checked) {
-      setNewUser(prev => ({
-        ...prev,
-        kioskAccess: [...prev.kioskAccess, kioskId]
-      }));
-    } else {
-      setNewUser(prev => ({
-        ...prev,
-        kioskAccess: prev.kioskAccess.filter(id => id !== kioskId)
-      }));
-    }
-  };
   const handleUserChange = (updates: any) => {
     setNewUser(prev => ({ ...prev, ...updates }));
+  };
+
+  const handlePermissionChange = (permission: Permission, checked: boolean) => {
+    setNewUser(prev => ({
+      ...prev,
+      permissions: checked
+        ? [...prev.permissions, permission]
+        : prev.permissions.filter((p) => p !== permission),
+    }));
   };
 
   const filteredUsers = users.filter(user => {
@@ -309,10 +334,27 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                 <Download className="w-4 h-4 mr-2" />
                 Export Users
               </Button>
+              <Button
+                className="bg-indigo-600 text-white"
+                onClick={() => setCreateDialogOpen(true)}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add User
+              </Button>
             </div>
           </div>
         </div>
       </header>
+
+      <CreateUserDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        newUser={newUser}
+        onUserChange={handleUserChange}
+        onCreateUser={handleCreateUser}
+        allPermissions={allPermissions}
+        onPermissionChange={handlePermissionChange}
+      />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -382,8 +424,11 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Roles</SelectItem>
-                  <SelectItem value="admin">Administrators</SelectItem>
-                  <SelectItem value="kiosk">Kiosk Users</SelectItem>
+                  <SelectItem value="super_admin">Super Admin</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="manager">Manager</SelectItem>
+                  <SelectItem value="operator">Operator</SelectItem>
+                  <SelectItem value="viewer">Viewer</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -450,3 +495,78 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
     </div>
   );
 }
+
+const CreateUserDialog = ({ open, onOpenChange, newUser, onUserChange, onCreateUser, allPermissions, onPermissionChange }: any) => (
+  <Dialog open={open} onOpenChange={onOpenChange}>
+    <DialogContent className="max-w-xl">
+      <DialogHeader>
+        <DialogTitle>Create New User</DialogTitle>
+        <DialogDescription>
+          Fill in the details to add a new user to your organization.
+        </DialogDescription>
+      </DialogHeader>
+      <div className="space-y-4 py-4">
+        <div>
+          <Label htmlFor="username">Username</Label>
+          <Input
+            id="username"
+            value={newUser.username}
+            onChange={(e) => onUserChange({ username: e.target.value })}
+          />
+        </div>
+        <div>
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            value={newUser.email}
+            onChange={(e) => onUserChange({ email: e.target.value })}
+          />
+        </div>
+        <div>
+          <Label htmlFor="password">Password</Label>
+          <Input
+            id="password"
+            type="password"
+            value={newUser.password}
+            onChange={(e) => onUserChange({ password: e.target.value })}
+          />
+        </div>
+        <div>
+          <Label htmlFor="role">Role</Label>
+          <Select value={newUser.role} onValueChange={(value) => onUserChange({ role: value })}>
+            <SelectTrigger id="role">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="super_admin">Super Admin</SelectItem>
+              <SelectItem value="admin">Admin</SelectItem>
+              <SelectItem value="manager">Manager</SelectItem>
+              <SelectItem value="operator">Operator</SelectItem>
+              <SelectItem value="viewer">Viewer</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label className="font-bold">Permissions</Label>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            {allPermissions.map((permission: Permission) => (
+              <div key={permission} className="flex items-center space-x-2">
+                <Checkbox
+                  id={permission}
+                  checked={newUser.permissions.includes(permission)}
+                  onCheckedChange={(checked) => onPermissionChange(permission, !!checked)}
+                />
+                <Label htmlFor={permission}>{permission}</Label>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <DialogFooter className="flex-col sm:flex-row-reverse">
+        <Button onClick={onCreateUser}>Create User</Button>
+        <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+);
