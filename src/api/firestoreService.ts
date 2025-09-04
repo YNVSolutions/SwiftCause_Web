@@ -23,9 +23,18 @@ export async function getCampaigns(organizationId?: string) {
   return snapshot.docs.map(d => ({ id: d.id, ...(d.data() as object) }));
 }
 
-export async function getKiosks() {
+export async function getKiosks(organizationId?: string) {
+  let kiosksCollection: any = collection(db, 'kiosks');
+  if (organizationId) {
+    kiosksCollection = query(kiosksCollection, where("organizationId", "==", organizationId));
+  }
+  const snapshot = await getDocs(kiosksCollection);
+  return snapshot.docs.map(d => ({ id: d.id, ...(d.data() as object) }));
+}
+
+export async function getAllKiosks() {
   const snapshot = await getDocs(collection(db, 'kiosks'));
-  return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  return snapshot.docs.map(d => ({ id: d.id, ...(d.data() as object) }));
 }
 
 export async function updateCampaign(campaignId: string, data: any) {
