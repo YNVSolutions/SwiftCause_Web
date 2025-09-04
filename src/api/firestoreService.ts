@@ -98,9 +98,12 @@ export async function deleteCampaign(campaignId: string) {
   await deleteDoc(ref);
 }
 
-export async function getRecentDonations(limitCount: number) {
-  const donationsRef = collection(db, 'donations');
-  const q = query(donationsRef, orderBy('timestamp', 'desc'), limit(limitCount));
+export async function getRecentDonations(limitCount: number, organizationId?: string) {
+  let donationsRef: any = collection(db, 'donations');
+  let q = query(donationsRef, orderBy('timestamp', 'desc'), limit(limitCount));
+  if (organizationId) {
+    q = query(donationsRef, where("organizationId", "==", organizationId), orderBy('timestamp', 'desc'), limit(limitCount));
+  }
   const snapshot = await getDocs(q);
-  return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  return snapshot.docs.map(d => ({ id: d.id, ...d.data() as object}));
 }

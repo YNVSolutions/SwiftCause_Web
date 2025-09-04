@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { getAllCampaigns, getKiosks, getRecentDonations } from '../api/firestoreService';
+import { getAllCampaigns, getKiosks, getRecentDonations, getCampaigns } from '../api/firestoreService';
 import { DocumentData, Timestamp } from 'firebase/firestore';
 import { Campaign } from '../App';
 
@@ -40,7 +40,7 @@ export interface Alert {
   priority: 'low' | 'medium' | 'high';
 }
 
-export function useDashboardData() {
+export function useDashboardData(organizationId?: string) {
   const [stats, setStats] = useState<DashboardStats>({
     totalRaised: 0,
     totalDonations: 0,
@@ -53,14 +53,20 @@ export function useDashboardData() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchDashboardData = useCallback(async () => {
+    if (!organizationId) {
+      setLoading(false);
+      setError("Organization ID is not available.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
       const [campaignsData, kiosksData, recentDonationsData] = await Promise.all([
-        getAllCampaigns() as Promise<Campaign[]>,
-        getKiosks() as Promise<Kiosk[]>,
-        getRecentDonations(5) as Promise<Donation[]> 
+        getCampaigns(organizationId) as Promise<Campaign[]>,
+        getKiosks(organizationId) as Promise<Kiosk[]>,
+        getRecentDonations(5, organizationId) as Promise<Donation[]> 
       ]);
 
       const totalRaised = campaignsData.reduce((acc, campaign: Campaign) => acc + (Number(campaign.raised) || 0), 0);
@@ -99,7 +105,7 @@ export function useDashboardData() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [organizationId]);
 
   useEffect(() => {
     fetchDashboardData();

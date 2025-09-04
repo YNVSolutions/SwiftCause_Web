@@ -63,7 +63,7 @@ import {
 } from "lucide-react";
 import { Screen, AdminSession, Permission, Campaign } from "../../App";
 import { db } from "../../lib/firebase";
-import { collection, query, orderBy, limit, getDocs } from "firebase/firestore";
+import { collection, query, orderBy, limit, getDocs, where } from "firebase/firestore";
 import {
   useDashboardData,
   Activity,
@@ -78,13 +78,17 @@ interface AdminDashboardProps {
 }
 
 const CHART_COLORS = [
-  "#3B82F6",
-  "#8B5CF6",
-  "#EF4444",
-  "#10B981",
-  "#F59E0B",
-  "#6366F1",
-];
+  "#6366F1", // Sophisticated Blue
+  "#8B5CF6", // Vibrant Purple
+  "#EC4899", // Modern Pink
+  "#10B981", // Fresh Green
+  "#F59E0B", // Warm Amber
+  "#06B6D4", // Refreshing Cyan
+  "#F97316", // Earthy Orange
+  "#84CC16", // Lime Green
+  "#14B8A6", // Teal
+  "#64748B"  // Cool Slate Gray
+]
 
 export function AdminDashboard({
   onNavigate,
@@ -93,7 +97,7 @@ export function AdminDashboard({
   hasPermission,
 }: AdminDashboardProps) {
   const { stats, recentActivities, alerts, loading, error, refreshDashboard } =
-    useDashboardData();
+    useDashboardData(userSession.user.organizationId);
 
   const [topCampaigns, setTopCampaigns] = useState<Campaign[]>([]);
   const [goalComparisonData, setGoalComparisonData] = useState<any[]>([]);
@@ -256,10 +260,14 @@ export function AdminDashboard({
 
   useEffect(() => {
     const fetchChartData = async () => {
+      if (!userSession.user.organizationId) return;
       try {
         const campaignsRef = collection(db, "campaigns");
+        const orgQuery = where("organizationId", "==", userSession.user.organizationId);
+
         const topListQuery = query(
           campaignsRef,
+          orgQuery,
           orderBy("raised", "desc"),
           limit(4)
         );
@@ -272,6 +280,7 @@ export function AdminDashboard({
 
         const topChartQuery = query(
           campaignsRef,
+          orgQuery,
           orderBy("raised", "desc"),
           limit(5)
         );
@@ -286,7 +295,8 @@ export function AdminDashboard({
         });
         setGoalComparisonData(comparisonData);
 
-        const allCampaignsSnapshot = await getDocs(campaignsRef);
+        const allCampaignsQuery = query(campaignsRef, orgQuery);
+        const allCampaignsSnapshot = await getDocs(allCampaignsQuery);
         const tagCounts: { [key: string]: number } = {};
         let totalTags = 0;
         allCampaignsSnapshot.forEach((doc) => {
