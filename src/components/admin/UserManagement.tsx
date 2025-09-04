@@ -32,6 +32,13 @@ interface UserTableRowProps {
   onEdit: (user: User) => void;
   onDelete: (userId: string) => void;
 }
+  const allPermissions: Permission[] = [
+    'create_campaign', 'view_campaigns', 'edit_campaign', 'view_dashboard',
+    'edit_user', 'manage_permissions', 'assign_campaigns', 'view_donations',
+    'create_kiosk', 'edit_kiosk', 'delete_kiosk', 'export_donations',
+    'view_users', 'delete_campaign', 'view_kiosks',
+    'create_user', 'edit_user', 'delete_user'
+  ];
 
 const UserTableRow: React.FC<UserTableRowProps> = ({ user, onEdit, onDelete }) => (
   <TableRow key={user.id}>
@@ -101,13 +108,7 @@ const EditUserDialog: React.FC<EditUserDialogProps> = ({ user, onUpdate, onDelet
     onClose();
   };
 
-  const allPermissions: Permission[] = [
-    'create_campaign', 'view_campaigns', 'edit_campaign', 'view_dashboard',
-    'edit_user', 'manage_permissions', 'assign_campaigns', 'view_donations',
-    'create_kiosk', 'edit_kiosk', 'delete_kiosk', 'export_donations',
-    'view_users', 'system_admin', 'delete_campaign', 'view_kiosks',
-    'create_user', 'edit_user', 'delete_user'
-  ];
+
 
   const handlePermissionChange = (permission: Permission, checked: boolean) => {
     const newPermissions = checked
@@ -154,7 +155,6 @@ const EditUserDialog: React.FC<EditUserDialogProps> = ({ user, onUpdate, onDelet
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="super_admin">Super Admin</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
                 <SelectItem value="manager">Manager</SelectItem>
                 <SelectItem value="operator">Operator</SelectItem>
@@ -220,13 +220,6 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
     permissions: [] as Permission[],
   });
 
-  const allPermissions: Permission[] = [
-    'create_campaign', 'view_campaigns', 'edit_campaign', 'view_dashboard',
-    'edit_user', 'manage_permissions', 'assign_campaigns', 'view_donations',
-    'create_kiosk', 'edit_kiosk', 'delete_kiosk', 'export_donations',
-    'view_users', 'system_admin', 'delete_campaign', 'view_kiosks',
-    'create_user', 'delete_user'
-  ];
 
   const handleCreateUser = () => {
     // TODO: Implement backend logic to create user in Firebase Auth and Firestore
@@ -424,7 +417,6 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Roles</SelectItem>
-                  <SelectItem value="super_admin">Super Admin</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="manager">Manager</SelectItem>
                   <SelectItem value="operator">Operator</SelectItem>
@@ -539,7 +531,6 @@ const CreateUserDialog = ({ open, onOpenChange, newUser, onUserChange, onCreateU
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="super_admin">Super Admin</SelectItem>
               <SelectItem value="admin">Admin</SelectItem>
               <SelectItem value="manager">Manager</SelectItem>
               <SelectItem value="operator">Operator</SelectItem>
