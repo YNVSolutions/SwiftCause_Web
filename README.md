@@ -1,4 +1,4 @@
-<img src="https://raw.githubusercontent.com/YNVSolutions/SwiftCause_Web/main/logo.png" alt="SwiftCause Logo" width="500" height="250">
+<img src="./logo.png" alt="SwiftCause Logo" width="250" height="250">
 
 # Swift Cause
 
