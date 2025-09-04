@@ -278,28 +278,6 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
     }
   ];
 
-  const complianceFeatures = [
-    {
-      icon: Lock,
-      title: 'PCI DSS',
-      description: 'Level 1 compliance'
-    },
-    {
-      icon: Shield,
-      title: 'SSL/TLS',
-      description: '256-bit encryption'
-    },
-    {
-      icon: CheckSquare,
-      title: 'GDPR',
-      description: 'Privacy compliant'
-    },
-    {
-      icon: Cloud,
-      title: 'SOC 2',
-      description: 'Type II audited'
-    }
-  ];
 
   const stepProgress = (currentStep / 4) * 100;
 
