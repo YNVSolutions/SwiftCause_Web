@@ -180,6 +180,7 @@ export interface Kiosk {
     saturday?: { open: string; close: string; };
     sunday?: { open: string; close: string; };
   };
+  organizationId?: string;
 }
 export interface User {
   id: string;
