@@ -47,9 +47,9 @@ const UserTableRow: React.FC<UserTableRowProps> = ({ user, onEdit, onDelete }) =
     <TableCell>{user.role}</TableCell>
     <TableCell>{user.lastLogin}</TableCell>
     <TableCell>
-      {user.permissions && user.permissions.permissions && user.permissions.permissions.length > 0 ? (
+      {user.permissions && user.permissions.length > 0 ? (
         <ul className="list-disc list-inside space-y-1 text-xs">
-          {user.permissions.permissions.map((p: string) => (
+          {user.permissions.map((p: string) => (
             <li key={p}>{p}</li>
           ))}
         </ul>
@@ -110,15 +110,12 @@ const EditUserDialog: React.FC<EditUserDialogProps> = ({ user, onUpdate, onDelet
 
   const handlePermissionChange = (permission: Permission, checked: boolean) => {
     const newPermissions = checked
-      ? [...(editedUser.permissions?.permissions || []), permission]
-      : (editedUser.permissions?.permissions || []).filter((p: Permission) => p !== permission);
+      ? [...(editedUser.permissions || []), permission]
+      : (editedUser.permissions || []).filter((p: Permission) => p !== permission);
 
     setEditedUser(prev => ({
       ...prev,
-      permissions: {
-        ...prev.permissions,
-        permissions: newPermissions
-      }
+      permissions: newPermissions
     }));
   };
 
@@ -149,14 +146,6 @@ const EditUserDialog: React.FC<EditUserDialogProps> = ({ user, onUpdate, onDelet
               onChange={(e) => setEditedUser({ ...editedUser, email: e.target.value })}
             />
           </div>
-          <div>
-            <Label htmlFor="department">Department</Label>
-            <Input
-              id="department"
-              value={editedUser.department || ''}
-              onChange={(e) => setEditedUser({ ...editedUser, department: e.target.value })}
-            />
-          </div>
           <div className="flex items-center space-x-2">
             <Checkbox
               id="isActive"
@@ -172,7 +161,7 @@ const EditUserDialog: React.FC<EditUserDialogProps> = ({ user, onUpdate, onDelet
                 <div key={permission} className="flex items-center space-x-2">
                   <Checkbox
                     id={permission}
-                    checked={editedUser.permissions?.permissions.includes(permission)}
+                    checked={editedUser.permissions?.includes(permission)}
                     onCheckedChange={(checked) => handlePermissionChange(permission, !!checked)}
                   />
                   <Label htmlFor={permission}>{permission}</Label>
@@ -202,7 +191,7 @@ interface UserManagementProps {
 }
 
 export function UserManagement({ onNavigate, onLogout, userSession, hasPermission }: UserManagementProps) {
-  const { users, loading, error, updateUser, refreshUsers } = useUsers();
+  const { users, loading, error, updateUser, refreshUsers } = useUsers(userSession.user.organizationId);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -215,20 +204,15 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
     kioskAccess: [] as string[]
   });
   const handleCreateUser = () => {
-
-    const userPermissions: UserPermissions = {
-      permissions: [],
-      role: 'super_admin',
-      description: 'Full access to all features'
-    };
     const user: User = {
       id: `user-${Date.now()}`,
       username: newUser.username,
       email: newUser.email,
       role: newUser.role,
       lastLogin: undefined,
-      permissions: userPermissions,
+      permissions: [],
       isActive: true,
+      organizationId: userSession.user.organizationId,
     };
     console.log("Create user functionality not implemented for live data.");
   };

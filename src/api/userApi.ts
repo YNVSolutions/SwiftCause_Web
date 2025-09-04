@@ -1,9 +1,12 @@
-import { collection, getDocs, doc, updateDoc, DocumentData } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, DocumentData, query, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
-export async function fetchAllUsers(): Promise<DocumentData[]> {
+export async function fetchAllUsers(organizationId?: string): Promise<DocumentData[]> {
   try {
-    const usersCollection = collection(db, 'users');
+    let usersCollection: any = collection(db, 'users');
+    if (organizationId) {
+      usersCollection = query(usersCollection, where("organizationId", "==", organizationId));
+    }
     const querySnapshot = await getDocs(usersCollection);
 
     if (querySnapshot.empty) {
@@ -13,7 +16,7 @@ export async function fetchAllUsers(): Promise<DocumentData[]> {
 
     const users = querySnapshot.docs.map(doc => ({
       id: doc.id,
-      ...doc.data()
+      ...doc.data() as object
     }));
 
     return users;
