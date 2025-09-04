@@ -376,24 +376,7 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
               </div>
             </div>
 
-            {/* Benefits Section */}
-            <div className="space-y-6">
-              <h3 className="text-2xl font-semibold text-gray-900">Why choose Swift Cause?</h3>
-              <div className="space-y-6">
-                {benefits.map((benefit, index) => (
-                  <div key={index} className="flex items-start space-x-4">
-                    <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-white border shadow-sm flex items-center justify-center">
-                      {benefit.icon}
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900 mb-1">{benefit.title}</h4>
-                      <p className="text-gray-600">{benefit.description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
+           
             {/* Security & Compliance */}
             <div className="space-y-6">
               <div>
