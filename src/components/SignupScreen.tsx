@@ -233,23 +233,7 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
     updateFormData('interestedFeatures', updated);
   };
 
-  const benefits = [
-    {
-      icon: <Zap className="w-5 h-5 text-yellow-600" />,
-      title: 'Quick Setup',
-      description: 'Get started in under 10 minutes'
-    },
-    {
-      icon: <Shield className="w-5 h-5 text-green-600" />,
-      title: '14-Day Free Trial',
-      description: 'No credit card required'
-    },
-    {
-      icon: <Award className="w-5 h-5 text-blue-600" />,
-      title: 'Dedicated Support',
-      description: 'Expert onboarding assistance'
-    }
-  ];
+ 
 
   const platformStats = [
     {
@@ -278,28 +262,6 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
     }
   ];
 
-  const complianceFeatures = [
-    {
-      icon: Lock,
-      title: 'PCI DSS',
-      description: 'Level 1 compliance'
-    },
-    {
-      icon: Shield,
-      title: 'SSL/TLS',
-      description: '256-bit encryption'
-    },
-    {
-      icon: CheckSquare,
-      title: 'GDPR',
-      description: 'Privacy compliant'
-    },
-    {
-      icon: Cloud,
-      title: 'SOC 2',
-      description: 'Type II audited'
-    }
-  ];
 
   const stepProgress = (currentStep / 4) * 100;
 
@@ -376,44 +338,6 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
               </div>
             </div>
 
-            {/* Benefits Section */}
-            <div className="space-y-6">
-              <h3 className="text-2xl font-semibold text-gray-900">Why choose Swift Cause?</h3>
-              <div className="space-y-6">
-                {benefits.map((benefit, index) => (
-                  <div key={index} className="flex items-start space-x-4">
-                    <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-white border shadow-sm flex items-center justify-center">
-                      {benefit.icon}
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900 mb-1">{benefit.title}</h4>
-                      <p className="text-gray-600">{benefit.description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Security & Compliance */}
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-2xl font-semibold text-gray-900 mb-2">Enterprise-Grade Security</h3>
-                <p className="text-gray-600">Your data is protected by industry-leading security measures</p>
-              </div>
-              
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {complianceFeatures.map((feature, index) => (
-                  <div key={index} className="text-center p-4 bg-gray-50 rounded-lg border">
-                    <div className="w-10 h-10 mx-auto mb-3 bg-white rounded-lg flex items-center justify-center shadow-sm">
-                      <feature.icon className="w-5 h-5 text-gray-600" />
-                    </div>
-                    <h4 className="font-semibold text-gray-900 text-sm mb-1">{feature.title}</h4>
-                    <p className="text-xs text-gray-600">{feature.description}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
             {/* Progress Indicator */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -428,34 +352,6 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
                 <span>Preferences</span>
               </div>
             </div>
-
-            {/* Testimonial */}
-            <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200">
-              <CardContent className="p-6">
-                <div className="flex items-center space-x-1 mb-3">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                  ))}
-                </div>
-                <p className="text-gray-700 mb-4 italic">
-                  "Swift Cause transformed our entire donation process. Setup was incredibly easy and our donations increased by 340% in the first quarter!"
-                </p>
-                <div className="flex items-start space-x-3">
-                  <div className="w-12 h-12 rounded-full overflow-hidden">
-                    <ImageWithFallback
-                      src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face"
-                      alt="Sarah Chen"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-gray-900">Sarah Chen</div>
-                    <div className="text-sm text-gray-600">Development Director</div>
-                    <div className="text-sm text-indigo-600">Global Health Initiative</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
           {/* Right side - Registration Form */}
