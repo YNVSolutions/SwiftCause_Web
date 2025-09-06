@@ -8,6 +8,11 @@ export function useUsers(organizationId?: string) {
   const [users, setUsers] = useState<User[]>([]);
 
   const refreshUsers = useCallback(async () => {
+    if (!organizationId) {
+      setUsers([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
