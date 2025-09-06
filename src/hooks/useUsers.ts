@@ -2,16 +2,21 @@ import { useState, useEffect, useCallback } from 'react';
 import { fetchAllUsers, updateUser as updateUserApi } from '../api/userApi';
 import { User } from '../App';
 
-export function useUsers() {
+export function useUsers(organizationId?: string) {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [users, setUsers] = useState<User[]>([]);
 
   const refreshUsers = useCallback(async () => {
+    if (!organizationId) {
+      setUsers([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
-      const usersData = await fetchAllUsers();
+      const usersData = await fetchAllUsers(organizationId);
       
       const formattedUsers = usersData.map(user => ({
         ...user,
@@ -29,7 +34,7 @@ export function useUsers() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [organizationId]);
 
   const updateUser = useCallback(async (userId: string, userData: Partial<User>) => {
     try {
@@ -48,7 +53,7 @@ export function useUsers() {
 
   useEffect(() => {
     refreshUsers();
-  }, [refreshUsers]);
+  }, [refreshUsers, organizationId]);
 
   return { loading, error, users, refreshUsers, updateUser };
 }

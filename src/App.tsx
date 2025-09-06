@@ -34,8 +34,9 @@ export type Screen =
   | 'admin-donations'
   | 'admin-users';
 
-// ... (All other type definitions remain the same)
+
 export type UserRole = 'super_admin' | 'admin' | 'manager' | 'operator' | 'viewer';
+
 export type Permission =
   | 'view_dashboard'
   | 'view_campaigns'
@@ -55,11 +56,19 @@ export type Permission =
   | 'delete_user'
   | 'manage_permissions'
   | 'system_admin';
-export interface UserPermissions {
-  permissions: Permission[];
-  role: 'super_admin' | 'admin' | 'manager' | 'operator' | 'viewer';
-  description: string;
+
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+  role: UserRole; // Singular role
+  permissions: Permission[]; // Array of permissions
+  isActive: boolean; // User is active by default
+  createdAt?: string;
+  lastLogin?: string;
+  organizationId?: string;
 }
+
 export interface CampaignConfiguration {
   predefinedAmounts: number[];
   allowCustomAmount: boolean;
@@ -180,18 +189,9 @@ export interface Kiosk {
     saturday?: { open: string; close: string; };
     sunday?: { open: string; close: string; };
   };
-}
-export interface User {
-  id: string;
-  username: string;
-  email: string;
-  role: UserRole; // Singular role
-  permissions: Permission[]; // Array of permissions
-  isActive: boolean; // User is active by default
-  createdAt?: string;
-  lastLogin?: string;
   organizationId?: string;
 }
+
 export interface KioskSession {
   kioskId: string;
   kioskName: string;
@@ -332,6 +332,22 @@ export default function App() {
       navigate('campaigns');
     }
   };
+
+  const handleOrganizationSwitch = (organizationId: string) => {
+    if (currentAdminSession) {
+      setCurrentAdminSession(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          user: {
+            ...prev.user,
+            organizationId: organizationId,
+          }
+        };
+      });
+    }
+  };
+
   const handleBackFromCampaign = () => {
     if (campaignView === 'donate') {
       setCampaignView('overview');
@@ -374,7 +390,9 @@ export default function App() {
     }
   };
   const hasPermission = (permission: Permission): boolean => {
-    if (!currentAdminSession) return false;
+    if (!currentAdminSession || !Array.isArray(currentAdminSession.user.permissions)) {
+      return false;
+    }
     return currentAdminSession.user.permissions.includes(permission) ||
            currentAdminSession.user.permissions.includes('system_admin');
   };
@@ -406,6 +424,7 @@ export default function App() {
             onLogout={handleLogout}
             userSession={currentAdminSession}
             hasPermission={hasPermission}
+            onOrganizationSwitch={handleOrganizationSwitch}
           />
         )}
         {currentScreen === 'admin-campaigns' && (

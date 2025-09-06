@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../lib/firebase';
+import { useKiosks } from '../../hooks/useKiosks';
+import { useCampaigns } from '../../hooks/useCampaigns';
 import {
   collection,
-  getDocs,
   updateDoc,
   doc,
   addDoc,
@@ -32,14 +33,15 @@ import {
 export function KioskManagement({ onNavigate, onLogout, userSession, hasPermission }: {
   onNavigate: (screen: Screen) => void;
   onLogout: () => void;
-  userSession: AdminSession | null;
+  userSession: AdminSession;
   hasPermission: (permission: Permission) => boolean;
 }) {
-  const [kiosks, setKiosks] = useState<Kiosk[]>([]);
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const { kiosks, loading: kiosksLoading, error: kiosksError, refresh: refreshKiosks } = useKiosks(userSession.user.organizationId);
+  const { campaigns, loading: campaignsLoading, error: campaignsError, refresh: refreshCampaigns } = useCampaigns(userSession.user.organizationId);
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [isLoading, setIsLoading] = useState(true);
+  const isLoading = kiosksLoading || campaignsLoading;
 
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -50,25 +52,12 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
   const [assigningKiosk, setAssigningKiosk] = useState<Kiosk | null>(null);
 
   useEffect(() => {
-    const fetchAllData = async () => {
-      setIsLoading(true);
-      try {
-        const kiosksSnapshot = await getDocs(collection(db, 'kiosks'));
-        setKiosks(kiosksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Kiosk)));
-        
-        const campaignsSnapshot = await getDocs(collection(db, 'campaigns'));
-        setCampaigns(campaignsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Campaign)));
-
-      } catch (error) {
-        console.error("Error fetching data: ", error);
-      }
-      setIsLoading(false);
-    };
-    fetchAllData();
+    refreshKiosks();
+    refreshCampaigns();
   }, []);
 
   const handleCreateKiosk = async () => {
-    if (!newKiosk.name || !newKiosk.location) return;
+    if (!newKiosk.name || !newKiosk.location || !userSession) return;
     try {
       const newKioskData: Omit<Kiosk, 'id'> = {
         ...newKiosk,
@@ -80,10 +69,12 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
         defaultCampaign: '',
         deviceInfo: {},
         operatingHours: {},
-        settings: { displayMode: 'grid', showAllCampaigns: true, maxCampaignsDisplay: 6, autoRotateCampaigns: false }
+        settings: { displayMode: 'grid', showAllCampaigns: true, maxCampaignsDisplay: 6, autoRotateCampaigns: false },
+        organizationId: userSession.user.organizationId,
       };
       const docRef = await addDoc(collection(db, 'kiosks'), newKioskData);
-      setKiosks(prev => [...prev, { id: docRef.id, ...newKioskData }]);
+      //setKiosks(prev => [...prev, { id: docRef.id, ...newKioskData }]);
+      refreshKiosks();
       setNewKiosk({ name: '', location: '', accessCode: '' });
       setIsCreateDialogOpen(false);
     } catch (error) {
@@ -95,7 +86,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
     if (window.confirm('Are you sure you want to delete this kiosk?')) {
       try {
         await deleteDoc(doc(db, 'kiosks', kioskId));
-        setKiosks(prev => prev.filter(kiosk => kiosk.id !== kioskId));
+        refreshKiosks();
       } catch (error) {
         console.error("Error deleting kiosk: ", error);
       }
@@ -112,7 +103,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
     try {
         const kioskRef = doc(db, 'kiosks', id);
         await updateDoc(kioskRef, dataToSave);
-        setKiosks(prev => prev.map(k => k.id === id ? updatedKiosk : k));
+        refreshKiosks();
     } catch (error) {
         console.error("Error updating kiosk assignment: ", error);
     }
