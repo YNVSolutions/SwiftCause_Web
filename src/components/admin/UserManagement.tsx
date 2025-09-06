@@ -19,7 +19,7 @@ import {
   Pencil,
   Trash2
 } from 'lucide-react';
-import { Screen, User, UserRole, AdminSession, Permission, UserPermissions } from '../../App';
+import { Screen, User, UserRole, AdminSession, Permission } from '../../App';
 import { calculateUserStats } from './utils/userManagementHelpers';
 import { useUsers } from '../../hooks/useUsers';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../ui/dialog';

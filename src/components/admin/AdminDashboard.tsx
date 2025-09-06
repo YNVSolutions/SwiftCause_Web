@@ -69,12 +69,14 @@ import {
   Activity,
   Alert,
 } from "../../hooks/useDashboardData";
+import { OrganizationSwitcher } from "./OrganizationSwitcher";
 
 interface AdminDashboardProps {
   onNavigate: (screen: Screen) => void;
   onLogout: () => void;
   userSession: AdminSession;
   hasPermission: (permission: Permission) => boolean;
+  onOrganizationSwitch: (organizationId: string) => void;
 }
 
 const CHART_COLORS = [
@@ -95,6 +97,7 @@ export function AdminDashboard({
   onLogout,
   userSession,
   hasPermission,
+  onOrganizationSwitch,
 }: AdminDashboardProps) {
   const { stats, recentActivities, alerts, loading, error, refreshDashboard } =
     useDashboardData(userSession.user.organizationId);
@@ -324,7 +327,7 @@ export function AdminDashboard({
     };
 
     fetchChartData();
-  }, [refreshDashboard]);
+  }, [userSession.user.organizationId, refreshDashboard]);
 
   const handleRefresh = () => {
     refreshDashboard();
@@ -423,6 +426,9 @@ export function AdminDashboard({
                   Welcome back, {userSession.user.username}
                 </p>
               </div>
+              {userSession.user.role === 'super_admin' && hasPermission('system_admin') && (
+                <OrganizationSwitcher userSession={userSession} onOrganizationChange={onOrganizationSwitch} />
+              )}
             </div>
             <div className="flex items-center space-x-4">
               <Button
