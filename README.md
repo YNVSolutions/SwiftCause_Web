@@ -36,7 +36,7 @@ Modern Donation Platform for UK-Based Nonprofits
 1.  **Clone the repository:**
 
     ```bash
-    git clone https://github.com/Yashraghuvans/SwiftCause.git
+    git clone https://github.com/YNVSolutions/SwiftCause_Web.git
     cd SwiftCause
     ```
 
@@ -72,7 +72,7 @@ Modern Donation Platform for UK-Based Nonprofits
 
 2.  **Open your browser:**
 
-    Navigate to `http://localhost:3000` to view the application.
+    Navigate to `http://localhost:5173` to view the application.
 
 
 ## Visual Studio Code 
