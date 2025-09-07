@@ -70,6 +70,7 @@ import {
   Alert,
 } from "../../hooks/useDashboardData";
 import { OrganizationSwitcher } from "./OrganizationSwitcher";
+import CurrencySettings from "./CurrencySettings";
 
 interface AdminDashboardProps {
   onNavigate: (screen: Screen) => void;
@@ -109,7 +110,6 @@ export function AdminDashboard({
   const [showGettingStarted, setShowGettingStarted] = useState(false);
   const [isLegendExpanded, setIsLegendExpanded] = useState(false);
 
-  // Platform features data
   const platformFeatures = [
     {
       icon: <Smartphone className="w-6 h-6" />,
@@ -487,6 +487,11 @@ export function AdminDashboard({
             )}
           </div>
         </div>
+        
+        <div className="mb-8">
+          <CurrencySettings />
+        </div>
+
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card>
