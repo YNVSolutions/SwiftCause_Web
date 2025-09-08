@@ -6,6 +6,7 @@ import { ArrowLeft, CreditCard, Shield, Lock, CreditCard as CreditCardIcon } fro
 import { Campaign, Donation, PaymentResult } from '../App';
 import PaymentForm from './PaymentForm';
 import { Checkbox } from './ui/checkbox';
+import { formatCurrency } from '../utils/currencyFormatter';
 import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
@@ -23,14 +24,6 @@ interface PaymentScreenProps {
 }
 
 export function PaymentScreen({ campaign, donation, isProcessing, error, handlePaymentSubmit, onBack, organizationCurrency }: PaymentScreenProps) {
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: organizationCurrency || 'USD', 
-      minimumFractionDigits: 2
-    }).format(amount);
-  };
 
   const [isAnonymous, setIsAnonymous] = React.useState(true);
   const [donorName, setDonorName] = React.useState('');
@@ -133,7 +126,7 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
                 
                 <div className="flex justify-between items-center">
                   <span className="text-sm sm:text-base text-muted-foreground">Donation Amount:</span>
-                  <span className="text-lg sm:text-2xl font-bold text-indigo-700">{formatCurrency(donation.amount)}</span>
+                  <span className="text-lg sm:text-2xl font-bold text-indigo-700">{formatCurrency(donation.amount, organizationCurrency || 'USD')}</span>
                 </div>
                 
                 {donation.isRecurring && (
@@ -149,7 +142,7 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
               
               <div className="flex justify-between text-lg sm:text-2xl font-bold mb-6 text-gray-900">
                 <span>Total:</span>
-                <span>{formatCurrency(donation.amount)}</span>
+                <span>{formatCurrency(donation.amount, organizationCurrency || 'USD')}</span>
               </div>
               
               <div className="space-y-5 pt-6 border-t border-gray-200">

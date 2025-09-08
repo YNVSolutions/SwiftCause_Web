@@ -24,7 +24,9 @@ import {
   MapPin,
   Target
 } from 'lucide-react';
-import { Campaign, Donation } from '../App';
+import { Campaign, Donation, Organization } from '../App';
+import { formatCurrency } from '../utils/currencyFormatter';
+import { getOrganizationById } from '../api/firestoreService';
 
 type CampaignView = 'overview' | 'donate';
 
@@ -60,16 +62,21 @@ export function CampaignScreen({
   const [donorInfo, setDonorInfo] = useState<DonorInfo>({
     isAnonymous: false
   });
+  const [organizationCurrency, setOrganizationCurrency] = useState<string | undefined>(undefined);
+
+  React.useEffect(() => {
+    const fetchOrganizationCurrency = async () => {
+      if (campaign.organizationId) {
+        const organization = await getOrganizationById(campaign.organizationId);
+        if (organization && organization.currency) {
+          setOrganizationCurrency(organization.currency);
+        }
+      }
+    };
+    fetchOrganizationCurrency();
+  }, [campaign.organizationId]);
 
   const config = campaign.configuration;
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0
-    }).format(amount);
-  };
 
   const getProgressPercentage = (raised: number, goal: number) => {
     return Math.min((raised / goal) * 100, 100);
@@ -168,8 +175,8 @@ export function CampaignScreen({
               {config.showProgressBar && campaign.goal > 0 && (
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between text-sm">
-                    <span>Raised: {formatCurrency(campaign.raised)}</span>
-                    <span>Goal: {formatCurrency(campaign.goal)}</span>
+                    <span>Raised: {formatCurrency(campaign.raised, organizationCurrency || 'USD')}</span>
+                    <span>Goal: {formatCurrency(campaign.goal, organizationCurrency || 'USD')}</span>
                   </div>
                   <Progress value={getProgressPercentage(campaign.raised || 0, campaign.goal || 0)} className="h-2" />
                   <p className="text-sm text-gray-600">{getProgressPercentage(campaign.raised || 0, campaign.goal || 0).toFixed(1)}% funded</p>
@@ -184,7 +191,7 @@ export function CampaignScreen({
                   </div>
                   <div className="flex items-center space-x-1">
                     <Heart className="w-4 h-4" />
-                    <span>{formatCurrency(151)} avg</span>
+                    <span>{formatCurrency(151, organizationCurrency || 'USD')} avg</span>
                   </div>
                 </div>
               )}
@@ -308,10 +315,10 @@ export function CampaignScreen({
                           selectedAmount === amount ? 'bg-indigo-600 hover:bg-indigo-700' : ''
                         }`}
                       >
-                        <span className="text-lg font-semibold">{formatCurrency(amount)}</span>
+                        <span className="text-lg font-semibold">{formatCurrency(amount, organizationCurrency || 'USD')}</span>
                         {config.enableRecurring && isRecurring && config.recurringDiscount && (
                           <span className="text-xs opacity-75">
-                            {formatCurrency(amount * (1 - config.recurringDiscount / 100))} after discount
+                            {formatCurrency(amount * (1 - config.recurringDiscount / 100), organizationCurrency || 'USD')} after discount
                           </span>
                         )}
                       </Button>
@@ -323,14 +330,14 @@ export function CampaignScreen({
                     <div className="space-y-2">
                       <Label htmlFor="customAmount">Custom Amount</Label>
                       <div className="relative">
-                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">$</span>
+                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"></span>
                         <Input
                           id="customAmount"
                           type="number"
                           min={config.minCustomAmount}
                           max={config.maxCustomAmount}
                           step="0.01"
-                          placeholder={`${config.minCustomAmount} - ${config.maxCustomAmount}`}
+                          placeholder={`${formatCurrency(config.minCustomAmount, organizationCurrency || 'USD')} - ${formatCurrency(config.maxCustomAmount, organizationCurrency || 'USD')}`}
                           value={customAmount}
                           onChange={(e) => handleCustomAmountChange(e.target.value)}
                           className="pl-8 h-12"
@@ -338,7 +345,7 @@ export function CampaignScreen({
                         />
                       </div>
                       <p className="text-sm text-gray-500">
-                        Enter between {formatCurrency(config.minCustomAmount)} and {formatCurrency(config.maxCustomAmount)}
+                        Enter between {formatCurrency(config.minCustomAmount, organizationCurrency || 'USD')} and {formatCurrency(config.maxCustomAmount, organizationCurrency || 'USD')}
                       </p>
                     </div>
                   )}
@@ -396,11 +403,11 @@ export function CampaignScreen({
                       <span className="font-medium">Your donation:</span>
                       <div className="text-right">
                         <div className="text-xl font-semibold">
-                          {formatCurrency(getDiscountedAmount())}
+                          {formatCurrency(getDiscountedAmount(), organizationCurrency || 'USD')}
                         </div>
                         {isRecurring && config.recurringDiscount && getCurrentAmount() !== getDiscountedAmount() && (
                           <div className="text-sm text-gray-500 line-through">
-                            {formatCurrency(getCurrentAmount())}
+                            {formatCurrency(getCurrentAmount(), organizationCurrency || 'USD')}
                           </div>
                         )}
                       </div>
