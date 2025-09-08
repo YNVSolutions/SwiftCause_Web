@@ -403,52 +403,29 @@ export function AdminDashboard({
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <div className="flex h-12 w-12 items-center justify-center">
-                <img
-                  src="/logo.png"
-                  className="h-12 w-12 rounded-xl shadow-md"
-                  alt="My Logo"
-                />
+        <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between h-auto sm:h-16 gap-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+              <div className="flex h-12 w-12 items-center justify-center mb-2 sm:mb-0">
+                <img src="/logo.png" className="h-12 w-12 rounded-xl shadow-md" alt="My Logo" />
               </div>
               <div>
                 <div className="flex items-center space-x-3">
-                  <h1 className="text-xl font-semibold text-gray-900">
-                    Admin Dashboard
-                  </h1>
-                  <Badge variant="outline" className="text-xs">
-                    {userSession.user.role}
-                  </Badge>
+                  <h1 className="text-xl font-semibold text-gray-900">Admin Dashboard</h1>
+                  <Badge variant="outline" className="text-xs">{userSession.user.role}</Badge>
                 </div>
-                <p className="text-sm text-gray-600">
-                  Welcome back, {userSession.user.username}
-                </p>
+                <p className="text-sm text-gray-600">Welcome back, {userSession.user.username}</p>
               </div>
               {userSession.user.role === 'super_admin' && hasPermission('system_admin') && (
                 <OrganizationSwitcher userSession={userSession} onOrganizationChange={onOrganizationSwitch} />
               )}
             </div>
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRefresh}
-                disabled={loading}
-                className="flex items-center space-x-2"
-              >
-                <RefreshCw
-                  className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
-                />
+            <div className="flex flex-col sm:flex-row items-stretch gap-2">
+              <Button variant="outline" size="sm" onClick={handleRefresh} disabled={loading} className="flex items-center space-x-2">
+                <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
                 <span>Refresh</span>
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onLogout}
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
-              >
+              <Button variant="ghost" size="sm" onClick={onLogout} className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
                 <LogOut className="w-4 h-4" />
                 <span>Logout</span>
               </Button>
@@ -457,38 +434,28 @@ export function AdminDashboard({
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-between mb-8">
+      <main className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
           <div>
             <h2 className="text-2xl text-gray-900">Overview</h2>
-            <p className="text-gray-600">
-              Manage campaigns, configure kiosks, and track donations across
-              your organization
+            <p className="text-gray-600 text-sm sm:text-base">
+              Manage campaigns, configure kiosks, and track donations across your organization
             </p>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex flex-col sm:flex-row items-stretch gap-2">
             {hasPermission("create_campaign") && (
-              <Button
-                onClick={() => onNavigate("admin-campaigns")}
-                className="bg-indigo-600 hover:bg-indigo-700"
-              >
-                <Settings className="w-4 h-4 mr-2" />
-                Manage Campaigns
+              <Button onClick={() => onNavigate("admin-campaigns")} className="bg-indigo-600 hover:bg-indigo-700">
+                <Settings className="w-4 h-4 mr-2" />Manage Campaigns
               </Button>
             )}
             {hasPermission("view_kiosks") && (
-              <Button
-                variant="outline"
-                onClick={() => onNavigate("admin-kiosks")}
-              >
-                <Settings className="w-4 h-4 mr-2" />
-                Manage Kiosks
+              <Button variant="outline" onClick={() => onNavigate("admin-kiosks")}>
+                <Settings className="w-4 h-4 mr-2" />Manage Kiosks
               </Button>
             )}
           </div>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
