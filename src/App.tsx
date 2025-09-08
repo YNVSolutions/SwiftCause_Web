@@ -134,6 +134,13 @@ export interface Campaign {
     };
   };
 }
+
+export interface Organization {
+  id: string;
+  name: string;
+  currency: string;
+}
+
 export interface Donation {
   campaignId: string;
   amount: number;

@@ -19,14 +19,15 @@ interface PaymentScreenProps {
   error: string | null;
   handlePaymentSubmit: (amount: number, metadata: any, currency: string) => Promise<void>;
   onBack: () => void;
+  organizationCurrency?: string;
 }
 
-export function PaymentScreen({ campaign, donation, isProcessing, error, handlePaymentSubmit, onBack }: PaymentScreenProps) {
+export function PaymentScreen({ campaign, donation, isProcessing, error, handlePaymentSubmit, onBack, organizationCurrency }: PaymentScreenProps) {
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: organizationCurrency || 'USD', 
       minimumFractionDigits: 2
     }).format(amount);
   };
@@ -35,7 +36,7 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
   const [donorName, setDonorName] = React.useState('');
   const [donorEmail, setDonorEmail] = React.useState('');
   const [donorPhone, setDonorPhone] = React.useState('');
-  const [donorMessage, setDonorMessage] = React.useState(''); // New state for donor message
+  const [donorMessage, setDonorMessage] = React.useState(''); 
 
   const handleSubmit = async () => {
 
@@ -46,11 +47,11 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
       donationAmount: donation.amount,
       isRecurring: donation.isRecurring,
       isAnonymous: isAnonymous,
-      kioskId: donation.kioskId || null, // Include kioskId from donation object
-      ...(isAnonymous ? {} : { donorName, donorEmail, donorPhone, donorMessage }), // Include donorMessage if not anonymous
+      kioskId: donation.kioskId || null, 
+      ...(isAnonymous ? {} : { donorName, donorEmail, donorPhone, donorMessage }), 
     };
     console.log('PaymentScreen - handleSubmit: Final metadata object', metadata);
-    await handlePaymentSubmit(donation.amount, metadata, 'USD');
+    await handlePaymentSubmit(donation.amount, metadata, organizationCurrency || 'USD'); 
   };
 
   return (
@@ -166,7 +167,7 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
                         setDonorName('');
                         setDonorEmail('');
                         setDonorPhone('');
-                        setDonorMessage(''); // Clear message if anonymous
+                        setDonorMessage(''); 
                       }
                     }}
                     className="h-5 w-5"
