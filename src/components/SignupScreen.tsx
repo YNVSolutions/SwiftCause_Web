@@ -62,13 +62,10 @@ interface SignupFormData {
   confirmPassword: string;
   
   // Preferences
-  interestedFeatures: string[];
-  hearAboutUs: string;
   currency: string; // Added currency field
   
   // Legal
   agreeToTerms: boolean;
-  agreeToMarketing: boolean;
 }
 
 const auth = getAuth();
@@ -91,11 +88,8 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
     website: '',
     password: '',
     confirmPassword: '',
-    interestedFeatures: [],
-    hearAboutUs: '',
     currency: 'GBP', 
-    agreeToTerms: false,
-    agreeToMarketing: false
+    agreeToTerms: false
   });
 
   const organizationTypes = [
@@ -228,14 +222,6 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
         organizationId: formData.organizationName.replace(/\s+/g, '-').toLowerCase() // Generate organizationId
       });
     }
-  };
-
-  const toggleFeature = (featureId: string) => {
-    const current = formData.interestedFeatures;
-    const updated = current.includes(featureId)
-      ? current.filter(id => id !== featureId)
-      : [...current, featureId];
-    updateFormData('interestedFeatures', updated);
   };
 
  
