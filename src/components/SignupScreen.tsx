@@ -149,7 +149,6 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
 
     if (step === 1) {
       if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
-      if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
       if (!formData.email.trim()) newErrors.email = 'Email is required';
       else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
     } else if (step === 2) {
@@ -162,6 +161,7 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
       if (!formData.password) newErrors.password = 'Password is required';
       else if (formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
       if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
+
     }
 
     setErrors(newErrors);
@@ -266,6 +266,9 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
               <div className="h-10 w-10">
                
               </div>
+              <div className="flex h-12 w-12 items-center justify-center">
+                <img src="/logo.png" className="h-12 w-12 rounded-xl shadow-md" alt="My Logo" />
+              </div>
               <div>
                 <h1 className="text-xl font-semibold text-gray-900">Swift Cause</h1>
                 <p className="text-xs text-gray-600">Account Registration</p>
@@ -296,10 +299,7 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
             {/* Hero Section */}
             <div className="space-y-8">
               <div className="space-y-6">
-                <div className="inline-flex items-center px-4 py-2 rounded-full bg-indigo-100 text-indigo-800 text-sm">
-                  <Award className="w-4 h-4 mr-2" />
-                  Trusted by 500+ organizations worldwide
-                </div>
+                
                 
                 <h2 className="text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 leading-tight">
                   Join the<span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600"> fundraising</span><br />revolution
