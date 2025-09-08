@@ -200,6 +200,7 @@ export interface KioskSession {
   defaultCampaign?: string;
   settings: Kiosk['settings'];
   loginMethod: 'qr' | 'manual';
+  organizationId?: string;
 }
 export interface AdminSession {
   user: User;

@@ -31,7 +31,7 @@ export function useCampaignList(kioskSession?: KioskSession | null): UseCampaign
 
     let filtered = campaigns.filter(c => {
       // Global campaigns are always available if showAllCampaigns is true, or if they are explicitly assigned
-      if (kioskSession.settings?.showAllCampaigns && c.isGlobal) return true;
+      if (kioskSession.settings?.showAllCampaigns && c.isGlobal && c.organizationId === kioskSession.organizationId) return true;
 
       // For non-global campaigns, or if showAllCampaigns is false, check if they are assigned to the current kiosk
       return kioskSession.assignedCampaigns?.includes(c.id);
