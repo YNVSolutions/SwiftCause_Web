@@ -39,7 +39,7 @@ import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
 interface SignupScreenProps {
-  onSignup: (data: SignupFormData) => void;
+  onSignup: (data: SignupFormData) => Promise<void>;
   onBack: () => void;
   onLogin: () => void;
 }
@@ -179,45 +179,9 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
   };
 
   // Updated handleSignup to include initial data for permissions and isActive
-  const handleSignup = async (data: SignupFormData) => {
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
-      const userId = userCredential.user.uid;
-
-      await setDoc(doc(firestore, 'users', userId), {
-        username: `${data.firstName} ${data.lastName}`,
-        email: data.email,
-        role: 'admin',
-        permissions: ['view_dashboard', 'manage_permissions', 'create_user', 'edit_user', 'delete_user', 'view_campaigns', 'create_campaign', 'edit_campaign', 'delete_campaign', 'view_kiosks', 'create_kiosk', 'edit_kiosk', 'delete_kiosk', 'assign_campaigns', 'view_donations', 'export_donations', 'view_users'], 
-        isActive: true,
-        createdAt: new Date().toISOString(),
-        organizationId: data.organizationId
-      });
-
-      await setDoc(doc(firestore, 'organizations', data.organizationId), {
-        name: data.organizationName,
-        type: data.organizationType,
-        size: data.organizationSize,
-        website: data.website,
-        currency: data.currency,
-        createdAt: new Date().toISOString()
-      });
-
-      alert('Signup successful!');
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error('Signup error:', error);
-        alert(`Signup failed: ${error.message}`);
-      } else {
-        console.error('Unknown signup error:', error);
-        alert('Signup failed due to an unknown error.');
-      }
-    }
-  };
-
   const handleSubmit = () => {
     if (validateStep(currentStep)) {
-      handleSignup({
+      onSignup({
         ...formData,
         organizationId: formData.organizationName.replace(/\s+/g, '-').toLowerCase() // Generate organizationId
       });
