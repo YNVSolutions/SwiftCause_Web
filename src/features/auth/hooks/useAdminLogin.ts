@@ -30,7 +30,6 @@ export function useAdminLogin(onLogin: OnLogin) {
 				setLocalError('User account is disabled.');
 				return;
 			}
-			console.log(userData);
 
 			if (!userData.organizationId) {
 				setLocalError('Organization ID not defined for this user. Please contact support.');
