@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useKiosks } from '../../../hooks/useKiosks';
-import { KioskSession, UserRole, Kiosk } from '../../../App';
+import { KioskSession, UserRole, Kiosk, Organization } from '../../../App';
+import { getOrganizationById } from '../../../api/firestoreService';
 
 type OnLogin = (role: UserRole, sessionData?: KioskSession) => void;
 
@@ -14,7 +15,7 @@ export function useKioskLogin(onLogin: OnLogin) {
 		if (kiosksError) setLocalError('Failed to load kiosks. Please try again.');
 	}, [kiosksError]);
 
-	const handleSubmit = useCallback((e: React.FormEvent) => {
+	const handleSubmit = useCallback(async (e: React.FormEvent) => {
 		e.preventDefault();
 		setLocalError('');
 
@@ -29,6 +30,14 @@ export function useKioskLogin(onLogin: OnLogin) {
 			return;
 		}
 
+		let organizationCurrency: string | undefined;
+		if (kiosk.organizationId) {
+			const organization = await getOrganizationById(kiosk.organizationId);
+			if (organization) {
+				organizationCurrency = organization.currency;
+			}
+		}
+
 		const now = new Date().toISOString();
 		const kioskSession: KioskSession = {
 			kioskId: kiosk.id,
@@ -41,7 +50,8 @@ export function useKioskLogin(onLogin: OnLogin) {
 				maxCampaignsDisplay: 6,
 				autoRotateCampaigns: false
 			},
-			loginMethod: 'manual'
+			loginMethod: 'manual',
+			organizationCurrency: organizationCurrency || 'USD',
 		};
 
 		onLogin('kiosk', kioskSession);

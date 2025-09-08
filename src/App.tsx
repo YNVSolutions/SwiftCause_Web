@@ -208,6 +208,7 @@ export interface KioskSession {
   settings: Kiosk['settings'];
   loginMethod: 'qr' | 'manual';
   organizationId?: string;
+  organizationCurrency?: string; 
 }
 export interface AdminSession {
   user: User;
