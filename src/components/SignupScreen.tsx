@@ -162,12 +162,12 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
       if (!formData.organizationName.trim()) newErrors.organizationName = 'Organization name is required';
       if (!formData.organizationType) newErrors.organizationType = 'Organization type is required';
       if (!formData.organizationSize) newErrors.organizationSize = 'Organization size is required';
-    } else if (step === 3) {
+    }  else if (step === 3) {
+      if (!formData.currency) newErrors.currency = 'Currency is required';
+    } else if (step === 4) {
       if (!formData.password) newErrors.password = 'Password is required';
       else if (formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
       if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
-    } else if (step === 4) {
-      if (!formData.currency) newErrors.currency = 'Currency is required';
     }
 
     setErrors(newErrors);
@@ -176,7 +176,7 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
 
   const handleNext = () => {
     if (validateStep(currentStep)) {
-      setCurrentStep(prev => Math.min(prev + 1, 5)); // Updated total steps to 5
+      setCurrentStep(prev => Math.min(prev + 1, 4));
     }
   };
 
@@ -205,10 +205,11 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
         type: data.organizationType,
         size: data.organizationSize,
         website: data.website,
-        currency: data.currency, // Save selected currency
+        currency: data.currency,
         createdAt: new Date().toISOString()
       });
 
+      alert('Signup successful!');
     } catch (error) {
       if (error instanceof Error) {
         console.error('Signup error:', error);
@@ -267,7 +268,7 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
   ];
 
 
-  const stepProgress = (currentStep / 5) * 100; // Updated total steps to 5
+  const stepProgress = (currentStep / 4) * 100;
 
   return (
     <div className="min-h-screen bg-white">
@@ -346,14 +347,14 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-700">Registration Progress</span>
-                <span className="text-sm text-gray-600">Step {currentStep} of 5</span>
+                <span className="text-sm text-gray-600">Step {currentStep} of 4</span>
               </div>
               <Progress value={stepProgress} className="h-2" />
               <div className="flex justify-between text-xs text-gray-500">
                 <span>Personal Info</span>
                 <span>Organization</span>
-                <span>Security</span>
                 <span>Currency</span>
+                <span>Security</span>
                 <span>Preferences</span>
               </div>
             </div>
@@ -545,8 +546,42 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
                     </div>
                   )}
 
-                  {/* Step 3: Account Security */}
+                  {/* Currency Selection */}
                   {currentStep === 3 && (
+                    <div className="space-y-4">
+                      <div className="text-center mb-6">
+                        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-yellow-100">
+                          <DollarSign className="h-6 w-6 text-yellow-600" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900">Select Your Currency</h3>
+                        <p className="text-sm text-gray-600">Choose the primary currency for your organization's payments.</p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="currency">Currency</Label>
+                        <Select
+                          value={formData.currency}
+                          onValueChange={(value) => updateFormData('currency', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select currency" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="GBP">GBP (£) - British Pound</SelectItem>
+                            <SelectItem value="USD">USD ($) - United States Dollar</SelectItem>
+                            <SelectItem value="EUR">EUR (€) - Euro</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-red-600 flex items-center mt-1">
+                          <AlertCircle className="w-3 h-3 mr-1" />
+                          Important: You will not be able to change this currency later.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Original Step 3: Account Security, now Step 4 */}
+                  {currentStep === 4 && (
                     <div className="space-y-4">
                       <div className="text-center mb-6">
                         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-green-100">
@@ -614,65 +649,6 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
                           </p>
                         )}
                       </div>
-                    </div>
-                  )}
-
-                  {/* Step 4: Preferences & Terms */}
-                  {currentStep === 4 && (
-                    <div className="space-y-6">
-                      <div className="text-center mb-6">
-                        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-purple-100">
-                          <Target className="h-6 w-6 text-purple-600" />
-                        </div>
-                        <h3 className="text-lg font-semibold text-gray-900">Almost Done!</h3>
-                        <p className="text-sm text-gray-600">Tell us what you're interested in</p>
-                      </div>
-
-                      <div className="space-y-4">
-                        <Label>Features you're interested in (optional)</Label>
-                        <div className="grid grid-cols-1 gap-3">
-                          {featureOptions.map((feature) => (
-                            <div 
-                              key={feature.id} 
-                              className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                                formData.interestedFeatures.includes(feature.id)
-                                  ? 'border-indigo-500 bg-indigo-50'
-                                  : 'border-gray-200 hover:border-gray-300'
-                              }`}
-                              onClick={() => toggleFeature(feature.id)}
-                            >
-                              <div className="flex items-center space-x-3">
-                                <Checkbox
-                                  checked={formData.interestedFeatures.includes(feature.id)}
-                                  onChange={() => toggleFeature(feature.id)}
-                                />
-                                <div>
-                                  <div className="font-medium text-sm">{feature.label}</div>
-                                  <div className="text-xs text-gray-600">{feature.description}</div>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>How did you hear about us?</Label>
-                        <Select 
-                          value={formData.hearAboutUs} 
-                          onValueChange={(value) => updateFormData('hearAboutUs', value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select an option" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {hearAboutUsOptions.map((option) => (
-                              <SelectItem key={option} value={option}>{option}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
                       <div className="space-y-4 pt-4 border-t">
                         <div className="flex items-start space-x-3">
                           <Checkbox
@@ -694,143 +670,6 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
                               </p>
                             )}
                           </div>
-                        </div>
-
-                        <div className="flex items-start space-x-3">
-                          <Checkbox
-                            id="agreeToMarketing"
-                            checked={formData.agreeToMarketing}
-                            onCheckedChange={(checked) => updateFormData('agreeToMarketing', checked)}
-                          />
-                          <label htmlFor="agreeToMarketing" className="text-sm cursor-pointer">
-                            I'd like to receive updates about new features and fundraising tips
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Currency Selection */}
-                  {currentStep === 4 && (
-                    <div className="space-y-4">
-                      <div className="text-center mb-6">
-                        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-yellow-100">
-                          <DollarSign className="h-6 w-6 text-yellow-600" />
-                        </div>
-                        <h3 className="text-lg font-semibold text-gray-900">Select Your Currency</h3>
-                        <p className="text-sm text-gray-600">Choose the primary currency for your organization's payments.</p>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="currency">Currency</Label>
-                        <Select
-                          value={formData.currency}
-                          onValueChange={(value) => updateFormData('currency', value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select currency" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="GBP">GBP (£) - British Pound</SelectItem>
-                            <SelectItem value="USD">USD ($) - United States Dollar</SelectItem>
-                            <SelectItem value="EUR">EUR (€) - Euro</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <p className="text-xs text-red-600 flex items-center mt-1">
-                          <AlertCircle className="w-3 h-3 mr-1" />
-                          Important: You will not be able to change this currency later.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                  {/* Preferences & Terms*/}
-                  {currentStep === 5 && (
-                    <div className="space-y-6">
-                      <div className="text-center mb-6">
-                        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-purple-100">
-                          <Target className="h-6 w-6 text-purple-600" />
-                        </div>
-                        <h3 className="text-lg font-semibold text-gray-900">Almost Done!</h3>
-                        <p className="text-sm text-gray-600">Tell us what you're interested in</p>
-                      </div>
-
-                      <div className="space-y-4">
-                        <Label>Features you're interested in (optional)</Label>
-                        <div className="grid grid-cols-1 gap-3">
-                          {featureOptions.map((feature) => (
-                            <div 
-                              key={feature.id} 
-                              className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                                formData.interestedFeatures.includes(feature.id)
-                                  ? 'border-indigo-500 bg-indigo-50'
-                                  : 'border-gray-200 hover:border-gray-300'
-                              }`}
-                              onClick={() => toggleFeature(feature.id)}
-                            >
-                              <div className="flex items-center space-x-3">
-                                <Checkbox
-                                  checked={formData.interestedFeatures.includes(feature.id)}
-                                  onChange={() => toggleFeature(feature.id)}
-                                />
-                                <div>
-                                  <div className="font-medium text-sm">{feature.label}</div>
-                                  <div className="text-xs text-gray-600">{feature.description}</div>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>How did you hear about us?</Label>
-                        <Select 
-                          value={formData.hearAboutUs} 
-                          onValueChange={(value) => updateFormData('hearAboutUs', value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select an option" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {hearAboutUsOptions.map((option) => (
-                              <SelectItem key={option} value={option}>{option}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-4 pt-4 border-t">
-                        <div className="flex items-start space-x-3">
-                          <Checkbox
-                            id="agreeToTerms"
-                            checked={formData.agreeToTerms}
-                            onCheckedChange={(checked) => updateFormData('agreeToTerms', checked)}
-                          />
-                          <div className="text-sm">
-                            <label htmlFor="agreeToTerms" className="cursor-pointer">
-                              I agree to the{' '}
-                              <a href="#" className="text-indigo-600 hover:underline">Terms of Service</a>
-                              {' '}and{' '}
-                              <a href="#" className="text-indigo-600 hover:underline">Privacy Policy</a>
-                            </label>
-                            {errors.agreeToTerms && (
-                              <p className="text-xs text-red-600 flex items-center mt-1">
-                                <AlertCircle className="w-3 h-3 mr-1" />
-                                {errors.agreeToTerms}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="flex items-start space-x-3">
-                          <Checkbox
-                            id="agreeToMarketing"
-                            checked={formData.agreeToMarketing}
-                            onCheckedChange={(checked) => updateFormData('agreeToMarketing', checked)}
-                          />
-                          <label htmlFor="agreeToMarketing" className="text-sm cursor-pointer">
-                            I'd like to receive updates about new features and fundraising tips
-                          </label>
                         </div>
                       </div>
                     </div>
@@ -847,7 +686,7 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
                       <div />
                     )}
 
-                    {currentStep < 5 ? (
+                    {currentStep < 4 ? (
                       <Button onClick={handleNext} className="bg-indigo-600 hover:bg-indigo-700">
                         Next
                         <ArrowRight className="w-4 h-4 ml-2" />
