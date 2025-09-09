@@ -17,7 +17,7 @@ export interface UseCampaignListReturn {
 }
 
 export function useCampaignList(kioskSession?: KioskSession | null): UseCampaignListReturn {
-  const { campaigns: rawCampaigns, loading, error, refresh } = useCampaigns();
+  const { campaigns: rawCampaigns, loading, error, refresh } = useCampaigns(kioskSession?.organizationId);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [isDetailedView, setIsDetailedView] = useState(true);
 
@@ -27,13 +27,10 @@ export function useCampaignList(kioskSession?: KioskSession | null): UseCampaign
   }, [rawCampaigns]);
 
   const availableCampaigns = useMemo(() => {
-    if (!kioskSession) return campaigns; // If no kiosk session, return all campaigns (e.g., for admin view)
+    if (!kioskSession) return campaigns; 
 
     let filtered = campaigns.filter(c => {
-      // Global campaigns are always available if showAllCampaigns is true, or if they are explicitly assigned
-      if (kioskSession.settings?.showAllCampaigns && c.isGlobal) return true;
-
-      // For non-global campaigns, or if showAllCampaigns is false, check if they are assigned to the current kiosk
+      if (c.isGlobal) return true;
       return kioskSession.assignedCampaigns?.includes(c.id);
     });
 

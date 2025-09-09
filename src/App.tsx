@@ -35,7 +35,7 @@ export type Screen =
   | 'admin-users';
 
 
-export type UserRole = 'super_admin' | 'admin' | 'manager' | 'operator' | 'viewer';
+export type UserRole = 'super_admin' | 'admin' | 'manager' | 'operator' | 'viewer' | 'kiosk';
 
 export type Permission =
   | 'view_dashboard'
@@ -134,6 +134,13 @@ export interface Campaign {
     };
   };
 }
+
+export interface Organization {
+  id: string;
+  name: string;
+  currency: string;
+}
+
 export interface Donation {
   campaignId: string;
   amount: number;
@@ -200,6 +207,8 @@ export interface KioskSession {
   defaultCampaign?: string;
   settings: Kiosk['settings'];
   loginMethod: 'qr' | 'manual';
+  organizationId?: string;
+  organizationCurrency?: string; 
 }
 export interface AdminSession {
   user: User;
@@ -223,12 +232,10 @@ export interface SignupFormData {
   confirmPassword: string;
   
   // Preferences
-  interestedFeatures: string[];
-  hearAboutUs: string;
+  currency: string; 
   
   // Legal
   agreeToTerms: boolean;
-  agreeToMarketing: boolean;
 }
 
 
@@ -261,10 +268,10 @@ export default function App() {
 
   const handleLogin = async (role: UserRole, sessionData?: KioskSession | AdminSession) => {
     setUserRole(role);
-    if (role === 'admin') {
+    if (role === 'admin' || role === 'super_admin' || role === 'manager' || role === 'operator' || role === 'viewer') {
       setCurrentAdminSession(sessionData as AdminSession);
       navigate('admin-dashboard');
-    } else {
+    } else if (role === 'kiosk') {
       setCurrentKioskSession(sessionData as KioskSession);
       await refreshCurrentKioskSession((sessionData as KioskSession).kioskId);
       navigate('campaigns');

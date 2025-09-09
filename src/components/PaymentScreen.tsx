@@ -6,6 +6,7 @@ import { ArrowLeft, CreditCard, Shield, Lock, CreditCard as CreditCardIcon } fro
 import { Campaign, Donation, PaymentResult } from '../App';
 import PaymentForm from './PaymentForm';
 import { Checkbox } from './ui/checkbox';
+import { formatCurrency } from '../utils/currencyFormatter';
 import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
@@ -19,23 +20,16 @@ interface PaymentScreenProps {
   error: string | null;
   handlePaymentSubmit: (amount: number, metadata: any, currency: string) => Promise<void>;
   onBack: () => void;
+  organizationCurrency?: string;
 }
 
-export function PaymentScreen({ campaign, donation, isProcessing, error, handlePaymentSubmit, onBack }: PaymentScreenProps) {
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2
-    }).format(amount);
-  };
+export function PaymentScreen({ campaign, donation, isProcessing, error, handlePaymentSubmit, onBack, organizationCurrency }: PaymentScreenProps) {
 
   const [isAnonymous, setIsAnonymous] = React.useState(true);
   const [donorName, setDonorName] = React.useState('');
   const [donorEmail, setDonorEmail] = React.useState('');
   const [donorPhone, setDonorPhone] = React.useState('');
-  const [donorMessage, setDonorMessage] = React.useState(''); // New state for donor message
+  const [donorMessage, setDonorMessage] = React.useState(''); 
 
   const handleSubmit = async () => {
 
@@ -46,11 +40,11 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
       donationAmount: donation.amount,
       isRecurring: donation.isRecurring,
       isAnonymous: isAnonymous,
-      kioskId: donation.kioskId || null, // Include kioskId from donation object
-      ...(isAnonymous ? {} : { donorName, donorEmail, donorPhone, donorMessage }), // Include donorMessage if not anonymous
+      kioskId: donation.kioskId || null, 
+      ...(isAnonymous ? {} : { donorName, donorEmail, donorPhone, donorMessage }), 
     };
     console.log('PaymentScreen - handleSubmit: Final metadata object', metadata);
-    await handlePaymentSubmit(donation.amount, metadata, 'USD');
+    await handlePaymentSubmit(donation.amount, metadata, organizationCurrency || 'USD'); 
   };
 
   return (
@@ -132,7 +126,7 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
                 
                 <div className="flex justify-between items-center">
                   <span className="text-sm sm:text-base text-muted-foreground">Donation Amount:</span>
-                  <span className="text-lg sm:text-2xl font-bold text-indigo-700">{formatCurrency(donation.amount)}</span>
+                  <span className="text-lg sm:text-2xl font-bold text-indigo-700">{formatCurrency(donation.amount, organizationCurrency || 'USD')}</span>
                 </div>
                 
                 {donation.isRecurring && (
@@ -148,7 +142,7 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
               
               <div className="flex justify-between text-lg sm:text-2xl font-bold mb-6 text-gray-900">
                 <span>Total:</span>
-                <span>{formatCurrency(donation.amount)}</span>
+                <span>{formatCurrency(donation.amount, organizationCurrency || 'USD')}</span>
               </div>
               
               <div className="space-y-5 pt-6 border-t border-gray-200">
@@ -166,7 +160,7 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
                         setDonorName('');
                         setDonorEmail('');
                         setDonorPhone('');
-                        setDonorMessage(''); // Clear message if anonymous
+                        setDonorMessage(''); 
                       }
                     }}
                     className="h-5 w-5"

@@ -6,13 +6,15 @@ import { Progress } from '../ui/progress';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
 import { Heart, Info, ArrowRight, Star } from 'lucide-react';
 import { Campaign } from '../../App';
+import { formatCurrency } from '../../utils/currencyFormatter';
 
 interface CampaignCardProps {
   campaign: Campaign;
   variant?: 'compact' | 'detailed';
-  onDonate?: (campaign: Campaign) => void; // Modified to pass campaign object
-  onViewDetails?: (campaign: Campaign, initialShowDetails: boolean) => void; // Modified to pass campaign and initialShowDetails
+  onDonate?: (campaign: Campaign) => void; 
+  onViewDetails?: (campaign: Campaign, initialShowDetails: boolean) => void; 
   isDefault?: boolean;
+  organizationCurrency?: string; 
 }
 
 export function CampaignCard({
@@ -20,19 +22,13 @@ export function CampaignCard({
   variant = 'detailed',
   onDonate,
   onViewDetails,
-  isDefault = false
+  isDefault = false,
+  organizationCurrency 
 }: CampaignCardProps) {
   if (!campaign.raised) {
     campaign.raised = 0;
   }
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0
-    }).format(amount);
-  };
 
   const getProgressPercentage = (raised: number, goal: number) => {
     if (!raised) return 0;
@@ -78,11 +74,11 @@ export function CampaignCard({
               <div className="space-y-1">
                 <div className="flex justify-between text-xs sm:text-sm">
                   <span className="text-muted-foreground">Raised</span>
-                  <span className="text-green-600">{formatCurrency(campaign.raised)}</span>
+                  <span className="text-green-600">{formatCurrency(campaign.raised, organizationCurrency || 'USD')}</span>
                 </div>
                 <Progress value={getProgressPercentage(campaign.raised, campaign.goal)} className="h-1.5" />
                 <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>{getProgressPercentage(campaign.raised, campaign.goal).toFixed(0)}% of {formatCurrency(campaign.goal)}</span>
+                  <span>{getProgressPercentage(campaign.raised, campaign.goal).toFixed(0)}% of {formatCurrency(campaign.goal, organizationCurrency || 'USD')}</span>
                 </div>
               </div>
             </div>
@@ -151,14 +147,14 @@ export function CampaignCard({
         <div className="space-y-2">
           <div className="flex justify-between text-xs sm:text-sm">
             <span className="text-muted-foreground">Raised</span>
-            <span className="text-green-600">{formatCurrency(campaign.raised)}</span>
+            <span className="text-green-600">{formatCurrency(campaign.raised, organizationCurrency || 'USD')}</span>
           </div>
           <Progress value={getProgressPercentage(campaign.raised, campaign.goal)} className="h-2" />
           <div className="flex justify-between text-xs sm:text-sm">
             <span className="text-muted-foreground">
               {campaign.goal ? getProgressPercentage(campaign.raised, campaign.goal).toFixed(1) + "% of goal" : 'N/A'}
             </span>
-            <span className="text-muted-foreground">Goal: { campaign.goal ? formatCurrency(campaign.goal) : 'N/A'}</span>
+            <span className="text-muted-foreground">Goal: { campaign.goal ? formatCurrency(campaign.goal, organizationCurrency || 'USD') : 'N/A'}</span>
           </div>
         </div>
 

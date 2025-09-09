@@ -135,6 +135,7 @@ export function CampaignListScreen({
               isDefaultCampaign={isDefaultCampaign}
               autoRotate={autoRotateCampaigns}
               rotationInterval={rotationInterval}
+              kioskSession={kioskSession} 
             />
           ) : (
             <div className={
@@ -149,6 +150,7 @@ export function CampaignListScreen({
                   onDonate={() => onSelectCampaign(campaign)}
                   onViewDetails={() => onViewDetails(campaign)}
                   isDefault={isDefaultCampaign(campaign.id)}
+                  organizationCurrency={kioskSession?.organizationCurrency}
                 />
               ))}
             </div>
@@ -166,6 +168,7 @@ interface CampaignCarouselProps {
   isDefaultCampaign: (campaignId: string) => boolean;
   autoRotate: boolean;
   rotationInterval: number;
+  kioskSession?: KioskSession | null;
 }
 
 const CampaignCarousel = ({
@@ -175,6 +178,7 @@ const CampaignCarousel = ({
   isDefaultCampaign,
   autoRotate,
   rotationInterval,
+  kioskSession
 }: CampaignCarouselProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -232,6 +236,7 @@ const CampaignCarousel = ({
                   onDonate={() => onSelectCampaign(campaign)}
                   onViewDetails={() => onViewDetails(campaign)}
                   isDefault={isDefaultCampaign(campaign.id)}
+                  organizationCurrency={kioskSession?.organizationCurrency}
                 />
               </div>
             </div>

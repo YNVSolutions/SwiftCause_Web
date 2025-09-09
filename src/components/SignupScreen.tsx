@@ -39,7 +39,7 @@ import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
 interface SignupScreenProps {
-  onSignup: (data: SignupFormData) => void;
+  onSignup: (data: SignupFormData) => Promise<void>;
   onBack: () => void;
   onLogin: () => void;
 }
@@ -62,12 +62,10 @@ interface SignupFormData {
   confirmPassword: string;
   
   // Preferences
-  interestedFeatures: string[];
-  hearAboutUs: string;
+  currency: string; // Added currency field
   
   // Legal
   agreeToTerms: boolean;
-  agreeToMarketing: boolean;
 }
 
 const auth = getAuth();
@@ -86,14 +84,12 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
     organizationName: '',
     organizationType: '',
     organizationSize: '',
-    organizationId: '', // Added organizationId
+    organizationId: '', 
     website: '',
     password: '',
     confirmPassword: '',
-    interestedFeatures: [],
-    hearAboutUs: '',
-    agreeToTerms: false,
-    agreeToMarketing: false
+    currency: 'GBP', 
+    agreeToTerms: false
   });
 
   const organizationTypes = [
@@ -153,18 +149,20 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
 
     if (step === 1) {
       if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
-      if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
       if (!formData.email.trim()) newErrors.email = 'Email is required';
       else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
     } else if (step === 2) {
       if (!formData.organizationName.trim()) newErrors.organizationName = 'Organization name is required';
       if (!formData.organizationType) newErrors.organizationType = 'Organization type is required';
       if (!formData.organizationSize) newErrors.organizationSize = 'Organization size is required';
-    } else if (step === 3) {
+    }  else if (step === 3) {
+      if (!formData.currency) newErrors.currency = 'Currency is required';
+    } else if (step === 4) {
       if (!formData.password) newErrors.password = 'Password is required';
       else if (formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
       if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
-    } 
+
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -181,56 +179,13 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
   };
 
   // Updated handleSignup to include initial data for permissions and isActive
-  const handleSignup = async (data: SignupFormData) => {
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
-      const userId = userCredential.user.uid;
-
-      await setDoc(doc(firestore, 'users', userId), {
-        username: `${data.firstName} ${data.lastName}`,
-        email: data.email,
-        role: 'admin',
-        permissions: ['view_dashboard', 'manage_permissions', 'create_user', 'edit_user', 'delete_user', 'view_campaigns', 'create_campaign', 'edit_campaign', 'delete_campaign', 'view_kiosks', 'create_kiosk', 'edit_kiosk', 'delete_kiosk', 'assign_campaigns', 'view_donations', 'export_donations', 'view_users'], 
-        isActive: true,
-        createdAt: new Date().toISOString(),
-        organizationId: data.organizationId
-      });
-
-      await setDoc(doc(firestore, 'organizations', data.organizationId), {
-        name: data.organizationName,
-        type: data.organizationType,
-        size: data.organizationSize,
-        website: data.website,
-        createdAt: new Date().toISOString()
-      });
-
-      alert('Signup successful!');
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error('Signup error:', error);
-        alert(`Signup failed: ${error.message}`);
-      } else {
-        console.error('Unknown signup error:', error);
-        alert('Signup failed due to an unknown error.');
-      }
-    }
-  };
-
   const handleSubmit = () => {
     if (validateStep(currentStep)) {
-      handleSignup({
+      onSignup({
         ...formData,
         organizationId: formData.organizationName.replace(/\s+/g, '-').toLowerCase() // Generate organizationId
       });
     }
-  };
-
-  const toggleFeature = (featureId: string) => {
-    const current = formData.interestedFeatures;
-    const updated = current.includes(featureId)
-      ? current.filter(id => id !== featureId)
-      : [...current, featureId];
-    updateFormData('interestedFeatures', updated);
   };
 
  
@@ -275,6 +230,9 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
               <div className="h-10 w-10">
                
               </div>
+              <div className="flex h-12 w-12 items-center justify-center">
+                <img src="/logo.png" className="h-12 w-12 rounded-xl shadow-md" alt="My Logo" />
+              </div>
               <div>
                 <h1 className="text-xl font-semibold text-gray-900">Swift Cause</h1>
                 <p className="text-xs text-gray-600">Account Registration</p>
@@ -305,10 +263,7 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
             {/* Hero Section */}
             <div className="space-y-8">
               <div className="space-y-6">
-                <div className="inline-flex items-center px-4 py-2 rounded-full bg-indigo-100 text-indigo-800 text-sm">
-                  <Award className="w-4 h-4 mr-2" />
-                  Trusted by 500+ organizations worldwide
-                </div>
+                
                 
                 <h2 className="text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 leading-tight">
                   Join the<span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600"> fundraising</span><br />revolution
@@ -348,6 +303,7 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
               <div className="flex justify-between text-xs text-gray-500">
                 <span>Personal Info</span>
                 <span>Organization</span>
+                <span>Currency</span>
                 <span>Security</span>
                 <span>Preferences</span>
               </div>
@@ -540,8 +496,42 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
                     </div>
                   )}
 
-                  {/* Step 3: Account Security */}
+                  {/* Currency Selection */}
                   {currentStep === 3 && (
+                    <div className="space-y-4">
+                      <div className="text-center mb-6">
+                        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-yellow-100">
+                          <DollarSign className="h-6 w-6 text-yellow-600" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900">Select Your Currency</h3>
+                        <p className="text-sm text-gray-600">Choose the primary currency for your organization's payments.</p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="currency">Currency</Label>
+                        <Select
+                          value={formData.currency}
+                          onValueChange={(value) => updateFormData('currency', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select currency" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="GBP">GBP (£) - British Pound</SelectItem>
+                            <SelectItem value="USD">USD ($) - United States Dollar</SelectItem>
+                            <SelectItem value="EUR">EUR (€) - Euro</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-red-600 flex items-center mt-1">
+                          <AlertCircle className="w-3 h-3 mr-1" />
+                          Important: You will not be able to change this currency later.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Original Step 3: Account Security, now Step 4 */}
+                  {currentStep === 4 && (
                     <div className="space-y-4">
                       <div className="text-center mb-6">
                         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-green-100">
@@ -609,65 +599,6 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
                           </p>
                         )}
                       </div>
-                    </div>
-                  )}
-
-                  {/* Step 4: Preferences & Terms */}
-                  {currentStep === 4 && (
-                    <div className="space-y-6">
-                      <div className="text-center mb-6">
-                        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-purple-100">
-                          <Target className="h-6 w-6 text-purple-600" />
-                        </div>
-                        <h3 className="text-lg font-semibold text-gray-900">Almost Done!</h3>
-                        <p className="text-sm text-gray-600">Tell us what you're interested in</p>
-                      </div>
-
-                      <div className="space-y-4">
-                        <Label>Features you're interested in (optional)</Label>
-                        <div className="grid grid-cols-1 gap-3">
-                          {featureOptions.map((feature) => (
-                            <div 
-                              key={feature.id} 
-                              className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                                formData.interestedFeatures.includes(feature.id)
-                                  ? 'border-indigo-500 bg-indigo-50'
-                                  : 'border-gray-200 hover:border-gray-300'
-                              }`}
-                              onClick={() => toggleFeature(feature.id)}
-                            >
-                              <div className="flex items-center space-x-3">
-                                <Checkbox
-                                  checked={formData.interestedFeatures.includes(feature.id)}
-                                  onChange={() => toggleFeature(feature.id)}
-                                />
-                                <div>
-                                  <div className="font-medium text-sm">{feature.label}</div>
-                                  <div className="text-xs text-gray-600">{feature.description}</div>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>How did you hear about us?</Label>
-                        <Select 
-                          value={formData.hearAboutUs} 
-                          onValueChange={(value) => updateFormData('hearAboutUs', value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select an option" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {hearAboutUsOptions.map((option) => (
-                              <SelectItem key={option} value={option}>{option}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
                       <div className="space-y-4 pt-4 border-t">
                         <div className="flex items-start space-x-3">
                           <Checkbox
@@ -690,21 +621,10 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
                             )}
                           </div>
                         </div>
-
-                        <div className="flex items-start space-x-3">
-                          <Checkbox
-                            id="agreeToMarketing"
-                            checked={formData.agreeToMarketing}
-                            onCheckedChange={(checked) => updateFormData('agreeToMarketing', checked)}
-                          />
-                          <label htmlFor="agreeToMarketing" className="text-sm cursor-pointer">
-                            I'd like to receive updates about new features and fundraising tips
-                          </label>
-                        </div>
                       </div>
                     </div>
                   )}
-
+                
                   {/* Navigation Buttons */}
                   <div className="flex items-center justify-between pt-4">
                     {currentStep > 1 ? (
