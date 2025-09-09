@@ -197,12 +197,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                                 {formatCurrency(performanceData[kiosk.id]?.totalRaised || 0)}
                               </span>
                             </div>
-                            <div className="flex items-center space-x-2">
-                              <Users className="w-4 h-4 text-gray-400" />
-                              <span className="text-sm">
-                                {performanceData[kiosk.id]?.donorCount || 0} donors
-                              </span>
-                            </div>
+                            
                           </div>
                         </TableCell>
                         <TableCell><div className="space-y-2"><div className="flex items-center space-x-2"><Target className="w-4 h-4 text-gray-400" /><span className="text-sm">{kiosk.assignedCampaigns?.length || 0} assigned</span></div>{kiosk.defaultCampaign && (<div className="flex items-center space-x-2"><Star className="w-4 h-4 text-yellow-500" /><span className="text-sm">{campaigns.find(c => c.id === kiosk.defaultCampaign)?.title?.slice(0, 20) || '...'}</span></div>)}</div></TableCell>
