@@ -56,19 +56,11 @@ export type Permission =
   | 'delete_user'
   | 'manage_permissions'
   | 'system_admin';
-
-export interface User {
-  id: string;
-  username: string;
-  email: string;
-  role: UserRole; // Singular role
-  permissions: Permission[]; // Array of permissions
-  isActive: boolean; // User is active by default
-  createdAt?: string;
-  lastLogin?: string;
-  organizationId?: string;
+export interface UserPermissions {
+  permissions: Permission[];
+  role: 'super_admin' | 'admin' | 'manager' | 'operator' | 'viewer';
+  description: string;
 }
-
 export interface CampaignConfiguration {
   predefinedAmounts: number[];
   allowCustomAmount: boolean;
@@ -134,13 +126,6 @@ export interface Campaign {
     };
   };
 }
-
-export interface Organization {
-  id: string;
-  name: string;
-  currency: string;
-}
-
 export interface Donation {
   campaignId: string;
   amount: number;
@@ -198,7 +183,17 @@ export interface Kiosk {
   };
   organizationId?: string;
 }
-
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+  role: UserRole; // Singular role
+  permissions: Permission[]; // Array of permissions
+  isActive: boolean; // User is active by default
+  createdAt?: string;
+  lastLogin?: string;
+  organizationId?: string;
+}
 export interface KioskSession {
   kioskId: string;
   kioskName: string;
