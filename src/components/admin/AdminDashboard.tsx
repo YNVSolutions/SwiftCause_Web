@@ -362,6 +362,22 @@ export function AdminDashboard({
 
     return formatCurrency(amount);
   };
+  const formatShortCurrency = (amount: number) => {
+    if (amount === 0) return "$0";
+    if (typeof amount !== "number") return "...";
+    const tiers = [
+      { value: 1e12, name: "T" },
+      { value: 1e9, name: "B" },
+      { value: 1e6, name: "M" },
+      { value: 1e3, name: "K" },
+    ];
+    const tier = tiers.find((t) => amount >= t.value);
+    if (tier) {
+      const value = (amount / tier.value).toFixed(1);
+      return `$${value}${tier.name}`;
+    }
+    return `$${amount}`;
+  };
 
   const getActivityIcon = (type: string) => {
     switch (type) {
@@ -696,10 +712,10 @@ export function AdminDashboard({
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" tick={false} />
                   <YAxis
-                    tickFormatter={(value) => formatCurrency(value as number)}
+                    tickFormatter={(value) => formatShortCurrency(value as number)}
                   />
                   <Tooltip
-                    formatter={(value) => formatCurrency(value as number)}
+                    formatter={(value) => formatShortCurrency(value as number)}
                   />
                   <Legend />
                   <Bar dataKey="Collected" fill="#10B981" />

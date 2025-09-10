@@ -1,4 +1,4 @@
-import { collection, getDocs, DocumentData } from 'firebase/firestore';
+import { collection, getDocs, DocumentData, query, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
 
@@ -22,4 +22,11 @@ export async function fetchAllDonations(): Promise<DocumentData[]> {
     console.error('Error fetching donations:', error);
     throw new Error('Failed to fetch donation data.');
   }
+}
+
+export async function getDonationsByKiosk(kioskId: string) {
+  const donationsRef = collection(db, 'donations');
+  const q = query(donationsRef, where('kioskId', '==', kioskId));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => doc.data());
 }

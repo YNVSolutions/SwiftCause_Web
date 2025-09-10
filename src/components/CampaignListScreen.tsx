@@ -42,6 +42,14 @@ export function CampaignListScreen({
   refreshCurrentKioskSession,
 }: CampaignListScreenProps) {
 
+  const [page, setPage] = useState(1);
+  const campaignsPerPage = 6;
+  const totalPages = Math.ceil(campaigns.length / campaignsPerPage);
+
+  const startIdx = (page - 1) * campaignsPerPage;
+  const endIdx = startIdx + campaignsPerPage;
+  const currentCampaigns = campaigns.slice(startIdx, endIdx);
+
   const handleRefresh = async () => {
     await refreshCampaigns();
     await refreshCurrentKioskSession();
@@ -142,7 +150,7 @@ export function CampaignListScreen({
               /* Container decides layout; default to grid/list based on isDetailedView */
               layoutMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "flex flex-col space-y-4"
             }>
-              {campaigns.map(campaign => (
+              {currentCampaigns.map(campaign => (
                 <CampaignCard
                   key={campaign.id}
                   campaign={campaign}
@@ -155,6 +163,28 @@ export function CampaignListScreen({
               ))}
             </div>
           )
+        )}
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex justify-center mt-4">
+            <button
+              onClick={() => setPage((p) => Math.max(p - 1, 1))}
+              disabled={page === 1}
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-l-lg shadow-md disabled:opacity-50"
+            >
+              ← Prev
+            </button>
+            <span className="px-4 py-2 text-gray-700">
+              Page {page} of {totalPages}
+            </span>
+            <button
+              onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+              disabled={page === totalPages}
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-r-lg shadow-md disabled:opacity-50"
+            >
+              Next →
+            </button>
+          </div>
         )}
       </main>
     </div>

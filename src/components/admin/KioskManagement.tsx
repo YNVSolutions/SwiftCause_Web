@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../../lib/firebase';
 import { useKiosks } from '../../hooks/useKiosks';
 import { useCampaigns } from '../../hooks/useCampaigns';
+import { useKioskPerformance } from '../../hooks/useKioskPerformance';
 import {
   collection,
   updateDoc,
@@ -38,6 +39,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
 }) {
   const { kiosks, loading: kiosksLoading, error: kiosksError, refresh: refreshKiosks } = useKiosks(userSession.user.organizationId);
   const { campaigns, loading: campaignsLoading, error: campaignsError, refresh: refreshCampaigns } = useCampaigns(userSession.user.organizationId);
+  const performanceData = useKioskPerformance(kiosks);
   
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -187,7 +189,17 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                       <TableRow key={kiosk.id}>
                         <TableCell><div className="space-y-1"><div className="flex items-center space-x-2"><Monitor className="w-4 h-4 text-gray-400" /><span className="font-medium">{kiosk.name}</span></div><div className="flex items-center space-x-2 text-sm text-gray-500"><MapPin className="w-3 h-3" /><span>{kiosk.location}</span></div><p className="text-xs text-gray-400 font-mono">{kiosk.id}</p></div></TableCell>
                         <TableCell>{getStatusBadge(kiosk.status)}</TableCell>
-                        <TableCell><div className="space-y-1"><div className="flex items-center space-x-2"><DollarSign className="w-4 h-4 text-gray-400" /><span className="text-sm font-medium">{formatCurrency(kiosk.totalRaised || 0)}</span></div><div className="flex items-center space-x-2"><Users className="w-4 h-4 text-gray-400" /><span className="text-sm">{kiosk.totalDonations || 0} donations</span></div></div></TableCell>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <div className="flex items-center space-x-2">
+                              <DollarSign className="w-4 h-4 text-gray-400" />
+                              <span className="text-sm font-medium">
+                                {formatCurrency(performanceData[kiosk.id]?.totalRaised || 0)}
+                              </span>
+                            </div>
+                            
+                          </div>
+                        </TableCell>
                         <TableCell><div className="space-y-2"><div className="flex items-center space-x-2"><Target className="w-4 h-4 text-gray-400" /><span className="text-sm">{kiosk.assignedCampaigns?.length || 0} assigned</span></div>{kiosk.defaultCampaign && (<div className="flex items-center space-x-2"><Star className="w-4 h-4 text-yellow-500" /><span className="text-sm">{campaigns.find(c => c.id === kiosk.defaultCampaign)?.title?.slice(0, 20) || '...'}</span></div>)}</div></TableCell>
                         <TableCell>
                           <div className="flex items-center space-x-1">
