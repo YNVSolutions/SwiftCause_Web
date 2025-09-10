@@ -13,9 +13,9 @@ import { UserManagement } from './components/admin/UserManagement';
 import CampaignManagement from './components/admin/CampaignManagement';
 import { doc, getDoc, db } from './lib/firebase';
 import { HomePage } from './components/HomePage';
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword, onAuthStateChanged, User as FirebaseAuthUser } from 'firebase/auth';
 import { getFirestore, setDoc } from 'firebase/firestore';
-import { OnboardingRedirectHandler } from './components/OnboardingRedirectHandler';
+// The OnboardingRedirectHandler is no longer needed.
 
 const auth = getAuth();
 const firestore = getFirestore();
@@ -33,8 +33,7 @@ export type Screen =
   | 'admin-campaigns'
   | 'admin-kiosks'
   | 'admin-donations'
-  | 'admin-users'
-  | 'onboarding';
+  | 'admin-users'; // 'onboarding' screen type removed
 
 
 export type UserRole = 'super_admin' | 'admin' | 'manager' | 'operator' | 'viewer' | 'kiosk';
@@ -242,15 +241,7 @@ export interface SignupFormData {
 
 
 export default function App() {
-  const getInitialScreen = (): Screen => {
-    const hash = window.location.hash;
-    if (hash.startsWith('#/onboarding')) {
-      return 'onboarding';
-    }
-    return 'home';
-  };
-
-  const [currentScreen, setCurrentScreen] = useState<Screen>(getInitialScreen());
+  const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [campaignView, setCampaignView] = useState<'overview' | 'donate'>('overview');
@@ -258,41 +249,57 @@ export default function App() {
   const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null);
   const [currentKioskSession, setCurrentKioskSession] = useState<KioskSession | null>(null);
   const [currentAdminSession, setCurrentAdminSession] = useState<AdminSession | null>(null);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true); // Manages loading state during Firebase auth initialization
 
-  console.log("App component rendered. Initial currentScreen:", currentScreen);
+  // console.log("App component rendered. Initial currentScreen:", currentScreen); // Removed debug log
 
-  // Effect to handle URL hash changes for navigation
+  // Effect to handle Firebase Auth state changes and re-establish session
   useEffect(() => {
-    console.log("App useEffect (hashchange) triggered.");
-    const handleHashChange = () => {
-      const hash = window.location.hash;
-      console.log("Hash change detected. Current hash:", hash);
-      if (hash.startsWith('#/onboarding')) {
-        console.log("Setting currentScreen to 'onboarding'.");
-        setCurrentScreen('onboarding');
-      } else if (currentScreen === 'onboarding') {
-        // Only navigate away from onboarding if the hash is no longer relevant
-        setCurrentScreen('home'); // Or a more appropriate default/previous screen
+    console.log("App: onAuthStateChanged listener set up.");
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      console.log("App: onAuthStateChanged triggered. FirebaseUser:", firebaseUser);
+      if (firebaseUser) {
+        // User is signed in, fetch additional user data from Firestore
+        const userDocRef = doc(db, "users", firebaseUser.uid);
+        const userDocSnap = await getDoc(userDocRef);
+
+        if (userDocSnap.exists()) {
+          const userData = userDocSnap.data() as User;
+          setUserRole(userData.role);
+          setCurrentAdminSession({
+            user: userData,
+            loginTime: new Date().toISOString(),
+          });
+
+          // Navigate to the appropriate screen based on user role after login/session restore
+          if (userData.role === 'admin' || userData.role === 'super_admin' || userData.role === 'manager' || userData.role === 'operator' || userData.role === 'viewer') {
+            setCurrentScreen('admin-dashboard');
+          } else if (userData.role === 'kiosk') {
+            setCurrentKioskSession(null); // Kiosk session needs explicit re-establishment via kiosk login flow
+            setCurrentScreen('campaigns');
+          }
+          console.log("App: User session restored, navigating to:", currentScreen);
+        } else {
+          // User document not found in Firestore for the authenticated Firebase user
+          console.warn("App: User document not found for UID:", firebaseUser.uid);
+          handleLogout(); // Log out from Firebase and clear local state
+        }
+      } else {
+        // No user is signed in (or was signed out)
+        console.log("App: Firebase user is signed out.");
+        handleLogout(); // Clear local session states
+        setCurrentScreen('home'); // Redirect to home/login if no user
       }
-    };
+      setIsLoadingAuth(false); // Authentication check is complete
+    });
 
-    // The initial call is now handled by getInitialScreen
+    return () => unsubscribe();
+  }, []); // Empty dependency array means this runs once on component mount
 
-    // Listen for hash changes
-    window.addEventListener('hashchange', handleHashChange);
-
-    // Cleanup listener
-    return () => {
-      window.removeEventListener('hashchange', handleHashChange);
-    };
-  }, [currentScreen]); // Add currentScreen to dependency array to re-evaluate on screen change
-
-  useEffect(() => {
-    console.log("currentScreen state updated to:", currentScreen);
-  }, [currentScreen]);
+  // console.log("currentScreen state updated to:", currentScreen); // Removed debug log
 
   const navigate = (screen: Screen) => {
-    console.log("navigate called with screen:", screen);
+    console.log("App: navigate called with screen:", screen);
     setCurrentScreen(screen);
   };
 
@@ -447,31 +454,18 @@ export default function App() {
            currentAdminSession.user.permissions.includes('system_admin');
   };
 
-  if (currentScreen === 'home') {
+  // Main application rendering logic based on authentication state and current screen
+  if (isLoadingAuth) {
     return (
-      <HomePage
-        onLogin={handleGoToLogin}
-        onSignup={handleGoToSignup}
-      />
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <p className="text-lg text-gray-700">Loading application...</p>
+      </div>
     );
-  }
-  if (currentScreen === 'signup') {
-    return (
-      <SignupScreen
-        onSignup={handleSignup}
-        onBack={() => navigate('home')}
-        onLogin={() => navigate('login')}
-      />
-    );
-  }
-
-  // This block should render independently of the admin session to handle redirects first
-  if (currentScreen === 'onboarding') {
-    return <OnboardingRedirectHandler onNavigate={navigate} />;
   }
 
   if (userRole === 'admin' && currentAdminSession) {
-    console.log("App: Rendering Admin section. currentScreen:", currentScreen);
+    // Admin section rendering
+    // console.log("App: Rendering Admin section. currentScreen:", currentScreen); // Removed debug log
     return (
       <div className="min-h-screen bg-background">
         {currentScreen === 'admin-dashboard' && (
@@ -515,18 +509,30 @@ export default function App() {
             hasPermission={hasPermission}
           />
         )}
-        {/* OnboardingRedirectHandler is now handled outside this block */}
+        {/* OnboardingRedirectHandler is completely removed. Stripe status is handled by AdminDashboard directly */}
       </div>
     );
   }
 
+  // Public or unauthenticated section rendering
   return (
     <div className="min-h-screen bg-background">
+      {currentScreen === 'home' && (
+        <HomePage
+          onLogin={handleGoToLogin}
+          onSignup={handleGoToSignup}
+        />
+      )}
       {currentScreen === 'login' && (
-      
         <LoginScreen onLogin={handleLogin} onGoBackToHome={handleGoBackToHome} />
       )}
-
+      {currentScreen === 'signup' && (
+        <SignupScreen
+          onSignup={handleSignup}
+          onBack={() => navigate('home')}
+          onLogin={() => navigate('login')}
+        />
+      )}
       {currentScreen === 'campaigns' && (
         <CampaignListContainer
           onSelectCampaign={(campaign) => handleCampaignSelect(campaign, false)}
@@ -536,7 +542,6 @@ export default function App() {
           refreshCurrentKioskSession={refreshCurrentKioskSession}
         />
       )}
-
       {currentScreen === 'campaign' && selectedCampaign && (
         <CampaignScreen
           campaign={selectedCampaign}
@@ -546,7 +551,6 @@ export default function App() {
           onViewChange={handleCampaignViewChange}
         />
       )}
-
       {currentScreen === 'payment' && donation && selectedCampaign && (
         <PaymentContainer
           campaign={selectedCampaign}
@@ -558,7 +562,6 @@ export default function App() {
           }}
         />
       )}
-
       {currentScreen === 'result' && paymentResult && (
         <ResultScreen
           result={paymentResult}
@@ -566,7 +569,6 @@ export default function App() {
           onReturnToStart={handleReturnToStart}
         />
       )}
-
       {currentScreen === 'email-confirmation' && paymentResult && (
         <EmailConfirmationScreen
           transactionId={paymentResult.transactionId}

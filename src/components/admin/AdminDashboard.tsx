@@ -110,16 +110,41 @@ export function AdminDashboard({
   const [showFeatures, setShowFeatures] = useState(false);
   const [showGettingStarted, setShowGettingStarted] = useState(false);
   const [isLegendExpanded, setIsLegendExpanded] = useState(false);
+  const [stripeStatusMessage, setStripeStatusMessage] = useState<{ type: 'success' | 'error' | 'warning', message: string } | null>(null); // New state for Stripe status messages
 
   const { organization, loading: orgLoading, error: orgError } = useOrganization(
     userSession.user.organizationId ?? null
   );
 
+  useEffect(() => {
+    const hash = window.location.hash;
+    const params = new URLSearchParams(hash.split("?")[1]);
+    const stripeStatus = params.get("stripe_status");
+
+    if (stripeStatus === "success") {
+      setStripeStatusMessage({
+        type: "success",
+        message: "Stripe onboarding complete! Your account is being reviewed and will be payout-ready shortly.",
+      });
+    } else if (stripeStatus === "refresh") {
+      setStripeStatusMessage({
+        type: "warning",
+        message: "Stripe onboarding session expired or was cancelled. Please try again.",
+      });
+    }
+
+    // Clear the stripe_status from the URL hash to prevent it from reappearing on refresh
+    if (stripeStatus) {
+      const newHash = hash.split("?")[0];
+      window.history.replaceState(null, '', newHash);
+    }
+  }, []); // Run once on component mount to check for URL hash
+
   const handleStripeOnboarding = async () => {
-    console.log("handleStripeOnboarding initiated.");
-    console.log("Current userSession:", userSession);
-    console.log("Firebase auth.currentUser:", auth.currentUser);
-    console.log("VITE_CREATE_ONBOARDING_LINK_URL:", import.meta.env.VITE_CREATE_ONBOARDING_LINK_URL);
+    // console.log("handleStripeOnboarding initiated."); // Removed debug log
+    // console.log("Current userSession:", userSession); // Removed debug log
+    // console.log("Firebase auth.currentUser:", auth.currentUser); // Removed debug log
+    // console.log("VITE_CREATE_ONBOARDING_LINK_URL:", import.meta.env.VITE_CREATE_ONBOARDING_LINK_URL); // Removed debug log
 
     if (!organization?.id) {
       console.error("Organization ID not available for Stripe onboarding.");
@@ -133,7 +158,7 @@ export function AdminDashboard({
 
     try {
       const idToken = await auth.currentUser.getIdToken();
-      console.log("Calling createOnboardingLink with orgId:", organization.id, "and ID Token:", idToken);
+      // console.log("Calling createOnboardingLink with orgId:", organization.id, "and ID Token:", idToken); // Removed debug log
 
       const response = await fetch('https://createonboardinglink-j2f5w4qwxq-uc.a.run.app', {
         method: "POST",
@@ -151,12 +176,12 @@ export function AdminDashboard({
 
       const { url } = await response.json();
       if (url) {
-        console.log("Received onboarding URL:", url);
+        // console.log("Received onboarding URL:", url); // Removed debug log
         window.location.href = url;
       }
     } catch (error) {
       console.error("Error creating Stripe onboarding link:", error);
-      // Optionally, show an error message to the user
+      setStripeStatusMessage({ type: 'error', message: `Failed to start Stripe onboarding: ${(error as Error).message}` }); // Show error to user
     }
   };
 
@@ -480,6 +505,12 @@ export function AdminDashboard({
                 <div className="flex items-center space-x-3">
                   <h1 className="text-xl font-semibold text-gray-900">Admin Dashboard</h1>
                   <Badge variant="outline" className="text-xs">{userSession.user.role}</Badge>
+                  {organization && organization.stripe && organization.stripe.chargesEnabled && organization.stripe.payoutsEnabled && (
+                    <Badge className="bg-green-500 text-white flex items-center space-x-1">
+                      <CheckCircle className="w-3 h-3" />
+                      <span>Stripe Ready</span>
+                    </Badge>
+                  )}
                 </div>
                 <p className="text-sm text-gray-600">Welcome back, {userSession.user.username}</p>
               </div>
@@ -502,6 +533,17 @@ export function AdminDashboard({
       </header>
 
       <main className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {stripeStatusMessage && (
+          <Card className={`mb-8 ${stripeStatusMessage.type === 'success' ? 'border-green-400 bg-green-50 text-green-800' : stripeStatusMessage.type === 'warning' ? 'border-yellow-400 bg-yellow-50 text-yellow-800' : 'border-red-400 bg-red-50 text-red-800'}`}>
+            <CardContent className="flex items-center space-x-3 p-4">
+              {stripeStatusMessage.type === 'success' && <CheckCircle className="w-5 h-5" />}
+              {stripeStatusMessage.type === 'warning' && <AlertCircle className="w-5 h-5" />}
+              {stripeStatusMessage.type === 'error' && <AlertCircle className="w-5 h-5" />}
+              <p className="font-medium">{stripeStatusMessage.message}</p>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
           <div>
             <h2 className="text-2xl text-gray-900">Overview</h2>
