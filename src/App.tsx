@@ -13,7 +13,7 @@ import { UserManagement } from './components/admin/UserManagement';
 import CampaignManagement from './components/admin/CampaignManagement';
 import { doc, getDoc, db } from './lib/firebase';
 import { HomePage } from './components/HomePage';
-import { getAuth, createUserWithEmailAndPassword, onAuthStateChanged, User as FirebaseAuthUser } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword, onAuthStateChanged, User as FirebaseAuthUser, signOut } from 'firebase/auth';
 import { getFirestore, setDoc } from 'firebase/firestore';
 // The OnboardingRedirectHandler is no longer needed.
 
@@ -250,7 +250,8 @@ export default function App() {
   const [currentKioskSession, setCurrentKioskSession] = useState<KioskSession | null>(null);
   const [currentAdminSession, setCurrentAdminSession] = useState<AdminSession | null>(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true); // Manages loading state during Firebase auth initialization
-
+  const [signupSuccess, setSignupSuccess] = useState(false); // New state for signup success message
+  const [signupError, setSignupError] = useState<string | null>(null); // New state for signup error message
   // console.log("App component rendered. Initial currentScreen:", currentScreen); // Removed debug log
 
   // Effect to handle Firebase Auth state changes and re-establish session
@@ -435,14 +436,15 @@ export default function App() {
         createdAt: new Date().toISOString()
       });
 
-      alert('Signup successful!');
+      await signOut(auth); // Clear the Firebase user session
+      setSignupSuccess(true); // Show success message and login button
     } catch (error) {
       if (error instanceof Error) {
         console.error('Signup error:', error);
-        alert(`Signup failed: ${error.message}`);
+        setSignupError(`Signup failed: ${error.message}`);
       } else {
         console.error('Unknown signup error:', error);
-        alert('Signup failed due to an unknown error.');
+        setSignupError('Signup failed due to an unknown error.');
       }
     }
   };
@@ -517,63 +519,100 @@ export default function App() {
   // Public or unauthenticated section rendering
   return (
     <div className="min-h-screen bg-background">
-      {currentScreen === 'home' && (
-        <HomePage
-          onLogin={handleGoToLogin}
-          onSignup={handleGoToSignup}
-        />
-      )}
-      {currentScreen === 'login' && (
-        <LoginScreen onLogin={handleLogin} onGoBackToHome={handleGoBackToHome} />
-      )}
-      {currentScreen === 'signup' && (
-        <SignupScreen
-          onSignup={handleSignup}
-          onBack={() => navigate('home')}
-          onLogin={() => navigate('login')}
-        />
-      )}
-      {currentScreen === 'campaigns' && (
-        <CampaignListContainer
-          onSelectCampaign={(campaign) => handleCampaignSelect(campaign, false)}
-          onViewDetails={(campaign) => handleCampaignSelect(campaign, true)}
-          kioskSession={currentKioskSession}
-          onLogout={handleLogout}
-          refreshCurrentKioskSession={refreshCurrentKioskSession}
-        />
-      )}
-      {currentScreen === 'campaign' && selectedCampaign && (
-        <CampaignScreen
-          campaign={selectedCampaign}
-          initialShowDetails={campaignView === 'overview'}
-          onSubmit={handleDonationSubmit}
-          onBack={handleBackFromCampaign}
-          onViewChange={handleCampaignViewChange}
-        />
-      )}
-      {currentScreen === 'payment' && donation && selectedCampaign && (
-        <PaymentContainer
-          campaign={selectedCampaign}
-          donation={donation}
-          onPaymentComplete={handlePaymentSubmit}
-          onBack={() => {
-            setCampaignView('donate');
-            navigate('campaign');
-          }}
-        />
-      )}
-      {currentScreen === 'result' && paymentResult && (
-        <ResultScreen
-          result={paymentResult}
-          onEmailConfirmation={paymentResult.success ? handleEmailConfirmation : undefined}
-          onReturnToStart={handleReturnToStart}
-        />
-      )}
-      {currentScreen === 'email-confirmation' && paymentResult && (
-        <EmailConfirmationScreen
-          transactionId={paymentResult.transactionId}
-          onComplete={handleReturnToStart}
-        />
+      {signupSuccess ? (
+        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4">
+          <h2 className="text-3xl font-bold text-green-600 mb-4">Account Created Successfully!</h2>
+          <p className="text-lg text-gray-700 mb-6 text-center">
+            Your account has been created. Please sign in to continue.
+          </p>
+          <button
+            onClick={() => {
+              setSignupSuccess(false);
+              navigate('login');
+            }}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
+            Sign In
+          </button>
+        </div>
+      ) : (
+        <>
+          {signupError && (
+            <div className="flex flex-col items-center justify-center min-h-screen bg-red-50 p-4">
+              <h2 className="text-3xl font-bold text-red-600 mb-4">Signup Failed</h2>
+              <p className="text-lg text-gray-700 mb-6 text-center">
+                {signupError}
+              </p>
+              <button
+                onClick={() => {
+                  setSignupError(null);
+                  navigate('signup'); // Go back to signup form
+                }}
+                className="px-6 py-3 bg-red-600 text-white rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+              >
+                Try Again
+              </button>
+            </div>
+          )}
+          {!signupSuccess && !signupError && currentScreen === 'home' && (
+            <HomePage
+              onLogin={handleGoToLogin}
+              onSignup={handleGoToSignup}
+            />
+          )}
+          {!signupSuccess && !signupError && currentScreen === 'login' && (
+            <LoginScreen onLogin={handleLogin} onGoBackToHome={handleGoBackToHome} />
+          )}
+          {!signupSuccess && !signupError && currentScreen === 'signup' && (
+            <SignupScreen
+              onSignup={handleSignup}
+              onBack={() => navigate('home')}
+              onLogin={() => navigate('login')}
+            />
+          )}
+          {currentScreen === 'campaigns' && (
+            <CampaignListContainer
+              onSelectCampaign={(campaign) => handleCampaignSelect(campaign, false)}
+              onViewDetails={(campaign) => handleCampaignSelect(campaign, true)}
+              kioskSession={currentKioskSession}
+              onLogout={handleLogout}
+              refreshCurrentKioskSession={refreshCurrentKioskSession}
+            />
+          )}
+          {currentScreen === 'campaign' && selectedCampaign && (
+            <CampaignScreen
+              campaign={selectedCampaign}
+              initialShowDetails={campaignView === 'overview'}
+              onSubmit={handleDonationSubmit}
+              onBack={handleBackFromCampaign}
+              onViewChange={handleCampaignViewChange}
+            />
+          )}
+          {currentScreen === 'payment' && donation && selectedCampaign && (
+            <PaymentContainer
+              campaign={selectedCampaign}
+              donation={donation}
+              onPaymentComplete={handlePaymentSubmit}
+              onBack={() => {
+                setCampaignView('donate');
+                navigate('campaign');
+              }}
+            />
+          )}
+          {currentScreen === 'result' && paymentResult && (
+            <ResultScreen
+              result={paymentResult}
+              onEmailConfirmation={paymentResult.success ? handleEmailConfirmation : undefined}
+              onReturnToStart={handleReturnToStart}
+            />
+          )}
+          {currentScreen === 'email-confirmation' && paymentResult && (
+            <EmailConfirmationScreen
+              transactionId={paymentResult.transactionId}
+              onComplete={handleReturnToStart}
+            />
+          )}
+        </>
       )}
     </div>
   );
