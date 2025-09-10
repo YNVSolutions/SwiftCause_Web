@@ -13,7 +13,7 @@ import {
   Timestamp,
   where
 } from 'firebase/firestore';
-
+import { Organization } from '../App';
 export async function getCampaigns(organizationId?: string) {
   let campaignsCollection: any = collection(db, 'campaigns');
   if (organizationId) {
@@ -66,7 +66,17 @@ export async function getOrganizations() {
   const snapshot = await getDocs(collection(db, 'organizations'));
   return snapshot.docs.map(d => ({ id: d.id, ...(d.data() as object) }));
 }
-
+export async function getOrganizationById(organizationId: string): Promise<Organization | null> {
+  const docRef = doc(db, 'organizations', organizationId);
+  const docSnap = await getDoc(docRef);
+  
+  if (docSnap.exists()) {
+    return { ...(docSnap.data() as Organization), id: docSnap.id };
+  } else {
+    console.log("No such organization document!");
+    return null;
+  }
+}
 export async function getAllCampaigns() {
   const campaignsRef = collection(db, 'campaigns');
   const snapshot = await getDocs(campaignsRef);
