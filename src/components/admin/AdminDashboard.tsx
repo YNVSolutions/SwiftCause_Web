@@ -70,6 +70,8 @@ import {
   Alert,
 } from "../../hooks/useDashboardData";
 import { OrganizationSwitcher } from "./OrganizationSwitcher";
+import { useOrganization } from "../../hooks/useOrganization";
+import { auth } from "../../lib/firebase";
 
 interface AdminDashboardProps {
   onNavigate: (screen: Screen) => void;
@@ -108,6 +110,55 @@ export function AdminDashboard({
   const [showFeatures, setShowFeatures] = useState(false);
   const [showGettingStarted, setShowGettingStarted] = useState(false);
   const [isLegendExpanded, setIsLegendExpanded] = useState(false);
+
+  const { organization, loading: orgLoading, error: orgError } = useOrganization(
+    userSession.user.organizationId ?? null
+  );
+
+  const handleStripeOnboarding = async () => {
+    console.log("handleStripeOnboarding initiated.");
+    console.log("Current userSession:", userSession);
+    console.log("Firebase auth.currentUser:", auth.currentUser);
+    console.log("VITE_CREATE_ONBOARDING_LINK_URL:", import.meta.env.VITE_CREATE_ONBOARDING_LINK_URL);
+
+    if (!organization?.id) {
+      console.error("Organization ID not available for Stripe onboarding.");
+      return;
+    }
+
+    if (!auth.currentUser) {
+      console.error("No authenticated Firebase user found.");
+      return;
+    }
+
+    try {
+      const idToken = await auth.currentUser.getIdToken();
+      console.log("Calling createOnboardingLink with orgId:", organization.id, "and ID Token:", idToken);
+
+      const response = await fetch('https://createonboardinglink-j2f5w4qwxq-uc.a.run.app', {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({ orgId: organization.id }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || response.statusText || "Failed to create onboarding link.");
+      }
+
+      const { url } = await response.json();
+      if (url) {
+        console.log("Received onboarding URL:", url);
+        window.location.href = url;
+      }
+    } catch (error) {
+      console.error("Error creating Stripe onboarding link:", error);
+      // Optionally, show an error message to the user
+    }
+  };
 
   // Platform features data
   const platformFeatures = [
@@ -471,6 +522,45 @@ export function AdminDashboard({
             )}
           </div>
         </div>
+        {orgLoading ? (
+          <p>Loading organization data...</p>
+        ) : orgError ? (
+          <p className="text-red-500">Error: {orgError}</p>
+        ) : organization &&
+          organization.stripe &&
+          !organization.stripe.chargesEnabled ? (
+          <Card className="mb-8 border-yellow-400 bg-yellow-50">
+            <CardHeader>
+              <CardTitle className="text-yellow-800 flex items-center space-x-2">
+                <CreditCard className="w-5 h-5" />
+                <span>Stripe Onboarding Required</span>
+              </CardTitle>
+              <CardDescription className="text-yellow-700">
+                Your organization needs to complete Stripe onboarding to accept donations and receive payouts.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={handleStripeOnboarding} className="bg-yellow-600 hover:bg-yellow-700">
+                Complete Stripe Onboarding
+              </Button>
+            </CardContent>
+          </Card>
+        ) : organization &&
+          organization.stripe &&
+          organization.stripe.chargesEnabled &&
+          !organization.stripe.payoutsEnabled ? (
+          <Card className="mb-8 border-blue-400 bg-blue-50">
+            <CardHeader>
+              <CardTitle className="text-blue-800 flex items-center space-x-2">
+                <CreditCard className="w-5 h-5" />
+                <span>Stripe Onboarding In Progress</span>
+              </CardTitle>
+              <CardDescription className="text-blue-700">
+                Your Stripe account is being reviewed. Payouts will be enabled shortly.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        ) : null}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <Card>
             <CardContent className="p-6">

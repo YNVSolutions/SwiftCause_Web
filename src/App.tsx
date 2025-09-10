@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { LoginScreen } from './components/LoginScreen';
 import { SignupScreen } from './components/SignupScreen';
 import { CampaignListContainer } from './features/campaigns/containers/CampaignListContainer';
@@ -15,6 +15,7 @@ import { doc, getDoc, db } from './lib/firebase';
 import { HomePage } from './components/HomePage';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { getFirestore, setDoc } from 'firebase/firestore';
+import { OnboardingRedirectHandler } from './components/OnboardingRedirectHandler';
 
 const auth = getAuth();
 const firestore = getFirestore();
@@ -32,7 +33,8 @@ export type Screen =
   | 'admin-campaigns'
   | 'admin-kiosks'
   | 'admin-donations'
-  | 'admin-users';
+  | 'admin-users'
+  | 'onboarding';
 
 
 export type UserRole = 'super_admin' | 'admin' | 'manager' | 'operator' | 'viewer' | 'kiosk';
@@ -56,11 +58,19 @@ export type Permission =
   | 'delete_user'
   | 'manage_permissions'
   | 'system_admin';
-export interface UserPermissions {
-  permissions: Permission[];
-  role: 'super_admin' | 'admin' | 'manager' | 'operator' | 'viewer';
-  description: string;
+
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+  role: UserRole; // Singular role
+  permissions: Permission[]; // Array of permissions
+  isActive: boolean; // User is active by default
+  createdAt?: string;
+  lastLogin?: string;
+  organizationId?: string;
 }
+
 export interface CampaignConfiguration {
   predefinedAmounts: number[];
   allowCustomAmount: boolean;
@@ -126,6 +136,13 @@ export interface Campaign {
     };
   };
 }
+
+export interface Organization {
+  id: string;
+  name: string;
+  currency: string;
+}
+
 export interface Donation {
   campaignId: string;
   amount: number;
@@ -183,17 +200,7 @@ export interface Kiosk {
   };
   organizationId?: string;
 }
-export interface User {
-  id: string;
-  username: string;
-  email: string;
-  role: UserRole; // Singular role
-  permissions: Permission[]; // Array of permissions
-  isActive: boolean; // User is active by default
-  createdAt?: string;
-  lastLogin?: string;
-  organizationId?: string;
-}
+
 export interface KioskSession {
   kioskId: string;
   kioskName: string;
@@ -235,7 +242,15 @@ export interface SignupFormData {
 
 
 export default function App() {
-  const [currentScreen, setCurrentScreen] = useState<Screen>('home');
+  const getInitialScreen = (): Screen => {
+    const hash = window.location.hash;
+    if (hash.startsWith('#/onboarding')) {
+      return 'onboarding';
+    }
+    return 'home';
+  };
+
+  const [currentScreen, setCurrentScreen] = useState<Screen>(getInitialScreen());
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [campaignView, setCampaignView] = useState<'overview' | 'donate'>('overview');
@@ -244,7 +259,40 @@ export default function App() {
   const [currentKioskSession, setCurrentKioskSession] = useState<KioskSession | null>(null);
   const [currentAdminSession, setCurrentAdminSession] = useState<AdminSession | null>(null);
 
+  console.log("App component rendered. Initial currentScreen:", currentScreen);
+
+  // Effect to handle URL hash changes for navigation
+  useEffect(() => {
+    console.log("App useEffect (hashchange) triggered.");
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      console.log("Hash change detected. Current hash:", hash);
+      if (hash.startsWith('#/onboarding')) {
+        console.log("Setting currentScreen to 'onboarding'.");
+        setCurrentScreen('onboarding');
+      } else if (currentScreen === 'onboarding') {
+        // Only navigate away from onboarding if the hash is no longer relevant
+        setCurrentScreen('home'); // Or a more appropriate default/previous screen
+      }
+    };
+
+    // The initial call is now handled by getInitialScreen
+
+    // Listen for hash changes
+    window.addEventListener('hashchange', handleHashChange);
+
+    // Cleanup listener
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
+  }, [currentScreen]); // Add currentScreen to dependency array to re-evaluate on screen change
+
+  useEffect(() => {
+    console.log("currentScreen state updated to:", currentScreen);
+  }, [currentScreen]);
+
   const navigate = (screen: Screen) => {
+    console.log("navigate called with screen:", screen);
     setCurrentScreen(screen);
   };
 
@@ -417,7 +465,13 @@ export default function App() {
     );
   }
 
+  // This block should render independently of the admin session to handle redirects first
+  if (currentScreen === 'onboarding') {
+    return <OnboardingRedirectHandler onNavigate={navigate} />;
+  }
+
   if (userRole === 'admin' && currentAdminSession) {
+    console.log("App: Rendering Admin section. currentScreen:", currentScreen);
     return (
       <div className="min-h-screen bg-background">
         {currentScreen === 'admin-dashboard' && (
@@ -461,6 +515,7 @@ export default function App() {
             hasPermission={hasPermission}
           />
         )}
+        {/* OnboardingRedirectHandler is now handled outside this block */}
       </div>
     );
   }

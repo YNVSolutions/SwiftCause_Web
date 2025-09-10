@@ -56,6 +56,11 @@ interface SignupFormData {
   organizationSize: string;
   organizationId: string; // Added organizationId
   website?: string;
+  stripe?: {
+    accountId: string;
+    chargesEnabled: boolean;
+    payoutsEnabled: boolean;
+  };
   
   // Account Setup
   password: string;
@@ -183,7 +188,12 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
     if (validateStep(currentStep)) {
       onSignup({
         ...formData,
-        organizationId: formData.organizationName.replace(/\s+/g, '-').toLowerCase() // Generate organizationId
+        organizationId: formData.organizationName.replace(/\s+/g, '-').toLowerCase(), // Generate organizationId
+        stripe: {
+          accountId: '',
+          chargesEnabled: false,
+          payoutsEnabled: false,
+        },
       });
     }
   };
