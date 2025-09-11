@@ -110,7 +110,7 @@ export function AdminDashboard({
   const [showFeatures, setShowFeatures] = useState(false);
   const [showGettingStarted, setShowGettingStarted] = useState(false);
   const [isLegendExpanded, setIsLegendExpanded] = useState(false);
-  const [stripeStatusMessage, setStripeStatusMessage] = useState<{ type: 'success' | 'error' | 'warning', message: string } | null>(null); // New state for Stripe status messages
+  const [stripeStatusMessage, setStripeStatusMessage] = useState<{ type: 'success' | 'error' | 'warning', message: string } | null>(null); 
 
   const { organization, loading: orgLoading, error: orgError } = useOrganization(
     userSession.user.organizationId ?? null
@@ -141,11 +141,6 @@ export function AdminDashboard({
   }, []); // Run once on component mount to check for URL hash
 
   const handleStripeOnboarding = async () => {
-    // console.log("handleStripeOnboarding initiated."); // Removed debug log
-    // console.log("Current userSession:", userSession); // Removed debug log
-    // console.log("Firebase auth.currentUser:", auth.currentUser); // Removed debug log
-    // console.log("VITE_CREATE_ONBOARDING_LINK_URL:", import.meta.env.VITE_CREATE_ONBOARDING_LINK_URL); // Removed debug log
-
     if (!organization?.id) {
       console.error("Organization ID not available for Stripe onboarding.");
       return;
@@ -158,8 +153,7 @@ export function AdminDashboard({
 
     try {
       const idToken = await auth.currentUser.getIdToken();
-      // console.log("Calling createOnboardingLink with orgId:", organization.id, "and ID Token:", idToken); // Removed debug log
-
+      
       const response = await fetch('https://createonboardinglink-j2f5w4qwxq-uc.a.run.app', {
         method: "POST",
         headers: {
@@ -176,12 +170,11 @@ export function AdminDashboard({
 
       const { url } = await response.json();
       if (url) {
-        // console.log("Received onboarding URL:", url); // Removed debug log
         window.location.href = url;
       }
     } catch (error) {
       console.error("Error creating Stripe onboarding link:", error);
-      setStripeStatusMessage({ type: 'error', message: `Failed to start Stripe onboarding: ${(error as Error).message}` }); // Show error to user
+      setStripeStatusMessage({ type: 'error', message: `Failed to start Stripe onboarding: ${(error as Error).message}` });
     }
   };
 

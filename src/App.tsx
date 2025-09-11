@@ -38,7 +38,7 @@ export type Screen =
   | "admin-campaigns"
   | "admin-kiosks"
   | "admin-donations"
-  | "admin-users"; // 'onboarding' screen type removed
+  | "admin-users";
 
 export type UserRole =
   | "super_admin"
@@ -72,9 +72,9 @@ export interface User {
   id: string;
   username: string;
   email: string;
-  role: UserRole; // Singular role
-  permissions: Permission[]; // Array of permissions
-  isActive: boolean; // User is active by default
+  role: UserRole;
+  permissions: Permission[]
+  isActive: boolean;
   createdAt?: string;
   lastLogin?: string;
   organizationId?: string;
@@ -235,7 +235,7 @@ export interface SignupFormData {
   organizationName: string;
   organizationType: string;
   organizationSize: string;
-  organizationId: string; // Added organizationId
+  organizationId: string;
   website?: string;
 
   // Account Setup
@@ -268,7 +268,6 @@ export default function App() {
     useState<AdminSession | null>(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true); // Manages loading state during Firebase auth initialization
 
-  // console.log("App component rendered. Initial currentScreen:", currentScreen); // Removed debug log
 
   // Effect to handle Firebase Auth state changes and re-establish session
   useEffect(() => {
@@ -301,13 +300,10 @@ export default function App() {
           ) {
             setCurrentScreen("admin-dashboard");
           } else if (userData.role === "kiosk") {
-            setCurrentKioskSession(null); // Kiosk session needs explicit re-establishment via kiosk login flow
+            setCurrentKioskSession(null); 
             setCurrentScreen("campaigns");
           }
-          console.log(
-            "App: User session restored, navigating to:",
-            currentScreen
-          );
+
         } else {
           // User document not found in Firestore for the authenticated Firebase user
           console.warn(
@@ -328,7 +324,7 @@ export default function App() {
     return () => unsubscribe();
   }, []); // Empty dependency array means this runs once on component mount
 
-  // console.log("currentScreen state updated to:", currentScreen); // Removed debug log
+
 
   const navigate = (screen: Screen) => {
     console.log("App: navigate called with screen:", screen);
@@ -542,8 +538,6 @@ export default function App() {
   }
 
   if (userRole === "admin" && currentAdminSession) {
-    // Admin section rendering
-    // console.log("App: Rendering Admin section. currentScreen:", currentScreen); // Removed debug log
     return (
       <div className="min-h-screen bg-background">
         {currentScreen === "admin-dashboard" && (
@@ -587,7 +581,6 @@ export default function App() {
             hasPermission={hasPermission}
           />
         )}
-        {/* OnboardingRedirectHandler is completely removed. Stripe status is handled by AdminDashboard directly */}
       </div>
     );
   }

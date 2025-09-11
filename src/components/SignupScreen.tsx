@@ -7,7 +7,6 @@ import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Checkbox } from './ui/checkbox';
 import { Progress } from './ui/progress';
-import { ImageWithFallback } from './figma/ImageWithFallback';
 import { 
   Heart,
   Shield,
@@ -54,7 +53,7 @@ interface SignupFormData {
   organizationName: string;
   organizationType: string;
   organizationSize: string;
-  organizationId: string; // Added organizationId
+  organizationId: string; 
   website?: string;
   stripe?: {
     accountId: string;
@@ -67,7 +66,7 @@ interface SignupFormData {
   confirmPassword: string;
   
   // Preferences
-  currency: string; // Added currency field
+  currency: string;
   
   // Legal
   agreeToTerms: boolean;
