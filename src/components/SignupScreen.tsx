@@ -7,7 +7,6 @@ import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Checkbox } from './ui/checkbox';
 import { Progress } from './ui/progress';
-import { ImageWithFallback } from './figma/ImageWithFallback';
 import { 
   Heart,
   Shield,
@@ -54,15 +53,20 @@ interface SignupFormData {
   organizationName: string;
   organizationType: string;
   organizationSize: string;
-  organizationId: string; // Added organizationId
+  organizationId: string; 
   website?: string;
+  stripe?: {
+    accountId: string;
+    chargesEnabled: boolean;
+    payoutsEnabled: boolean;
+  };
   
   // Account Setup
   password: string;
   confirmPassword: string;
   
   // Preferences
-  currency: string; // Added currency field
+  currency: string;
   
   // Legal
   agreeToTerms: boolean;
@@ -183,7 +187,12 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
     if (validateStep(currentStep)) {
       onSignup({
         ...formData,
-        organizationId: formData.organizationName.replace(/\s+/g, '-').toLowerCase() // Generate organizationId
+        organizationId: formData.organizationName.replace(/\s+/g, '-').toLowerCase(), // Generate organizationId
+        stripe: {
+          accountId: '',
+          chargesEnabled: false,
+          payoutsEnabled: false,
+        },
       });
     }
   };

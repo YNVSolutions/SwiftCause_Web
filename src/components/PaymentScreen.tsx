@@ -10,8 +10,7 @@ import { formatCurrency } from '../utils/currencyFormatter';
 import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
-import { ChevronDown } from "lucide-react";
-import { Textarea } from "./ui/textarea"; // Import Textarea component
+import { Textarea } from "./ui/textarea";
 
 interface PaymentScreenProps {
   campaign: Campaign;

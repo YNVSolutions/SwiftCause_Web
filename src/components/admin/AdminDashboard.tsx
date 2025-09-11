@@ -70,6 +70,8 @@ import {
   Alert,
 } from "../../hooks/useDashboardData";
 import { OrganizationSwitcher } from "./OrganizationSwitcher";
+import { useOrganization } from "../../hooks/useOrganization";
+import { auth } from "../../lib/firebase";
 
 interface AdminDashboardProps {
   onNavigate: (screen: Screen) => void;
@@ -108,6 +110,73 @@ export function AdminDashboard({
   const [showFeatures, setShowFeatures] = useState(false);
   const [showGettingStarted, setShowGettingStarted] = useState(false);
   const [isLegendExpanded, setIsLegendExpanded] = useState(false);
+  const [stripeStatusMessage, setStripeStatusMessage] = useState<{ type: 'success' | 'error' | 'warning', message: string } | null>(null); 
+
+  const { organization, loading: orgLoading, error: orgError } = useOrganization(
+    userSession.user.organizationId ?? null
+  );
+
+  useEffect(() => {
+    const hash = window.location.hash;
+    const params = new URLSearchParams(hash.split("?")[1]);
+    const stripeStatus = params.get("stripe_status");
+
+    if (stripeStatus === "success") {
+      setStripeStatusMessage({
+        type: "success",
+        message: "Stripe onboarding complete! Your account is being reviewed and will be payout-ready shortly.",
+      });
+    } else if (stripeStatus === "refresh") {
+      setStripeStatusMessage({
+        type: "warning",
+        message: "Stripe onboarding session expired or was cancelled. Please try again.",
+      });
+    }
+
+    // Clear the stripe_status from the URL hash to prevent it from reappearing on refresh
+    if (stripeStatus) {
+      const newHash = hash.split("?")[0];
+      window.history.replaceState(null, '', newHash);
+    }
+  }, []); // Run once on component mount to check for URL hash
+
+  const handleStripeOnboarding = async () => {
+    if (!organization?.id) {
+      console.error("Organization ID not available for Stripe onboarding.");
+      return;
+    }
+
+    if (!auth.currentUser) {
+      console.error("No authenticated Firebase user found.");
+      return;
+    }
+
+    try {
+      const idToken = await auth.currentUser.getIdToken();
+      
+      const response = await fetch('https://createonboardinglink-j2f5w4qwxq-uc.a.run.app', {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({ orgId: organization.id }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || response.statusText || "Failed to create onboarding link.");
+      }
+
+      const { url } = await response.json();
+      if (url) {
+        window.location.href = url;
+      }
+    } catch (error) {
+      console.error("Error creating Stripe onboarding link:", error);
+      setStripeStatusMessage({ type: 'error', message: `Failed to start Stripe onboarding: ${(error as Error).message}` });
+    }
+  };
 
   // Platform features data
   const platformFeatures = [
@@ -429,6 +498,12 @@ export function AdminDashboard({
                 <div className="flex items-center space-x-3">
                   <h1 className="text-xl font-semibold text-gray-900">Admin Dashboard</h1>
                   <Badge variant="outline" className="text-xs">{userSession.user.role}</Badge>
+                  {organization && organization.stripe && organization.stripe.chargesEnabled && organization.stripe.payoutsEnabled && (
+                    <Badge className="bg-green-500 text-white flex items-center space-x-1">
+                      <CheckCircle className="w-3 h-3" />
+                      <span>Stripe Ready</span>
+                    </Badge>
+                  )}
                 </div>
                 <p className="text-sm text-gray-600">Welcome back, {userSession.user.username}</p>
               </div>
@@ -451,6 +526,17 @@ export function AdminDashboard({
       </header>
 
       <main className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {stripeStatusMessage && (
+          <Card className={`mb-8 ${stripeStatusMessage.type === 'success' ? 'border-green-400 bg-green-50 text-green-800' : stripeStatusMessage.type === 'warning' ? 'border-yellow-400 bg-yellow-50 text-yellow-800' : 'border-red-400 bg-red-50 text-red-800'}`}>
+            <CardContent className="flex items-center space-x-3 p-4">
+              {stripeStatusMessage.type === 'success' && <CheckCircle className="w-5 h-5" />}
+              {stripeStatusMessage.type === 'warning' && <AlertCircle className="w-5 h-5" />}
+              {stripeStatusMessage.type === 'error' && <AlertCircle className="w-5 h-5" />}
+              <p className="font-medium">{stripeStatusMessage.message}</p>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
           <div>
             <h2 className="text-2xl text-gray-900">Overview</h2>
@@ -471,6 +557,45 @@ export function AdminDashboard({
             )}
           </div>
         </div>
+        {orgLoading ? (
+          <p>Loading organization data...</p>
+        ) : orgError ? (
+          <p className="text-red-500">Error: {orgError}</p>
+        ) : organization &&
+          organization.stripe &&
+          !organization.stripe.chargesEnabled ? (
+          <Card className="mb-8 border-yellow-400 bg-yellow-50">
+            <CardHeader>
+              <CardTitle className="text-yellow-800 flex items-center space-x-2">
+                <CreditCard className="w-5 h-5" />
+                <span>Stripe Onboarding Required</span>
+              </CardTitle>
+              <CardDescription className="text-yellow-700">
+                Your organization needs to complete Stripe onboarding to accept donations and receive payouts.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={handleStripeOnboarding} className="bg-yellow-600 hover:bg-yellow-700">
+                Complete Stripe Onboarding
+              </Button>
+            </CardContent>
+          </Card>
+        ) : organization &&
+          organization.stripe &&
+          organization.stripe.chargesEnabled &&
+          !organization.stripe.payoutsEnabled ? (
+          <Card className="mb-8 border-blue-400 bg-blue-50">
+            <CardHeader>
+              <CardTitle className="text-blue-800 flex items-center space-x-2">
+                <CreditCard className="w-5 h-5" />
+                <span>Stripe Onboarding In Progress</span>
+              </CardTitle>
+              <CardDescription className="text-blue-700">
+                Your Stripe account is being reviewed. Payouts will be enabled shortly.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        ) : null}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <Card>
             <CardContent className="p-6">

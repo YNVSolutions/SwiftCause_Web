@@ -2,6 +2,8 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { getStorage, ref, deleteObject } from 'firebase/storage'; // Import ref and deleteObject
+import { getFunctions } from 'firebase/functions'; // Import getFunctions
+
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -16,6 +18,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
+const functions = getFunctions(app); // Initialize functions
 
 // Function to delete a file from Firebase Storage
 const deleteFile = async (fileUrl: string) => {
@@ -29,4 +32,4 @@ const deleteFile = async (fileUrl: string) => {
   }
 };
 
-export { db, auth, storage, doc, getDoc, updateDoc, deleteFile };
+export { db, auth, storage, functions, doc, getDoc, updateDoc, deleteFile };
