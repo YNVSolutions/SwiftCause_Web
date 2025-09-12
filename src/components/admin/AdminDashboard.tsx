@@ -129,6 +129,7 @@ export function AdminDashboard({
   const [isLegendExpanded, setIsLegendExpanded] = useState(false);
   const [stripeStatusMessage, setStripeStatusMessage] = useState<{ type: 'success' | 'error' | 'warning', message: string } | null>(null);
   const [showStripeStatusDialog, setShowStripeStatusDialog] = useState(false);
+  const [isStripeOnboardingLoading, setIsStripeOnboardingLoading] = useState(false);
 
   const { organization, loading: orgLoading, error: orgError } = useOrganization(
     userSession.user.organizationId ?? null
@@ -171,6 +172,7 @@ export function AdminDashboard({
     }
 
     try {
+      setIsStripeOnboardingLoading(true);
       const idToken = await auth.currentUser.getIdToken();
       
       const response = await fetch('https://createonboardinglink-j2f5w4qwxq-uc.a.run.app', {
@@ -194,6 +196,8 @@ export function AdminDashboard({
     } catch (error) {
       console.error("Error creating Stripe onboarding link:", error);
       setStripeStatusMessage({ type: 'error', message: `Failed to start Stripe onboarding: ${(error as Error).message}` });
+    } finally {
+      setIsStripeOnboardingLoading(false);
     }
   };
 
@@ -580,8 +584,17 @@ export function AdminDashboard({
                           <p className="text-sm text-yellow-700">
                             Your organization needs to complete Stripe onboarding to accept donations and receive payouts.
                           </p>
-                          <Button onClick={handleStripeOnboarding} className="bg-yellow-600 hover:bg-yellow-700">
-                            Complete Stripe Onboarding
+                          <Button
+                            onClick={handleStripeOnboarding}
+                            className="bg-yellow-600 hover:bg-yellow-700"
+                            disabled={isStripeOnboardingLoading}
+                          >
+                            {isStripeOnboardingLoading ? (
+                              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                            ) : (
+                              <CreditCard className="w-4 h-4 mr-2" />
+                            )}
+                            {isStripeOnboardingLoading ? "Processing..." : "Complete Stripe Onboarding"}
                           </Button>
                         </>
                       ) : organization &&
