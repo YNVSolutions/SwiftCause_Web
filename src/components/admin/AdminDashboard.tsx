@@ -61,9 +61,26 @@ import {
   Rocket,
   Play,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose,
+} from "../ui/dialog";
 import { Screen, AdminSession, Permission, Campaign } from "../../App";
 import { db } from "../../lib/firebase";
-import { collection, query, orderBy, limit, getDocs, where } from "firebase/firestore";
+import {
+  collection,
+  query,
+  orderBy,
+  limit,
+  getDocs,
+  where,
+} from "firebase/firestore";
 import {
   useDashboardData,
   Activity,
@@ -110,7 +127,8 @@ export function AdminDashboard({
   const [showFeatures, setShowFeatures] = useState(false);
   const [showGettingStarted, setShowGettingStarted] = useState(false);
   const [isLegendExpanded, setIsLegendExpanded] = useState(false);
-  const [stripeStatusMessage, setStripeStatusMessage] = useState<{ type: 'success' | 'error' | 'warning', message: string } | null>(null); 
+  const [stripeStatusMessage, setStripeStatusMessage] = useState<{ type: 'success' | 'error' | 'warning', message: string } | null>(null);
+  const [showStripeStatusDialog, setShowStripeStatusDialog] = useState(false);
 
   const { organization, loading: orgLoading, error: orgError } = useOrganization(
     userSession.user.organizationId ?? null
@@ -124,7 +142,8 @@ export function AdminDashboard({
     if (stripeStatus === "success") {
       setStripeStatusMessage({
         type: "success",
-        message: "Stripe onboarding complete! Your account is being reviewed and will be payout-ready shortly.",
+        message:
+          "Stripe onboarding complete! Your account is being reviewed and will be payout-ready shortly.",
       });
     } else if (stripeStatus === "refresh") {
       setStripeStatusMessage({
@@ -496,16 +515,17 @@ export function AdminDashboard({
               </div>
               <div>
                 <div className="flex items-center space-x-3">
-                  <h1 className="text-xl font-semibold text-gray-900">
-                    Admin Dashboard {organization && `- ${organization.name}`}
+                  <h1 className="text-xl font-semibold text-gray-900 flex items-center">
+                    Admin Dashboard
+                    {organization && (
+                      <span className="ml-2 text-2xl font-bold text-indigo-700">
+                        - {organization.name}
+                      </span>
+                    )}
                   </h1>
-                  <Badge variant="outline" className="text-xs">{userSession.user.role}</Badge>
-                  {organization && organization.stripe && organization.stripe.chargesEnabled && organization.stripe.payoutsEnabled && (
-                    <Badge className="bg-green-500 text-white flex items-center space-x-1">
-                      <CheckCircle className="w-3 h-3" />
-                      <span>Stripe Ready</span>
-                    </Badge>
-                  )}
+                  <Badge variant="secondary" className="px-3 py-1 text-sm font-medium rounded-full bg-gray-200 text-gray-700">
+                    {userSession.user.role}
+                  </Badge>
                 </div>
                 <p className="text-sm text-gray-600">Welcome back, {userSession.user.username}</p>
               </div>
@@ -513,7 +533,80 @@ export function AdminDashboard({
                 <OrganizationSwitcher userSession={userSession} onOrganizationChange={onOrganizationSwitch} />
               )}
             </div>
-            <div className="flex flex-col sm:flex-row items-stretch gap-2">
+            <div className="flex flex-col sm:flex-row items-center gap-2">
+              {organization && organization.stripe && (
+                <Dialog open={showStripeStatusDialog} onOpenChange={setShowStripeStatusDialog}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="lg"
+                      className={`relative ml-2 rounded-full p-2.5 
+                        ${!organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled
+                          ? 'text-red-600 hover:text-red-700 animate-pulse bg-red-100'
+                          : 'text-green-600 hover:text-green-700 bg-green-100'
+                        }`}
+                      aria-label="Stripe Status"
+                    >
+                      {!organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled ? (
+                        <CreditCard className="h-6 w-6" />
+                      ) : (
+                        <CreditCard className="h-6 w-6" />
+                      )}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle className="flex items-center space-x-2">
+                        {!organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled ? (
+                          <CreditCard className="h-5 w-5 text-red-600" />
+                        ) : (
+                          <CreditCard className="h-5 w-5 text-green-600" />
+                        )}
+                        <span>Stripe Account Status</span>
+                      </DialogTitle>
+                      <DialogDescription>
+                        Review the current status of your Stripe integration.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      {orgLoading ? (
+                        <p>Loading organization data...</p>
+                      ) : orgError ? (
+                        <p className="text-red-500">Error: {orgError}</p>
+                      ) : organization &&
+                        organization.stripe &&
+                        !organization.stripe.chargesEnabled ? (
+                        <>
+                          <p className="text-sm text-yellow-700">
+                            Your organization needs to complete Stripe onboarding to accept donations and receive payouts.
+                          </p>
+                          <Button onClick={handleStripeOnboarding} className="bg-yellow-600 hover:bg-yellow-700">
+                            Complete Stripe Onboarding
+                          </Button>
+                        </>
+                      ) : organization &&
+                        organization.stripe &&
+                        organization.stripe.chargesEnabled &&
+                        !organization.stripe.payoutsEnabled ? (
+                        <p className="text-sm text-blue-700">
+                          Your Stripe account is being reviewed. Payouts will be enabled shortly.
+                        </p>
+                      ) : (
+                        <p className="text-sm text-green-700">
+                          Your Stripe account is fully configured and ready to accept donations and process payouts.
+                        </p>
+                      )}
+                    </div>
+                    <DialogFooter>
+                      <DialogClose asChild>
+                        <Button type="button" variant="secondary">
+                          Close
+                        </Button>
+                      </DialogClose>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
               <Button variant="outline" size="sm" onClick={handleRefresh} disabled={loading} className="flex items-center space-x-2">
                 <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
                 <span>Refresh</span>
@@ -563,40 +656,6 @@ export function AdminDashboard({
           <p>Loading organization data...</p>
         ) : orgError ? (
           <p className="text-red-500">Error: {orgError}</p>
-        ) : organization &&
-          organization.stripe &&
-          !organization.stripe.chargesEnabled ? (
-          <Card className="mb-8 border-yellow-400 bg-yellow-50">
-            <CardHeader>
-              <CardTitle className="text-yellow-800 flex items-center space-x-2">
-                <CreditCard className="w-5 h-5" />
-                <span>Stripe Onboarding Required</span>
-              </CardTitle>
-              <CardDescription className="text-yellow-700">
-                Your organization needs to complete Stripe onboarding to accept donations and receive payouts.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button onClick={handleStripeOnboarding} className="bg-yellow-600 hover:bg-yellow-700">
-                Complete Stripe Onboarding
-              </Button>
-            </CardContent>
-          </Card>
-        ) : organization &&
-          organization.stripe &&
-          organization.stripe.chargesEnabled &&
-          !organization.stripe.payoutsEnabled ? (
-          <Card className="mb-8 border-blue-400 bg-blue-50">
-            <CardHeader>
-              <CardTitle className="text-blue-800 flex items-center space-x-2">
-                <CreditCard className="w-5 h-5" />
-                <span>Stripe Onboarding In Progress</span>
-              </CardTitle>
-              <CardDescription className="text-blue-700">
-                Your Stripe account is being reviewed. Payouts will be enabled shortly.
-              </CardDescription>
-            </CardHeader>
-          </Card>
         ) : null}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <Card>
