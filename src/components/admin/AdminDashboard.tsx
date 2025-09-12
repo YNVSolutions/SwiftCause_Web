@@ -496,7 +496,9 @@ export function AdminDashboard({
               </div>
               <div>
                 <div className="flex items-center space-x-3">
-                  <h1 className="text-xl font-semibold text-gray-900">Admin Dashboard</h1>
+                  <h1 className="text-xl font-semibold text-gray-900">
+                    Admin Dashboard {organization && `- ${organization.name}`}
+                  </h1>
                   <Badge variant="outline" className="text-xs">{userSession.user.role}</Badge>
                   {organization && organization.stripe && organization.stripe.chargesEnabled && organization.stripe.payoutsEnabled && (
                     <Badge className="bg-green-500 text-white flex items-center space-x-1">
