@@ -9,6 +9,7 @@ import {
 } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Progress } from "../ui/progress";
+import { Skeleton } from "../ui/skeleton";
 import {
   Collapsible,
   CollapsibleContent,
@@ -906,21 +907,40 @@ export function AdminDashboard({
               <CardTitle>Campaign Goal Comparison</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={goalComparisonData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" tick={false} />
-                  <YAxis
-                    tickFormatter={(value) => formatShortCurrency(value as number)}
-                  />
-                  <Tooltip
-                    formatter={(value) => formatShortCurrency(value as number)}
-                  />
-                  <Legend />
-                  <Bar dataKey="Collected" fill="#10B981" />
-                  <Bar dataKey="Goal" fill="#94A3B8" />
-                </BarChart>
-              </ResponsiveContainer>
+              {loading ? (
+                <div className="space-y-4">
+                  <Skeleton className="h-[300px] w-full" />
+                </div>
+              ) : goalComparisonData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={goalComparisonData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" tick={false} />
+                    <YAxis
+                      tickFormatter={(value) => formatShortCurrency(value as number)}
+                    />
+                    <Tooltip
+                      formatter={(value) => formatShortCurrency(value as number)}
+                    />
+                    <Legend />
+                    <Bar dataKey="Collected" fill="#10B981" />
+                    <Bar dataKey="Goal" fill="#94A3B8" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Target className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                  <p className="text-lg font-medium mb-2">No Campaigns Yet</p>
+                  <p className="text-sm mb-4">
+                    Start by creating your first fundraising campaign to track progress.
+                  </p>
+                  {hasPermission("create_campaign") && (
+                    <Button onClick={() => onNavigate("admin-campaigns")}>
+                      <Plus className="w-4 h-4 mr-2" /> Create New Campaign
+                    </Button>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -1016,7 +1036,21 @@ export function AdminDashboard({
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {topCampaigns.length > 0 ? (
+                {loading ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Skeleton className="h-5 w-3/4" />
+                        <Skeleton className="h-5 w-1/4" />
+                      </div>
+                      <Skeleton className="h-2 w-full" />
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <Skeleton className="h-3 w-1/3" />
+                        <Skeleton className="h-3 w-1/4" />
+                      </div>
+                    </div>
+                  ))
+                ) : topCampaigns.length > 0 ? (
                   topCampaigns.map((campaign: Campaign) => {
                     const collected = campaign.raised || 0;
                     const goal = campaign.goal || 1;
@@ -1045,9 +1079,18 @@ export function AdminDashboard({
                     );
                   })
                 ) : (
-                  <p className="text-sm text-gray-500">
-                    No campaign data available.
-                  </p>
+                  <div className="text-center py-8 text-gray-500">
+                    <Target className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                    <p className="text-lg font-medium mb-2">No Campaigns Yet</p>
+                    <p className="text-sm mb-4">
+                      Start by creating your first fundraising campaign to track progress.
+                    </p>
+                    {hasPermission("create_campaign") && (
+                      <Button onClick={() => onNavigate("admin-campaigns")}>
+                        <Plus className="w-4 h-4 mr-2" /> Create New Campaign
+                      </Button>
+                    )}
+                  </div>
                 )}
               </div>
             </CardContent>
@@ -1058,28 +1101,60 @@ export function AdminDashboard({
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentActivities.map((activity: Activity) => (
-                  <div key={activity.id} className="flex items-start space-x-3">
-                    <div className="flex-shrink-0 mt-0.5">
-                      {getActivityIcon(activity.type)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-900">
-                        {activity.message}
-                      </p>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <p className="text-xs text-gray-500">
-                          {activity.timestamp}
-                        </p>
-                        {activity.kioskId && (
-                          <Badge variant="secondary" className="text-xs">
-                            {activity.kioskId}
-                          </Badge>
-                        )}
+                {loading ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="flex items-start space-x-3">
+                      <Skeleton className="h-6 w-6 rounded-full" />
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-4 w-3/4" />
+                        <Skeleton className="h-3 w-1/2" />
                       </div>
                     </div>
+                  ))
+                ) : recentActivities.length > 0 ? (
+                  recentActivities.map((activity: Activity) => (
+                    <div key={activity.id} className="flex items-start space-x-3">
+                      <div className="flex-shrink-0 mt-0.5">
+                        {getActivityIcon(activity.type)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-900">
+                          {activity.message}
+                        </p>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <p className="text-xs text-gray-500">
+                            {activity.timestamp}
+                          </p>
+                          {activity.kioskId && (
+                            <Badge variant="secondary" className="text-xs">
+                              {activity.kioskId}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <ActivityIcon className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                    <p className="text-lg font-medium mb-2">No Recent Activity</p>
+                    <p className="text-sm mb-4">
+                      Start by managing campaigns or configuring kiosks to see activity here.
+                    </p>
+                    <div className="flex flex-col sm:flex-row justify-center gap-2">
+                      {hasPermission("create_campaign") && (
+                        <Button onClick={() => onNavigate("admin-campaigns")} size="sm">
+                          <Settings className="w-4 h-4 mr-2" /> Manage Campaigns
+                        </Button>
+                      )}
+                      {hasPermission("create_kiosk") && (
+                        <Button onClick={() => onNavigate("admin-kiosks")} size="sm" variant="outline">
+                          <Monitor className="w-4 h-4 mr-2" /> Configure Kiosks
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
@@ -1095,17 +1170,34 @@ export function AdminDashboard({
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {alerts.map((alert: Alert) => (
-                  <div
-                    key={alert.id}
-                    className="flex items-start space-x-3 p-3 rounded-lg bg-gray-50"
-                  >
-                    <div className="flex-shrink-0 mt-0.5">
-                      {getAlertIcon(alert.type)}
+                {loading ? (
+                  Array.from({ length: 2 }).map((_, i) => (
+                    <div key={i} className="flex items-start space-x-3 p-3 rounded-lg bg-gray-50">
+                      <Skeleton className="h-5 w-5 rounded-full" />
+                      <Skeleton className="h-4 w-3/4" />
                     </div>
-                    <p className="text-sm text-gray-900">{alert.message}</p>
+                  ))
+                ) : alerts.length > 0 ? (
+                  alerts.map((alert: Alert) => (
+                    <div
+                      key={alert.id}
+                      className="flex items-start space-x-3 p-3 rounded-lg bg-gray-50"
+                    >
+                      <div className="flex-shrink-0 mt-0.5">
+                        {getAlertIcon(alert.type)}
+                      </div>
+                      <p className="text-sm text-gray-900">{alert.message}</p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <AlertCircle className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                    <p className="text-lg font-medium mb-2">No System Alerts</p>
+                    <p className="text-sm mb-4">
+                      Your system is running smoothly. No alerts to display.
+                    </p>
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
