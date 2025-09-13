@@ -5,19 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import {
-  Plus,
-  Search,
-  ArrowLeft,
-  UserCog,
-  Users,
-  Shield,
-  Activity,
-  Download,
-  User as UserIcon,
-  Loader2,
-  AlertCircle,
-  Pencil,
-  Trash2
+  Plus, Search, ArrowLeft, UserCog, Users, Shield, Activity,
+  Loader2, AlertCircle, Pencil, Trash2
 } from 'lucide-react';
 import { Screen, User, UserRole, AdminSession, Permission } from '../../App';
 import { calculateUserStats } from './utils/userManagementHelpers';
@@ -25,179 +14,13 @@ import { useUsers } from '../../hooks/useUsers';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../ui/dialog';
 import { Label } from '../ui/label';
 import { Checkbox } from '../ui/checkbox';
-import { Tooltip } from '../ui/tooltip';
 
-interface UserTableRowProps {
-  user: User;
-  onEdit: (user: User) => void;
-  onDelete: (userId: string) => void;
-}
-  const allPermissions: Permission[] = [
-    'create_campaign', 'view_campaigns', 'edit_campaign', 'view_dashboard',
-    'edit_user', 'manage_permissions', 'assign_campaigns', 'view_donations',
-    'create_kiosk', 'edit_kiosk', 'delete_kiosk', 'export_donations',
-    'view_users', 'delete_campaign', 'view_kiosks',
-    'create_user', 'edit_user', 'delete_user'
-  ];
-
-const UserTableRow: React.FC<UserTableRowProps> = ({ user, onEdit, onDelete }) => (
-  <TableRow key={user.id}>
-    <TableCell>
-      <div className="space-y-1">
-        <div className="flex items-center space-x-2">
-          <UserIcon className="w-4 h-4 text-gray-400" />
-          <span className="font-medium">{user.username}</span>
-        </div>
-        <p className="text-sm text-gray-500">{user.email}</p>
-        <p className="text-xs text-gray-400">ID: {user.id}</p>
-      </div>
-    </TableCell>
-    <TableCell>{user.role}</TableCell>
-    <TableCell>{user.lastLogin}</TableCell>
-    <TableCell>
-      {user.permissions && user.permissions.length > 0 ? (
-        <ul className="list-disc list-inside space-y-1 text-xs">
-          {user.permissions.map((p: string) => (
-            <li key={p}>{p}</li>
-          ))}
-        </ul>
-      ) : (
-        <span className="text-gray-500">No specific permissions</span>
-      )}
-    </TableCell>
-    <TableCell>
-      <div className="flex space-x-2">
-        <Button variant="ghost" size="sm" onClick={() => onEdit(user)}>
-          <Pencil className="w-4 h-4" />
-        </Button>
-        <Button variant="ghost" size="sm" onClick={() => onDelete(user.id)}>
-          <Trash2 className="w-4 h-4" />
-        </Button>
-      </div>
-    </TableCell>
-  </TableRow>
-);
-
-interface CreateUserDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  newUser: any;
-  onUserChange: (updates: any) => void;
-  onCreateUser: () => void;
-  onKioskAccessChange: (kioskId: string, checked: boolean) => void;
-}
-
-
-
-interface EditUserDialogProps {
-  user: User;
-  onUpdate: (userId: string, updates: Partial<User>) => void;
-  onDelete: (userId: string) => void;
-  onClose: () => void;
-}
-
-const EditUserDialog: React.FC<EditUserDialogProps> = ({ user, onUpdate, onDelete, onClose }) => {
-  const [editedUser, setEditedUser] = useState(user);
-
-  useEffect(() => {
-    setEditedUser(user);
-  }, [user]);
-
-  const handleUpdate = () => {
-    onUpdate(editedUser.id, editedUser);
-    onClose();
-  };
-
-
-
-  const handlePermissionChange = (permission: Permission, checked: boolean) => {
-    const newPermissions = checked
-      ? [...(editedUser.permissions || []), permission]
-      : (editedUser.permissions || []).filter((p: Permission) => p !== permission);
-
-    setEditedUser(prev => ({
-      ...prev,
-      permissions: newPermissions
-    }));
-  };
-
-  return (
-    <Dialog open={!!user} onOpenChange={onClose}>
-      <DialogContent className="max-w-xl">
-        <DialogHeader>
-          <DialogTitle>Edit User: {editedUser.username}</DialogTitle>
-          <DialogDescription>
-            Update user details, permissions, and status.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div>
-            <Label htmlFor="username">Username</Label>
-            <Input
-              id="username"
-              value={editedUser.username}
-              onChange={(e) => setEditedUser({ ...editedUser, username: e.target.value })}
-            />
-          </div>
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={editedUser.email}
-              onChange={(e) => setEditedUser({ ...editedUser, email: e.target.value })}
-            />
-          </div>
-          <div>
-            <Label htmlFor="role">Role</Label>
-            <Select value={editedUser.role} onValueChange={(value) => setEditedUser({ ...editedUser, role: value as UserRole })}>
-              <SelectTrigger id="role">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="manager">Manager</SelectItem>
-                <SelectItem value="operator">Operator</SelectItem>
-                <SelectItem value="viewer">Viewer</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="isActive"
-              checked={editedUser.isActive}
-              onCheckedChange={(checked) => setEditedUser({ ...editedUser, isActive: !!checked })}
-            />
-            <Label htmlFor="isActive">Active</Label>
-          </div>
-          <div className="space-y-2">
-            <Label className="font-bold">Permissions</Label>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              {allPermissions.map((permission: Permission) => (
-                <div key={permission} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={permission}
-                    checked={editedUser.permissions?.includes(permission)}
-                    onCheckedChange={(checked) => handlePermissionChange(permission, !!checked)}
-                  />
-                  <Label htmlFor={permission}>{permission}</Label>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-        <DialogFooter className="flex-col sm:flex-row-reverse">
-          <Button onClick={handleUpdate}>Save Changes</Button>
-          <Button variant="destructive" onClick={() => { onDelete(editedUser.id); onClose(); }}>
-            Delete User
-          </Button>
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
+const allPermissions: Permission[] = [
+    'view_dashboard', 'manage_permissions', 'create_user', 'edit_user', 'delete_user',
+    'view_campaigns', 'create_campaign', 'edit_campaign', 'delete_campaign',
+    'view_kiosks', 'create_kiosk', 'edit_kiosk', 'delete_kiosk', 'assign_campaigns',
+    'view_donations', 'export_donations', 'view_users'
+];
 
 interface UserManagementProps {
   onNavigate: (screen: Screen) => void;
@@ -207,357 +30,169 @@ interface UserManagementProps {
 }
 
 export function UserManagement({ onNavigate, onLogout, userSession, hasPermission }: UserManagementProps) {
-  const { users, loading, error, updateUser, refreshUsers } = useUsers(userSession.user.organizationId);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState('all');
-  const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [newUser, setNewUser] = useState({
-    username: '',
-    email: '',
-    password: '',
-    role: 'viewer' as UserRole,
-    permissions: [] as Permission[],
-  });
+    const { users, loading, error, updateUser, addUser, deleteUser } = useUsers(userSession.user.organizationId);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [roleFilter, setRoleFilter] = useState('all');
+    const [editingUser, setEditingUser] = useState<User | null>(null);
+    const [createDialogOpen, setCreateDialogOpen] = useState(false);
+    const [newUser, setNewUser] = useState({
+        username: '', email: '', password: '', role: 'viewer' as UserRole, permissions: [] as Permission[],
+    });
 
-
-  const handleCreateUser = () => {
-    // TODO: Implement backend logic to create user in Firebase Auth and Firestore
-    const user: User = {
-      id: `user-${Date.now()}`,
-      username: newUser.username,
-      email: newUser.email,
-      role: newUser.role,
-      lastLogin: undefined,
-      permissions: newUser.permissions,
-      isActive: true,
-      organizationId: userSession.user.organizationId,
-    };
-    console.log('TODO: Create user in backend', user, 'Password:', newUser.password);
-    setCreateDialogOpen(false);
-    setNewUser({ username: '', email: '', password: '', role: 'viewer', permissions: [] });
-    refreshUsers();
-  };
-
-  const handleUserChange = (updates: any) => {
-    setNewUser(prev => ({ ...prev, ...updates }));
-  };
-
-  const handlePermissionChange = (permission: Permission, checked: boolean) => {
-    setNewUser(prev => ({
-      ...prev,
-      permissions: checked
-        ? [...prev.permissions, permission]
-        : prev.permissions.filter((p) => p !== permission),
-    }));
-  };
-
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-    return matchesSearch && matchesRole;
-  });
-
-  const handleDeleteUser = async (userId: string) => {
-    if (window.confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
-      console.log(`Deleting user with ID: ${userId}`);
-      refreshUsers();
-    }
-  };
-
-  const handleUpdateUser = (userId: string, updates: Partial<User>) => {
-    updateUser(userId, updates);
-  };
-
-  const stats = calculateUserStats(users);
-
-  const exportToCsv = (data: User[]) => {
-    if (data.length === 0) {
-      alert("No data to export.");
-      return;
-    }
-
-    const headers = Object.keys(data[0]).join(',');
-    const csvContent = data.map(row => Object.values(row).map(value => {
-      const stringValue = String(value);
-      return `"${stringValue.replace(/"/g, '""')}"`;
-    }).join(',')).join('\n');
-
-    const csv = `${headers}\n${csvContent}`;
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `users_${new Date().toISOString().slice(0, 10)}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onNavigate('admin-dashboard')}
-                className="flex items-center space-x-2"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Back to Dashboard</span>
-              </Button>
-              <div className="h-6 w-px bg-gray-300" />
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900">User Management</h1>
-                <p className="text-sm text-gray-600">Manage platform users and permissions</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => exportToCsv(users)}
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Export Users
-              </Button>
-              <Button
-                className="bg-indigo-600 text-white"
-                onClick={() => setCreateDialogOpen(true)}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add User
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <CreateUserDialog
-        open={createDialogOpen}
-        onOpenChange={setCreateDialogOpen}
-        newUser={newUser}
-        onUserChange={handleUserChange}
-        onCreateUser={handleCreateUser}
-        allPermissions={allPermissions}
-        onPermissionChange={handlePermissionChange}
-      />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Users</p>
-                  <p className="text-2xl font-semibold text-gray-900">{stats.total}</p>
-                </div>
-                <Users className="h-8 w-8 text-blue-600" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Administrators</p>
-                  <p className="text-2xl font-semibold text-gray-900">{stats.admins}</p>
-                </div>
-                <UserCog className="h-8 w-8 text-purple-600" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Kiosk Users</p>
-                  <p className="text-2xl font-semibold text-gray-900">{stats.kiosks}</p>
-                </div>
-                <Shield className="h-8 w-8 text-green-600" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Active Users</p>
-                  <p className="text-2xl font-semibold text-gray-900">{stats.active}</p>
-                  <p className="text-xs text-gray-500">Last 7 days</p>
-                </div>
-                <Activity className="h-8 w-8 text-orange-600" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        <Card className="mb-8">
-          <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input
-                    placeholder="Search users..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              <Select value={roleFilter} onValueChange={setRoleFilter}>
-                <SelectTrigger className="w-full sm:w-48">
-                  <SelectValue placeholder="Filter by role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Roles</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="manager">Manager</SelectItem>
-                  <SelectItem value="operator">Operator</SelectItem>
-                  <SelectItem value="viewer">Viewer</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Users ({filteredUsers.length})</CardTitle>
-            <CardDescription>Manage user accounts and permissions</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              {loading ? (
-                <div className="flex items-center justify-center p-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-                  <p className="ml-4 text-lg text-gray-600">Loading users...</p>
-                </div>
-              ) : error ? (
-                <div className="flex flex-col items-center justify-center p-8 text-center text-red-600">
-                  <AlertCircle className="h-10 w-10 text-red-500" />
-                  <p className="mt-2 text-lg">{error}</p>
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>User Details</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Last Login</TableHead>
-                      <TableHead>Access Permissions</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredUsers.map((user) => (
-                      <UserTableRow
-                        key={user.id}
-                        user={user}
-                        onEdit={setEditingUser}
-                        onDelete={handleDeleteUser}
-                      />
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-              {!loading && filteredUsers.length === 0 && (
-                <div className="flex items-center justify-center p-8 text-gray-500">
-                  No users found.
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-        {editingUser && (
-          <EditUserDialog
-            user={editingUser}
-            onUpdate={handleUpdateUser}
-            onDelete={handleDeleteUser}
-            onClose={() => setEditingUser(null)}
-          />
-        )
+    const handleCreateUser = async () => {
+        if (!newUser.email || !newUser.password || !newUser.username) {
+            alert("Username, email, and password are required.");
+            return;
         }
-      </div>
-    </div>
-  );
+        try {
+            await addUser({ ...newUser, organizationId: userSession.user.organizationId! });
+            setCreateDialogOpen(false);
+            setNewUser({ username: '', email: '', password: '', role: 'viewer', permissions: [] });
+        } catch (err) {
+            alert(`Error: ${(err as Error).message}`);
+        }
+    };
+
+    const handleDeleteUser = async (userId: string) => {
+        if (window.confirm("Are you sure? This action is permanent and cannot be undone.")) {
+            try {
+                await deleteUser(userId);
+            } catch (err) {
+                alert(`Error: ${(err as Error).message}`);
+            }
+        }
+    };
+
+    const handleUpdateUser = async (userId: string, updates: Partial<User>) => {
+        try {
+            await updateUser(userId, updates);
+            setEditingUser(null);
+        } catch (err) {
+            alert(`Error: ${(err as Error).message}`);
+        }
+    };
+
+    const filteredUsers = users.filter(user => {
+        const matchesSearch = user.username?.toLowerCase().includes(searchTerm.toLowerCase()) || user.email?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesRole = roleFilter === 'all' || user.role === roleFilter;
+        return matchesSearch && matchesRole;
+    });
+
+    const stats = calculateUserStats(users);
+
+    return (
+        <div className="min-h-screen bg-gray-50">
+            <header className="bg-white shadow-sm border-b">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex items-center justify-between h-16">
+                        <div className="flex items-center space-x-4">
+                            <Button variant="ghost" size="sm" onClick={() => onNavigate('admin-dashboard')} className="flex items-center space-x-2"><ArrowLeft className="w-4 h-4" /><span>Back to Dashboard</span></Button>
+                            <div className="h-6 w-px bg-gray-300" />
+                            <div><h1 className="text-xl font-semibold text-gray-900">User Management</h1><p className="text-sm text-gray-600">Manage platform users and permissions</p></div>
+                        </div>
+                        <div className="flex items-center space-x-4">
+                            {hasPermission('create_user') && <Button className="bg-indigo-600 text-white" onClick={() => setCreateDialogOpen(true)}><Plus className="w-4 h-4 mr-2" />Add User</Button>}
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Users</p><p className="text-2xl font-semibold text-gray-900">{stats.total}</p></div><Users className="h-8 w-8 text-blue-600" /></div></CardContent></Card>
+                    <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Administrators</p><p className="text-2xl font-semibold text-gray-900">{stats.admins}</p></div><UserCog className="h-8 w-8 text-purple-600" /></div></CardContent></Card>
+                    <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Kiosk Users</p><p className="text-2xl font-semibold text-gray-900">{stats.kiosks}</p></div><Shield className="h-8 w-8 text-green-600" /></div></CardContent></Card>
+                    <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Active Users</p><p className="text-2xl font-semibold text-gray-900">{stats.active}</p></div><Activity className="h-8 w-8 text-orange-600" /></div></CardContent></Card>
+                </div>
+
+                <Card className="mb-8">
+                    <CardContent className="p-6">
+                        <div className="flex flex-col sm:flex-row gap-4">
+                            <div className="flex-1 relative"><Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" /><Input placeholder="Search users by name or email..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" /></div>
+                            <Select value={roleFilter} onValueChange={setRoleFilter}>
+                                <SelectTrigger className="w-full sm:w-48"><SelectValue placeholder="Filter by role" /></SelectTrigger>
+                                <SelectContent><SelectItem value="all">All Roles</SelectItem><SelectItem value="admin">Admin</SelectItem><SelectItem value="manager">Manager</SelectItem><SelectItem value="operator">Operator</SelectItem><SelectItem value="viewer">Viewer</SelectItem></SelectContent>
+                            </Select>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader><CardTitle>Users ({filteredUsers.length})</CardTitle><CardDescription>Manage user accounts and permissions</CardDescription></CardHeader>
+                    <CardContent>
+                        {loading ? <div className="flex justify-center p-12"><Loader2 className="h-8 w-8 animate-spin" /></div> : error ? <div className="text-center text-destructive p-12"><AlertCircle className="mx-auto h-8 w-8 mb-2" /><p>{error}</p></div> : (
+                            <Table>
+                                <TableHeader><TableRow><TableHead>User Details</TableHead><TableHead>Role</TableHead><TableHead>Permissions</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
+                                <TableBody>
+                                    {filteredUsers.map((user) => (
+                                        <TableRow key={user.id}>
+                                            <TableCell><div className="font-medium">{user.username}</div><div className="text-sm text-muted-foreground">{user.email}</div></TableCell>
+                                            <TableCell><span className="capitalize">{user.role}</span></TableCell>
+                                            <TableCell><div className="text-xs truncate max-w-xs">{user.permissions?.join(', ').replace(/_/g, ' ') || 'None'}</div></TableCell>
+                                            <TableCell className="text-right">
+                                                {hasPermission('edit_user') && <Button variant="ghost" size="icon" onClick={() => setEditingUser(user)}><Pencil className="h-4 w-4" /></Button>}
+                                                {hasPermission('delete_user') && <Button variant="ghost" size="icon" onClick={() => handleDeleteUser(user.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        )}
+                    </CardContent>
+                </Card>
+            </main>
+
+            <CreateUserDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} newUser={newUser} onUserChange={setNewUser} onCreateUser={handleCreateUser} />
+            {editingUser && <EditUserDialog user={editingUser} onUpdate={handleUpdateUser} onClose={() => setEditingUser(null)} />}
+        </div>
+    );
 }
 
-const CreateUserDialog = ({ open, onOpenChange, newUser, onUserChange, onCreateUser, allPermissions, onPermissionChange }: any) => (
-  <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent className="max-w-xl">
-      <DialogHeader>
-        <DialogTitle>Create New User</DialogTitle>
-        <DialogDescription>
-          Fill in the details to add a new user to your organization.
-        </DialogDescription>
-      </DialogHeader>
-      <div className="space-y-4 py-4">
-        <div>
-          <Label htmlFor="username">Username</Label>
-          <Input
-            id="username"
-            value={newUser.username}
-            onChange={(e) => onUserChange({ username: e.target.value })}
-          />
-        </div>
-        <div>
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            value={newUser.email}
-            onChange={(e) => onUserChange({ email: e.target.value })}
-          />
-        </div>
-        <div>
-          <Label htmlFor="password">Password</Label>
-          <Input
-            id="password"
-            type="password"
-            value={newUser.password}
-            onChange={(e) => onUserChange({ password: e.target.value })}
-          />
-        </div>
-        <div>
-          <Label htmlFor="role">Role</Label>
-          <Select value={newUser.role} onValueChange={(value) => onUserChange({ role: value })}>
-            <SelectTrigger id="role">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="admin">Admin</SelectItem>
-              <SelectItem value="manager">Manager</SelectItem>
-              <SelectItem value="operator">Operator</SelectItem>
-              <SelectItem value="viewer">Viewer</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label className="font-bold">Permissions</Label>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            {allPermissions.map((permission: Permission) => (
-              <div key={permission} className="flex items-center space-x-2">
-                <Checkbox
-                  id={permission}
-                  checked={newUser.permissions.includes(permission)}
-                  onCheckedChange={(checked) => onPermissionChange(permission, !!checked)}
-                />
-                <Label htmlFor={permission}>{permission}</Label>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-      <DialogFooter className="flex-col sm:flex-row-reverse">
-        <Button onClick={onCreateUser}>Create User</Button>
-        <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
-);
+function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateUser }: any) {
+    const onPermissionChange = (permission: Permission, checked: boolean) => {
+        const currentPermissions = newUser.permissions || [];
+        const newPermissions = checked ? [...currentPermissions, permission] : currentPermissions.filter((p: Permission) => p !== permission);
+        onUserChange({ ...newUser, permissions: newPermissions });
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader><DialogTitle>Create New User</DialogTitle><DialogDescription>Fill in the details to add a new user to your organization.</DialogDescription></DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="username" className="text-right">Username</Label><Input id="username" value={newUser.username} onChange={(e) => onUserChange({ ...newUser, username: e.target.value })} className="col-span-3" /></div>
+                    <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="email" className="text-right">Email</Label><Input id="email" type="email" value={newUser.email} onChange={(e) => onUserChange({ ...newUser, email: e.target.value })} className="col-span-3" /></div>
+                    <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="password" className="text-right">Password</Label><Input id="password" type="password" value={newUser.password} onChange={(e) => onUserChange({ ...newUser, password: e.target.value })} className="col-span-3" /></div>
+                    <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="role" className="text-right">Role</Label><Select value={newUser.role} onValueChange={(value: UserRole) => onUserChange({ ...newUser, role: value })}><SelectTrigger className="col-span-3"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="admin">Admin</SelectItem><SelectItem value="manager">Manager</SelectItem><SelectItem value="operator">Operator</SelectItem><SelectItem value="viewer">Viewer</SelectItem></SelectContent></Select></div>
+                    <div><Label className="font-semibold">Permissions</Label><div className="grid grid-cols-2 gap-2 mt-2 p-4 border rounded-md max-h-40 overflow-y-auto">{allPermissions.map((p) => (<div key={p} className="flex items-center space-x-2"><Checkbox id={`create-${p}`} checked={newUser.permissions.includes(p)} onCheckedChange={(c) => onPermissionChange(p, !!c)} /><Label htmlFor={`create-${p}`} className="text-sm font-normal capitalize">{p.replace(/_/g, ' ')}</Label></div>))}</div></div>
+                </div>
+                <DialogFooter><Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button><Button onClick={onCreateUser}>Create User</Button></DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+function EditUserDialog({ user, onUpdate, onClose }: { user: User, onUpdate: (userId: string, updates: Partial<User>) => void, onClose: () => void }) {
+    const [editedUser, setEditedUser] = useState(user);
+    useEffect(() => { setEditedUser(user); }, [user]);
+
+    const handlePermissionChange = (permission: Permission, checked: boolean) => {
+        const currentPermissions = editedUser.permissions || [];
+        const newPermissions = checked ? [...currentPermissions, permission] : currentPermissions.filter((p: Permission) => p !== permission);
+        setEditedUser(prev => ({ ...prev, permissions: newPermissions }));
+    };
+
+    return (
+        <Dialog open={true} onOpenChange={onClose}>
+            <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader><DialogTitle>Edit User: {editedUser.username}</DialogTitle><DialogDescription>Update the user's role and permissions.</DialogDescription></DialogHeader>
+                <div className="grid gap-6 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="role" className="text-right">Role</Label><Select value={editedUser.role} onValueChange={(value: UserRole) => setEditedUser({ ...editedUser, role: value })}><SelectTrigger className="col-span-3"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="admin">Admin</SelectItem><SelectItem value="manager">Manager</SelectItem><SelectItem value="operator">Operator</SelectItem><SelectItem value="viewer">Viewer</SelectItem></SelectContent></Select></div>
+                    <div><Label className="font-semibold">Permissions</Label><div className="grid grid-cols-2 gap-2 mt-2 p-4 border rounded-md max-h-60 overflow-y-auto">{allPermissions.map((p) => (<div key={p} className="flex items-center space-x-2"><Checkbox id={`edit-${p}`} checked={editedUser.permissions?.includes(p)} onCheckedChange={(c) => handlePermissionChange(p, !!c)} /><Label htmlFor={`edit-${p}`} className="text-sm font-normal capitalize">{p.replace(/_/g, ' ')}</Label></div>))}</div></div>
+                </div>
+                <DialogFooter><Button variant="outline" onClick={onClose}>Cancel</Button><Button onClick={() => onUpdate(editedUser.id, { role: editedUser.role, permissions: editedUser.permissions })}>Save Changes</Button></DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
