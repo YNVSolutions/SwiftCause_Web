@@ -61,6 +61,7 @@ import {
   Lightbulb,
   Rocket,
   Play,
+  TriangleAlert,
 } from "lucide-react";
 import {
   Dialog,
@@ -949,27 +950,51 @@ export function AdminDashboard({
               <CardTitle>Campaign Categories</CardTitle>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col">
-              <div className="flex-1">
-                <ResponsiveContainer width="100%" height={220}>
-                  <PieChart>
-                    <Pie
-                      data={categoryData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={5}
-                      dataKey="value"
-                      nameKey="name"
-                    >
-                      {categoryData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value, name) => [`${value}%`, name]} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
+              {loading ? (
+                <div className="space-y-4">
+                  <Skeleton className="h-[220px] w-full mb-4" />
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <Skeleton key={i} className="h-5 w-full" />
+                    ))}
+                  </div>
+                </div>
+              ) : categoryData.length > 0 ? (
+                <div className="flex-1">
+                  <ResponsiveContainer width="100%" height={220}>
+                    <PieChart>
+                      <Pie
+                        data={categoryData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={100}
+                        paddingAngle={5}
+                        dataKey="value"
+                        nameKey="name"
+                      >
+                        {categoryData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value, name) => [`${value}%`, name]} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <TriangleAlert className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                  <p className="text-lg font-medium mb-2">No Categories Yet</p>
+                  <p className="text-sm mb-4">
+                      Start by creating your first fundraising campaign to track progress.
+                    </p>
+                    {hasPermission("create_campaign") && (
+                      <Button onClick={() => onNavigate("admin-campaigns")}>
+                        <Plus className="w-4 h-4 mr-2" /> Create New Campaign
+                      </Button>
+                    )}
+                </div>
+              )}
               <div className="mt-4 border-t pt-4">
                 <div className="grid grid-cols-2 gap-x-6 gap-y-3">
                   {displayedCategories.map((entry) => (
