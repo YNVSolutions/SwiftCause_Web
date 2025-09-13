@@ -1228,7 +1228,7 @@ export function AdminDashboard({
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
+              <CardTitle>More Actions</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 gap-3">
