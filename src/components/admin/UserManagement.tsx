@@ -14,6 +14,7 @@ import { useUsers } from '../../hooks/useUsers';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../ui/dialog';
 import { Label } from '../ui/label';
 import { Checkbox } from '../ui/checkbox';
+import { DialogPortal } from '@radix-ui/react-dialog';
 
 const allPermissions: Permission[] = [
     'view_dashboard', 'manage_permissions', 'create_user', 'edit_user', 'delete_user',
@@ -38,10 +39,15 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
     const [newUser, setNewUser] = useState({
         username: '', email: '', password: '', role: 'viewer' as UserRole, permissions: [] as Permission[],
     });
+    
+    // Custom alert/confirm components instead of native window.alert/confirm
+    const [dialogMessage, setDialogMessage] = useState<string | null>(null);
+    const [dialogAction, setDialogAction] = useState<(() => void) | null>(null);
+    const [showConfirm, setShowConfirm] = useState(false);
 
     const handleCreateUser = async () => {
         if (!newUser.email || !newUser.password || !newUser.username) {
-            alert("Username, email, and password are required.");
+            setDialogMessage("Username, email, and password are required.");
             return;
         }
         try {
@@ -49,18 +55,23 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
             setCreateDialogOpen(false);
             setNewUser({ username: '', email: '', password: '', role: 'viewer', permissions: [] });
         } catch (err) {
-            alert(`Error: ${(err as Error).message}`);
+            setDialogMessage(`Error: ${(err as Error).message}`);
         }
     };
 
-    const handleDeleteUser = async (userId: string) => {
-        if (window.confirm("Are you sure? This action is permanent and cannot be undone.")) {
+    const handleDeleteUser = (userToDelete: User) => {
+        setDialogMessage(`Are you sure you want to delete the user "${userToDelete.username}"? This action is permanent and cannot be undone.`);
+        setDialogAction(() => async () => {
             try {
-                await deleteUser(userId);
+                await deleteUser(userToDelete.id);
+                setDialogMessage(null);
+                setShowConfirm(false);
             } catch (err) {
-                alert(`Error: ${(err as Error).message}`);
+                setDialogMessage(`Error: ${(err as Error).message}`);
+                setShowConfirm(false);
             }
-        }
+        });
+        setShowConfirm(true);
     };
 
     const handleUpdateUser = async (userId: string, updates: Partial<User>) => {
@@ -68,7 +79,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
             await updateUser(userId, updates);
             setEditingUser(null);
         } catch (err) {
-            alert(`Error: ${(err as Error).message}`);
+            setDialogMessage(`Error: ${(err as Error).message}`);
         }
     };
 
@@ -111,7 +122,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                             <div className="flex-1 relative"><Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" /><Input placeholder="Search users by name or email..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" /></div>
                             <Select value={roleFilter} onValueChange={setRoleFilter}>
                                 <SelectTrigger className="w-full sm:w-48"><SelectValue placeholder="Filter by role" /></SelectTrigger>
-                                <SelectContent><SelectItem value="all">All Roles</SelectItem><SelectItem value="admin">Admin</SelectItem><SelectItem value="manager">Manager</SelectItem><SelectItem value="operator">Operator</SelectItem><SelectItem value="viewer">Viewer</SelectItem></SelectContent>
+                                <SelectContent><SelectItem value="all">All Roles</SelectItem><SelectItem value="super_admin">Super Admin</SelectItem><SelectItem value="admin">Admin</SelectItem><SelectItem value="manager">Manager</SelectItem><SelectItem value="operator">Operator</SelectItem><SelectItem value="viewer">Viewer</SelectItem></SelectContent>
                             </Select>
                         </div>
                     </CardContent>
@@ -131,7 +142,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                                             <TableCell><div className="text-xs truncate max-w-xs">{user.permissions?.join(', ').replace(/_/g, ' ') || 'None'}</div></TableCell>
                                             <TableCell className="text-right">
                                                 {hasPermission('edit_user') && <Button variant="ghost" size="icon" onClick={() => setEditingUser(user)}><Pencil className="h-4 w-4" /></Button>}
-                                                {hasPermission('delete_user') && <Button variant="ghost" size="icon" onClick={() => handleDeleteUser(user.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>}
+                                                {hasPermission('delete_user') && user.id !== userSession.user.id && <Button variant="ghost" size="icon" onClick={() => handleDeleteUser(user)}><Trash2 className="h-4 w-4 text-destructive" /></Button>}
                                             </TableCell>
                                         </TableRow>
                                     ))}
@@ -144,6 +155,28 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
 
             <CreateUserDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} newUser={newUser} onUserChange={setNewUser} onCreateUser={handleCreateUser} />
             {editingUser && <EditUserDialog user={editingUser} onUpdate={handleUpdateUser} onClose={() => setEditingUser(null)} />}
+            {dialogMessage && (
+                <Dialog open={true} onOpenChange={() => setDialogMessage(null)}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>{showConfirm ? "Confirm Action" : "Error"}</DialogTitle>
+                        </DialogHeader>
+                        <DialogDescription>
+                            {dialogMessage}
+                        </DialogDescription>
+                        <DialogFooter>
+                            {showConfirm ? (
+                                <>
+                                    <Button variant="outline" onClick={() => { setDialogMessage(null); setShowConfirm(false); }}>Cancel</Button>
+                                    <Button onClick={() => dialogAction && dialogAction()}>Confirm</Button>
+                                </>
+                            ) : (
+                                <Button onClick={() => setDialogMessage(null)}>Close</Button>
+                            )}
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            )}
         </div>
     );
 }
@@ -163,7 +196,7 @@ function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateU
                     <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="username" className="text-right">Username</Label><Input id="username" value={newUser.username} onChange={(e) => onUserChange({ ...newUser, username: e.target.value })} className="col-span-3" /></div>
                     <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="email" className="text-right">Email</Label><Input id="email" type="email" value={newUser.email} onChange={(e) => onUserChange({ ...newUser, email: e.target.value })} className="col-span-3" /></div>
                     <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="password" className="text-right">Password</Label><Input id="password" type="password" value={newUser.password} onChange={(e) => onUserChange({ ...newUser, password: e.target.value })} className="col-span-3" /></div>
-                    <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="role" className="text-right">Role</Label><Select value={newUser.role} onValueChange={(value: UserRole) => onUserChange({ ...newUser, role: value })}><SelectTrigger className="col-span-3"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="admin">Admin</SelectItem><SelectItem value="manager">Manager</SelectItem><SelectItem value="operator">Operator</SelectItem><SelectItem value="viewer">Viewer</SelectItem></SelectContent></Select></div>
+                    <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="role" className="text-right">Role</Label><Select value={newUser.role} onValueChange={(value: UserRole) => onUserChange({ ...newUser, role: value })}><SelectTrigger className="col-span-3"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="super_admin">Super Admin</SelectItem><SelectItem value="admin">Admin</SelectItem><SelectItem value="manager">Manager</SelectItem><SelectItem value="operator">Operator</SelectItem><SelectItem value="viewer">Viewer</SelectItem></SelectContent></Select></div>
                     <div><Label className="font-semibold">Permissions</Label><div className="grid grid-cols-2 gap-2 mt-2 p-4 border rounded-md max-h-40 overflow-y-auto">{allPermissions.map((p) => (<div key={p} className="flex items-center space-x-2"><Checkbox id={`create-${p}`} checked={newUser.permissions.includes(p)} onCheckedChange={(c) => onPermissionChange(p, !!c)} /><Label htmlFor={`create-${p}`} className="text-sm font-normal capitalize">{p.replace(/_/g, ' ')}</Label></div>))}</div></div>
                 </div>
                 <DialogFooter><Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button><Button onClick={onCreateUser}>Create User</Button></DialogFooter>
@@ -187,7 +220,7 @@ function EditUserDialog({ user, onUpdate, onClose }: { user: User, onUpdate: (us
             <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader><DialogTitle>Edit User: {editedUser.username}</DialogTitle><DialogDescription>Update the user's role and permissions.</DialogDescription></DialogHeader>
                 <div className="grid gap-6 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="role" className="text-right">Role</Label><Select value={editedUser.role} onValueChange={(value: UserRole) => setEditedUser({ ...editedUser, role: value })}><SelectTrigger className="col-span-3"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="admin">Admin</SelectItem><SelectItem value="manager">Manager</SelectItem><SelectItem value="operator">Operator</SelectItem><SelectItem value="viewer">Viewer</SelectItem></SelectContent></Select></div>
+                    <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="role" className="text-right">Role</Label><Select value={editedUser.role} onValueChange={(value: UserRole) => setEditedUser({ ...editedUser, role: value })}><SelectTrigger className="col-span-3"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="super_admin">Super Admin</SelectItem><SelectItem value="admin">Admin</SelectItem><SelectItem value="manager">Manager</SelectItem><SelectItem value="operator">Operator</SelectItem><SelectItem value="viewer">Viewer</SelectItem></SelectContent></Select></div>
                     <div><Label className="font-semibold">Permissions</Label><div className="grid grid-cols-2 gap-2 mt-2 p-4 border rounded-md max-h-60 overflow-y-auto">{allPermissions.map((p) => (<div key={p} className="flex items-center space-x-2"><Checkbox id={`edit-${p}`} checked={editedUser.permissions?.includes(p)} onCheckedChange={(c) => handlePermissionChange(p, !!c)} /><Label htmlFor={`edit-${p}`} className="text-sm font-normal capitalize">{p.replace(/_/g, ' ')}</Label></div>))}</div></div>
                 </div>
                 <DialogFooter><Button variant="outline" onClick={onClose}>Cancel</Button><Button onClick={() => onUpdate(editedUser.id, { role: editedUser.role, permissions: editedUser.permissions })}>Save Changes</Button></DialogFooter>
@@ -195,4 +228,3 @@ function EditUserDialog({ user, onUpdate, onClose }: { user: User, onUpdate: (us
         </Dialog>
     );
 }
-
