@@ -2,12 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { fetchAllUsers, updateUser as updateUserApi, createUser as createUserApi, deleteUser as deleteUserApi } from '../api/userApi';
 import { User, UserRole, Permission } from '../App';
 
-/**
- * Custom hook for managing user data within a specific organization.
- * Encapsulates all logic for fetching, creating, updating, and deleting users.
- * @param organizationId The ID of the organization whose users are being managed.
- * @returns An object containing user state and management functions.
- */
+
 export function useUsers(organizationId?: string) {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -27,9 +22,6 @@ export function useUsers(organizationId?: string) {
         ...user,
         createdAt: user.createdAt?.toDate ? user.createdAt.toDate().toLocaleDateString() : 'N/A',
         lastLogin: user.lastLogin?.toDate ? user.lastLogin.toDate().toLocaleString() : 'N/A',
-        // *** THE FIX IS HERE ***
-        // Ensure 'permissions' is always an array. If it's not an array
-        // (e.g., it's undefined, null, or another type), default to an empty array.
         permissions: Array.isArray(user.permissions) ? user.permissions : [],
       })) as User[];
       setUsers(formattedUsers);
