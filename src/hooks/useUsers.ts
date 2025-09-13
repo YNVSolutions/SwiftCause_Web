@@ -77,4 +77,3 @@ export function useUsers(organizationId?: string) {
 
   return { loading, error, users, refreshUsers, updateUser, addUser, deleteUser };
 }
-
