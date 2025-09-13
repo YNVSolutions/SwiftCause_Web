@@ -1,7 +1,36 @@
-import { collection, getDocs, doc, updateDoc, DocumentData, query, where } from 'firebase/firestore';
-import { httpsCallable } from 'firebase/functions';
-import { db, functions } from '../lib/firebase';
+import { collection, getDocs, doc, DocumentData, query, where } from 'firebase/firestore';
+import { getAuth } from "firebase/auth";
+import { db } from '../lib/firebase';
 import { User, UserRole, Permission } from '../App';
+
+// Helper function to make authenticated fetch calls to Firebase Functions
+async function callAuthenticatedFunction(functionName: string, method: string, data?: any) {
+  const auth = getAuth();
+  const token = await auth.currentUser?.getIdToken();
+
+  if (!token) {
+    throw new Error("Authentication token not found. Please log in.");
+  }
+
+  const url = `https://us-central1-swiftcause-app.cloudfunctions.net/${functionName}`;
+  
+  const response = await fetch(url, {
+    method: method,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+
+  const responseData = await response.json();
+  
+  if (!response.ok) {
+    throw new Error(responseData.error || 'Something went wrong on the server.');
+  }
+
+  return responseData;
+}
 
 export async function fetchAllUsers(organizationId?: string): Promise<DocumentData[]> {
   try {
@@ -21,13 +50,13 @@ export async function fetchAllUsers(organizationId?: string): Promise<DocumentDa
   }
 }
 
-export async function updateUser(userId: string, data: Partial<User>): Promise<void> {
+export async function updateUser(userId: string, data: Partial<User>): Promise<any> {
   try {
-    const userRef = doc(db, 'users', userId);
-    await updateDoc(userRef, data as DocumentData);
+    const result = await callAuthenticatedFunction('updateUser', 'POST', { userId, data });
+    return result;
   } catch (error) {
     console.error('Error updating user:', error);
-    throw new Error('Failed to update user details.');
+    throw error;
   }
 }
 
@@ -40,25 +69,20 @@ export async function createUser(userData: {
   organizationId: string;
 }): Promise<any> {
   try {
-    const createUserFunction = httpsCallable(functions, 'createUser');
-    const result = await createUserFunction(userData);
-    return result.data;
+    const result = await callAuthenticatedFunction('createUser', 'POST', userData);
+    return result;
   } catch (error) {
     console.error('Error calling createUser function:', error);
-    const message = (error as any).message || 'An unknown server error occurred while creating the user.';
-    throw new Error(message);
+    throw error;
   }
 }
 
 export async function deleteUser(userId: string): Promise<any> {
   try {
-    const deleteUserFunction = httpsCallable(functions, 'deleteUser');
-    const result = await deleteUserFunction({ userId });
-    return result.data;
+    const result = await callAuthenticatedFunction('deleteUser', 'POST', { userId });
+    return result;
   } catch (error) {
     console.error('Error calling deleteUser function:', error);
-    const message = (error as any).message || 'An unknown server error occurred while deleting the user.';
-    throw new Error(message);
+    throw error;
   }
 }
-
