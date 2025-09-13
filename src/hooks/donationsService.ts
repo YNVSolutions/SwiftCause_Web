@@ -10,9 +10,9 @@ function formatTimestamp(timestamp: any): string {
 }
 
 
-export async function getDonations(): Promise<Donation[]> {
+export async function getDonations(organizationId: string): Promise<Donation[]> {
   try {
-    const rawDonations = await fetchAllDonations();
+    const rawDonations = await fetchAllDonations(organizationId);
 
     const formattedDonations: Donation[] = rawDonations.map(donation => ({
       ...donation,

@@ -36,6 +36,9 @@ import {
 import { Plus, ArrowLeft, Settings, Download } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { AlertTriangle } from "lucide-react"; // Import AlertTriangle
+import { Skeleton } from "../ui/skeleton";
+import { Ghost } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -1019,7 +1022,7 @@ const CampaignManagement = ({
   const [campaignToDelete, setCampaignToDelete] = useState<DocumentData | null>(null);
   const [confirmDeleteInput, setConfirmDeleteInput] = useState("");
 
-  const { campaigns, updateWithImage, createWithImage, remove } =
+  const { campaigns, updateWithImage, createWithImage, remove, loading } =
     useCampaignManagement(userSession.user.organizationId);
 
   const handleDeleteClick = (campaign: DocumentData) => {
@@ -1428,115 +1431,136 @@ const CampaignManagement = ({
             </div>
 
             <div className="divide-y divide-gray-200">
-              {filteredAndSortedCampaigns.map((campaign) => {
-                const collected = Number(campaign.raised) || 0;
-                const goal = Number(campaign.goal) || 1;
-                const progress = Math.round((collected / goal) * 100);
-                const donors = campaign.donationCount || 0;
-                const avgDonation =
-                  donors > 0 ? (collected / donors).toFixed(2) : "0.00";
-                const status = campaign.status || "Active";
-                const endDate = campaign.endDate?.seconds
-                  ? new Date(
-                      campaign.endDate.seconds * 1000
-                    ).toLocaleDateString("en-US")
-                  : "N/A";
-                const isExpired = campaign.endDate?.seconds
-                  ? new Date(campaign.endDate.seconds * 1000) < new Date()
-                  : false;
-
-                return (
-                  <div
-                    key={campaign.id}
-                    className="block md:grid md:grid-cols-10 items-center py-4 px-6 hover:bg-gray-50 transition-colors duration-150"
-                  >
-                    <div className="md:col-span-3 flex items-center space-x-3 mb-4 md:mb-0">
-                      <div className="relative">
-                        <img
-                          src={
-                            campaign.coverImageUrl ||
-                            "https://via.placeholder.com/40"
-                          }
-                          alt={campaign.title}
-                          className="w-10 h-10 object-cover rounded-md flex-shrink-0"
-                        />
-                        {campaign.coverImageUrl && (
-                          <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
-                        )}
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {campaign.title}
-                        </p>
-                        {/* <p className="text-xs text-gray-500">{campaign.tags.split(',').map((t: string) => t.trim()).filter(Boolean).join(' · ')}</p> */}
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 md:col-span-7 md:grid-cols-7 md:gap-0">
-                      <div className="col-span-1 md:col-span-2 space-y-1">
-                        <p className="text-sm font-medium text-gray-800">
-                          ${collected.toLocaleString()}{" "}
-                          <span className="text-gray-500 font-normal">
-                            ({progress}%)
-                          </span>
-                        </p>
-                        <div className="w-4/5 bg-gray-200 rounded-full h-2">
-                          <div
-                            className={`h-2 rounded-full transition-all duration-500 ${getProgressColor(
-                              progress
-                            )}`}
-                            style={{ width: `${Math.min(progress, 100)}%` }}
-                          ></div>
-                        </div>
-                        <p className="text-xs text-gray-500">
-                          Goal: ${goal.toLocaleString()}
-                        </p>
-                      </div>
-
-                      <div className="col-span-1 md:col-span-2 text-sm text-gray-800">
-                        <p>{donors} donors</p>
-                        <p>${avgDonation} avg</p>
-                      </div>
-
-                      <div className="col-span-1 md:col-span-1">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                            status
-                          )}`}
-                        >
-                          {status}
-                        </span>
-                      </div>
-
-                      <div className="col-span-1 md:col-span-1 text-sm text-gray-800">
-                        <p>{endDate}</p>
-                        {isExpired && (
-                          <p className="text-xs text-red-500">Expired</p>
-                        )}
-                      </div>
-
-                      <div className="col-span-2 md:col-span-1 flex justify-start md:justify-end items-center space-x-2 text-gray-500 mt-4 md:mt-0">
-                        {hasPermission("edit_campaign") && (
-                          <button
-                            onClick={() => handleEditClick(campaign)}
-                            className="p-2 hover:bg-gray-100 rounded-md"
-                            title="Edit"
-                          >
-                            <FaEdit className="h-4 w-4" />
-                          </button>
-                        )}
-                        <button
-                          onClick={() => handleDeleteClick(campaign)}
-                          className="p-2 hover:bg-red-100 rounded-md text-red-500"
-                          title="Delete"
-                        >
-                          <FaTrashAlt className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
+              {loading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="grid grid-cols-10 items-center py-4 px-6">
+                    <Skeleton className="h-10 w-full col-span-3" />
+                    <Skeleton className="h-10 w-full col-span-2 ml-4" />
+                    <Skeleton className="h-10 w-full col-span-2 ml-4" />
+                    <Skeleton className="h-10 w-full col-span-1 ml-4" />
+                    <Skeleton className="h-10 w-full col-span-1 ml-4" />
+                    <Skeleton className="h-10 w-10 col-span-1 ml-auto" />
                   </div>
-                );
-              })}
+                ))
+              ) : filteredAndSortedCampaigns.length > 0 ? (
+                filteredAndSortedCampaigns.map((campaign) => {
+                  const collected = Number(campaign.raised) || 0;
+                  const goal = Number(campaign.goal) || 1;
+                  const progress = Math.round((collected / goal) * 100);
+                  const donors = campaign.donationCount || 0;
+                  const avgDonation =
+                    donors > 0 ? (collected / donors).toFixed(2) : "0.00";
+                  const status = campaign.status || "Active";
+                  const endDate = campaign.endDate?.seconds
+                    ? new Date(
+                        campaign.endDate.seconds * 1000
+                      ).toLocaleDateString("en-US")
+                    : "N/A";
+                  const isExpired = campaign.endDate?.seconds
+                    ? new Date(campaign.endDate.seconds * 1000) < new Date()
+                    : false;
+
+                  return (
+                    <div
+                      key={campaign.id}
+                      className="block md:grid md:grid-cols-10 items-center py-4 px-6 hover:bg-gray-50 transition-colors duration-150"
+                    >
+                      <div className="md:col-span-3 flex items-center space-x-3 mb-4 md:mb-0">
+                        <div className="relative">
+                          <img
+                            src={
+                              campaign.coverImageUrl ||
+                              "https://via.placeholder.com/40"
+                            }
+                            alt={campaign.title}
+                            className="w-10 h-10 object-cover rounded-md flex-shrink-0"
+                          />
+                          {campaign.coverImageUrl && (
+                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">
+                            {campaign.title}
+                          </p>
+                          {/* <p className="text-xs text-gray-500">{campaign.tags.split(',').map((t: string) => t.trim()).filter(Boolean).join(' · ')}</p> */}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4 md:col-span-7 md:grid-cols-7 md:gap-0">
+                        <div className="col-span-1 md:col-span-2 space-y-1">
+                          <p className="text-sm font-medium text-gray-800">
+                            ${collected.toLocaleString()}{" "}
+                            <span className="text-gray-500 font-normal">
+                              ({progress}%)
+                            </span>
+                          </p>
+                          <div className="w-4/5 bg-gray-200 rounded-full h-2">
+                            <div
+                              className={`h-2 rounded-full transition-all duration-500 ${getProgressColor(
+                                progress
+                              )}`}
+                              style={{ width: `${Math.min(progress, 100)}%` }}
+                            ></div>
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            Goal: ${goal.toLocaleString()}
+                          </p>
+                        </div>
+
+                        <div className="col-span-1 md:col-span-2 text-sm text-gray-800">
+                          <p>{donors} donors</p>
+                          <p>${avgDonation} avg</p>
+                        </div>
+
+                        <div className="col-span-1 md:col-span-1">
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
+                              status
+                            )}`}
+                          >
+                            {status}
+                          </span>
+                        </div>
+
+                        <div className="col-span-1 md:col-span-1 text-sm text-gray-800">
+                          <p>{endDate}</p>
+                          {isExpired && (
+                            <p className="text-xs text-red-500">Expired</p>
+                          )}
+                        </div>
+
+                        <div className="col-span-2 md:col-span-1 flex justify-start md:justify-end items-center space-x-2 text-gray-500 mt-4 md:mt-0">
+                          {hasPermission("edit_campaign") && (
+                            <button
+                              onClick={() => handleEditClick(campaign)}
+                              className="p-2 hover:bg-gray-100 rounded-md"
+                              title="Edit"
+                            >
+                              <FaEdit className="h-4 w-4" />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleDeleteClick(campaign)}
+                            className="p-2 hover:bg-red-100 rounded-md text-red-500"
+                            title="Delete"
+                          >
+                            <FaTrashAlt className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-center py-12">
+                  <Ghost className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">No campaigns found</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Create a new campaign to get started.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>

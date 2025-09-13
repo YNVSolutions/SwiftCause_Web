@@ -167,6 +167,7 @@ export interface Donation {
   kioskId?: string;
   transactionId?: string;
   isGiftAid?: boolean;
+  organizationId?: string;
 }
 export interface PaymentResult {
   success: boolean;

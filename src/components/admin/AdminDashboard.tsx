@@ -9,6 +9,7 @@ import {
 } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Progress } from "../ui/progress";
+import { Skeleton } from "../ui/skeleton";
 import {
   Collapsible,
   CollapsibleContent,
@@ -60,10 +61,28 @@ import {
   Lightbulb,
   Rocket,
   Play,
+  TriangleAlert,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose,
+} from "../ui/dialog";
 import { Screen, AdminSession, Permission, Campaign } from "../../App";
 import { db } from "../../lib/firebase";
-import { collection, query, orderBy, limit, getDocs, where } from "firebase/firestore";
+import {
+  collection,
+  query,
+  orderBy,
+  limit,
+  getDocs,
+  where,
+} from "firebase/firestore";
 import {
   useDashboardData,
   Activity,
@@ -110,7 +129,9 @@ export function AdminDashboard({
   const [showFeatures, setShowFeatures] = useState(false);
   const [showGettingStarted, setShowGettingStarted] = useState(false);
   const [isLegendExpanded, setIsLegendExpanded] = useState(false);
-  const [stripeStatusMessage, setStripeStatusMessage] = useState<{ type: 'success' | 'error' | 'warning', message: string } | null>(null); 
+  const [stripeStatusMessage, setStripeStatusMessage] = useState<{ type: 'success' | 'error' | 'warning', message: string } | null>(null);
+  const [showStripeStatusDialog, setShowStripeStatusDialog] = useState(false);
+  const [isStripeOnboardingLoading, setIsStripeOnboardingLoading] = useState(false);
 
   const { organization, loading: orgLoading, error: orgError } = useOrganization(
     userSession.user.organizationId ?? null
@@ -124,7 +145,8 @@ export function AdminDashboard({
     if (stripeStatus === "success") {
       setStripeStatusMessage({
         type: "success",
-        message: "Stripe onboarding complete! Your account is being reviewed and will be payout-ready shortly.",
+        message:
+          "Stripe onboarding complete! Your account is being reviewed and will be payout-ready shortly.",
       });
     } else if (stripeStatus === "refresh") {
       setStripeStatusMessage({
@@ -152,6 +174,7 @@ export function AdminDashboard({
     }
 
     try {
+      setIsStripeOnboardingLoading(true);
       const idToken = await auth.currentUser.getIdToken();
       
       const response = await fetch('https://createonboardinglink-j2f5w4qwxq-uc.a.run.app', {
@@ -175,6 +198,8 @@ export function AdminDashboard({
     } catch (error) {
       console.error("Error creating Stripe onboarding link:", error);
       setStripeStatusMessage({ type: 'error', message: `Failed to start Stripe onboarding: ${(error as Error).message}` });
+    } finally {
+      setIsStripeOnboardingLoading(false);
     }
   };
 
@@ -496,14 +521,17 @@ export function AdminDashboard({
               </div>
               <div>
                 <div className="flex items-center space-x-3">
-                  <h1 className="text-xl font-semibold text-gray-900">Admin Dashboard</h1>
-                  <Badge variant="outline" className="text-xs">{userSession.user.role}</Badge>
-                  {organization && organization.stripe && organization.stripe.chargesEnabled && organization.stripe.payoutsEnabled && (
-                    <Badge className="bg-green-500 text-white flex items-center space-x-1">
-                      <CheckCircle className="w-3 h-3" />
-                      <span>Stripe Ready</span>
-                    </Badge>
-                  )}
+                  <h1 className="text-xl font-semibold text-gray-900 flex items-center">
+                    Admin Dashboard
+                    {organization && (
+                      <span className="ml-2 text-2xl font-bold text-indigo-700">
+                        - {organization.name}
+                      </span>
+                    )}
+                  </h1>
+                  <Badge variant="secondary" className="px-3 py-1 text-sm font-medium rounded-full bg-gray-200 text-gray-700">
+                    {userSession.user.role}
+                  </Badge>
                 </div>
                 <p className="text-sm text-gray-600">Welcome back, {userSession.user.username}</p>
               </div>
@@ -511,7 +539,89 @@ export function AdminDashboard({
                 <OrganizationSwitcher userSession={userSession} onOrganizationChange={onOrganizationSwitch} />
               )}
             </div>
-            <div className="flex flex-col sm:flex-row items-stretch gap-2">
+            <div className="flex flex-col sm:flex-row items-center gap-2">
+              {organization && organization.stripe && (
+                <Dialog open={showStripeStatusDialog} onOpenChange={setShowStripeStatusDialog}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="lg"
+                      className={`relative ml-2 rounded-full p-2.5 
+                        ${!organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled
+                          ? 'text-red-600 hover:text-red-700 animate-pulse bg-red-100'
+                          : 'text-green-600 hover:text-green-700 bg-green-100'
+                        }`}
+                      aria-label="Stripe Status"
+                    >
+                      {!organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled ? (
+                        <CreditCard className="h-6 w-6" />
+                      ) : (
+                        <CreditCard className="h-6 w-6" />
+                      )}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle className="flex items-center space-x-2">
+                        {!organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled ? (
+                          <CreditCard className="h-5 w-5 text-red-600" />
+                        ) : (
+                          <CreditCard className="h-5 w-5 text-green-600" />
+                        )}
+                        <span>Stripe Account Status</span>
+                      </DialogTitle>
+                      <DialogDescription>
+                        Review the current status of your Stripe integration.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      {orgLoading ? (
+                        <p>Loading organization data...</p>
+                      ) : orgError ? (
+                        <p className="text-red-500">Error: {orgError}</p>
+                      ) : organization &&
+                        organization.stripe &&
+                        !organization.stripe.chargesEnabled ? (
+                        <>
+                          <p className="text-sm text-yellow-700">
+                            Your organization needs to complete Stripe onboarding to accept donations and receive payouts.
+                          </p>
+                          <Button
+                            onClick={handleStripeOnboarding}
+                            className="bg-yellow-600 hover:bg-yellow-700"
+                            disabled={isStripeOnboardingLoading}
+                          >
+                            {isStripeOnboardingLoading ? (
+                              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                            ) : (
+                              <CreditCard className="w-4 h-4 mr-2" />
+                            )}
+                            {isStripeOnboardingLoading ? "Processing..." : "Complete Stripe Onboarding"}
+                          </Button>
+                        </>
+                      ) : organization &&
+                        organization.stripe &&
+                        organization.stripe.chargesEnabled &&
+                        !organization.stripe.payoutsEnabled ? (
+                        <p className="text-sm text-blue-700">
+                          Your Stripe account is being reviewed. Payouts will be enabled shortly.
+                        </p>
+                      ) : (
+                        <p className="text-sm text-green-700">
+                          Your Stripe account is fully configured and ready to accept donations and process payouts.
+                        </p>
+                      )}
+                    </div>
+                    <DialogFooter>
+                      <DialogClose asChild>
+                        <Button type="button" variant="secondary">
+                          Close
+                        </Button>
+                      </DialogClose>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
               <Button variant="outline" size="sm" onClick={handleRefresh} disabled={loading} className="flex items-center space-x-2">
                 <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
                 <span>Refresh</span>
@@ -561,40 +671,6 @@ export function AdminDashboard({
           <p>Loading organization data...</p>
         ) : orgError ? (
           <p className="text-red-500">Error: {orgError}</p>
-        ) : organization &&
-          organization.stripe &&
-          !organization.stripe.chargesEnabled ? (
-          <Card className="mb-8 border-yellow-400 bg-yellow-50">
-            <CardHeader>
-              <CardTitle className="text-yellow-800 flex items-center space-x-2">
-                <CreditCard className="w-5 h-5" />
-                <span>Stripe Onboarding Required</span>
-              </CardTitle>
-              <CardDescription className="text-yellow-700">
-                Your organization needs to complete Stripe onboarding to accept donations and receive payouts.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button onClick={handleStripeOnboarding} className="bg-yellow-600 hover:bg-yellow-700">
-                Complete Stripe Onboarding
-              </Button>
-            </CardContent>
-          </Card>
-        ) : organization &&
-          organization.stripe &&
-          organization.stripe.chargesEnabled &&
-          !organization.stripe.payoutsEnabled ? (
-          <Card className="mb-8 border-blue-400 bg-blue-50">
-            <CardHeader>
-              <CardTitle className="text-blue-800 flex items-center space-x-2">
-                <CreditCard className="w-5 h-5" />
-                <span>Stripe Onboarding In Progress</span>
-              </CardTitle>
-              <CardDescription className="text-blue-700">
-                Your Stripe account is being reviewed. Payouts will be enabled shortly.
-              </CardDescription>
-            </CardHeader>
-          </Card>
         ) : null}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <Card>
@@ -832,21 +908,40 @@ export function AdminDashboard({
               <CardTitle>Campaign Goal Comparison</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={goalComparisonData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" tick={false} />
-                  <YAxis
-                    tickFormatter={(value) => formatShortCurrency(value as number)}
-                  />
-                  <Tooltip
-                    formatter={(value) => formatShortCurrency(value as number)}
-                  />
-                  <Legend />
-                  <Bar dataKey="Collected" fill="#10B981" />
-                  <Bar dataKey="Goal" fill="#94A3B8" />
-                </BarChart>
-              </ResponsiveContainer>
+              {loading ? (
+                <div className="space-y-4">
+                  <Skeleton className="h-[300px] w-full" />
+                </div>
+              ) : goalComparisonData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={goalComparisonData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" tick={false} />
+                    <YAxis
+                      tickFormatter={(value) => formatShortCurrency(value as number)}
+                    />
+                    <Tooltip
+                      formatter={(value) => formatShortCurrency(value as number)}
+                    />
+                    <Legend />
+                    <Bar dataKey="Collected" fill="#10B981" />
+                    <Bar dataKey="Goal" fill="#94A3B8" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Target className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                  <p className="text-lg font-medium mb-2">No Campaigns Yet</p>
+                  <p className="text-sm mb-4">
+                    Start by creating your first fundraising campaign to track progress.
+                  </p>
+                  {hasPermission("create_campaign") && (
+                    <Button onClick={() => onNavigate("admin-campaigns")}>
+                      <Plus className="w-4 h-4 mr-2" /> Create New Campaign
+                    </Button>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -855,27 +950,51 @@ export function AdminDashboard({
               <CardTitle>Campaign Categories</CardTitle>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col">
-              <div className="flex-1">
-                <ResponsiveContainer width="100%" height={220}>
-                  <PieChart>
-                    <Pie
-                      data={categoryData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={5}
-                      dataKey="value"
-                      nameKey="name"
-                    >
-                      {categoryData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value, name) => [`${value}%`, name]} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
+              {loading ? (
+                <div className="space-y-4">
+                  <Skeleton className="h-[220px] w-full mb-4" />
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <Skeleton key={i} className="h-5 w-full" />
+                    ))}
+                  </div>
+                </div>
+              ) : categoryData.length > 0 ? (
+                <div className="flex-1">
+                  <ResponsiveContainer width="100%" height={220}>
+                    <PieChart>
+                      <Pie
+                        data={categoryData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={100}
+                        paddingAngle={5}
+                        dataKey="value"
+                        nameKey="name"
+                      >
+                        {categoryData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value, name) => [`${value}%`, name]} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <TriangleAlert className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                  <p className="text-lg font-medium mb-2">No Categories Yet</p>
+                  <p className="text-sm mb-4">
+                      Start by creating your first fundraising campaign to track progress.
+                    </p>
+                    {hasPermission("create_campaign") && (
+                      <Button onClick={() => onNavigate("admin-campaigns")}>
+                        <Plus className="w-4 h-4 mr-2" /> Create New Campaign
+                      </Button>
+                    )}
+                </div>
+              )}
               <div className="mt-4 border-t pt-4">
                 <div className="grid grid-cols-2 gap-x-6 gap-y-3">
                   {displayedCategories.map((entry) => (
@@ -942,7 +1061,21 @@ export function AdminDashboard({
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {topCampaigns.length > 0 ? (
+                {loading ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Skeleton className="h-5 w-3/4" />
+                        <Skeleton className="h-5 w-1/4" />
+                      </div>
+                      <Skeleton className="h-2 w-full" />
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <Skeleton className="h-3 w-1/3" />
+                        <Skeleton className="h-3 w-1/4" />
+                      </div>
+                    </div>
+                  ))
+                ) : topCampaigns.length > 0 ? (
                   topCampaigns.map((campaign: Campaign) => {
                     const collected = campaign.raised || 0;
                     const goal = campaign.goal || 1;
@@ -971,9 +1104,18 @@ export function AdminDashboard({
                     );
                   })
                 ) : (
-                  <p className="text-sm text-gray-500">
-                    No campaign data available.
-                  </p>
+                  <div className="text-center py-8 text-gray-500">
+                    <Target className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                    <p className="text-lg font-medium mb-2">No Campaigns Yet</p>
+                    <p className="text-sm mb-4">
+                      Start by creating your first fundraising campaign to track progress.
+                    </p>
+                    {hasPermission("create_campaign") && (
+                      <Button onClick={() => onNavigate("admin-campaigns")}>
+                        <Plus className="w-4 h-4 mr-2" /> Create New Campaign
+                      </Button>
+                    )}
+                  </div>
                 )}
               </div>
             </CardContent>
@@ -984,28 +1126,60 @@ export function AdminDashboard({
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentActivities.map((activity: Activity) => (
-                  <div key={activity.id} className="flex items-start space-x-3">
-                    <div className="flex-shrink-0 mt-0.5">
-                      {getActivityIcon(activity.type)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-900">
-                        {activity.message}
-                      </p>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <p className="text-xs text-gray-500">
-                          {activity.timestamp}
-                        </p>
-                        {activity.kioskId && (
-                          <Badge variant="secondary" className="text-xs">
-                            {activity.kioskId}
-                          </Badge>
-                        )}
+                {loading ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="flex items-start space-x-3">
+                      <Skeleton className="h-6 w-6 rounded-full" />
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-4 w-3/4" />
+                        <Skeleton className="h-3 w-1/2" />
                       </div>
                     </div>
+                  ))
+                ) : recentActivities.length > 0 ? (
+                  recentActivities.map((activity: Activity) => (
+                    <div key={activity.id} className="flex items-start space-x-3">
+                      <div className="flex-shrink-0 mt-0.5">
+                        {getActivityIcon(activity.type)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-900">
+                          {activity.message}
+                        </p>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <p className="text-xs text-gray-500">
+                            {activity.timestamp}
+                          </p>
+                          {activity.kioskId && (
+                            <Badge variant="secondary" className="text-xs">
+                              {activity.kioskId}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <ActivityIcon className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                    <p className="text-lg font-medium mb-2">No Recent Activity</p>
+                    <p className="text-sm mb-4">
+                      Start by managing campaigns or configuring kiosks to see activity here.
+                    </p>
+                    <div className="flex flex-col sm:flex-row justify-center gap-2">
+                      {hasPermission("create_campaign") && (
+                        <Button onClick={() => onNavigate("admin-campaigns")} size="sm">
+                          <Settings className="w-4 h-4 mr-2" /> Manage Campaigns
+                        </Button>
+                      )}
+                      {hasPermission("create_kiosk") && (
+                        <Button onClick={() => onNavigate("admin-kiosks")} size="sm" variant="outline">
+                          <Monitor className="w-4 h-4 mr-2" /> Configure Kiosks
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
@@ -1021,23 +1195,40 @@ export function AdminDashboard({
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {alerts.map((alert: Alert) => (
-                  <div
-                    key={alert.id}
-                    className="flex items-start space-x-3 p-3 rounded-lg bg-gray-50"
-                  >
-                    <div className="flex-shrink-0 mt-0.5">
-                      {getAlertIcon(alert.type)}
+                {loading ? (
+                  Array.from({ length: 2 }).map((_, i) => (
+                    <div key={i} className="flex items-start space-x-3 p-3 rounded-lg bg-gray-50">
+                      <Skeleton className="h-5 w-5 rounded-full" />
+                      <Skeleton className="h-4 w-3/4" />
                     </div>
-                    <p className="text-sm text-gray-900">{alert.message}</p>
+                  ))
+                ) : alerts.length > 0 ? (
+                  alerts.map((alert: Alert) => (
+                    <div
+                      key={alert.id}
+                      className="flex items-start space-x-3 p-3 rounded-lg bg-gray-50"
+                    >
+                      <div className="flex-shrink-0 mt-0.5">
+                        {getAlertIcon(alert.type)}
+                      </div>
+                      <p className="text-sm text-gray-900">{alert.message}</p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <AlertCircle className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                    <p className="text-lg font-medium mb-2">No System Alerts</p>
+                    <p className="text-sm mb-4">
+                      Your system is running smoothly. No alerts to display.
+                    </p>
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
+              <CardTitle>More Actions</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 gap-3">

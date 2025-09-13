@@ -2,10 +2,11 @@ import { collection, getDocs, DocumentData, query, where } from 'firebase/firest
 import { db } from '../lib/firebase';
 
 
-export async function fetchAllDonations(): Promise<DocumentData[]> {
+export async function fetchAllDonations(organizationId: string): Promise<DocumentData[]> {
   try {
     const donationsCollection = collection(db, 'donations');
-    const querySnapshot = await getDocs(donationsCollection);
+    const q = query(donationsCollection, where('organizationId', '==', organizationId));
+    const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {
       console.log('No donations found.');
