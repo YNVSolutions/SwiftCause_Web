@@ -77,10 +77,13 @@ export async function getOrganizationById(organizationId: string): Promise<Organ
     return null;
   }
 }
-export async function getAllCampaigns() {
-  const campaignsRef = collection(db, 'campaigns');
+export async function getAllCampaigns(organizationId?: string) {
+  let campaignsRef: any = collection(db, 'campaigns');
+  if (organizationId) {
+    campaignsRef = query(campaignsRef, where("organizationId", "==", organizationId));
+  }
   const snapshot = await getDocs(campaignsRef);
-  return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  return snapshot.docs.map(d => ({ id: d.id, ...(d.data() as object) }));
 }
 
 export async function updateKiosk(kioskId: string, data: any) {

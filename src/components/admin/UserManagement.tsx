@@ -19,6 +19,8 @@ import {
   Pencil,
   Trash2
 } from 'lucide-react';
+import { Skeleton } from "../ui/skeleton";
+import { Ghost } from "lucide-react";
 import { Screen, User, UserRole, AdminSession, Permission } from '../../App';
 import { calculateUserStats } from './utils/userManagementHelpers';
 import { useUsers } from '../../hooks/useUsers';
@@ -434,16 +436,22 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
           <CardContent>
             <div className="overflow-x-auto">
               {loading ? (
-                <div className="flex items-center justify-center p-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-                  <p className="ml-4 text-lg text-gray-600">Loading users...</p>
+                <div className="space-y-4">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="grid grid-cols-5 gap-4 py-4 px-6 border-b border-gray-200">
+                      <Skeleton className="h-10 w-full col-span-2" />
+                      <Skeleton className="h-10 w-full col-span-1" />
+                      <Skeleton className="h-10 w-full col-span-1" />
+                      <Skeleton className="h-10 w-20 col-span-1 ml-auto" />
+                    </div>
+                  ))}
                 </div>
               ) : error ? (
                 <div className="flex flex-col items-center justify-center p-8 text-center text-red-600">
                   <AlertCircle className="h-10 w-10 text-red-500" />
                   <p className="mt-2 text-lg">{error}</p>
                 </div>
-              ) : (
+              ) : filteredUsers.length > 0 ? (
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -465,10 +473,18 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                     ))}
                   </TableBody>
                 </Table>
-              )}
-              {!loading && filteredUsers.length === 0 && (
-                <div className="flex items-center justify-center p-8 text-gray-500">
-                  No users found.
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Ghost className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                  <p className="text-lg font-medium mb-2">No Users Found</p>
+                  <p className="text-sm mb-4">
+                    There are no users matching your criteria.
+                  </p>
+                  {hasPermission("create_user") && (
+                    <Button onClick={() => setCreateDialogOpen(true)}>
+                      <Plus className="w-4 h-4 mr-2" /> Create New User
+                    </Button>
+                  )}
                 </div>
               )}
             </div>

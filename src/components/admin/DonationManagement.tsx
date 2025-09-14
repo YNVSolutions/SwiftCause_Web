@@ -22,6 +22,8 @@ import {
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
+import { Skeleton } from "../ui/skeleton"; // Import Skeleton
+import { Ghost } from "lucide-react"; // Import Ghost
 import { Screen, AdminSession, Permission, Donation } from '../../App';
 import { getDonations } from '../../hooks/donationsService';
 
@@ -71,8 +73,8 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
         setLoading(true);
        
         const [donationData, campaignData] = await Promise.all([
-          getDonations(),
-          getAllCampaigns()
+          getDonations(userSession.user.organizationId || ''),
+          getAllCampaigns(userSession.user.organizationId || '')
         ]);
         setDonations(donationData as FetchedDonation[]);
         setCampaigns(campaignData as Campaign[]);
@@ -273,16 +275,23 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="flex items-center justify-center p-8">
-                <span className="animate-spin h-8 w-8 border-4 rounded-full border-t-transparent border-blue-500"></span>
-                <p className="ml-4 text-lg text-gray-600">Loading donations...</p>
+              <div className="space-y-4">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="grid grid-cols-6 gap-4 py-4 px-6 border-b border-gray-200">
+                    <Skeleton className="h-10 w-full col-span-2" />
+                    <Skeleton className="h-10 w-full col-span-1" />
+                    <Skeleton className="h-10 w-full col-span-1" />
+                    <Skeleton className="h-10 w-full col-span-1" />
+                    <Skeleton className="h-10 w-full col-span-1" />
+                  </div>
+                ))}
               </div>
             ) : error ? (
-              <div className="flex items-center justify-center p-8">
-                <AlertCircle className="h-8 w-8 text-red-500" />
-                <p className="ml-4 text-lg text-red-600">{error}</p>
+              <div className="flex flex-col items-center justify-center p-8 text-center text-red-600">
+                <AlertCircle className="h-10 w-10 text-red-500" />
+                <p className="mt-2 text-lg">{error}</p>
               </div>
-            ) : (
+            ) : filteredDonations.length > 0 ? (
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
@@ -361,10 +370,14 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                   </TableBody>
                 </Table>
               </div>
-            )}
-            {!loading && filteredDonations.length === 0 && (
-              <div className="flex items-center justify-center p-8 text-gray-500">
-                No donations found.
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <Ghost className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                <p className="text-lg font-medium mb-2">No Donations Found</p>
+                <p className="text-sm mb-4">
+                  No donations have been made to your organization yet.
+                </p>
+                {/* Optionally add a button to navigate to create campaign if applicable */}
               </div>
             )}
           </CardContent>
