@@ -63,6 +63,7 @@ interface HomePageProps {
 
 export function HomePage({ onLogin, onSignup }: HomePageProps) {
   const [showDemoModal, setShowDemoModal] = useState(false);
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   
   // Mock live statistics for demonstration
   const [stats, setStats] = useState({
@@ -97,6 +98,10 @@ export function HomePage({ onLogin, onSignup }: HomePageProps) {
 
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat('en-US').format(num);
+  };
+
+  const toggleFaq = (index: number) => {
+    setOpenFaqIndex(openFaqIndex === index ? null : index);
   };
 
   const keyFeatures = [
@@ -171,7 +176,20 @@ export function HomePage({ onLogin, onSignup }: HomePageProps) {
     }
   ];
 
-
+  const faqs = [
+    {
+      question: 'What is Swift Cause?',
+      answer: 'Swift Cause is an intelligent donation platform that empowers organizations with touch-friendly kiosks, real-time analytics, and comprehensive campaign management to make giving easy, secure, and impactful.'
+    },
+    {
+      question: 'How does Swift Cause ensure my donations are secure?',
+      answer: 'Swift Cause secures donations through a 3-tier architecture. Stripe tokenizes payments, while Firebase Functions and webhooks ensure all sensitive data is processed and protected in a safe backend.'
+    },
+    {
+      question: 'Is Swift Cause suitable for small organizations?',
+      answer: 'Yes, Swift Cause is designed to be flexible for organizations of all sizes. The platform is scalable and with features like instant QR code access and easy deployment, you can quickly set up a kiosk for a single event and manage it efficiently.'
+    }
+  ];
 
   return (
     <div className="min-h-screen bg-white">
@@ -196,8 +214,7 @@ export function HomePage({ onLogin, onSignup }: HomePageProps) {
             <nav className="hidden md:flex items-center space-x-8">
               <a href="#features" className="text-gray-600 hover:text-gray-900 transition-colors">Features</a>
               <a href="#solutions" className="text-gray-600 hover:text-gray-900 transition-colors">Solutions</a>
-              <a href="#pricing" className="text-gray-600 hover:text-gray-900 transition-colors">Pricing</a>
-              <a href="#testimonials" className="text-gray-600 hover:text-gray-900 transition-colors">Reviews</a>
+              <a href="#faq" className="text-gray-600 hover:text-gray-900 transition-colors">FAQ</a>
             </nav>
 
             <div className="flex items-center space-x-3">
@@ -380,6 +397,41 @@ export function HomePage({ onLogin, onSignup }: HomePageProps) {
           </div>
         </div>
       </section>
+
+      {/* FAQ Section */}
+      <section id="faq" className="py-20 bg-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Find answers to the most common questions about our platform and services.
+            </p>
+          </div>
+          
+          <div className="space-y-8">
+            {faqs.map((faq, index) => (
+              <div key={index} className="border-b border-gray-200 pb-8">
+                <button
+                  className="flex items-center justify-between w-full text-left focus:outline-none"
+                  onClick={() => toggleFaq(index)}
+                >
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4">{faq.question}</h3>
+                  <ChevronRight
+                    className={`w-6 h-6 transform transition-transform duration-300 ${
+                      openFaqIndex === index ? 'rotate-90' : ''
+                    }`}
+                  />
+                </button>
+                {openFaqIndex === index && (
+                  <p className="text-gray-600 mt-2 transition-all duration-300 ease-in-out">{faq.answer}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
       
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-indigo-600 to-purple-600">
@@ -463,7 +515,7 @@ export function HomePage({ onLogin, onSignup }: HomePageProps) {
           </div>
           
           <div className="border-t border-gray-800 mt-8 pt-8 flex items-center justify-between">
-            <p className="text-gray-400">© 2024 Swift Cause. All rights reserved.</p>
+            <p className="text-gray-400">© 2025 Swift Cause. All rights reserved.</p>
             <div className="flex items-center space-x-2 text-gray-400">
               <Clock className="w-4 h-4" />
               <span className="text-sm">24/7 Support</span>
