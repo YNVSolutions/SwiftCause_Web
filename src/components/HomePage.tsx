@@ -261,7 +261,7 @@ export function HomePage({ onLogin, onSignup }: HomePageProps) {
             <div className="space-y-8">
               <div className="inline-flex items-center px-4 py-2 rounded-full bg-indigo-100 text-indigo-800 text-sm">
                 <TrendingUp className="w-4 h-4 mr-2" />
-                Trusted by 500+ organizations worldwide
+                Trusted by organizations worldwide
               </div>
               
               <div className="space-y-6">
