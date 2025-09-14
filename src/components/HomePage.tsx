@@ -63,6 +63,7 @@ interface HomePageProps {
 
 export function HomePage({ onLogin, onSignup }: HomePageProps) {
   const [showDemoModal, setShowDemoModal] = useState(false);
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   
   // Mock live statistics for demonstration
   const [stats, setStats] = useState({
@@ -97,6 +98,10 @@ export function HomePage({ onLogin, onSignup }: HomePageProps) {
 
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat('en-US').format(num);
+  };
+
+  const toggleFaq = (index: number) => {
+    setOpenFaqIndex(openFaqIndex === index ? null : index);
   };
 
   const keyFeatures = [
@@ -171,82 +176,41 @@ export function HomePage({ onLogin, onSignup }: HomePageProps) {
     }
   ];
 
-  const testimonials = [
+  const howItWorks = [
     {
-      name: 'Sarah Chen',
-      role: 'Development Director',
-      organization: 'Global Health Initiative',
-      content: 'Swift Cause transformed our fundraising. We saw a 340% increase in donations within the first quarter of implementation.',
-      rating: 5,
-      image: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face'
+      title: 'Set Up',
+      description: 'Customize your campaigns with branding, goals, and pricing through our intuitive dashboard.',
+      icon: <Settings className="w-8 h-8 text-indigo-600" />
     },
     {
-      name: 'Michael Rodriguez',
-      role: 'Executive Director',
-      organization: 'Community Food Network',
-      content: 'The analytics dashboard gives us incredible insights. We can now optimize our campaigns based on real data.',
-      rating: 5,
-      image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'
+      title: 'Deploy',
+      description: 'Place touch-friendly kiosks in key locations or share QR codes for easy, contactless access.',
+      icon: <MapPin className="w-8 h-8 text-purple-600" />
     },
     {
-      name: 'Dr. Emily Watson',
-      role: 'Research Administrator',
-      organization: 'Children\'s Hospital Foundation',
-      content: 'Security and compliance were our top concerns. Swift Cause exceeded all our requirements and more.',
-      rating: 5,
-      image: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face'
-    }
+      title: 'Engage',
+      description: 'Donors contribute seamlessly with a few taps on a kiosk or a quick scan from their smartphone.',
+      icon: <CreditCard className="w-8 h-8 text-green-600" />
+    },
+    {
+      title: 'Track',
+      description: 'Monitor donations in real-time and analyze campaign performance directly from your dashboard.',
+      icon: <BarChart3 className="w-8 h-8 text-orange-600" />
+    },
   ];
 
-  const pricingPlans = [
+  const faqs = [
     {
-      name: 'Starter',
-      price: 99,
-      period: '/month',
-      description: 'Perfect for small organizations getting started',
-      features: [
-        'Up to 5 kiosks',
-        'Basic analytics',
-        '5 active campaigns',
-        'Email support',
-        'Standard security'
-      ],
-      highlighted: false,
-      cta: 'Start Free Trial'
+      question: 'What is Swift Cause?',
+      answer: 'Swift Cause is an intelligent donation platform that empowers organizations with touch-friendly kiosks, real-time analytics, and comprehensive campaign management to make giving easy, secure, and impactful.'
     },
     {
-      name: 'Professional',
-      price: 299,
-      period: '/month',
-      description: 'Ideal for growing organizations with multiple locations',
-      features: [
-        'Up to 25 kiosks',
-        'Advanced analytics',
-        'Unlimited campaigns',
-        'Priority support',
-        'Advanced security',
-        'Custom branding',
-        'API access'
-      ],
-      highlighted: true,
-      cta: 'Most Popular'
+      question: 'How does Swift Cause ensure my donations are secure?',
+      answer: 'Swift Cause secures donations through a 3-tier architecture. Stripe tokenizes payments, while Firebase Functions and webhooks ensure all sensitive data is processed and protected in a safe backend.'
     },
     {
-      name: 'Enterprise',
-      price: 'Custom',
-      period: '',
-      description: 'For large organizations with complex requirements',
-      features: [
-        'Unlimited kiosks',
-        'Custom analytics',
-        'White-label solution',
-        'Dedicated support',
-        'Enterprise security',
-        'Custom integrations',
-        'SLA guarantee'
-      ],
-      highlighted: false,
-      cta: 'Contact Sales'
+      question: 'Is Swift Cause suitable for small organizations?',
+      answer: 'Yes, Swift Cause is designed to be flexible for organizations of all sizes. The platform is scalable and with features like instant QR code access and easy deployment, you can quickly set up a kiosk for a single event and manage it efficiently.'
     }
   ];
 
@@ -273,8 +237,8 @@ export function HomePage({ onLogin, onSignup }: HomePageProps) {
             <nav className="hidden md:flex items-center space-x-8">
               <a href="#features" className="text-gray-600 hover:text-gray-900 transition-colors">Features</a>
               <a href="#solutions" className="text-gray-600 hover:text-gray-900 transition-colors">Solutions</a>
-              <a href="#pricing" className="text-gray-600 hover:text-gray-900 transition-colors">Pricing</a>
-              <a href="#testimonials" className="text-gray-600 hover:text-gray-900 transition-colors">Reviews</a>
+              <a href="#how-it-works" className="text-gray-600 hover:text-gray-900 transition-colors">How It Works</a>
+              <a href="#faq" className="text-gray-600 hover:text-gray-900 transition-colors">FAQ</a>
             </nav>
 
             <div className="flex items-center space-x-3">
@@ -297,7 +261,7 @@ export function HomePage({ onLogin, onSignup }: HomePageProps) {
             <div className="space-y-8">
               <div className="inline-flex items-center px-4 py-2 rounded-full bg-indigo-100 text-indigo-800 text-sm">
                 <TrendingUp className="w-4 h-4 mr-2" />
-                Trusted by 500+ organizations worldwide
+                Trusted by organizations worldwide
               </div>
               
               <div className="space-y-6">
@@ -458,43 +422,30 @@ export function HomePage({ onLogin, onSignup }: HomePageProps) {
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section id="testimonials" className="py-20 bg-white">
+      {/* How It Works Section */}
+      <section id="how-it-works" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-              Trusted by Leaders Worldwide
+              How It Works
             </h2>
-            <p className="text-xl text-gray-600">
-              See how organizations are transforming their fundraising with Swift Cause
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Getting started with Swift Cause is fast, easy, and intuitive.
             </p>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <Card key={index} className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-8">
-                  <div className="flex items-center space-x-1 mb-4">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {howItWorks.map((step, index) => (
+              <Card key={index} className="text-center p-6">
+                <CardContent className="space-y-4">
+                  <div className="p-4 rounded-full inline-block bg-indigo-50 text-indigo-600">
+                    {step.icon}
                   </div>
-                  <Quote className="w-8 h-8 text-indigo-200 mb-4" />
-                  <p className="text-gray-700 mb-6 italic">"{testimonial.content}"</p>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 rounded-full overflow-hidden">
-                      <ImageWithFallback
-                        src={testimonial.image}
-                        alt={testimonial.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div>
-                      <div className="font-semibold text-gray-900">{testimonial.name}</div>
-                      <div className="text-sm text-gray-600">{testimonial.role}</div>
-                      <div className="text-sm text-indigo-600">{testimonial.organization}</div>
-                    </div>
-                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    {step.title}
+                  </h3>
+                  <p className="text-gray-600">
+                    {step.description}
+                  </p>
                 </CardContent>
               </Card>
             ))}
@@ -502,63 +453,36 @@ export function HomePage({ onLogin, onSignup }: HomePageProps) {
         </div>
       </section>
 
-
-      {/* Pricing Section */}
-      <section id="pricing" className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* FAQ Section */}
+      <section id="faq" className="py-20 bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-              Simple, Transparent Pricing
+              Frequently Asked Questions
             </h2>
-            <p className="text-xl text-gray-600">
-              Choose the plan that fits your organization's needs
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Find answers to the most common questions about our platform and services.
             </p>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {pricingPlans.map((plan, index) => (
-              <Card 
-                key={index} 
-                className={`relative hover:shadow-xl transition-all ${
-                  plan.highlighted 
-                    ? 'ring-2 ring-indigo-500 scale-105 bg-indigo-50' 
-                    : 'hover:scale-105'
-                }`}
-              >
-                {plan.highlighted && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <Badge className="bg-indigo-600 text-white px-4 py-1">Most Popular</Badge>
-                  </div>
-                )}
-                <CardContent className="p-8 text-center">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
-                  <p className="text-gray-600 mb-6">{plan.description}</p>
-                  <div className="mb-6">
-                    <span className="text-4xl font-bold text-gray-900">
-                      {typeof plan.price === 'number' ? `$${plan.price}` : plan.price}
-                    </span>
-                    <span className="text-gray-600">{plan.period}</span>
-                  </div>
-                  <Button 
-                    onClick={onSignup}
-                    className={`w-full mb-6 ${
-                      plan.highlighted 
-                        ? 'bg-indigo-600 hover:bg-indigo-700 text-white' 
-                        : 'bg-gray-900 hover:bg-gray-800 text-white'
+          
+          <div className="space-y-8">
+            {faqs.map((faq, index) => (
+              <div key={index} className="border-b border-gray-200 pb-8">
+                <button
+                  className="flex items-center justify-between w-full text-left focus:outline-none"
+                  onClick={() => toggleFaq(index)}
+                >
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4">{faq.question}</h3>
+                  <ChevronRight
+                    className={`w-6 h-6 transform transition-transform duration-300 ${
+                      openFaqIndex === index ? 'rotate-90' : ''
                     }`}
-                  >
-                    {plan.cta}
-                  </Button>
-                  <ul className="space-y-3 text-left">
-                    {plan.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-center text-gray-700">
-                        <CheckCircle className="w-4 h-4 text-green-500 mr-3 flex-shrink-0" />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
+                  />
+                </button>
+                {openFaqIndex === index && (
+                  <p className="text-gray-600 mt-2 transition-all duration-300 ease-in-out">{faq.answer}</p>
+                )}
+              </div>
             ))}
           </div>
         </div>
@@ -646,7 +570,7 @@ export function HomePage({ onLogin, onSignup }: HomePageProps) {
           </div>
           
           <div className="border-t border-gray-800 mt-8 pt-8 flex items-center justify-between">
-            <p className="text-gray-400">© 2024 Swift Cause. All rights reserved.</p>
+            <p className="text-gray-400">© 2025 Swift Cause. All rights reserved.</p>
             <div className="flex items-center space-x-2 text-gray-400">
               <Clock className="w-4 h-4" />
               <span className="text-sm">24/7 Support</span>
