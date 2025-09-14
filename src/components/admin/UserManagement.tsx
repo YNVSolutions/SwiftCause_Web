@@ -40,7 +40,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
         username: '', email: '', password: '', role: 'viewer' as UserRole, permissions: [] as Permission[],
     });
     
-    // Custom alert/confirm components instead of native window.alert/confirm
+
     const [dialogMessage, setDialogMessage] = useState<string | null>(null);
     const [dialogAction, setDialogAction] = useState<(() => void) | null>(null);
     const [showConfirm, setShowConfirm] = useState(false);
@@ -122,7 +122,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                             <div className="flex-1 relative"><Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" /><Input placeholder="Search users by name or email..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" /></div>
                             <Select value={roleFilter} onValueChange={setRoleFilter}>
                                 <SelectTrigger className="w-full sm:w-48"><SelectValue placeholder="Filter by role" /></SelectTrigger>
-                                <SelectContent><SelectItem value="all">All Roles</SelectItem><SelectItem value="super_admin">Super Admin</SelectItem><SelectItem value="admin">Admin</SelectItem><SelectItem value="manager">Manager</SelectItem><SelectItem value="operator">Operator</SelectItem><SelectItem value="viewer">Viewer</SelectItem></SelectContent>
+                                <SelectContent><SelectItem value="all">All Roles</SelectItem><SelectItem value="admin">Admin</SelectItem><SelectItem value="manager">Manager</SelectItem><SelectItem value="operator">Operator</SelectItem><SelectItem value="viewer">Viewer</SelectItem></SelectContent>
                             </Select>
                         </div>
                     </CardContent>
