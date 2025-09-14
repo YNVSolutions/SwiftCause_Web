@@ -176,6 +176,29 @@ export function HomePage({ onLogin, onSignup }: HomePageProps) {
     }
   ];
 
+  const howItWorks = [
+    {
+      title: 'Set Up',
+      description: 'Customize your campaigns with branding, goals, and pricing through our intuitive dashboard.',
+      icon: <Settings className="w-8 h-8 text-indigo-600" />
+    },
+    {
+      title: 'Deploy',
+      description: 'Place touch-friendly kiosks in key locations or share QR codes for easy, contactless access.',
+      icon: <MapPin className="w-8 h-8 text-purple-600" />
+    },
+    {
+      title: 'Engage',
+      description: 'Donors contribute seamlessly with a few taps on a kiosk or a quick scan from their smartphone.',
+      icon: <CreditCard className="w-8 h-8 text-green-600" />
+    },
+    {
+      title: 'Track',
+      description: 'Monitor donations in real-time and analyze campaign performance directly from your dashboard.',
+      icon: <BarChart3 className="w-8 h-8 text-orange-600" />
+    },
+  ];
+
   const faqs = [
     {
       question: 'What is Swift Cause?',
@@ -214,6 +237,7 @@ export function HomePage({ onLogin, onSignup }: HomePageProps) {
             <nav className="hidden md:flex items-center space-x-8">
               <a href="#features" className="text-gray-600 hover:text-gray-900 transition-colors">Features</a>
               <a href="#solutions" className="text-gray-600 hover:text-gray-900 transition-colors">Solutions</a>
+              <a href="#how-it-works" className="text-gray-600 hover:text-gray-900 transition-colors">How It Works</a>
               <a href="#faq" className="text-gray-600 hover:text-gray-900 transition-colors">FAQ</a>
             </nav>
 
@@ -398,8 +422,39 @@ export function HomePage({ onLogin, onSignup }: HomePageProps) {
         </div>
       </section>
 
+      {/* How It Works Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+              How It Works
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Getting started with Swift Cause is fast, easy, and intuitive.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {howItWorks.map((step, index) => (
+              <Card key={index} className="text-center p-6">
+                <CardContent className="space-y-4">
+                  <div className="p-4 rounded-full inline-block bg-indigo-50 text-indigo-600">
+                    {step.icon}
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    {step.title}
+                  </h3>
+                  <p className="text-gray-600">
+                    {step.description}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* FAQ Section */}
-      <section id="faq" className="py-20 bg-white">
+      <section id="faq" className="py-20 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
@@ -432,7 +487,7 @@ export function HomePage({ onLogin, onSignup }: HomePageProps) {
           </div>
         </div>
       </section>
-      
+
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-indigo-600 to-purple-600">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
