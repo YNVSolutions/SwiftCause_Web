@@ -426,66 +426,6 @@ export function HomePage({ onLogin, onSignup }: HomePageProps) {
       </section>
 
 
-      {/* Pricing Section */}
-      <section id="pricing" className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-              Simple, Transparent Pricing
-            </h2>
-            <p className="text-xl text-gray-600">
-              Choose the plan that fits your organization's needs
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {pricingPlans.map((plan, index) => (
-              <Card 
-                key={index} 
-                className={`relative hover:shadow-xl transition-all ${
-                  plan.highlighted 
-                    ? 'ring-2 ring-indigo-500 scale-105 bg-indigo-50' 
-                    : 'hover:scale-105'
-                }`}
-              >
-                {plan.highlighted && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <Badge className="bg-indigo-600 text-white px-4 py-1">Most Popular</Badge>
-                  </div>
-                )}
-                <CardContent className="p-8 text-center">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
-                  <p className="text-gray-600 mb-6">{plan.description}</p>
-                  <div className="mb-6">
-                    <span className="text-4xl font-bold text-gray-900">
-                      {typeof plan.price === 'number' ? `$${plan.price}` : plan.price}
-                    </span>
-                    <span className="text-gray-600">{plan.period}</span>
-                  </div>
-                  <Button 
-                    onClick={onSignup}
-                    className={`w-full mb-6 ${
-                      plan.highlighted 
-                        ? 'bg-indigo-600 hover:bg-indigo-700 text-white' 
-                        : 'bg-gray-900 hover:bg-gray-800 text-white'
-                    }`}
-                  >
-                    {plan.cta}
-                  </Button>
-                  <ul className="space-y-3 text-left">
-                    {plan.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-center text-gray-700">
-                        <CheckCircle className="w-4 h-4 text-green-500 mr-3 flex-shrink-0" />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-indigo-600 to-purple-600">
