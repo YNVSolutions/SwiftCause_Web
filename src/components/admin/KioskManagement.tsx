@@ -29,6 +29,8 @@ import {
   Plus, Edit, Trash2, Search, ArrowLeft, Settings, Activity, MapPin,
   DollarSign, Users, WifiOff, CheckCircle, Monitor, Download, Target, Star, AlertTriangle
 } from 'lucide-react';
+import { Skeleton } from "../ui/skeleton"; // Import Skeleton
+import { Ghost } from "lucide-react"; // Import Ghost
 
 
 export function KioskManagement({ onNavigate, onLogout, userSession, hasPermission }: {
@@ -138,7 +140,62 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
   };
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-screen">Loading Kiosk Data...</div>;
+    return (
+      <div className="flex flex-col min-h-screen bg-gray-50">
+        <header className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between h-auto sm:h-16 gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                <Skeleton className="w-32 h-8" />
+                <div className="h-6 w-px bg-gray-300 hidden sm:block" />
+                <div className="space-y-1">
+                  <Skeleton className="w-48 h-6" />
+                  <Skeleton className="w-64 h-4" />
+                </div>
+              </div>
+              <Skeleton className="w-28 h-10" />
+            </div>
+          </div>
+        </header>
+        <main className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Card key={i}><CardContent className="p-6"><div className="flex items-center justify-between"><div><Skeleton className="w-24 h-5 mb-2" /><Skeleton className="w-32 h-8" /></div><Skeleton className="h-8 w-8" /></div></CardContent></Card>
+            ))}
+          </div>
+          <Card>
+            <CardHeader>
+              <Skeleton className="w-48 h-6 mb-2" />
+              <Skeleton className="w-64 h-4" />
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <Table className="min-w-full">
+                  <TableHeader>
+                    <TableRow>
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <TableHead key={i}><Skeleton className="h-6 w-24" /></TableHead>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <TableRow key={i}>
+                        <TableCell><Skeleton className="h-10 w-full" /></TableCell>
+                        <TableCell><Skeleton className="h-10 w-24" /></TableCell>
+                        <TableCell><Skeleton className="h-10 w-32" /></TableCell>
+                        <TableCell><Skeleton className="h-10 w-40" /></TableCell>
+                        <TableCell><Skeleton className="h-10 w-20" /></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </main>
+      </div>
+    );
   }
 
   return (
@@ -182,57 +239,72 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
-                <Table className="min-w-full">
-                  <TableHeader><TableRow><TableHead>Kiosk Details</TableHead><TableHead>Status</TableHead><TableHead>Performance</TableHead><TableHead>Campaign Assignment</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
-                  <TableBody>
-                    {filteredKiosks.map((kiosk) => (
-                      <TableRow key={kiosk.id}>
-                        <TableCell><div className="space-y-1"><div className="flex items-center space-x-2"><Monitor className="w-4 h-4 text-gray-400" /><span className="font-medium">{kiosk.name}</span></div><div className="flex items-center space-x-2 text-sm text-gray-500"><MapPin className="w-3 h-3" /><span>{kiosk.location}</span></div><p className="text-xs text-gray-400 font-mono">{kiosk.id}</p></div></TableCell>
-                        <TableCell>{getStatusBadge(kiosk.status)}</TableCell>
-                        <TableCell>
-                          <div className="space-y-1">
-                            <div className="flex items-center space-x-2">
-                              <DollarSign className="w-4 h-4 text-gray-400" />
-                              <span className="text-sm font-medium">
-                                {formatCurrency(performanceData[kiosk.id]?.totalRaised || 0)}
-                              </span>
+                {filteredKiosks.length > 0 ? (
+                  <Table className="min-w-full">
+                    <TableHeader><TableRow><TableHead>Kiosk Details</TableHead><TableHead>Status</TableHead><TableHead>Performance</TableHead><TableHead>Campaign Assignment</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
+                    <TableBody>
+                      {filteredKiosks.map((kiosk) => (
+                        <TableRow key={kiosk.id}>
+                          <TableCell><div className="space-y-1"><div className="flex items-center space-x-2"><Monitor className="w-4 h-4 text-gray-400" /><span className="font-medium">{kiosk.name}</span></div><div className="flex items-center space-x-2 text-sm text-gray-500"><MapPin className="w-3 h-3" /><span>{kiosk.location}</span></div><p className="text-xs text-gray-400 font-mono">{kiosk.id}</p></div></TableCell>
+                          <TableCell>{getStatusBadge(kiosk.status)}</TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              <div className="flex items-center space-x-2">
+                                <DollarSign className="w-4 h-4 text-gray-400" />
+                                <span className="text-sm font-medium">
+                                  {formatCurrency(performanceData[kiosk.id]?.totalRaised || 0)}
+                                </span>
+                              </div>
+                              
                             </div>
-                            
-                          </div>
-                        </TableCell>
-                        <TableCell><div className="space-y-2"><div className="flex items-center space-x-2"><Target className="w-4 h-4 text-gray-400" /><span className="text-sm">{kiosk.assignedCampaigns?.length || 0} assigned</span></div>{kiosk.defaultCampaign && (<div className="flex items-center space-x-2"><Star className="w-4 h-4 text-yellow-500" /><span className="text-sm">{campaigns.find(c => c.id === kiosk.defaultCampaign)?.title?.slice(0, 20) || '...'}</span></div>)}</div></TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-1">
-                            {hasPermission('edit_kiosk') && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  setAssigningKiosk(kiosk);
-                                  setIsAssignmentDialogOpen(true);
-                                }}
-                                title="Edit Kiosk Details & Campaigns"
-                              >
-                                <Edit className="w-4 h-4" />
-                              </Button>
-                            )}
-                            {hasPermission('delete_kiosk') && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDeleteKiosk(kiosk.id)}
-                                className="text-red-600 hover:text-red-700"
-                                title="Delete kiosk"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                          </TableCell>
+                          <TableCell><div className="space-y-2"><div className="flex items-center space-x-2"><Target className="w-4 h-4 text-gray-400" /><span className="text-sm">{kiosk.assignedCampaigns?.length || 0} assigned</span></div>{kiosk.defaultCampaign && (<div className="flex items-center space-x-2"><Star className="w-4 h-4 text-yellow-500" /><span className="text-sm">{campaigns.find(c => c.id === kiosk.defaultCampaign)?.title?.slice(0, 20) || '...'}</span></div>)}</div></TableCell>
+                          <TableCell>
+                            <div className="flex items-center space-x-1">
+                              {hasPermission('edit_kiosk') && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setAssigningKiosk(kiosk);
+                                    setIsAssignmentDialogOpen(true);
+                                  }}
+                                  title="Edit Kiosk Details & Campaigns"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                              )}
+                              {hasPermission('delete_kiosk') && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDeleteKiosk(kiosk.id)}
+                                  className="text-red-600 hover:text-red-700"
+                                  title="Delete kiosk"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : ( 
+                  <div className="text-center py-8 text-gray-500">
+                    <Ghost className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                    <p className="text-lg font-medium mb-2">No Kiosks Found</p>
+                    <p className="text-sm mb-4">
+                      No kiosks have been registered yet.
+                    </p>
+                    {hasPermission("create_kiosk") && (
+                      <Button onClick={() => setIsCreateDialogOpen(true)}>
+                        <Plus className="w-4 h-4 mr-2" /> Register New Kiosk
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

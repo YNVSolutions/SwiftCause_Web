@@ -8,6 +8,8 @@ import {
   Plus, Search, ArrowLeft, UserCog, Users, Shield, Activity,
   Loader2, AlertCircle, Pencil, Trash2
 } from 'lucide-react';
+import { Skeleton } from "../ui/skeleton";
+import { Ghost } from "lucide-react";
 import { Screen, User, UserRole, AdminSession, Permission } from '../../App';
 import { calculateUserStats } from './utils/userManagementHelpers';
 import { useUsers } from '../../hooks/useUsers';
@@ -223,8 +225,129 @@ function EditUserDialog({ user, onUpdate, onClose }: { user: User, onUpdate: (us
                     <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="role" className="text-right">Role</Label><Select value={editedUser.role} onValueChange={(value: UserRole) => setEditedUser({ ...editedUser, role: value })}><SelectTrigger className="col-span-3"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="super_admin">Super Admin</SelectItem><SelectItem value="admin">Admin</SelectItem><SelectItem value="manager">Manager</SelectItem><SelectItem value="operator">Operator</SelectItem><SelectItem value="viewer">Viewer</SelectItem></SelectContent></Select></div>
                     <div><Label className="font-semibold">Permissions</Label><div className="grid grid-cols-2 gap-2 mt-2 p-4 border rounded-md max-h-60 overflow-y-auto">{allPermissions.map((p) => (<div key={p} className="flex items-center space-x-2"><Checkbox id={`edit-${p}`} checked={editedUser.permissions?.includes(p)} onCheckedChange={(c) => handlePermissionChange(p, !!c)} /><Label htmlFor={`edit-${p}`} className="text-sm font-normal capitalize">{p.replace(/_/g, ' ')}</Label></div>))}</div></div>
                 </div>
+
                 <DialogFooter><Button variant="outline" onClick={onClose}>Cancel</Button><Button onClick={() => onUpdate(editedUser.id, { role: editedUser.role, permissions: editedUser.permissions })}>Save Changes</Button></DialogFooter>
             </DialogContent>
         </Dialog>
     );
+                <Shield className="h-8 w-8 text-green-600" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Active Users</p>
+                  <p className="text-2xl font-semibold text-gray-900">{stats.active}</p>
+                  <p className="text-xs text-gray-500">Last 7 days</p>
+                </div>
+                <Activity className="h-8 w-8 text-orange-600" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        <Card className="mb-8">
+          <CardContent className="p-6">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    placeholder="Search users..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              <Select value={roleFilter} onValueChange={setRoleFilter}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder="Filter by role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Roles</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="manager">Manager</SelectItem>
+                  <SelectItem value="operator">Operator</SelectItem>
+                  <SelectItem value="viewer">Viewer</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Users ({filteredUsers.length})</CardTitle>
+            <CardDescription>Manage user accounts and permissions</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              {loading ? (
+                <div className="space-y-4">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="grid grid-cols-5 gap-4 py-4 px-6 border-b border-gray-200">
+                      <Skeleton className="h-10 w-full col-span-2" />
+                      <Skeleton className="h-10 w-full col-span-1" />
+                      <Skeleton className="h-10 w-full col-span-1" />
+                      <Skeleton className="h-10 w-20 col-span-1 ml-auto" />
+                    </div>
+                  ))}
+                </div>
+              ) : error ? (
+                <div className="flex flex-col items-center justify-center p-8 text-center text-red-600">
+                  <AlertCircle className="h-10 w-10 text-red-500" />
+                  <p className="mt-2 text-lg">{error}</p>
+                </div>
+              ) : filteredUsers.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>User Details</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Last Login</TableHead>
+                      <TableHead>Access Permissions</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredUsers.map((user) => (
+                      <UserTableRow
+                        key={user.id}
+                        user={user}
+                        onEdit={setEditingUser}
+                        onDelete={handleDeleteUser}
+                      />
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Ghost className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                  <p className="text-lg font-medium mb-2">No Users Found</p>
+                  <p className="text-sm mb-4">
+                    There are no users matching your criteria.
+                  </p>
+                  {hasPermission("create_user") && (
+                    <Button onClick={() => setCreateDialogOpen(true)}>
+                      <Plus className="w-4 h-4 mr-2" /> Create New User
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+        {editingUser && (
+          <EditUserDialog
+            user={editingUser}
+            onUpdate={handleUpdateUser}
+            onDelete={handleDeleteUser}
+            onClose={() => setEditingUser(null)}
+          />
+        )
+        }
+      </div>
+    </div>
+  );
 }

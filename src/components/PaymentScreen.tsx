@@ -37,6 +37,7 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
       campaignId: campaign.id,
       campaignTitle: campaign.title,
       donationAmount: donation.amount,
+      organizationId: campaign.organizationId,
       isRecurring: donation.isRecurring,
       isAnonymous: isAnonymous,
       kioskId: donation.kioskId || null, 
