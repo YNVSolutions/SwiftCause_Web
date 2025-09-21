@@ -1043,28 +1043,9 @@ export function AdminDashboard({
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-1 gap-8 mb-8">
+        {/* Top Performing Campaigns - Full Width */}
+        <div className="mb-8">
           <Card>
-            <CardHeader>
-              <CardTitle>Kiosks by Device OS</CardTitle>
-              <CardDescription>
-                Distribution of kiosks by operating system
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="space-y-4">
-                  <Skeleton className="h-[300px] w-full" />
-                </div>
-              ) : (
-                <DeviceChart data={deviceDistribution} />
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-          <Card className="lg:col-span-2">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle>Top Performing Campaigns</CardTitle>
@@ -1143,6 +1124,28 @@ export function AdminDashboard({
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Kiosks by Device OS and Recent Activity - Side by Side */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Kiosks by Device OS</CardTitle>
+              <CardDescription>
+                Distribution of kiosks by operating system
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="space-y-4">
+                  <Skeleton className="h-[300px] w-full" />
+                </div>
+              ) : (
+                <DeviceChart data={deviceDistribution} />
+              )}
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>Recent Activity</CardTitle>
