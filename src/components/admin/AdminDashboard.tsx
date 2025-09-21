@@ -91,6 +91,7 @@ import {
 import { OrganizationSwitcher } from "./OrganizationSwitcher";
 import { useOrganization } from "../../hooks/useOrganization";
 import { auth } from "../../lib/firebase";
+import { DeviceChart } from "./DeviceChart";
 
 interface AdminDashboardProps {
   onNavigate: (screen: Screen) => void;
@@ -122,6 +123,8 @@ export function AdminDashboard({
 }: AdminDashboardProps) {
   const { stats, recentActivities, alerts, loading, error, refreshDashboard } =
     useDashboardData(userSession.user.organizationId);
+  
+  const { deviceDistribution } = stats;
 
   const [topCampaigns, setTopCampaigns] = useState<Campaign[]>([]);
   const [goalComparisonData, setGoalComparisonData] = useState<any[]>([]);
@@ -1036,6 +1039,26 @@ export function AdminDashboard({
                   </Button>
                 )}
               </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-1 gap-8 mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Kiosks by Device OS</CardTitle>
+              <CardDescription>
+                Distribution of kiosks by operating system
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="space-y-4">
+                  <Skeleton className="h-[300px] w-full" />
+                </div>
+              ) : (
+                <DeviceChart data={deviceDistribution} />
+              )}
             </CardContent>
           </Card>
         </div>
