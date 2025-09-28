@@ -91,6 +91,7 @@ import {
 import { OrganizationSwitcher } from "./OrganizationSwitcher";
 import { useOrganization } from "../../hooks/useOrganization";
 import { auth } from "../../lib/firebase";
+import { DeviceChart } from "./DeviceChart";
 
 interface AdminDashboardProps {
   onNavigate: (screen: Screen) => void;
@@ -122,6 +123,8 @@ export function AdminDashboard({
 }: AdminDashboardProps) {
   const { stats, recentActivities, alerts, loading, error, refreshDashboard } =
     useDashboardData(userSession.user.organizationId);
+  
+  const { deviceDistribution } = stats;
 
   const [topCampaigns, setTopCampaigns] = useState<Campaign[]>([]);
   const [goalComparisonData, setGoalComparisonData] = useState<any[]>([]);
@@ -155,12 +158,11 @@ export function AdminDashboard({
       });
     }
 
-    // Clear the stripe_status from the URL hash to prevent it from reappearing on refresh
     if (stripeStatus) {
       const newHash = hash.split("?")[0];
       window.history.replaceState(null, '', newHash);
     }
-  }, []); // Run once on component mount to check for URL hash
+  }, []);
 
   const handleStripeOnboarding = async () => {
     if (!organization?.id) {
@@ -203,7 +205,7 @@ export function AdminDashboard({
     }
   };
 
-  // Platform features data
+
   const platformFeatures = [
     {
       icon: <Smartphone className="w-6 h-6" />,
@@ -285,7 +287,6 @@ export function AdminDashboard({
     },
   ];
 
-  // Getting started steps
   const gettingStartedSteps = [
     {
       step: 1,
@@ -333,7 +334,7 @@ export function AdminDashboard({
     },
   ];
 
-  // Quick tips for users
+
   const quickTips = [
     {
       icon: <Lightbulb className="w-5 h-5 text-yellow-600" />,
@@ -1040,8 +1041,9 @@ export function AdminDashboard({
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-          <Card className="lg:col-span-2">
+        
+        <div className="mb-8">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle>Top Performing Campaigns</CardTitle>
@@ -1120,6 +1122,28 @@ export function AdminDashboard({
               </div>
             </CardContent>
           </Card>
+        </div>
+
+       
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Kiosks by Device OS</CardTitle>
+              <CardDescription>
+                Distribution of kiosks by operating system
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="space-y-4">
+                  <Skeleton className="h-[300px] w-full" />
+                </div>
+              ) : (
+                <DeviceChart data={deviceDistribution} />
+              )}
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>Recent Activity</CardTitle>

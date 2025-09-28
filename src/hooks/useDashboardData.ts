@@ -8,6 +8,13 @@ interface Kiosk {
   status?: 'online' | 'offline' | 'maintenance';
   name?: string;
   location?: string;
+  totalRaised?: number;
+  deviceInfo?: {
+    os?: string;
+    model?: string;
+    screenSize?: string;
+    touchCapable?: boolean;
+  };
 }
 
 interface Donation {
@@ -23,6 +30,8 @@ interface DashboardStats {
   totalDonations: number;
   activeCampaigns: number;
   activeKiosks: number;
+  topLocations: Array<{ name: string; totalRaised: number }>;
+  deviceDistribution: Array<{ name: string; value: number }>;
 }
 
 export interface Activity {
@@ -46,6 +55,8 @@ export function useDashboardData(organizationId?: string) {
     totalDonations: 0,
     activeCampaigns: 0,
     activeKiosks: 0,
+    topLocations: [],
+    deviceDistribution: [],
   });
   const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
@@ -75,7 +86,37 @@ export function useDashboardData(organizationId?: string) {
       const activeCampaigns = campaignsData.filter((c: Campaign) => c.status === 'active').length;
       const activeKiosks = kiosksData.filter((k: Kiosk) => k.status === 'online').length;
 
-      setStats({ totalRaised, totalDonations, activeCampaigns, activeKiosks });
+      // Process Geographic Data - Group kiosks by location and sum totalRaised
+      const locationGroups: { [key: string]: number } = {};
+      kiosksData.forEach((kiosk: Kiosk) => {
+        if (kiosk.location && kiosk.totalRaised) {
+          locationGroups[kiosk.location] = (locationGroups[kiosk.location] || 0) + kiosk.totalRaised;
+        }
+      });
+      const topLocations = Object.entries(locationGroups)
+        .map(([name, totalRaised]) => ({ name, totalRaised }))
+        .sort((a, b) => b.totalRaised - a.totalRaised)
+        .slice(0, 5);
+
+      // Process Device Data - Count occurrences of each device OS
+      const deviceCounts: { [key: string]: number } = {};
+      kiosksData.forEach((kiosk: Kiosk) => {
+        if (kiosk.deviceInfo?.os) {
+          deviceCounts[kiosk.deviceInfo.os] = (deviceCounts[kiosk.deviceInfo.os] || 0) + 1;
+        }
+      });
+      const deviceDistribution = Object.entries(deviceCounts)
+        .map(([name, value]) => ({ name, value }))
+        .sort((a, b) => b.value - a.value);
+
+      setStats({ 
+        totalRaised, 
+        totalDonations, 
+        activeCampaigns, 
+        activeKiosks, 
+        topLocations, 
+        deviceDistribution 
+      });
 
       const formattedActivities = recentDonationsData.map((donation: Donation): Activity => {
         const timestamp = donation.timestamp; 
