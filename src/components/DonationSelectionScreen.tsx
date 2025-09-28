@@ -20,7 +20,6 @@ import {
   Percent
 } from 'lucide-react';
 import { Campaign, Donation } from '../App';
-import DonationFrequencyToggle from './DonationFrequencyToggle';
 
 interface DonationSelectionScreenProps {
   campaign: Campaign;
@@ -44,7 +43,6 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
   const [recurringInterval, setRecurringInterval] = useState<'monthly' | 'quarterly' | 'yearly'>(
     campaign.configuration.defaultRecurringInterval
   );
-  const [donationFrequency, setDonationFrequency] = useState<'one-time' | 'monthly'>('one-time');
   const [donorInfo, setDonorInfo] = useState<DonorInfo>({
     email: '',
     name: '',
@@ -122,13 +120,11 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
     e.preventDefault();
     if (!isValidAmount()) return;
 
-    const isMonthly = donationFrequency === 'monthly';
-
     const donation: Donation = {
       campaignId: campaign.id,
       amount: getCurrentAmount(),
-      isRecurring: isMonthly,
-      recurringInterval: isMonthly ? 'monthly' : undefined,
+      isRecurring,
+      recurringInterval: isRecurring ? recurringInterval : undefined,
       isAnonymous: donorInfo.isAnonymous,
       isGiftAid: isGiftAid,
     };
@@ -339,10 +335,14 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
                           )}
                         </p>
                       </div>
-                      <DonationFrequencyToggle onFrequencyChange={(f) => setDonationFrequency(f)} />
+                      <Switch
+                        id="recurring"
+                        checked={isRecurring}
+                        onCheckedChange={setIsRecurring}
+                      />
                     </div>
 
-                    {donationFrequency === 'monthly' && config.recurringIntervals.length > 1 && (
+                    {isRecurring && config.recurringIntervals.length > 1 && (
                       <div>
                         <Label>Recurring Frequency</Label>
                         <Select value={recurringInterval} onValueChange={(value: any) => setRecurringInterval(value)}>
@@ -410,13 +410,13 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
                     </div>
                     
                     <div className="flex flex-wrap gap-2 text-sm">
-                      {donationFrequency === 'monthly' && (
+                      {isRecurring && (
                         <Badge variant="secondary" className="flex items-center space-x-1">
                           <Clock className="w-3 h-3" />
                           <span className="capitalize">{recurringInterval}</span>
                         </Badge>
                       )}
-                      {donationFrequency === 'monthly' && config.recurringDiscount && (
+                      {isRecurring && config.recurringDiscount && (
                         <Badge variant="secondary" className="flex items-center space-x-1 bg-green-100 text-green-800">
                           <Percent className="w-3 h-3" />
                           <span>{config.recurringDiscount}% saved</span>
