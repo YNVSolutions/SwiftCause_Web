@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { ArrowLeft, AlertTriangle, FileText, CheckCircle, ExternalLink } from 'lucide-react';
 import { Footer } from '../shared/Footer';
+import swiftCauseLogo from '../../assets/logo.png';
 
 export function TermsPage({ onNavigate }: { onNavigate?: (screen: string) => void }) {
   const effectiveDate = 'September 28, 2025';
@@ -25,7 +26,21 @@ export function TermsPage({ onNavigate }: { onNavigate?: (screen: string) => voi
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800">
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="h-8 w-8 sm:h-10 sm:w-10">
+              <img 
+                src={swiftCauseLogo} 
+                alt="Swift Cause Logo" 
+                className="w-full h-full object-contain"
+              />
+            </div>
+            <div>
+              <h1 className="text-lg sm:text-xl font-semibold text-gray-900">Swift Cause</h1>
+              <p className="text-xs text-gray-600">Donation Platform</p>
+            </div>
+          </div>
+          
           <Button 
             variant="ghost" 
             onClick={() => onNavigate && onNavigate('home')} 
