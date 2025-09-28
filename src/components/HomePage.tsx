@@ -59,9 +59,10 @@ import swiftCauseLogo from '../assets/logo.png';
 interface HomePageProps {
   onLogin: () => void;
   onSignup: () => void;
+  onNavigate?: (screen: any) => void;
 }
 
-export function HomePage({ onLogin, onSignup }: HomePageProps) {
+export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
   const [showDemoModal, setShowDemoModal] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   
@@ -239,6 +240,9 @@ export function HomePage({ onLogin, onSignup }: HomePageProps) {
               <a href="#solutions" className="text-gray-600 hover:text-gray-900 transition-colors">Solutions</a>
               <a href="#how-it-works" className="text-gray-600 hover:text-gray-900 transition-colors">How It Works</a>
               <a href="#faq" className="text-gray-600 hover:text-gray-900 transition-colors">FAQ</a>
+              <button onClick={() => onNavigate && onNavigate('about')} className="text-gray-600 hover:text-gray-900 transition-colors">About</button>
+              <button onClick={() => onNavigate && onNavigate('blog')} className="text-gray-600 hover:text-gray-900 transition-colors">Blog</button>
+              <button onClick={() => onNavigate && onNavigate('contact')} className="text-gray-600 hover:text-gray-900 transition-colors">Contact</button>
             </nav>
 
             <div className="flex items-center space-x-3">
@@ -541,30 +545,39 @@ export function HomePage({ onLogin, onSignup }: HomePageProps) {
             <div>
               <h4 className="font-semibold mb-4">Product</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Features</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Pricing</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Security</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">API</a></li>
+                <li><a href="#features" className="hover:text-white transition-colors">Features</a></li>
+                <li><a href="#solutions" className="hover:text-white transition-colors">Solutions</a></li>
+                <li><a href="#how-it-works" className="hover:text-white transition-colors">How It Works</a></li>
               </ul>
             </div>
             
             <div>
               <h4 className="font-semibold mb-4">Company</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">About</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Careers</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
+                <li>
+                  <button onClick={() => onNavigate && onNavigate('about')} className="hover:text-white transition-colors text-left">About</button>
+                </li>
+                <li>
+                  <button onClick={() => onNavigate && onNavigate('blog')} className="hover:text-white transition-colors text-left">Blog</button>
+                </li>
+                <li>
+                  <button onClick={() => onNavigate && onNavigate('contact')} className="hover:text-white transition-colors text-left">Contact</button>
+                </li>
               </ul>
             </div>
             
             <div>
-              <h4 className="font-semibold mb-4">Support</h4>
+              <h4 className="font-semibold mb-4">Resources</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Help Center</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Documentation</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Status</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Privacy</a></li>
+                <li>
+                  <button onClick={() => onNavigate && onNavigate('docs')} className="hover:text-white transition-colors text-left">Documentation</button>
+                </li>
+                <li>
+                  <button onClick={() => onNavigate && onNavigate('privacy')} className="hover:text-white transition-colors text-left">Privacy</button>
+                </li>
+                <li>
+                  <button onClick={() => onNavigate && onNavigate('terms')} className="hover:text-white transition-colors text-left">Terms</button>
+                </li>
               </ul>
             </div>
           </div>
