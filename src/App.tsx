@@ -13,6 +13,7 @@ import { UserManagement } from "./components/admin/UserManagement";
 import CampaignManagement from "./components/admin/CampaignManagement";
 import { doc, getDoc, db } from "./lib/firebase";
 import { HomePage } from "./components/HomePage";
+import SubscriptionManagement from "./components/account/SubscriptionManagement";
 import {
   getAuth,
   createUserWithEmailAndPassword,
@@ -27,6 +28,7 @@ const firestore = getFirestore();
 
 export type Screen =
   | "home"
+  | "subscriptions"
   | "login"
   | "signup"
   | "campaigns"
@@ -589,8 +591,15 @@ export default function App() {
   // Public or unauthenticated section rendering
   return (
     <div className="min-h-screen bg-background">
+      {/* Simple path-based route to support /account/subscriptions */}
+      {typeof window !== 'undefined' && window.location?.pathname === '/account/subscriptions' && (
+        <SubscriptionManagement />
+      )}
       {currentScreen === "home" && (
         <HomePage onLogin={handleGoToLogin} onSignup={handleGoToSignup} />
+      )}
+      {currentScreen === "subscriptions" && (
+        <SubscriptionManagement />
       )}
       {currentScreen === "login" && (
         <LoginScreen
