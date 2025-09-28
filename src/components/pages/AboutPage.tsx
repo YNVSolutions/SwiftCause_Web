@@ -3,6 +3,7 @@ import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
 import { ArrowLeft, Smartphone, Shield, BarChart3, QrCode, Target, UserCog, Heart, Award, Globe, CheckCircle } from 'lucide-react';
 import swiftCauseLogo from '../../assets/logo.png';
+import { Footer } from '../shared/Footer';
 
 export function AboutPage({ onNavigate }: { onNavigate?: (screen: string) => void }) {
   return (
@@ -363,6 +364,8 @@ export function AboutPage({ onNavigate }: { onNavigate?: (screen: string) => voi
           </div>
         </div>
       </section>
+      
+      <Footer onNavigate={onNavigate} />
     </div>
   );
 }
