@@ -17,7 +17,6 @@ import { AboutPage } from "./components/pages/AboutPage";
 import { BlogPage } from "./components/pages/BlogPage";
 import { ContactPage } from "./components/pages/ContactPage";
 import { DocumentationPage } from "./components/pages/DocumentationPage";
-import { PrivacyPage } from "./components/pages/PrivacyPage";
 import { TermsPage } from "./components/pages/TermsPage";
 import {
   getAuth,
@@ -50,7 +49,6 @@ export type Screen =
   | "blog"
   | "contact"
   | "docs"
-  | "privacy"
   | "terms";
 
 export type UserRole =
@@ -609,7 +607,6 @@ export default function App() {
       {currentScreen === "blog" && <BlogPage onNavigate={navigate} />}
       {currentScreen === "contact" && <ContactPage onNavigate={navigate} />}
       {currentScreen === "docs" && <DocumentationPage onNavigate={navigate} />}
-      {currentScreen === "privacy" && <PrivacyPage onNavigate={navigate} />}
       {currentScreen === "terms" && <TermsPage onNavigate={navigate} />}
       {currentScreen === "login" && (
         <LoginScreen
