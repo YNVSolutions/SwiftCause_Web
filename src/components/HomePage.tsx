@@ -240,9 +240,6 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
               <a href="#solutions" className="text-gray-600 hover:text-gray-900 transition-colors">Solutions</a>
               <a href="#how-it-works" className="text-gray-600 hover:text-gray-900 transition-colors">How It Works</a>
               <a href="#faq" className="text-gray-600 hover:text-gray-900 transition-colors">FAQ</a>
-              <button onClick={() => onNavigate && onNavigate('about')} className="text-gray-600 hover:text-gray-900 transition-colors">About</button>
-              <button onClick={() => onNavigate && onNavigate('blog')} className="text-gray-600 hover:text-gray-900 transition-colors">Blog</button>
-              <button onClick={() => onNavigate && onNavigate('contact')} className="text-gray-600 hover:text-gray-900 transition-colors">Contact</button>
             </nav>
 
             <div className="flex items-center space-x-3">
