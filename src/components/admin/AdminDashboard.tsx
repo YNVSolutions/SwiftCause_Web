@@ -158,12 +158,11 @@ export function AdminDashboard({
       });
     }
 
-    // Clear the stripe_status from the URL hash to prevent it from reappearing on refresh
     if (stripeStatus) {
       const newHash = hash.split("?")[0];
       window.history.replaceState(null, '', newHash);
     }
-  }, []); // Run once on component mount to check for URL hash
+  }, []);
 
   const handleStripeOnboarding = async () => {
     if (!organization?.id) {
@@ -206,7 +205,7 @@ export function AdminDashboard({
     }
   };
 
-  // Platform features data
+
   const platformFeatures = [
     {
       icon: <Smartphone className="w-6 h-6" />,
@@ -288,7 +287,6 @@ export function AdminDashboard({
     },
   ];
 
-  // Getting started steps
   const gettingStartedSteps = [
     {
       step: 1,
@@ -336,7 +334,7 @@ export function AdminDashboard({
     },
   ];
 
-  // Quick tips for users
+
   const quickTips = [
     {
       icon: <Lightbulb className="w-5 h-5 text-yellow-600" />,
@@ -1043,7 +1041,7 @@ export function AdminDashboard({
           </Card>
         </div>
 
-        {/* Top Performing Campaigns - Full Width */}
+        
         <div className="mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
@@ -1126,7 +1124,7 @@ export function AdminDashboard({
           </Card>
         </div>
 
-        {/* Kiosks by Device OS and Recent Activity - Side by Side */}
+       
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           <Card>
             <CardHeader>
