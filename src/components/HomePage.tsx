@@ -218,7 +218,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Navigation Header */}
+
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -255,7 +255,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
         </div>
       </header>
 
-      {/* Hero Section */}
+
       <section className="relative overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-blue-50">
         <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))]" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
@@ -300,7 +300,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
                 </Button>
               </div>
 
-              {/* Live Stats */}
+
               <div className="flex items-center space-x-6 pt-8 border-t">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-gray-900">{formatCurrency(stats.totalRaised)}</div>
@@ -317,13 +317,12 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
               </div>
             </div>
 
-            {/* Hero Platform Preview */}
             <div className="relative">
               <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-white p-1">
                 <div className="aspect-[4/3] bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-6 flex flex-col justify-center">
-                  {/* Platform Interface Preview */}
+                 
                   <div className="space-y-4">
-                    {/* Header */}
+            
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <div className="w-8 h-8">
@@ -338,7 +337,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
                       <Badge className="bg-green-100 text-green-800 border-green-200">Live</Badge>
                     </div>
 
-                    {/* Interactive Analytics Dashboard */}
+                   
                     <EnterprisePlatformShowcase />
                   </div>
                 </div>
@@ -348,7 +347,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
         </div>
       </section>
 
-      {/* Key Features Section */}
+    
       <section id="features" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
@@ -384,7 +383,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
         </div>
       </section>
 
-      {/* Solutions Section */}
+  
       <section id="solutions" className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
@@ -424,7 +423,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
         </div>
       </section>
 
-      {/* How It Works Section */}
+
       <section id="how-it-works" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
@@ -455,7 +454,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
         </div>
       </section>
 
-      {/* FAQ Section */}
+
       <section id="faq" className="py-20 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
@@ -490,7 +489,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
         </div>
       </section>
 
-      {/* CTA Section */}
+
       <section className="py-20 bg-gradient-to-r from-indigo-600 to-purple-600">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6">
@@ -514,7 +513,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
               className="h-14 px-8 border-white text-indigo-600  hover:bg-gray-100 hover:text-indigo-600 shadow-lg"
               onClick={() => setShowDemoModal(true)}
             >
-              Schedule a Demo
+              Watch Demo
             </Button>
           </div>
         </div>
