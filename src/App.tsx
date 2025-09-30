@@ -13,6 +13,10 @@ import { UserManagement } from "./components/admin/UserManagement";
 import CampaignManagement from "./components/admin/CampaignManagement";
 import { doc, getDoc, db } from "./lib/firebase";
 import { HomePage } from "./components/HomePage";
+import { AboutPage } from "./components/pages/AboutPage";
+import { ContactPage } from "./components/pages/ContactPage";
+import { DocumentationPage } from "./components/pages/DocumentationPage";
+import { TermsPage } from "./components/pages/TermsPage";
 import {
   getAuth,
   createUserWithEmailAndPassword,
@@ -38,7 +42,12 @@ export type Screen =
   | "admin-campaigns"
   | "admin-kiosks"
   | "admin-donations"
-  | "admin-users";
+  | "admin-users"
+  // marketing/info pages
+  | "about"
+  | "contact"
+  | "docs"
+  | "terms";
 
 export type UserRole =
   | "super_admin"
@@ -590,8 +599,12 @@ export default function App() {
   return (
     <div className="min-h-screen bg-background">
       {currentScreen === "home" && (
-        <HomePage onLogin={handleGoToLogin} onSignup={handleGoToSignup} />
+        <HomePage onLogin={handleGoToLogin} onSignup={handleGoToSignup} onNavigate={navigate} />
       )}
+      {currentScreen === "about" && <AboutPage onNavigate={navigate} />}
+      {currentScreen === "contact" && <ContactPage onNavigate={navigate} />}
+      {currentScreen === "docs" && <DocumentationPage onNavigate={navigate} />}
+      {currentScreen === "terms" && <TermsPage onNavigate={navigate} />}
       {currentScreen === "login" && (
         <LoginScreen
           onLogin={handleLogin}

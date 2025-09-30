@@ -619,8 +619,6 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
                             <label htmlFor="agreeToTerms" className="cursor-pointer">
                               I agree to the{' '}
                               <a href="#" className="text-indigo-600 hover:underline">Terms of Service</a>
-                              {' '}and{' '}
-                              <a href="#" className="text-indigo-600 hover:underline">Privacy Policy</a>
                             </label>
                             {errors.agreeToTerms && (
                               <p className="text-xs text-red-600 flex items-center mt-1">

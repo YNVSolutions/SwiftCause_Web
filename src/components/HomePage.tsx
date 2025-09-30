@@ -54,14 +54,16 @@ import {
 } from 'lucide-react';
 
 import { ImageWithFallback } from './figma/ImageWithFallback';
+import { Footer } from './shared/Footer';
 import swiftCauseLogo from '../assets/logo.png';
 
 interface HomePageProps {
   onLogin: () => void;
   onSignup: () => void;
+  onNavigate?: (screen: any) => void;
 }
 
-export function HomePage({ onLogin, onSignup }: HomePageProps) {
+export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
   const [showDemoModal, setShowDemoModal] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   
@@ -116,7 +118,7 @@ export function HomePage({ onLogin, onSignup }: HomePageProps) {
       icon: <Shield className="w-8 h-8" />,
       title: 'Bank-Level Security',
       description: 'PCI DSS compliant payment processing with enterprise-grade security',
-      highlights: ['Encrypted transactions', 'Fraud protection', 'Data privacy'],
+      highlights: ['Encrypted transactions', 'Fraud protection', 'Secure processing'],
       color: 'bg-green-50 text-green-600 border-green-200'
     },
     {
@@ -216,7 +218,7 @@ export function HomePage({ onLogin, onSignup }: HomePageProps) {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Navigation Header */}
+
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -253,7 +255,7 @@ export function HomePage({ onLogin, onSignup }: HomePageProps) {
         </div>
       </header>
 
-      {/* Hero Section */}
+
       <section className="relative overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-blue-50">
         <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))]" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
@@ -298,7 +300,7 @@ export function HomePage({ onLogin, onSignup }: HomePageProps) {
                 </Button>
               </div>
 
-              {/* Live Stats */}
+
               <div className="flex items-center space-x-6 pt-8 border-t">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-gray-900">{formatCurrency(stats.totalRaised)}</div>
@@ -315,13 +317,12 @@ export function HomePage({ onLogin, onSignup }: HomePageProps) {
               </div>
             </div>
 
-            {/* Hero Platform Preview */}
             <div className="relative">
               <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-white p-1">
                 <div className="aspect-[4/3] bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-6 flex flex-col justify-center">
-                  {/* Platform Interface Preview */}
+                 
                   <div className="space-y-4">
-                    {/* Header */}
+            
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <div className="w-8 h-8">
@@ -336,7 +337,7 @@ export function HomePage({ onLogin, onSignup }: HomePageProps) {
                       <Badge className="bg-green-100 text-green-800 border-green-200">Live</Badge>
                     </div>
 
-                    {/* Interactive Analytics Dashboard */}
+                   
                     <EnterprisePlatformShowcase />
                   </div>
                 </div>
@@ -346,7 +347,7 @@ export function HomePage({ onLogin, onSignup }: HomePageProps) {
         </div>
       </section>
 
-      {/* Key Features Section */}
+    
       <section id="features" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
@@ -382,7 +383,7 @@ export function HomePage({ onLogin, onSignup }: HomePageProps) {
         </div>
       </section>
 
-      {/* Solutions Section */}
+  
       <section id="solutions" className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
@@ -422,7 +423,7 @@ export function HomePage({ onLogin, onSignup }: HomePageProps) {
         </div>
       </section>
 
-      {/* How It Works Section */}
+
       <section id="how-it-works" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
@@ -453,7 +454,7 @@ export function HomePage({ onLogin, onSignup }: HomePageProps) {
         </div>
       </section>
 
-      {/* FAQ Section */}
+
       <section id="faq" className="py-20 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
@@ -488,7 +489,7 @@ export function HomePage({ onLogin, onSignup }: HomePageProps) {
         </div>
       </section>
 
-      {/* CTA Section */}
+
       <section className="py-20 bg-gradient-to-r from-indigo-600 to-purple-600">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6">
@@ -512,72 +513,13 @@ export function HomePage({ onLogin, onSignup }: HomePageProps) {
               className="h-14 px-8 border-white text-indigo-600  hover:bg-gray-100 hover:text-indigo-600 shadow-lg"
               onClick={() => setShowDemoModal(true)}
             >
-              Schedule a Demo
+              Watch Demo
             </Button>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="space-y-4">
-              <div className="flex items-center space-x-3">
-                <div className="h-8 w-8">
-                  <img 
-                    src={swiftCauseLogo} 
-                    alt="Swift Cause Logo" 
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-                <span className="text-lg font-semibold">Swift Cause</span>
-              </div>
-              <p className="text-gray-400 text-sm">
-                Empowering organizations to create meaningful impact through intelligent fundraising technology.
-              </p>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold mb-4">Product</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Features</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Pricing</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Security</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">API</a></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold mb-4">Company</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">About</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Careers</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold mb-4">Support</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Help Center</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Documentation</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Status</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Privacy</a></li>
-              </ul>
-            </div>
-          </div>
-          
-          <div className="border-t border-gray-800 mt-8 pt-8 flex items-center justify-between">
-            <p className="text-gray-400">© 2025 Swift Cause. All rights reserved.</p>
-            <div className="flex items-center space-x-2 text-gray-400">
-              <Clock className="w-4 h-4" />
-              <span className="text-sm">24/7 Support</span>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer onNavigate={onNavigate} />
 
       {/* Demo Modal */}
       <DemoModal 
