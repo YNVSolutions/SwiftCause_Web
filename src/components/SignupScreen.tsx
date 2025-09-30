@@ -320,7 +320,7 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
           </div>
 
           {/* Right side - Registration Form */}
-          <div className="lg:col-span-5 flex items-start justify-center py-20 lg:py-32">
+          <div className="lg:col-span-5 flex items-center justify-center py-20 lg:py-32">
             <div className="w-full max-w-md">
               {/* Mobile header */}
               <div className="lg:hidden text-center mb-8">
