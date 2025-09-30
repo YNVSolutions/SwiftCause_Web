@@ -637,6 +637,7 @@ export default function App() {
           onSignup={handleSignup}
           onBack={() => navigate("home")}
           onLogin={() => navigate("login")}
+          onViewTerms={() => navigate("terms")}
         />
       )}
       {currentScreen === "campaigns" && (
