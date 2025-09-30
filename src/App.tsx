@@ -17,6 +17,7 @@ import { AboutPage } from "./components/pages/AboutPage";
 import { ContactPage } from "./components/pages/ContactPage";
 import { DocumentationPage } from "./components/pages/DocumentationPage";
 import { TermsPage } from "./components/pages/TermsPage";
+import { Toast, ToastHost } from "./components/ui/Toast";
 import {
   getAuth,
   createUserWithEmailAndPassword,
@@ -24,7 +25,7 @@ import {
   User as FirebaseAuthUser,
 } from "firebase/auth";
 import { getFirestore, setDoc } from "firebase/firestore";
-// The OnboardingRedirectHandler is no longer needed.
+
 
 const auth = getAuth();
 const firestore = getFirestore();
@@ -236,26 +237,26 @@ export interface AdminSession {
   loginTime: string;
 }
 export interface SignupFormData {
-  // Personal Information
+
   firstName: string;
   lastName: string;
   email: string;
 
-  // Organization Information
+
   organizationName: string;
   organizationType: string;
   organizationSize: string;
   organizationId: string;
   website?: string;
 
-  // Account Setup
+
   password: string;
   confirmPassword: string;
 
-  // Preferences
+
   currency: string;
 
-  // Legal
+
   agreeToTerms: boolean;
 }
 
@@ -276,10 +277,25 @@ export default function App() {
     useState<KioskSession | null>(null);
   const [currentAdminSession, setCurrentAdminSession] =
     useState<AdminSession | null>(null);
-  const [isLoadingAuth, setIsLoadingAuth] = useState(true); // Manages loading state during Firebase auth initialization
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true); 
+
+  const [isToastVisible, setIsToastVisible] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastVariant, setToastVariant] = useState<"success" | "error" | "warning" | "info">("info");
+
+  const showToast = (
+    message: string,
+    variant: "success" | "error" | "warning" | "info" = "info",
+    durationMs = 2500
+  ) => {
+    setToastMessage(message);
+    setToastVariant(variant);
+    setIsToastVisible(true);
+
+  };
 
 
-  // Effect to handle Firebase Auth state changes and re-establish session
+
   useEffect(() => {
     console.log("App: onAuthStateChanged listener set up.");
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -288,7 +304,7 @@ export default function App() {
         firebaseUser
       );
       if (firebaseUser) {
-        // User is signed in, fetch additional user data from Firestore
+
         const userDocRef = doc(db, "users", firebaseUser.uid);
         const userDocSnap = await getDoc(userDocRef);
 
@@ -300,7 +316,7 @@ export default function App() {
             loginTime: new Date().toISOString(),
           });
 
-          // Navigate to the appropriate screen based on user role after login/session restore
+        
           if (
             userData.role === "admin" ||
             userData.role === "super_admin" ||
@@ -315,30 +331,30 @@ export default function App() {
           }
 
         } else {
-          // User document not found in Firestore for the authenticated Firebase user
+         
           console.warn(
             "App: User document not found for UID:",
             firebaseUser.uid
           );
-          handleLogout(); // Log out from Firebase and clear local state
+          handleLogout();
         }
       } else {
-        // No user is signed in (or was signed out)
+      
         console.log("App: Firebase user is signed out.");
-        handleLogout(); // Clear local session states
-        setCurrentScreen("home"); // Redirect to home/login if no user
+        handleLogout(); 
+        setCurrentScreen("home"); 
       }
-      setIsLoadingAuth(false); // Authentication check is complete
+      setIsLoadingAuth(false);
     });
 
     return () => unsubscribe();
-  }, []); // Empty dependency array means this runs once on component mount
+  }, []); 
 
 
 
-  const navigate = (screen: Screen) => {
+  const navigate = (screen: string) => {
     console.log("App: navigate called with screen:", screen);
-    setCurrentScreen(screen);
+    setCurrentScreen(screen as Screen);
   };
 
   const handleGoToLogin = () => {
@@ -367,10 +383,12 @@ export default function App() {
     ) {
       setCurrentAdminSession(sessionData as AdminSession);
       navigate("admin-dashboard");
+      showToast("Sign in successful", "success");
     } else if (role === "kiosk") {
       setCurrentKioskSession(sessionData as KioskSession);
       await refreshCurrentKioskSession((sessionData as KioskSession).kioskId);
       navigate("campaigns");
+      showToast("Sign in successful", "success");
     }
   };
 
@@ -513,15 +531,14 @@ export default function App() {
         website: signupData.website,
         createdAt: new Date().toISOString(),
       });
-
-      alert("Signup successful!");
+      showToast("Signup successful", "success");
     } catch (error) {
       if (error instanceof Error) {
         console.error("Signup error:", error);
-        alert(`Signup failed: ${error.message}`);
+        showToast(`Signup failed: ${error.message}`, "error", 3500);
       } else {
         console.error("Unknown signup error:", error);
-        alert("Signup failed due to an unknown error.");
+        showToast("Signup failed due to an unknown error.", "error", 3500);
       }
     }
   };
@@ -550,6 +567,9 @@ export default function App() {
   if (userRole === "admin" && currentAdminSession) {
     return (
       <div className="min-h-screen bg-background">
+        <ToastHost visible={isToastVisible} onClose={() => setIsToastVisible(false)} align="top">
+          <Toast message={toastMessage} variant={toastVariant} onClose={() => setIsToastVisible(false)} />
+        </ToastHost>
         {currentScreen === "admin-dashboard" && (
           <AdminDashboard
             onNavigate={navigate}
@@ -594,10 +614,11 @@ export default function App() {
       </div>
     );
   }
-
-  // Public or unauthenticated section rendering
   return (
     <div className="min-h-screen bg-background">
+      <ToastHost visible={isToastVisible} onClose={() => setIsToastVisible(false)} align="top">
+        <Toast message={toastMessage} variant={toastVariant} onClose={() => setIsToastVisible(false)} />
+      </ToastHost>
       {currentScreen === "home" && (
         <HomePage onLogin={handleGoToLogin} onSignup={handleGoToSignup} onNavigate={navigate} />
       )}
