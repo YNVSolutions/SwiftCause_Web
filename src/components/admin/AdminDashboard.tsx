@@ -92,6 +92,7 @@ import { OrganizationSwitcher } from "./OrganizationSwitcher";
 import { useOrganization } from "../../hooks/useOrganization";
 import { auth } from "../../lib/firebase";
 import { DeviceChart } from "./DeviceChart";
+import { Verification } from "../Verification";
 
 interface AdminDashboardProps {
   onNavigate: (screen: Screen) => void;
@@ -285,6 +286,30 @@ export function AdminDashboard({
       ],
       color: "bg-red-50 text-red-600 border-red-200",
     },
+    {
+      icon: <Shield className="w-6 h-6" />,
+      title: "AML Identity Verification",
+      description:
+        "Built-in Stripe Identity flow for secure, compliant user verification",
+      benefits: [
+        "Document checks",
+        "Real-time status",
+        "Privacy-first",
+      ],
+      color: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    },
+    {
+      icon: <BarChart3 className="w-6 h-6" />,
+      title: "Compliance Dashboard",
+      description:
+        "Admin-only audit logs and reporting to monitor sensitive actions",
+      benefits: [
+        "Sortable logs",
+        "JSON details view",
+        "Secure access",
+      ],
+      color: "bg-slate-50 text-slate-700 border-slate-200",
+    },
   ];
 
   const gettingStartedSteps = [
@@ -332,6 +357,30 @@ export function AdminDashboard({
       estimated: "5 minutes",
       canAccess: hasPermission("create_user"),
     },
+    {
+      step: 5,
+      title: "Verify Your Identity",
+      description:
+        "Complete AML verification to unlock sensitive features and compliance tools",
+      action: "Start Verification",
+      actionFunction: () => {
+        window.dispatchEvent(new Event("open-verification-dialog"));
+      },
+      icon: <Shield className="w-5 h-5" />,
+      estimated: "2 minutes",
+      canAccess: true,
+    },
+    {
+      step: 6,
+      title: "Review Compliance Logs",
+      description:
+        "Access the compliance dashboard to review audit logs and activities",
+      action: "Open Compliance",
+      actionFunction: () => onNavigate("admin-compliance"),
+      icon: <BarChart3 className="w-5 h-5" />,
+      estimated: "1 minute",
+      canAccess: hasPermission("system_admin"),
+    },
   ];
 
 
@@ -353,6 +402,18 @@ export function AdminDashboard({
       title: "Monitor Performance",
       description:
         "Check the analytics regularly to optimize campaign performance and kiosk placement.",
+    },
+    {
+      icon: <Shield className="w-5 h-5 text-indigo-600" />,
+      title: "Verification: Best Results",
+      description:
+        "Use good lighting and keep your ID within the frame for faster approval.",
+    },
+    {
+      icon: <CheckCircle className="w-5 h-5 text-emerald-600" />,
+      title: "Verification: Match Details",
+      description:
+        "Ensure your profile name and birthdate match your government ID.",
     },
   ];
 
@@ -627,6 +688,9 @@ export function AdminDashboard({
                 <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
                 <span>Refresh</span>
               </Button>
+              <div className="ml-1">
+                <Verification />
+              </div>
               <Button variant="ghost" size="sm" onClick={onLogout} className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
                 <LogOut className="w-4 h-4" />
                 <span>Logout</span>
@@ -664,6 +728,11 @@ export function AdminDashboard({
             {hasPermission("view_kiosks") && (
               <Button variant="outline" onClick={() => onNavigate("admin-kiosks")}>
                 <Settings className="w-4 h-4 mr-2" />Manage Kiosks
+              </Button>
+            )}
+            {hasPermission("system_admin") && (
+              <Button variant="outline" onClick={() => onNavigate("admin-compliance")}>
+                <Shield className="w-4 h-4 mr-2" />Compliance
               </Button>
             )}
           </div>
