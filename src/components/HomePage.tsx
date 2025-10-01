@@ -67,7 +67,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
   const [showDemoModal, setShowDemoModal] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   
-  // Mock live statistics for demonstration
+ 
   const [stats, setStats] = useState({
     totalRaised: 15847320,
     totalDonors: 47823,
@@ -77,7 +77,6 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
     countriesReached: 45
   });
 
-  // Simulate live updates
   useEffect(() => {
     const interval = setInterval(() => {
       setStats(prev => ({
@@ -150,6 +149,23 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
       color: 'bg-red-50 text-red-600 border-red-200'
     }
   ];
+
+  keyFeatures.push(
+    {
+      icon: <Shield className="w-8 h-8" />,
+      title: 'AML Identity Verification',
+      description: 'Built-in Stripe Identity flow for secure, compliant user verification',
+      highlights: ['Document checks', 'Real-time status', 'Privacy-first'],
+      color: 'bg-emerald-50 text-emerald-600 border-emerald-200'
+    },
+    {
+      icon: <BarChart3 className="w-8 h-8" />,
+      title: 'Compliance Dashboard',
+      description: 'Audit logs and reporting to monitor sensitive actions across your platform',
+      highlights: ['Admin-only access', 'Sortable logs', 'JSON details view'],
+      color: 'bg-slate-50 text-slate-700 border-slate-200'
+    }
+  );
 
   const useCases = [
     {
@@ -521,7 +537,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
 
       <Footer onNavigate={onNavigate} />
 
-      {/* Demo Modal */}
+    
       <DemoModal 
         open={showDemoModal} 
         onOpenChange={setShowDemoModal} 
