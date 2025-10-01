@@ -51,6 +51,14 @@ import {
 } from "lucide-react";
 import { Kiosk, Campaign } from "../../../App";
 
+type DeviceInfoForm = (Kiosk["deviceInfo"]) & {
+  modelCustom?: string;
+  osCustom?: string;
+  screenSizeCustom?: string;
+};
+
+type KioskForm = Omit<Kiosk, "deviceInfo"> & { deviceInfo?: DeviceInfoForm };
+
 interface KioskCampaignAssignmentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -66,7 +74,7 @@ export function KioskCampaignAssignmentDialog({
   onSave,
   campaigns,
 }: KioskCampaignAssignmentDialogProps) {
-  const [formData, setFormData] = useState<Kiosk>(() => {
+  const [formData, setFormData] = useState<KioskForm>(() => {
     if (kiosk) return { ...kiosk };
 
     return {
@@ -95,13 +103,13 @@ export function KioskCampaignAssignmentDialog({
     if (kiosk) {
       setFormData({
         ...kiosk,
-        settings: { // Ensure settings object exists and new properties are merged
+        settings: { 
           displayMode: "grid",
           showAllCampaigns: false,
           maxCampaignsDisplay: 6,
           autoRotateCampaigns: false,
           rotationInterval: 30,
-          ...kiosk.settings, // Merge existing settings
+          ...kiosk.settings, 
         },
       });
     }
@@ -118,7 +126,30 @@ export function KioskCampaignAssignmentDialog({
   };
 
   const handleSave = () => {
-    onSave(formData);
+    
+    const device = formData.deviceInfo || {};
+    const normalizedDevice: Kiosk["deviceInfo"] = {
+      ...device,
+      model:
+        device.model === "Custom" && device.modelCustom
+          ? device.modelCustom
+          : device.model,
+      os:
+        device.os === "Other" && device.osCustom
+          ? device.osCustom
+          : device.os,
+      screenSize:
+        device.screenSize === "Custom" && device.screenSizeCustom
+          ? device.screenSizeCustom
+          : device.screenSize,
+    };
+    
+    delete (normalizedDevice as any).modelCustom;
+    delete (normalizedDevice as any).osCustom;
+    delete (normalizedDevice as any).screenSizeCustom;
+
+    const payload: Kiosk = { ...(formData as Kiosk), deviceInfo: normalizedDevice };
+    onSave(payload);
     onOpenChange(false);
   };
 
@@ -138,7 +169,7 @@ export function KioskCampaignAssignmentDialog({
         ? assigned.filter((id) => id !== campaignId)
         : [...assigned, campaignId];
 
-      // If removing the default campaign, clear it
+      
       let newDefault = prev.defaultCampaign;
       if (isAssigned && prev.defaultCampaign === campaignId) {
         newDefault = newAssigned.length > 0 ? newAssigned[0] : "";
@@ -209,7 +240,7 @@ export function KioskCampaignAssignmentDialog({
                 </CardHeader>
                 
                 <CardContent className="px-0 space-y-8">
-                  {/* Basic Information Section */}
+                  
                   <div className="space-y-6">
                     <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wide border-b pb-2">
                       Basic Information
@@ -295,7 +326,7 @@ export function KioskCampaignAssignmentDialog({
                     </div>
                   </div>
   
-                  {/* Device Information Section */}
+                    
                   <div className="space-y-6">
                     <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wide border-b pb-2">
                       Device Information
@@ -306,51 +337,115 @@ export function KioskCampaignAssignmentDialog({
                         <Label htmlFor="model" className="text-sm font-medium text-gray-700">
                           Device Model
                         </Label>
+                        <Select
+                          value={formData.deviceInfo?.model || ''}
+                          onValueChange={(value) => setFormData(prev => ({
+                            ...prev!,
+                            deviceInfo: { ...prev!.deviceInfo, model: value }
+                          }))}
+                        >
+                          <SelectTrigger className="h-10">
+                            <SelectValue placeholder="Select or type a model" />
+                          </SelectTrigger>
+                          <SelectContent>
+                           
+                            <SelectItem value="iPad 10.2">iPad 10.2</SelectItem>
+                            <SelectItem value="iPad Pro 12.9">iPad Pro 12.9</SelectItem>
+                            <SelectItem value="Samsung Galaxy Tab A8">Samsung Galaxy Tab A8</SelectItem>
+                            <SelectItem value="Samsung Galaxy Tab S7">Samsung Galaxy Tab S7</SelectItem>
+                            <SelectItem value="Surface Pro 7">Surface Pro 7</SelectItem>
+                            <SelectItem value="Custom">Custom...</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        {formData.deviceInfo?.model === 'Custom' && (
                         <Input
                           id="model"
                           name="model"
-                          value={formData.deviceInfo?.model}
+                            value={formData.deviceInfo?.modelCustom || ''}
                           onChange={(e) => setFormData(prev => ({
                             ...prev!,
-                            deviceInfo: { ...prev!.deviceInfo, model: e.target.value }
+                              deviceInfo: { ...prev!.deviceInfo, modelCustom: e.target.value }
                           }))}
-                          className="h-10"
-                          placeholder="e.g., iPad Pro 12.9"
+                            className="h-10 mt-2"
+                            placeholder="Enter custom model"
                         />
+                        )}
                       </div>
                       
                       <div className="space-y-2">
                         <Label htmlFor="os" className="text-sm font-medium text-gray-700">
                           Operating System
                         </Label>
-                        <Input
-                          id="os"
-                          name="os"
-                          value={formData.deviceInfo?.os}
-                          onChange={(e) => setFormData(prev => ({
+                        <Select
+                          value={formData.deviceInfo?.os || ''}
+                          onValueChange={(value) => setFormData(prev => ({
                             ...prev!,
-                            deviceInfo: { ...prev!.deviceInfo, os: e.target.value }
+                            deviceInfo: { ...prev!.deviceInfo, os: value }
                           }))}
-                          className="h-10"
-                          placeholder="e.g., iOS 17.2"
-                        />
+                        >
+                          <SelectTrigger className="h-10">
+                            <SelectValue placeholder="Select OS" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="iOS">iOS</SelectItem>
+                            <SelectItem value="Android">Android</SelectItem>
+                            <SelectItem value="Windows">Windows</SelectItem>
+                            <SelectItem value="ChromeOS">ChromeOS</SelectItem>
+                            <SelectItem value="Linux">Linux</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        {formData.deviceInfo?.os === 'Other' && (
+                          <Input
+                            id="os"
+                            name="osCustom"
+                            value={formData.deviceInfo?.osCustom || ''}
+                            onChange={(e) => setFormData(prev => ({
+                              ...prev!,
+                              deviceInfo: { ...prev!.deviceInfo, osCustom: e.target.value }
+                            }))}
+                            className="h-10 mt-2"
+                            placeholder="Enter OS name"
+                          />
+                        )}
                       </div>
                       
                       <div className="space-y-2">
                         <Label htmlFor="screenSize" className="text-sm font-medium text-gray-700">
                           Screen Size
                         </Label>
-                        <Input
-                          id="screenSize"
-                          name="screenSize"
-                          value={formData.deviceInfo?.screenSize}
-                          onChange={(e) => setFormData(prev => ({
+                        <Select
+                          value={formData.deviceInfo?.screenSize || ''}
+                          onValueChange={(value) => setFormData(prev => ({
                             ...prev!,
-                            deviceInfo: { ...prev!.deviceInfo, screenSize: e.target.value }
+                            deviceInfo: { ...prev!.deviceInfo, screenSize: value }
                           }))}
-                          className="h-10"
-                          placeholder="e.g., 12.9 inches"
-                        />
+                        >
+                          <SelectTrigger className="h-10">
+                            <SelectValue placeholder="Select screen size" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="10.2 inches">10.2 inches</SelectItem>
+                            <SelectItem value="11 inches">11 inches</SelectItem>
+                            <SelectItem value="12.9 inches">12.9 inches</SelectItem>
+                            <SelectItem value="13.3 inches">13.3 inches</SelectItem>
+                            <SelectItem value="15 inches">15 inches</SelectItem>
+                            <SelectItem value="Custom">Custom...</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        {formData.deviceInfo?.screenSize === 'Custom' && (
+                          <Input
+                            id="screenSize"
+                            name="screenSizeCustom"
+                            value={formData.deviceInfo?.screenSizeCustom || ''}
+                            onChange={(e) => setFormData(prev => ({
+                              ...prev!,
+                              deviceInfo: { ...prev!.deviceInfo, screenSizeCustom: e.target.value }
+                            }))}
+                            className="h-10 mt-2"
+                            placeholder="Enter custom screen size"
+                          />
+                        )}
                       </div>
                     </div>
                   </div>
@@ -359,7 +454,7 @@ export function KioskCampaignAssignmentDialog({
             </TabsContent>
   
             <TabsContent value="campaigns" className="mt-0 space-y-8 p-6">
-              {/* Assigned Campaigns */}
+              
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -463,7 +558,7 @@ export function KioskCampaignAssignmentDialog({
                 )}
               </div>
   
-              {/* Available Campaigns */}
+             
               {unassignedCampaigns.length > 0 && (
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
@@ -521,7 +616,7 @@ export function KioskCampaignAssignmentDialog({
                 </div>
               )}
   
-              {/* Global Campaigns */}
+
               {globalCampaigns.length > 0 && (
                 <div className="space-y-4 pt-6 border-t">
                   <div className="flex items-center gap-3">

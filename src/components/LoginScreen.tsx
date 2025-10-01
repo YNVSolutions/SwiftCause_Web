@@ -195,14 +195,14 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
             </div>
 
             <Card className="bg-white/80 backdrop-blur-sm border-white/20 shadow-xl">
-              <CardHeader className="relative text-center space-y-2 pt-12">
+              <CardHeader className="relative text-center space-y-2 pt-10 pb-0">
                 <CardTitle className="text-xl lg:text-2xl">Platform Access</CardTitle>
                 <CardDescription className="text-sm lg:text-base">
                   Choose your access type to continue
                 </CardDescription>
               </CardHeader>
 
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-6 pt-6">
                 <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'kiosk' | 'admin')}>
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="admin" className="flex items-center space-x-2">
@@ -215,13 +215,16 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
                     </TabsTrigger>
                   </TabsList>
 
-                  <TabsContent value="kiosk">
-                    <KioskLoginContainer onLogin={onLogin} />
-                  </TabsContent>
+                  {/* Ensure consistent box sizing for tab panels */}
+                  <div className="mt-4 min-h-[320px]">
+                    <TabsContent value="kiosk" className="m-0">
+                      <KioskLoginContainer onLogin={onLogin} />
+                    </TabsContent>
 
-                  <TabsContent value="admin">
-                    <AdminLoginContainer onLogin={onLogin} />
-                  </TabsContent>
+                    <TabsContent value="admin" className="m-0">
+                      <AdminLoginContainer onLogin={onLogin} />
+                    </TabsContent>
+                  </div>
                 </Tabs>
 
                 {activeTab === 'kiosk' && (

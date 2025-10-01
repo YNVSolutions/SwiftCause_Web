@@ -22,7 +22,7 @@ interface Donation {
   amount: number;
   campaignId: string;
   timestamp: Timestamp;
-  platform?: string; // This might be kioskId
+  platform?: string; 
 }
 
 interface DashboardStats {
@@ -86,7 +86,7 @@ export function useDashboardData(organizationId?: string) {
       const activeCampaigns = campaignsData.filter((c: Campaign) => c.status === 'active').length;
       const activeKiosks = kiosksData.filter((k: Kiosk) => k.status === 'online').length;
 
-      // Process Geographic Data - Group kiosks by location and sum totalRaised
+  
       const locationGroups: { [key: string]: number } = {};
       kiosksData.forEach((kiosk: Kiosk) => {
         if (kiosk.location && kiosk.totalRaised) {
@@ -98,11 +98,24 @@ export function useDashboardData(organizationId?: string) {
         .sort((a, b) => b.totalRaised - a.totalRaised)
         .slice(0, 5);
 
-      // Process Device Data - Count occurrences of each device OS
+     
+      const normalizeOs = (raw?: string): string | null => {
+        if (!raw) return null;
+        const v = raw.trim().toLowerCase();
+        if (!v) return null;
+        if (v.includes('ios') || v.includes('ipad')) return 'iOS';
+        if (v.includes('android')) return 'Android';
+        if (v.includes('windows')) return 'Windows';
+        if (v.includes('chrome')) return 'ChromeOS';
+        if (v.includes('linux')) return 'Linux';
+        return raw.trim(); 
+      };
+
       const deviceCounts: { [key: string]: number } = {};
       kiosksData.forEach((kiosk: Kiosk) => {
-        if (kiosk.deviceInfo?.os) {
-          deviceCounts[kiosk.deviceInfo.os] = (deviceCounts[kiosk.deviceInfo.os] || 0) + 1;
+        const normalized = normalizeOs(kiosk.deviceInfo?.os);
+        if (normalized) {
+          deviceCounts[normalized] = (deviceCounts[normalized] || 0) + 1;
         }
       });
       const deviceDistribution = Object.entries(deviceCounts)

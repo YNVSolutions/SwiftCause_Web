@@ -41,6 +41,7 @@ interface SignupScreenProps {
   onSignup: (data: SignupFormData) => Promise<void>;
   onBack: () => void;
   onLogin: () => void;
+  onViewTerms: () => void;
 }
 
 interface SignupFormData {
@@ -75,7 +76,7 @@ interface SignupFormData {
 const auth = getAuth();
 const firestore = getFirestore();
 
-export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
+export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupScreenProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -320,7 +321,7 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
           </div>
 
           {/* Right side - Registration Form */}
-          <div className="lg:col-span-5 flex items-start justify-center py-20 lg:py-32">
+          <div className="lg:col-span-5 flex items-center justify-center py-20 lg:py-32">
             <div className="w-full max-w-md">
               {/* Mobile header */}
               <div className="lg:hidden text-center mb-8">
@@ -618,7 +619,9 @@ export function SignupScreen({ onSignup, onBack, onLogin }: SignupScreenProps) {
                           <div className="text-sm">
                             <label htmlFor="agreeToTerms" className="cursor-pointer">
                               I agree to the{' '}
-                              <a href="#" className="text-indigo-600 hover:underline">Terms of Service</a>
+                              <button type="button" className="text-indigo-600 hover:underline" onClick={onViewTerms}>
+                                Terms of Service
+                              </button>
                             </label>
                             {errors.agreeToTerms && (
                               <p className="text-xs text-red-600 flex items-center mt-1">

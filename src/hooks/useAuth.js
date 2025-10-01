@@ -2,6 +2,25 @@ import { useCallback, useState } from 'react';
 import { loginWithEmailPassword } from '../api/authService';
 import { getUserById } from '../api/firestoreService';
 
+function getFriendlyAuthMessage(error) {
+  const code = error?.code || '';
+  switch (code) {
+    case 'auth/invalid-credential':
+    case 'auth/wrong-password':
+    case 'auth/user-not-found':
+    case 'auth/invalid-email':
+      return 'Invalid username or password.';
+    case 'auth/user-disabled':
+      return 'This account has been disabled. Please contact support.';
+    case 'auth/too-many-requests':
+      return 'Too many attempts. Please try again later.';
+    case 'auth/network-request-failed':
+      return 'Network error. Check your connection and try again.';
+    default:
+      return 'Authentication failed. Please try again.';
+  }
+}
+
 export function useAuth() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -21,7 +40,7 @@ export function useAuth() {
       setUser(profile);
       return profile;
     } catch (e) {
-      setError(e?.message || 'Authentication failed. Please try again.');
+      setError(getFriendlyAuthMessage(e));
       setUser(null);
       return null;
     } finally {
