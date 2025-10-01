@@ -243,4 +243,8 @@
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
   }
+
+  .animate-spin {
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
 }
