@@ -354,11 +354,27 @@ export default function App() {
   }, []); 
 
 
-
   const navigate = (screen: string) => {
     console.log("App: navigate called with screen:", screen);
     setCurrentScreen(screen as Screen);
   };
+
+  
+  useEffect(() => {
+    if (userRole && !isLoadingAuth) {
+      if (userRole === "admin" || userRole === "super_admin" || userRole === "manager" || userRole === "operator" || userRole === "viewer") {
+        if (currentScreen !== "admin-dashboard" && currentScreen !== "admin-campaigns" && currentScreen !== "admin-kiosks" && currentScreen !== "admin-donations" && currentScreen !== "admin-users" && currentScreen !== "admin-compliance") {
+          console.log("Redirecting admin user to dashboard");
+          navigate("admin-dashboard");
+        }
+      } else if (userRole === "kiosk") {
+        if (currentScreen !== "campaigns" && currentScreen !== "campaign" && currentScreen !== "payment" && currentScreen !== "result" && currentScreen !== "email-confirmation") {
+          console.log("Redirecting kiosk user to campaigns");
+          navigate("campaigns");
+        }
+      }
+    }
+  }, [userRole, currentScreen, isLoadingAuth, navigate]);
 
   const handleGoToLogin = () => {
     navigate("login");
@@ -558,10 +574,33 @@ export default function App() {
     );
   };
 
-  // Main application rendering logic based on authentication state and current screen
+
   if (isLoadingAuth) {
     return (
       <Loader />
+    );
+  }
+
+ 
+  console.log("App render state:", {
+    userRole,
+    currentScreen,
+    hasAdminSession: !!currentAdminSession,
+    hasKioskSession: !!currentKioskSession,
+    isLoadingAuth
+  });
+
+
+
+
+  if (userRole && !currentAdminSession && !currentKioskSession) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Loader />
+          <p className="mt-4 text-gray-600">Loading your session...</p>
+        </div>
+      </div>
     );
   }
 
@@ -618,6 +657,63 @@ export default function App() {
       </div>
     );
   }
+
+  
+  if (userRole === "kiosk" && currentKioskSession) {
+    return (
+      <div className="min-h-screen bg-background">
+        <ToastHost visible={isToastVisible} onClose={() => setIsToastVisible(false)} align="top">
+          <Toast message={toastMessage} variant={toastVariant} onClose={() => setIsToastVisible(false)} />
+        </ToastHost>
+        {currentScreen === "campaigns" && (
+          <CampaignListContainer
+            onSelectCampaign={(campaign) => handleCampaignSelect(campaign, false)}
+            onViewDetails={(campaign) => handleCampaignSelect(campaign, true)}
+            kioskSession={currentKioskSession}
+            onLogout={handleLogout}
+            refreshCurrentKioskSession={refreshCurrentKioskSession}
+          />
+        )}
+        {currentScreen === "campaign" && selectedCampaign && (
+          <CampaignScreen
+            campaign={selectedCampaign}
+            initialShowDetails={campaignView === "overview"}
+            onSubmit={handleDonationSubmit}
+            onBack={handleBackFromCampaign}
+            onViewChange={handleCampaignViewChange}
+          />
+        )}
+        {currentScreen === "payment" && donation && selectedCampaign && (
+          <PaymentContainer
+            campaign={selectedCampaign}
+            donation={donation}
+            onPaymentComplete={handlePaymentSubmit}
+            onBack={() => {
+              setCampaignView("donate");
+              navigate("campaign");
+            }}
+          />
+        )}
+        {currentScreen === "result" && paymentResult && (
+          <ResultScreen
+            result={paymentResult}
+            onEmailConfirmation={
+              paymentResult.success ? handleEmailConfirmation : undefined
+            }
+            onReturnToStart={handleReturnToStart}
+          />
+        )}
+        {currentScreen === "email-confirmation" && paymentResult && (
+          <EmailConfirmationScreen
+            transactionId={paymentResult.transactionId}
+            onComplete={handleReturnToStart}
+          />
+        )}
+      </div>
+    );
+  }
+
+  
   return (
     <div className="min-h-screen bg-background">
       <ToastHost visible={isToastVisible} onClose={() => setIsToastVisible(false)} align="top">
@@ -687,6 +783,16 @@ export default function App() {
           transactionId={paymentResult.transactionId}
           onComplete={handleReturnToStart}
         />
+      )}
+      
+      {!currentScreen && (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Welcome to Swift Cause</h1>
+            <p className="text-gray-600 mb-6">Redirecting you to the appropriate page...</p>
+            <Loader />
+          </div>
+        </div>
       )}
     </div>
   );
