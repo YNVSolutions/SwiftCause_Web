@@ -48,7 +48,6 @@ export function useUsers(organizationId?: string) {
       await createUserApi(userData);
       await refreshUsers();
     } catch (error) {
-      console.error(error);
       throw error;
     }
   }, [refreshUsers]);
@@ -58,7 +57,6 @@ export function useUsers(organizationId?: string) {
       setUsers(prev => prev.filter(user => user.id !== userId));
       await deleteUserApi(userId);
     } catch (error) {
-      console.error(error);
       refreshUsers();
       throw error;
     }
@@ -69,7 +67,6 @@ export function useUsers(organizationId?: string) {
       setUsers(prev => prev.map(user => (user.id === userId ? { ...user, ...userData } : user)));
       await updateUserApi(userId, userData);
     } catch (error) {
-      console.error(error);
       refreshUsers();
       throw new Error("Failed to update user.");
     }

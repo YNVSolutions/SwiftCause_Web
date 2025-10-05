@@ -17,7 +17,6 @@ export const uploadImage = async (file: File, path: string): Promise<string> => 
     const downloadURL = await getDownloadURL(snapshot.ref);
     return downloadURL;
   } catch (error) {
-    console.error('Error uploading image:', error);
     if (error instanceof Error) {
       throw error;
     }
