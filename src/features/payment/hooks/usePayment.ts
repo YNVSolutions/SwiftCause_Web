@@ -16,7 +16,6 @@ export function usePayment(onPaymentComplete: (result: PaymentResult) => void): 
   const [error, setError] = useState<string | null>(null);
 
   const handlePaymentSubmit = useCallback(async (amount: number, metadata: any, currency: string) => {
-    console.log('usePayment - handlePaymentSubmit: received metadata', metadata);
     setIsProcessing(true);
     setError(null);
 
@@ -75,7 +74,6 @@ export function usePayment(onPaymentComplete: (result: PaymentResult) => void): 
         onPaymentComplete({ success: false, error: 'Payment not successful.' });
       }
     } catch (err: any) {
-      console.error('Fetch or Stripe error:', err);
       setError(err.message || 'An unexpected error occurred.');
       onPaymentComplete({ success: false, error: err.message || 'An unexpected error occurred.' });
     } finally {

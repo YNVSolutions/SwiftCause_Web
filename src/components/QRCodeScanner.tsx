@@ -65,7 +65,6 @@ export function QRCodeScanner({ onScanSuccess, onScanError, isActive, onClose }:
         };
       }
     } catch (err) {
-      console.error('Camera access error:', err);
       setHasPermission(false);
       setError('Camera access denied or not available');
       onScanError('Camera access denied or not available');

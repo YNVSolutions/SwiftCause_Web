@@ -21,7 +21,6 @@ export async function getDonations(organizationId: string): Promise<Donation[]> 
 
     return formattedDonations;
   } catch (error) {
-    console.error('Error in donations service:', error);
     throw new Error('Could not retrieve donation data. Please try again.');
   }
 }
