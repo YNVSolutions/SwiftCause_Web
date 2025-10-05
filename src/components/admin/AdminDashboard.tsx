@@ -603,7 +603,7 @@ export function AdminDashboard({
     );
   };
   
-  const navItems = [
+  const navItems: Array<{ screen: Screen; permission: Permission | 'view_dashboard'; icon: React.ReactNode; label: string }> = [
     { screen: "admin-dashboard", permission: "view_dashboard", icon: <LayoutDashboard className="w-5 h-5" />, label: "Overview" },
     { screen: "admin-campaigns", permission: "view_campaigns", icon: <Megaphone className="w-5 h-5" />, label: "Campaigns" },
     { screen: "admin-kiosks", permission: "view_kiosks", icon: <Monitor className="w-5 h-5" />, label: "Kiosks" },
@@ -770,9 +770,9 @@ export function AdminDashboard({
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Total Raised</p>
-                    <p className="font-semibold text-gray-900 whitespace-nowrap text-[clamp(1.25rem,4vw,1.75rem)]">
+                    <div className="font-semibold text-gray-900 whitespace-nowrap text-[clamp(1.25rem,4vw,1.75rem)]">
                       {loading ? <Skeleton className="h-8 w-24 mt-1" /> : formatLargeCurrency(stats.totalRaised)}
-                    </p>
+                    </div>
                   </div>
                   <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
                     <DollarSign className="h-6 w-6 text-green-600" />
@@ -785,9 +785,9 @@ export function AdminDashboard({
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Total Donations</p>
-                    <p className="font-semibold text-gray-900 whitespace-nowrap text-[clamp(1.25rem,4vw,1.75rem)]">
+                    <div className="font-semibold text-gray-900 whitespace-nowrap text-[clamp(1.25rem,4vw,1.75rem)]">
                       {loading ? <Skeleton className="h-8 w-16 mt-1" /> : formatNumber(stats.totalDonations)}
-                    </p>
+                    </div>
                   </div>
                   <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Heart className="h-6 w-6 text-blue-600" />
@@ -800,9 +800,9 @@ export function AdminDashboard({
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Active Campaigns</p>
-                    <p className="font-semibold text-gray-900 whitespace-nowrap text-[clamp(1.25rem,4vw,1.75rem)]">
+                    <div className="font-semibold text-gray-900 whitespace-nowrap text-[clamp(1.25rem,4vw,1.75rem)]">
                       {loading ? <Skeleton className="h-8 w-12 mt-1" /> : stats.activeCampaigns}
-                    </p>
+                    </div>
                   </div>
                   <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Globe className="h-6 w-6 text-purple-600" />
@@ -815,9 +815,9 @@ export function AdminDashboard({
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Active Kiosks</p>
-                    <p className="font-semibold text-gray-900 whitespace-nowrap text-[clamp(1.25rem,4vw,1.75rem)]">
+                    <div className="font-semibold text-gray-900 whitespace-nowrap text-[clamp(1.25rem,4vw,1.75rem)]">
                       {loading ? <Skeleton className="h-8 w-12 mt-1" /> : stats.activeKiosks}
-                    </p>
+                    </div>
                   </div>
                   <div className="h-12 w-12 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Settings className="h-6 w-6 text-orange-600" />
