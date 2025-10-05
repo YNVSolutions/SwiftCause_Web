@@ -44,7 +44,6 @@ export const useOrganization = (organizationId: string | null) => {
         setLoading(false);
       },
       (e) => {
-        console.error("Error fetching organization:", e);
         setError("Failed to load organization data.");
         setLoading(false);
       }

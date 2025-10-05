@@ -19,7 +19,6 @@ export function useCampaignManagement(organizationId?: string) {
       const downloadURL = await getDownloadURL(snapshot.ref);
       return downloadURL;
     } catch (error) {
-      console.error("Error uploading file:", error);
       throw new Error("Failed to upload file.");
     }
   }, []);

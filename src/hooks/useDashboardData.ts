@@ -154,7 +154,6 @@ export function useDashboardData(organizationId?: string) {
       setAlerts(offlineKioskAlerts);
 
     } catch (e) {
-      console.error("Failed to fetch dashboard data:", e);
       setError('Could not load dashboard data. Please try refreshing.');
     } finally {
       setLoading(false);
