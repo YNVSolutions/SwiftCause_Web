@@ -9,7 +9,6 @@ export async function fetchAllDonations(organizationId: string): Promise<Documen
     const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {
-      console.log('No donations found.');
       return [];
     }
 
@@ -20,7 +19,6 @@ export async function fetchAllDonations(organizationId: string): Promise<Documen
 
     return donations;
   } catch (error) {
-    console.error('Error fetching donations:', error);
     throw new Error('Failed to fetch donation data.');
   }
 }

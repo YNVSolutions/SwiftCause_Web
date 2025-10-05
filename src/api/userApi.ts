@@ -45,7 +45,6 @@ export async function fetchAllUsers(organizationId?: string): Promise<DocumentDa
       return Object.assign(userObject, firestoreData);
     });
   } catch (error) {
-    console.error('Error fetching users:', error);
     throw new Error('Failed to fetch user data from the server.');
   }
 }
@@ -55,7 +54,6 @@ export async function updateUser(userId: string, data: Partial<User>): Promise<a
     const result = await callAuthenticatedFunction('updateUser', 'POST', { userId, data });
     return result;
   } catch (error) {
-    console.error('Error updating user:', error);
     throw error;
   }
 }
@@ -72,7 +70,6 @@ export async function createUser(userData: {
     const result = await callAuthenticatedFunction('createUser', 'POST', userData);
     return result;
   } catch (error) {
-    console.error('Error calling createUser function:', error);
     throw error;
   }
 }
@@ -82,7 +79,6 @@ export async function deleteUser(userId: string): Promise<any> {
     const result = await callAuthenticatedFunction('deleteUser', 'POST', { userId });
     return result;
   } catch (error) {
-    console.error('Error calling deleteUser function:', error);
     throw error;
   }
 }

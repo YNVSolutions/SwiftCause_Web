@@ -300,12 +300,7 @@ export default function App() {
 
 
   useEffect(() => {
-    console.log("App: onAuthStateChanged listener set up.");
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      console.log(
-        "App: onAuthStateChanged triggered. FirebaseUser:",
-        firebaseUser
-      );
       if (firebaseUser) {
 
         const userDocRef = doc(db, "users", firebaseUser.uid);
@@ -335,15 +330,10 @@ export default function App() {
 
         } else {
          
-          console.warn(
-            "App: User document not found for UID:",
-            firebaseUser.uid
-          );
+          
           handleLogout();
         }
       } else {
-      
-        console.log("App: Firebase user is signed out.");
         handleLogout(); 
         setCurrentScreen("home"); 
       }
@@ -355,7 +345,6 @@ export default function App() {
 
 
   const navigate = (screen: string) => {
-    console.log("App: navigate called with screen:", screen);
     setCurrentScreen(screen as Screen);
   };
 
@@ -364,12 +353,10 @@ export default function App() {
     if (userRole && !isLoadingAuth) {
       if (userRole === "admin" || userRole === "super_admin" || userRole === "manager" || userRole === "operator" || userRole === "viewer") {
         if (currentScreen !== "admin-dashboard" && currentScreen !== "admin-campaigns" && currentScreen !== "admin-kiosks" && currentScreen !== "admin-donations" && currentScreen !== "admin-users" && currentScreen !== "admin-compliance") {
-          console.log("Redirecting admin user to dashboard");
           navigate("admin-dashboard");
         }
       } else if (userRole === "kiosk") {
         if (currentScreen !== "campaigns" && currentScreen !== "campaign" && currentScreen !== "payment" && currentScreen !== "result" && currentScreen !== "email-confirmation") {
-          console.log("Redirecting kiosk user to campaigns");
           navigate("campaigns");
         }
       }
@@ -433,13 +420,10 @@ export default function App() {
             ...(kioskSnap.data() as Kiosk),
           }));
         } else {
-          console.warn(
-            "Kiosk document not found during refresh:",
-            targetKioskId
-          );
+          
         }
       } catch (error) {
-        console.error("Error refreshing kiosk session:", error);
+        
       }
     }
   };
@@ -553,10 +537,8 @@ export default function App() {
       showToast("Signup successful", "success");
     } catch (error) {
       if (error instanceof Error) {
-        console.error("Signup error:", error);
         showToast(`Signup failed: ${error.message}`, "error", 3500);
       } else {
-        console.error("Unknown signup error:", error);
         showToast("Signup failed due to an unknown error.", "error", 3500);
       }
     }
@@ -581,17 +563,7 @@ export default function App() {
     );
   }
 
- 
-  console.log("App render state:", {
-    userRole,
-    currentScreen,
-    hasAdminSession: !!currentAdminSession,
-    hasKioskSession: !!currentKioskSession,
-    isLoadingAuth
-  });
-
-
-
+  
 
   if (userRole && !currentAdminSession && !currentKioskSession) {
     return (
