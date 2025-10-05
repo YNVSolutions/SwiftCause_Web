@@ -43,7 +43,6 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
       kioskId: donation.kioskId || null, 
       ...(isAnonymous ? {} : { donorName, donorEmail, donorPhone, donorMessage }), 
     };
-    console.log('PaymentScreen - handleSubmit: Final metadata object', metadata);
     await handlePaymentSubmit(donation.amount, metadata, organizationCurrency || 'USD'); 
   };
 

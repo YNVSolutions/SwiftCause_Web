@@ -61,7 +61,6 @@ export function CampaignListScreen({
         await updateKiosk(kioskSession.kioskId, { settings: { ...kioskSession.settings, displayMode: newLayout } });
         await refreshCurrentKioskSession(); // Refresh kiosk session to get updated settings
       } catch (e) {
-        console.error("Failed to update kiosk display mode:", e);
       }
     }
   };

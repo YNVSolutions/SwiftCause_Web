@@ -24,7 +24,7 @@ export const OrganizationSwitcher: React.FC<OrganizationSwitcherProps> = ({ user
                 const orgs = await getOrganizations();
                 setOrganizations(orgs as Organization[]);
             } catch (error) {
-                console.error("Failed to fetch organizations:", error);
+                
             } finally {
                 setLoading(false);
             }
