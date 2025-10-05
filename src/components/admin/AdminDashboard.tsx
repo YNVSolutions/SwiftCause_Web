@@ -63,7 +63,11 @@ import {
   Play,
   TriangleAlert,
   Menu,
-  X
+  X,
+  LayoutDashboard,
+  Megaphone,
+  Fingerprint,
+  FileText
 } from "lucide-react";
 import {
   Dialog,
@@ -102,6 +106,7 @@ interface AdminDashboardProps {
   userSession: AdminSession;
   hasPermission: (permission: Permission) => boolean;
   onOrganizationSwitch: (organizationId: string) => void;
+  currentScreen: Screen;
 }
 
 const CHART_COLORS = [
@@ -123,6 +128,7 @@ export function AdminDashboard({
   userSession,
   hasPermission,
   onOrganizationSwitch,
+  currentScreen
 }: AdminDashboardProps) {
   const { stats, recentActivities, alerts, loading, error, refreshDashboard } =
     useDashboardData(userSession.user.organizationId);
@@ -286,7 +292,7 @@ export function AdminDashboard({
       color: "bg-red-50 text-red-600 border-red-200",
     },
     {
-      icon: <Shield className="w-6 h-6" />,
+      icon: <Fingerprint className="w-6 h-6" />,
       title: "AML Identity Verification",
       description:
         "Built-in Stripe Identity flow for secure, compliant user verification",
@@ -298,7 +304,7 @@ export function AdminDashboard({
       color: "bg-emerald-50 text-emerald-700 border-emerald-200",
     },
     {
-      icon: <BarChart3 className="w-6 h-6" />,
+      icon: <FileText className="w-6 h-6" />,
       title: "Compliance Dashboard",
       description:
         "Admin-only audit logs and reporting to monitor sensitive actions",
@@ -476,6 +482,7 @@ export function AdminDashboard({
           setCategoryData(formattedCategoryData);
         }
       } catch (error) {
+          console.error("Error fetching chart data:", error);
       }
     };
 
@@ -568,113 +575,120 @@ export function AdminDashboard({
       </div>
     );
   }
-
-  // Sidebar navigation items
-  const SidebarNav = () => (
-    <nav className="mt-4 space-y-1">
-      {hasPermission("view_dashboard") && (
-        <Button variant="ghost" className="w-full justify-start" onClick={() => { onNavigate("admin-dashboard"); setIsSidebarOpen(false); }}>Overview</Button>
-      )}
-      {hasPermission("view_campaigns") && (
-        <Button variant="ghost" className="w-full justify-start" onClick={() => { onNavigate("admin-campaigns"); setIsSidebarOpen(false); }}>Campaigns</Button>
-      )}
-      {hasPermission("view_kiosks") && (
-        <Button variant="ghost" className="w-full justify-start" onClick={() => { onNavigate("admin-kiosks"); setIsSidebarOpen(false); }}>Kiosks</Button>
-      )}
-      {hasPermission("view_donations") && (
-        <Button variant="ghost" className="w-full justify-start" onClick={() => { onNavigate("admin-donations"); setIsSidebarOpen(false); }}>Donations</Button>
-      )}
-      {hasPermission("view_users") && (
-        <Button variant="ghost" className="w-full justify-start" onClick={() => { onNavigate("admin-users"); setIsSidebarOpen(false); }}>Users</Button>
-      )}
-      {hasPermission("system_admin") && (
-        <Button variant="ghost" className="w-full justify-start" onClick={() => { onNavigate("admin-compliance"); setIsSidebarOpen(false); }}>Compliance</Button>
-      )}
-    </nav>
-  );
+  
+  const NavLink = ({ screen, permission, icon, label }: { screen: Screen; permission: Permission | 'view_dashboard'; icon: React.ReactNode; label: string }) => {
+    if (permission === 'view_dashboard' ? !hasPermission('view_dashboard') && !hasPermission('system_admin') : !hasPermission(permission)) {
+      return null;
+    }
+    
+    const isActive = currentScreen === screen;
+    
+    return (
+      <Button
+        variant="ghost"
+        className={`w-full justify-start items-center group transition-colors duration-200 ${
+          isActive
+            ? "bg-indigo-100 text-indigo-700 font-semibold"
+            : "text-slate-300 hover:bg-slate-700 hover:text-white"
+        }`}
+        onClick={() => {
+          onNavigate(screen);
+          setIsSidebarOpen(false);
+        }}
+      >
+        <div className={`w-1 h-5 rounded-r-lg mr-3 transition-colors duration-200 ${isActive ? 'bg-indigo-500' : 'bg-transparent group-hover:bg-slate-600'}`}></div>
+        {icon}
+        <span className="ml-3">{label}</span>
+      </Button>
+    );
+  };
+  
+  const navItems = [
+    { screen: "admin-dashboard", permission: "view_dashboard", icon: <LayoutDashboard className="w-5 h-5" />, label: "Overview" },
+    { screen: "admin-campaigns", permission: "view_campaigns", icon: <Megaphone className="w-5 h-5" />, label: "Campaigns" },
+    { screen: "admin-kiosks", permission: "view_kiosks", icon: <Monitor className="w-5 h-5" />, label: "Kiosks" },
+    { screen: "admin-donations", permission: "view_donations", icon: <TrendingUp className="w-5 h-5" />, label: "Donations" },
+    { screen: "admin-users", permission: "view_users", icon: <Users className="w-5 h-5" />, label: "Users" },
+    { screen: "admin-compliance", permission: "system_admin", icon: <Shield className="w-5 h-5" />, label: "Compliance" },
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Mobile overlay */}
+    <div className="min-h-screen bg-slate-50">
       {isSidebarOpen && (
-        <div className="fixed inset-0 bg-black/40 z-40 lg:hidden" onClick={() => setIsSidebarOpen(false)} />
+        <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={() => setIsSidebarOpen(false)} />
       )}
 
-      {/* Sidebar */}
       <aside
-        className={`fixed z-50 top-0 left-0 h-full w-64 bg-white border-r shadow-lg transform transition-transform duration-200 ease-in-out
-        ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 lg:static lg:z-auto`}
+        className={`fixed z-50 top-0 left-0 h-full w-64 bg-slate-800 text-white shadow-lg transform transition-transform duration-300 ease-in-out
+        ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
       >
-        <div className="h-16 border-b flex items-center justify-between px-4">
-          <div className="flex items-center space-x-2">
+        <div className="h-16 border-b border-slate-700 flex items-center justify-between px-4">
+          <div className="flex items-center space-x-3">
             <img src="/logo.png" className="h-8 w-8 rounded-md" alt="Logo" />
-            <span className="font-semibold">Admin</span>
+            <span className="font-semibold text-lg">Admin Panel</span>
           </div>
-          <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setIsSidebarOpen(false)}>
+          <Button variant="ghost" size="icon" className="lg:hidden text-slate-300 hover:text-white hover:bg-slate-700" onClick={() => setIsSidebarOpen(false)}>
             <X className="w-5 h-5" />
           </Button>
         </div>
-        <div className="px-3 py-2">
-          <SidebarNav />
-        </div>
+        <nav className="p-2 space-y-1">
+          {navItems.map(item => (
+            <NavLink key={item.screen} {...item} />
+          ))}
+        </nav>
       </aside>
 
-      {/* Content wrapper with left padding on large screens */}
       <div className="lg:pl-64">
-        <header className="bg-white shadow-sm border-b sticky top-0 z-30">
-          <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between h-auto sm:h-16 gap-4">
+        <header className="bg-white/80 backdrop-blur-lg shadow-sm border-b sticky top-0 z-30">
+          <div className="max-w-screen-2xl mx-auto">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-3 sm:py-0 px-4 sm:px-6 lg:px-8 sm:h-16">
               <div className="flex items-center gap-2 w-full sm:w-auto">
                 <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setIsSidebarOpen(true)} aria-label="Open menu">
                   <Menu className="w-5 h-5" />
                 </Button>
-                <div className="flex h-12 w-12 items-center justify-center mb-0">
-                  <img src="/logo.png" className="h-12 w-12 rounded-xl shadow-md" alt="My Logo" />
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center space-x-2">
-                    <h1 className="text-xl font-semibold text-gray-900 truncate">
-                      Admin Dashboard
-                    </h1>
-                    {organization && (
-                      <span className="ml-1 text-lg font-bold text-indigo-700 truncate">
-                        - {organization.name}
-                      </span>
-                    )}
+                <div className="flex items-center min-w-0">
+                  <div className="flex-shrink-0 h-10 w-10 items-center justify-center mr-2 hidden sm:flex">
+                     <img src="/logo.png" className="h-10 w-10 rounded-lg shadow-sm" alt="My Logo" />
                   </div>
-                  <p className="text-sm text-gray-600 truncate">Welcome back, {userSession.user.username}</p>
-                </div>
-                {userSession.user.role === 'super_admin' && hasPermission('system_admin') && (
-                  <div className="ml-auto sm:ml-4">
-                    <OrganizationSwitcher userSession={userSession} onOrganizationChange={onOrganizationSwitch} />
+                  <div className="min-w-0">
+                    <div className="flex items-center space-x-2">
+                      <h1 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">
+                        Admin Dashboard
+                      </h1>
+                      {organization && (
+                        <span className="hidden md:inline-block ml-1 text-lg font-bold text-indigo-700 truncate">
+                          - {organization.name}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-600 truncate">Welcome back, {userSession.user.username}</p>
                   </div>
-                )}
+                </div>
               </div>
-              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+                {userSession.user.role === 'super_admin' && hasPermission('system_admin') && (
+                  <OrganizationSwitcher userSession={userSession} onOrganizationChange={onOrganizationSwitch} />
+                )}
                 {organization && organization.stripe && (
                   <Dialog open={showStripeStatusDialog} onOpenChange={setShowStripeStatusDialog}>
                     <DialogTrigger asChild>
                       <Button
                         variant="ghost"
-                        size="lg"
-                        className={`relative rounded-full p-2.5 
+                        size="sm"
+                        className={`relative rounded-full p-2
                         ${!organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled
                           ? 'text-red-600 hover:text-red-700 bg-red-100'
                           : 'text-green-600 hover:text-green-700 bg-green-100'
                         }`}
                         aria-label="Stripe Status"
                       >
-                        <CreditCard className="h-6 w-6" />
+                        <CreditCard className="h-5 w-5" />
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-[425px]">
                       <DialogHeader>
                         <DialogTitle className="flex items-center space-x-2">
-                          {!organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled ? (
-                            <CreditCard className="h-5 w-5 text-red-600" />
-                          ) : (
-                            <CreditCard className="h-5 w-5 text-green-600" />
-                          )}
+                          <CreditCard className={`h-5 w-5 ${!organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled ? 'text-red-600' : 'text-green-600'}`} />
                           <span>Stripe Account Status</span>
                         </DialogTitle>
                         <DialogDescription>
@@ -682,86 +696,58 @@ export function AdminDashboard({
                         </DialogDescription>
                       </DialogHeader>
                       <div className="grid gap-4 py-4">
-                        {orgLoading ? (
-                          <p>Loading organization data...</p>
-                        ) : orgError ? (
-                          <p className="text-red-500">Error: {orgError}</p>
-                        ) : organization &&
-                          organization.stripe &&
-                          !organization.stripe.chargesEnabled ? (
+                        {orgLoading ? ( <p>Loading...</p> ) : orgError ? ( <p className="text-red-500">Error: {orgError}</p> ) 
+                          : organization?.stripe && !organization.stripe.chargesEnabled ? (
                           <>
-                            <p className="text-sm text-yellow-700">
-                              Your organization needs to complete Stripe onboarding to accept donations and receive payouts.
-                            </p>
-                            <Button
-                              onClick={handleStripeOnboarding}
-                              className="bg-yellow-600 hover:bg-yellow-700"
-                              disabled={isStripeOnboardingLoading}
-                            >
-                              {isStripeOnboardingLoading ? (
-                                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                              ) : (
-                                <CreditCard className="w-4 h-4 mr-2" />
-                              )}
-                              {isStripeOnboardingLoading ? "Processing..." : "Complete Stripe Onboarding"}
+                            <p className="text-sm text-yellow-700">Onboarding is required to accept donations.</p>
+                            <Button onClick={handleStripeOnboarding} className="bg-yellow-600 hover:bg-yellow-700" disabled={isStripeOnboardingLoading}>
+                              {isStripeOnboardingLoading ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <CreditCard className="w-4 h-4 mr-2" />}
+                              {isStripeOnboardingLoading ? "Processing..." : "Complete Onboarding"}
                             </Button>
                           </>
-                        ) : organization &&
-                          organization.stripe &&
-                          organization.stripe.chargesEnabled &&
-                          !organization.stripe.payoutsEnabled ? (
-                          <p className="text-sm text-blue-700">
-                            Your Stripe account is being reviewed. Payouts will be enabled shortly.
-                          </p>
+                        ) : organization?.stripe && organization.stripe.chargesEnabled && !organization.stripe.payoutsEnabled ? (
+                          <p className="text-sm text-blue-700">Account under review. Payouts will be enabled shortly.</p>
                         ) : (
-                          <p className="text-sm text-green-700">
-                            Your Stripe account is fully configured and ready to accept donations and process payouts.
-                          </p>
+                          <p className="text-sm text-green-700">Your Stripe account is fully configured and ready.</p>
                         )}
                       </div>
                       <DialogFooter>
-                        <DialogClose asChild>
-                          <Button type="button" variant="secondary">
-                            Close
-                          </Button>
-                        </DialogClose>
+                        <DialogClose asChild><Button type="button" variant="secondary">Close</Button></DialogClose>
                       </DialogFooter>
                     </DialogContent>
                   </Dialog>
                 )}
                 <Button variant="outline" size="sm" onClick={handleRefresh} disabled={loading} className="flex items-center space-x-2">
                   <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-                  <span>Refresh</span>
+                  <span className="hidden sm:inline">Refresh</span>
                 </Button>
-                <div className="ml-0 sm:ml-1">
-                  <Verification />
-                </div>
+                <Verification />
                 <Button variant="ghost" size="sm" onClick={onLogout} className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
                   <LogOut className="w-4 h-4" />
-                  <span>Logout</span>
+                  <span className="hidden sm:inline">Logout</span>
                 </Button>
               </div>
             </div>
           </div>
         </header>
 
-        <main className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <main className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
           {stripeStatusMessage && (
             <Card className={`mb-8 ${stripeStatusMessage.type === 'success' ? 'border-green-400 bg-green-50 text-green-800' : stripeStatusMessage.type === 'warning' ? 'border-yellow-400 bg-yellow-50 text-yellow-800' : 'border-red-400 bg-red-50 text-red-800'}`}>
               <CardContent className="flex items-center space-x-3 p-4">
                 {stripeStatusMessage.type === 'success' && <CheckCircle className="w-5 h-5" />}
                 {stripeStatusMessage.type === 'warning' && <AlertCircle className="w-5 h-5" />}
                 {stripeStatusMessage.type === 'error' && <AlertCircle className="w-5 h-5" />}
-                <p className="font-medium">{stripeStatusMessage.message}</p>
+                <p className="font-medium text-sm sm:text-base">{stripeStatusMessage.message}</p>
               </CardContent>
             </Card>
           )}
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
             <div>
-              <h2 className="text-2xl text-gray-900">Overview</h2>
-              <p className="text-gray-600 text-sm sm:text-base">
-                Manage campaigns, configure kiosks, and track donations across your organization
+              <h2 className="text-2xl font-bold text-gray-900">Overview</h2>
+              <p className="text-gray-600 mt-1">
+                Manage campaigns, kiosks, and track donations across your organization.
               </p>
             </div>
             <div className="flex flex-col sm:flex-row items-stretch gap-2 w-full sm:w-auto">
@@ -772,81 +758,68 @@ export function AdminDashboard({
               )}
               {hasPermission("view_kiosks") && (
                 <Button variant="outline" onClick={() => onNavigate("admin-kiosks")} className="w-full sm:w-auto">
-                  <Settings className="w-4 h-4 mr-2" />Manage Kiosks
-                </Button>
-              )}
-              {hasPermission("system_admin") && (
-                <Button variant="outline" onClick={() => onNavigate("admin-compliance")} className="w-full sm:w-auto">
-                  <Shield className="w-4 h-4 mr-2" />Compliance
+                  <Monitor className="w-4 h-4 mr-2" />Manage Kiosks
                 </Button>
               )}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <Card>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <Card className="transition-shadow hover:shadow-lg">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">
-                      Total Raised
-                    </p>
-                    <p className="font-semibold text-gray-900 whitespace-nowrap text-[clamp(1.125rem,4vw,1.5rem)]">
-                      {loading ? "..." : formatLargeCurrency(stats.totalRaised)}
+                    <p className="text-sm font-medium text-gray-600">Total Raised</p>
+                    <p className="font-semibold text-gray-900 whitespace-nowrap text-[clamp(1.25rem,4vw,1.75rem)]">
+                      {loading ? <Skeleton className="h-8 w-24 mt-1" /> : formatLargeCurrency(stats.totalRaised)}
                     </p>
                   </div>
-                  <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
+                  <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
                     <DollarSign className="h-6 w-6 text-green-600" />
                   </div>
                 </div>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="transition-shadow hover:shadow-lg">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">
-                      Total Donations
-                    </p>
-                    <p className="text-2xl font-semibold text-gray-900">
-                      {loading ? "..." : formatNumber(stats.totalDonations)}
+                    <p className="text-sm font-medium text-gray-600">Total Donations</p>
+                    <p className="font-semibold text-gray-900 whitespace-nowrap text-[clamp(1.25rem,4vw,1.75rem)]">
+                      {loading ? <Skeleton className="h-8 w-16 mt-1" /> : formatNumber(stats.totalDonations)}
                     </p>
                   </div>
-                  <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Heart className="h-6 w-6 text-blue-600" />
                   </div>
                 </div>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="transition-shadow hover:shadow-lg">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">
-                      Active Campaigns
-                    </p>
-                    <p className="text-2xl font-semibold text-gray-900">
-                      {loading ? "..." : stats.activeCampaigns}
+                    <p className="text-sm font-medium text-gray-600">Active Campaigns</p>
+                    <p className="font-semibold text-gray-900 whitespace-nowrap text-[clamp(1.25rem,4vw,1.75rem)]">
+                      {loading ? <Skeleton className="h-8 w-12 mt-1" /> : stats.activeCampaigns}
                     </p>
                   </div>
-                  <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Globe className="h-6 w-6 text-purple-600" />
                   </div>
                 </div>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="transition-shadow hover:shadow-lg">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">
-                      Active Kiosks
-                    </p>
-                    <p className="text-2xl font-semibold text-gray-900">
-                      {loading ? "..." : stats.activeKiosks}
+                    <p className="text-sm font-medium text-gray-600">Active Kiosks</p>
+                    <p className="font-semibold text-gray-900 whitespace-nowrap text-[clamp(1.25rem,4vw,1.75rem)]">
+                      {loading ? <Skeleton className="h-8 w-12 mt-1" /> : stats.activeKiosks}
                     </p>
                   </div>
-                  <div className="h-12 w-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                  <div className="h-12 w-12 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Settings className="h-6 w-6 text-orange-600" />
                   </div>
                 </div>
@@ -856,50 +829,29 @@ export function AdminDashboard({
 
           <Collapsible open={showFeatures} onOpenChange={setShowFeatures}>
             <CollapsibleTrigger asChild>
-              <Button
-                variant="ghost"
-                className="w-full justify-between p-2 h-auto mb-2 "
-              >
+              <Button variant="ghost" className="w-full justify-between p-2 h-auto mb-2 " >
                 <div className="flex items-center space-x-2">
                   <Rocket className="w-5 h-5 text-indigo-600" />
-                  <h3 className="text-xl font-semibold text-gray-900">
-                    Platform Features
-                  </h3>
+                  <h3 className="text-xl font-semibold text-gray-900">Platform Features</h3>
                 </div>
-                {showFeatures ? (
-                  <ChevronDown className="w-5 h-5" />
-                ) : (
-                  <ChevronRight className="w-5 h-5" />
-                )}
+                {showFeatures ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-4 mb-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {platformFeatures.map((feature, index) => (
-                  <Card
-                    key={index}
-                    className="hover:shadow-md transition-shadow"
-                  >
+                  <Card key={index} className="hover:shadow-xl transition-shadow duration-300">
                     <CardContent className="p-6">
-                      <div
-                        className={`inline-flex p-3 rounded-lg ${feature.color} mb-4`}
-                      >
+                      <div className={`inline-flex p-3 rounded-lg ${feature.color} mb-4`}>
                         {feature.icon}
                       </div>
-                      <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                        {feature.title}
-                      </h4>
-                      <p className="text-gray-600 mb-4">
-                        {feature.description}
-                      </p>
+                      <h4 className="text-lg font-semibold text-gray-900 mb-2">{feature.title}</h4>
+                      <p className="text-gray-600 mb-4 text-sm">{feature.description}</p>
                       <ul className="space-y-2">
                         {feature.benefits.map((benefit, idx) => (
-                          <li
-                            key={idx}
-                            className="flex items-center text-sm text-gray-600"
-                          >
-                            <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                            {benefit}
+                          <li key={idx} className="flex items-center text-sm text-gray-600">
+                            <CheckCircle className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
+                            <span>{benefit}</span>
                           </li>
                         ))}
                       </ul>
@@ -910,73 +862,41 @@ export function AdminDashboard({
             </CollapsibleContent>
           </Collapsible>
 
-          <Collapsible
-            open={showGettingStarted}
-            onOpenChange={setShowGettingStarted}
-          >
+          <Collapsible open={showGettingStarted} onOpenChange={setShowGettingStarted}>
             <CollapsibleTrigger asChild>
-              <Button
-                variant="ghost"
-                className="w-full justify-between p-2 h-auto mb-2"
-              >
+              <Button variant="ghost" className="w-full justify-between p-2 h-auto mb-2">
                 <div className="flex items-center space-x-2">
                   <BookOpen className="w-5 h-5 text-green-600" />
-                  <h3 className="text-xl font-semibold text-gray-900">
-                    Getting Started
-                  </h3>
+                  <h3 className="text-xl font-semibold text-gray-900">Getting Started</h3>
                 </div>
-                {showGettingStarted ? (
-                  <ChevronDown className="w-5 h-5" />
-                ) : (
-                  <ChevronRight className="w-5 h-5" />
-                )}
+                {showGettingStarted ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-4 mb-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {gettingStartedSteps.map((step, index) => (
-                  <Card
-                    key={index}
-                    className={`${
-                      step.canAccess
-                        ? "hover:shadow-md transition-shadow"
-                        : "opacity-60"
-                    }`}
-                  >
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {gettingStartedSteps.map((step) => (
+                  <Card key={step.step} className={`${step.canAccess ? "hover:shadow-xl transition-shadow duration-300" : "opacity-60"}`}>
                     <CardContent className="p-6">
                       <div className="flex items-start space-x-4">
-                        <div className="flex items-center justify-center w-8 h-8 bg-indigo-100 text-indigo-600 rounded-full text-sm font-semibold">
-                          {step.step}
-                        </div>
+                        <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 bg-indigo-100 text-indigo-600 rounded-full text-sm font-semibold">{step.step}</div>
                         <div className="flex-1">
                           <div className="flex items-center space-x-2 mb-2">
                             <div className="text-indigo-600">{step.icon}</div>
-                            <h4 className="font-semibold text-gray-900">
-                              {step.title}
-                            </h4>
+                            <h4 className="font-semibold text-gray-900">{step.title}</h4>
                           </div>
-                          <p className="text-gray-600 mb-4">
-                            {step.description}
-                          </p>
+                          <p className="text-gray-600 mb-4 text-sm">{step.description}</p>
                           <div className="flex items-center justify-between">
                             {step.canAccess ? (
-                              <Button
-                                onClick={step.actionFunction}
-                                size="sm"
-                                className="bg-indigo-600 hover:bg-indigo-700"
-                              >
+                              <Button onClick={step.actionFunction} size="sm" className="bg-indigo-600 hover:bg-indigo-700">
                                 <Play className="w-4 h-4 mr-2" />
                                 {step.action}
                               </Button>
                             ) : (
                               <Badge variant="secondary" className="text-xs">
-                                <HelpCircle className="w-3 h-3 mr-1" />
-                                Requires permission
+                                <HelpCircle className="w-3 h-3 mr-1" /> Requires permission
                               </Badge>
                             )}
-                            <span className="text-xs text-gray-500">
-                              ~{step.estimated}
-                            </span>
+                            <span className="text-xs text-gray-500">~{step.estimated}</span>
                           </div>
                         </div>
                       </div>
@@ -985,25 +905,20 @@ export function AdminDashboard({
                 ))}
               </div>
 
-              <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+              <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2 text-blue-900">
-                    <Lightbulb className="w-5 h-5" />
-                    <span>Quick Tips</span>
+                    <Lightbulb className="w-5 h-5" /><span>Quick Tips</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
                     {quickTips.map((tip, index) => (
                       <div key={index} className="flex items-start space-x-3">
                         <div className="flex-shrink-0">{tip.icon}</div>
                         <div>
-                          <h5 className="font-medium text-gray-900 mb-1">
-                            {tip.title}
-                          </h5>
-                          <p className="text-sm text-gray-600">
-                            {tip.description}
-                          </p>
+                          <h5 className="font-medium text-gray-900 mb-1 text-sm">{tip.title}</h5>
+                          <p className="text-xs text-gray-600">{tip.description}</p>
                         </div>
                       </div>
                     ))}
@@ -1012,29 +927,18 @@ export function AdminDashboard({
               </Card>
             </CollapsibleContent>
           </Collapsible>
-        </div>
-
+        
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Campaign Goal Comparison</CardTitle>
-            </CardHeader>
+          <Card className="transition-shadow hover:shadow-lg">
+            <CardHeader><CardTitle>Campaign Goal Comparison</CardTitle></CardHeader>
             <CardContent>
-              {loading ? (
-                <div className="space-y-4">
-                  <Skeleton className="h-[300px] w-full" />
-                </div>
-              ) : goalComparisonData.length > 0 ? (
+              {loading ? ( <Skeleton className="h-[300px] w-full" /> ) : goalComparisonData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={goalComparisonData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" tick={false} />
-                    <YAxis
-                      tickFormatter={(value) => formatShortCurrency(value as number)}
-                    />
-                    <Tooltip
-                      formatter={(value) => formatShortCurrency(value as number)}
-                    />
+                    <YAxis tickFormatter={(value) => formatShortCurrency(value as number)} />
+                    <Tooltip formatter={(value) => formatShortCurrency(value as number)} />
                     <Legend />
                     <Bar dataKey="Collected" fill="#10B981" />
                     <Bar dataKey="Goal" fill="#94A3B8" />
@@ -1044,175 +948,88 @@ export function AdminDashboard({
                 <div className="text-center py-8 text-gray-500">
                   <Target className="mx-auto h-12 w-12 text-gray-400 mb-3" />
                   <p className="text-lg font-medium mb-2">No Campaigns Yet</p>
-                  <p className="text-sm mb-4">
-                    Start by creating your first fundraising campaign to track progress.
-                  </p>
-                  {hasPermission("create_campaign") && (
-                    <Button onClick={() => onNavigate("admin-campaigns")}>
-                      <Plus className="w-4 h-4 mr-2" /> Create New Campaign
-                    </Button>
-                  )}
+                  <p className="text-sm mb-4">Create your first campaign to track progress.</p>
+                  {hasPermission("create_campaign") && ( <Button onClick={() => onNavigate("admin-campaigns")}><Plus className="w-4 h-4 mr-2" />Create Campaign</Button> )}
                 </div>
               )}
             </CardContent>
           </Card>
 
-          <Card className="flex flex-col">
-            <CardHeader>
-              <CardTitle>Campaign Categories</CardTitle>
-            </CardHeader>
+          <Card className="flex flex-col transition-shadow hover:shadow-lg">
+            <CardHeader><CardTitle>Campaign Categories</CardTitle></CardHeader>
             <CardContent className="flex-1 flex flex-col">
               {loading ? (
                 <div className="space-y-4">
                   <Skeleton className="h-[220px] w-full mb-4" />
                   <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-                    {Array.from({ length: 4 }).map((_, i) => (
-                      <Skeleton key={i} className="h-5 w-full" />
-                    ))}
+                    {Array.from({ length: 4 }).map((_, i) => (<Skeleton key={i} className="h-5 w-full" />))}
                   </div>
                 </div>
               ) : categoryData.length > 0 ? (
-                <div className="flex-1">
-                  <ResponsiveContainer width="100%" height={220}>
-                    <PieChart>
-                      <Pie
-                        data={categoryData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={100}
-                        paddingAngle={5}
-                        dataKey="value"
-                        nameKey="name"
-                      >
-                        {categoryData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value, name) => [`${value}%`, name]} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
+                <>
+                  <div className="flex-1">
+                    <ResponsiveContainer width="100%" height={220}>
+                      <PieChart>
+                        <Pie data={categoryData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value" nameKey="name">
+                          {categoryData.map((entry, index) => (<Cell key={`cell-${index}`} fill={entry.color} />))}
+                        </Pie>
+                        <Tooltip formatter={(value, name) => [`${value}%`, name]} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="mt-4 border-t pt-4">
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                      {displayedCategories.map((entry) => (
+                        <div key={entry.name} className="flex items-center justify-between text-sm">
+                          <div className="flex items-center gap-2 truncate">
+                            <span className="h-3 w-3 rounded-sm flex-shrink-0" style={{ backgroundColor: entry.color }} />
+                            <span className="text-gray-600 truncate">{entry.name}</span>
+                          </div>
+                          <span className="font-semibold text-gray-800">{entry.value}%</span>
+                        </div>
+                      ))}
+                    </div>
+                    {categoryData.length > 6 && (
+                      <Button variant="ghost" size="sm" className="w-full mt-3 text-indigo-600 hover:text-indigo-700" onClick={() => setIsLegendExpanded(!isLegendExpanded)}>
+                        {isLegendExpanded ? (<span className="flex items-center">Show Less <ChevronUp className="w-4 h-4 ml-1" /></span>) : (<span className="flex items-center">Show More <ChevronDown className="w-4 h-4 ml-1" /></span>)}
+                      </Button>
+                    )}
+                  </div>
+                </>
               ) : (
                 <div className="text-center py-8 text-gray-500">
                   <TriangleAlert className="mx-auto h-12 w-12 text-gray-400 mb-3" />
                   <p className="text-lg font-medium mb-2">No Categories Yet</p>
-                  <p className="text-sm mb-4">
-                      Start by creating your first fundraising campaign to track progress.
-                    </p>
-                    {hasPermission("create_campaign") && (
-                      <Button onClick={() => onNavigate("admin-campaigns")}>
-                        <Plus className="w-4 h-4 mr-2" /> Create New Campaign
-                      </Button>
-                    )}
+                  <p className="text-sm mb-4">Create campaigns with tags to see data here.</p>
+                  {hasPermission("create_campaign") && (<Button onClick={() => onNavigate("admin-campaigns")}><Plus className="w-4 h-4 mr-2" />Create Campaign</Button>)}
                 </div>
               )}
-              <div className="mt-4 border-t pt-4">
-                <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-                  {displayedCategories.map((entry) => (
-                    <div
-                      key={entry.name}
-                      className="flex items-center justify-between text-sm"
-                    >
-                      <div className="flex items-center gap-2 truncate">
-                        <span
-                          className="h-3 w-3 rounded-sm flex-shrink-0"
-                          style={{ backgroundColor: entry.color }}
-                        />
-                        <span className="text-gray-600 truncate">
-                          {entry.name}
-                        </span>
-                      </div>
-                      <span className="font-semibold text-gray-800">
-                        {entry.value}%
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                {categoryData.length > 6 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full mt-3 text-indigo-600 hover:text-indigo-700"
-                    onClick={() => setIsLegendExpanded(!isLegendExpanded)}
-                  >
-                    {isLegendExpanded ? (
-                      <span className="flex items-center">
-                        Show Less <ChevronUp className="w-4 h-4 ml-1" />
-                      </span>
-                    ) : (
-                      <span className="flex items-center">
-                        Show More <ChevronDown className="w-4 h-4 ml-1" />
-                      </span>
-                    )}
-                  </Button>
-                )}
-              </div>
             </CardContent>
           </Card>
         </div>
 
-        
         <div className="mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+          <Card className="transition-shadow hover:shadow-lg">
+            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
               <div>
                 <CardTitle>Top Performing Campaigns</CardTitle>
-                <CardDescription>
-                  Campaigns by fundraising progress
-                </CardDescription>
+                <CardDescription>Campaigns by fundraising progress</CardDescription>
               </div>
-              {hasPermission("view_campaigns") && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onNavigate("admin-campaigns")}
-                >
-                  View All
-                </Button>
-              )}
+              {hasPermission("view_campaigns") && (<Button variant="outline" size="sm" onClick={() => onNavigate("admin-campaigns")}>View All Campaigns</Button>)}
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {loading ? (
-                  Array.from({ length: 3 }).map((_, i) => (
-                    <div key={i} className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Skeleton className="h-5 w-3/4" />
-                        <Skeleton className="h-5 w-1/4" />
-                      </div>
-                      <Skeleton className="h-2 w-full" />
-                      <div className="flex justify-between text-xs text-gray-500">
-                        <Skeleton className="h-3 w-1/3" />
-                        <Skeleton className="h-3 w-1/4" />
-                      </div>
-                    </div>
-                  ))
-                ) : topCampaigns.length > 0 ? (
-                  topCampaigns.map((campaign: Campaign) => {
+                {loading ? ( Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="space-y-2 py-2"><div className="flex items-center justify-between"><Skeleton className="h-5 w-3/4" /><Skeleton className="h-5 w-1/4" /></div><Skeleton className="h-2 w-full" /></div>
+                  )) ) : topCampaigns.length > 0 ? ( topCampaigns.map((campaign: Campaign) => {
                     const collected = campaign.raised || 0;
                     const goal = campaign.goal || 1;
-                    const progress = Math.round((collected / goal) * 100);
+                    const progress = Math.min(Math.round((collected / goal) * 100), 100);
                     return (
                       <div key={campaign.id} className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-medium text-gray-900">
-                            {campaign.title}
-                          </h4>
-                          <div className="text-right">
-                            <p className="text-sm font-medium text-green-600">
-                              {formatCurrency(collected)}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {campaign.donationCount || 0} donors
-                            </p>
-                          </div>
-                        </div>
+                        <div className="flex items-center justify-between"><h4 className="font-medium text-gray-900 truncate pr-4">{campaign.title}</h4><div className="text-right flex-shrink-0"><p className="text-sm font-medium text-green-600">{formatCurrency(collected)}</p></div></div>
                         <Progress value={progress} className="h-2" />
-                        <div className="flex justify-between text-xs text-gray-500">
-                          <span>{progress}% complete</span>
-                          <span>Goal: {formatCurrency(goal)}</span>
-                        </div>
+                        <div className="flex justify-between text-xs text-gray-500"><span>{progress}% complete</span><span>Goal: {formatCurrency(goal)}</span></div>
                       </div>
                     );
                   })
@@ -1220,98 +1037,40 @@ export function AdminDashboard({
                   <div className="text-center py-8 text-gray-500">
                     <Target className="mx-auto h-12 w-12 text-gray-400 mb-3" />
                     <p className="text-lg font-medium mb-2">No Campaigns Yet</p>
-                    <p className="text-sm mb-4">
-                      Start by creating your first fundraising campaign to track progress.
-                    </p>
-                    {hasPermission("create_campaign") && (
-                      <Button onClick={() => onNavigate("admin-campaigns")}>
-                        <Plus className="w-4 h-4 mr-2" /> Create New Campaign
-                      </Button>
-                    )}
+                    <p className="text-sm mb-4">Create your first campaign to see progress.</p>
+                    {hasPermission("create_campaign") && (<Button onClick={() => onNavigate("admin-campaigns")}><Plus className="w-4 h-4 mr-2" />Create Campaign</Button>)}
                   </div>
                 )}
               </div>
             </CardContent>
           </Card>
         </div>
-
        
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Kiosks by Device OS</CardTitle>
-              <CardDescription>
-                Distribution of kiosks by operating system
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="space-y-4">
-                  <Skeleton className="h-[300px] w-full" />
-                </div>
-              ) : (
-                <DeviceChart data={deviceDistribution} />
-              )}
-            </CardContent>
+          <Card className="transition-shadow hover:shadow-lg">
+            <CardHeader><CardTitle>Kiosks by Device OS</CardTitle><CardDescription>Distribution of kiosks by operating system</CardDescription></CardHeader>
+            <CardContent>{loading ? (<Skeleton className="h-[300px] w-full" />) : (<DeviceChart data={deviceDistribution} />)}</CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-            </CardHeader>
+          <Card className="transition-shadow hover:shadow-lg">
+            <CardHeader><CardTitle>Recent Activity</CardTitle></CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {loading ? (
-                  Array.from({ length: 3 }).map((_, i) => (
-                    <div key={i} className="flex items-start space-x-3">
-                      <Skeleton className="h-6 w-6 rounded-full" />
-                      <div className="flex-1 space-y-2">
-                        <Skeleton className="h-4 w-3/4" />
-                        <Skeleton className="h-3 w-1/2" />
-                      </div>
-                    </div>
-                  ))
-                ) : recentActivities.length > 0 ? (
-                  recentActivities.map((activity: Activity) => (
+                {loading ? ( Array.from({ length: 3 }).map((_, i) => (<div key={i} className="flex items-start space-x-3"><Skeleton className="h-6 w-6 rounded-full" /><div className="flex-1 space-y-2"><Skeleton className="h-4 w-3/4" /><Skeleton className="h-3 w-1/2" /></div></div>))) 
+                : recentActivities.length > 0 ? ( recentActivities.map((activity: Activity) => (
                     <div key={activity.id} className="flex items-start space-x-3">
-                      <div className="flex-shrink-0 mt-0.5">
-                        {getActivityIcon(activity.type)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-900">
-                          {activity.message}
-                        </p>
-                        <div className="flex items-center space-x-2 mt-1">
-                          <p className="text-xs text-gray-500">
-                            {activity.timestamp}
-                          </p>
-                          {activity.kioskId && (
-                            <Badge variant="secondary" className="text-xs">
-                              {activity.kioskId}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
+                      <div className="flex-shrink-0 mt-0.5">{getActivityIcon(activity.type)}</div>
+                      <div className="flex-1 min-w-0"><p className="text-sm text-gray-900">{activity.message}</p><div className="flex items-center space-x-2 mt-1"><p className="text-xs text-gray-500">{activity.timestamp}</p>{activity.kioskId && (<Badge variant="secondary" className="text-xs">{activity.kioskId}</Badge>)}</div></div>
                     </div>
                   ))
                 ) : (
                   <div className="text-center py-8 text-gray-500">
                     <ActivityIcon className="mx-auto h-12 w-12 text-gray-400 mb-3" />
                     <p className="text-lg font-medium mb-2">No Recent Activity</p>
-                    <p className="text-sm mb-4">
-                      Start by managing campaigns or configuring kiosks to see activity here.
-                    </p>
+                    <p className="text-sm mb-4">Manage campaigns or kiosks to see activity here.</p>
                     <div className="flex flex-col sm:flex-row justify-center gap-2">
-                      {hasPermission("create_campaign") && (
-                        <Button onClick={() => onNavigate("admin-campaigns")} size="sm">
-                          <Settings className="w-4 h-4 mr-2" /> Manage Campaigns
-                        </Button>
-                      )}
-                      {hasPermission("create_kiosk") && (
-                        <Button onClick={() => onNavigate("admin-kiosks")} size="sm" variant="outline">
-                          <Monitor className="w-4 h-4 mr-2" /> Configure Kiosks
-                        </Button>
-                      )}
+                      {hasPermission("create_campaign") && (<Button onClick={() => onNavigate("admin-campaigns")} size="sm"><Settings className="w-4 h-4 mr-2" />Manage Campaigns</Button>)}
+                      {hasPermission("create_kiosk") && (<Button onClick={() => onNavigate("admin-kiosks")} size="sm" variant="outline"><Monitor className="w-4 h-4 mr-2" />Configure Kiosks</Button>)}
                     </div>
                   </div>
                 )}
@@ -1321,97 +1080,37 @@ export function AdminDashboard({
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <AlertCircle className="w-5 h-5 text-yellow-600" />
-                <span>System Alerts</span>
-              </CardTitle>
-            </CardHeader>
+          <Card className="transition-shadow hover:shadow-lg">
+            <CardHeader><CardTitle className="flex items-center space-x-2"><AlertCircle className="w-5 h-5 text-yellow-600" /><span>System Alerts</span></CardTitle></CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {loading ? (
-                  Array.from({ length: 2 }).map((_, i) => (
-                    <div key={i} className="flex items-start space-x-3 p-3 rounded-lg bg-gray-50">
-                      <Skeleton className="h-5 w-5 rounded-full" />
-                      <Skeleton className="h-4 w-3/4" />
-                    </div>
-                  ))
-                ) : alerts.length > 0 ? (
-                  alerts.map((alert: Alert) => (
-                    <div
-                      key={alert.id}
-                      className="flex items-start space-x-3 p-3 rounded-lg bg-gray-50"
-                    >
-                      <div className="flex-shrink-0 mt-0.5">
-                        {getAlertIcon(alert.type)}
-                      </div>
-                      <p className="text-sm text-gray-900">{alert.message}</p>
-                    </div>
-                  ))
+                {loading ? ( Array.from({ length: 2 }).map((_, i) => (<div key={i} className="flex items-start space-x-3 p-3 rounded-lg bg-gray-50"><Skeleton className="h-5 w-5 rounded-full" /><Skeleton className="h-4 w-3/4" /></div>))) 
+                : alerts.length > 0 ? ( alerts.map((alert: Alert) => (<div key={alert.id} className="flex items-start space-x-3 p-3 rounded-lg bg-gray-50"><div className="flex-shrink-0 mt-0.5">{getAlertIcon(alert.type)}</div><p className="text-sm text-gray-900">{alert.message}</p></div>))
                 ) : (
                   <div className="text-center py-8 text-gray-500">
-                    <AlertCircle className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                    <CheckCircle className="mx-auto h-12 w-12 text-green-400 mb-3" />
                     <p className="text-lg font-medium mb-2">No System Alerts</p>
-                    <p className="text-sm mb-4">
-                      Your system is running smoothly. No alerts to display.
-                    </p>
+                    <p className="text-sm mb-4">Your system is running smoothly.</p>
                   </div>
                 )}
               </div>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>More Actions</CardTitle>
-            </CardHeader>
+          <Card className="transition-shadow hover:shadow-lg">
+            <CardHeader><CardTitle>More Actions</CardTitle></CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 gap-3">
-                {hasPermission("view_campaigns") && (
-                  <Button
-                    variant="outline"
-                    className="justify-start h-12"
-                    onClick={() => onNavigate("admin-campaigns")}
-                  >
-                    <Database className="w-4 h-4 mr-3" />
-                    Manage Campaigns
-                  </Button>
-                )}
-                {hasPermission("view_kiosks") && (
-                  <Button
-                    variant="outline"
-                    className="justify-start h-12"
-                    onClick={() => onNavigate("admin-kiosks")}
-                  >
-                    <Settings className="w-4 h-4 mr-3" />
-                    Configure Kiosks
-                  </Button>
-                )}
-                {hasPermission("view_donations") && (
-                  <Button
-                    variant="outline"
-                    className="justify-start h-12"
-                    onClick={() => onNavigate("admin-donations")}
-                  >
-                    <TrendingUp className="w-4 h-4 mr-3" />
-                    View Donations
-                  </Button>
-                )}
-                {hasPermission("view_users") && (
-                  <Button
-                    variant="outline"
-                    className="justify-start h-12"
-                    onClick={() => onNavigate("admin-users")}
-                  >
-                    <UserCog className="w-4 h-4 mr-3" />
-                    User Management
-                  </Button>
-                )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {hasPermission("view_campaigns") && (<Button variant="outline" className="justify-start h-12" onClick={() => onNavigate("admin-campaigns")}><Target className="w-4 h-4 mr-3" />Manage Campaigns</Button>)}
+                {hasPermission("view_kiosks") && (<Button variant="outline" className="justify-start h-12" onClick={() => onNavigate("admin-kiosks")}><Monitor className="w-4 h-4 mr-3" />Configure Kiosks</Button>)}
+                {hasPermission("view_donations") && (<Button variant="outline" className="justify-start h-12" onClick={() => onNavigate("admin-donations")}><TrendingUp className="w-4 h-4 mr-3" />View Donations</Button>)}
+                {hasPermission("view_users") && (<Button variant="outline" className="justify-start h-12" onClick={() => onNavigate("admin-users")}><UserCog className="w-4 h-4 mr-3" />User Management</Button>)}
+                 {hasPermission("system_admin") && (<Button variant="outline" className="justify-start h-12 sm:col-span-2" onClick={() => onNavigate("admin-compliance")}><Shield className="w-4 h-4 mr-3" />Compliance Dashboard</Button>)}
               </div>
             </CardContent>
           </Card>
         </div>
       </main>
+      </div>
     </div>
   );
 }
