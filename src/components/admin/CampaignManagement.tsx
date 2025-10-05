@@ -30,8 +30,8 @@ import {
   FaEllipsisV,
   FaUpload,
   FaImage,
-  FaTrashAlt, // Added FaTrashAlt
-  FaPlus, // Import FaPlus
+  FaTrashAlt, 
+  FaPlus, 
 } from "react-icons/fa";
 import { Plus, ArrowLeft, Settings, Download } from "lucide-react";
 import { Calendar } from "../ui/calendar";
@@ -1374,7 +1374,7 @@ const CampaignManagement = ({
             </Select>
 
             <Popover open={showCalendar} onOpenChange={setShowCalendar}>
-              <PopoverTrigger>
+              <PopoverTrigger asChild>
                 <Button variant="outline" className="justify-start text-left font-normal w-full">
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {dateFilter ? dateFilter.toLocaleDateString() : "Filter by Date"}
@@ -1391,17 +1391,15 @@ const CampaignManagement = ({
                   initialFocus
                 />
                 <div className="p-3 border-t">
-                  <Button
-                    variant="ghost"
-                    size="sm"
+                  <button
                     onClick={() => {
                       setDateFilter(undefined);
                       setShowCalendar(false);
                     }}
-                    className="w-full"
+                    className="w-full text-sm text-gray-700 hover:text-gray-900"
                   >
                     Clear Date Filter
-                  </Button>
+                  </button>
                 </div>
               </PopoverContent>
             </Popover>
