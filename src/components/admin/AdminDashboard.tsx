@@ -62,6 +62,8 @@ import {
   Rocket,
   Play,
   TriangleAlert,
+  Menu,
+  X
 } from "lucide-react";
 import {
   Dialog,
@@ -103,16 +105,16 @@ interface AdminDashboardProps {
 }
 
 const CHART_COLORS = [
-  "#6366F1", // Sophisticated Blue
-  "#8B5CF6", // Vibrant Purple
-  "#EC4899", // Modern Pink
-  "#10B981", // Fresh Green
-  "#F59E0B", // Warm Amber
-  "#06B6D4", // Refreshing Cyan
-  "#F97316", // Earthy Orange
-  "#84CC16", // Lime Green
-  "#14B8A6", // Teal
-  "#64748B"  // Cool Slate Gray
+  "#6366F1",
+  "#8B5CF6",
+  "#EC4899",
+  "#10B981",
+  "#F59E0B",
+  "#06B6D4",
+  "#F97316",
+  "#84CC16",
+  "#14B8A6",
+  "#64748B"
 ]
 
 export function AdminDashboard({
@@ -136,6 +138,7 @@ export function AdminDashboard({
   const [stripeStatusMessage, setStripeStatusMessage] = useState<{ type: 'success' | 'error' | 'warning', message: string } | null>(null);
   const [showStripeStatusDialog, setShowStripeStatusDialog] = useState(false);
   const [isStripeOnboardingLoading, setIsStripeOnboardingLoading] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const { organization, loading: orgLoading, error: orgError } = useOrganization(
     userSession.user.organizationId ?? null
@@ -202,7 +205,6 @@ export function AdminDashboard({
       setIsStripeOnboardingLoading(false);
     }
   };
-
 
   const platformFeatures = [
     {
@@ -379,7 +381,6 @@ export function AdminDashboard({
       canAccess: hasPermission("system_admin"),
     },
   ];
-
 
   const quickTips = [
     {
@@ -568,247 +569,291 @@ export function AdminDashboard({
     );
   }
 
+  // Sidebar navigation items
+  const SidebarNav = () => (
+    <nav className="mt-4 space-y-1">
+      {hasPermission("view_dashboard") && (
+        <Button variant="ghost" className="w-full justify-start" onClick={() => { onNavigate("admin-dashboard"); setIsSidebarOpen(false); }}>Overview</Button>
+      )}
+      {hasPermission("view_campaigns") && (
+        <Button variant="ghost" className="w-full justify-start" onClick={() => { onNavigate("admin-campaigns"); setIsSidebarOpen(false); }}>Campaigns</Button>
+      )}
+      {hasPermission("view_kiosks") && (
+        <Button variant="ghost" className="w-full justify-start" onClick={() => { onNavigate("admin-kiosks"); setIsSidebarOpen(false); }}>Kiosks</Button>
+      )}
+      {hasPermission("view_donations") && (
+        <Button variant="ghost" className="w-full justify-start" onClick={() => { onNavigate("admin-donations"); setIsSidebarOpen(false); }}>Donations</Button>
+      )}
+      {hasPermission("view_users") && (
+        <Button variant="ghost" className="w-full justify-start" onClick={() => { onNavigate("admin-users"); setIsSidebarOpen(false); }}>Users</Button>
+      )}
+      {hasPermission("system_admin") && (
+        <Button variant="ghost" className="w-full justify-start" onClick={() => { onNavigate("admin-compliance"); setIsSidebarOpen(false); }}>Compliance</Button>
+      )}
+    </nav>
+  );
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between h-auto sm:h-16 gap-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-              <div className="flex h-12 w-12 items-center justify-center mb-2 sm:mb-0">
-                <img src="/logo.png" className="h-12 w-12 rounded-xl shadow-md" alt="My Logo" />
-              </div>
-              <div>
-                <div className="flex items-center space-x-3">
-                  <h1 className="text-xl font-semibold text-gray-900 flex items-center">
-                    Admin Dashboard
+      {/* Mobile overlay */}
+      {isSidebarOpen && (
+        <div className="fixed inset-0 bg-black/40 z-40 lg:hidden" onClick={() => setIsSidebarOpen(false)} />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`fixed z-50 top-0 left-0 h-full w-64 bg-white border-r shadow-lg transform transition-transform duration-200 ease-in-out
+        ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 lg:static lg:z-auto`}
+      >
+        <div className="h-16 border-b flex items-center justify-between px-4">
+          <div className="flex items-center space-x-2">
+            <img src="/logo.png" className="h-8 w-8 rounded-md" alt="Logo" />
+            <span className="font-semibold">Admin</span>
+          </div>
+          <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setIsSidebarOpen(false)}>
+            <X className="w-5 h-5" />
+          </Button>
+        </div>
+        <div className="px-3 py-2">
+          <SidebarNav />
+        </div>
+      </aside>
+
+      {/* Content wrapper with left padding on large screens */}
+      <div className="lg:pl-64">
+        <header className="bg-white shadow-sm border-b sticky top-0 z-30">
+          <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between h-auto sm:h-16 gap-4">
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setIsSidebarOpen(true)} aria-label="Open menu">
+                  <Menu className="w-5 h-5" />
+                </Button>
+                <div className="flex h-12 w-12 items-center justify-center mb-0">
+                  <img src="/logo.png" className="h-12 w-12 rounded-xl shadow-md" alt="My Logo" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center space-x-2">
+                    <h1 className="text-xl font-semibold text-gray-900 truncate">
+                      Admin Dashboard
+                    </h1>
                     {organization && (
-                      <span className="ml-2 text-2xl font-bold text-indigo-700">
+                      <span className="ml-1 text-lg font-bold text-indigo-700 truncate">
                         - {organization.name}
                       </span>
                     )}
-                  </h1>
-                  <Badge variant="secondary" className="px-3 py-1 text-sm font-medium rounded-full bg-gray-200 text-gray-700">
-                    {userSession.user.role}
-                  </Badge>
+                  </div>
+                  <p className="text-sm text-gray-600 truncate">Welcome back, {userSession.user.username}</p>
                 </div>
-                <p className="text-sm text-gray-600">Welcome back, {userSession.user.username}</p>
+                {userSession.user.role === 'super_admin' && hasPermission('system_admin') && (
+                  <div className="ml-auto sm:ml-4">
+                    <OrganizationSwitcher userSession={userSession} onOrganizationChange={onOrganizationSwitch} />
+                  </div>
+                )}
               </div>
-              {userSession.user.role === 'super_admin' && hasPermission('system_admin') && (
-                <OrganizationSwitcher userSession={userSession} onOrganizationChange={onOrganizationSwitch} />
-              )}
-            </div>
-            <div className="flex flex-col sm:flex-row items-center gap-2">
-              {organization && organization.stripe && (
-                <Dialog open={showStripeStatusDialog} onOpenChange={setShowStripeStatusDialog}>
-                  <DialogTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="lg"
-                      className={`relative ml-2 rounded-full p-2.5 
+              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                {organization && organization.stripe && (
+                  <Dialog open={showStripeStatusDialog} onOpenChange={setShowStripeStatusDialog}>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="lg"
+                        className={`relative rounded-full p-2.5 
                         ${!organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled
-                          ? 'text-red-600 hover:text-red-700 animate-pulse bg-red-100'
+                          ? 'text-red-600 hover:text-red-700 bg-red-100'
                           : 'text-green-600 hover:text-green-700 bg-green-100'
                         }`}
-                      aria-label="Stripe Status"
-                    >
-                      {!organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled ? (
+                        aria-label="Stripe Status"
+                      >
                         <CreditCard className="h-6 w-6" />
-                      ) : (
-                        <CreditCard className="h-6 w-6" />
-                      )}
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                      <DialogTitle className="flex items-center space-x-2">
-                        {!organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled ? (
-                          <CreditCard className="h-5 w-5 text-red-600" />
-                        ) : (
-                          <CreditCard className="h-5 w-5 text-green-600" />
-                        )}
-                        <span>Stripe Account Status</span>
-                      </DialogTitle>
-                      <DialogDescription>
-                        Review the current status of your Stripe integration.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                      {orgLoading ? (
-                        <p>Loading organization data...</p>
-                      ) : orgError ? (
-                        <p className="text-red-500">Error: {orgError}</p>
-                      ) : organization &&
-                        organization.stripe &&
-                        !organization.stripe.chargesEnabled ? (
-                        <>
-                          <p className="text-sm text-yellow-700">
-                            Your organization needs to complete Stripe onboarding to accept donations and receive payouts.
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px]">
+                      <DialogHeader>
+                        <DialogTitle className="flex items-center space-x-2">
+                          {!organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled ? (
+                            <CreditCard className="h-5 w-5 text-red-600" />
+                          ) : (
+                            <CreditCard className="h-5 w-5 text-green-600" />
+                          )}
+                          <span>Stripe Account Status</span>
+                        </DialogTitle>
+                        <DialogDescription>
+                          Review the current status of your Stripe integration.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        {orgLoading ? (
+                          <p>Loading organization data...</p>
+                        ) : orgError ? (
+                          <p className="text-red-500">Error: {orgError}</p>
+                        ) : organization &&
+                          organization.stripe &&
+                          !organization.stripe.chargesEnabled ? (
+                          <>
+                            <p className="text-sm text-yellow-700">
+                              Your organization needs to complete Stripe onboarding to accept donations and receive payouts.
+                            </p>
+                            <Button
+                              onClick={handleStripeOnboarding}
+                              className="bg-yellow-600 hover:bg-yellow-700"
+                              disabled={isStripeOnboardingLoading}
+                            >
+                              {isStripeOnboardingLoading ? (
+                                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                              ) : (
+                                <CreditCard className="w-4 h-4 mr-2" />
+                              )}
+                              {isStripeOnboardingLoading ? "Processing..." : "Complete Stripe Onboarding"}
+                            </Button>
+                          </>
+                        ) : organization &&
+                          organization.stripe &&
+                          organization.stripe.chargesEnabled &&
+                          !organization.stripe.payoutsEnabled ? (
+                          <p className="text-sm text-blue-700">
+                            Your Stripe account is being reviewed. Payouts will be enabled shortly.
                           </p>
-                          <Button
-                            onClick={handleStripeOnboarding}
-                            className="bg-yellow-600 hover:bg-yellow-700"
-                            disabled={isStripeOnboardingLoading}
-                          >
-                            {isStripeOnboardingLoading ? (
-                              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                            ) : (
-                              <CreditCard className="w-4 h-4 mr-2" />
-                            )}
-                            {isStripeOnboardingLoading ? "Processing..." : "Complete Stripe Onboarding"}
+                        ) : (
+                          <p className="text-sm text-green-700">
+                            Your Stripe account is fully configured and ready to accept donations and process payouts.
+                          </p>
+                        )}
+                      </div>
+                      <DialogFooter>
+                        <DialogClose asChild>
+                          <Button type="button" variant="secondary">
+                            Close
                           </Button>
-                        </>
-                      ) : organization &&
-                        organization.stripe &&
-                        organization.stripe.chargesEnabled &&
-                        !organization.stripe.payoutsEnabled ? (
-                        <p className="text-sm text-blue-700">
-                          Your Stripe account is being reviewed. Payouts will be enabled shortly.
-                        </p>
-                      ) : (
-                        <p className="text-sm text-green-700">
-                          Your Stripe account is fully configured and ready to accept donations and process payouts.
-                        </p>
-                      )}
-                    </div>
-                    <DialogFooter>
-                      <DialogClose asChild>
-                        <Button type="button" variant="secondary">
-                          Close
-                        </Button>
-                      </DialogClose>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              )}
-              <Button variant="outline" size="sm" onClick={handleRefresh} disabled={loading} className="flex items-center space-x-2">
-                <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-                <span>Refresh</span>
-              </Button>
-              <div className="ml-1">
-                <Verification />
+                        </DialogClose>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                )}
+                <Button variant="outline" size="sm" onClick={handleRefresh} disabled={loading} className="flex items-center space-x-2">
+                  <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+                  <span>Refresh</span>
+                </Button>
+                <div className="ml-0 sm:ml-1">
+                  <Verification />
+                </div>
+                <Button variant="ghost" size="sm" onClick={onLogout} className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
+                  <LogOut className="w-4 h-4" />
+                  <span>Logout</span>
+                </Button>
               </div>
-              <Button variant="ghost" size="sm" onClick={onLogout} className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
-                <LogOut className="w-4 h-4" />
-                <span>Logout</span>
-              </Button>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <main className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {stripeStatusMessage && (
-          <Card className={`mb-8 ${stripeStatusMessage.type === 'success' ? 'border-green-400 bg-green-50 text-green-800' : stripeStatusMessage.type === 'warning' ? 'border-yellow-400 bg-yellow-50 text-yellow-800' : 'border-red-400 bg-red-50 text-red-800'}`}>
-            <CardContent className="flex items-center space-x-3 p-4">
-              {stripeStatusMessage.type === 'success' && <CheckCircle className="w-5 h-5" />}
-              {stripeStatusMessage.type === 'warning' && <AlertCircle className="w-5 h-5" />}
-              {stripeStatusMessage.type === 'error' && <AlertCircle className="w-5 h-5" />}
-              <p className="font-medium">{stripeStatusMessage.message}</p>
-            </CardContent>
-          </Card>
-        )}
+        <main className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-4 sm:py-8">
+          {stripeStatusMessage && (
+            <Card className={`mb-8 ${stripeStatusMessage.type === 'success' ? 'border-green-400 bg-green-50 text-green-800' : stripeStatusMessage.type === 'warning' ? 'border-yellow-400 bg-yellow-50 text-yellow-800' : 'border-red-400 bg-red-50 text-red-800'}`}>
+              <CardContent className="flex items-center space-x-3 p-4">
+                {stripeStatusMessage.type === 'success' && <CheckCircle className="w-5 h-5" />}
+                {stripeStatusMessage.type === 'warning' && <AlertCircle className="w-5 h-5" />}
+                {stripeStatusMessage.type === 'error' && <AlertCircle className="w-5 h-5" />}
+                <p className="font-medium">{stripeStatusMessage.message}</p>
+              </CardContent>
+            </Card>
+          )}
 
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
-          <div>
-            <h2 className="text-2xl text-gray-900">Overview</h2>
-            <p className="text-gray-600 text-sm sm:text-base">
-              Manage campaigns, configure kiosks, and track donations across your organization
-            </p>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+            <div>
+              <h2 className="text-2xl text-gray-900">Overview</h2>
+              <p className="text-gray-600 text-sm sm:text-base">
+                Manage campaigns, configure kiosks, and track donations across your organization
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row items-stretch gap-2 w-full sm:w-auto">
+              {hasPermission("create_campaign") && (
+                <Button onClick={() => onNavigate("admin-campaigns")} className="bg-indigo-600 hover:bg-indigo-700 w-full sm:w-auto">
+                  <Settings className="w-4 h-4 mr-2" />Manage Campaigns
+                </Button>
+              )}
+              {hasPermission("view_kiosks") && (
+                <Button variant="outline" onClick={() => onNavigate("admin-kiosks")} className="w-full sm:w-auto">
+                  <Settings className="w-4 h-4 mr-2" />Manage Kiosks
+                </Button>
+              )}
+              {hasPermission("system_admin") && (
+                <Button variant="outline" onClick={() => onNavigate("admin-compliance")} className="w-full sm:w-auto">
+                  <Shield className="w-4 h-4 mr-2" />Compliance
+                </Button>
+              )}
+            </div>
           </div>
-          <div className="flex flex-col sm:flex-row items-stretch gap-2">
-            {hasPermission("create_campaign") && (
-              <Button onClick={() => onNavigate("admin-campaigns")} className="bg-indigo-600 hover:bg-indigo-700">
-                <Settings className="w-4 h-4 mr-2" />Manage Campaigns
-              </Button>
-            )}
-            {hasPermission("view_kiosks") && (
-              <Button variant="outline" onClick={() => onNavigate("admin-kiosks")}>
-                <Settings className="w-4 h-4 mr-2" />Manage Kiosks
-              </Button>
-            )}
-            {hasPermission("system_admin") && (
-              <Button variant="outline" onClick={() => onNavigate("admin-compliance")}>
-                <Shield className="w-4 h-4 mr-2" />Compliance
-              </Button>
-            )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">
+                      Total Raised
+                    </p>
+                    <p className="font-semibold text-gray-900 whitespace-nowrap text-[clamp(1.125rem,4vw,1.5rem)]">
+                      {loading ? "..." : formatLargeCurrency(stats.totalRaised)}
+                    </p>
+                  </div>
+                  <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <DollarSign className="h-6 w-6 text-green-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">
+                      Total Donations
+                    </p>
+                    <p className="text-2xl font-semibold text-gray-900">
+                      {loading ? "..." : formatNumber(stats.totalDonations)}
+                    </p>
+                  </div>
+                  <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Heart className="h-6 w-6 text-blue-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">
+                      Active Campaigns
+                    </p>
+                    <p className="text-2xl font-semibold text-gray-900">
+                      {loading ? "..." : stats.activeCampaigns}
+                    </p>
+                  </div>
+                  <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <Globe className="h-6 w-6 text-purple-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">
+                      Active Kiosks
+                    </p>
+                    <p className="text-2xl font-semibold text-gray-900">
+                      {loading ? "..." : stats.activeKiosks}
+                    </p>
+                  </div>
+                  <div className="h-12 w-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <Settings className="h-6 w-6 text-orange-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        </div>
-        {orgLoading ? (
-          <p>Loading organization data...</p>
-        ) : orgError ? (
-          <p className="text-red-500">Error: {orgError}</p>
-        ) : null}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">
-                    Total Raised
-                  </p>
-                  <p className="font-semibold text-gray-900 whitespace-nowrap text-[clamp(1.125rem,4vw,1.5rem)]">
-                    {loading ? "..." : formatLargeCurrency(stats.totalRaised)}
-                  </p>
-                </div>
-                <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <DollarSign className="h-6 w-6 text-green-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">
-                    Total Donations
-                  </p>
-                  <p className="text-2xl font-semibold text-gray-900">
-                    {loading ? "..." : formatNumber(stats.totalDonations)}
-                  </p>
-                </div>
-                <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Heart className="h-6 w-6 text-blue-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">
-                    Active Campaigns
-                  </p>
-                  <p className="text-2xl font-semibold text-gray-900">
-                    {loading ? "..." : stats.activeCampaigns}
-                  </p>
-                </div>
-                <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <Globe className="h-6 w-6 text-purple-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">
-                    Active Kiosks
-                  </p>
-                  <p className="text-2xl font-semibold text-gray-900">
-                    {loading ? "..." : stats.activeKiosks}
-                  </p>
-                </div>
-                <div className="h-12 w-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                  <Settings className="h-6 w-6 text-orange-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        <div className="mb-8">
+
           <Collapsible open={showFeatures} onOpenChange={setShowFeatures}>
             <CollapsibleTrigger asChild>
               <Button
@@ -968,6 +1013,7 @@ export function AdminDashboard({
             </CollapsibleContent>
           </Collapsible>
         </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           <Card>
             <CardHeader>
