@@ -81,7 +81,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
         setError(null);
       } catch (err) {
         setError("Failed to load data. Please try again.");
-        console.error("Error fetching data:", err);
+        
       } finally {
         setLoading(false);
       }

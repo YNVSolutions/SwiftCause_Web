@@ -82,7 +82,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
       setNewKiosk({ name: '', location: '', accessCode: '' });
       setIsCreateDialogOpen(false);
     } catch (error) {
-      console.error("Error adding kiosk: ", error);
+       
     }
   };
 
@@ -92,7 +92,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
         await deleteDoc(doc(db, 'kiosks', kioskId));
         refreshKiosks();
       } catch (error) {
-        console.error("Error deleting kiosk: ", error);
+         
       }
     }
   };
@@ -109,7 +109,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
         await updateDoc(kioskRef, dataToSave);
         refreshKiosks();
     } catch (error) {
-        console.error("Error updating kiosk assignment: ", error);
+         
     }
   };
 

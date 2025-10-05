@@ -352,7 +352,6 @@ const CampaignDialog = ({
           setImagePreviewUrl(uploadedData.coverImageUrl); // Update preview with uploaded URL
         }
       } catch (error) {
-        console.error("Error uploading cover image:", error);
         alert("Failed to upload cover image. Please try again.");
       }
     }
@@ -373,7 +372,6 @@ const CampaignDialog = ({
           setOrganizationLogoPreview(url); // Update preview with uploaded URL
         }
       } catch (error) {
-        console.error("Error uploading organization logo:", error);
         alert("Failed to upload organization logo. Please try again.");
       } finally {
         setIsUploadingOrganizationLogo(false); // Reset loading state
@@ -414,7 +412,6 @@ const CampaignDialog = ({
               imageUrls.push(url);
             }
           } catch (error) {
-            console.error(`Error uploading gallery image ${file.name}:`, error);
             alert(
               `Failed to upload gallery image ${file.name}. Please try again.`
             );
@@ -431,7 +428,6 @@ const CampaignDialog = ({
           setSelectedGalleryImages([]); // Clear selected files after upload
         }
       } catch (error) {
-        console.error("Error uploading gallery images:", error);
         alert("Failed to upload gallery images. Please try again.");
       } finally {
         setIsUploadingGalleryImages(false); // Reset loading state
@@ -474,7 +470,6 @@ const CampaignDialog = ({
       );
       alert("Image deleted successfully.");
     } catch (error) {
-      console.error("Error deleting gallery image:", error);
       alert("Failed to delete image. Please try again.");
     }
   };
@@ -500,7 +495,6 @@ const CampaignDialog = ({
           finalData = { ...finalData, organizationInfoLogo: url };
         }
       } catch (error) {
-        console.error("Error uploading organization logo:", error);
         alert("Failed to upload organization logo. Please try again.");
         return;
       }
@@ -519,7 +513,6 @@ const CampaignDialog = ({
             imageUrls.push(url);
           }
         } catch (error) {
-          console.error(`Error uploading gallery image ${file.name}:`, error);
           alert(
             `Failed to upload gallery image ${file.name}. Please try again.`
           );
@@ -1039,12 +1032,10 @@ const CampaignManagement = ({
         setConfirmDeleteInput("");
         // Optionally, show a success toast or message
       } catch (error) {
-        console.error("Error deleting campaign:", error);
         // Optionally, show an error toast or message
       }
     } else {
       // Optionally, show an error message if input doesn't match
-      console.log("Confirmation input does not match campaign title.");
     }
   };
 
@@ -1190,10 +1181,6 @@ const CampaignManagement = ({
         await updateWithImage(campaignId, finalDataToSave);
       }
     } catch (error) {
-      console.error(
-        isNew ? "Error creating campaign: " : "Error updating document: ",
-        error
-      );
       alert(
         `Failed to ${isNew ? "create" : "update"} campaign. Please try again.`
       );

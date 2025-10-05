@@ -167,12 +167,10 @@ export function AdminDashboard({
 
   const handleStripeOnboarding = async () => {
     if (!organization?.id) {
-      console.error("Organization ID not available for Stripe onboarding.");
       return;
     }
 
     if (!auth.currentUser) {
-      console.error("No authenticated Firebase user found.");
       return;
     }
 
@@ -199,7 +197,6 @@ export function AdminDashboard({
         window.location.href = url;
       }
     } catch (error) {
-      console.error("Error creating Stripe onboarding link:", error);
       setStripeStatusMessage({ type: 'error', message: `Failed to start Stripe onboarding: ${(error as Error).message}` });
     } finally {
       setIsStripeOnboardingLoading(false);
@@ -478,7 +475,6 @@ export function AdminDashboard({
           setCategoryData(formattedCategoryData);
         }
       } catch (error) {
-        console.error("Error fetching chart data: ", error);
       }
     };
 
