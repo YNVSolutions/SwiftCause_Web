@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createThankYouMail } from '../api/firestoreService';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -18,12 +19,17 @@ export function EmailConfirmationScreen({ transactionId, onComplete }: EmailConf
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSending(true);
-    
-    // Simulate email sending
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setEmailSent(true);
-    setIsSending(false);
+
+    try {
+      await createThankYouMail(email);
+      alert('Thank you! Your receipt has been sent.');
+      setEmailSent(true);
+    } catch (err) {
+      console.error('Error sending receipt email:', err);
+      alert('There was an issue sending your receipt. Please try again.');
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleSkip = () => {
