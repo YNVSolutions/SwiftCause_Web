@@ -92,6 +92,7 @@ import { OrganizationSwitcher } from "./OrganizationSwitcher";
 import { useOrganization } from "../../hooks/useOrganization";
 import { auth } from "../../lib/firebase";
 import { DeviceChart } from "./DeviceChart";
+import { AdminLayout } from "./AdminLayout";
 
 interface AdminDashboardProps {
   onNavigate: (screen: Screen) => void;
@@ -512,10 +513,10 @@ export function AdminDashboard({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between h-auto sm:h-16 gap-4">
+    <AdminLayout onNavigate={onNavigate} onLogout={onLogout} userSession={userSession} hasPermission={hasPermission}>
+      <header className="bg-white shadow-sm border rounded-md">
+        <div className="px-2 sm:px-4 lg:px-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between h-auto gap-4 py-3">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
               <div className="flex h-12 w-12 items-center justify-center mb-2 sm:mb-0">
                 <img src="/logo.png" className="h-12 w-12 rounded-xl shadow-md" alt="My Logo" />
@@ -636,7 +637,7 @@ export function AdminDashboard({
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-4 sm:py-8">
+      <main className="px-1 sm:px-2 lg:px-4 py-4 sm:py-6">
         {stripeStatusMessage && (
           <Card className={`mb-8 ${stripeStatusMessage.type === 'success' ? 'border-green-400 bg-green-50 text-green-800' : stripeStatusMessage.type === 'warning' ? 'border-yellow-400 bg-yellow-50 text-yellow-800' : 'border-red-400 bg-red-50 text-red-800'}`}>
             <CardContent className="flex items-center space-x-3 p-4">
@@ -1301,6 +1302,6 @@ export function AdminDashboard({
           </Card>
         </div>
       </main>
-    </div>
+    </AdminLayout>
   );
 }
