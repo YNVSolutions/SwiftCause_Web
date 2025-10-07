@@ -18,6 +18,7 @@ import { ContactPage } from "./components/pages/ContactPage";
 import { DocumentationPage } from "./components/pages/DocumentationPage";
 import { TermsPage } from "./components/pages/TermsPage";
 import { Toast, ToastHost } from "./components/ui/Toast";
+import { Loader } from "./components/ui/Loader";
 import {
   getAuth,
   createUserWithEmailAndPassword,
@@ -555,13 +556,9 @@ export default function App() {
     );
   };
 
-  // Main application rendering logic based on authentication state and current screen
+  
   if (isLoadingAuth) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <p className="text-lg text-gray-700">Loading application...</p>
-      </div>
-    );
+    return <Loader />;
   }
 
   if (userRole === "admin" && currentAdminSession) {
