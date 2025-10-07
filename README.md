@@ -75,6 +75,13 @@ Modern Donation Platform for UK-Based Nonprofits
     Navigate to `http://localhost:5173` to view the application.
 
 
+### Environment Variables
+
+`VITE_CLOUD_FUNCTIONS_BASE` - Base URL for Firebase Cloud Functions
+
+Example: `https://us-central1-your-project.cloudfunctions.net`
+
+
 ## Visual Studio Code 
 
 You would need to have the latest version of [VS Code](https://code.visualstudio.com) and VS Code [Chrome Debugger Extension](https://marketplace.visualstudio.com/items?itemName=msjsdiag.debugger-for-chrome) installed.
