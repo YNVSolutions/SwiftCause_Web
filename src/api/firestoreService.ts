@@ -125,3 +125,17 @@ export async function getRecentDonations(limitCount: number, organizationId?: st
   const snapshot = await getDocs(q);
   return snapshot.docs.map(d => ({ id: d.id, ...d.data() as object}));
 }
+
+export async function createThankYouMail(recipientEmail: string) {
+  const mailRef = collection(db, 'mail');
+  const donationThankYouEmail = {
+    to: [recipientEmail],
+    message: {
+      subject: 'Thank you for your donation!',
+      text: `Dear Donor,\n\nThank you so much for your generous contribution to our campaign. Your support means a lot to us and helps us move closer to our goal.\n\nWe truly appreciate your kindness and belief in our mission.\n\nWith gratitude,\nSwift Cause`,
+      html: `<!DOCTYPE html>\n<html>\n  <body style=\"font-family: Arial, sans-serif; color: #333;\">\n    <h2>Thank You for Your Donation!</h2>\n    <p>Dear Donor,</p>\n    <p>Thank you so much for your generous contribution to our campaign. Your support means a lot to us and helps us move closer to our goal.</p>\n    <p>We truly appreciate your kindness and belief in our mission.</p>\n    <p>With gratitude,</p>\n    <p><strong>Swift Cause</strong></p>\n  </body>\n</html>`
+    }
+  };
+
+  await addDoc(mailRef, donationThankYouEmail);
+}
