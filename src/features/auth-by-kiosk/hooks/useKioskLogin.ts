@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useKiosks } from '../../../hooks/useKiosks';
+import { useKiosks } from '../../../shared/lib/hooks/useKiosks';
 import { KioskSession, UserRole } from '../../../shared/types';
 import { kioskAuthApi } from '../api';
 

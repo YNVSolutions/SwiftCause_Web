@@ -1,7 +1,7 @@
 import React from 'react';
-import { KioskLogin } from '../../../components/kiosk/KioskLogin';
+import { KioskLogin } from '../../../pages/auth/KioskLogin';
 import { useKioskLogin } from '../hooks/useKioskLogin';
-import { UserRole, KioskSession } from '../../../App';
+import { UserRole, KioskSession } from '../../../app/App';
 
 interface KioskLoginContainerProps {
 	onLogin: (role: UserRole, sessionData?: KioskSession) => void;
