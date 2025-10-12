@@ -1,6 +1,6 @@
 import React from 'react';
 import { Clock } from 'lucide-react';
-import swiftCauseLogo from '../../assets/logo.png';
+import swiftCauseLogo from '../assets/logo.png';
 
 interface FooterProps {
   onNavigate?: (screen: string) => void;
