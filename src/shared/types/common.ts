@@ -75,7 +75,7 @@ export interface KioskSession {
   startTime: string;
   assignedCampaigns: string[];
   defaultCampaign?: string;
-  settings: Kiosk["settings"];
+  settings: any;
   loginMethod: "qr" | "manual";
   organizationId?: string;
   organizationCurrency?: string;

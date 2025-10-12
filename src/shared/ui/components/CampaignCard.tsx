@@ -1,12 +1,12 @@
 import React from 'react';
-import { Button } from './button';
-import { Card, CardContent, CardHeader, CardTitle } from './card';
-import { Badge } from './badge';
-import { Progress } from './progress';
-import { ImageWithFallback } from './figma/ImageWithFallback';
+import { Button } from './ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Badge } from './ui/badge';
+import { Progress } from './ui/progress';
+import { ImageWithFallback } from '../figma/ImageWithFallback';
 import { Heart, Info, ArrowRight, Star } from 'lucide-react';
-import { Campaign } from '../../app/App';
-import { formatCurrency } from '../lib/currencyFormatter';
+import { Campaign } from '../../../app/App';
+import { formatCurrency } from '../../lib/currencyFormatter';
 
 interface CampaignCardProps {
   campaign: Campaign;

@@ -1,4 +1,4 @@
-import { db } from '../lib/firebase';
+import { db } from '../../lib/firebase';
 import {
   collection,
   getDocs,
@@ -13,7 +13,7 @@ import {
   Timestamp,
   where
 } from 'firebase/firestore';
-import { Organization } from '../../app/App';
+import { Organization } from '../../../app/App';
 export async function getCampaigns(organizationId?: string) {
   let campaignsCollection: any = collection(db, 'campaigns');
   if (organizationId) {
