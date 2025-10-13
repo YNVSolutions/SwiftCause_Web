@@ -1,18 +1,19 @@
 import React from 'react';
-import { Button } from '../ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Badge } from '../ui/badge';
-import { Progress } from '../ui/progress';
-import { ImageWithFallback } from '../figma/ImageWithFallback';
+import { Button } from '../../../shared/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../../../shared/ui/card';
+import { Badge } from '../../../shared/ui/badge';
+import { Progress } from '../../../shared/ui/progress';
+import { ImageWithFallback } from '../../../shared/ui/figma/ImageWithFallback';
 import { Heart, Info, ArrowRight, Star } from 'lucide-react';
-import { Campaign } from '../../App';
-import { formatCurrency } from '../../utils/currencyFormatter';
+import { Campaign } from '../../../app/App';
+import { formatCurrency } from '../../../shared/lib/currencyFormatter';
 
 interface CampaignCardProps {
   campaign: Campaign;
-  variant?: 'compact' | 'detailed';
+  variant?: 'compact' | 'detailed' | 'list' | 'carousel' | 'grid';
   onDonate?: (campaign: Campaign) => void; 
   onViewDetails?: (campaign: Campaign, initialShowDetails: boolean) => void; 
+  onSelect?: (campaign: Campaign) => void;
   isDefault?: boolean;
   organizationCurrency?: string; 
 }
@@ -22,6 +23,7 @@ export function CampaignCard({
   variant = 'detailed',
   onDonate,
   onViewDetails,
+  onSelect,
   isDefault = false,
   organizationCurrency 
 }: CampaignCardProps) {
@@ -35,7 +37,7 @@ export function CampaignCard({
     return Math.min((raised / goal) * 100, 100);
   };
 
-  if (variant === 'compact') {
+  if (variant === 'compact' || variant === 'list') {
     return (
       <Card className={`rounded-2xl shadow-md hover:shadow-xl transition-shadow duration-300 bg-white border border-gray-100 overflow-hidden hover:-translate-y-1 ${isDefault ? 'ring-2 ring-indigo-500 ring-opacity-50' : ''}`}>
         <div className="flex">
@@ -84,6 +86,16 @@ export function CampaignCard({
             </div>
 
             <div className="flex gap-2 mt-2 sm:mt-3">
+              {onSelect && (
+                <Button
+                  onClick={() => onSelect(campaign)}
+                  size="sm"
+                  className="bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 ease-in-out text-sm"
+                >
+                  <Heart className="mr-1 h-4 w-4" />
+                  Select
+                </Button>
+              )}
               {onDonate && (
                 <Button
                   onClick={() => onDonate(campaign)}
@@ -159,6 +171,17 @@ export function CampaignCard({
         </div>
 
         <div className="flex gap-2 sm:gap-3 mt-auto">
+          {onSelect && (
+            <Button
+              onClick={() => onSelect(campaign)}
+              className="flex-1 h-12 sm:h-14 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-all duration-200 ease-in-out text-base"
+              size="lg"
+            >
+              <Heart className="mr-2 h-5 w-5" />
+              <span className="text-base sm:text-lg">Select</span>
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          )}
           {onDonate && (
             <Button
               onClick={() => onDonate(campaign)}

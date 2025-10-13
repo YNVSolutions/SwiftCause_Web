@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Badge } from './ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Checkbox } from './ui/checkbox';
-import { Progress } from './ui/progress';
+import { Button } from '../../../shared/ui/button';
+import { Input } from '../../../shared/ui/input';
+import { Label } from '../../../shared/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../shared/ui/card';
+import { Badge } from '../../../shared/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../shared/ui/select';
+import { Checkbox } from '../../../shared/ui/checkbox';
+import { Progress } from '../../../shared/ui/progress';
 import { 
   Heart,
   Shield,

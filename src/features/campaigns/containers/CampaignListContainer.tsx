@@ -1,6 +1,6 @@
 import React from 'react';
-import { CampaignListScreen } from '../../../components/CampaignListScreen';
-import { Campaign, KioskSession } from '../../../App';
+import { CampaignListScreen } from '../../../pages/campaigns/CampaignListScreen';
+import { Campaign, KioskSession } from '../../../app/App';
 import { useCampaignList } from '../hooks/useCampaignList';
 
 interface CampaignListContainerProps {

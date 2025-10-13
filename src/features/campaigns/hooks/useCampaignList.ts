@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useCampaigns } from '../../../hooks/useCampaigns';
-import { Campaign, KioskSession } from '../../../App';
+import { useCampaigns } from '../../../shared/lib/hooks/useCampaigns';
+import { Campaign, KioskSession } from '../../../app/App';
 
 export interface UseCampaignListReturn {
   campaigns: Campaign[];

@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { authApi } from '../api';
 import { User } from '../../../entities/user';
 
-function getFriendlyAuthMessage(error) {
+function getFriendlyAuthMessage(error: any) {
   const code = error?.code || '';
   switch (code) {
     case 'auth/invalid-credential':

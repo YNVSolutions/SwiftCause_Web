@@ -1,7 +1,7 @@
 import { collection, getDocs, doc, DocumentData, query, where } from 'firebase/firestore';
 import { getAuth } from "firebase/auth";
 import { db } from '../lib/firebase';
-import { User, UserRole, Permission } from '../App';
+import { User, UserRole, Permission } from '../../app/App';
 
 // Helper function to make authenticated fetch calls to Firebase Functions
 async function callAuthenticatedFunction(functionName: string, method: string, data?: any) {

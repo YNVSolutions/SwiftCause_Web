@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useKiosks } from '../../../hooks/useKiosks';
-import { KioskSession, UserRole, Kiosk, Organization } from '../../../App';
-import { getOrganizationById } from '../../../api/firestoreService';
+import { useKiosks } from '../../../shared/lib/hooks/useKiosks';
+import { KioskSession, UserRole, Kiosk, Organization } from '../../../app/App';
+import { getOrganizationById } from '../../../shared/api/firestoreService';
 
 type OnLogin = (role: UserRole, sessionData?: KioskSession) => void;
 

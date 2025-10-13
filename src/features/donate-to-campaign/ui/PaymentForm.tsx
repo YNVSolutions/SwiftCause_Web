@@ -1,8 +1,8 @@
 import React from 'react';
-import { PaymentScreen } from '../../../components/PaymentScreen';
-import { Campaign, Donation, PaymentResult } from '../../../App';
+import { PaymentScreen } from '../../../pages/campaigns/PaymentScreen';
+import { Campaign, Donation, PaymentResult } from '../../../app/App';
 import { usePayment } from '../hooks/usePayment';
-import { getOrganizationById } from '../../../api/firestoreService';
+import { getOrganizationById } from '../../../shared/api/firestoreService';
 
 interface PaymentContainerProps {
   campaign: Campaign;
