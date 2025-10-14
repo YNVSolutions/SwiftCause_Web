@@ -2,4 +2,3 @@
 export * from './firebase';
 export * from './imageUpload';
 export * from './currencyFormatter';
-export * from './userManagementHelpers';
