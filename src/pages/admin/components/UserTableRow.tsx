@@ -4,7 +4,7 @@ import { Badge } from '../../../shared/ui/badge';
 import { TableCell, TableRow } from '../../../shared/ui/table';
 import { Edit, Trash2, Users, Shield, Key } from 'lucide-react';
 import { User } from '../../../app/App';
-import { formatDate, getRoleBadge, getLastLoginStatus } from '../../../shared/lib/userManagementHelpers';
+import { formatDate, getRoleBadge, getLastLoginStatus } from '../utils/userManagementHelpers';
 
 interface UserTableRowProps {
   user: User;
