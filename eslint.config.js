@@ -38,7 +38,7 @@ export default tseslint.config([
                 'src/entities/**/*',
               ],
               message:
-                "❌ FSD: The 'shared' layer cannot import from higher layers.",
+                "FSD: The 'shared' layer cannot import from higher layers.",
             },
             {
               target: 'src/entities/**/*',
@@ -49,24 +49,24 @@ export default tseslint.config([
                 'src/features/**/*',
               ],
               message:
-                "❌ FSD: The 'entities' layer cannot import from higher layers.",
+                "FSD: The 'entities' layer cannot import from higher layers.",
             },
             {
               target: 'src/features/**/*',
               from: ['src/app/**/*', 'src/pages/**/*', 'src/widgets/**/*'],
               message:
-                "❌ FSD: The 'features' layer cannot import from higher layers.",
+                "FSD: The 'features' layer cannot import from higher layers.",
             },
             {
               target: 'src/widgets/**/*',
               from: ['src/app/**/*', 'src/pages/**/*'],
               message:
-                "❌ FSD: The 'widgets' layer cannot import from higher layers.",
+                "FSD: The 'widgets' layer cannot import from higher layers.",
             },
             {
               target: 'src/pages/**/*',
               from: 'src/app/**/*',
-              message: "❌ FSD: The 'pages' layer cannot import from the 'app' layer.",
+              message: "FSD: The 'pages' layer cannot import from the 'app' layer.",
             },
           ],
         },
