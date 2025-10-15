@@ -66,6 +66,11 @@ export interface Organization {
   size?: string;
   website?: string;
   createdAt?: string;
+  stripe?: {
+    accountId?: string;
+    chargesEnabled?: boolean;
+    payoutsEnabled?: boolean;
+  };
 }
 
 export interface AdminSession {
