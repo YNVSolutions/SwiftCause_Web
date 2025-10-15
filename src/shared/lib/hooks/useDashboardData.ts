@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
 import { getAllCampaigns, getKiosks, getRecentDonations, getCampaigns } from '../../api/firestoreService';
 import { DocumentData, Timestamp } from 'firebase/firestore';
-import { Campaign, Kiosk, Donation } from '../../types';
+import { Campaign } from '../../types';
+import { Kiosk, Donation } from '../../types';
 
 
 interface DashboardStats {
@@ -111,14 +112,16 @@ export function useDashboardData(organizationId?: string) {
       });
 
       const formattedActivities = recentDonationsData.map((donation: Donation): Activity => {
-        const timestamp = donation.timestamp; 
+        const t: any = (donation as any).timestamp;
+        const ts = t && typeof t === 'object' && 'seconds' in t ? new Date(t.seconds * 1000).toLocaleString() : String(t ?? 'N/A');
+        const platform: string | undefined = (donation as any).platform;
         return {
           id: donation.id,
           type: 'donation',
           message: `New donation of $${donation.amount} for campaign ${donation.campaignId}`,
-          timestamp: timestamp ? new Date(timestamp.seconds * 1000).toLocaleString() : 'N/A',
-          kioskId: donation.platform,
-        };
+          timestamp: ts,
+          ...(platform ? { kioskId: platform } : {}),
+        } as Activity;
       });
       setRecentActivities(formattedActivities);
 

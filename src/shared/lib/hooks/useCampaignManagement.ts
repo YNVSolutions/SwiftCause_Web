@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useCampaigns } from './useCampaigns';
+import { useCampaigns } from '../../../entities/campaign/model/hooks';
 import { storage } from '../firebase'; // Import storage
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'; // Import storage functions
 
