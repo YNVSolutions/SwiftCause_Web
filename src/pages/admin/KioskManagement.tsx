@@ -11,7 +11,7 @@ import {
   deleteDoc,
   DocumentData,
 } from 'firebase/firestore';
-import { Screen, Kiosk, Campaign, AdminSession, Permission } from '../../app/App';
+import { Screen, Kiosk, Campaign, AdminSession, Permission } from '../../shared/types';
 
 // UI Components
 import { Button } from '../../shared/ui/button';

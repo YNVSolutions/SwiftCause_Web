@@ -73,7 +73,7 @@ import {
   DialogFooter,
   DialogClose,
 } from "../../shared/ui/dialog";
-import { Screen, AdminSession, Permission, Campaign } from "../../app/App";
+import { Screen, AdminSession, Permission, Campaign } from "../../shared/types";
 import { db } from "../../shared/lib/firebase";
 import {
   collection,

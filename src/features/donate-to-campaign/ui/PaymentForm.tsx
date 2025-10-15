@@ -1,6 +1,6 @@
 import React from 'react';
 import { PaymentScreen } from '../../../pages/campaigns/PaymentScreen';
-import { Campaign, Donation, PaymentResult } from '../../../app/App';
+import { Campaign, Donation, PaymentResult } from '../../../shared/types';
 import { usePayment } from '../hooks/usePayment';
 import { getOrganizationById } from '../../../shared/api/firestoreService';
 

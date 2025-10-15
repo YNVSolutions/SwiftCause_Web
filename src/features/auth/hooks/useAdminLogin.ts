@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useAuth } from '../../../shared/lib/hooks/useAuth';
-import { UserRole, AdminSession, User } from '../../../app/App';
+import { UserRole, AdminSession, User } from '../../../shared/types';
 
 type OnLogin = (role: UserRole, sessionData?: AdminSession) => void;
 

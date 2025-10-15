@@ -1,7 +1,7 @@
 import React from 'react';
 import { AdminLogin } from '../../../pages/admin/AdminLogin';
 import { useAdminLogin } from '../hooks/useAdminLogin';
-import { UserRole, AdminSession } from '../../../app/App';
+import { UserRole, AdminSession } from '../../../shared/types';
 
 interface AdminLoginContainerProps {
 	onLogin: (role: UserRole, sessionData?: AdminSession) => void;

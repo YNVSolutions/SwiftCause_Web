@@ -1,29 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
 import { getAllCampaigns, getKiosks, getRecentDonations, getCampaigns } from '../../api/firestoreService';
 import { DocumentData, Timestamp } from 'firebase/firestore';
-import { Campaign } from '../../../app/App';
+import { Campaign, Kiosk, Donation } from '../../types';
 
-interface Kiosk {
-  id: string;
-  status?: 'online' | 'offline' | 'maintenance';
-  name?: string;
-  location?: string;
-  totalRaised?: number;
-  deviceInfo?: {
-    os?: string;
-    model?: string;
-    screenSize?: string;
-    touchCapable?: boolean;
-  };
-}
-
-interface Donation {
-  id: string;
-  amount: number;
-  campaignId: string;
-  timestamp: Timestamp;
-  platform?: string; 
-}
 
 interface DashboardStats {
   totalRaised: number;

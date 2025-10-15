@@ -24,7 +24,7 @@ import {
   MapPin,
   Target
 } from 'lucide-react';
-import { Campaign, Donation, Organization } from '../../app/App';
+import { Campaign, Donation, Organization } from '../../shared/types';
 import { formatCurrency } from '../../shared/lib/currencyFormatter';
 import { getOrganizationById } from '../../shared/api/firestoreService';
 

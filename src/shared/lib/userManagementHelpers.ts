@@ -1,4 +1,4 @@
-import { UserRole, User } from '../../app/App';
+import { UserRole, User } from '../types';
 import { UserCog, Settings, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 
 export const formatDate = (dateString: string | undefined) => {

@@ -5,7 +5,7 @@ import { Label } from '../../../shared/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../../../shared/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../shared/ui/select';
 import { Checkbox } from '../../../shared/ui/checkbox';
-import { UserRole } from '../../../app/App';
+import { UserRole } from '../../../shared/types';
 
 
 interface CreateUserDialogProps {

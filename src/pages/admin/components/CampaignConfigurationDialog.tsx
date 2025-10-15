@@ -31,7 +31,14 @@ import {
   MapPin,
   MessageSquare
 } from 'lucide-react';
-import { Campaign, CampaignConfiguration } from '../../../app/App';
+import { Campaign, CampaignConfiguration } from '../../../shared/types';
+import { 
+  CAMPAIGN_CATEGORIES, 
+  CAMPAIGN_THEMES, 
+  PREDEFINED_AMOUNT_SETS,
+  DEFAULT_CAMPAIGN_CONFIG,
+  DEFAULT_CAMPAIGN_VALUES
+} from '../../../shared/config';
 
 interface CampaignConfigurationDialogProps {
   open: boolean;
@@ -56,63 +63,21 @@ export function CampaignConfigurationDialog({
       id: '',
       title: '',
       description: '',
-      goal: 10000,
-      raised: 0,
       coverImageUrl: '',
       category: '',
-      status: 'active' as const,
       createdAt: new Date().toISOString().split('T')[0],
       endDate: '',
-      organizationId: 'ORG-NEW',
-      configuration: {
-        predefinedAmounts: [25, 50, 100, 250, 500],
-        allowCustomAmount: true,
-        minCustomAmount: 1,
-        maxCustomAmount: 10000,
-        suggestedAmounts: [25, 50, 100],
-        enableRecurring: true,
-        recurringIntervals: ['monthly', 'quarterly'],
-        defaultRecurringInterval: 'monthly',
-        recurringDiscount: 0,
-        displayStyle: 'grid',
-        showProgressBar: true,
-        showDonorCount: true,
-        showRecentDonations: true,
-        maxRecentDonations: 5,
-        primaryCTAText: 'Donate Now',
-        secondaryCTAText: 'Learn More',
-        theme: 'default',
-        requiredFields: ['email'],
-        optionalFields: ['name'],
-        enableAnonymousDonations: true,
-        enableSocialSharing: true,
-        enableDonorWall: true,
-        enableComments: false
-      }
+      ...DEFAULT_CAMPAIGN_VALUES,
+      configuration: DEFAULT_CAMPAIGN_CONFIG
     };
   });
 
   const [customAmount, setCustomAmount] = useState('');
   const [activeTab, setActiveTab] = useState('basic');
 
-  const categories = [
-    'Global Health', 'Education', 'Emergency Relief', 'Food Security', 
-    'Environmental', 'Community Development', 'Animal Welfare', 'Arts & Culture'
-  ];
-
-  const themes = [
-    { value: 'default', label: 'Default', description: 'Clean, professional design' },
-    { value: 'minimal', label: 'Minimal', description: 'Simple, distraction-free' },
-    { value: 'vibrant', label: 'Vibrant', description: 'Bold colors and gradients' },
-    { value: 'elegant', label: 'Elegant', description: 'Sophisticated typography' }
-  ];
-
-  const predefinedAmountSets = [
-    { name: 'Small Donations', amounts: [5, 10, 25, 50, 100] },
-    { name: 'Medium Donations', amounts: [25, 50, 100, 250, 500] },
-    { name: 'Large Donations', amounts: [100, 250, 500, 1000, 2500] },
-    { name: 'Major Gifts', amounts: [500, 1000, 2500, 5000, 10000] }
-  ];
+  const categories = CAMPAIGN_CATEGORIES;
+  const themes = CAMPAIGN_THEMES;
+  const predefinedAmountSets = PREDEFINED_AMOUNT_SETS;
 
   const handleSave = () => {
     const campaignToSave = {

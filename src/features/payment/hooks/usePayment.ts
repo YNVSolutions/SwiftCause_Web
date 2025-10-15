@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
-import { PaymentResult } from '../../../app/App'; // Adjust path if needed
-import { Campaign, Donation } from '../../../app/App';
+import { PaymentResult, Campaign, Donation } from '../../../shared/types';
 
 interface UsePaymentReturn {
   isProcessing: boolean;

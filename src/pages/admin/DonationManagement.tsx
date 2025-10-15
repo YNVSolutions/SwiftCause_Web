@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { Skeleton } from "../../shared/ui/skeleton"; // Import Skeleton
 import { Ghost } from "lucide-react"; // Import Ghost
-import { Screen, AdminSession, Permission, Donation } from '../../app/App';
+import { Screen, AdminSession, Permission, Donation } from '../../shared/types';
 import { getDonations } from '../../shared/lib/hooks/donationsService';
 
 import { getAllCampaigns } from '../../shared/api/firestoreService';
