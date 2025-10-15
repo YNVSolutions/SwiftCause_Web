@@ -4,7 +4,7 @@ import { DocumentData, Timestamp } from "firebase/firestore";
 import { useCampaignManagement } from "../../shared/lib/hooks/useCampaignManagement";
 import { deleteFile } from "../../shared/lib/firebase"; // Import deleteFile
 import * as firebaseService from "../../shared/api/firestoreService"; // Import firebaseService
-import UploadButton from "../../shared/ui/components/UploadButton"; // Import the new UploadButton component
+import UploadButton from "../../shared/ui/UploadButton"; // Import the new UploadButton component
 
 import { Button } from "../../shared/ui/button";
 import { Input } from "../../shared/ui/input";
