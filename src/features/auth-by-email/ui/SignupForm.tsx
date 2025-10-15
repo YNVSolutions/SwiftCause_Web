@@ -36,6 +36,7 @@ import {
 } from 'lucide-react';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
+import { ORGANIZATION_TYPES, ORGANIZATION_SIZES, CURRENCY_OPTIONS } from '../../../shared/config';
 
 interface SignupScreenProps {
   onSignup: (data: SignupFormData) => Promise<void>;
@@ -97,23 +98,8 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
     agreeToTerms: false
   });
 
-  const organizationTypes = [
-    'Non-profit Organization',
-    'Healthcare Institution', 
-    'Educational Institution',
-    'Religious Organization',
-    'Government Agency',
-    'Corporate Foundation',
-    'Other'
-  ];
-
-  const organizationSizes = [
-    '1-10 employees',
-    '11-50 employees',
-    '51-200 employees',
-    '201-1000 employees',
-    '1000+ employees'
-  ];
+  const organizationTypes = ORGANIZATION_TYPES;
+  const organizationSizes = ORGANIZATION_SIZES;
 
   const featureOptions = [
     { id: 'kiosks', label: 'Donation Kiosks', description: 'Touch-friendly donation interfaces' },

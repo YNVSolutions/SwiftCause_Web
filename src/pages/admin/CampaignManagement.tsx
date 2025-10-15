@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import { Screen, AdminSession, Permission } from "../../app/App";
+import { Screen, AdminSession, Permission } from "../../shared/types";
+import { DEFAULT_CAMPAIGN_CONFIG, DEFAULT_CAMPAIGN_VALUES } from "../../shared/config";
 import { DocumentData, Timestamp } from "firebase/firestore";
 import { useCampaignManagement } from "../../shared/lib/hooks/useCampaignManagement";
 import { deleteFile } from "../../shared/lib/firebase"; // Import deleteFile
@@ -98,39 +99,39 @@ const CampaignDialog = ({
     impactMetricsCustomMetricUnit: "",
 
     // CampaignConfiguration fields - flattened for form handling (initial subset)
-    predefinedAmounts: "", // comma-separated
-    allowCustomAmount: true,
-    minCustomAmount: 1,
-    maxCustomAmount: 1000,
+    predefinedAmounts: DEFAULT_CAMPAIGN_CONFIG.predefinedAmounts.join(","),
+    allowCustomAmount: DEFAULT_CAMPAIGN_CONFIG.allowCustomAmount,
+    minCustomAmount: DEFAULT_CAMPAIGN_CONFIG.minCustomAmount,
+    maxCustomAmount: DEFAULT_CAMPAIGN_CONFIG.maxCustomAmount,
     // Adding more CampaignConfiguration fields
-    suggestedAmounts: "", // comma-separated
-    enableRecurring: false,
-    recurringIntervals: "", // comma-separated
-    defaultRecurringInterval: "monthly",
-    recurringDiscount: 0,
+    suggestedAmounts: DEFAULT_CAMPAIGN_CONFIG.suggestedAmounts.join(","),
+    enableRecurring: DEFAULT_CAMPAIGN_CONFIG.enableRecurring,
+    recurringIntervals: DEFAULT_CAMPAIGN_CONFIG.recurringIntervals.join(","),
+    defaultRecurringInterval: DEFAULT_CAMPAIGN_CONFIG.defaultRecurringInterval,
+    recurringDiscount: DEFAULT_CAMPAIGN_CONFIG.recurringDiscount,
     // Adding Display Settings fields
-    displayStyle: "grid",
-    showProgressBar: true,
-    showDonorCount: true,
-    showRecentDonations: true,
-    maxRecentDonations: 5,
+    displayStyle: DEFAULT_CAMPAIGN_CONFIG.displayStyle,
+    showProgressBar: DEFAULT_CAMPAIGN_CONFIG.showProgressBar,
+    showDonorCount: DEFAULT_CAMPAIGN_CONFIG.showDonorCount,
+    showRecentDonations: DEFAULT_CAMPAIGN_CONFIG.showRecentDonations,
+    maxRecentDonations: DEFAULT_CAMPAIGN_CONFIG.maxRecentDonations,
     // Adding Call-to-Action fields
-    primaryCTAText: "Donate Now",
-    secondaryCTAText: "",
+    primaryCTAText: DEFAULT_CAMPAIGN_CONFIG.primaryCTAText,
+    secondaryCTAText: DEFAULT_CAMPAIGN_CONFIG.secondaryCTAText || "",
     urgencyMessage: "",
     // Adding Visual Customization fields
     accentColor: "#4F46E5",
     backgroundImage: "",
-    theme: "default",
+    theme: DEFAULT_CAMPAIGN_CONFIG.theme,
     // Adding Form Configuration fields
-    requiredFields: "", // comma-separated
-    optionalFields: "", // comma-separated
-    enableAnonymousDonations: true,
+    requiredFields: DEFAULT_CAMPAIGN_CONFIG.requiredFields.join(","),
+    optionalFields: DEFAULT_CAMPAIGN_CONFIG.optionalFields.join(","),
+    enableAnonymousDonations: DEFAULT_CAMPAIGN_CONFIG.enableAnonymousDonations,
     // Adding Social Features fields
-    enableSocialSharing: true,
+    enableSocialSharing: DEFAULT_CAMPAIGN_CONFIG.enableSocialSharing,
     shareMessage: "",
-    enableDonorWall: true,
-    enableComments: true,
+    enableDonorWall: DEFAULT_CAMPAIGN_CONFIG.enableDonorWall,
+    enableComments: DEFAULT_CAMPAIGN_CONFIG.enableComments,
   };
 
   const [formData, setFormData] = useState<DocumentData>(initialFormData);
