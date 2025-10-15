@@ -49,7 +49,7 @@ import {
   RotateCcw,
   Eye,
 } from "lucide-react";
-import { Kiosk, Campaign } from "../../../app/App";
+import { Kiosk, Campaign } from "../../../shared/types";
 
 type DeviceInfoForm = (Kiosk["deviceInfo"]) & {
   modelCustom?: string;

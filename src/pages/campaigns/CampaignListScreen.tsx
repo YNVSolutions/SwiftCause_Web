@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { CampaignCard } from '../../shared/ui/CampaignCard';
 import { NavigationHeader } from '../../shared/ui/NavigationHeader';
-import { Campaign, KioskSession, Kiosk } from '../../app/App';
+import { Campaign, KioskSession, Kiosk } from '../../shared/types';
 import { Button } from '../../shared/ui/button';
 import { RotateCcw, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
 import { updateKiosk } from '../../shared/api/firestoreService';

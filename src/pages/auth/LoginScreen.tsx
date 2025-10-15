@@ -20,7 +20,7 @@ import {
   ArrowLeft,
   Home,
 } from 'lucide-react';
-import { UserRole, KioskSession, AdminSession } from '../../app/App';
+import { UserRole, KioskSession, AdminSession } from '../../shared/types';
 import { KioskLoginContainer } from '../../features/auth/containers/KioskLoginContainer';
 import { AdminLoginContainer } from '../../features/auth/containers/AdminLoginContainer';
 

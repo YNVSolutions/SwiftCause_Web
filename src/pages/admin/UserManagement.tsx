@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { Skeleton } from "../../shared/ui/skeleton";
 import { Ghost } from "lucide-react";
-import { Screen, User, UserRole, AdminSession, Permission } from '../../app/App';
+import { Screen, User, UserRole, AdminSession, Permission } from '../../shared/types';
 import { calculateUserStats } from '../../shared/lib/userManagementHelpers';
 import { useUsers } from '../../shared/lib/hooks/useUsers';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../../shared/ui/dialog';

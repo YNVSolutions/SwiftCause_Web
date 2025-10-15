@@ -3,7 +3,7 @@ import { Button } from '../../../shared/ui/button';
 import { Badge } from '../../../shared/ui/badge';
 import { TableCell, TableRow } from '../../../shared/ui/table';
 import { Edit, Trash2, Users, Shield, Key } from 'lucide-react';
-import { User } from '../../../app/App';
+import { User } from '../../../shared/types';
 import { formatDate, getRoleBadge, getLastLoginStatus } from '../../../shared/lib/userManagementHelpers';
 
 interface UserTableRowProps {
