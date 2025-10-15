@@ -31,7 +31,7 @@ import {
   MapPin,
   MessageSquare
 } from 'lucide-react';
-import { Campaign, CampaignConfiguration } from '../../../shared/types';
+import { Campaign, CampaignConfiguration } from '../../../entities/campaign';
 import { 
   CAMPAIGN_CATEGORIES, 
   CAMPAIGN_THEMES, 
@@ -59,17 +59,24 @@ export function CampaignConfigurationDialog({
     if (campaign) return { ...campaign };
     
     // Default campaign with sensible configuration
-    return {
+    const defaults: Campaign = {
       id: '',
       title: '',
       description: '',
       coverImageUrl: '',
-      category: '',
       createdAt: new Date().toISOString().split('T')[0],
       endDate: '',
-      ...DEFAULT_CAMPAIGN_VALUES,
-      configuration: DEFAULT_CAMPAIGN_CONFIG
+      ...{ ...DEFAULT_CAMPAIGN_VALUES, assignedKiosks: [...DEFAULT_CAMPAIGN_VALUES.assignedKiosks] as string[], galleryImages: [...DEFAULT_CAMPAIGN_VALUES.galleryImages] as string[] },
+      configuration: {
+        ...DEFAULT_CAMPAIGN_CONFIG,
+        predefinedAmounts: [...DEFAULT_CAMPAIGN_CONFIG.predefinedAmounts] as number[],
+        suggestedAmounts: [...DEFAULT_CAMPAIGN_CONFIG.suggestedAmounts] as number[],
+        recurringIntervals: [...DEFAULT_CAMPAIGN_CONFIG.recurringIntervals],
+        requiredFields: [...DEFAULT_CAMPAIGN_CONFIG.requiredFields],
+        optionalFields: [...DEFAULT_CAMPAIGN_CONFIG.optionalFields],
+      }
     };
+    return defaults;
   });
 
   const [customAmount, setCustomAmount] = useState('');
@@ -111,8 +118,8 @@ export function CampaignConfigurationDialog({
     });
   };
 
-  const applyAmountSet = (amounts: number[]) => {
-    updateConfiguration({ predefinedAmounts: amounts });
+  const applyAmountSet = (amounts: number[] | readonly number[]) => {
+    updateConfiguration({ predefinedAmounts: [...amounts] as number[] });
   };
 
   const toggleRecurringInterval = (interval: 'monthly' | 'quarterly' | 'yearly') => {

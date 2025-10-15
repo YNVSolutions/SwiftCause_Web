@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../shared/lib/firebase';
 import { useKiosks } from '../../shared/lib/hooks/useKiosks';
-import { useCampaigns } from '../../shared/lib/hooks/useCampaigns';
+import { useCampaigns } from '../../entities/campaign';
 import { useKioskPerformance } from '../../shared/lib/hooks/useKioskPerformance';
 import {
   collection,

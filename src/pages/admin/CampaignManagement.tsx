@@ -1224,7 +1224,13 @@ const CampaignManagement = ({
     return "bg-blue-500";
   };
 
-  const uniqueCategories = Array.from(new Set(campaigns.map((c: any) => c.category).filter(Boolean)));
+  const uniqueCategories: string[] = Array.from(
+    new Set(
+      (campaigns as any[])
+        .map((c) => (typeof c.category === 'string' ? c.category : ''))
+        .filter((v): v is string => Boolean(v))
+    )
+  );
 
   const filteredAndSortedCampaigns = campaigns
     .filter((campaign: any) => {
