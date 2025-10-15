@@ -1,18 +1,12 @@
 import { useState, useEffect } from "react";
 import { doc, onSnapshot, DocumentData } from "firebase/firestore";
 import { db } from "../firebase";
+import { Organization } from "../types";
 
 export interface StripeAccountInfo {
   accountId: string;
   chargesEnabled: boolean;
   payoutsEnabled: boolean;
-}
-
-export interface Organization {
-  id: string;
-  name: string;
-  stripe?: StripeAccountInfo;
-  // Add other organization fields as necessary
 }
 
 export const useOrganization = (organizationId: string | null) => {
