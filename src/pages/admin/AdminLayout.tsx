@@ -1,5 +1,5 @@
 import React from "react";
-import { Screen, AdminSession, Permission } from "../../app/App";
+import { Screen, AdminSession, Permission } from "../../shared/types";
 import {
   SidebarProvider,
   Sidebar,
