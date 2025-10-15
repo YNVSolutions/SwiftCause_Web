@@ -5,7 +5,7 @@ import { Badge } from '../../../shared/ui/badge';
 import { Progress } from '../../../shared/ui/progress';
 import { ImageWithFallback } from '../../../shared/ui/figma/ImageWithFallback';
 import { Heart, Info, ArrowRight, Star } from 'lucide-react';
-import { Campaign } from '../../../app/App';
+import { Campaign } from '../../../shared/types';
 import { formatCurrency } from '../../../shared/lib/currencyFormatter';
 
 interface CampaignCardProps {
