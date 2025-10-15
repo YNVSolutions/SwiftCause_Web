@@ -3,7 +3,7 @@ import { Button } from '../../shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../shared/ui/card';
 import { Badge } from '../../shared/ui/badge';
 import { ArrowLeft, CreditCard, Shield, Lock, CreditCard as CreditCardIcon } from 'lucide-react';
-import { Campaign, Donation, PaymentResult } from '../../app/App';
+import { Campaign, Donation, PaymentResult } from '../../shared/types';
 import PaymentForm from '../../widgets/payment-flow/PaymentForm';
 import { Checkbox } from '../../shared/ui/checkbox';
 import { formatCurrency } from '../../shared/lib/currencyFormatter';
