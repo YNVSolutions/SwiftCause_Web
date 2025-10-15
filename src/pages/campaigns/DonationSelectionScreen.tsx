@@ -19,7 +19,7 @@ import {
   Gift,
   Percent
 } from 'lucide-react';
-import { Campaign, Donation } from '../../app/App';
+import { Campaign, Donation } from '../../shared/types';
 
 interface DonationSelectionScreenProps {
   campaign: Campaign;

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { fetchAllUsers, updateUser as updateUserApi, createUser as createUserApi, deleteUser as deleteUserApi } from '../../api/userApi';
-import { User, UserRole, Permission } from '../../../app/App';
+import { User, UserRole, Permission } from '../types';
 
 
 export function useUsers(organizationId?: string) {
