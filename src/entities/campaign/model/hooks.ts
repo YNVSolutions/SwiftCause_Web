@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { getCampaigns, getTopCampaigns, getAllCampaigns, updateCampaign, updateCampaignWithImage, createCampaign, createCampaignWithImage, deleteCampaign } from '../../api/firestoreService';
+import { getCampaigns, getTopCampaigns, getAllCampaigns, updateCampaign, updateCampaignWithImage, createCampaign, createCampaignWithImage, deleteCampaign } from '../../../shared/api/firestoreService';
 
 export function useCampaigns(organizationId?: string) {
   const [loading, setLoading] = useState(true);

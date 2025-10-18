@@ -1,5 +1,5 @@
 import { fetchAllDonations } from '../../api/legacy/donationsApi';
-import { Donation } from '../types'; 
+import { Donation } from '../../types'; 
 
 
 function formatTimestamp(timestamp: any): string {

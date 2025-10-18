@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CampaignCard } from '../../shared/ui/CampaignCard';
+import { CampaignCard } from '../../entities/campaign';
 import { NavigationHeader } from '../../shared/ui/NavigationHeader';
 import { Campaign, KioskSession, Kiosk } from '../../shared/types';
 import { Button } from '../../shared/ui/button';

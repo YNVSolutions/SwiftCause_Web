@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { doc, onSnapshot, DocumentData } from "firebase/firestore";
 import { db } from "../firebase";
-import { Organization } from "../types";
+import { Organization } from "../../types";
 
 export interface StripeAccountInfo {
   accountId: string;
