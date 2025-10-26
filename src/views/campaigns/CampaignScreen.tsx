@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import { Campaign, Donation, Organization } from '../../shared/types';
 import { formatCurrency } from '../../shared/lib/currencyFormatter';
-import { getOrganizationById } from '../../shared/api/firestoreService';
+import { getOrganizationById } from '../../shared/api';
 
 type CampaignView = 'overview' | 'donate';
 

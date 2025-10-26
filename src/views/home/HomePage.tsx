@@ -225,7 +225,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
             <div className="flex items-center space-x-3">
               <div className="h-10 w-10">
                 <img 
-                  src={swiftCauseLogo} 
+                  src={swiftCauseLogo.src} 
                   alt="Swift Cause Logo" 
                   className="w-full h-full object-contain"
                 />
@@ -327,7 +327,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
                       <div className="flex items-center space-x-2">
                         <div className="w-8 h-8">
                           <img 
-                            src={swiftCauseLogo} 
+                            src={swiftCauseLogo.src} 
                             alt="Swift Cause" 
                             className="w-full h-full object-contain"
                           />

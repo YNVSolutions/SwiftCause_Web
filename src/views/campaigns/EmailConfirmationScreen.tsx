@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { createThankYouMail } from '../../shared/api/firestoreService';
+import { createThankYouMail } from '../../shared/api';
 import { Button } from '../../shared/ui/button';
 import { Input } from '../../shared/ui/input';
 import { Label } from '../../shared/ui/label';

@@ -21,8 +21,8 @@ import {
   Home,
 } from 'lucide-react';
 import { UserRole, KioskSession, AdminSession } from '../../shared/types';
-import { KioskLoginContainer } from '../../features/auth/containers/KioskLoginContainer';
-import { AdminLoginContainer } from '../../features/auth/containers/AdminLoginContainer';
+import { KioskLoginContainer } from '../../features/auth-by-kiosk';
+import { AdminLoginContainer } from '../../features/auth-by-email';
 
 interface LoginScreenProps {
   onLogin: (role: UserRole, sessionData?: KioskSession | AdminSession) => void;

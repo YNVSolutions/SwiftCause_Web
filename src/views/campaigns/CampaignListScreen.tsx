@@ -4,7 +4,7 @@ import { NavigationHeader } from '../../shared/ui/NavigationHeader';
 import { Campaign, KioskSession, Kiosk } from '../../shared/types';
 import { Button } from '../../shared/ui/button';
 import { RotateCcw, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
-import { updateKiosk } from '../../shared/api/firestoreService';
+import { updateKiosk } from '../../shared/api';
 
 interface CampaignListScreenProps {
   campaigns: Campaign[];

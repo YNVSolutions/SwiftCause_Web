@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
-import { getOrganizations } from '../../shared/api/firestoreService';
+import { getOrganizations } from '../../shared/api';
 import { AdminSession } from '../../shared/types';
 import { Building } from 'lucide-react';
 

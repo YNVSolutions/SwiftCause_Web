@@ -37,7 +37,7 @@ export function ContactPage({ onNavigate }: { onNavigate?: (screen: string) => v
           <div className="flex items-center space-x-3">
             <div className="h-8 w-8">
               <img 
-                src={swiftCauseLogo} 
+                src={swiftCauseLogo.src} 
                 alt="Swift Cause Logo" 
                 className="w-full h-full object-contain"
               />
