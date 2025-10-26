@@ -9,7 +9,12 @@ export default function AdminCampaignsPage() {
   const { currentAdminSession, hasPermission, handleLogout } = useAuth()
 
   const handleNavigate = (screen: string) => {
-    router.push(`/admin/${screen}`)
+    if (screen === 'admin' || screen === 'admin-dashboard') {
+      router.push('/admin')
+    } else {
+      const route = screen.replace('admin-', '')
+      router.push(`/admin/${route}`)
+    }
   }
 
   if (!currentAdminSession) {

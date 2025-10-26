@@ -205,7 +205,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
           <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between h-auto sm:h-16 gap-4">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                <Button variant="ghost" size="sm" onClick={() => onNavigate('admin-dashboard')} className="flex items-center space-x-2">
+                <Button variant="ghost" size="sm" onClick={() => onNavigate('admin')} className="flex items-center space-x-2">
                   <ArrowLeft className="w-4 h-4" /><span>Back to Dashboard</span>
                 </Button>
                 <div className="h-6 w-px bg-gray-300 hidden sm:block" />

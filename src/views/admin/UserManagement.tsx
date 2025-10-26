@@ -99,7 +99,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
                         <div className="flex items-center space-x-4">
-                            <Button variant="ghost" size="sm" onClick={() => onNavigate('admin-dashboard')} className="flex items-center space-x-2"><ArrowLeft className="w-4 h-4" /><span>Back to Dashboard</span></Button>
+                            <Button variant="ghost" size="sm" onClick={() => onNavigate('admin')} className="flex items-center space-x-2"><ArrowLeft className="w-4 h-4" /><span>Back to Dashboard</span></Button>
                             <div className="h-6 w-px bg-gray-300" />
                             <div><h1 className="text-xl font-semibold text-gray-900">User Management</h1><p className="text-sm text-gray-600">Manage platform users and permissions</p></div>
                         </div>

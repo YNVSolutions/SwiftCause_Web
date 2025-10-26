@@ -190,7 +190,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => onNavigate('admin-dashboard')}
+                onClick={() => onNavigate('admin')}
                 className="flex items-center space-x-2"
               >
                 <ArrowLeft className="w-4 h-4" />

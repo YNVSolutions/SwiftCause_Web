@@ -52,7 +52,7 @@ export function AdminLayout({ onNavigate, onLogout, userSession, hasPermission, 
             <SidebarGroupLabel>Navigation</SidebarGroupLabel>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton onClick={() => onNavigate("admin-dashboard")} isActive tooltip="Dashboard">
+                <SidebarMenuButton onClick={() => onNavigate("admin")} isActive tooltip="Dashboard">
                   <LayoutDashboard />
                   <span>Dashboard</span>
                 </SidebarMenuButton>
