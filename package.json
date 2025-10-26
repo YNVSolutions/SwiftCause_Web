@@ -6,8 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "install": "npm install --legacy-peer-deps"
+    "lint": "eslint"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.12",
