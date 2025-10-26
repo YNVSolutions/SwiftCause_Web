@@ -3,15 +3,21 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { CampaignScreen } from '@/views/campaigns/CampaignScreen'
 import { useAuth } from '@/shared/lib/auth-provider'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, use } from 'react'
 import { Campaign } from '@/shared/types'
+import { getCampaignById } from '@/shared/api/firestoreService'
 
-export default function CampaignPage({ params }: { params: { campaignId: string } }) {
+export default function CampaignPage({ params }: { params: Promise<{ campaignId: string }> }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { currentKioskSession } = useAuth()
   const [campaign, setCampaign] = useState<Campaign | null>(null)
   const [initialShowDetails, setInitialShowDetails] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  
+  // Unwrap the params Promise
+  const { campaignId } = use(params)
 
   useEffect(() => {
     if (searchParams) {
@@ -19,9 +25,30 @@ export default function CampaignPage({ params }: { params: { campaignId: string 
       setInitialShowDetails(view === 'overview')
     }
     
-    // TODO: Fetch campaign data based on campaignId
-    // For now, we'll need to implement this based on your existing campaign fetching logic
-  }, [searchParams, params.campaignId])
+    // Fetch campaign data based on campaignId
+    const fetchCampaign = async () => {
+      if (!campaignId) return
+      
+      try {
+        setLoading(true)
+        setError(null)
+        const campaignData = await getCampaignById(campaignId)
+        
+        if (campaignData) {
+          setCampaign(campaignData as Campaign)
+        } else {
+          setError('Campaign not found')
+        }
+      } catch (err) {
+        console.error('Error fetching campaign:', err)
+        setError('Failed to load campaign. Please try again.')
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    fetchCampaign()
+  }, [searchParams, campaignId])
 
   const handleDonationSubmit = (donation: any) => {
     // Store donation data in sessionStorage or pass via URL
@@ -30,7 +57,7 @@ export default function CampaignPage({ params }: { params: { campaignId: string 
       kioskId: currentKioskSession?.kioskId,
     }
     sessionStorage.setItem('donation', JSON.stringify(donationWithKiosk))
-    router.push(`/payment/${params.campaignId}`)
+    router.push(`/payment/${campaignId}`)
   }
 
   const handleBack = () => {
@@ -40,13 +67,21 @@ export default function CampaignPage({ params }: { params: { campaignId: string 
   const handleViewChange = (view: 'overview' | 'donate') => {
     // Update URL to reflect view change
     const newUrl = view === 'overview' 
-      ? `/campaign/${params.campaignId}?view=overview`
-      : `/campaign/${params.campaignId}`
+      ? `/campaign/${campaignId}?view=overview`
+      : `/campaign/${campaignId}`
     router.push(newUrl)
   }
 
-  if (!campaign) {
+  if (loading) {
     return <div>Loading campaign...</div>
+  }
+
+  if (error) {
+    return <div className="p-4 text-red-600">{error}</div>
+  }
+
+  if (!campaign) {
+    return <div>No campaign data available</div>
   }
 
   return (

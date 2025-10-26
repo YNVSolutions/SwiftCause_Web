@@ -23,6 +23,16 @@ export async function getCampaigns(organizationId?: string) {
   return snapshot.docs.map(d => ({ id: d.id, ...(d.data() as object) }));
 }
 
+export async function getCampaignById(campaignId: string) {
+  const docRef = doc(db, 'campaigns', campaignId);
+  const docSnap = await getDoc(docRef);
+  
+  if (docSnap.exists()) {
+    return { id: docSnap.id, ...(docSnap.data() as object) };
+  }
+  return null;
+}
+
 export async function getKiosks(organizationId?: string) {
   let kiosksCollection: any = collection(db, 'kiosks');
   if (organizationId) {
