@@ -6,7 +6,6 @@ const nextConfig = {
   env: {
     CUSTOM_KEY: process.env.CUSTOM_KEY,
   },
-  distDir: '.next-dev',
 }
 
 module.exports = nextConfig

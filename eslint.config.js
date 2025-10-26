@@ -2,28 +2,28 @@ import js from '@eslint/js'
 import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 import tseslint from 'typescript-eslint'
-import { globalIgnores } from 'eslint/config'
 import importPlugin from 'eslint-plugin-import'
-import nextPlugin from 'eslint-config-next' 
 
 export default tseslint.config([
-  globalIgnores(['dist']),
+  {
+    ignores: ['dist/**', 'node_modules/**', '.next/**', '.next-dev/**'],
+  },
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
       js.configs.recommended,
-      tseslint.configs.recommended,
-      reactHooks.configs['recommended-latest'],
-      nextPlugin,
+      ...tseslint.configs.recommended,
     ],
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
     },
     plugins: {
+      'react-hooks': reactHooks,
       import: importPlugin,
     },
     rules: {
+      ...reactHooks.configs.recommended.rules,
       'import/no-restricted-paths': [
         'error',
         {
