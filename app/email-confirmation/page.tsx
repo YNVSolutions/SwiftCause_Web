@@ -3,9 +3,9 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { EmailConfirmationScreen } from '@/views/campaigns/EmailConfirmationScreen'
 import { useAuth } from '@/shared/lib/auth-provider'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 
-export default function EmailConfirmationPage() {
+function EmailConfirmationContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { userRole } = useAuth()
@@ -50,5 +50,13 @@ export default function EmailConfirmationPage() {
       transactionId={transactionId}
       onComplete={handleComplete}
     />
+  )
+}
+
+export default function EmailConfirmationPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <EmailConfirmationContent />
+    </Suspense>
   )
 }
