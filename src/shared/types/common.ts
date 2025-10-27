@@ -8,6 +8,7 @@ export type Screen =
   | "payment"
   | "result"
   | "email-confirmation"
+  | "admin"
   | "admin-dashboard"
   | "admin-campaigns"
   | "admin-kiosks"

@@ -1,5 +1,5 @@
 import React from 'react';
-import { KioskLogin } from '../../../pages/auth/KioskLogin';
+import { KioskLogin } from '../../../views/auth/KioskLogin';
 import { useKioskLogin } from '../hooks/useKioskLogin';
 import { UserRole, KioskSession } from '../../../shared/types';
 

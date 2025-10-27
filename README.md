@@ -37,16 +37,19 @@ A live version of the project is deployed on Vercel:
 
 ## 🛠️ Tech Stack
 
-This project uses a modern monorepo-like structure with a React/Vite frontend and a Firebase backend.
+This project uses a modern architecture with a Next.js frontend and a Firebase backend.
 
 | Area | Technology | Badge |
 | :--- | :--- | :--- |
-| **Frontend** | React | ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB) |
+| **Framework** | Next.js | ![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white) |
+| **Frontend** | React 19 | ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB) |
 | **Language** | TypeScript | ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white) |
-| **Build Tool** | Vite | ![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white) |
-| **Styling** | Tailwind CSS | ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-%231572B6.svg?style=for-the-badge&logo=tailwindcss&logoColor=white) |
+| **Styling** | Tailwind CSS 4 | ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-%231572B6.svg?style=for-the-badge&logo=tailwindcss&logoColor=white) |
 | **UI Components** | Radix UI | ![Radix UI](https://img.shields.io/badge/Radix_UI-161618?logo=radix-ui&logoColor=white) |
-| **Backend** | Firebase | ![Firebase](https://img.shields.io/badge/Firebase-FFCA28?logo=firebase&logoColor=black) |
+| **Icons** | Lucide React | ![Lucide](https://img.shields.io/badge/Lucide-222222?logo=lucide&logoColor=white) |
+| **Charts** | Recharts | ![Recharts](https://img.shields.io/badge/Recharts-232F3E?logo=recharts&logoColor=white) |
+| **Notifications** | Sonner | ![Sonner](https://img.shields.io/badge/Sonner-87CEEB?logo=sonner&logoColor=white) |
+| **Backend** | Firebase 11 | ![Firebase](https://img.shields.io/badge/Firebase-FFCA28?logo=firebase&logoColor=black) |
 | **Payments** | Stripe | ![Stripe](https://img.shields.io/badge/Stripe-626CD9?logo=stripe&logoColor=white) |
 | **Deployment** | Vercel | ![Vercel](https://img.shields.io/badge/vercel-%23000000.svg?style=for-the-badge&logo=vercel&logoColor=white) |
 | **CI/CD** | GitHub Actions | ![GitHub Actions](https://img.shields.io/badge/github%20actions-%232671E5.svg?style=for-the-badge&logo=githubactions&logoColor=white) |
@@ -68,80 +71,76 @@ Follow these instructions to set up and run the project on your local machine.
 ### Prerequisites
 
 You must have the following tools installed:
-* [Node.js](https://nodejs.org/) (v22 or later recommended)
-* [pnpm](https://pnpm.io/) (or `npm`)
+* [Node.js](https://nodejs.org/) (v18 or later recommended)
+* [npm](https://www.npmjs.com/) or [pnpm](https://pnpm.io/) package manager
 * [Firebase CLI](https://firebase.google.com/docs/cli) (for backend functions)
 
 You will also need accounts and API keys for:
-* Firebase
-* Stripe
+* Firebase account and API keys
+* Stripe account and publishable key
 
 ### Environment Setup
 
 This project requires environment variables for its services.
 
-1.  Create a `.env` file in the root directory.
-2.  Copy the contents of `.env.example` (if available) or add the following keys. You must get these values from your service provider dashboards (Firebase, Supabase, Stripe).
+1.  Create a `.env.local` file in the root directory.
+2.  Copy the contents of `.env.example` (if available) or add the following keys. You must get these values from your service provider dashboards (Firebase, Stripe).
 
     ```bash
-    # Supabase
-    VITE_SUPABASE_URL=YOUR_SUPABASE_PROJECT_URL
-    VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
-
     # Stripe
-    VITE_STRIPE_PUBLISHABLE_KEY=YOUR_STRIPE_PUBLISHABLE_KEY
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=YOUR_STRIPE_PUBLISHABLE_KEY
 
     # Firebase
-    VITE_FIREBASE_API_KEY=YOUR_FIREBASE_API_KEY
-    VITE_FIREBASE_AUTH_DOMAIN=YOUR_FIREBASE_AUTH_DOMAIN
-    VITE_FIREBASE_PROJECT_ID=YOUR_FIREBASE_PROJECT_ID
-    VITE_FIREBASE_STORAGE_BUCKET=YOUR_FIREBASE_STORAGE_BUCKET
-    VITE_FIREBASE_MESSAGING_SENDER_ID=YOUR_FIREBASE_MESSAGING_SENDER_ID
-    VITE_FIREBASE_APP_ID=YOUR_FIREBASE_APP_ID
+    NEXT_PUBLIC_FIREBASE_API_KEY=YOUR_FIREBASE_API_KEY
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=YOUR_FIREBASE_AUTH_DOMAIN
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID=YOUR_FIREBASE_PROJECT_ID
+    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=YOUR_FIREBASE_STORAGE_BUCKET
+    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=YOUR_FIREBASE_MESSAGING_SENDER_ID
+    NEXT_PUBLIC_FIREBASE_APP_ID=YOUR_FIREBASE_APP_ID
     ```
 
 ### Installation
 
 1.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/YNVSolutions/SwiftCause_Web.git](https://github.com/YNVSolutions/SwiftCause_Web.git)
+    git clone https://github.com/YNVSolutions/SwiftCause_Web.git
     cd SwiftCause_Web
     ```
 
-2.  **Install Frontend Dependencies:**
-    (From the root directory)
-    ```bash
-    pnpm install
-    ```
-    *or*
+2.  **Install Dependencies:**
     ```bash
     npm install
+    ```
+    *or if using pnpm:*
+    ```bash
+    pnpm install
     ```
 
-3.  **Install Backend Dependencies:**
-    ```bash
-    cd backend/functions
-    pnpm install
-    ```
-    *or*
-    ```bash
-    npm install
-    ```
+3.  **Set up environment variables:**
+    Create a `.env.local` file in the root directory and add your Firebase and Stripe credentials as shown in the [Environment Setup](#environment-setup) section.
 
 ### Running Locally
 
-You will need to run the frontend development server and the backend functions emulator in two separate terminals.
+Start the development server:
 
-1.  **Terminal 1: Start the Frontend (Vite):**
-    (From the root directory)
-    ```bash
-    pnpm dev
-    ```
-     *or*
-    ```bash
-    npm run dev
-    ```
-    The application will be available at `http://localhost:5173`.
+```bash
+npm run dev
+```
+*or if using pnpm:*
+```bash
+pnpm dev
+```
+
+The application will be available at `http://localhost:3000`.
+
+**Note:** If you're using Firebase Cloud Functions for the backend, you may need to run the Firebase emulator in a separate terminal:
+
+```bash
+cd backend/functions
+npm install
+cd ../..
+firebase emulators:start
+```
 
 
 ## 🤝 Contributing
@@ -157,48 +156,65 @@ Contributions are welcome! If you'd like to help improve SwiftCause, please foll
 
 ## Visual Studio Code 
 
-You would need to have the latest version of [VS Code](https://code.visualstudio.com) and VS Code [Chrome Debugger Extension](https://marketplace.visualstudio.com/items?itemName=msjsdiag.debugger-for-chrome) installed.
+You would need to have the latest version of [VS Code](https://code.visualstudio.com) installed.
 
-Then add the block below to your `launch.json` file and put it inside the `.vscode` folder in your app’s root directory.
+For Next.js debugging in VS Code, you can use the built-in Node.js debugger. Add the block below to your `launch.json` file inside the `.vscode` folder in your app's root directory.
 
 ```json
 {
   "version": "0.2.0",
-  "configurations": [{
-    "name": "Chrome",
-    "type": "chrome",
-    "request": "launch",
-    "url": "http://localhost:3000",
-    "webRoot": "${workspaceRoot}/src",
-    "sourceMapPathOverrides": {
-      "webpack:///src/*": "${webRoot}/*"
+  "configurations": [
+    {
+      "name": "Next.js: debug server-side",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/next/dist/bin/next",
+      "args": ["dev"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Next.js: debug client-side",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}"
+    },
+    {
+      "name": "Next.js: debug full stack",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/next/dist/bin/next",
+      "args": ["dev"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"],
+      "serverReadyAction": {
+        "pattern": "- Local:.+(https?://.+)",
+        "uriFormat": "%s",
+        "action": "debugWithChrome"
+      }
     }
-  }]
+  ]
 }
 ```
->Note: the URL may be different if you've made adjustments via the [HOST or PORT environment variables](#advanced-configuration).
 
-Start your app by running `npm start`, and start debugging in VS Code by pressing `F5` or by clicking the green debug icon. You can now write code, set breakpoints, make changes to the code, and debug your newly modified code—all from your editor.
-
-Having problems with VS Code Debugging? Please see their [troubleshooting guide](https://github.com/Microsoft/vscode-chrome-debug/blob/master/README.md#troubleshooting).
+Start debugging in VS Code by pressing `F5` or by clicking the green debug icon. You can now write code, set breakpoints, make changes to the code, and debug your newly modified code—all from your editor.
 
 
 ## Supported Browsers
 
-By default, the generated project usee the latest version of React.
+By default, the generated project uses the latest version of React 19 and Next.js 16.
 
 You can refer [to the React documentation](https://react.dev/learn) for more information about supported browsers.
 
-## Install TailwindCSS (v4.0)
+## Styling with Tailwind CSS
 
-1. Go to https://tailwindcss.com/
-2. Get started
-3. Under framework guides, select Next.js
-4. Follow the steps mentioned there to start using TailwindCSS 
+This project uses Tailwind CSS v4.0 for styling. The configuration is already set up in `tailwind.config.js` with custom colors, border radius, and other design tokens.
 
 **Developer Recommendations:**
 * Use [Prettier](https://prettier.io/) for code formatting.
 * Install the [Tailwind CSS IntelliSense](https://marketplace.visualstudio.com/items?itemName=bradlc.vscode-tailwindcss) extension for VS Code.
+* Install the [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) extension for VS Code for better code quality.
 * Before starting work, please create and/or assign an issue to yourself.
 
 ## ©️ License
