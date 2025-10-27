@@ -149,3 +149,25 @@ export async function createThankYouMail(recipientEmail: string) {
 
   await addDoc(mailRef, donationThankYouEmail);
 }
+
+export interface FeedbackData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  message: string;
+  timestamp?: Date;
+}
+
+export async function submitFeedback(feedback: FeedbackData) {
+  const feedbackRef = collection(db, 'feedback');
+  const feedbackData = {
+    firstName: feedback.firstName,
+    lastName: feedback.lastName,
+    email: feedback.email,
+    message: feedback.message,
+    timestamp: Timestamp.now()
+  };
+  
+  const docRef = await addDoc(feedbackRef, feedbackData);
+  return { id: docRef.id, ...feedbackData };
+}
