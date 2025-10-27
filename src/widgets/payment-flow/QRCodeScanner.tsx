@@ -26,7 +26,7 @@ export function QRCodeScanner({ onScanSuccess, onScanError, isActive, onClose }:
   const [lastScanResult, setLastScanResult] = useState<string>('');
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const scanIntervalRef = useRef<NodeJS.Timeout>();
+  const scanIntervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   // Cleanup function
   const cleanup = () => {
