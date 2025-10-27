@@ -3,10 +3,10 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ResultScreen } from '@/views/campaigns/ResultScreen'
 import { useAuth } from '@/shared/lib/auth-provider'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { PaymentResult } from '@/shared/types'
 
-export default function ResultPage() {
+function ResultContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { userRole } = useAuth()
@@ -56,5 +56,13 @@ export default function ResultPage() {
       onEmailConfirmation={paymentResult.success ? handleEmailConfirmation : undefined}
       onReturnToStart={handleReturnToStart}
     />
+  )
+}
+
+export default function ResultPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ResultContent />
+    </Suspense>
   )
 }
