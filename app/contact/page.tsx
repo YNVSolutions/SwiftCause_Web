@@ -7,7 +7,11 @@ export default function Contact() {
   const router = useRouter()
 
   const handleNavigate = (screen: string) => {
-    router.push(`/${screen}`)
+    if (screen === 'home') {
+      router.push('/')
+    } else {
+      router.push(`/${screen}`)
+    }
   }
 
   return <ContactPage onNavigate={handleNavigate} />

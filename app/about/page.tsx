@@ -7,7 +7,11 @@ export default function About() {
   const router = useRouter()
 
   const handleNavigate = (screen: string) => {
-    router.push(`/${screen}`)
+    if (screen === 'home') {
+      router.push('/')
+    } else {
+      router.push(`/${screen}`)
+    }
   }
 
   return <AboutPage onNavigate={handleNavigate} />
