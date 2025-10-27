@@ -16,7 +16,7 @@ export function Toast({ message, variant = "info", onClose, durationMs = 2500 }:
     return () => clearTimeout(id);
   }, [onClose, durationMs]);
 
-  const palette: Record<ToastVariant, { bg: string; border: string; text: string; iconBg: string; icon: JSX.Element }> = {
+  const palette: Record<ToastVariant, { bg: string; border: string; text: string; iconBg: string; icon: React.ReactElement }> = {
     success: {
       bg: "bg-emerald-50 dark:bg-emerald-900/20",
       border: "border-emerald-200 dark:border-emerald-800",
