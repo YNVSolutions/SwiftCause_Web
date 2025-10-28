@@ -7,7 +7,11 @@ export default function Terms() {
   const router = useRouter()
 
   const handleNavigate = (screen: string) => {
-    router.push(`/${screen}`)
+    if (screen === 'home') {
+      router.push('/')
+    } else {
+      router.push(`/${screen}`)
+    }
   }
 
   return <TermsPage onNavigate={handleNavigate} />

@@ -244,8 +244,8 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
                 <div className="pt-4 border-t text-center space-y-2">
                   <p className="text-sm text-gray-600">Need assistance?</p>
                   <div className="flex items-center justify-center space-x-4 text-sm">
-                    <a href="mailto:ynvtech@gmail.com" className="text-indigo-600 hover:text-indigo-700 font-medium">
-                      📩 ynvtech@gmail.com
+                    <a href="mailto:swiftcauseweb@gmail.com" className="text-indigo-600 hover:text-indigo-700 font-medium">
+                      📩 swiftcauseweb@gmail.com
                     </a>
                     <span className="text-gray-300">•</span>
                     <span className="text-gray-600">24/7 Support</span>

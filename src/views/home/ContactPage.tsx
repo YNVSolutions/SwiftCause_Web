@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Button } from '../../shared/ui/button';
-import { ArrowLeft, Mail, Phone, Building, SendHorizontal, Loader2, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, Building, SendHorizontal, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { Footer } from '../../shared/ui/Footer';
 import swiftCauseLogo from '../../shared/assets/logo.png';
+import { submitFeedback } from '../../shared/api/firestoreService';
 
 const ContactInfoItem = ({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) => (
   <div className="flex items-start">
@@ -19,15 +20,37 @@ const ContactInfoItem = ({ icon, title, children }: { icon: React.ReactNode; tit
 export function ContactPage({ onNavigate }: { onNavigate?: (screen: string) => void }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    message: ''
+  });
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setIsLoading(true);
+    setError(null);
 
-    setTimeout(() => {
+    try {
+      await submitFeedback(formData);
       setIsLoading(false);
       setIsSubmitted(true);
-    }, 2000);
+    } catch (err) {
+      console.error('Error submitting feedback:', err);
+      setIsLoading(false);
+      setError('Failed to send message. Please try again.');
+    }
+  };
+
+  const handleChange = (field: keyof typeof formData) => (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: e.target.value
+    }));
   };
 
   return (
@@ -64,11 +87,11 @@ export function ContactPage({ onNavigate }: { onNavigate?: (screen: string) => v
               </p>
               <div className="mt-12 space-y-8 not-prose">
                 <ContactInfoItem icon={<Mail size={24} />} title="Email Us">
-                  <a href="mailto:support@swiftcause.com" className="hover:text-indigo-600 transition">support@swiftcause.com</a>
+                  <a href="mailto:swiftcauseweb@gmail.com" className="hover:text-indigo-600 transition">swiftcauseweb@gmail.com</a>
                   <p className="text-sm">General & Support Inquiries</p>
                 </ContactInfoItem>
                 <ContactInfoItem icon={<Building size={24} />} title="Our Office">
-                  <p>123 Philanthropy Lane<br />London, E1 6AN, UK</p>
+                  <p>Soon to be announced</p>
                 </ContactInfoItem>
               </div>
             </div>
@@ -82,23 +105,57 @@ export function ContactPage({ onNavigate }: { onNavigate?: (screen: string) => v
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-6">
+                  {error && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md flex items-start">
+                      <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
+                      <span>{error}</span>
+                    </div>
+                  )}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
-                      <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                      <input type="text" id="name" required className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition" />
+                      <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                      <input 
+                        type="text" 
+                        id="firstName" 
+                        required 
+                        value={formData.firstName}
+                        onChange={handleChange('firstName')}
+                        className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition" 
+                      />
                     </div>
                     <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                      <input type="email" id="email" required className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition" />
+                      <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                      <input 
+                        type="text" 
+                        id="lastName" 
+                        required 
+                        value={formData.lastName}
+                        onChange={handleChange('lastName')}
+                        className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition" 
+                      />
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
-                    <input type="text" id="subject" required className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition" />
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                    <input 
+                      type="email" 
+                      id="email" 
+                      required 
+                      value={formData.email}
+                      onChange={handleChange('email')}
+                      className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition" 
+                    />
                   </div>
                   <div>
                     <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">Message</label>
-                    <textarea id="message" rows={4} required className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition" />
+                    <textarea 
+                      id="message" 
+                      rows={4} 
+                      required 
+                      value={formData.message}
+                      onChange={handleChange('message')}
+                      className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition" 
+                    />
                   </div>
                   <div>
                     <Button type="submit" className="w-full flex justify-center items-center py-3 px-6" disabled={isLoading}>

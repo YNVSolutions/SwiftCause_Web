@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, updateDoc, addDoc, collection } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { getStorage, ref, deleteObject } from 'firebase/storage'; // Import ref and deleteObject
 import { getFunctions } from 'firebase/functions'; // Import getFunctions
@@ -32,4 +32,4 @@ const deleteFile = async (fileUrl: string) => {
   }
 };
 
-export { db, auth, storage, functions, doc, getDoc, updateDoc, deleteFile };
+export { db, auth, storage, functions, doc, getDoc, updateDoc, addDoc, collection, deleteFile };
