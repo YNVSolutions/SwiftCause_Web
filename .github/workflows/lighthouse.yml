@@ -30,27 +30,13 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build application
-        run: npm run build
-        env:
-          NODE_ENV: production
-
-      - name: Start server
-        run: |
-          npm run start &
-          echo "Waiting for server to start..."
-          npx wait-on http://localhost:3000 --timeout 60000
-
       - name: Run Lighthouse CI
         id: lighthouse
         run: |
           npm install -g @lhci/cli@0.13.x
           
           # Run Lighthouse
-          lhci autorun --collect.url=http://localhost:3000 --collect.numberOfRuns=3 || true
+          lhci autorun --collect.url=https://swift-cause-web.vercel.app --collect.numberOfRuns=3 || true
           
           # Parse results (simplified version)
           echo "Lighthouse scan completed"
@@ -61,7 +47,7 @@ jobs:
         uses: treosh/lighthouse-ci-action@v11
         with:
           urls: |
-            http://localhost:3000
+            https://swift-cause-web.vercel.app
           uploadArtifacts: true
           temporaryPublicStorage: true
           runs: 3
