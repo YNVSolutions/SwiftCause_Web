@@ -516,155 +516,153 @@ export function AdminDashboard({
     <AdminLayout onNavigate={onNavigate} onLogout={onLogout} userSession={userSession} hasPermission={hasPermission}>
       <header className="bg-white shadow-sm border rounded-md">
         <div className="px-2 sm:px-4 lg:px-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between h-auto gap-4 py-3">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-              <div className="flex h-12 w-12 items-center justify-center mb-2 sm:mb-0">
-                <img src="/logo.png" className="h-12 w-12 rounded-xl shadow-md" alt="My Logo" />
-              </div>
-              <div>
-                <div className="flex items-center space-x-3">
-                  <h1 className="text-xl font-semibold text-gray-900 flex items-center">
-                    Admin Dashboard
-                    {organization && (
-                      <span className="ml-2 text-2xl font-bold text-indigo-700">
-                        - {organization.name}
-                      </span>
-                    )}
-                  </h1>
-                  <Badge variant="secondary" className="px-3 py-1 text-sm font-medium rounded-full bg-gray-200 text-gray-700">
-                    {userSession.user.role}
-                  </Badge>
+          <div className="flex flex-col gap-4 py-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                  <img src="/logo.png" className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl shadow-md flex-shrink-0" alt="Logo" />
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 sm:gap-x-3 min-w-0 flex-1">
+                    <h1 className="text-base sm:text-xl font-semibold text-gray-900 flex items-center flex-wrap gap-1 sm:gap-2">
+                      <span className="whitespace-nowrap">Admin Dashboard</span>
+                      {organization && (
+                        <span className="text-lg sm:text-xl md:text-2xl font-bold text-indigo-700 truncate max-w-[200px] sm:max-w-none">
+                          {organization.name}
+                        </span>
+                      )}
+                    </h1>
+                    <Badge variant="secondary" className="px-2 sm:px-3 py-0.5 sm:py-1 text-xs sm:text-sm font-medium rounded-full bg-gray-200 text-gray-700 whitespace-nowrap flex-shrink-0">
+                      {userSession.user.role}
+                    </Badge>
+                  </div>
                 </div>
-                <p className="text-sm text-gray-600">Welcome back, {userSession.user.username}</p>
+                {userSession.user.role === 'super_admin' && hasPermission('system_admin') && (
+                  <div className="w-full sm:w-auto">
+                    <OrganizationSwitcher userSession={userSession} onOrganizationChange={onOrganizationSwitch} />
+                  </div>
+                )}
               </div>
-              {userSession.user.role === 'super_admin' && hasPermission('system_admin') && (
-                <OrganizationSwitcher userSession={userSession} onOrganizationChange={onOrganizationSwitch} />
-              )}
-            </div>
-            <div className="flex flex-col sm:flex-row items-center gap-2">
-              {organization && organization.stripe && (
-                <Dialog open={showStripeStatusDialog} onOpenChange={setShowStripeStatusDialog}>
-                  <DialogTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="lg"
-                      className={`relative ml-2 rounded-full p-2.5 
-                        ${!organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled
-                          ? 'text-red-600 hover:text-red-700 animate-pulse bg-red-100'
-                          : 'text-green-600 hover:text-green-700 bg-green-100'
-                        }`}
-                      aria-label="Stripe Status"
-                    >
-                      {!organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled ? (
-                        <CreditCard className="h-6 w-6" />
-                      ) : (
-                        <CreditCard className="h-6 w-6" />
-                      )}
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                      <DialogTitle className="flex items-center space-x-2">
-                        {!organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled ? (
-                          <CreditCard className="h-5 w-5 text-red-600" />
-                        ) : (
-                          <CreditCard className="h-5 w-5 text-green-600" />
-                        )}
-                        <span>Stripe Account Status</span>
-                      </DialogTitle>
-                      <DialogDescription>
-                        Review the current status of your Stripe integration.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                      {orgLoading ? (
-                        <p>Loading organization data...</p>
-                      ) : orgError ? (
-                        <p className="text-red-500">Error: {orgError}</p>
-                      ) : organization &&
-                        organization.stripe &&
-                        !organization.stripe.chargesEnabled ? (
-                        <>
-                          <p className="text-sm text-yellow-700">
-                            Your organization needs to complete Stripe onboarding to accept donations and receive payouts.
+              <div className="flex flex-row items-center gap-2 w-full sm:w-auto justify-end">
+                {organization && organization.stripe && (
+                  <Dialog open={showStripeStatusDialog} onOpenChange={setShowStripeStatusDialog}>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`relative rounded-full p-2 sm:p-2.5
+                          ${!organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled
+                            ? 'text-red-600 hover:text-red-700 animate-pulse bg-red-100'
+                            : 'text-green-600 hover:text-green-700 bg-green-100'
+                          }`}
+                        aria-label="Stripe Status"
+                      >
+                        <CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px] mx-4">
+                      <DialogHeader>
+                        <DialogTitle className="flex items-center space-x-2 text-base sm:text-lg">
+                          {!organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled ? (
+                            <CreditCard className="h-5 w-5 text-red-600" />
+                          ) : (
+                            <CreditCard className="h-5 w-5 text-green-600" />
+                          )}
+                          <span>Stripe Account Status</span>
+                        </DialogTitle>
+                        <DialogDescription className="text-sm">
+                          Review the current status of your Stripe integration.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        {orgLoading ? (
+                          <p className="text-sm">Loading organization data...</p>
+                        ) : orgError ? (
+                          <p className="text-sm text-red-500">Error: {orgError}</p>
+                        ) : organization &&
+                          organization.stripe &&
+                          !organization.stripe.chargesEnabled ? (
+                          <>
+                            <p className="text-sm text-yellow-700">
+                              Your organization needs to complete Stripe onboarding to accept donations and receive payouts.
+                            </p>
+                            <Button
+                              onClick={handleStripeOnboarding}
+                              className="bg-yellow-600 hover:bg-yellow-700 w-full sm:w-auto"
+                              disabled={isStripeOnboardingLoading}
+                            >
+                              {isStripeOnboardingLoading ? (
+                                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                              ) : (
+                                <CreditCard className="w-4 h-4 mr-2" />
+                              )}
+                              {isStripeOnboardingLoading ? "Processing..." : "Complete Stripe Onboarding"}
+                            </Button>
+                          </>
+                        ) : organization &&
+                          organization.stripe &&
+                          organization.stripe.chargesEnabled &&
+                          !organization.stripe.payoutsEnabled ? (
+                          <p className="text-sm text-blue-700">
+                            Your Stripe account is being reviewed. Payouts will be enabled shortly.
                           </p>
-                          <Button
-                            onClick={handleStripeOnboarding}
-                            className="bg-yellow-600 hover:bg-yellow-700"
-                            disabled={isStripeOnboardingLoading}
-                          >
-                            {isStripeOnboardingLoading ? (
-                              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                            ) : (
-                              <CreditCard className="w-4 h-4 mr-2" />
-                            )}
-                            {isStripeOnboardingLoading ? "Processing..." : "Complete Stripe Onboarding"}
+                        ) : (
+                          <p className="text-sm text-green-700">
+                            Your Stripe account is fully configured and ready to accept donations and process payouts.
+                          </p>
+                        )}
+                      </div>
+                      <DialogFooter>
+                        <DialogClose asChild>
+                          <Button type="button" variant="secondary" className="w-full sm:w-auto">
+                            Close
                           </Button>
-                        </>
-                      ) : organization &&
-                        organization.stripe &&
-                        organization.stripe.chargesEnabled &&
-                        !organization.stripe.payoutsEnabled ? (
-                        <p className="text-sm text-blue-700">
-                          Your Stripe account is being reviewed. Payouts will be enabled shortly.
-                        </p>
-                      ) : (
-                        <p className="text-sm text-green-700">
-                          Your Stripe account is fully configured and ready to accept donations and process payouts.
-                        </p>
-                      )}
-                    </div>
-                    <DialogFooter>
-                      <DialogClose asChild>
-                        <Button type="button" variant="secondary">
-                          Close
-                        </Button>
-                      </DialogClose>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              )}
-              <Button variant="outline" size="sm" onClick={handleRefresh} disabled={loading} className="flex items-center space-x-2">
-                <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-                <span>Refresh</span>
-              </Button>
-              <Button variant="ghost" size="sm" onClick={onLogout} className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
-                <LogOut className="w-4 h-4" />
-                <span>Logout</span>
-              </Button>
+                        </DialogClose>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                )}
+                <Button variant="outline" size="sm" onClick={handleRefresh} disabled={loading} className="flex items-center space-x-2">
+                  <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+                  <span className="hidden sm:inline">Refresh</span>
+                </Button>
+              </div>
             </div>
+            <p className="text-xs sm:text-sm text-gray-600">Welcome back, {userSession.user.username}</p>
           </div>
         </div>
       </header>
 
       <main className="px-1 sm:px-2 lg:px-4 py-4 sm:py-6">
         {stripeStatusMessage && (
-          <Card className={`mb-8 ${stripeStatusMessage.type === 'success' ? 'border-green-400 bg-green-50 text-green-800' : stripeStatusMessage.type === 'warning' ? 'border-yellow-400 bg-yellow-50 text-yellow-800' : 'border-red-400 bg-red-50 text-red-800'}`}>
-            <CardContent className="flex items-center space-x-3 p-4">
-              {stripeStatusMessage.type === 'success' && <CheckCircle className="w-5 h-5" />}
-              {stripeStatusMessage.type === 'warning' && <AlertCircle className="w-5 h-5" />}
-              {stripeStatusMessage.type === 'error' && <AlertCircle className="w-5 h-5" />}
-              <p className="font-medium">{stripeStatusMessage.message}</p>
+          <Card className={`mb-6 sm:mb-8 ${stripeStatusMessage.type === 'success' ? 'border-green-400 bg-green-50 text-green-800' : stripeStatusMessage.type === 'warning' ? 'border-yellow-400 bg-yellow-50 text-yellow-800' : 'border-red-400 bg-red-50 text-red-800'}`}>
+            <CardContent className="flex items-center space-x-2 sm:space-x-3 p-3 sm:p-4">
+              {stripeStatusMessage.type === 'success' && <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />}
+              {stripeStatusMessage.type === 'warning' && <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />}
+              {stripeStatusMessage.type === 'error' && <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />}
+              <p className="font-medium text-xs sm:text-sm break-words">{stripeStatusMessage.message}</p>
             </CardContent>
           </Card>
         )}
 
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
-          <div>
-            <h2 className="text-2xl text-gray-900">Overview</h2>
-            <p className="text-gray-600 text-sm sm:text-base">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 gap-4">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-1">Overview</h2>
+            <p className="text-gray-600 text-xs sm:text-sm md:text-base">
               Manage campaigns, configure kiosks, and track donations across your organization
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row items-stretch gap-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
             {hasPermission("create_campaign") && (
-              <Button onClick={() => onNavigate("admin-campaigns")} className="bg-indigo-600 hover:bg-indigo-700">
-                <Settings className="w-4 h-4 mr-2" />Manage Campaigns
+              <Button onClick={() => onNavigate("admin-campaigns")} className="bg-indigo-600 hover:bg-indigo-700 w-full sm:w-auto text-sm sm:text-base">
+                <Settings className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Manage Campaigns</span>
+                <span className="sm:hidden">Campaigns</span>
               </Button>
             )}
             {hasPermission("view_kiosks") && (
-              <Button variant="outline" onClick={() => onNavigate("admin-kiosks")}>
-                <Settings className="w-4 h-4 mr-2" />Manage Kiosks
+              <Button variant="outline" onClick={() => onNavigate("admin-kiosks")} className="w-full sm:w-auto text-sm sm:text-base">
+                <Settings className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Manage Kiosks</span>
+                <span className="sm:hidden">Kiosks</span>
               </Button>
             )}
           </div>
@@ -674,71 +672,71 @@ export function AdminDashboard({
         ) : orgError ? (
           <p className="text-red-500">Error: {orgError}</p>
         ) : null}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+          <Card className="aspect-square lg:aspect-auto">
+            <CardContent className="p-4 sm:p-6 h-full flex flex-col justify-between">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
                     Total Raised
                   </p>
-                  <p className="font-semibold text-gray-900 whitespace-nowrap text-[clamp(1.125rem,4vw,1.5rem)]">
+                  <p className="font-semibold text-gray-900 text-base sm:text-lg md:text-xl lg:text-2xl truncate">
                     {loading ? "..." : formatLargeCurrency(stats.totalRaised)}
                   </p>
                 </div>
-                <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <DollarSign className="h-6 w-6 text-green-600" />
+                <div className="h-10 w-10 sm:h-12 sm:w-12 bg-green-100 rounded-lg flex items-center justify-center shrink-0">
+                  <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">
+          <Card className="aspect-square lg:aspect-auto">
+            <CardContent className="p-4 sm:p-6 h-full flex flex-col justify-between">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
                     Total Donations
                   </p>
-                  <p className="text-2xl font-semibold text-gray-900">
+                  <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">
                     {loading ? "..." : formatNumber(stats.totalDonations)}
                   </p>
                 </div>
-                <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Heart className="h-6 w-6 text-blue-600" />
+                <div className="h-10 w-10 sm:h-12 sm:w-12 bg-blue-100 rounded-lg flex items-center justify-center shrink-0">
+                  <Heart className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">
+          <Card className="aspect-square lg:aspect-auto">
+            <CardContent className="p-4 sm:p-6 h-full flex flex-col justify-between">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
                     Active Campaigns
                   </p>
-                  <p className="text-2xl font-semibold text-gray-900">
+                  <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">
                     {loading ? "..." : stats.activeCampaigns}
                   </p>
                 </div>
-                <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <Globe className="h-6 w-6 text-purple-600" />
+                <div className="h-10 w-10 sm:h-12 sm:w-12 bg-purple-100 rounded-lg flex items-center justify-center shrink-0">
+                  <Globe className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">
+          <Card className="aspect-square lg:aspect-auto">
+            <CardContent className="p-4 sm:p-6 h-full flex flex-col justify-between">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
                     Active Kiosks
                   </p>
-                  <p className="text-2xl font-semibold text-gray-900">
+                  <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">
                     {loading ? "..." : stats.activeKiosks}
                   </p>
                 </div>
-                <div className="h-12 w-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                  <Settings className="h-6 w-6 text-orange-600" />
+                <div className="h-10 w-10 sm:h-12 sm:w-12 bg-orange-100 rounded-lg flex items-center justify-center shrink-0">
+                  <Settings className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
                 </div>
               </div>
             </CardContent>
@@ -749,48 +747,48 @@ export function AdminDashboard({
             <CollapsibleTrigger asChild>
               <Button
                 variant="ghost"
-                className="w-full justify-between p-2 h-auto mb-2 "
+                className="w-full justify-between p-2 sm:p-3 h-auto mb-2 text-left"
               >
                 <div className="flex items-center space-x-2">
-                  <Rocket className="w-5 h-5 text-indigo-600" />
-                  <h3 className="text-xl font-semibold text-gray-900">
+                  <Rocket className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 flex-shrink-0" />
+                  <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900">
                     Platform Features
                   </h3>
                 </div>
                 {showFeatures ? (
-                  <ChevronDown className="w-5 h-5" />
+                  <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                 ) : (
-                  <ChevronRight className="w-5 h-5" />
+                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                 )}
               </Button>
             </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-4 mb-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <CollapsibleContent className="space-y-4 mb-6 sm:mb-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {platformFeatures.map((feature, index) => (
                   <Card
                     key={index}
                     className="hover:shadow-md transition-shadow"
                   >
-                    <CardContent className="p-6">
+                    <CardContent className="p-4 sm:p-6">
                       <div
-                        className={`inline-flex p-3 rounded-lg ${feature.color} mb-4`}
+                        className={`inline-flex p-2 sm:p-3 rounded-lg ${feature.color} mb-3 sm:mb-4`}
                       >
                         {feature.icon}
                       </div>
-                      <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                      <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
                         {feature.title}
                       </h4>
-                      <p className="text-gray-600 mb-4">
+                      <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">
                         {feature.description}
                       </p>
-                      <ul className="space-y-2">
+                      <ul className="space-y-1.5 sm:space-y-2">
                         {feature.benefits.map((benefit, idx) => (
                           <li
                             key={idx}
-                            className="flex items-center text-sm text-gray-600"
+                            className="flex items-center text-xs sm:text-sm text-gray-600"
                           >
-                            <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                            {benefit}
+                            <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 mr-2 flex-shrink-0" />
+                            <span>{benefit}</span>
                           </li>
                         ))}
                       </ul>
@@ -808,23 +806,23 @@ export function AdminDashboard({
             <CollapsibleTrigger asChild>
               <Button
                 variant="ghost"
-                className="w-full justify-between p-2 h-auto mb-2"
+                className="w-full justify-between p-2 sm:p-3 h-auto mb-2 text-left"
               >
                 <div className="flex items-center space-x-2">
-                  <BookOpen className="w-5 h-5 text-green-600" />
-                  <h3 className="text-xl font-semibold text-gray-900">
+                  <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 flex-shrink-0" />
+                  <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900">
                     Getting Started
                   </h3>
                 </div>
                 {showGettingStarted ? (
-                  <ChevronDown className="w-5 h-5" />
+                  <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                 ) : (
-                  <ChevronRight className="w-5 h-5" />
+                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                 )}
               </Button>
             </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-4 mb-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <CollapsibleContent className="space-y-4 mb-6 sm:mb-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 {gettingStartedSteps.map((step, index) => (
                   <Card
                     key={index}
@@ -834,30 +832,31 @@ export function AdminDashboard({
                         : "opacity-60"
                     }`}
                   >
-                    <CardContent className="p-6">
-                      <div className="flex items-start space-x-4">
-                        <div className="flex items-center justify-center w-8 h-8 bg-indigo-100 text-indigo-600 rounded-full text-sm font-semibold">
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="flex items-start space-x-3 sm:space-x-4">
+                        <div className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-indigo-100 text-indigo-600 rounded-full text-xs sm:text-sm font-semibold flex-shrink-0">
                           {step.step}
                         </div>
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-2 mb-2">
-                            <div className="text-indigo-600">{step.icon}</div>
-                            <h4 className="font-semibold text-gray-900">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center space-x-2 mb-2 flex-wrap">
+                            <div className="text-indigo-600 flex-shrink-0">{step.icon}</div>
+                            <h4 className="font-semibold text-sm sm:text-base text-gray-900">
                               {step.title}
                             </h4>
                           </div>
-                          <p className="text-gray-600 mb-4">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
                             {step.description}
                           </p>
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
                             {step.canAccess ? (
                               <Button
                                 onClick={step.actionFunction}
                                 size="sm"
-                                className="bg-indigo-600 hover:bg-indigo-700"
+                                className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm"
                               >
-                                <Play className="w-4 h-4 mr-2" />
-                                {step.action}
+                                <Play className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                                <span className="hidden sm:inline">{step.action}</span>
+                                <span className="sm:hidden">Go</span>
                               </Button>
                             ) : (
                               <Badge variant="secondary" className="text-xs">
@@ -865,7 +864,7 @@ export function AdminDashboard({
                                 Requires permission
                               </Badge>
                             )}
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-gray-500 whitespace-nowrap">
                               ~{step.estimated}
                             </span>
                           </div>
@@ -877,22 +876,22 @@ export function AdminDashboard({
               </div>
 
               <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2 text-blue-900">
-                    <Lightbulb className="w-5 h-5" />
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="flex items-center space-x-2 text-blue-900 text-base sm:text-lg">
+                    <Lightbulb className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                     <span>Quick Tips</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <CardContent className="p-4 sm:p-6 pt-0">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {quickTips.map((tip, index) => (
-                      <div key={index} className="flex items-start space-x-3">
+                      <div key={index} className="flex items-start space-x-2 sm:space-x-3">
                         <div className="flex-shrink-0">{tip.icon}</div>
-                        <div>
-                          <h5 className="font-medium text-gray-900 mb-1">
+                        <div className="min-w-0">
+                          <h5 className="font-medium text-sm sm:text-base text-gray-900 mb-1">
                             {tip.title}
                           </h5>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-xs sm:text-sm text-gray-600">
                             {tip.description}
                           </p>
                         </div>
@@ -904,42 +903,48 @@ export function AdminDashboard({
             </CollapsibleContent>
           </Collapsible>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mb-6 sm:mb-8">
           <Card>
-            <CardHeader>
-              <CardTitle>Campaign Goal Comparison</CardTitle>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-base sm:text-lg">Campaign Goal Comparison</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 sm:p-6 pt-0">
               {loading ? (
                 <div className="space-y-4">
-                  <Skeleton className="h-[300px] w-full" />
+                  <Skeleton className="h-[250px] sm:h-[300px] w-full" />
                 </div>
               ) : goalComparisonData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
                   <BarChart data={goalComparisonData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" tick={false} />
+                    <XAxis 
+                      dataKey="name" 
+                      tick={false}
+                      className="text-xs"
+                    />
                     <YAxis
                       tickFormatter={(value) => formatShortCurrency(value as number)}
+                      className="text-xs"
                     />
                     <Tooltip
                       formatter={(value) => formatShortCurrency(value as number)}
+                      contentStyle={{ fontSize: '12px' }}
                     />
-                    <Legend />
+                    <Legend wrapperStyle={{ fontSize: '12px' }} />
                     <Bar dataKey="Collected" fill="#10B981" />
                     <Bar dataKey="Goal" fill="#94A3B8" />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <Target className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-                  <p className="text-lg font-medium mb-2">No Campaigns Yet</p>
-                  <p className="text-sm mb-4">
+                <div className="text-center py-6 sm:py-8 text-gray-500">
+                  <Target className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3" />
+                  <p className="text-base sm:text-lg font-medium mb-2">No Campaigns Yet</p>
+                  <p className="text-xs sm:text-sm mb-4 px-4">
                     Start by creating your first fundraising campaign to track progress.
                   </p>
                   {hasPermission("create_campaign") && (
-                    <Button onClick={() => onNavigate("admin-campaigns")}>
-                      <Plus className="w-4 h-4 mr-2" /> Create New Campaign
+                    <Button onClick={() => onNavigate("admin-campaigns")} size="sm" className="text-xs sm:text-sm">
+                      <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-2" /> Create New Campaign
                     </Button>
                   )}
                 </div>
@@ -948,14 +953,14 @@ export function AdminDashboard({
           </Card>
 
           <Card className="flex flex-col">
-            <CardHeader>
-              <CardTitle>Campaign Categories</CardTitle>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-base sm:text-lg">Campaign Categories</CardTitle>
             </CardHeader>
-            <CardContent className="flex-1 flex flex-col">
+            <CardContent className="flex-1 flex flex-col p-4 sm:p-6 pt-0">
               {loading ? (
                 <div className="space-y-4">
-                  <Skeleton className="h-[220px] w-full mb-4" />
-                  <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                  <Skeleton className="h-[180px] sm:h-[220px] w-full mb-4" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-3">
                     {Array.from({ length: 4 }).map((_, i) => (
                       <Skeleton key={i} className="h-5 w-full" />
                     ))}
@@ -963,14 +968,14 @@ export function AdminDashboard({
                 </div>
               ) : categoryData.length > 0 ? (
                 <div className="flex-1">
-                  <ResponsiveContainer width="100%" height={220}>
+                  <ResponsiveContainer width="100%" height={180} className="sm:h-[220px]">
                     <PieChart>
                       <Pie
                         data={categoryData}
                         cx="50%"
                         cy="50%"
-                        innerRadius={60}
-                        outerRadius={100}
+                        innerRadius={50}
+                        outerRadius={80}
                         paddingAngle={5}
                         dataKey="value"
                         nameKey="name"
@@ -979,41 +984,44 @@ export function AdminDashboard({
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(value, name) => [`${value}%`, name]} />
+                      <Tooltip 
+                        formatter={(value, name) => [`${value}%`, name]} 
+                        contentStyle={{ fontSize: '12px' }}
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
               ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <TriangleAlert className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-                  <p className="text-lg font-medium mb-2">No Categories Yet</p>
-                  <p className="text-sm mb-4">
+                <div className="text-center py-6 sm:py-8 text-gray-500">
+                  <TriangleAlert className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3" />
+                  <p className="text-base sm:text-lg font-medium mb-2">No Categories Yet</p>
+                  <p className="text-xs sm:text-sm mb-4 px-4">
                       Start by creating your first fundraising campaign to track progress.
                     </p>
                     {hasPermission("create_campaign") && (
-                      <Button onClick={() => onNavigate("admin-campaigns")}>
-                        <Plus className="w-4 h-4 mr-2" /> Create New Campaign
+                      <Button onClick={() => onNavigate("admin-campaigns")} size="sm" className="text-xs sm:text-sm">
+                        <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-2" /> Create New Campaign
                       </Button>
                     )}
                 </div>
               )}
               <div className="mt-4 border-t pt-4">
-                <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-3">
                   {displayedCategories.map((entry) => (
                     <div
                       key={entry.name}
-                      className="flex items-center justify-between text-sm"
+                      className="flex items-center justify-between text-xs sm:text-sm"
                     >
-                      <div className="flex items-center gap-2 truncate">
+                      <div className="flex items-center gap-2 truncate min-w-0 flex-1">
                         <span
-                          className="h-3 w-3 rounded-sm flex-shrink-0"
+                          className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-sm flex-shrink-0"
                           style={{ backgroundColor: entry.color }}
                         />
                         <span className="text-gray-600 truncate">
                           {entry.name}
                         </span>
                       </div>
-                      <span className="font-semibold text-gray-800">
+                      <span className="font-semibold text-gray-800 flex-shrink-0 ml-2">
                         {entry.value}%
                       </span>
                     </div>
@@ -1023,16 +1031,16 @@ export function AdminDashboard({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="w-full mt-3 text-indigo-600 hover:text-indigo-700"
+                    className="w-full mt-3 text-indigo-600 hover:text-indigo-700 text-xs sm:text-sm"
                     onClick={() => setIsLegendExpanded(!isLegendExpanded)}
                   >
                     {isLegendExpanded ? (
-                      <span className="flex items-center">
-                        Show Less <ChevronUp className="w-4 h-4 ml-1" />
+                      <span className="flex items-center justify-center">
+                        Show Less <ChevronUp className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
                       </span>
                     ) : (
-                      <span className="flex items-center">
-                        Show More <ChevronDown className="w-4 h-4 ml-1" />
+                      <span className="flex items-center justify-center">
+                        Show More <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
                       </span>
                     )}
                   </Button>
@@ -1043,12 +1051,12 @@ export function AdminDashboard({
         </div>
 
         
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Top Performing Campaigns</CardTitle>
-                <CardDescription>
+            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-4 sm:p-6">
+              <div className="flex-1 min-w-0">
+                <CardTitle className="text-base sm:text-lg mb-1">Top Performing Campaigns</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">
                   Campaigns by fundraising progress
                 </CardDescription>
               </div>
@@ -1057,22 +1065,23 @@ export function AdminDashboard({
                   variant="outline"
                   size="sm"
                   onClick={() => onNavigate("admin-campaigns")}
+                  className="w-full sm:w-auto text-xs sm:text-sm"
                 >
                   View All
                 </Button>
               )}
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
+            <CardContent className="p-4 sm:p-6 pt-0">
+              <div className="space-y-3 sm:space-y-4">
                 {loading ? (
                   Array.from({ length: 3 }).map((_, i) => (
                     <div key={i} className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Skeleton className="h-5 w-3/4" />
-                        <Skeleton className="h-5 w-1/4" />
+                      <div className="flex items-center justify-between gap-2">
+                        <Skeleton className="h-4 sm:h-5 w-3/4" />
+                        <Skeleton className="h-4 sm:h-5 w-1/4" />
                       </div>
                       <Skeleton className="h-2 w-full" />
-                      <div className="flex justify-between text-xs text-gray-500">
+                      <div className="flex justify-between text-xs text-gray-500 gap-2">
                         <Skeleton className="h-3 w-1/3" />
                         <Skeleton className="h-3 w-1/4" />
                       </div>
@@ -1085,12 +1094,12 @@ export function AdminDashboard({
                     const progress = Math.round((collected / goal) * 100);
                     return (
                       <div key={campaign.id} className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-medium text-gray-900">
+                        <div className="flex items-start sm:items-center justify-between gap-2 flex-wrap">
+                          <h4 className="font-medium text-sm sm:text-base text-gray-900 flex-1 min-w-0 truncate">
                             {campaign.title}
                           </h4>
-                          <div className="text-right">
-                            <p className="text-sm font-medium text-green-600">
+                          <div className="text-right flex-shrink-0">
+                            <p className="text-xs sm:text-sm font-medium text-green-600">
                               {formatCurrency(collected)}
                             </p>
                             <p className="text-xs text-gray-500">
@@ -1098,24 +1107,24 @@ export function AdminDashboard({
                             </p>
                           </div>
                         </div>
-                        <Progress value={progress} className="h-2" />
-                        <div className="flex justify-between text-xs text-gray-500">
+                        <Progress value={progress} className="h-1.5 sm:h-2" />
+                        <div className="flex justify-between text-xs text-gray-500 gap-2">
                           <span>{progress}% complete</span>
-                          <span>Goal: {formatCurrency(goal)}</span>
+                          <span className="truncate">Goal: {formatCurrency(goal)}</span>
                         </div>
                       </div>
                     );
                   })
                 ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <Target className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-                    <p className="text-lg font-medium mb-2">No Campaigns Yet</p>
-                    <p className="text-sm mb-4">
+                  <div className="text-center py-6 sm:py-8 text-gray-500">
+                    <Target className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3" />
+                    <p className="text-base sm:text-lg font-medium mb-2">No Campaigns Yet</p>
+                    <p className="text-xs sm:text-sm mb-4 px-4">
                       Start by creating your first fundraising campaign to track progress.
                     </p>
                     {hasPermission("create_campaign") && (
-                      <Button onClick={() => onNavigate("admin-campaigns")}>
-                        <Plus className="w-4 h-4 mr-2" /> Create New Campaign
+                      <Button onClick={() => onNavigate("admin-campaigns")} size="sm" className="text-xs sm:text-sm">
+                        <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-2" /> Create New Campaign
                       </Button>
                     )}
                   </div>
@@ -1126,18 +1135,18 @@ export function AdminDashboard({
         </div>
 
        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mb-6 sm:mb-8">
           <Card>
-            <CardHeader>
-              <CardTitle>Kiosks by Device OS</CardTitle>
-              <CardDescription>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-base sm:text-lg">Kiosks by Device OS</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
                 Distribution of kiosks by operating system
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 sm:p-6 pt-0">
               {loading ? (
                 <div className="space-y-4">
-                  <Skeleton className="h-[300px] w-full" />
+                  <Skeleton className="h-[250px] sm:h-[300px] w-full" />
                 </div>
               ) : (
                 <DeviceChart data={deviceDistribution} />
@@ -1146,32 +1155,32 @@ export function AdminDashboard({
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-base sm:text-lg">Recent Activity</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
+            <CardContent className="p-4 sm:p-6 pt-0">
+              <div className="space-y-3 sm:space-y-4">
                 {loading ? (
                   Array.from({ length: 3 }).map((_, i) => (
-                    <div key={i} className="flex items-start space-x-3">
-                      <Skeleton className="h-6 w-6 rounded-full" />
-                      <div className="flex-1 space-y-2">
-                        <Skeleton className="h-4 w-3/4" />
+                    <div key={i} className="flex items-start space-x-2 sm:space-x-3">
+                      <Skeleton className="h-5 w-5 sm:h-6 sm:w-6 rounded-full flex-shrink-0" />
+                      <div className="flex-1 space-y-2 min-w-0">
+                        <Skeleton className="h-3 sm:h-4 w-3/4" />
                         <Skeleton className="h-3 w-1/2" />
                       </div>
                     </div>
                   ))
                 ) : recentActivities.length > 0 ? (
                   recentActivities.map((activity: Activity) => (
-                    <div key={activity.id} className="flex items-start space-x-3">
+                    <div key={activity.id} className="flex items-start space-x-2 sm:space-x-3">
                       <div className="flex-shrink-0 mt-0.5">
                         {getActivityIcon(activity.type)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-900">
+                        <p className="text-xs sm:text-sm text-gray-900 break-words">
                           {activity.message}
                         </p>
-                        <div className="flex items-center space-x-2 mt-1">
+                        <div className="flex items-center flex-wrap space-x-2 mt-1 gap-1">
                           <p className="text-xs text-gray-500">
                             {activity.timestamp}
                           </p>
@@ -1185,21 +1194,25 @@ export function AdminDashboard({
                     </div>
                   ))
                 ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <ActivityIcon className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-                    <p className="text-lg font-medium mb-2">No Recent Activity</p>
-                    <p className="text-sm mb-4">
+                  <div className="text-center py-6 sm:py-8 text-gray-500">
+                    <ActivityIcon className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3" />
+                    <p className="text-base sm:text-lg font-medium mb-2">No Recent Activity</p>
+                    <p className="text-xs sm:text-sm mb-4 px-4">
                       Start by managing campaigns or configuring kiosks to see activity here.
                     </p>
                     <div className="flex flex-col sm:flex-row justify-center gap-2">
                       {hasPermission("create_campaign") && (
-                        <Button onClick={() => onNavigate("admin-campaigns")} size="sm">
-                          <Settings className="w-4 h-4 mr-2" /> Manage Campaigns
+                        <Button onClick={() => onNavigate("admin-campaigns")} size="sm" className="text-xs sm:text-sm">
+                          <Settings className="w-3 h-3 sm:w-4 sm:h-4 mr-2" /> 
+                          <span className="hidden sm:inline">Manage Campaigns</span>
+                          <span className="sm:hidden">Campaigns</span>
                         </Button>
                       )}
                       {hasPermission("create_kiosk") && (
-                        <Button onClick={() => onNavigate("admin-kiosks")} size="sm" variant="outline">
-                          <Monitor className="w-4 h-4 mr-2" /> Configure Kiosks
+                        <Button onClick={() => onNavigate("admin-kiosks")} size="sm" variant="outline" className="text-xs sm:text-sm">
+                          <Monitor className="w-3 h-3 sm:w-4 sm:h-4 mr-2" /> 
+                          <span className="hidden sm:inline">Configure Kiosks</span>
+                          <span className="sm:hidden">Kiosks</span>
                         </Button>
                       )}
                     </div>
@@ -1210,40 +1223,40 @@ export function AdminDashboard({
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <AlertCircle className="w-5 h-5 text-yellow-600" />
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
+                <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600 flex-shrink-0" />
                 <span>System Alerts</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
+            <CardContent className="p-4 sm:p-6 pt-0">
+              <div className="space-y-2 sm:space-y-3">
                 {loading ? (
                   Array.from({ length: 2 }).map((_, i) => (
-                    <div key={i} className="flex items-start space-x-3 p-3 rounded-lg bg-gray-50">
-                      <Skeleton className="h-5 w-5 rounded-full" />
-                      <Skeleton className="h-4 w-3/4" />
+                    <div key={i} className="flex items-start space-x-2 sm:space-x-3 p-2 sm:p-3 rounded-lg bg-gray-50">
+                      <Skeleton className="h-4 w-4 sm:h-5 sm:w-5 rounded-full flex-shrink-0" />
+                      <Skeleton className="h-3 sm:h-4 w-3/4" />
                     </div>
                   ))
                 ) : alerts.length > 0 ? (
                   alerts.map((alert: Alert) => (
                     <div
                       key={alert.id}
-                      className="flex items-start space-x-3 p-3 rounded-lg bg-gray-50"
+                      className="flex items-start space-x-2 sm:space-x-3 p-2 sm:p-3 rounded-lg bg-gray-50"
                     >
                       <div className="flex-shrink-0 mt-0.5">
                         {getAlertIcon(alert.type)}
                       </div>
-                      <p className="text-sm text-gray-900">{alert.message}</p>
+                      <p className="text-xs sm:text-sm text-gray-900 break-words">{alert.message}</p>
                     </div>
                   ))
                 ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <AlertCircle className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-                    <p className="text-lg font-medium mb-2">No System Alerts</p>
-                    <p className="text-sm mb-4">
+                  <div className="text-center py-6 sm:py-8 text-gray-500">
+                    <AlertCircle className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3" />
+                    <p className="text-base sm:text-lg font-medium mb-2">No System Alerts</p>
+                    <p className="text-xs sm:text-sm mb-4 px-4">
                       Your system is running smoothly. No alerts to display.
                     </p>
                   </div>
@@ -1252,49 +1265,49 @@ export function AdminDashboard({
             </CardContent>
           </Card>
           <Card>
-            <CardHeader>
-              <CardTitle>More Actions</CardTitle>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-base sm:text-lg">More Actions</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 gap-3">
+            <CardContent className="p-4 sm:p-6 pt-0">
+              <div className="grid grid-cols-1 gap-2 sm:gap-3">
                 {hasPermission("view_campaigns") && (
                   <Button
                     variant="outline"
-                    className="justify-start h-12"
+                    className="justify-start h-10 sm:h-12 text-xs sm:text-sm"
                     onClick={() => onNavigate("admin-campaigns")}
                   >
-                    <Database className="w-4 h-4 mr-3" />
-                    Manage Campaigns
+                    <Database className="w-3 h-3 sm:w-4 sm:h-4 mr-2 sm:mr-3 flex-shrink-0" />
+                    <span className="truncate">Manage Campaigns</span>
                   </Button>
                 )}
                 {hasPermission("view_kiosks") && (
                   <Button
                     variant="outline"
-                    className="justify-start h-12"
+                    className="justify-start h-10 sm:h-12 text-xs sm:text-sm"
                     onClick={() => onNavigate("admin-kiosks")}
                   >
-                    <Settings className="w-4 h-4 mr-3" />
-                    Configure Kiosks
+                    <Settings className="w-3 h-3 sm:w-4 sm:h-4 mr-2 sm:mr-3 flex-shrink-0" />
+                    <span className="truncate">Configure Kiosks</span>
                   </Button>
                 )}
                 {hasPermission("view_donations") && (
                   <Button
                     variant="outline"
-                    className="justify-start h-12"
+                    className="justify-start h-10 sm:h-12 text-xs sm:text-sm"
                     onClick={() => onNavigate("admin-donations")}
                   >
-                    <TrendingUp className="w-4 h-4 mr-3" />
-                    View Donations
+                    <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 mr-2 sm:mr-3 flex-shrink-0" />
+                    <span className="truncate">View Donations</span>
                   </Button>
                 )}
                 {hasPermission("view_users") && (
                   <Button
                     variant="outline"
-                    className="justify-start h-12"
+                    className="justify-start h-10 sm:h-12 text-xs sm:text-sm"
                     onClick={() => onNavigate("admin-users")}
                   >
-                    <UserCog className="w-4 h-4 mr-3" />
-                    User Management
+                    <UserCog className="w-3 h-3 sm:w-4 sm:h-4 mr-2 sm:mr-3 flex-shrink-0" />
+                    <span className="truncate">User Management</span>
                   </Button>
                 )}
               </div>
