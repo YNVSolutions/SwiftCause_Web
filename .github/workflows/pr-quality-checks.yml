@@ -1,0 +1,96 @@
+name: PR Quality Checks
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  quality-checks:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write       
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' 
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci 
+
+      - name: Run linter
+        id: linter
+        run: npm run lint
+        continue-on-error: true 
+     
+
+      - name: Check build
+        id: build
+        run: npm run build 
+
+      - name: Comment PR with check results
+        if: always()
+        continue-on-error: true
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+            const prNumber = context.issue.number;
+            const workflowRunId = context.runId;
+            const workflowUrl = `https://github.com/${owner}/${repo}/actions/runs/${workflowRunId}`;
+            const prUrl = `https://github.com/${owner}/${repo}/pull/${prNumber}`;
+
+            // Get step outcomes
+            const linterOutcome = '${{ steps.linter.outcome }}';
+            const buildOutcome = '${{ steps.build.outcome }}';
+
+            const getStatus = (outcome) => {
+              if (outcome === 'success') return '✅ Passed';
+              if (outcome === 'failure') return '❌ Failed';
+              if (outcome === 'cancelled') return '⚠️ Cancelled';
+              if (outcome === 'skipped') return '⏸️ Skipped';
+              return '⏳ Unknown';
+            };
+
+            // Critical check is just the build. Linting is allowed to fail.
+            const criticalChecksPassed = buildOutcome === 'success';
+
+            const comment = `## 🚀 CI Quality Checks
+
+            **Overall Status:** ${criticalChecksPassed ? '✅ **Build passed!**' : '❌ **Build failed**'}
+
+            ### Check Details
+
+            | Check | Status | Description |
+            |-------|--------|-------------|
+            | **Linter** | ${getStatus(linterOutcome)} | Code quality and style checks |
+            | **Build** | ${getStatus(buildOutcome)} | Next.js production build |
+
+            ### Next Steps
+
+            ${criticalChecksPassed ? 
+              '✅ **Ready for review!**\n\n- Build successful\n- Ready for code review' : 
+              '❌ **Action Required**\n\n- Review failed build\n- Check [workflow logs](' + workflowUrl + ') for details'}
+
+            ---
+            📊 [View workflow logs](${workflowUrl}) | 🔍 [View all checks](${prUrl}/checks) | 📝 [View PR](${prUrl})`;
+
+            try {
+              await github.rest.issues.createComment({
+                issue_number: prNumber,
+                owner: owner,
+                repo: repo,
+                body: comment
+              });
+            } catch (error) {
+              console.log('Could not comment on PR:', error.message);
+            }
