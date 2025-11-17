@@ -1,0 +1,66 @@
+name: Invalidate CloudFront Cache
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to invalidate'
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+      paths:
+        description: 'Paths to invalidate (comma-separated, default: /*)'
+        required: false
+        default: '/*'
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  invalidate:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::651380694327:role/devops/github/adinmo-devops-app-sdktools-portal
+          aws-region: eu-west-1
+
+      - name: Invalidate Dev Cache
+        if: ${{ inputs.environment == 'dev' }}
+        run: |
+          echo "🔄 Invalidating Dev CloudFront cache..."
+          echo "Distribution: EUZCFSTCCIEUU"
+          echo "Paths: ${{ inputs.paths }}"
+          aws cloudfront create-invalidation \
+            --distribution-id EUZCFSTCCIEUU \
+            --paths ${{ inputs.paths }}
+          echo "✅ Dev cache invalidation initiated"
+
+      - name: Invalidate Prod Cache
+        if: ${{ inputs.environment == 'prod' }}
+        run: |
+          echo "🔄 Invalidating Production CloudFront cache..."
+          echo "Distribution: E2VZK1EHOJJ0YV"
+          echo "Paths: ${{ inputs.paths }}"
+          aws cloudfront create-invalidation \
+            --distribution-id E2VZK1EHOJJ0YV \
+            --paths ${{ inputs.paths }}
+          echo "✅ Production cache invalidation initiated"
+
+      - name: Show result
+        run: |
+          echo "Cache invalidation request submitted successfully!"
+          echo ""
+          echo "⏰ Note: CloudFront invalidation takes 2-5 minutes to propagate globally"
+          echo "🌍 Check your domain after a few minutes:"
+          if [ "${{ inputs.environment }}" == "dev" ]; then
+            echo "   https://sdktools-dev.adinmo.com"
+          else
+            echo "   https://sdktools.adinmo.com"
+          fi
