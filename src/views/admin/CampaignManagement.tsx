@@ -1290,9 +1290,9 @@ const CampaignManagement = ({
 
   return (
     <>
-      <div className="min-h-screen bg-gray-50 font-sans">
+      <div className="min-h-screen bg-gray-50 font-sans w-full overflow-x-hidden">
         <header className="bg-white shadow-sm border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center space-x-4">
                 <Button
@@ -1302,30 +1302,33 @@ const CampaignManagement = ({
                   className="flex items-center space-x-2"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  <span>Back to Dashboard</span>
+                  <span className="hidden sm:inline">Back to Dashboard</span>
+                  <span className="sm:hidden">Back</span>
                 </Button>
                 <div className="h-6 w-px bg-gray-300" />
                 <div>
-                  <h1 className="text-xl font-semibold text-gray-900">
+                  <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
                     Campaign Management
                   </h1>
-                  <p className="text-sm text-gray-600">
+                  <p className="hidden sm:block text-sm text-gray-600">
                     Configure and monitor Campaigns
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-4">
-                <Button variant="outline" size="sm" onClick={() => exportToCsv(filteredAndSortedCampaigns)}>
-                  <Download className="w-4 h-4 mr-2" />
-                  Export Logs
+              <div className="flex items-center space-x-2 sm:space-x-4">
+                <Button variant="outline" size="sm" onClick={() => exportToCsv(filteredAndSortedCampaigns)} className="text-xs sm:text-sm">
+                  <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Export Logs</span>
+                  <span className="sm:hidden">Export</span>
                 </Button>
                 <Button
-                  className="bg-indigo-600 hover:bg-indigo-700"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm"
                   onClick={() => setIsAddDialogOpen(true)}
                 >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Campaign
+                  <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Add Campaign</span>
+                  <span className="sm:hidden">Add</span>
                 </Button>
               </div>
             </div>
@@ -1333,18 +1336,18 @@ const CampaignManagement = ({
         </header>
         
 
-        <div className="max-w-7xl mx-auto p-4 sm:p-6">
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-gray-800">
+        <div className="w-full p-3 sm:p-4 md:p-6">
+          <div className="mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
               Campaigns ({filteredAndSortedCampaigns.length})
             </h2>
-            <p className="text-gray-500 text-sm">
+            <p className="text-xs sm:text-sm text-gray-600">
               Manage your donation campaigns
             </p>
           </div>
 
           {/* Filters and Sorting */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-4 sm:mb-6">
             <div className="lg:col-span-2">
               <div className="relative">
                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
