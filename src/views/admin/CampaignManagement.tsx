@@ -1094,10 +1094,9 @@ const CampaignManagement = ({
         description: data.description,
         status: data.status,
         goal: Number(data.goal),
-        tags: data.tags
-          .split(",")
-          .map((t: string) => t.trim())
-          .filter(Boolean),
+        tags: typeof data.tags === "string"
+        ? data.tags.split(",").map((t: string) => t.trim()).filter(Boolean)
+        : [],
         coverImageUrl: data.coverImageUrl || "",
         category: data.category || "",
         organizationId: userSession.user.organizationId || "",
