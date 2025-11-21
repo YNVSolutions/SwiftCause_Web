@@ -32,35 +32,39 @@ export function AdminLogin({ email, password, error, loading, onEmailChange, onP
 
 			<form onSubmit={onSubmit} className="space-y-4">
 				<div className="space-y-2">
-					<Label htmlFor="email" className="flex items-center space-x-2">
-						<UserCog className="w-4 h-4 text-gray-500" />
+					<Label htmlFor="email" className="flex items-center space-x-2 ">
+						<UserCog className="w-4 h-4 text-gray-500 " />
 						<span>Email</span>
 					</Label>
-					<Input
-						id="email"
-						type="text"
-						placeholder="Enter admin email"
-						value={email}
-						onChange={onEmailChange}
-						className="h-12"
-						required
-					/>
+					<div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 transition-colors">
+						<Input
+							id="email"
+							type="text"
+							placeholder="Enter admin email"
+							value={email}
+							onChange={onEmailChange}
+							className="h-12 w-full px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
+							required
+						/>
+					</div>
 				</div>
 
 				<div className="space-y-2">
 					<Label htmlFor="password" className="flex items-center space-x-2">
-						<Shield className="w-4 h-4 text-gray-500" />
+						<Shield className="w-4 h-4 text-gray-500 " />
 						<span>Password</span>
 					</Label>
-					<Input
-						id="password"
-						type="password"
-						placeholder="Enter admin password"
-						value={password}
-						onChange={onPasswordChange}
-						className="h-12"
-						required
-					/>
+					<div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 transition-colors">
+						<Input
+							id="password"
+							type="password"
+							placeholder="Enter admin password"
+							value={password}
+							onChange={onPasswordChange}
+							className="h-12 w-full px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
+							required
+						/>
+					</div>
 				</div>
 
 				{error && (

@@ -167,6 +167,8 @@ const CampaignDialog = ({
   // New states for specific image upload loading
   const [isUploadingOrganizationLogo, setIsUploadingOrganizationLogo] = useState(false);
   const [isUploadingGalleryImages, setIsUploadingGalleryImages] = useState(false);
+  // Loading state for the dialog submit (create/save)
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (isEditMode && campaign) {
@@ -178,13 +180,13 @@ const CampaignDialog = ({
         tags: Array.isArray(campaign.tags) ? campaign.tags.join(", ") : "",
         startDate: campaign.startDate?.seconds
           ? new Date(campaign.startDate.seconds * 1000)
-              .toISOString()
-              .split("T")[0]
+            .toISOString()
+            .split("T")[0]
           : "",
         endDate: campaign.endDate?.seconds
           ? new Date(campaign.endDate.seconds * 1000)
-              .toISOString()
-              .split("T")[0]
+            .toISOString()
+            .split("T")[0]
           : "",
         coverImageUrl: campaign.coverImageUrl || "",
 
@@ -365,8 +367,7 @@ const CampaignDialog = ({
       try {
         const url = await uploadFile(
           selectedOrganizationLogo,
-          `campaigns/${campaign?.id || "new"}/organizationLogo/${
-            selectedOrganizationLogo.name
+          `campaigns/${campaign?.id || "new"}/organizationLogo/${selectedOrganizationLogo.name
           }`
         );
         if (url) {
@@ -488,13 +489,14 @@ const CampaignDialog = ({
 
     let finalData = { ...formData };
 
+    setIsSubmitting(true);
+
     // Upload organization logo
     if (selectedOrganizationLogo && !finalData.organizationInfoLogo) { // Only upload if not already uploaded
       try {
         const url = await uploadFile(
           selectedOrganizationLogo,
-          `campaigns/${campaign?.id || "new"}/organizationLogo/${
-            selectedOrganizationLogo.name
+          `campaigns/${campaign?.id || "new"}/organizationLogo/${selectedOrganizationLogo.name
           }`
         );
         if (url) {
@@ -503,6 +505,7 @@ const CampaignDialog = ({
       } catch (error) {
         console.error("Error uploading organization logo:", error);
         alert("Failed to upload organization logo. Please try again.");
+        setIsSubmitting(false);
         return;
       }
     }
@@ -524,6 +527,7 @@ const CampaignDialog = ({
           alert(
             `Failed to upload gallery image ${file.name}. Please try again.`
           );
+          setIsSubmitting(false);
           return;
         }
       }
@@ -532,8 +536,12 @@ const CampaignDialog = ({
       }
     }
 
-    await onSave(finalData, !isEditMode, campaign?.id);
-    handleDialogClose();
+    try {
+      await onSave(finalData, !isEditMode, campaign?.id);
+      handleDialogClose();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleDialogClose = () => {
@@ -576,21 +584,19 @@ const CampaignDialog = ({
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8" aria-label="Tabs">
             <button
-              className={`${
-                activeTab === "basic"
-                  ? "border-indigo-500 text-indigo-600"
-                  : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-              } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
+              className={`${activeTab === "basic"
+                ? "border-indigo-500 text-indigo-600"
+                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
               onClick={() => setActiveTab("basic")}
             >
               Basic Info
             </button>
             <button
-              className={`${
-                activeTab === "advanced"
-                  ? "border-indigo-500 text-indigo-600"
-                  : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-              } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
+              className={`${activeTab === "advanced"
+                ? "border-indigo-500 text-indigo-600"
+                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
               onClick={() => setActiveTab("advanced")}
             >
               Advanced Settings
@@ -605,29 +611,37 @@ const CampaignDialog = ({
                 <Label htmlFor="title" className="text-right">
                   Title {isEditMode ? "" : "*"}
                 </Label>
-                <Input
-                  id="title"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleChange}
-                  className="col-span-3"
-                  placeholder="Enter campaign title"
-                />
+                <div className="col-span-3">
+                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                    <Input
+                      id="title"
+                      name="title"
+                      value={formData.title}
+                      onChange={handleChange}
+                      className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
+                      placeholder="Enter campaign title"
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-4 items-start gap-4">
                 <Label htmlFor="description" className="text-right pt-2">
                   Description {isEditMode ? "" : "*"}
                 </Label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  className="col-span-3"
-                  rows={3}
-                  placeholder="Enter campaign description"
-                />
+                <div className="col-span-3">
+                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                    <Textarea
+                      id="description"
+                      name="description"
+                      value={formData.description}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
+                      rows={3}
+                      placeholder="Enter campaign description"
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-4 items-start gap-4">
@@ -693,40 +707,51 @@ const CampaignDialog = ({
                 <Label htmlFor="tags" className="text-right">
                   Tags
                 </Label>
-                <Input
-                  id="tags"
-                  name="tags"
-                  value={formData.tags}
-                  onChange={handleChange}
-                  className="col-span-3"
-                  placeholder="health, education, etc."
-                />
+                <div className="col-span-3">
+                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                    <Input
+                      id="tags"
+                      name="tags"
+                      value={formData.tags}
+                      onChange={handleChange}
+                      className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
+                      placeholder="health, education, etc."
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-x-4 gap-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="goal">Fundraising Goal ($)</Label>
-                  <Input
-                    id="goal"
-                    name="goal"
-                    type="number"
-                    value={formData.goal}
-                    onChange={handleChange}
-                    placeholder="0"
-                  />
+                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                    <Input
+                      id="goal"
+                      name="goal"
+                      type="number"
+                      value={formData.goal}
+                      onChange={handleChange}
+                      placeholder="0"
+                      className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-2 h-15 ">
                   <Label htmlFor="status">Status</Label>
                   <Select
                     name="status"
                     value={formData.status}
                     onValueChange={(value: string) =>
-                      handleChange({ target: { name: "status", value } } as any)
+                      setFormData((prev: any) => ({ ...prev, status: value }))
                     }
                   >
-                    <SelectTrigger id="status">
-                      <SelectValue />
+                    <SelectTrigger
+                      id="status"
+                      className="w-full h-12 bg-blue-500 border border-gray-300 rounded-lg px-3 flex items-center justify-start text-left focus-visible:ring-0 focus-visible:border-indigo-500 focus-visible:ring-indigo-100 transition-colors"
+                    >
+                      <SelectValue placeholder="Select status" className="h-12" />
                     </SelectTrigger>
+
                     <SelectContent>
                       <SelectItem value="active">Active</SelectItem>
                       <SelectItem value="paused">Paused</SelectItem>
@@ -734,25 +759,33 @@ const CampaignDialog = ({
                     </SelectContent>
                   </Select>
                 </div>
+
+
                 <div className="space-y-2">
                   <Label htmlFor="startDate">Start Date</Label>
-                  <Input
-                    id="startDate"
-                    name="startDate"
-                    type="date"
-                    value={formData.startDate}
-                    onChange={handleChange}
-                  />
+                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                    <Input
+                      id="startDate"
+                      name="startDate"
+                      type="date"
+                      value={formData.startDate}
+                      onChange={handleChange}
+                      className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="endDate">End Date</Label>
-                  <Input
-                    id="endDate"
-                    name="endDate"
-                    type="date"
-                    value={formData.endDate}
-                    onChange={handleChange}
-                  />
+                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                    <Input
+                      id="endDate"
+                      name="endDate"
+                      type="date"
+                      value={formData.endDate}
+                      onChange={handleChange}
+                      className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
+                    />
+                  </div>
                 </div>
               </div>
             </>
@@ -767,14 +800,18 @@ const CampaignDialog = ({
                 <Label htmlFor="category" className="text-right">
                   Category
                 </Label>
-                <Input
-                  id="category"
-                  name="category"
-                  value={formData.category}
-                  onChange={handleChange}
-                  className="col-span-3"
-                  placeholder="e.g., Environment, Education"
-                />
+                <div className="col-span-3">
+                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                    <Input
+                      id="category"
+                      name="category"
+                      value={formData.category}
+                      onChange={handleChange}
+                      className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
+                      placeholder="e.g., Environment, Education"
+                    />
+                  </div>
+                </div>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="isGlobal" className="text-right">
@@ -793,28 +830,36 @@ const CampaignDialog = ({
                 <Label htmlFor="longDescription" className="text-right pt-2">
                   Long Description
                 </Label>
-                <Textarea
-                  id="longDescription"
-                  name="longDescription"
-                  value={formData.longDescription}
-                  onChange={handleChange}
-                  className="col-span-3"
-                  rows={5}
-                  placeholder="Provide a more detailed description of the campaign."
-                />
+                <div className="col-span-3">
+                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                    <Textarea
+                      id="longDescription"
+                      name="longDescription"
+                      value={formData.longDescription}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
+                      rows={5}
+                      placeholder="Provide a more detailed description of the campaign."
+                    />
+                  </div>
+                </div>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="videoUrl" className="text-right">
                   Video URL
                 </Label>
-                <Input
-                  id="videoUrl"
-                  name="videoUrl"
-                  value={formData.videoUrl}
-                  onChange={handleChange}
-                  className="col-span-3"
-                  placeholder="Optional YouTube URL"
-                />
+                <div className="col-span-3">
+                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                    <Input
+                      id="videoUrl"
+                      name="videoUrl"
+                      value={formData.videoUrl}
+                      onChange={handleChange}
+                      className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
+                      placeholder="Optional YouTube URL"
+                    />
+                  </div>
+                </div>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="galleryImages" className="text-right">
@@ -900,38 +945,62 @@ const CampaignDialog = ({
               <h3 className="text-lg font-semibold text-gray-900 mt-8">Pricing Options</h3>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="predefinedAmounts" className="text-right">Predefined Amounts</Label>
-                <Input id="predefinedAmounts" name="predefinedAmounts" value={formData.predefinedAmounts} onChange={handleChange} className="col-span-3" placeholder="Comma-separated numbers, e.g., 10,25,50"/>
+                <div className="col-span-3">
+                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                    <Input id="predefinedAmounts" name="predefinedAmounts" value={formData.predefinedAmounts} onChange={handleChange} className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent" placeholder="Comma-separated numbers, e.g., 10,25,50" />
+                  </div>
+                </div>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="allowCustomAmount" className="text-right">Allow Custom Amount</Label>
-                <input type="checkbox" id="allowCustomAmount" name="allowCustomAmount" checked={formData.allowCustomAmount} onChange={handleChange} className="col-span-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"/>
+                <input type="checkbox" id="allowCustomAmount" name="allowCustomAmount" checked={formData.allowCustomAmount} onChange={handleChange} className="col-span-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="minCustomAmount" className="text-right">Min Custom Amount</Label>
-                <Input id="minCustomAmount" name="minCustomAmount" type="number" value={formData.minCustomAmount} onChange={handleChange} className="col-span-3" placeholder="1"/>
+                <div className="col-span-3">
+                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                    <Input id="minCustomAmount" name="minCustomAmount" type="number" value={formData.minCustomAmount} onChange={handleChange} className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent" placeholder="1" />
+                  </div>
+                </div>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="maxCustomAmount" className="text-right">Max Custom Amount</Label>
-                <Input id="maxCustomAmount" name="maxCustomAmount" type="number" value={formData.maxCustomAmount} onChange={handleChange} className="col-span-3" placeholder="1000"/>
+                <div className="col-span-3">
+                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                    <Input id="maxCustomAmount" name="maxCustomAmount" type="number" value={formData.maxCustomAmount} onChange={handleChange} className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent" placeholder="1000" />
+                  </div>
+                </div>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="suggestedAmounts" className="text-right">Suggested Amounts</Label>
-                <Input id="suggestedAmounts" name="suggestedAmounts" value={formData.suggestedAmounts} onChange={handleChange} className="col-span-3" placeholder="Comma-separated numbers, e.g., 100,250"/>
+                <div className="col-span-3">
+                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                    <Input id="suggestedAmounts" name="suggestedAmounts" value={formData.suggestedAmounts} onChange={handleChange} className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent" placeholder="Comma-separated numbers, e.g., 100,250" />
+                  </div>
+                </div>
               </div>
 
               <h3 className="text-lg font-semibold text-gray-900 mt-8">Subscription Settings</h3>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="enableRecurring" className="text-right">Enable Recurring</Label>
-                <input type="checkbox" id="enableRecurring" name="enableRecurring" checked={formData.enableRecurring} onChange={handleChange} className="col-span-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"/>
+                <input type="checkbox" id="enableRecurring" name="enableRecurring" checked={formData.enableRecurring} onChange={handleChange} className="col-span-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="recurringIntervals" className="text-right">Recurring Intervals</Label>
-                <Input id="recurringIntervals" name="recurringIntervals" value={formData.recurringIntervals} onChange={handleChange} className="col-span-3" placeholder="Comma-separated: monthly, quarterly, yearly"/>
+                <div className="col-span-3">
+                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                    <Input id="recurringIntervals" name="recurringIntervals" value={formData.recurringIntervals} onChange={handleChange} className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent" placeholder="Comma-separated: monthly, quarterly, yearly" />
+                  </div>
+                </div>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="defaultRecurringInterval" className="text-right">Default Recurring Interval</Label>
                 <Select name="defaultRecurringInterval" value={formData.defaultRecurringInterval} onValueChange={(value: string) => handleChange({ target: { name: 'defaultRecurringInterval', value } } as any)}>
-                  <SelectTrigger id="defaultRecurringInterval" className="col-span-3"><SelectValue /></SelectTrigger>
+                  <div className="col-span-3">
+                    <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                      <SelectTrigger id="defaultRecurringInterval" className="w-full"><SelectValue /></SelectTrigger>
+                    </div>
+                  </div>
                   <SelectContent>
                     <SelectItem value="monthly">Monthly</SelectItem>
                     <SelectItem value="quarterly">Quarterly</SelectItem>
@@ -941,39 +1010,55 @@ const CampaignDialog = ({
               </div>
 
               <h3 className="text-lg font-semibold text-gray-900 mt-8">Display Settings</h3>
-              
+
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="showProgressBar" className="text-right">Show Progress Bar</Label>
-                <input type="checkbox" id="showProgressBar" name="showProgressBar" checked={formData.showProgressBar} onChange={handleChange} className="col-span-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"/>
+                <input type="checkbox" id="showProgressBar" name="showProgressBar" checked={formData.showProgressBar} onChange={handleChange} className="col-span-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="showDonorCount" className="text-right">Show Donor Count</Label>
-                <input type="checkbox" id="showDonorCount" name="showDonorCount" checked={formData.showDonorCount} onChange={handleChange} className="col-span-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"/>
+                <input type="checkbox" id="showDonorCount" name="showDonorCount" checked={formData.showDonorCount} onChange={handleChange} className="col-span-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="showRecentDonations" className="text-right">Show Recent Donations</Label>
-                <input type="checkbox" id="showRecentDonations" name="showRecentDonations" checked={formData.showRecentDonations} onChange={handleChange} className="col-span-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"/>
+                <input type="checkbox" id="showRecentDonations" name="showRecentDonations" checked={formData.showRecentDonations} onChange={handleChange} className="col-span-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="maxRecentDonations" className="text-right">Max Recent Donations</Label>
-                <Input id="maxRecentDonations" name="maxRecentDonations" type="number" value={formData.maxRecentDonations} onChange={handleChange} className="col-span-3" placeholder="5"/>
+                <div className="col-span-3">
+                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                    <Input id="maxRecentDonations" name="maxRecentDonations" type="number" value={formData.maxRecentDonations} onChange={handleChange} className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent" placeholder="5" />
+                  </div>
+                </div>
               </div>
 
               <h3 className="text-lg font-semibold text-gray-900 mt-8">Call-to-Action</h3>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="primaryCTAText" className="text-right">Primary CTA Text</Label>
-                <Input id="primaryCTAText" name="primaryCTAText" value={formData.primaryCTAText} onChange={handleChange} className="col-span-3" placeholder="e.g., Donate Now"/>
+                <div className="col-span-3">
+                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                    <Input id="primaryCTAText" name="primaryCTAText" value={formData.primaryCTAText} onChange={handleChange} className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent" placeholder="e.g., Donate Now" />
+                  </div>
+                </div>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="secondaryCTAText" className="text-right">Secondary CTA Text</Label>
-                <Input id="secondaryCTAText" name="secondaryCTAText" value={formData.secondaryCTAText} onChange={handleChange} className="col-span-3" placeholder="e.g., Learn More"/>
+                <div className="col-span-3">
+                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                    <Input id="secondaryCTAText" name="secondaryCTAText" value={formData.secondaryCTAText} onChange={handleChange} className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent" placeholder="e.g., Learn More" />
+                  </div>
+                </div>
               </div>
               <div className="grid grid-cols-4 items-start gap-4">
                 <Label htmlFor="urgencyMessage" className="text-right pt-2">Urgency Message</Label>
-                <Textarea id="urgencyMessage" name="urgencyMessage" value={formData.urgencyMessage} onChange={handleChange} className="col-span-3" rows={2} placeholder="e.g., Only 10 days left to reach our goal!"/>
+                <div className="col-span-3">
+                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                    <Textarea id="urgencyMessage" name="urgencyMessage" value={formData.urgencyMessage} onChange={handleChange} className="w-full px-3 py-2 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent" rows={2} placeholder="e.g., Only 10 days left to reach our goal!" />
+                  </div>
+                </div>
               </div>
 
-              
+
             </div>
           )}
         </div>
@@ -981,12 +1066,12 @@ const CampaignDialog = ({
           <Button
             variant="outline"
             onClick={handleDialogClose}
-            disabled={uploadingImage}
+            disabled={uploadingImage || isSubmitting}
           >
             Cancel
           </Button>
-          <Button onClick={handleSaveChanges} disabled={isSaveDisabled}>
-            {saveButtonText}
+          <Button onClick={handleSaveChanges} disabled={isSaveDisabled || isSubmitting}>
+            {isSubmitting ? (isEditMode ? "Saving..." : "Creating...") : saveButtonText}
           </Button>
         </div>
       </DialogContent>
@@ -1123,13 +1208,13 @@ const CampaignManagement = ({
           itemsProvided: Number(data.impactMetricsItemsProvided) || undefined,
           customMetric:
             data.impactMetricsCustomMetricLabel ||
-            data.impactMetricsCustomMetricValue ||
-            data.impactMetricsCustomMetricUnit
+              data.impactMetricsCustomMetricValue ||
+              data.impactMetricsCustomMetricUnit
               ? {
-                  label: data.impactMetricsCustomMetricLabel || "",
-                  value: Number(data.impactMetricsCustomMetricValue) || 0,
-                  unit: data.impactMetricsCustomMetricUnit || "",
-                }
+                label: data.impactMetricsCustomMetricLabel || "",
+                value: Number(data.impactMetricsCustomMetricValue) || 0,
+                unit: data.impactMetricsCustomMetricUnit || "",
+              }
               : undefined,
         },
         configuration: {
@@ -1235,8 +1320,8 @@ const CampaignManagement = ({
   const filteredAndSortedCampaigns = campaigns
     .filter((campaign: any) => {
       const matchesSearch = campaign.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            campaign.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            campaign.tags?.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+        campaign.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        campaign.tags?.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()));
       const matchesStatus = statusFilter === "all" || campaign.status === statusFilter;
       const matchesCategory = categoryFilter === "all" || campaign.category === categoryFilter;
       const matchesDate = !dateFilter || (campaign.endDate && new Date(campaign.endDate.seconds * 1000).toDateString() === dateFilter.toDateString());
@@ -1317,11 +1402,17 @@ const CampaignManagement = ({
               </div>
 
               <div className="flex items-center space-x-2 sm:space-x-4">
-                <Button variant="outline" size="sm" onClick={() => exportToCsv(filteredAndSortedCampaigns)} className="text-xs sm:text-sm">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => exportToCsv(filteredAndSortedCampaigns)}
+                  className="text-xs sm:text-sm transition-colors hover:bg-gray-800 hover:text-black"
+                >
                   <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                   <span className="hidden sm:inline">Export Logs</span>
                   <span className="sm:hidden">Export</span>
                 </Button>
+
                 <Button
                   className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm"
                   onClick={() => setIsAddDialogOpen(true)}
@@ -1334,7 +1425,7 @@ const CampaignManagement = ({
             </div>
           </div>
         </header>
-        
+
 
         <div className="w-full p-3 sm:p-4 md:p-6">
           <div className="mb-4 sm:mb-6">
@@ -1350,84 +1441,106 @@ const CampaignManagement = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-4 sm:mb-6">
             <div className="lg:col-span-2">
               <div className="relative">
-                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  placeholder="Search campaigns..."
-                  value={searchTerm}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+                <div className="text-black flex flex-row gap-6 border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                  <div className="">
+                    <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 mr-1" />
+                  </div>
+                  <div className="">
+                    <Input
+                      placeholder="Search campaigns..."
+                      value={searchTerm}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+                      className="pl-10 w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="paused">Paused</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-              </SelectContent>
-            </Select>
+            <div>
+              <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-full h-12 px-3 flex items-center justify-start text-left bg-transparent focus-visible:ring-0">
+                    <SelectValue placeholder="Filter by Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="paused">Paused</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by Category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {uniqueCategories.map(category => (
-                  <SelectItem key={category} value={category}>{category}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div>
+              <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger className="w-full h-12 px-3 flex items-center justify-start text-left bg-transparent focus-visible:ring-0">
+                    <SelectValue placeholder="Filter by Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {uniqueCategories.map(category => (
+                      <SelectItem key={category} value={category}>{category}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
-            <Select value={sortOrder} onValueChange={setSortOrder}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="endDate">End Date</SelectItem>
-                <SelectItem value="title">Title</SelectItem>
-                <SelectItem value="goal">Goal Amount</SelectItem>
-                <SelectItem value="createdAt">Created Date</SelectItem>
-              </SelectContent>
-            </Select>
+            <div>
+              <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                <Select value={sortOrder} onValueChange={setSortOrder}>
+                  <SelectTrigger className="w-full h-12 px-3 flex items-center justify-start text-left bg-transparent focus-visible:ring-0">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="endDate">End Date</SelectItem>
+                    <SelectItem value="title">Title</SelectItem>
+                    <SelectItem value="goal">Goal Amount</SelectItem>
+                    <SelectItem value="createdAt">Created Date</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
-            <Popover open={showCalendar} onOpenChange={setShowCalendar}>
-              <PopoverTrigger>
-                <Button variant="outline" className="justify-start text-left font-normal w-full">
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dateFilter ? dateFilter.toLocaleDateString() : "Filter by Date"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={dateFilter}
-                  onSelect={(date: Date | undefined) => {
-                    setDateFilter(date);
-                    setShowCalendar(false);
-                  }}
-                  initialFocus
-                />
-                <div className="p-3 border-t">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setDateFilter(undefined);
-                      setShowCalendar(false);
-                    }}
-                    className="w-full"
-                  >
-                    Clear Date Filter
-                  </Button>
-                </div>
-              </PopoverContent>
-            </Popover>
+            <div className="">
+              <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                <Popover open={showCalendar} onOpenChange={setShowCalendar}>
+                  <PopoverTrigger>
+                    <Button variant="outline" className="justify-start text-left font-normal w-full h-12 px-3 flex items-center">
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateFilter ? dateFilter.toLocaleDateString() : "Filter by Date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dateFilter}
+                      onSelect={(date: Date | undefined) => {
+                        setDateFilter(date);
+                        setShowCalendar(false);
+                      }}
+                      initialFocus
+                    />
+                    <div className="p-3 border-t">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setDateFilter(undefined);
+                          setShowCalendar(false);
+                        }}
+                        className="w-full"
+                      >
+                        Clear Date Filter
+                      </Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
           </div>
 
           <div className="bg-white rounded-xl shadow overflow-hidden">
@@ -1463,8 +1576,8 @@ const CampaignManagement = ({
                   const status = campaign.status || "Active";
                   const endDate = campaign.endDate?.seconds
                     ? new Date(
-                        campaign.endDate.seconds * 1000
-                      ).toLocaleDateString("en-US")
+                      campaign.endDate.seconds * 1000
+                    ).toLocaleDateString("en-US")
                     : "N/A";
                   const isExpired = campaign.endDate?.seconds
                     ? new Date(campaign.endDate.seconds * 1000) < new Date()
@@ -1483,7 +1596,7 @@ const CampaignManagement = ({
                               "https://via.placeholder.com/40"
                             }
                             alt={campaign.title}
-                            className="w-10 h-10 object-cover rounded-md flex-shrink-0"
+                            className="w-10 h-10 object-cover rounded-md shrink-0"
                           />
                           {campaign.coverImageUrl && (
                             <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
@@ -1525,7 +1638,7 @@ const CampaignManagement = ({
 
                         <div className="col-span-1 md:col-span-1">
                           <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
+                            className={`inline-flex items-center h-12 px-3 rounded-full text-sm font-medium ${getStatusColor(
                               status
                             )}`}
                           >

@@ -215,6 +215,22 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                 </div>
               </div>
               <div className="flex flex-col sm:flex-row items-stretch gap-2 mb-6 sm:mb-0 mt-2">
+                <div className="w-full sm:w-80">
+                  <div className="relative">
+                    <div className="h-10 items-center flex flex-row gap-5 border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                      <div>
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" /></div>
+                      <div>
+                        <Input
+                          placeholder="Search kiosks..."
+                          value={searchTerm}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+                          className="pl-10 w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 {hasPermission('create_kiosk') && (
                   <Button onClick={() => setIsCreateDialogOpen(true)} className="bg-indigo-600 hover:bg-indigo-700">
                     <Plus className="w-4 h-4 mr-2" />Add Kiosk
@@ -315,9 +331,44 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
         <DialogContent className="sm:max-w-[500px]"> {/* Adjusted max-width */}
           <DialogHeader><DialogTitle>Add New Kiosk</DialogTitle><DialogDescription>Configure a new donation kiosk for deployment.</DialogDescription></DialogHeader>
           <div className="space-y-4 py-4">
-            <div><Label htmlFor="kioskName">Kiosk Name</Label><Input id="kioskName" value={newKiosk.name} onChange={(e) => setNewKiosk(p => ({ ...p, name: e.target.value }))} placeholder="Times Square Kiosk"/></div>
-            <div><Label htmlFor="kioskLocation">Location</Label><Input id="kioskLocation" value={newKiosk.location} onChange={(e) => setNewKiosk(p => ({ ...p, location: e.target.value }))} placeholder="Times Square, New York, NY"/></div>
-            <div><Label htmlFor="accessCode">Access Code</Label><Input id="accessCode" value={newKiosk.accessCode} onChange={(e) => setNewKiosk(p => ({ ...p, accessCode: e.target.value }))} placeholder="TS2024"/></div>
+            <div>
+              <Label htmlFor="kioskName">Kiosk Name</Label>
+              <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                <Input
+                  id="kioskName"
+                  value={newKiosk.name}
+                  onChange={(e) => setNewKiosk(p => ({ ...p, name: e.target.value }))}
+                  placeholder="Times Square Kiosk"
+                  className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="kioskLocation">Location</Label>
+              <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                <Input
+                  id="kioskLocation"
+                  value={newKiosk.location}
+                  onChange={(e) => setNewKiosk(p => ({ ...p, location: e.target.value }))}
+                  placeholder="Times Square, New York, NY"
+                  className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="accessCode">Access Code</Label>
+              <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                <Input
+                  id="accessCode"
+                  value={newKiosk.accessCode}
+                  onChange={(e) => setNewKiosk(p => ({ ...p, accessCode: e.target.value }))}
+                  placeholder="TS2024"
+                  className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
+                />
+              </div>
+            </div>
           </div>
           <div className="flex justify-end space-x-2 pt-4"><Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>Cancel</Button><Button onClick={handleCreateKiosk} disabled={!newKiosk.name || !newKiosk.location}>Add Kiosk</Button></div>
         </DialogContent>
