@@ -97,13 +97,21 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
         <div className="min-h-screen bg-gray-50">
             <header className="bg-white shadow-sm border-b">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-16">
-                        <div className="flex items-center space-x-4">
-                            <Button variant="ghost" size="sm" onClick={() => onNavigate('admin')} className="flex items-center space-x-2"><ArrowLeft className="w-4 h-4" /><span>Back to Dashboard</span></Button>
+                    <div className="flex items-center justify-between h-16 gap-3">
+                        <div className="flex items-center gap-3">
+                            <Button variant="ghost" size="sm" onClick={() => onNavigate('admin')} className="flex items-center space-x-2">
+                                <ArrowLeft className="w-4 h-4" />
+                                <span className="hidden sm:inline">Back to Dashboard</span>
+                                <span className="sm:hidden">Back</span>
+                            </Button>
                             <div className="h-6 w-px bg-gray-300" />
-                            <div><h1 className="text-xl font-semibold text-gray-900">User Management</h1><p className="text-sm text-gray-600">Manage platform users and permissions</p></div>
+                                <div>
+                                    <h1 className="text-xl font-semibold text-gray-900">User Management</h1>
+                                    <p className="text-sm text-gray-600 hidden lg:block">Manage platform users and permissions</p>
+                                    <p className="text-sm text-gray-600 hidden sm:block lg:hidden">Manage users and permissions</p>
+                                </div>
                         </div>
-                        <div className="flex items-center space-x-4">
+                        <div className="flex items-center gap-2">
                             {hasPermission('create_user') && <Button className="bg-indigo-600 text-white" onClick={() => setCreateDialogOpen(true)}><Plus className="w-4 h-4 mr-2" />Add User</Button>}
                         </div>
                     </div>
@@ -111,7 +119,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
             </header>
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Users</p><p className="text-2xl font-semibold text-gray-900">{stats.total}</p></div><Users className="h-8 w-8 text-blue-600" /></div></CardContent></Card>
                     <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Administrators</p><p className="text-2xl font-semibold text-gray-900">{stats.admins}</p></div><UserCog className="h-8 w-8 text-purple-600" /></div></CardContent></Card>
                     <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Kiosk Users</p><p className="text-2xl font-semibold text-gray-900">{stats.kiosks}</p></div><Shield className="h-8 w-8 text-green-600" /></div></CardContent></Card>

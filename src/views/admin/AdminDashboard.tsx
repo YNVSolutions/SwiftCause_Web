@@ -659,7 +659,7 @@ export function AdminDashboard({
               </Button>
             )}
             {hasPermission("view_kiosks") && (
-              <Button variant="outline" onClick={() => onNavigate("admin-kiosks")} className="w-full sm:w-auto text-sm sm:text-base">
+              <Button variant="ghost" onClick={() => onNavigate("admin-kiosks")} className="w-full sm:w-auto text-sm sm:text-base">
                 <Settings className="w-4 h-4 mr-2" />
                 <span className="hidden sm:inline">Manage Kiosks</span>
                 <span className="sm:hidden">Kiosks</span>
