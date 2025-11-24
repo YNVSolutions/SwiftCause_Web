@@ -5,6 +5,7 @@ import { ArrowLeft, Smartphone, Shield, BarChart3, QrCode, Target, UserCog, Hear
 import swiftCauseLogo from '../../shared/assets/logo.png';
 import { Footer } from '../../shared/ui/Footer';
 
+
 export function AboutPage({ onNavigate }: { onNavigate?: (screen: string) => void }) {
   return (
     <div className="min-h-screen bg-white">
