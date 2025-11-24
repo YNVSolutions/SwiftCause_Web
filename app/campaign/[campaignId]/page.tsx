@@ -6,7 +6,6 @@ import { useAuth } from '@/shared/lib/auth-provider'
 import { useState, useEffect, use } from 'react'
 import { Campaign } from '@/shared/types'
 import { getCampaignById } from '@/shared/api/firestoreService'
-import { Donation } from '@/shared/types'
 
 export default function CampaignPage({ params }: { params: Promise<{ campaignId: string }> }) {
   const router = useRouter()
@@ -51,7 +50,7 @@ export default function CampaignPage({ params }: { params: Promise<{ campaignId:
     fetchCampaign()
   }, [searchParams, campaignId])
 
-  const handleDonationSubmit = (donation: Donation) => {
+  const handleDonationSubmit = (donation: any) => {
     // Store donation data in sessionStorage or pass via URL
     const donationWithKiosk = {
       ...donation,

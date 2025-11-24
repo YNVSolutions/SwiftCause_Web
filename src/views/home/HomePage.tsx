@@ -55,7 +55,7 @@ import {
 
 import { ImageWithFallback } from '../../shared/ui/figma/ImageWithFallback';
 import { Footer } from '../../shared/ui/Footer';
-import Image from 'next/image';
+import swiftCauseLogo from '../../shared/assets/logo.png';
 
 interface HomePageProps {
   onLogin: () => void;
@@ -224,11 +224,9 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-3">
               <div className="h-10 w-10">
-                <Image 
-                  src='/logo.png'
+                <img 
+                  src={swiftCauseLogo.src} 
                   alt="Swift Cause Logo" 
-                  width='100'
-                  height='100'
                   className="w-full h-full object-contain"
                 />
               </div>
@@ -328,11 +326,9 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <div className="w-8 h-8">
-                          <Image 
-                            src='/logo.png' 
+                          <img 
+                            src={swiftCauseLogo.src} 
                             alt="Swift Cause" 
-                            height = '100'
-                            width='100'
                             className="w-full h-full object-contain"
                           />
                         </div>
