@@ -1,4 +1,4 @@
-import { collection, query, where, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, orderBy, limit } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, orderBy } from 'firebase/firestore';
 import { db } from '../../../shared/lib/firebase';
 import { Campaign } from '../model';
 
