@@ -1,4 +1,4 @@
-import React from 'react';
+"use client";
 import { Button } from '../../shared/ui/button';
 import { Card, CardContent } from '../../shared/ui/card';
 import { ArrowLeft, Smartphone, Shield, BarChart3, QrCode, Target, UserCog, Heart, Award, Globe, CheckCircle } from 'lucide-react';
