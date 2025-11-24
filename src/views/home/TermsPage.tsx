@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '../../shared/ui/button';
 import { ArrowLeft, AlertTriangle, FileText, CheckCircle, ExternalLink } from 'lucide-react';
 import { Footer } from '../../shared/ui/Footer';
-import swiftCauseLogo from '../../shared/assets/logo.png';
+import Image from 'next/image';
 
 export function TermsPage({ onNavigate }: { onNavigate?: (screen: string) => void }) {
   const effectiveDate = 'September 28, 2025';
@@ -29,8 +29,10 @@ export function TermsPage({ onNavigate }: { onNavigate?: (screen: string) => voi
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="h-8 w-8 sm:h-10 sm:w-10">
-              <img 
-                src={swiftCauseLogo.src} 
+              <Image 
+                src='/logo.png'
+                height='100'
+                width='100'
                 alt="Swift Cause Logo" 
                 className="w-full h-full object-contain"
               />

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../../shared/ui/dialog';
 import { Button } from '../../shared/ui/button';
 import { Badge } from '../../shared/ui/badge';
@@ -124,7 +124,7 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
     }
   };
 
-  const resetDemo = () => {
+  const resetDemo = useCallback(() => {
     setIsPlaying(false);
     setCurrentStep(0);
     setProgress(0);
@@ -132,7 +132,7 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
       clearInterval(intervalId);
       setIntervalId(null);
     }
-  };
+  }, [isPlaying, currentStep, progress, intervalId]);
 
   const goToStep = (step: number) => {
     setCurrentStep(step);
@@ -154,7 +154,7 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
     if (!open) {
       resetDemo();
     }
-  }, [open]);
+  }, [open, resetDemo]);
 
   const currentStepData = demoSteps[currentStep];
 

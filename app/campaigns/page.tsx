@@ -4,15 +4,19 @@ import { useRouter } from 'next/navigation'
 import { CampaignListContainer } from '@/features/campaigns'
 import { useAuth } from '@/shared/lib/auth-provider'
 
+interface CampaignNavData {
+  id: string
+}
+
 export default function CampaignsPage() {
   const router = useRouter()
   const { currentKioskSession, handleLogout, refreshCurrentKioskSession } = useAuth()
 
-  const handleSelectCampaign = (campaign: any) => {
+  const handleSelectCampaign = (campaign: CampaignNavData) => {
     router.push(`/campaign/${campaign.id}`)
   }
 
-  const handleViewDetails = (campaign: any) => {
+  const handleViewDetails = (campaign: CampaignNavData) => {
     router.push(`/campaign/${campaign.id}?view=overview`)
   }
 
