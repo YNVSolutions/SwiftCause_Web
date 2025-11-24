@@ -87,7 +87,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
       }
     };
     fetchAllData();
-  }, [userSession?.user?.organizationId]);
+  }, []);
 
   const campaignMap = useMemo(() => {
     return campaigns.reduce((acc, campaign) => {

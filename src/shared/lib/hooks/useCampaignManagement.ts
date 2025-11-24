@@ -57,7 +57,7 @@ export function useCampaignManagement(organizationId?: string) {
     } finally {
       setUploadingImage(false);
     }
-  }, [selectedImage, updateWithImage, uploadFile, createWithImage]);
+  }, [selectedImage, updateWithImage, uploadFile]);
 
   const clearImageSelection = useCallback(() => {
     setSelectedImage(null);
