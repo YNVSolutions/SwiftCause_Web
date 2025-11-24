@@ -13,22 +13,22 @@ import {
   Timestamp,
   where
 } from 'firebase/firestore';
-import { Organization } from '../types';
-export async function getCampaigns(organizationId?: string) {
+import { Organization, Campaign } from '../types';
+export async function getCampaigns(organizationId?: string): Promise<Campaign[]> {
   let campaignsCollection: any = collection(db, 'campaigns');
   if (organizationId) {
     campaignsCollection = query(campaignsCollection, where("organizationId", "==", organizationId));
   }
   const snapshot = await getDocs(campaignsCollection);
-  return snapshot.docs.map(d => ({ id: d.id, ...(d.data() as object) }));
+  return snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Campaign));
 }
 
-export async function getCampaignById(campaignId: string) {
+export async function getCampaignById(campaignId: string): Promise<Campaign | null> {
   const docRef = doc(db, 'campaigns', campaignId);
   const docSnap = await getDoc(docRef);
   
   if (docSnap.exists()) {
-    return { id: docSnap.id, ...(docSnap.data() as object) };
+    return { id: docSnap.id, ...docSnap.data() } as Campaign;
   }
   return null;
 }

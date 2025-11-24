@@ -64,77 +64,77 @@ interface CampaignDialogProps {
   ) => Promise<void>;
 }
 
+const getInitialFormData = () => ({
+  title: "",
+  description: "",
+  status: "active",
+  goal: 0,
+  tags: [],
+  startDate: "",
+  endDate: "",
+  coverImageUrl: "",
+  // New fields for advanced settings (initial subset)
+  category: "",
+  organizationId: "",
+  longDescription: "",
+  videoUrl: "",
+  // Adding more fields for advanced settings
+  assignedKiosks: "", // Stored as comma-separated string
+  isGlobal: false,
+  galleryImages: "", // Stored as comma-separated string
+  organizationInfoName: "",
+  organizationInfoDescription: "",
+  organizationInfoWebsite: "",
+  organizationInfoLogo: "",
+  impactMetricsPeopleHelped: 0,
+  impactMetricsItemsProvided: 0,
+  impactMetricsCustomMetricLabel: "",
+  impactMetricsCustomMetricValue: 0,
+  impactMetricsCustomMetricUnit: "",
+
+  // CampaignConfiguration fields - flattened for form handling (initial subset)
+  predefinedAmounts: DEFAULT_CAMPAIGN_CONFIG.predefinedAmounts.join(","),
+  allowCustomAmount: DEFAULT_CAMPAIGN_CONFIG.allowCustomAmount,
+  minCustomAmount: DEFAULT_CAMPAIGN_CONFIG.minCustomAmount,
+  maxCustomAmount: DEFAULT_CAMPAIGN_CONFIG.maxCustomAmount,
+  // Adding more CampaignConfiguration fields
+  suggestedAmounts: DEFAULT_CAMPAIGN_CONFIG.suggestedAmounts.join(","),
+  enableRecurring: DEFAULT_CAMPAIGN_CONFIG.enableRecurring,
+  recurringIntervals: DEFAULT_CAMPAIGN_CONFIG.recurringIntervals.join(","),
+  defaultRecurringInterval: DEFAULT_CAMPAIGN_CONFIG.defaultRecurringInterval,
+  recurringDiscount: DEFAULT_CAMPAIGN_CONFIG.recurringDiscount,
+  // Adding Display Settings fields
+  displayStyle: DEFAULT_CAMPAIGN_CONFIG.displayStyle,
+  showProgressBar: DEFAULT_CAMPAIGN_CONFIG.showProgressBar,
+  showDonorCount: DEFAULT_CAMPAIGN_CONFIG.showDonorCount,
+  showRecentDonations: DEFAULT_CAMPAIGN_CONFIG.showRecentDonations,
+  maxRecentDonations: DEFAULT_CAMPAIGN_CONFIG.maxRecentDonations,
+  // Adding Call-to-Action fields
+  primaryCTAText: DEFAULT_CAMPAIGN_CONFIG.primaryCTAText,
+  secondaryCTAText: DEFAULT_CAMPAIGN_CONFIG.secondaryCTAText || "",
+  urgencyMessage: "",
+  // Adding Visual Customization fields
+  accentColor: "#4F46E5",
+  backgroundImage: "",
+  theme: DEFAULT_CAMPAIGN_CONFIG.theme,
+  // Adding Form Configuration fields
+  requiredFields: DEFAULT_CAMPAIGN_CONFIG.requiredFields.join(","),
+  optionalFields: DEFAULT_CAMPAIGN_CONFIG.optionalFields.join(","),
+  enableAnonymousDonations: DEFAULT_CAMPAIGN_CONFIG.enableAnonymousDonations,
+  // Adding Social Features fields
+  enableSocialSharing: DEFAULT_CAMPAIGN_CONFIG.enableSocialSharing,
+  shareMessage: "",
+  enableDonorWall: DEFAULT_CAMPAIGN_CONFIG.enableDonorWall,
+  enableComments: DEFAULT_CAMPAIGN_CONFIG.enableComments,
+});
+
 const CampaignDialog = ({
   open,
   onOpenChange,
   campaign,
   onSave,
 }: CampaignDialogProps) => {
-  const initialFormData = {
-    title: "",
-    description: "",
-    status: "active",
-    goal: 0,
-    tags: [],
-    startDate: "",
-    endDate: "",
-    coverImageUrl: "",
-    // New fields for advanced settings (initial subset)
-    category: "",
-    organizationId: "",
-    longDescription: "",
-    videoUrl: "",
-    // Adding more fields for advanced settings
-    assignedKiosks: "", // Stored as comma-separated string
-    isGlobal: false,
-    galleryImages: "", // Stored as comma-separated string
-    organizationInfoName: "",
-    organizationInfoDescription: "",
-    organizationInfoWebsite: "",
-    organizationInfoLogo: "",
-    impactMetricsPeopleHelped: 0,
-    impactMetricsItemsProvided: 0,
-    impactMetricsCustomMetricLabel: "",
-    impactMetricsCustomMetricValue: 0,
-    impactMetricsCustomMetricUnit: "",
-
-    // CampaignConfiguration fields - flattened for form handling (initial subset)
-    predefinedAmounts: DEFAULT_CAMPAIGN_CONFIG.predefinedAmounts.join(","),
-    allowCustomAmount: DEFAULT_CAMPAIGN_CONFIG.allowCustomAmount,
-    minCustomAmount: DEFAULT_CAMPAIGN_CONFIG.minCustomAmount,
-    maxCustomAmount: DEFAULT_CAMPAIGN_CONFIG.maxCustomAmount,
-    // Adding more CampaignConfiguration fields
-    suggestedAmounts: DEFAULT_CAMPAIGN_CONFIG.suggestedAmounts.join(","),
-    enableRecurring: DEFAULT_CAMPAIGN_CONFIG.enableRecurring,
-    recurringIntervals: DEFAULT_CAMPAIGN_CONFIG.recurringIntervals.join(","),
-    defaultRecurringInterval: DEFAULT_CAMPAIGN_CONFIG.defaultRecurringInterval,
-    recurringDiscount: DEFAULT_CAMPAIGN_CONFIG.recurringDiscount,
-    // Adding Display Settings fields
-    displayStyle: DEFAULT_CAMPAIGN_CONFIG.displayStyle,
-    showProgressBar: DEFAULT_CAMPAIGN_CONFIG.showProgressBar,
-    showDonorCount: DEFAULT_CAMPAIGN_CONFIG.showDonorCount,
-    showRecentDonations: DEFAULT_CAMPAIGN_CONFIG.showRecentDonations,
-    maxRecentDonations: DEFAULT_CAMPAIGN_CONFIG.maxRecentDonations,
-    // Adding Call-to-Action fields
-    primaryCTAText: DEFAULT_CAMPAIGN_CONFIG.primaryCTAText,
-    secondaryCTAText: DEFAULT_CAMPAIGN_CONFIG.secondaryCTAText || "",
-    urgencyMessage: "",
-    // Adding Visual Customization fields
-    accentColor: "#4F46E5",
-    backgroundImage: "",
-    theme: DEFAULT_CAMPAIGN_CONFIG.theme,
-    // Adding Form Configuration fields
-    requiredFields: DEFAULT_CAMPAIGN_CONFIG.requiredFields.join(","),
-    optionalFields: DEFAULT_CAMPAIGN_CONFIG.optionalFields.join(","),
-    enableAnonymousDonations: DEFAULT_CAMPAIGN_CONFIG.enableAnonymousDonations,
-    // Adding Social Features fields
-    enableSocialSharing: DEFAULT_CAMPAIGN_CONFIG.enableSocialSharing,
-    shareMessage: "",
-    enableDonorWall: DEFAULT_CAMPAIGN_CONFIG.enableDonorWall,
-    enableComments: DEFAULT_CAMPAIGN_CONFIG.enableComments,
-  };
-
-  const [formData, setFormData] = useState<DocumentData>(initialFormData);
+  const [formData, setFormData] = useState<DocumentData>(getInitialFormData());
   const [activeTab, setActiveTab] = useState<"basic" | "advanced">("basic");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isEditMode = !!campaign;
@@ -286,7 +286,7 @@ const CampaignDialog = ({
         setGalleryImagePreviews(campaign.galleryImages);
       }
     } else if (!isEditMode) {
-      setFormData(initialFormData);
+      setFormData(getInitialFormData());
       setImagePreviewUrl(null);
       // Clear advanced image selections/previews for add mode
       setSelectedOrganizationLogo(null);
@@ -546,7 +546,7 @@ const CampaignDialog = ({
 
   const handleDialogClose = () => {
     clearImageSelection();
-    setFormData(initialFormData); // Reset for add mode
+    setFormData(getInitialFormData()); // Reset for add mode
     // Clear advanced image selections/previews
     setSelectedOrganizationLogo(null);
     setOrganizationLogoPreview(null);
@@ -1507,7 +1507,7 @@ const CampaignManagement = ({
             <div className="">
               <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
                 <Popover open={showCalendar} onOpenChange={setShowCalendar}>
-                  <PopoverTrigger>
+                  <PopoverTrigger asChild>
                     <Button variant="outline" className="justify-start text-left font-normal w-full h-12 px-3 flex items-center">
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {dateFilter ? dateFilter.toLocaleDateString() : "Filter by Date"}

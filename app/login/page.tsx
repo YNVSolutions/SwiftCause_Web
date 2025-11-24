@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { LoginScreen } from '@/views/auth/LoginScreen'
 import { useAuth } from '@/shared/lib/auth-provider'
 import { useToast } from '@/shared/ui/ToastProvider'
+import { UserRole, KioskSession, AdminSession } from '@/shared/types'
 
 export default function Login() {
   const router = useRouter()
@@ -14,7 +15,7 @@ export default function Login() {
     router.push('/')
   }
 
-  const handleLoginWithToast = async (role: any, sessionData?: any) => {
+  const handleLoginWithToast = async (role: UserRole, sessionData?: KioskSession | AdminSession) => {
     try {
       await handleLogin(role, sessionData)
       showToast('Sign in successful', 'success')
@@ -25,7 +26,7 @@ export default function Login() {
       } else if (role === 'kiosk') {
         router.push('/campaigns')
       }
-    } catch (error) {
+    } catch {
       showToast('Login failed', 'error')
     }
   }
