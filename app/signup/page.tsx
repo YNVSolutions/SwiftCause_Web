@@ -4,13 +4,14 @@ import { useRouter } from 'next/navigation'
 import { SignupScreen } from '@/views/auth/SignupScreen'
 import { useAuth } from '@/shared/lib/auth-provider'
 import { useToast } from '@/shared/ui/ToastProvider'
+import { SignupFormData } from '@/shared/types'
 
 export default function Signup() {
   const router = useRouter()
   const { handleSignup } = useAuth()
   const { showToast } = useToast()
 
-  const handleSignupWithToast = async (signupData: any) => {
+  const handleSignupWithToast = async (signupData: SignupFormData) => {
     try {
       await handleSignup(signupData)
       showToast('Signup successful', 'success')

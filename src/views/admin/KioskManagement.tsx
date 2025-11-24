@@ -58,7 +58,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
   useEffect(() => {
     refreshKiosks();
     refreshCampaigns();
-  }, []);
+  }, [refreshKiosks, refreshCampaigns]);
 
   const handleCreateKiosk = async () => {
     if (!newKiosk.name || !newKiosk.location || !userSession) return;

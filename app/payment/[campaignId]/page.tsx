@@ -49,7 +49,7 @@ export default function PaymentPage({ params }: { params: Promise<{ campaignId: 
     fetchData()
   }, [campaignId])
 
-  const handlePaymentComplete = (result: any) => {
+  const handlePaymentComplete = (result: { success: boolean; message?: string; transactionId?: string }) => {
     // Store payment result and navigate to result page
     sessionStorage.setItem('paymentResult', JSON.stringify(result))
     router.push('/result')
