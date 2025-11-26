@@ -396,26 +396,50 @@ export function AdminDashboard({
 
         const allCampaignsQuery = query(campaignsRef, orgQuery);
         const allCampaignsSnapshot = await getDocs(allCampaignsQuery);
-        const tagCounts: { [key: string]: number } = {};
-        let totalTags = 0;
+        console.log("all campaigns snapshot", allCampaignsSnapshot)
+        const averageDonation: { [key: string]: number } = {};
+        let average = 0;
         allCampaignsSnapshot.forEach((doc) => {
-          const tags = (doc.data() as Campaign).tags;
-          if (Array.isArray(tags) && tags.length > 0) {
-            tags.forEach((tag) => {
-              tagCounts[tag] = (tagCounts[tag] || 0) + 1;
-              totalTags++;
-            });
+          const raisedAmount = (doc.data() as Campaign).raised;
+          const donationCount = (doc.data() as Campaign).donationCount;
+
+          if (raisedAmount > 0) {
+            console.log("raised amount", raisedAmount);
+            // console.log("campaign", title);
+            const average = raisedAmount / (donationCount || 1);
+            averageDonation[doc.id] = average;
           }
         });
-        if (totalTags > 0) {
-          const formattedCategoryData = Object.keys(tagCounts).map(
-            (name, index) => ({
-              name,
-              value: Math.round((tagCounts[name] / totalTags) * 100),
-              color: CHART_COLORS[index % CHART_COLORS.length],
-            })
-          );
+        // Build categoryData from per-campaign average donation values so the
+        // pie chart shows the relative average donation per campaign.
+        const averages: { id: string; name: string; avg: number }[] = [];
+        allCampaignsSnapshot.forEach((doc) => {
+          const data = doc.data() as Campaign;
+          const raised = data.raised || 0;
+          const count = data.donationCount || 0;
+          const avgValue = count > 0 ? raised / count : 0;
+          averages.push({ id: doc.id, name: data.title || `Campaign ${doc.id}`, avg: avgValue });
+        });
+
+        // Only include campaigns with non-zero averages
+        const nonZeroAverages = averages.filter((a) => a.avg > 0);
+        const totalAvg = nonZeroAverages.reduce((sum, a) => sum + a.avg, 0);
+
+        if (totalAvg > 0) {
+          // Use the raw average donation amount as the slice value so the pie
+          // chart proportions reflect actual average dollar amounts.
+          let formattedCategoryData = nonZeroAverages.map((entry, index) => ({
+            name: entry.name,
+            value: entry.avg,
+            color: CHART_COLORS[index % CHART_COLORS.length],
+          }));
+
+          // Sort descending by value so the chart displays largest -> smallest
+          formattedCategoryData = formattedCategoryData.sort((a, b) => b.value - a.value);
+
           setCategoryData(formattedCategoryData);
+        } else {
+          setCategoryData([]);
         }
       } catch (error) {
         console.error("Error fetching chart data: ", error);
@@ -954,12 +978,12 @@ export function AdminDashboard({
 
           <Card className="flex flex-col">
             <CardHeader className="p-4 sm:p-6">
-              <CardTitle className="text-base sm:text-lg">Campaign Categories</CardTitle>
+              <CardTitle className="text-base sm:text-lg">Average Donation Per Campaign</CardTitle>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col p-4 sm:p-6 pt-0">
               {loading ? (
                 <div className="space-y-4">
-                  <Skeleton className="h-[180px] sm:h-[220px] w-full mb-4" />
+                  <Skeleton className="h-[260px] sm:h-[300px] w-full mb-4" />
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-3">
                     {Array.from({ length: 4 }).map((_, i) => (
                       <Skeleton key={i} className="h-5 w-full" />
@@ -967,28 +991,19 @@ export function AdminDashboard({
                   </div>
                 </div>
               ) : categoryData.length > 0 ? (
-                <div className="flex-1">
-                  <ResponsiveContainer width="100%" height={180} className="sm:h-[220px]">
-                    <PieChart>
-                      <Pie
-                        data={categoryData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={50}
-                        outerRadius={80}
-                        paddingAngle={5}
-                        dataKey="value"
-                        nameKey="name"
-                      >
+                <div className="flex-1 flex items-end">
+                  <ResponsiveContainer width="100%" height={260}>
+                    <BarChart data={categoryData} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                      <YAxis tickFormatter={(value) => formatShortCurrency(value as number)} />
+                      <Tooltip formatter={(value) => formatShortCurrency(value as number)} contentStyle={{ fontSize: '12px' }} />
+                      <Bar dataKey="value">
                         {categoryData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
-                      </Pie>
-                      <Tooltip 
-                        formatter={(value, name) => [`${value}%`, name]} 
-                        contentStyle={{ fontSize: '12px' }}
-                      />
-                    </PieChart>
+                      </Bar>
+                    </BarChart>
                   </ResponsiveContainer>
                 </div>
               ) : (
@@ -1005,28 +1020,7 @@ export function AdminDashboard({
                     )}
                 </div>
               )}
-              <div className="mt-4 border-t pt-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-3">
-                  {displayedCategories.map((entry) => (
-                    <div
-                      key={entry.name}
-                      className="flex items-center justify-between text-xs sm:text-sm"
-                    >
-                      <div className="flex items-center gap-2 truncate min-w-0 flex-1">
-                        <span
-                          className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-sm flex-shrink-0"
-                          style={{ backgroundColor: entry.color }}
-                        />
-                        <span className="text-gray-600 truncate">
-                          {entry.name}
-                        </span>
-                      </div>
-                      <span className="font-semibold text-gray-800 flex-shrink-0 ml-2">
-                        {entry.value}%
-                      </span>
-                    </div>
-                  ))}
-                </div>
+              <div className="mt-2 border-t pt-2">                 
                 {categoryData.length > 6 && (
                   <Button
                     variant="ghost"

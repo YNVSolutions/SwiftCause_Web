@@ -13,22 +13,22 @@ import {
   Timestamp,
   where
 } from 'firebase/firestore';
-import { Organization } from '../types';
-export async function getCampaigns(organizationId?: string) {
+import { Organization, Campaign } from '../types';
+export async function getCampaigns(organizationId?: string): Promise<Campaign[]> {
   let campaignsCollection: any = collection(db, 'campaigns');
   if (organizationId) {
     campaignsCollection = query(campaignsCollection, where("organizationId", "==", organizationId));
   }
   const snapshot = await getDocs(campaignsCollection);
-  return snapshot.docs.map(d => ({ id: d.id, ...(d.data() as object) }));
+  return snapshot.docs.map(d => ({ id: d.id, ...(d.data() as object) } as Campaign));
 }
 
-export async function getCampaignById(campaignId: string) {
+export async function getCampaignById(campaignId: string): Promise<Campaign | null> {
   const docRef = doc(db, 'campaigns', campaignId);
   const docSnap = await getDoc(docRef);
   
   if (docSnap.exists()) {
-    return { id: docSnap.id, ...(docSnap.data() as object) };
+    return { id: docSnap.id, ...(docSnap.data() as object) } as Campaign;
   }
   return null;
 }
@@ -62,7 +62,7 @@ export async function getUserById(userId: string) {
   const ref = doc(db, 'users', userId);
   const snap = await getDoc(ref);
   if (!snap.exists()) return null;
-  return { id: snap.id, ...snap.data() };
+  return { id: snap.id, ...(snap.data() as object) };
 }
 
 export async function getTopCampaigns(limitCount: number) {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../../shared/ui/dialog';
 import { Button } from '../../shared/ui/button';
 import { Badge } from '../../shared/ui/badge';
@@ -85,7 +85,25 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
     }
   ];
 
-  const startDemo = () => {
+  const pauseDemo = useCallback(() => {
+    setIsPlaying(false);
+    if (intervalId) {
+      clearInterval(intervalId);
+      setIntervalId(null);
+    }
+  }, [intervalId]);
+
+  const resetDemo = useCallback(() => {
+    setIsPlaying(false);
+    setCurrentStep(0);
+    setProgress(0);
+    if (intervalId) {
+      clearInterval(intervalId);
+      setIntervalId(null);
+    }
+  }, [intervalId]);
+
+  const startDemo = useCallback(() => {
     if (intervalId) {
       clearInterval(intervalId);
     }
@@ -114,33 +132,13 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
     }, 80);
     
     setIntervalId(newInterval);
-  };
+  }, [intervalId, demoSteps.length]);
 
-  const pauseDemo = () => {
-    setIsPlaying(false);
-    if (intervalId) {
-      clearInterval(intervalId);
-      setIntervalId(null);
-    }
-  };
-
-  const resetDemo = () => {
-    setIsPlaying(false);
-    setCurrentStep(0);
-    setProgress(0);
-    if (intervalId) {
-      clearInterval(intervalId);
-      setIntervalId(null);
-    }
-  };
-
-  const goToStep = (step: number) => {
+  const goToStep = useCallback((step: number) => {
     setCurrentStep(step);
     setProgress(0);
-    if (isPlaying) {
-      pauseDemo();
-    }
-  };
+    pauseDemo();
+  }, [pauseDemo]);
 
   useEffect(() => {
     return () => {
@@ -154,7 +152,7 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
     if (!open) {
       resetDemo();
     }
-  }, [open]);
+  }, [open, resetDemo]);
 
   const currentStepData = demoSteps[currentStep];
 
