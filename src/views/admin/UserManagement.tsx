@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Label } from '../../shared/ui/label';
 import { Checkbox } from '../../shared/ui/checkbox';
 import { DialogPortal } from '@radix-ui/react-dialog';
+import { AdminLayout } from './AdminLayout';
 
 const allPermissions: Permission[] = [
     'view_dashboard', 'manage_permissions', 'create_user', 'edit_user', 'delete_user',
@@ -94,32 +95,53 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
     const stats = calculateUserStats(users);
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <header className="bg-white shadow-sm border-b">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-16 gap-3">
-                        <div className="flex items-center gap-3">
+        <AdminLayout
+            onNavigate={onNavigate}
+            onLogout={onLogout}
+            userSession={userSession}
+            hasPermission={hasPermission}
+            activeScreen="admin-users"
+        >
+        <div className="space-y-6">
+            <header className="bg-white shadow-sm border-b rounded-md">
+                <div className="px-2 sm:px-6 lg:px-8">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between h-auto sm:h-16 gap-4">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                             <Button variant="ghost" size="sm" onClick={() => onNavigate('admin')} className="flex items-center space-x-2">
-                                <ArrowLeft className="w-4 h-4" />
-                                <span className="hidden sm:inline">Back to Dashboard</span>
-                                <span className="sm:hidden">Back</span>
+                                <ArrowLeft className="w-4 h-4" /><span className="hidden sm:inline">Back to Dashboard</span><span className="sm:hidden">Back</span>
                             </Button>
-                            <div className="h-6 w-px bg-gray-300" />
-                                <div>
-                                    <h1 className="text-xl font-semibold text-gray-900">User Management</h1>
-                                    <p className="text-sm text-gray-600 hidden lg:block">Manage platform users and permissions</p>
-                                    <p className="text-sm text-gray-600 hidden sm:block lg:hidden">Manage users and permissions</p>
-                                </div>
+                            <div className="h-6 w-px bg-gray-300 hidden sm:block" />
+                            <div>
+                                <h1 className="text-xl font-semibold text-gray-900">User Management</h1>
+                                <p className="text-sm text-gray-600 hidden lg:block">Manage platform users and permissions</p>
+                                <p className="text-sm text-gray-600 hidden sm:block lg:hidden">Manage users and permissions</p>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                            {hasPermission('create_user') && <Button className="bg-indigo-600 text-white" onClick={() => setCreateDialogOpen(true)}><Plus className="w-4 h-4 mr-2" />Add User</Button>}
-                        </div>
+                        {hasPermission('create_user') && (
+                            <Button className="bg-indigo-600 text-white hidden sm:inline-flex" onClick={() => setCreateDialogOpen(true)}>
+                                <Plus className="w-4 h-4 mr-2" />Add User
+                            </Button>
+                        )}
                     </div>
                 </div>
             </header>
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <main className="px-2 sm:px-6 lg:px-8 py-4 sm:py-8">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-8">
+                    <div className="w-full sm:max-w-md">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                            <Input placeholder="Search users by name or email..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
+                        </div>
+                    </div>
+                    {hasPermission('create_user') && (
+                        <Button className="bg-indigo-600 text-white w-full sm:w-auto sm:hidden" onClick={() => setCreateDialogOpen(true)}>
+                            <Plus className="w-4 h-4 mr-2" />Add User
+                        </Button>
+                    )}
+                </div>
+
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Users</p><p className="text-2xl font-semibold text-gray-900">{stats.total}</p></div><Users className="h-8 w-8 text-blue-600" /></div></CardContent></Card>
                     <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Administrators</p><p className="text-2xl font-semibold text-gray-900">{stats.admins}</p></div><UserCog className="h-8 w-8 text-purple-600" /></div></CardContent></Card>
                     <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Kiosk Users</p><p className="text-2xl font-semibold text-gray-900">{stats.kiosks}</p></div><Shield className="h-8 w-8 text-green-600" /></div></CardContent></Card>
@@ -127,12 +149,17 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                 </div>
 
                 <Card className="mb-8">
-                    <CardContent className="p-6">
-                        <div className="flex flex-col sm:flex-row gap-4">
-                            <div className="flex-1 relative"><Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" /><Input placeholder="Search users by name or email..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" /></div>
+                    <CardContent className="p-5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             <Select value={roleFilter} onValueChange={setRoleFilter}>
-                                <SelectTrigger className="w-full sm:w-48"><SelectValue placeholder="Filter by role" /></SelectTrigger>
-                                <SelectContent><SelectItem value="all">All Roles</SelectItem><SelectItem value="admin">Admin</SelectItem><SelectItem value="manager">Manager</SelectItem><SelectItem value="operator">Operator</SelectItem><SelectItem value="viewer">Viewer</SelectItem></SelectContent>
+                                <SelectTrigger className="w-full h-12"><SelectValue placeholder="Filter by role" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Roles</SelectItem>
+                                    <SelectItem value="admin">Admin</SelectItem>
+                                    <SelectItem value="manager">Manager</SelectItem>
+                                    <SelectItem value="operator">Operator</SelectItem>
+                                    <SelectItem value="viewer">Viewer</SelectItem>
+                                </SelectContent>
                             </Select>
                         </div>
                     </CardContent>
@@ -188,6 +215,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                 </Dialog>
             )}
         </div>
+        </AdminLayout>
     );
 }
 
