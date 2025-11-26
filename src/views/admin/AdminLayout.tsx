@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { Screen, AdminSession, Permission } from "../../shared/types";
 import {
@@ -26,15 +28,35 @@ import {
   LogOut,
 } from "lucide-react";
 
+const SCREEN_LABELS: Partial<Record<Screen, string>> = {
+  admin: "Dashboard",
+  "admin-dashboard": "Dashboard",
+  "admin-campaigns": "Campaigns",
+  "admin-kiosks": "Kiosks",
+  "admin-donations": "Donations",
+  "admin-users": "Users",
+};
+
 interface AdminLayoutProps {
   onNavigate: (screen: Screen) => void;
   onLogout: () => void;
   userSession: AdminSession;
   hasPermission: (permission: Permission) => boolean;
   children: React.ReactNode;
+  activeScreen?: Screen;
 }
 
-export function AdminLayout({ onNavigate, onLogout, userSession, hasPermission, children }: AdminLayoutProps) {
+export function AdminLayout({
+  onNavigate,
+  onLogout,
+  userSession,
+  hasPermission,
+  children,
+  activeScreen = "admin-dashboard",
+}: AdminLayoutProps) {
+  const isActive = (...screens: Screen[]) => screens.includes(activeScreen);
+  const currentLabel = SCREEN_LABELS[activeScreen] ?? "Admin";
+
   return (
     <SidebarProvider>
       <Sidebar side="left" collapsible="offcanvas" className="bg-white">
@@ -43,7 +65,9 @@ export function AdminLayout({ onNavigate, onLogout, userSession, hasPermission, 
             <img src="/logo.png" alt="Logo" className="h-8 w-8 rounded-md" />
             <div className="flex flex-col">
               <span className="text-sm font-semibold">SwiftCause Admin</span>
-              <span className="text-xs text-gray-500 truncate">{userSession.user.username}</span>
+              <span className="text-xs text-gray-500 truncate">
+                {userSession.user.username}
+              </span>
             </div>
           </div>
         </SidebarHeader>
@@ -52,14 +76,24 @@ export function AdminLayout({ onNavigate, onLogout, userSession, hasPermission, 
             <SidebarGroupLabel>Navigation</SidebarGroupLabel>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton onClick={() => onNavigate("admin")} isActive tooltip="Dashboard">
+                <SidebarMenuButton
+                  onClick={() => onNavigate("admin")}
+                  isActive={isActive("admin", "admin-dashboard")}
+                  tooltip="Dashboard"
+                  className={isActive("admin", "admin-dashboard") ? "border-l-4 border-indigo-600 bg-sidebar-accent" : ""}
+                >
                   <LayoutDashboard />
                   <span>Dashboard</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               {hasPermission("view_campaigns") && (
                 <SidebarMenuItem>
-                  <SidebarMenuButton onClick={() => onNavigate("admin-campaigns")} tooltip="Campaigns">
+                  <SidebarMenuButton
+                    onClick={() => onNavigate("admin-campaigns")}
+                    tooltip="Campaigns"
+                    isActive={isActive("admin-campaigns")}
+                    className={isActive("admin-campaigns") ? "border-l-4 border-indigo-600 bg-sidebar-accent" : ""}
+                  >
                     <Settings />
                     <span>Campaigns</span>
                   </SidebarMenuButton>
@@ -67,7 +101,12 @@ export function AdminLayout({ onNavigate, onLogout, userSession, hasPermission, 
               )}
               {hasPermission("view_kiosks") && (
                 <SidebarMenuItem>
-                  <SidebarMenuButton onClick={() => onNavigate("admin-kiosks")} tooltip="Kiosks">
+                  <SidebarMenuButton
+                    onClick={() => onNavigate("admin-kiosks")}
+                    tooltip="Kiosks"
+                    isActive={isActive("admin-kiosks")}
+                    className={isActive("admin-kiosks") ? "border-l-4 border-indigo-600 bg-sidebar-accent" : ""}
+                  >
                     <Monitor />
                     <span>Kiosks</span>
                   </SidebarMenuButton>
@@ -75,7 +114,12 @@ export function AdminLayout({ onNavigate, onLogout, userSession, hasPermission, 
               )}
               {hasPermission("view_donations") && (
                 <SidebarMenuItem>
-                  <SidebarMenuButton onClick={() => onNavigate("admin-donations")} tooltip="Donations">
+                  <SidebarMenuButton
+                    onClick={() => onNavigate("admin-donations")}
+                    tooltip="Donations"
+                    isActive={isActive("admin-donations")}
+                    className={isActive("admin-donations") ? "border-l-4 border-indigo-600 bg-sidebar-accent" : ""}
+                  >
                     <Database />
                     <span>Donations</span>
                   </SidebarMenuButton>
@@ -83,7 +127,12 @@ export function AdminLayout({ onNavigate, onLogout, userSession, hasPermission, 
               )}
               {hasPermission("view_users") && (
                 <SidebarMenuItem>
-                  <SidebarMenuButton onClick={() => onNavigate("admin-users")} tooltip="Users">
+                  <SidebarMenuButton
+                    onClick={() => onNavigate("admin-users")}
+                    tooltip="Users"
+                    isActive={isActive("admin-users")}
+                    className={isActive("admin-users") ? "border-l-4 border-indigo-600 bg-sidebar-accent" : ""}
+                  >
                     <Users />
                     <span>Users</span>
                   </SidebarMenuButton>
@@ -95,7 +144,9 @@ export function AdminLayout({ onNavigate, onLogout, userSession, hasPermission, 
         </SidebarContent>
         <SidebarFooter>
           <div className="px-2 py-2 flex items-center justify-between">
-            <Badge variant="secondary" className="text-xs">{userSession.user.role}</Badge>
+            <Badge variant="secondary" className="text-xs">
+              {userSession.user.role}
+            </Badge>
             <Button variant="ghost" size="sm" onClick={onLogout} className="text-gray-600">
               <LogOut className="h-4 w-4 mr-1" /> Logout
             </Button>
@@ -108,12 +159,12 @@ export function AdminLayout({ onNavigate, onLogout, userSession, hasPermission, 
           <div className="flex items-center justify-between px-3 h-14">
             <div className="flex items-center gap-2">
               <SidebarTrigger />
-              <span className="font-semibold">Admin</span>
+              <span className="font-semibold">{currentLabel}</span>
             </div>
           </div>
         </header>
-        <div className="px-2 sm:px-6 lg:px-8 py-4">
-          {children}
+        <div className="flex-1 w-full bg-slate-50">
+          <div className="px-4 sm:px-6 lg:px-10 py-6 w-full">{children}</div>
         </div>
       </SidebarInset>
     </SidebarProvider>

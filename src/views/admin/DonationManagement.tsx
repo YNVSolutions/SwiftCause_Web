@@ -28,6 +28,7 @@ import { Screen, AdminSession, Permission, Donation } from '../../shared/types';
 import { getDonations } from '../../shared/lib/hooks/donationsService';
 
 import { getAllCampaigns } from '../../shared/api';
+import { AdminLayout } from './AdminLayout';
 interface FetchedDonation extends Omit<Donation, 'timestamp'> {
   id: string;
   amount: number;
@@ -51,7 +52,7 @@ interface DonationManagementProps {
   onNavigate: (screen: Screen) => void;
   onLogout: () => void;
   userSession: AdminSession;
-  hasPermission: (permission: Permission) => void;
+  hasPermission: (permission: Permission) => boolean;
 }
 
 export function DonationManagement({ onNavigate, onLogout, userSession, hasPermission }: DonationManagementProps) {
@@ -156,6 +157,11 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
       : 0,
   };
 
+  const summaryCurrency =
+    filteredDonations[0]?.currency ||
+    donations[0]?.currency ||
+    "USD";
+
   const exportToCsv = (data: FetchedDonation[]) => {
     if (data.length === 0) {
       alert("No data to export.");
@@ -182,31 +188,37 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onNavigate('admin')}
-                className="flex items-center space-x-2"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Back to Dashboard</span>
-              </Button>
-              <div className="h-6 w-px bg-gray-300" />
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900">Donation Management</h1>
-                <p className="text-sm text-gray-600">Track and analyze donation transactions</p>
+    <AdminLayout
+      onNavigate={onNavigate}
+      onLogout={onLogout}
+      userSession={userSession}
+      hasPermission={hasPermission}
+      activeScreen="admin-donations"
+    >
+      <div className="space-y-6">
+        <header className="bg-white shadow-sm border-b rounded-md">
+          <div className="px-2 sm:px-6 lg:px-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between h-auto sm:h-16 gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onNavigate('admin')}
+                  className="flex items-center space-x-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>Back to Dashboard</span>
+                </Button>
+                <div className="h-6 w-px bg-gray-300 hidden sm:block" />
+                <div>
+                  <h1 className="text-xl font-semibold text-gray-900">Donation Management</h1>
+                  <p className="text-sm text-gray-600">Track and analyze donation transactions</p>
+                </div>
               </div>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
+                className="hidden sm:inline-flex"
                 onClick={() => exportToCsv(donations)}
               >
                 <Download className="w-4 h-4 mr-2" />
@@ -214,175 +226,179 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
               </Button>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {/* ... Stat Cards ... */}
-        </div>
-
-        <Card className="mb-8">
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-              <div className="lg:col-span-2">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input
-                    placeholder="Search donations..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
+        <main className="px-2 sm:px-6 lg:px-8 py-4 sm:py-8">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
+            <div className="w-full sm:max-w-md">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Search donations..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
               </div>
-              
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="success">Success</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="failed">Failed</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={campaignFilter} onValueChange={setCampaignFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Filter by campaign" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Campaigns</SelectItem>
-                  {campaigns.map(campaign => (
-                    <SelectItem key={campaign.id} value={campaign.id}>{campaign.title}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Popover open={showCalendar} onOpenChange={setShowCalendar}>
-                {/* ... Popover content ... */}
-              </Popover>
             </div>
-          </CardContent>
-        </Card>
+            <Button
+              variant="outline"
+              size="sm"
+              className="sm:hidden"
+              onClick={() => exportToCsv(donations)}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Export CSV
+            </Button>
+          </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Donations ({filteredDonations.length})</CardTitle>
-            <CardDescription>All donation transactions and their details</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="space-y-4">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="grid grid-cols-6 gap-4 py-4 px-6 border-b border-gray-200">
-                    <Skeleton className="h-10 w-full col-span-2" />
-                    <Skeleton className="h-10 w-full col-span-1" />
-                    <Skeleton className="h-10 w-full col-span-1" />
-                    <Skeleton className="h-10 w-full col-span-1" />
-                    <Skeleton className="h-10 w-full col-span-1" />
-                  </div>
-                ))}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Raised</p><p className="text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.totalAmount, summaryCurrency)}</p></div><DollarSign className="w-8 h-8 text-green-500" /></div></CardContent></Card>
+            <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Donations</p><p className="text-2xl font-semibold text-gray-900">{totalStats.totalDonations}</p></div><Users className="w-8 h-8 text-indigo-500" /></div></CardContent></Card>
+            <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Completed</p><p className="text-2xl font-semibold text-gray-900">{totalStats.completedDonations}</p></div><CheckCircle className="w-8 h-8 text-emerald-500" /></div></CardContent></Card>
+            <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Average Donation</p><p className="text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.avgDonation, summaryCurrency)}</p></div><TrendingUp className="w-8 h-8 text-orange-500" /></div></CardContent></Card>
+          </div>
+
+          <Card className="mb-8">
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-full h-12"><SelectValue placeholder="Filter by status" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="success">Success</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="failed">Failed</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={campaignFilter} onValueChange={setCampaignFilter}>
+                  <SelectTrigger className="w-full h-12"><SelectValue placeholder="Filter by campaign" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Campaigns</SelectItem>
+                    {campaigns.map(campaign => (
+                      <SelectItem key={campaign.id} value={campaign.id}>{campaign.title}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Popover open={showCalendar} onOpenChange={setShowCalendar}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="justify-start text-left font-normal w-full h-12 px-3 flex items-center"><CalendarIcon className="mr-2 h-4 w-4" />{dateFilter ? dateFilter.toLocaleDateString() : "Filter by date"}</Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={dateFilter} onSelect={(date) => { setDateFilter(date); setShowCalendar(false); }} initialFocus />
+                    <div className="p-3 border-t"><Button variant="ghost" size="sm" onClick={() => { setDateFilter(undefined); setShowCalendar(false); }} className="w-full">Clear Date Filter</Button></div>
+                  </PopoverContent>
+                </Popover>
               </div>
-            ) : error ? (
-              <div className="flex flex-col items-center justify-center p-8 text-center text-red-600">
-                <AlertCircle className="h-10 w-10 text-red-500" />
-                <p className="mt-2 text-lg">{error}</p>
-              </div>
-            ) : filteredDonations.length > 0 ? (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Donor & Transaction</TableHead>
-                      <TableHead>Campaign</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Payment Details</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Date & Platform</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredDonations.map((donation) => (
-                      <TableRow key={donation.id}>
-                        <TableCell>
-                          <div className="space-y-1">
-                            <div className="flex items-center space-x-2">
-                              <Users className="w-4 h-4 text-gray-400" />
-                              <span className="font-medium">{donation.donorName || 'Anonymous'}</span>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Donations ({filteredDonations.length})</CardTitle>
+              <CardDescription>All donation transactions and their details</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="space-y-4">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="grid grid-cols-6 gap-4 py-4 px-6 border-b border-gray-200">
+                      <Skeleton className="h-10 w-full col-span-2" />
+                      <Skeleton className="h-10 w-full col-span-1" />
+                      <Skeleton className="h-10 w-full col-span-1" />
+                      <Skeleton className="h-10 w-full col-span-1" />
+                      <Skeleton className="h-10 w-full col-span-1" />
+                    </div>
+                  ))}
+                </div>
+              ) : error ? (
+                <div className="flex flex-col items-center justify-center p-8 text-center text-red-600"><AlertCircle className="h-10 w-10 text-red-500" /><p className="mt-2 text-lg">{error}</p></div>
+              ) : filteredDonations.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Donor & Transaction</TableHead>
+                        <TableHead>Campaign</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Payment Details</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Date & Platform</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredDonations.map((donation) => (
+                        <TableRow key={donation.id}>
+                          <TableCell>
+                            <div className="space-y-1">
+                              <div className="flex items-center space-x-2">
+                                <Users className="w-4 h-4 text-gray-400" />
+                                <span className="font-medium">{donation.donorName || 'Anonymous'}</span>
+                              </div>
+                              <p className="text-sm text-gray-500">{donation.donorId}</p>
+                              <p className="text-xs font-mono text-gray-400">{donation.stripePaymentIntentId}</p>
                             </div>
-                            <p className="text-sm text-gray-500">{donation.donorId}</p>
-                            <p className="text-xs font-mono text-gray-400">{donation.stripePaymentIntentId}</p>
-                          </div>
-                        </TableCell>
+                          </TableCell>
 
                  
-                        <TableCell>
-                          <div className="space-y-1">
-                            <p className="font-medium text-gray-900">
-                                {campaignMap[donation.campaignId] || donation.campaignId}
-                            </p>
-                            {donation.isGiftAid && (
-                              <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-200 text-xs">
-                                Gift Aid
-                              </Badge>
-                            )}
-                          </div>
-                        </TableCell>
-
-                        <TableCell>
-                          <div className="space-y-1">
-                            <p className="text-lg font-semibold text-gray-900">
-                              {formatCurrency(donation.amount, donation.currency)}
-                            </p>
-                          </div>
-                        </TableCell>
-
-                        <TableCell>
-                          <div className="space-y-1">
-                            <div className="flex items-center space-x-2">
-                              <CreditCard className="w-4 h-4 text-gray-400" />
-                              <span className="text-sm">{donation.platform}</span>
+                          <TableCell>
+                            <div className="space-y-1">
+                              <p className="font-medium text-gray-900">
+                                  {campaignMap[donation.campaignId] || donation.campaignId}
+                              </p>
+                              {donation.isGiftAid && (
+                                <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-200 text-xs">
+                                  Gift Aid
+                                </Badge>
+                              )}
                             </div>
-                          </div>
-                        </TableCell>
+                          </TableCell>
 
-                        <TableCell>{getStatusBadge(donation.paymentStatus)}</TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              <p className="text-lg font-semibold text-gray-900">
+                                {formatCurrency(donation.amount, donation.currency)}
+                              </p>
+                            </div>
+                          </TableCell>
 
-                        <TableCell>
-                          <div className="space-y-1">
-                            <div className="flex items-center space-x-2">
-                              <Clock className="w-3 h-3 text-gray-400" />
-                              <span className="text-sm">{donation.timestamp}</span>
+                          <TableCell>
+                            <div className="space-y-1">
+                              <div className="flex items-center space-x-2">
+                                <CreditCard className="w-4 h-4 text-gray-400" />
+                                <span className="text-sm">{donation.platform}</span>
+                              </div>
                             </div>
-                            <div className="flex items-center space-x-2">
-                              <MapPin className="w-3 h-3 text-gray-400" />
-                              <Badge variant="secondary" className="text-xs">
-                                {donation.platform}
-                              </Badge>
+                          </TableCell>
+
+                          <TableCell>{getStatusBadge(donation.paymentStatus)}</TableCell>
+
+                          <TableCell>
+                            <div className="space-y-1">
+                              <div className="flex items-center space-x-2">
+                                <Clock className="w-3 h-3 text-gray-400" />
+                                <span className="text-sm">{donation.timestamp}</span>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <MapPin className="w-3 h-3 text-gray-400" />
+                                <Badge variant="secondary" className="text-xs">
+                                  {donation.platform}
+                                </Badge>
+                              </div>
                             </div>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <Ghost className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-                <p className="text-lg font-medium mb-2">No Donations Found</p>
-                <p className="text-sm mb-4">
-                  No donations have been made to your organization yet.
-                </p>
-                {/* Optionally add a button to navigate to create campaign if applicable */}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500"><Ghost className="mx-auto h-12 w-12 text-gray-400 mb-3" /><p className="text-lg font-medium mb-2">No Donations Found</p><p className="text-sm mb-4">No donations have been made to your organization yet.</p></div>
+              )}
+            </CardContent>
+          </Card>
+        </main>
       </div>
-    </div>
+    </AdminLayout>
   );
 }
