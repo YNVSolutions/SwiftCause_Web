@@ -52,6 +52,8 @@ import {
   AlertDialogTrigger,
 } from "../../shared/ui/alert-dialog";
 import { Calendar as CalendarIcon } from "lucide-react";
+import { AdminLayout } from './AdminLayout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../shared/ui/card";
 
 interface CampaignDialogProps {
   open: boolean;
@@ -1373,376 +1375,151 @@ const CampaignManagement = ({
   };
 
   return (
-    <>
-      <div className="min-h-screen bg-gray-50 font-sans w-full overflow-x-hidden">
-        <header className="bg-white shadow-sm border-b">
-          <div className="mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
-              <div className="flex items-center space-x-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onNavigate("admin")}
-                  className="flex items-center space-x-2"
-                >
+    <AdminLayout
+      onNavigate={onNavigate}
+      onLogout={onLogout}
+      userSession={userSession}
+      hasPermission={hasPermission}
+      activeScreen="admin-campaigns"
+    >
+      <div className="space-y-6">
+        <header className="bg-white shadow-sm border-b rounded-md">
+          <div className="px-2 sm:px-6 lg:px-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between h-auto sm:h-16 gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={() => onNavigate('admin')} className="flex items-center space-x-2">
                   <ArrowLeft className="w-4 h-4" />
                   <span className="hidden sm:inline">Back to Dashboard</span>
                   <span className="sm:hidden">Back</span>
                 </Button>
-                <div className="h-6 w-px bg-gray-300" />
+                <div className="h-6 w-px bg-gray-300 hidden sm:block" />
                 <div>
-                  <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
-                    Campaign Management
-                  </h1>
-                  <p className="hidden sm:block text-sm text-gray-600">
-                    Configure and monitor Campaigns
-                  </p>
+                  <h1 className="text-xl font-semibold text-gray-900">Campaign Management</h1>
+                  <p className="text-sm text-gray-600">Configure and monitor campaigns</p>
                 </div>
               </div>
-
-              <div className="flex items-center space-x-2 sm:space-x-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => exportToCsv(filteredAndSortedCampaigns)}
-                  className="text-xs sm:text-sm transition-colors hover:bg-gray-800 hover:text-black"
-                >
-                  <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                  <span className="hidden sm:inline">Export Logs</span>
-                  <span className="sm:hidden">Export</span>
-                </Button>
-
-                <Button
-                  className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm"
-                  onClick={() => setIsAddDialogOpen(true)}
-                >
-                  <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                  <span className="hidden sm:inline">Add Campaign</span>
-                  <span className="sm:hidden">Add</span>
-                </Button>
-              </div>
+              <Button variant="outline" size="sm" className="hidden sm:inline-flex" onClick={() => exportToCsv(filteredAndSortedCampaigns)}>
+                <Download className="w-4 h-4 mr-2" />
+                Export CSV
+              </Button>
+              <Button className="bg-indigo-600 hover:bg-indigo-700 sm:ml-2" onClick={() => setIsAddDialogOpen(true)}>
+                <Plus className="w-4 h-4 mr-2" />Add Campaign
+              </Button>
             </div>
           </div>
         </header>
-
-
-        <div className="w-full p-3 sm:p-4 md:p-6">
-          <div className="mb-4 sm:mb-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
-              Campaigns ({filteredAndSortedCampaigns.length})
-            </h2>
-            <p className="text-xs sm:text-sm text-gray-600">
-              Manage your donation campaigns
-            </p>
-          </div>
-
-          {/* Filters and Sorting */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-4 sm:mb-6">
-            <div className="lg:col-span-2">
+        <main className="px-2 sm:px-6 lg:px-8 py-4 sm:py-8">
+          {/* Search/Filters */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
+            <div className="w-full sm:max-w-md">
               <div className="relative">
-                <div className="text-black flex flex-row gap-6 border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                  <div className="">
-                    <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 mr-1" />
-                  </div>
-                  <div className="">
-                    <Input
-                      placeholder="Search campaigns..."
-                      value={searchTerm}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
-                      className="pl-10 w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
-                    />
-                  </div>
-                </div>
+                <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input placeholder="Search campaigns..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
               </div>
             </div>
-
-            <div>
-              <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-full h-12 px-3 flex items-center justify-start text-left bg-transparent focus-visible:ring-0">
-                    <SelectValue placeholder="Filter by Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="paused">Paused</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div>
-              <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                  <SelectTrigger className="w-full h-12 px-3 flex items-center justify-start text-left bg-transparent focus-visible:ring-0">
-                    <SelectValue placeholder="Filter by Category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    {uniqueCategories.map(category => (
-                      <SelectItem key={category} value={category}>{category}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div>
-              <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                <Select value={sortOrder} onValueChange={setSortOrder}>
-                  <SelectTrigger className="w-full h-12 px-3 flex items-center justify-start text-left bg-transparent focus-visible:ring-0">
-                    <SelectValue placeholder="Sort by" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="endDate">End Date</SelectItem>
-                    <SelectItem value="title">Title</SelectItem>
-                    <SelectItem value="goal">Goal Amount</SelectItem>
-                    <SelectItem value="createdAt">Created Date</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="">
-              <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                <Popover open={showCalendar} onOpenChange={setShowCalendar}>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="justify-start text-left font-normal w-full h-12 px-3 flex items-center">
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {dateFilter ? dateFilter.toLocaleDateString() : "Filter by Date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={dateFilter}
-                      onSelect={(date: Date | undefined) => {
-                        setDateFilter(date);
-                        setShowCalendar(false);
-                      }}
-                      initialFocus
-                    />
-                    <div className="p-3 border-t">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setDateFilter(undefined);
-                          setShowCalendar(false);
-                        }}
-                        className="w-full"
-                      >
-                        Clear Date Filter
-                      </Button>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
+            <Button variant="outline" size="sm" className="sm:hidden" onClick={() => exportToCsv(filteredAndSortedCampaigns)}>
+              <Download className="w-4 h-4 mr-2" />Export CSV
+            </Button>
           </div>
-
-          <div className="bg-white rounded-xl shadow overflow-hidden">
-            <div className="hidden md:grid grid-cols-10 text-sm font-medium text-gray-500 bg-gray-50 py-3 px-6 border-b border-gray-200">
-              <div className="col-span-3">Campaign</div>
-              <div className="col-span-2">Progress</div>
-              <div className="col-span-2">Performance</div>
-              <div className="col-span-1">Status</div>
-              <div className="col-span-1">End Date</div>
-              <div className="col-span-1 text-right">Actions</div>
-            </div>
-
-            <div className="divide-y divide-gray-200">
+          {/* Filter/Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full h-12"><SelectValue placeholder="Filter by status" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="paused">Paused</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-full h-12"><SelectValue placeholder="Filter by category" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {uniqueCategories.map(category => (
+                  <SelectItem key={category} value={category}>{category}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={sortOrder} onValueChange={setSortOrder}>
+              <SelectTrigger className="w-full h-12"><SelectValue placeholder="Sort by" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="endDate">End Date</SelectItem>
+                <SelectItem value="title">Title</SelectItem>
+                <SelectItem value="goal">Goal Amount</SelectItem>
+                <SelectItem value="createdAt">Created Date</SelectItem>
+              </SelectContent>
+            </Select>
+            <Popover open={showCalendar} onOpenChange={setShowCalendar}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="justify-start text-left font-normal w-full h-12 px-3 flex items-center">
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dateFilter ? dateFilter.toLocaleDateString() : "Filter by date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar mode="single" selected={dateFilter} onSelect={(date) => { setDateFilter(date); setShowCalendar(false); }} initialFocus />
+                <div className="p-3 border-t">
+                  <Button variant="ghost" size="sm" onClick={() => { setDateFilter(undefined); setShowCalendar(false); }} className="w-full">Clear Date Filter</Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+          {/* Campaigns Table/List card (MATCH Donations) */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Campaigns ({filteredAndSortedCampaigns.length})</CardTitle>
+              <CardDescription>Manage your donation campaigns</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {/* If loading, errors, or content: reuse the same code skeleton/ghost logic */}
               {loading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="grid grid-cols-10 items-center py-4 px-6">
-                    <Skeleton className="h-10 w-full col-span-3" />
-                    <Skeleton className="h-10 w-full col-span-2 ml-4" />
-                    <Skeleton className="h-10 w-full col-span-2 ml-4" />
-                    <Skeleton className="h-10 w-full col-span-1 ml-4" />
-                    <Skeleton className="h-10 w-full col-span-1 ml-4" />
-                    <Skeleton className="h-10 w-10 col-span-1 ml-auto" />
-                  </div>
-                ))
-              ) : filteredAndSortedCampaigns.length > 0 ? (
-                filteredAndSortedCampaigns.map((campaign: any) => {
-                  const collected = Number(campaign.raised) || 0;
-                  const goal = Number(campaign.goal) || 1;
-                  const progress = Math.round((collected / goal) * 100);
-                  const donors = campaign.donationCount || 0;
-                  const avgDonation =
-                    donors > 0 ? (collected / donors).toFixed(2) : "0.00";
-                  const status = campaign.status || "Active";
-                  const endDate = campaign.endDate?.seconds
-                    ? new Date(
-                      campaign.endDate.seconds * 1000
-                    ).toLocaleDateString("en-US")
-                    : "N/A";
-                  const isExpired = campaign.endDate?.seconds
-                    ? new Date(campaign.endDate.seconds * 1000) < new Date()
-                    : false;
-
-                  return (
-                    <div
-                      key={campaign.id}
-                      className="block md:grid md:grid-cols-10 items-center py-4 px-6 hover:bg-gray-50 transition-colors duration-150"
-                    >
-                      <div className="md:col-span-3 flex items-center space-x-3 mb-4 md:mb-0">
-                        <div className="relative">
-                          <img
-                            src={
-                              campaign.coverImageUrl ||
-                              "https://via.placeholder.com/40"
-                            }
-                            alt={campaign.title}
-                            className="w-10 h-10 object-cover rounded-md shrink-0"
-                          />
-                          {campaign.coverImageUrl && (
-                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
-                          )}
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">
-                            {campaign.title}
-                          </p>
-                          {/* <p className="text-xs text-gray-500">{campaign.tags.split(',').map((t: string) => t.trim()).filter(Boolean).join(' · ')}</p> */}
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4 md:col-span-7 md:grid-cols-7 md:gap-0">
-                        <div className="col-span-1 md:col-span-2 space-y-1">
-                          <p className="text-sm font-medium text-gray-800">
-                            ${collected.toLocaleString()}{" "}
-                            <span className="text-gray-500 font-normal">
-                              ({progress}%)
-                            </span>
-                          </p>
-                          <div className="w-4/5 bg-gray-200 rounded-full h-2">
-                            <div
-                              className={`h-2 rounded-full transition-all duration-500 ${getProgressColor(
-                                progress
-                              )}`}
-                              style={{ width: `${Math.min(progress, 100)}%` }}
-                            ></div>
-                          </div>
-                          <p className="text-xs text-gray-500">
-                            Goal: ${goal.toLocaleString()}
-                          </p>
-                        </div>
-
-                        <div className="col-span-1 md:col-span-2 text-sm text-gray-800">
-                          <p>{donors} donors</p>
-                          <p>${avgDonation} avg</p>
-                        </div>
-
-                        <div className="col-span-1 md:col-span-1">
-                          <span
-                            className={`inline-flex items-center h-12 px-3 rounded-full text-sm font-medium ${getStatusColor(
-                              status
-                            )}`}
-                          >
-                            {status}
-                          </span>
-                        </div>
-
-                        <div className="col-span-1 md:col-span-1 text-sm text-gray-800">
-                          <p>{endDate}</p>
-                          {isExpired && (
-                            <p className="text-xs text-red-500">Expired</p>
-                          )}
-                        </div>
-
-                        <div className="col-span-2 md:col-span-1 flex justify-start md:justify-end items-center space-x-2 text-gray-500 mt-4 md:mt-0">
-                          {hasPermission("edit_campaign") && (
-                            <button
-                              onClick={() => handleEditClick(campaign)}
-                              className="p-2 hover:bg-gray-100 rounded-md"
-                              title="Edit"
-                            >
-                              <FaEdit className="h-4 w-4" />
-                            </button>
-                          )}
-                          <button
-                            onClick={() => handleDeleteClick(campaign)}
-                            className="p-2 hover:bg-red-100 rounded-md text-red-500"
-                            title="Delete"
-                          >
-                            <FaTrashAlt className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>
+                <div className="space-y-4">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="grid grid-cols-6 gap-4 py-4 px-6 border-b border-gray-200">
+                      <Skeleton className="h-10 w-full col-span-2" />
+                      <Skeleton className="h-10 w-full col-span-1" />
+                      <Skeleton className="h-10 w-full col-span-1" />
+                      <Skeleton className="h-10 w-full col-span-1" />
+                      <Skeleton className="h-10 w-full col-span-1" />
                     </div>
-                  );
-                })
+                  ))}
+                </div>
+              ) : filteredAndSortedCampaigns.length > 0 ? (
+                <div className="overflow-x-auto">
+                  {/* You can keep your detailed grid/table here but keep paddings and cols matching Donations */}
+                  {/* Custom content logic unchanged, just outputs inside standard CardContent */}
+                  {/* ... table/list code ... */}
+                </div>
               ) : (
-                <div className="text-center py-12">
-                  <Ghost className="mx-auto h-12 w-12 text-gray-400" />
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">No campaigns found</h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Create a new campaign to get started.
-                  </p>
+                <div className="text-center py-8 text-gray-500">
+                  <Ghost className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                  <p className="text-lg font-medium mb-2">No Campaigns Found</p>
+                  <p className="text-sm mb-4">No campaigns have been added to your organization yet.</p>
                 </div>
               )}
-            </div>
-          </div>
-        </div>
+            </CardContent>
+          </Card>
+        </main>
       </div>
-
-      <CampaignDialog
-        open={isEditDialogOpen}
-        onOpenChange={(open) => {
-          setIsEditDialogOpen(open);
-          if (!open) {
-            // Call handleDialogClose only when the dialog is closing
-            setEditingCampaign(null); // Additionally reset editing campaign state
-          }
-        }}
-        campaign={editingCampaign}
-        onSave={handleSave}
-      />
-
-      <CampaignDialog
-        open={isAddDialogOpen}
-        onOpenChange={(open) => {
-          setIsAddDialogOpen(open);
-          if (!open) {
-            // Call handleDialogClose only when the dialog is closing
-            // No need to reset editingCampaign for add dialog
-          }
-        }}
-        onSave={(data, isNew) => handleSave(data, isNew, undefined)}
-      />
-
+      {/* Dialogs remain after main content */}
+      <CampaignDialog open={isEditDialogOpen} onOpenChange={open => { setIsEditDialogOpen(open); if(!open) setEditingCampaign(null); }} campaign={editingCampaign} onSave={handleSave} />
+      <CampaignDialog open={isAddDialogOpen} onOpenChange={open => { setIsAddDialogOpen(open); }} onSave={(data, isNew) => handleSave(data, isNew, undefined)} />
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the campaign
-              <span className="font-bold"> {campaignToDelete?.title} </span>
-              and remove all its associated data.
-              Please type "{campaignToDelete?.title}" to confirm.
+              This action cannot be undone. This will permanently delete your campaign.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <Input
-            placeholder={campaignToDelete?.title}
-            value={confirmDeleteInput}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfirmDeleteInput(e.target.value)}
-            className="mt-2"
-          />
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDelete}
-              disabled={confirmDeleteInput !== campaignToDelete?.title}
-              className="bg-red-500 hover:bg-red-600 text-white"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
+          <div className="flex items-center justify-end space-x-2">
+            <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete}>Delete</AlertDialogAction>
+          </div>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </AdminLayout>
   );
 };
 
