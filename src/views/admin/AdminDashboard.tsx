@@ -23,6 +23,8 @@ import {
   Legend,
   BarChart,
   Bar,
+  LineChart,
+  Line,
   ResponsiveContainer,
   PieChart,
   Pie,
@@ -366,16 +368,24 @@ export function AdminDashboard({
 
         const topListQuery = query(
           campaignsRef,
-          orgQuery,
-          orderBy("raised", "desc"),
-          limit(4)
+          orgQuery
         );
         const topListSnapshot = await getDocs(topListQuery);
-        setTopCampaigns(
-          topListSnapshot.docs.map(
-            (doc) => ({ id: doc.id, ...doc.data() } as Campaign)
-          )
+        const allCampaigns = topListSnapshot.docs.map(
+          (doc) => ({ id: doc.id, ...doc.data() } as Campaign)
         );
+        
+        // Sort by percentage of goal completion
+        const sortedByPercentage = allCampaigns
+          .filter(campaign => campaign.goal && campaign.goal > 0)
+          .sort((a, b) => {
+            const percentA = (a.raised || 0) / (a.goal || 1);
+            const percentB = (b.raised || 0) / (b.goal || 1);
+            return percentB - percentA;
+          })
+          .slice(0, 4);
+        
+        setTopCampaigns(sortedByPercentage);
 
         const topChartQuery = query(
           campaignsRef,
@@ -993,17 +1003,13 @@ export function AdminDashboard({
               ) : categoryData.length > 0 ? (
                 <div className="flex-1 flex items-end">
                   <ResponsiveContainer width="100%" height={260}>
-                    <BarChart data={categoryData} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}>
+                    <LineChart data={categoryData} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                       <YAxis tickFormatter={(value) => formatShortCurrency(value as number)} />
                       <Tooltip formatter={(value) => formatShortCurrency(value as number)} contentStyle={{ fontSize: '12px' }} />
-                      <Bar dataKey="value">
-                        {categoryData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Bar>
-                    </BarChart>
+                      <Line type="monotone" dataKey="value" stroke="#6366F1" strokeWidth={2} dot={{ fill: '#6366F1', r: 4 }} />
+                    </LineChart>
                   </ResponsiveContainer>
                 </div>
               ) : (
@@ -1085,7 +1091,9 @@ export function AdminDashboard({
                   topCampaigns.map((campaign: Campaign) => {
                     const collected = campaign.raised || 0;
                     const goal = campaign.goal || 1;
-                    const progress = Math.round((collected / goal) * 100);
+                    const progressRaw = (collected / goal) * 100;
+                    const progress = progressRaw < 1 ? progressRaw.toFixed(2) : Math.round(progressRaw);
+                    const progressValue = progressRaw < 1 ? progressRaw : Math.round(progressRaw);
                     return (
                       <div key={campaign.id} className="space-y-2">
                         <div className="flex items-start sm:items-center justify-between gap-2 flex-wrap">
@@ -1101,7 +1109,7 @@ export function AdminDashboard({
                             </p>
                           </div>
                         </div>
-                        <Progress value={progress} className="h-1.5 sm:h-2" />
+                        <Progress value={progressValue} className="h-1.5 sm:h-2" />
                         <div className="flex justify-between text-xs text-gray-500 gap-2">
                           <span>{progress}% complete</span>
                           <span className="truncate">Goal: {formatCurrency(goal)}</span>
