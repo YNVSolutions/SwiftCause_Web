@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { Skeleton } from "../../shared/ui/skeleton"; // Import Skeleton
 import { Ghost } from "lucide-react"; // Import Ghost
+import { AdminLayout } from './AdminLayout';
 
 
 export function KioskManagement({ onNavigate, onLogout, userSession, hasPermission }: {
@@ -141,23 +142,14 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
 
   if (isLoading) {
     return (
-      <div className="flex flex-col min-h-screen bg-gray-50">
-        <header className="bg-white shadow-sm border-b">
-          <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between h-auto sm:h-16 gap-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                <Skeleton className="w-32 h-8" />
-                <div className="h-6 w-px bg-gray-300 hidden sm:block" />
-                <div className="space-y-1">
-                  <Skeleton className="w-48 h-6" />
-                  <Skeleton className="w-64 h-4" />
-                </div>
-              </div>
-              <Skeleton className="w-28 h-10" />
-            </div>
-          </div>
-        </header>
-        <main className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1">
+      <AdminLayout
+        onNavigate={onNavigate}
+        onLogout={onLogout}
+        userSession={userSession}
+        hasPermission={hasPermission}
+        activeScreen="admin-kiosks"
+      >
+        <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {Array.from({ length: 4 }).map((_, i) => (
               <Card key={i}><CardContent className="p-6"><div className="flex items-center justify-between"><div><Skeleton className="w-24 h-5 mb-2" /><Skeleton className="w-32 h-8" /></div><Skeleton className="h-8 w-8" /></div></CardContent></Card>
@@ -193,16 +185,22 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
               </div>
             </CardContent>
           </Card>
-        </main>
-      </div>
+        </div>
+      </AdminLayout>
     );
   }
 
   return (
-    <>
-      <div className="min-h-screen bg-gray-50">
-        <header className="bg-white shadow-sm border-b">
-          <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+    <AdminLayout
+      onNavigate={onNavigate}
+      onLogout={onLogout}
+      userSession={userSession}
+      hasPermission={hasPermission}
+      activeScreen="admin-kiosks"
+    >
+      <div className="space-y-6">
+        <header className="bg-white shadow-sm border-b rounded-md">
+          <div className="px-2 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between h-auto sm:h-16 gap-4">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                 <Button variant="ghost" size="sm" onClick={() => onNavigate('admin')} className="flex items-center space-x-2">
@@ -219,7 +217,8 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                   <div className="relative">
                     <div className="h-10 items-center flex flex-row gap-5 border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
                       <div>
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" /></div>
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                      </div>
                       <div>
                         <Input
                           placeholder="Search kiosks..."
@@ -240,8 +239,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
             </div>
           </div>
         </header>
-
-        <main className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <main className="px-2 sm:px-6 lg:px-8 py-4 sm:py-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Kiosks</p><p className="text-2xl font-semibold text-gray-900">{kiosks.length}</p><div className="flex items-center space-x-4 text-xs text-gray-500 mt-1"><span className="text-green-600">{totalStats.online} online</span><span className="text-red-600">{totalStats.offline} offline</span></div></div><Settings className="h-8 w-8 text-blue-600" /></div></CardContent></Card>
             <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Raised</p><p className="text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.totalRaised)}</p></div><DollarSign className="h-8 w-8 text-green-600" /></div></CardContent></Card>
@@ -375,6 +373,6 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
       </Dialog>
       
       <KioskCampaignAssignmentDialog open={isAssignmentDialogOpen} onOpenChange={setIsAssignmentDialogOpen} kiosk={assigningKiosk} campaigns={campaigns} onSave={handleSaveKioskAssignment} />
-    </>
+    </AdminLayout>
   );
 }
