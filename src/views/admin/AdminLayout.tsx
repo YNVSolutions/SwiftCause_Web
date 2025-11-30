@@ -58,8 +58,8 @@ export function AdminLayout({
   const currentLabel = SCREEN_LABELS[activeScreen] ?? "Admin";
 
   return (
-    <SidebarProvider>
-      <Sidebar side="left" collapsible="offcanvas" className="bg-white">
+    <SidebarProvider defaultOpen={true}>
+      <Sidebar side="left" variant="sidebar" collapsible="icon" className="bg-white border-r">
         <SidebarHeader>
           <div className="flex items-center gap-2 px-2 py-1">
             <img src="/logo.png" alt="Logo" className="h-8 w-8 rounded-md" />
@@ -154,17 +154,17 @@ export function AdminLayout({
         </SidebarFooter>
       </Sidebar>
 
-      <SidebarInset>
+      <SidebarInset className="overflow-x-hidden">
         <header className="sticky top-0 z-20 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b">
           <div className="flex items-center justify-between px-3 h-14">
             <div className="flex items-center gap-2">
-              <SidebarTrigger />
-              <span className="font-semibold">{currentLabel}</span>
+              <SidebarTrigger className="lg:hidden" />
+              <span className="font-semibold text-sm sm:text-base">{currentLabel}</span>
             </div>
           </div>
         </header>
-        <div className="flex-1 w-full bg-slate-50">
-          <div className="px-4 sm:px-6 lg:px-10 py-6 w-full">{children}</div>
+        <div className="flex-1 w-full bg-slate-50 overflow-x-hidden">
+          <div className="px-2 sm:px-4 lg:px-6 py-4 sm:py-6 w-full max-w-full">{children}</div>
         </div>
       </SidebarInset>
     </SidebarProvider>
