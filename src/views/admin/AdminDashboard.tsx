@@ -1192,10 +1192,10 @@ export function AdminDashboard({
           </Card>
 
           <Card>
-            <CardHeader className="p-4 sm:p-6">
+            <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-2 sm:pb-3">
               <CardTitle className="text-base sm:text-lg">Recent Activity</CardTitle>
             </CardHeader>
-            <CardContent className="p-4 sm:p-6 pt-0">
+            <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6 pt-0">
               <div className="space-y-3 sm:space-y-4">
                 {loading ? (
                   Array.from({ length: 3 }).map((_, i) => (
