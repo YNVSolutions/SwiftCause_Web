@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
-import { getAllCampaigns, getKiosks, getRecentDonations, getCampaigns } from '../../api/firestoreService';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { getKiosks, getRecentDonations, getCampaigns } from '../../api/firestoreService';
+import { getCountFromServer, collection, query, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Campaign } from '../../types';
 import { Kiosk, Donation } from '../../types';
@@ -15,6 +15,8 @@ interface DashboardStats {
   deviceDistribution: Array<{ name: string; value: number }>;
   donationDistribution: Array<{ range: string; count: number }>;
 }
+
+type FirestoreTimestamp = { seconds: number; nanoseconds: number };
 
 export interface Activity {
   id: string;
@@ -51,9 +53,10 @@ export function useDashboardData(organizationId?: string) {
   const [error, setError] = useState<string | null>(null);
 
   const fetchDashboardData = useCallback(async () => {
-    if (!organizationId) {
+    // Validate organizationId
+    if (!organizationId || typeof organizationId !== 'string' || organizationId.trim() === '') {
       setLoading(false);
-      setError("Organization ID is not available.");
+      setError("Invalid organization ID.");
       return;
     }
 
@@ -109,13 +112,7 @@ export function useDashboardData(organizationId?: string) {
         .map(([name, value]) => ({ name, value }))
         .sort((a, b) => b.value - a.value);
 
-      // Fetch all donations for the organization to calculate distribution
-      const allDonationsQuery = organizationId
-        ? await getDocs(query(collection(db, 'donations'), where("organizationId", "==", organizationId)))
-        : await getDocs(collection(db, 'donations'));
-
-      const allDonations = allDonationsQuery.docs.map(d => d.data() as Donation);
-
+      // Fetch donation distribution using aggregation queries (more efficient)
       // Define amount ranges
       const ranges = [
         { min: 0, max: 100, label: '$0-$100' },
@@ -123,21 +120,43 @@ export function useDashboardData(organizationId?: string) {
         { min: 200, max: 300, label: '$200-$300' },
         { min: 300, max: 400, label: '$300-$400' },
         { min: 400, max: 500, label: '$400-$500' },
-        { min: 500, max: Infinity, label: '$500+' }
+        { min: 500, max: 10000, label: '$500+' } // Set reasonable upper limit
       ];
 
-      // Count donations in each range
-      const donationDistribution = ranges.map(range => {
-        const count = allDonations.filter(donation => {
-          const amount = donation.amount || 0;
-          return amount >= range.min && amount < range.max;
-        }).length;
-
-        return {
-          range: range.label,
-          count: count
-        };
-      });
+      // Use Promise.all to fetch counts in parallel for better performance
+      const donationDistribution = await Promise.all(
+        ranges.map(async (range) => {
+          try {
+            // Build query for this range
+            let rangeQuery = collection(db, 'donations');
+            const constraints = [];
+            
+            if (organizationId) {
+              constraints.push(where("organizationId", "==", organizationId));
+            }
+            constraints.push(where("amount", ">=", range.min));
+            if (range.max !== 10000) { // Don't add upper limit for last range
+              constraints.push(where("amount", "<", range.max));
+            }
+            
+            const q = query(rangeQuery, ...constraints);
+            
+            // Use getCountFromServer for efficient counting (doesn't download documents)
+            const snapshot = await getCountFromServer(q);
+            
+            return {
+              range: range.label,
+              count: snapshot.data().count
+            };
+          } catch (error) {
+            console.error(`Error fetching count for range ${range.label}:`, error);
+            return {
+              range: range.label,
+              count: 0
+            };
+          }
+        })
+      );
 
       setStats({
         totalRaised,
@@ -154,16 +173,20 @@ export function useDashboardData(organizationId?: string) {
 
         // Normalize into ISO string for sorting
         let iso: string;
-        if (rawTs && typeof rawTs === "object" && "seconds" in rawTs) {
+        if (isFirestoreTimestamp(rawTs)) {
           iso = new Date(rawTs.seconds * 1000).toISOString();
-        } else {
-          iso = String(rawTs);
+        }
+        else {
+          iso = safeIso(String(rawTs));
         }
 
         const platform: string | undefined = (donation as any).platform;
         const campaignName =
           campaignsData.find(c => c.id === donation.campaignId)?.title ||
           donation.campaignId;
+
+        const dateObj = new Date(iso);
+        
 
         return {
           id: donation.id,
@@ -177,11 +200,13 @@ export function useDashboardData(organizationId?: string) {
           timeAgo: getTimeBucket(iso),
 
           // Human-friendly time if needed
-          displayTime: new Date(iso).toLocaleString(),
+          displayTime: isNaN(dateObj.getTime()) ? "Invalid timestamp" : dateObj.toLocaleString(), 
 
           ...(platform ? { kioskId: platform } : {}),
           
           // Include full donation data for detail view
+          // ⚠️ SECURITY NOTE: This exposes PII (email, phone, name) to client
+          // TODO: Sanitize or use server-side API to filter sensitive fields
           donationData: donation,
           campaignName: campaignName
         } as Activity;
@@ -241,8 +266,6 @@ function getTimeBucket(isoString: string): string {
 
   // For week/month calculations:
   const nowDay = now.getDay();            // 0 = Sun
-  const donationDay = date.getDay();
-  const diffWeeks = Math.floor(diffDays / 7);
 
   // --- This Week ---
   // Same week if both fall after last Sunday
@@ -271,4 +294,20 @@ function getTimeBucket(isoString: string): string {
 
   // --- Older ---
   return "Older";
+}
+
+function isFirestoreTimestamp(value: unknown): value is FirestoreTimestamp {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "seconds" in value &&
+    typeof (value as any).seconds === "number" &&
+    "nanoseconds" in value &&
+    typeof (value as any).nanoseconds === "number"
+  );
+}
+
+function safeIso(input: string): string {
+  const d = new Date(input);
+  return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
 }

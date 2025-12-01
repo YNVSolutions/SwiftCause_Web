@@ -550,8 +550,8 @@ export function AdminDashboard({
 
   return (
     <AdminLayout onNavigate={onNavigate} onLogout={onLogout} userSession={userSession} hasPermission={hasPermission}>
-      <header className="bg-white shadow-sm border rounded-md">
-        <div className="px-2 sm:px-4 lg:px-6">
+      <header className="bg-white shadow-sm border rounded-md overflow-hidden">
+        <div className="px-2 sm:px-4 lg:px-6 overflow-x-hidden">
           <div className="flex flex-col gap-4 py-3">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 flex-1 min-w-0">
@@ -667,7 +667,7 @@ export function AdminDashboard({
         </div>
       </header>
 
-      <main className="px-1 sm:px-2 lg:px-4 py-4 sm:py-6">
+      <main className="px-1 sm:px-2 lg:px-4 py-4 sm:py-6 w-full max-w-full overflow-x-hidden">
         {stripeStatusMessage && (
           <Card className={`mb-6 sm:mb-8 ${stripeStatusMessage.type === 'success' ? 'border-green-400 bg-green-50 text-green-800' : stripeStatusMessage.type === 'warning' ? 'border-yellow-400 bg-yellow-50 text-yellow-800' : 'border-red-400 bg-red-50 text-red-800'}`}>
             <CardContent className="flex items-center space-x-2 sm:space-x-3 p-3 sm:p-4">
@@ -1192,10 +1192,10 @@ export function AdminDashboard({
           </Card>
 
           <Card>
-            <CardHeader className="p-4 sm:p-6">
+            <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-2 sm:pb-3">
               <CardTitle className="text-base sm:text-lg">Recent Activity</CardTitle>
             </CardHeader>
-            <CardContent className="p-4 sm:p-6 pt-0">
+            <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6 pt-0">
               <div className="space-y-3 sm:space-y-4">
                 {loading ? (
                   Array.from({ length: 3 }).map((_, i) => (
