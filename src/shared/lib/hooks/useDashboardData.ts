@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
-import { getAllCampaigns, getKiosks, getRecentDonations, getCampaigns } from '../../api/firestoreService';
-import { DocumentData, Timestamp } from 'firebase/firestore';
+import { getKiosks, getRecentDonations, getCampaigns } from '../../api/firestoreService';
+import { getCountFromServer, collection, query, where } from 'firebase/firestore';
+import { db } from '../firebase';
 import { Campaign } from '../../types';
 import { Kiosk, Donation } from '../../types';
 
@@ -12,14 +13,21 @@ interface DashboardStats {
   activeKiosks: number;
   topLocations: Array<{ name: string; totalRaised: number }>;
   deviceDistribution: Array<{ name: string; value: number }>;
+  donationDistribution: Array<{ range: string; count: number }>;
 }
+
+type FirestoreTimestamp = { seconds: number; nanoseconds: number };
 
 export interface Activity {
   id: string;
   type: 'donation' | 'campaign' | 'kiosk';
   message: string;
   timestamp: string;
+  timeAgo: string;
+  displayTime: string;
   kioskId?: string;
+  donationData?: Donation;
+  campaignName?: string;
 }
 
 export interface Alert {
@@ -37,6 +45,7 @@ export function useDashboardData(organizationId?: string) {
     activeKiosks: 0,
     topLocations: [],
     deviceDistribution: [],
+    donationDistribution: [],
   });
   const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
@@ -44,9 +53,10 @@ export function useDashboardData(organizationId?: string) {
   const [error, setError] = useState<string | null>(null);
 
   const fetchDashboardData = useCallback(async () => {
-    if (!organizationId) {
+    // Validate organizationId
+    if (!organizationId || typeof organizationId !== 'string' || organizationId.trim() === '') {
       setLoading(false);
-      setError("Organization ID is not available.");
+      setError("Invalid organization ID.");
       return;
     }
 
@@ -57,16 +67,16 @@ export function useDashboardData(organizationId?: string) {
       const [campaignsData, kiosksData, recentDonationsData] = await Promise.all([
         getCampaigns(organizationId) as Promise<Campaign[]>,
         getKiosks(organizationId) as Promise<Kiosk[]>,
-        getRecentDonations(5, organizationId) as Promise<Donation[]> 
+        getRecentDonations(10, organizationId) as Promise<Donation[]>
       ]);
 
       const totalRaised = campaignsData.reduce((acc, campaign: Campaign) => acc + (Number(campaign.raised) || 0), 0);
       const totalDonations = campaignsData.reduce((acc, campaign: Campaign) => acc + (Number(campaign.donationCount) || 0), 0);
-      
+
       const activeCampaigns = campaignsData.filter((c: Campaign) => c.status === 'active').length;
       const activeKiosks = kiosksData.filter((k: Kiosk) => k.status === 'online').length;
 
-  
+
       const locationGroups: { [key: string]: number } = {};
       kiosksData.forEach((kiosk: Kiosk) => {
         if (kiosk.location && kiosk.totalRaised) {
@@ -78,7 +88,7 @@ export function useDashboardData(organizationId?: string) {
         .sort((a, b) => b.totalRaised - a.totalRaised)
         .slice(0, 5);
 
-     
+
       const normalizeOs = (raw?: string): string | null => {
         if (!raw) return null;
         const v = raw.trim().toLowerCase();
@@ -88,7 +98,7 @@ export function useDashboardData(organizationId?: string) {
         if (v.includes('windows')) return 'Windows';
         if (v.includes('chrome')) return 'ChromeOS';
         if (v.includes('linux')) return 'Linux';
-        return raw.trim(); 
+        return raw.trim();
       };
 
       const deviceCounts: { [key: string]: number } = {};
@@ -102,27 +112,112 @@ export function useDashboardData(organizationId?: string) {
         .map(([name, value]) => ({ name, value }))
         .sort((a, b) => b.value - a.value);
 
-      setStats({ 
-        totalRaised, 
-        totalDonations, 
-        activeCampaigns, 
-        activeKiosks, 
-        topLocations, 
-        deviceDistribution 
+      // Fetch donation distribution using aggregation queries (more efficient)
+      // Define amount ranges
+      const ranges = [
+        { min: 0, max: 100, label: '$0-$100' },
+        { min: 100, max: 200, label: '$100-$200' },
+        { min: 200, max: 300, label: '$200-$300' },
+        { min: 300, max: 400, label: '$300-$400' },
+        { min: 400, max: 500, label: '$400-$500' },
+        { min: 500, max: 10000, label: '$500+' } // Set reasonable upper limit
+      ];
+
+      // Use Promise.all to fetch counts in parallel for better performance
+      const donationDistribution = await Promise.all(
+        ranges.map(async (range) => {
+          try {
+            // Build query for this range
+            let rangeQuery = collection(db, 'donations');
+            const constraints = [];
+            
+            if (organizationId) {
+              constraints.push(where("organizationId", "==", organizationId));
+            }
+            constraints.push(where("amount", ">=", range.min));
+            if (range.max !== 10000) { // Don't add upper limit for last range
+              constraints.push(where("amount", "<", range.max));
+            }
+            
+            const q = query(rangeQuery, ...constraints);
+            
+            // Use getCountFromServer for efficient counting (doesn't download documents)
+            const snapshot = await getCountFromServer(q);
+            
+            return {
+              range: range.label,
+              count: snapshot.data().count
+            };
+          } catch (error) {
+            console.error(`Error fetching count for range ${range.label}:`, error);
+            return {
+              range: range.label,
+              count: 0
+            };
+          }
+        })
+      );
+
+      setStats({
+        totalRaised,
+        totalDonations,
+        activeCampaigns,
+        activeKiosks,
+        topLocations,
+        deviceDistribution,
+        donationDistribution
       });
 
       const formattedActivities = recentDonationsData.map((donation: Donation): Activity => {
-        const t: any = (donation as any).timestamp;
-        const ts = t && typeof t === 'object' && 'seconds' in t ? new Date(t.seconds * 1000).toLocaleString() : String(t ?? 'N/A');
+        const rawTs: any = donation.timestamp;
+
+        // Normalize into ISO string for sorting
+        let iso: string;
+        if (isFirestoreTimestamp(rawTs)) {
+          iso = new Date(rawTs.seconds * 1000).toISOString();
+        }
+        else {
+          iso = safeIso(String(rawTs));
+        }
+
         const platform: string | undefined = (donation as any).platform;
+        const campaignName =
+          campaignsData.find(c => c.id === donation.campaignId)?.title ||
+          donation.campaignId;
+
+        const dateObj = new Date(iso);
+        
+
         return {
           id: donation.id,
-          type: 'donation',
-          message: `New donation of $${donation.amount} for campaign ${donation.campaignId}`,
-          timestamp: ts,
+          type: "donation",
+          message: `New donation of $${donation.amount} for campaign ${campaignName}`,
+
+          // raw ISO used for sorting
+          timestamp: iso,
+
+          // "x minutes ago", "yesterday", etc.
+          timeAgo: getTimeBucket(iso),
+
+          // Human-friendly time if needed
+          displayTime: isNaN(dateObj.getTime()) ? "Invalid timestamp" : dateObj.toLocaleString(), 
+
           ...(platform ? { kioskId: platform } : {}),
+          
+          // Include full donation data for detail view
+          // ⚠️ SECURITY NOTE: This exposes PII (email, phone, name) to client
+          // TODO: Sanitize or use server-side API to filter sensitive fields
+          donationData: donation,
+          campaignName: campaignName
         } as Activity;
       });
+
+      // Sort by real ISO timestamp
+      formattedActivities.sort(
+        (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
+
+
       setRecentActivities(formattedActivities);
 
       const offlineKioskAlerts = kiosksData
@@ -148,4 +243,71 @@ export function useDashboardData(organizationId?: string) {
   }, [fetchDashboardData]);
 
   return { loading, error, stats, recentActivities, alerts, refreshDashboard: fetchDashboardData };
+}
+
+function getTimeBucket(isoString: string): string {
+  const date = new Date(isoString);
+  const now = new Date();
+
+  const diffMs = now.getTime() - date.getTime();
+  const diffMinutes = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  // --- Under 1 hour ---
+  if (diffMinutes < 1) return "1 minute ago";
+  if (diffMinutes < 60) return `${diffMinutes} minutes ago`;
+
+  // --- Under 1 day ---
+  if (diffHours < 24) return `${diffHours} hours ago`;
+
+  // --- Yesterday ---
+  if (diffDays === 1) return "Yesterday";
+
+  // For week/month calculations:
+  const nowDay = now.getDay();            // 0 = Sun
+
+  // --- This Week ---
+  // Same week if both fall after last Sunday
+  const startOfWeek = new Date(now);
+  startOfWeek.setHours(0, 0, 0, 0);
+  startOfWeek.setDate(now.getDate() - nowDay);
+
+  if (date >= startOfWeek) return "This week";
+
+  // --- Last Week ---
+  const startOfLastWeek = new Date(startOfWeek);
+  startOfLastWeek.setDate(startOfLastWeek.getDate() - 7);
+
+  if (date >= startOfLastWeek && date < startOfWeek) return "Last week";
+
+  // --- Earlier This Month ---
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  if (date >= startOfMonth) return "Earlier this month";
+
+  // --- Last Month ---
+  const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0); // last day of previous month
+
+  if (date >= startOfLastMonth && date <= endOfLastMonth) return "Last month";
+
+  // --- Older ---
+  return "Older";
+}
+
+function isFirestoreTimestamp(value: unknown): value is FirestoreTimestamp {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "seconds" in value &&
+    typeof (value as any).seconds === "number" &&
+    "nanoseconds" in value &&
+    typeof (value as any).nanoseconds === "number"
+  );
+}
+
+function safeIso(input: string): string {
+  const d = new Date(input);
+  return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
 }

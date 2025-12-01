@@ -23,6 +23,8 @@ import {
   Legend,
   BarChart,
   Bar,
+  LineChart,
+  Line,
   ResponsiveContainer,
   PieChart,
   Pie,
@@ -136,6 +138,8 @@ export function AdminDashboard({
   const [stripeStatusMessage, setStripeStatusMessage] = useState<{ type: 'success' | 'error' | 'warning', message: string } | null>(null);
   const [showStripeStatusDialog, setShowStripeStatusDialog] = useState(false);
   const [isStripeOnboardingLoading, setIsStripeOnboardingLoading] = useState(false);
+  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
+  const [showActivityDialog, setShowActivityDialog] = useState(false);
 
   const { organization, loading: orgLoading, error: orgError } = useOrganization(
     userSession.user.organizationId ?? null
@@ -366,16 +370,24 @@ export function AdminDashboard({
 
         const topListQuery = query(
           campaignsRef,
-          orgQuery,
-          orderBy("raised", "desc"),
-          limit(4)
+          orgQuery
         );
         const topListSnapshot = await getDocs(topListQuery);
-        setTopCampaigns(
-          topListSnapshot.docs.map(
-            (doc) => ({ id: doc.id, ...doc.data() } as Campaign)
-          )
+        const allCampaigns = topListSnapshot.docs.map(
+          (doc) => ({ id: doc.id, ...doc.data() } as Campaign)
         );
+        
+        // Sort by percentage of goal completion
+        const sortedByPercentage = allCampaigns
+          .filter(campaign => campaign.goal && campaign.goal > 0)
+          .sort((a, b) => {
+            const percentA = (a.raised || 0) / (a.goal || 1);
+            const percentB = (b.raised || 0) / (b.goal || 1);
+            return percentB - percentA;
+          })
+          .slice(0, 4);
+        
+        setTopCampaigns(sortedByPercentage);
 
         const topChartQuery = query(
           campaignsRef,
@@ -538,8 +550,8 @@ export function AdminDashboard({
 
   return (
     <AdminLayout onNavigate={onNavigate} onLogout={onLogout} userSession={userSession} hasPermission={hasPermission}>
-      <header className="bg-white shadow-sm border rounded-md">
-        <div className="px-2 sm:px-4 lg:px-6">
+      <header className="bg-white shadow-sm border rounded-md overflow-hidden">
+        <div className="px-2 sm:px-4 lg:px-6 overflow-x-hidden">
           <div className="flex flex-col gap-4 py-3">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 flex-1 min-w-0">
@@ -655,7 +667,7 @@ export function AdminDashboard({
         </div>
       </header>
 
-      <main className="px-1 sm:px-2 lg:px-4 py-4 sm:py-6">
+      <main className="px-1 sm:px-2 lg:px-4 py-4 sm:py-6 w-full max-w-full overflow-x-hidden">
         {stripeStatusMessage && (
           <Card className={`mb-6 sm:mb-8 ${stripeStatusMessage.type === 'success' ? 'border-green-400 bg-green-50 text-green-800' : stripeStatusMessage.type === 'warning' ? 'border-yellow-400 bg-yellow-50 text-yellow-800' : 'border-red-400 bg-red-50 text-red-800'}`}>
             <CardContent className="flex items-center space-x-2 sm:space-x-3 p-3 sm:p-4">
@@ -993,17 +1005,13 @@ export function AdminDashboard({
               ) : categoryData.length > 0 ? (
                 <div className="flex-1 flex items-end">
                   <ResponsiveContainer width="100%" height={260}>
-                    <BarChart data={categoryData} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}>
+                    <LineChart data={categoryData} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                       <YAxis tickFormatter={(value) => formatShortCurrency(value as number)} />
                       <Tooltip formatter={(value) => formatShortCurrency(value as number)} contentStyle={{ fontSize: '12px' }} />
-                      <Bar dataKey="value">
-                        {categoryData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Bar>
-                    </BarChart>
+                      <Line type="monotone" dataKey="value" stroke="#6366F1" strokeWidth={2} dot={{ fill: '#6366F1', r: 4 }} />
+                    </LineChart>
                   </ResponsiveContainer>
                 </div>
               ) : (
@@ -1085,7 +1093,9 @@ export function AdminDashboard({
                   topCampaigns.map((campaign: Campaign) => {
                     const collected = campaign.raised || 0;
                     const goal = campaign.goal || 1;
-                    const progress = Math.round((collected / goal) * 100);
+                    const progressRaw = (collected / goal) * 100;
+                    const progress = progressRaw < 1 ? progressRaw.toFixed(2) : Math.round(progressRaw);
+                    const progressValue = progressRaw < 1 ? progressRaw : Math.round(progressRaw);
                     return (
                       <div key={campaign.id} className="space-y-2">
                         <div className="flex items-start sm:items-center justify-between gap-2 flex-wrap">
@@ -1101,7 +1111,7 @@ export function AdminDashboard({
                             </p>
                           </div>
                         </div>
-                        <Progress value={progress} className="h-1.5 sm:h-2" />
+                        <Progress value={progressValue} className="h-1.5 sm:h-2" />
                         <div className="flex justify-between text-xs text-gray-500 gap-2">
                           <span>{progress}% complete</span>
                           <span className="truncate">Goal: {formatCurrency(goal)}</span>
@@ -1132,9 +1142,9 @@ export function AdminDashboard({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mb-6 sm:mb-8">
           <Card>
             <CardHeader className="p-4 sm:p-6">
-              <CardTitle className="text-base sm:text-lg">Kiosks by Device OS</CardTitle>
+              <CardTitle className="text-base sm:text-lg">Donation Distribution by Amount</CardTitle>
               <CardDescription className="text-xs sm:text-sm">
-                Distribution of kiosks by operating system
+                Number of donations in different amount ranges
               </CardDescription>
             </CardHeader>
             <CardContent className="p-4 sm:p-6 pt-0">
@@ -1142,17 +1152,50 @@ export function AdminDashboard({
                 <div className="space-y-4">
                   <Skeleton className="h-[250px] sm:h-[300px] w-full" />
                 </div>
+              ) : stats.donationDistribution.length > 0 ? (
+                <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
+                  <LineChart data={stats.donationDistribution}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                      dataKey="range" 
+                      tick={{ fontSize: 12 }}
+                      angle={-45}
+                      textAnchor="end"
+                      height={80}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 12 }}
+                      label={{ value: 'Number of Donations', angle: -90, position: 'insideLeft', style: { fontSize: 12 } }}
+                    />
+                    <Tooltip contentStyle={{ fontSize: '12px' }} />
+                    <Legend wrapperStyle={{ fontSize: '12px' }} />
+                    <Line 
+                      type="monotone" 
+                      dataKey="count" 
+                      stroke="#6366F1" 
+                      strokeWidth={2} 
+                      dot={{ fill: '#6366F1', r: 4 }}
+                      name="Donations"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
               ) : (
-                <DeviceChart data={deviceDistribution} />
+                <div className="text-center py-6 sm:py-8 text-gray-500">
+                  <TrendingUp className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3" />
+                  <p className="text-base sm:text-lg font-medium mb-2">No Donation Data</p>
+                  <p className="text-xs sm:text-sm mb-4 px-4">
+                    Start receiving donations to see distribution trends.
+                  </p>
+                </div>
               )}
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="p-4 sm:p-6">
+            <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-2 sm:pb-3">
               <CardTitle className="text-base sm:text-lg">Recent Activity</CardTitle>
             </CardHeader>
-            <CardContent className="p-4 sm:p-6 pt-0">
+            <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6 pt-0">
               <div className="space-y-3 sm:space-y-4">
                 {loading ? (
                   Array.from({ length: 3 }).map((_, i) => (
@@ -1166,7 +1209,14 @@ export function AdminDashboard({
                   ))
                 ) : recentActivities.length > 0 ? (
                   recentActivities.map((activity: Activity) => (
-                    <div key={activity.id} className="flex items-start space-x-2 sm:space-x-3">
+                    <div 
+                      key={activity.id} 
+                      className="flex items-start space-x-2 sm:space-x-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                      onClick={() => {
+                        setSelectedActivity(activity);
+                        setShowActivityDialog(true);
+                      }}
+                    >
                       <div className="flex-shrink-0 mt-0.5">
                         {getActivityIcon(activity.type)}
                       </div>
@@ -1176,7 +1226,7 @@ export function AdminDashboard({
                         </p>
                         <div className="flex items-center flex-wrap space-x-2 mt-1 gap-1">
                           <p className="text-xs text-gray-500">
-                            {activity.timestamp}
+                            {activity.timeAgo}
                           </p>
                           {activity.kioskId && (
                             <Badge variant="secondary" className="text-xs">
@@ -1309,6 +1359,141 @@ export function AdminDashboard({
           </Card>
         </div>
       </main>
+
+      {/* Donation Details Dialog */}
+      <Dialog open={showActivityDialog} onOpenChange={setShowActivityDialog}>
+        <DialogContent className="sm:max-w-[500px] mx-4">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2 text-base sm:text-lg">
+              <Heart className="h-5 w-5 text-green-600" />
+              <span>Donation Details</span>
+            </DialogTitle>
+            <DialogDescription className="text-sm">
+              Complete information about this donation
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedActivity && selectedActivity.donationData && (
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-3 items-center gap-4">
+                <span className="text-sm font-medium text-gray-700">Amount:</span>
+                <span className="col-span-2 text-sm font-semibold text-green-600">
+                  ${selectedActivity.donationData.amount}
+                </span>
+              </div>
+              
+              <div className="grid grid-cols-3 items-center gap-4">
+                <span className="text-sm font-medium text-gray-700">Campaign:</span>
+                <span className="col-span-2 text-sm text-gray-900">
+                  {selectedActivity.campaignName || 'N/A'}
+                </span>
+              </div>
+              
+              <div className="grid grid-cols-3 items-center gap-4">
+                <span className="text-sm font-medium text-gray-700">Date & Time:</span>
+                <span className="col-span-2 text-sm text-gray-900">
+                  {selectedActivity.displayTime}
+                </span>
+              </div>
+              
+              {selectedActivity.donationData.donorName && (
+                <div className="grid grid-cols-3 items-center gap-4">
+                  <span className="text-sm font-medium text-gray-700">Donor Name:</span>
+                  <span className="col-span-2 text-sm text-gray-900">
+                    {selectedActivity.donationData.donorName}
+                  </span>
+                </div>
+              )}
+              
+              {selectedActivity.donationData.donorEmail && (
+                <div className="grid grid-cols-3 items-center gap-4">
+                  <span className="text-sm font-medium text-gray-700">Email:</span>
+                  <span className="col-span-2 text-sm text-gray-900 break-all">
+                    {selectedActivity.donationData.donorEmail}
+                  </span>
+                </div>
+              )}
+              
+              {selectedActivity.donationData.donorPhone && (
+                <div className="grid grid-cols-3 items-center gap-4">
+                  <span className="text-sm font-medium text-gray-700">Phone:</span>
+                  <span className="col-span-2 text-sm text-gray-900">
+                    {selectedActivity.donationData.donorPhone}
+                  </span>
+                </div>
+              )}
+              
+              <div className="grid grid-cols-3 items-center gap-4">
+                <span className="text-sm font-medium text-gray-700">Type:</span>
+                <span className="col-span-2 text-sm">
+                  {selectedActivity.donationData.isRecurring ? (
+                    <Badge variant="default" className="bg-blue-600">
+                      Recurring ({selectedActivity.donationData.recurringInterval})
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary">One-time</Badge>
+                  )}
+                </span>
+              </div>
+              
+              {selectedActivity.donationData.isAnonymous && (
+                <div className="grid grid-cols-3 items-center gap-4">
+                  <span className="text-sm font-medium text-gray-700">Anonymous:</span>
+                  <span className="col-span-2 text-sm">
+                    <Badge variant="outline">Anonymous Donation</Badge>
+                  </span>
+                </div>
+              )}
+              
+              {selectedActivity.donationData.isGiftAid && (
+                <div className="grid grid-cols-3 items-center gap-4">
+                  <span className="text-sm font-medium text-gray-700">Gift Aid:</span>
+                  <span className="col-span-2 text-sm">
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                      Gift Aid Eligible
+                    </Badge>
+                  </span>
+                </div>
+              )}
+              
+              {selectedActivity.kioskId && (
+                <div className="grid grid-cols-3 items-center gap-4">
+                  <span className="text-sm font-medium text-gray-700">Platform:</span>
+                  <span className="col-span-2 text-sm text-gray-900">
+                    {selectedActivity.kioskId}
+                  </span>
+                </div>
+              )}
+              
+              {selectedActivity.donationData.transactionId && (
+                <div className="grid grid-cols-3 items-center gap-4">
+                  <span className="text-sm font-medium text-gray-700">Transaction ID:</span>
+                  <span className="col-span-2 text-xs text-gray-600 font-mono break-all">
+                    {selectedActivity.donationData.transactionId}
+                  </span>
+                </div>
+              )}
+              
+              {selectedActivity.donationData.donorMessage && (
+                <div className="grid grid-cols-3 items-start gap-4">
+                  <span className="text-sm font-medium text-gray-700">Message:</span>
+                  <span className="col-span-2 text-sm text-gray-900 italic">
+                    "{selectedActivity.donationData.donorMessage}"
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+          
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="secondary" className="w-full sm:w-auto">
+                Close
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }
