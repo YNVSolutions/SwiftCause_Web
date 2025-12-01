@@ -52,8 +52,23 @@ import {
   AlertDialogTrigger,
 } from "../../shared/ui/alert-dialog";
 import { Calendar as CalendarIcon } from "lucide-react";
-import { AdminLayout } from './AdminLayout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../shared/ui/card";
+import { AdminLayout } from "./AdminLayout";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../../shared/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../../shared/ui/table";
+import { Badge } from "../../shared/ui/badge";
 
 interface CampaignDialogProps {
   open: boolean;
@@ -1310,6 +1325,11 @@ const CampaignManagement = ({
     return "bg-blue-500";
   };
 
+  const formatDate = (timestamp?: { seconds?: number }) => {
+    if (!timestamp?.seconds) return "—";
+    return new Date(timestamp.seconds * 1000).toLocaleDateString();
+  };
+
   const uniqueCategories: string[] = Array.from(
     new Set(
       (campaigns as any[])
@@ -1387,92 +1407,203 @@ const CampaignManagement = ({
           <div className="px-2 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between h-auto sm:h-16 gap-4">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                <Button variant="ghost" size="sm" onClick={() => onNavigate('admin')} className="flex items-center space-x-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onNavigate("admin")}
+                  className="flex items-center space-x-2"
+                >
                   <ArrowLeft className="w-4 h-4" />
                   <span className="hidden sm:inline">Back to Dashboard</span>
                   <span className="sm:hidden">Back</span>
                 </Button>
                 <div className="h-6 w-px bg-gray-300 hidden sm:block" />
                 <div>
-                  <h1 className="text-xl font-semibold text-gray-900">Campaign Management</h1>
-                  <p className="text-sm text-gray-600">Configure and monitor campaigns</p>
+                  <h1 className="text-xl font-semibold text-gray-900">
+                    Campaign Management
+                  </h1>
+                  <p className="text-sm text-gray-600 hidden lg:block">
+                    Configure and monitor campaigns
+                  </p>
                 </div>
               </div>
-              <Button variant="outline" size="sm" className="hidden sm:inline-flex" onClick={() => exportToCsv(filteredAndSortedCampaigns)}>
-                <Download className="w-4 h-4 mr-2" />
-                Export CSV
-              </Button>
-              <Button className="bg-indigo-600 hover:bg-indigo-700 sm:ml-2" onClick={() => setIsAddDialogOpen(true)}>
-                <Plus className="w-4 h-4 mr-2" />Add Campaign
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="hidden sm:inline-flex"
+                  onClick={() => exportToCsv(filteredAndSortedCampaigns)}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Export CSV
+                </Button>
+                <Button
+                  className="bg-indigo-600 text-white hidden sm:inline-flex"
+                  onClick={() => setIsAddDialogOpen(true)}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Campaign
+                </Button>
+              </div>
             </div>
           </div>
         </header>
         <main className="px-2 sm:px-6 lg:px-8 py-4 sm:py-8">
-          {/* Search/Filters */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-8">
             <div className="w-full sm:max-w-md">
               <div className="relative">
                 <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input placeholder="Search campaigns..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
+                <Input
+                  placeholder="Search campaigns..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
               </div>
             </div>
-            <Button variant="outline" size="sm" className="sm:hidden" onClick={() => exportToCsv(filteredAndSortedCampaigns)}>
-              <Download className="w-4 h-4 mr-2" />Export CSV
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto sm:justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full sm:w-auto sm:hidden"
+                onClick={() => exportToCsv(filteredAndSortedCampaigns)}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export CSV
+              </Button>
+              <Button
+                className="bg-indigo-600 hover:bg-indigo-700 w-full sm:w-auto sm:hidden"
+                onClick={() => setIsAddDialogOpen(true)}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Campaign
+              </Button>
+            </div>
           </div>
-          {/* Filter/Grid */}
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full h-12"><SelectValue placeholder="Filter by status" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="paused">Paused</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-full h-12"><SelectValue placeholder="Filter by category" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {uniqueCategories.map(category => (
-                  <SelectItem key={category} value={category}>{category}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={sortOrder} onValueChange={setSortOrder}>
-              <SelectTrigger className="w-full h-12"><SelectValue placeholder="Sort by" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="endDate">End Date</SelectItem>
-                <SelectItem value="title">Title</SelectItem>
-                <SelectItem value="goal">Goal Amount</SelectItem>
-                <SelectItem value="createdAt">Created Date</SelectItem>
-              </SelectContent>
-            </Select>
-            <Popover open={showCalendar} onOpenChange={setShowCalendar}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="justify-start text-left font-normal w-full h-12 px-3 flex items-center">
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dateFilter ? dateFilter.toLocaleDateString() : "Filter by date"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" selected={dateFilter} onSelect={(date) => { setDateFilter(date); setShowCalendar(false); }} initialFocus />
-                <div className="p-3 border-t">
-                  <Button variant="ghost" size="sm" onClick={() => { setDateFilter(undefined); setShowCalendar(false); }} className="w-full">Clear Date Filter</Button>
-                </div>
-              </PopoverContent>
-            </Popover>
+            <Card className="hover:shadow-md transition-shadow duration-200 border border-gray-100">
+              <CardContent className="p-5">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-full h-12 border-0 shadow-none focus:ring-0 bg-transparent hover:bg-gray-50/50 text-base font-semibold text-gray-900 transition-colors [&>span]:font-semibold [&>span]:text-base [&_svg]:text-gray-400 [&_svg]:opacity-80">
+                    <SelectValue placeholder="All Statuses" />
+                  </SelectTrigger>
+                  <SelectContent className="shadow-xl border-gray-200 min-w-[180px]">
+                    <SelectItem value="all" className="font-medium text-gray-900 cursor-pointer hover:bg-indigo-50 focus:bg-indigo-50">All Statuses</SelectItem>
+                    <SelectItem value="active" className="font-medium text-gray-900 cursor-pointer hover:bg-indigo-50 focus:bg-indigo-50">Active</SelectItem>
+                    <SelectItem value="paused" className="font-medium text-gray-900 cursor-pointer hover:bg-indigo-50 focus:bg-indigo-50">Paused</SelectItem>
+                    <SelectItem value="completed" className="font-medium text-gray-900 cursor-pointer hover:bg-indigo-50 focus:bg-indigo-50">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-md transition-shadow duration-200 border border-gray-100">
+              <CardContent className="p-5">
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger className="w-full h-12 border-0 shadow-none focus:ring-0 bg-transparent hover:bg-gray-50/50 text-base font-semibold text-gray-900 transition-colors [&>span]:font-semibold [&>span]:text-base [&_svg]:text-gray-400 [&_svg]:opacity-80">
+                    <SelectValue placeholder="All Categories" />
+                  </SelectTrigger>
+                  <SelectContent className="shadow-xl border-gray-200 min-w-[180px]">
+                    <SelectItem value="all" className="font-medium text-gray-900 cursor-pointer hover:bg-indigo-50 focus:bg-indigo-50">All Categories</SelectItem>
+                    {uniqueCategories.map((category) => (
+                      <SelectItem key={category} value={category} className="font-medium text-gray-900 cursor-pointer hover:bg-indigo-50 focus:bg-indigo-50">
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-md transition-shadow duration-200 border border-gray-100">
+              <CardContent className="p-5">
+                <Select value={sortOrder} onValueChange={setSortOrder}>
+                  <SelectTrigger className="w-full h-12 border-0 shadow-none focus:ring-0 bg-transparent hover:bg-gray-50/50 text-base font-semibold text-gray-900 transition-colors [&>span]:font-semibold [&>span]:text-base [&_svg]:text-gray-400 [&_svg]:opacity-80">
+                    <SelectValue placeholder="End Date" />
+                  </SelectTrigger>
+                  <SelectContent className="shadow-xl border-gray-200 min-w-[180px]">
+                    <SelectItem value="endDate" className="font-medium text-gray-900 cursor-pointer hover:bg-indigo-50 focus:bg-indigo-50">End Date</SelectItem>
+                    <SelectItem value="title" className="font-medium text-gray-900 cursor-pointer hover:bg-indigo-50 focus:bg-indigo-50">Title</SelectItem>
+                    <SelectItem value="goal" className="font-medium text-gray-900 cursor-pointer hover:bg-indigo-50 focus:bg-indigo-50">Goal Amount</SelectItem>
+                    <SelectItem value="createdAt" className="font-medium text-gray-900 cursor-pointer hover:bg-indigo-50 focus:bg-indigo-50">Created Date</SelectItem>
+                  </SelectContent>
+                </Select>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-md transition-shadow duration-200 border border-gray-100">
+              <CardContent className="p-5">
+                <Popover open={showCalendar} onOpenChange={setShowCalendar}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="justify-between text-left text-base font-semibold w-full h-12 px-3 flex items-center border-0 shadow-none hover:bg-gray-50/50 bg-transparent text-gray-900 transition-colors"
+                    >
+                      <div className="flex items-center">
+                        <CalendarIcon className="mr-2 h-4 w-4 text-gray-400" />
+                        <span>
+                          {dateFilter
+                            ? dateFilter.toLocaleDateString()
+                            : "Filter by date"}
+                        </span>
+                      </div>
+                      <svg
+                        className="h-4 w-4 text-gray-400 opacity-80"
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 shadow-xl border-gray-200" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dateFilter}
+                      onSelect={(date) => {
+                        setDateFilter(date);
+                        setShowCalendar(false);
+                      }}
+                      initialFocus
+                      classNames={{
+                        head_row: "flex justify-between",
+                        head_cell: "text-muted-foreground rounded-md w-9 font-medium text-[0.8rem] flex items-center justify-center",
+                        row: "flex w-full mt-2 justify-between",
+                        cell: "text-center text-sm focus-within:relative focus-within:z-20 w-9",
+                        day: "size-9 p-0 font-normal aria-selected:opacity-100 hover:bg-indigo-50",
+                        caption_label: "font-semibold text-gray-900",
+                      }}
+                    />
+                    <div className="p-3 border-t border-gray-200">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setDateFilter(undefined);
+                          setShowCalendar(false);
+                        }}
+                        className="w-full font-medium text-gray-900 hover:bg-indigo-50 transition-colors"
+                      >
+                        Clear Date Filter
+                      </Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </CardContent>
+            </Card>
           </div>
-          {/* Campaigns Table/List card (MATCH Donations) */}
+          {/* Campaigns Table/List – aligned with Donations layout */}
           <Card>
             <CardHeader>
               <CardTitle>Campaigns ({filteredAndSortedCampaigns.length})</CardTitle>
               <CardDescription>Manage your donation campaigns</CardDescription>
             </CardHeader>
             <CardContent>
-              {/* If loading, errors, or content: reuse the same code skeleton/ghost logic */}
               {loading ? (
                 <div className="space-y-4">
                   {Array.from({ length: 5 }).map((_, i) => (
@@ -1487,9 +1618,117 @@ const CampaignManagement = ({
                 </div>
               ) : filteredAndSortedCampaigns.length > 0 ? (
                 <div className="overflow-x-auto">
-                  {/* You can keep your detailed grid/table here but keep paddings and cols matching Donations */}
-                  {/* Custom content logic unchanged, just outputs inside standard CardContent */}
-                  {/* ... table/list code ... */}
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Campaign</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Goal</TableHead>
+                        <TableHead>End Date</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredAndSortedCampaigns.map((campaign: any) => {
+                        const progress =
+                          campaign.goal && campaign.raised
+                            ? Math.min(
+                                (Number(campaign.raised) / Number(campaign.goal)) *
+                                  100,
+                                100
+                              )
+                            : 0;
+
+                        return (
+                          <TableRow key={campaign.id ?? campaign.title}>
+                            <TableCell>
+                              <div className="space-y-1">
+                                <div className="flex items-center justify-between gap-2">
+                                  <div>
+                                    <p className="font-medium text-gray-900">
+                                      {campaign.title}
+                                    </p>
+                                    {campaign.category && (
+                                      <p className="text-xs text-gray-500">
+                                        {campaign.category}
+                                      </p>
+                                    )}
+                                  </div>
+                                  {typeof progress === "number" &&
+                                    progress > 0 && (
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-xs text-gray-500">
+                                          {progress.toFixed(0)}%
+                                        </span>
+                                        <div className="h-1.5 w-20 bg-gray-100 rounded-full overflow-hidden">
+                                          <div
+                                            className={`h-full ${getProgressColor(
+                                              progress
+                                            )}`}
+                                            style={{ width: `${progress}%` }}
+                                          />
+                                        </div>
+                                      </div>
+                                    )}
+                                </div>
+                                {Array.isArray(campaign.tags) &&
+                                  campaign.tags.length > 0 && (
+                                    <div className="flex flex-wrap gap-1">
+                                      {campaign.tags.map((tag: string) => (
+                                        <Badge
+                                          key={tag}
+                                          variant="secondary"
+                                          className="text-xs"
+                                        >
+                                          {tag}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                className={`text-xs px-2 py-1 rounded-full ${getStatusColor(
+                                  campaign.status ?? "unknown"
+                                )}`}
+                              >
+                                {campaign.status ?? "Unknown"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <span className="font-medium">
+                                {typeof campaign.goal === "number"
+                                  ? campaign.goal.toLocaleString()
+                                  : "—"}
+                              </span>
+                            </TableCell>
+                            <TableCell>{formatDate(campaign.endDate)}</TableCell>
+                            <TableCell className="text-right">
+                              <div className="inline-flex items-center gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => handleEditClick(campaign)}
+                                >
+                                  <FaEdit className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-red-600 hover:text-red-700"
+                                  onClick={() => handleDeleteClick(campaign)}
+                                >
+                                  <FaTrashAlt className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
                 </div>
               ) : (
                 <div className="text-center py-8 text-gray-500">
