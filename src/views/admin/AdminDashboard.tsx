@@ -95,12 +95,6 @@ import { useOrganization } from "../../shared/lib/hooks/useOrganization";
 import { auth } from "../../shared/lib/firebase";
 import { DeviceChart } from "./DeviceChart";
 import { AdminLayout } from "./AdminLayout";
-import { FuturisticPieChart } from "./components/FuturisticPieChart";
-import { FuturisticBarChart } from "./components/FuturisticBarChart";
-import { FuturisticLineChart } from "./components/FuturisticLineChart";
-import { FuturisticStatCard } from "./components/FuturisticStatCard";
-import { FuturisticActivityFeed } from "./components/FuturisticActivityFeed";
-import { FuturisticCampaignCard } from "./components/FuturisticCampaignCard";
 
 interface AdminDashboardProps {
   onNavigate: (screen: Screen) => void;
@@ -144,7 +138,6 @@ export function AdminDashboard({
   const [stripeStatusMessage, setStripeStatusMessage] = useState<{ type: 'success' | 'error' | 'warning', message: string } | null>(null);
   const [showStripeStatusDialog, setShowStripeStatusDialog] = useState(false);
   const [isStripeOnboardingLoading, setIsStripeOnboardingLoading] = useState(false);
-  const [isHeaderExpanded, setIsHeaderExpanded] = useState(false);
 
   const { organization, loading: orgLoading, error: orgError } = useOrganization(
     userSession.user.organizationId ?? null
@@ -555,148 +548,49 @@ export function AdminDashboard({
 
   return (
     <AdminLayout onNavigate={onNavigate} onLogout={onLogout} userSession={userSession} hasPermission={hasPermission}>
-      <header className="relative bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden mb-4 sm:mb-6">
-        {/* Gradient top accent */}
-        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
-        
-        <div className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 md:py-5">
-          {/* Main Header Row */}
-          <div className="flex items-center justify-between gap-2 sm:gap-4">
-            {/* Left: Logo & Title */}
-            <div className="flex items-center gap-2 sm:gap-3 md:gap-4 min-w-0 flex-1">
-              <div className="relative flex-shrink-0">
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg blur-sm opacity-30" />
-                <img src="/logo.png" className="relative h-10 w-10 sm:h-12 sm:w-12 rounded-lg shadow-md" alt="Logo" />
-              </div>
-              
-              <div className="min-w-0 flex-1">
-                <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-0.5 truncate">
-                  Admin Dashboard
-                </h1>
-                <p className="hidden sm:block text-xs sm:text-sm text-gray-600 truncate">
-                  Manage your organization
-                </p>
-                {/* Mobile: Show compact info */}
-                <div className="sm:hidden flex items-center gap-2 text-xs text-gray-600">
-                  {organization && (
-                    <span className="truncate">{organization.name}</span>
-                  )}
-                  <span>•</span>
-                  <span className="truncate">{userSession.user.username}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Right: Actions */}
-            <div className="flex items-center gap-2 flex-shrink-0">
-              {/* Mobile: Expand/Collapse Button */}
-              <button
-                onClick={() => setIsHeaderExpanded(!isHeaderExpanded)}
-                className="sm:hidden flex items-center justify-center w-8 h-8 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
-                aria-label={isHeaderExpanded ? "Collapse header" : "Expand header"}
-              >
-                {isHeaderExpanded ? (
-                  <ChevronUp className="w-4 h-4 text-gray-600" />
-                ) : (
-                  <ChevronDown className="w-4 h-4 text-gray-600" />
-                )}
-              </button>
-
-              {userSession.user.role === 'super_admin' && hasPermission('system_admin') && (
-                <div className="hidden sm:block">
-                  <OrganizationSwitcher userSession={userSession} onOrganizationChange={onOrganizationSwitch} />
-                </div>
-              )}
-              
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleRefresh} 
-                disabled={loading} 
-                className="border-gray-300 hover:bg-gray-50"
-              >
-                <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-                <span className="hidden sm:inline ml-2">Refresh</span>
-              </Button>
-            </div>
-          </div>
-
-          {/* Expandable Info Bar - Hidden on mobile unless expanded */}
-          <div className={`${isHeaderExpanded ? 'block' : 'hidden'} sm:block`}>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 mt-3 sm:mt-4 border-t border-gray-100">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 md:gap-6">
-                {/* Organization */}
-                {organization && (
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center flex-shrink-0">
-                      <Globe className="h-4 w-4 text-indigo-600" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs text-gray-500 font-medium">Organization</p>
-                      <p className="text-sm font-semibold text-gray-900 truncate">{organization.name}</p>
-                    </div>
-                  </div>
-                )}
-                
-                {/* User */}
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center flex-shrink-0">
-                    <Users className="h-4 w-4 text-purple-600" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs text-gray-500 font-medium">User</p>
-                    <p className="text-sm font-semibold text-gray-900 truncate">{userSession.user.username}</p>
+      <header className="bg-white shadow-sm border rounded-md">
+        <div className="px-2 sm:px-4 lg:px-6">
+          <div className="flex flex-col gap-4 py-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                  <img src="/logo.png" className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl shadow-md flex-shrink-0" alt="Logo" />
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 sm:gap-x-3 min-w-0 flex-1">
+                    <h1 className="text-base sm:text-xl font-semibold text-gray-900 flex items-center flex-wrap gap-1 sm:gap-2">
+                      <span className="whitespace-nowrap">Admin Dashboard</span>
+                      {organization && (
+                        <span className="text-lg sm:text-xl md:text-2xl font-bold text-indigo-700 truncate max-w-[200px] sm:max-w-none">
+                          {organization.name}
+                        </span>
+                      )}
+                    </h1>
+                    <Badge variant="secondary" className="px-2 sm:px-3 py-0.5 sm:py-1 text-xs sm:text-sm font-medium rounded-full bg-gray-200 text-gray-700 whitespace-nowrap flex-shrink-0">
+                      {userSession.user.role}
+                    </Badge>
                   </div>
                 </div>
-                
-                {/* Role */}
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-orange-100 to-red-100 flex items-center justify-center flex-shrink-0">
-                    <Shield className="h-4 w-4 text-orange-600" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs text-gray-500 font-medium">Role</p>
-                    <p className="text-sm font-semibold text-gray-900 capitalize truncate">{userSession.user.role.replace('_', ' ')}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Status Indicators & Org Switcher */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                {/* Mobile: Organization Switcher */}
                 {userSession.user.role === 'super_admin' && hasPermission('system_admin') && (
-                  <div className="sm:hidden">
+                  <div className="w-full sm:w-auto">
                     <OrganizationSwitcher userSession={userSession} onOrganizationChange={onOrganizationSwitch} />
                   </div>
                 )}
-
-                {/* Stripe Status */}
+              </div>
+              <div className="flex flex-row items-center gap-2 w-full sm:w-auto justify-end">
                 {organization && organization.stripe && (
                   <Dialog open={showStripeStatusDialog} onOpenChange={setShowStripeStatusDialog}>
                     <DialogTrigger asChild>
-                      <button
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all ${
-                          !organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled
-                            ? 'border-red-200 bg-red-50 hover:bg-red-100'
-                            : 'border-green-200 bg-green-50 hover:bg-green-100'
-                        }`}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`relative rounded-full p-2 sm:p-2.5
+                          ${!organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled
+                            ? 'text-red-600 hover:text-red-700 animate-pulse bg-red-100'
+                            : 'text-green-600 hover:text-green-700 bg-green-100'
+                          }`}
+                        aria-label="Stripe Status"
                       >
-                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                          !organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled
-                            ? 'bg-red-500 animate-pulse'
-                            : 'bg-green-500'
-                        }`} />
-                        <CreditCard className="h-3.5 w-3.5 flex-shrink-0" />
-                        <span className={`text-xs font-semibold whitespace-nowrap ${
-                          !organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled
-                            ? 'text-red-700'
-                            : 'text-green-700'
-                        }`}>
-                          {!organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled
-                            ? 'Setup Required'
-                            : 'Payments Active'}
-                        </span>
-                      </button>
+                        <CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />
+                      </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-[425px] mx-4">
                       <DialogHeader>
@@ -760,16 +654,18 @@ export function AdminDashboard({
                     </DialogContent>
                   </Dialog>
                 )}
+                <Button variant="outline" size="sm" onClick={handleRefresh} disabled={loading} className="flex items-center space-x-2">
+                  <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+                  <span className="hidden sm:inline">Refresh</span>
+                </Button>
               </div>
             </div>
+            <p className="text-xs sm:text-sm text-gray-600">Welcome back, {userSession.user.username}</p>
           </div>
         </div>
-        
-        {/* Bottom gradient accent */}
-        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent" />
       </header>
 
-      <main className="w-full max-w-full overflow-x-hidden px-2 sm:px-3 lg:px-4 py-4 sm:py-6 bg-gradient-to-br from-gray-50 via-slate-50 to-gray-100 min-h-screen">
+      <main className="px-1 sm:px-2 lg:px-4 py-4 sm:py-6">
         {stripeStatusMessage && (
           <Card className={`mb-6 sm:mb-8 ${stripeStatusMessage.type === 'success' ? 'border-green-400 bg-green-50 text-green-800' : stripeStatusMessage.type === 'warning' ? 'border-yellow-400 bg-yellow-50 text-yellow-800' : 'border-red-400 bg-red-50 text-red-800'}`}>
             <CardContent className="flex items-center space-x-2 sm:space-x-3 p-3 sm:p-4">
@@ -781,76 +677,104 @@ export function AdminDashboard({
           </Card>
         )}
 
-        {/* Key Metrics Section */}
-        <div className="relative bg-white rounded-lg border border-gray-200 shadow-sm p-4 sm:p-5 mb-6">
-          {/* Top accent line */}
-          <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-green-500 via-blue-500 via-purple-500 to-orange-500 rounded-t-lg" />
-          
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center">
-                <BarChart3 className="h-5 w-5 text-indigo-600" />
-              </div>
-              <div className="min-w-0">
-                <h2 className="text-base sm:text-lg font-bold text-gray-900">Performance Overview</h2>
-                <p className="text-xs sm:text-sm text-gray-600">Real-time key metrics</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              {hasPermission("create_campaign") && (
-                <Button 
-                  onClick={() => onNavigate("admin-campaigns")} 
-                  size="sm"
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-sm"
-                >
-                  <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
-                  <span className="text-xs sm:text-sm font-medium">Campaigns</span>
-                </Button>
-              )}
-              {hasPermission("view_kiosks") && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => onNavigate("admin-kiosks")}
-                  className="border-cyan-200 text-cyan-700 hover:bg-cyan-50 hover:border-cyan-300"
-                >
-                  <Monitor className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
-                  <span className="text-xs sm:text-sm font-medium">Kiosks</span>
-                </Button>
-              )}
-            </div>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 gap-4">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-1">Overview</h2>
+            <p className="text-gray-600 text-xs sm:text-sm md:text-base">
+              Manage campaigns, configure kiosks, and track donations across your organization
+            </p>
           </div>
-          {/* Stat Cards Grid - Responsive */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <FuturisticStatCard
-            title="Total Raised"
-            value={loading ? "..." : formatLargeCurrency(stats.totalRaised)}
-            icon={DollarSign}
-            gradient="from-green-500 to-emerald-600"
-            loading={loading}
-          />
-          <FuturisticStatCard
-            title="Total Donations"
-            value={loading ? "..." : formatNumber(stats.totalDonations)}
-            icon={Heart}
-            gradient="from-blue-500 to-indigo-600"
-            loading={loading}
-          />
-          <FuturisticStatCard
-            title="Active Campaigns"
-            value={loading ? "..." : stats.activeCampaigns}
-            icon={Globe}
-            gradient="from-purple-500 to-pink-600"
-            loading={loading}
-          />
-          <FuturisticStatCard
-            title="Active Kiosks"
-            value={loading ? "..." : stats.activeKiosks}
-            icon={Monitor}
-            gradient="from-orange-500 to-red-600"
-            loading={loading}
-          />
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+            {hasPermission("create_campaign") && (
+              <Button onClick={() => onNavigate("admin-campaigns")} className="bg-indigo-600 hover:bg-indigo-700 w-full sm:w-auto text-sm sm:text-base">
+                <Settings className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Manage Campaigns</span>
+                <span className="sm:hidden">Campaigns</span>
+              </Button>
+            )}
+            {hasPermission("view_kiosks") && (
+              <Button variant="ghost" onClick={() => onNavigate("admin-kiosks")} className="w-full sm:w-auto text-sm sm:text-base">
+                <Settings className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Manage Kiosks</span>
+                <span className="sm:hidden">Kiosks</span>
+              </Button>
+            )}
           </div>
+        </div>
+        {orgLoading ? (
+          <p>Loading organization data...</p>
+        ) : orgError ? (
+          <p className="text-red-500">Error: {orgError}</p>
+        ) : null}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+          <Card className="aspect-square lg:aspect-auto">
+            <CardContent className="p-4 sm:p-6 h-full flex flex-col justify-between">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
+                    Total Raised
+                  </p>
+                  <p className="font-semibold text-gray-900 text-base sm:text-lg md:text-xl lg:text-2xl truncate">
+                    {loading ? "..." : formatLargeCurrency(stats.totalRaised)}
+                  </p>
+                </div>
+                <div className="h-10 w-10 sm:h-12 sm:w-12 bg-green-100 rounded-lg flex items-center justify-center shrink-0">
+                  <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="aspect-square lg:aspect-auto">
+            <CardContent className="p-4 sm:p-6 h-full flex flex-col justify-between">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
+                    Total Donations
+                  </p>
+                  <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">
+                    {loading ? "..." : formatNumber(stats.totalDonations)}
+                  </p>
+                </div>
+                <div className="h-10 w-10 sm:h-12 sm:w-12 bg-blue-100 rounded-lg flex items-center justify-center shrink-0">
+                  <Heart className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="aspect-square lg:aspect-auto">
+            <CardContent className="p-4 sm:p-6 h-full flex flex-col justify-between">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
+                    Active Campaigns
+                  </p>
+                  <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">
+                    {loading ? "..." : stats.activeCampaigns}
+                  </p>
+                </div>
+                <div className="h-10 w-10 sm:h-12 sm:w-12 bg-purple-100 rounded-lg flex items-center justify-center shrink-0">
+                  <Globe className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="aspect-square lg:aspect-auto">
+            <CardContent className="p-4 sm:p-6 h-full flex flex-col justify-between">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
+                    Active Kiosks
+                  </p>
+                  <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">
+                    {loading ? "..." : stats.activeKiosks}
+                  </p>
+                </div>
+                <div className="h-10 w-10 sm:h-12 sm:w-12 bg-orange-100 rounded-lg flex items-center justify-center shrink-0">
+                  <Settings className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
         <div className="mb-8">
           <Collapsible open={showFeatures} onOpenChange={setShowFeatures}>
@@ -1014,29 +938,39 @@ export function AdminDashboard({
           </Collapsible>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mb-6 sm:mb-8">
-          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
-            <div className="mb-4 flex items-center justify-between border-b border-gray-200 pb-3">
-              <div>
-                <h3 className="text-base font-semibold text-gray-900">Campaign Goal Comparison</h3>
-                <p className="text-xs text-gray-500 mt-0.5">Collected vs Goal amounts</p>
-              </div>
-              <Badge variant="secondary" className="bg-indigo-50 text-indigo-700 border-indigo-200">
-                <BarChart3 className="w-3 h-3 mr-1" />
-                Bar
-              </Badge>
-            </div>
-            <div className="-mx-4 -mb-4">
+          <Card>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-base sm:text-lg">Campaign Goal Comparison</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6 pt-0">
               {loading ? (
-                <div className="space-y-4 p-4">
-                  <Skeleton className="h-[400px] w-full rounded-xl" />
+                <div className="space-y-4">
+                  <Skeleton className="h-[250px] sm:h-[300px] w-full" />
                 </div>
               ) : goalComparisonData.length > 0 ? (
-                <FuturisticBarChart 
-                  data={goalComparisonData} 
-                  formatValue={(value) => formatShortCurrency(value as number)}
-                />
+                <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
+                  <BarChart data={goalComparisonData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                      dataKey="name" 
+                      tick={false}
+                      className="text-xs"
+                    />
+                    <YAxis
+                      tickFormatter={(value) => formatShortCurrency(value as number)}
+                      className="text-xs"
+                    />
+                    <Tooltip
+                      formatter={(value) => formatShortCurrency(value as number)}
+                      contentStyle={{ fontSize: '12px' }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: '12px' }} />
+                    <Bar dataKey="Collected" fill="#10B981" />
+                    <Bar dataKey="Goal" fill="#94A3B8" />
+                  </BarChart>
+                </ResponsiveContainer>
               ) : (
-                <div className="text-center py-6 sm:py-8 text-gray-500 p-4">
+                <div className="text-center py-6 sm:py-8 text-gray-500">
                   <Target className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3" />
                   <p className="text-base sm:text-lg font-medium mb-2">No Campaigns Yet</p>
                   <p className="text-xs sm:text-sm mb-4 px-4">
@@ -1049,318 +983,338 @@ export function AdminDashboard({
                   )}
                 </div>
               )}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
-          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
-            <div className="mb-4 flex items-center justify-between border-b border-gray-200 pb-3">
-              <div>
-                <h3 className="text-base font-semibold text-gray-900">Average Donation Per Campaign</h3>
-                <p className="text-xs text-gray-500 mt-0.5">Donation trends over time</p>
-              </div>
-              <Badge variant="secondary" className="bg-cyan-50 text-cyan-700 border-cyan-200">
-                <TrendingUp className="w-3 h-3 mr-1" />
-                Line
-              </Badge>
-            </div>
-            <div className="-mx-4 -mb-4">
+          <Card className="flex flex-col">
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-base sm:text-lg">Average Donation Per Campaign</CardTitle>
+            </CardHeader>
+            <CardContent className="flex-1 flex flex-col p-4 sm:p-6 pt-0">
               {loading ? (
-                <div className="space-y-4 p-4">
-                  <Skeleton className="h-[400px] w-full rounded-xl" />
+                <div className="space-y-4">
+                  <Skeleton className="h-[260px] sm:h-[300px] w-full mb-4" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-3">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <Skeleton key={i} className="h-5 w-full" />
+                    ))}
+                  </div>
                 </div>
               ) : categoryData.length > 0 ? (
-                <FuturisticLineChart 
-                  data={categoryData} 
-                  formatValue={(value) => formatShortCurrency(value as number)}
-                />
+                <div className="flex-1 flex items-end">
+                  <ResponsiveContainer width="100%" height={260}>
+                    <LineChart data={categoryData} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                      <YAxis tickFormatter={(value) => formatShortCurrency(value as number)} />
+                      <Tooltip formatter={(value) => formatShortCurrency(value as number)} contentStyle={{ fontSize: '12px' }} />
+                      <Line type="monotone" dataKey="value" stroke="#6366F1" strokeWidth={2} dot={{ fill: '#6366F1', r: 4 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
               ) : (
-                <div className="text-center py-6 sm:py-8 text-gray-500 p-4">
+                <div className="text-center py-6 sm:py-8 text-gray-500">
                   <TriangleAlert className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3" />
                   <p className="text-base sm:text-lg font-medium mb-2">No Categories Yet</p>
                   <p className="text-xs sm:text-sm mb-4 px-4">
-                    Start by creating your first fundraising campaign to track progress.
-                  </p>
-                  {hasPermission("create_campaign") && (
-                    <Button onClick={() => onNavigate("admin-campaigns")} size="sm" className="text-xs sm:text-sm">
-                      <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-2" /> Create New Campaign
-                    </Button>
-                  )}
+                      Start by creating your first fundraising campaign to track progress.
+                    </p>
+                    {hasPermission("create_campaign") && (
+                      <Button onClick={() => onNavigate("admin-campaigns")} size="sm" className="text-xs sm:text-sm">
+                        <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-2" /> Create New Campaign
+                      </Button>
+                    )}
                 </div>
               )}
-            </div>
-          </div>
+              <div className="mt-2 border-t pt-2">                 
+                {categoryData.length > 6 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full mt-3 text-indigo-600 hover:text-indigo-700 text-xs sm:text-sm"
+                    onClick={() => setIsLegendExpanded(!isLegendExpanded)}
+                  >
+                    {isLegendExpanded ? (
+                      <span className="flex items-center justify-center">
+                        Show Less <ChevronUp className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
+                      </span>
+                    ) : (
+                      <span className="flex items-center justify-center">
+                        Show More <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
+                      </span>
+                    )}
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         
         <div className="mb-6 sm:mb-8">
-          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-gray-200 pb-3 mb-4">
+          <Card>
+            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-4 sm:p-6">
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="w-1 h-6 bg-gradient-to-b from-yellow-400 to-amber-500 rounded-full" />
-                  <h3 className="text-base font-semibold text-gray-900">Top Performing Campaigns</h3>
-                </div>
-                <p className="text-xs text-gray-500 ml-3">
-                  Ranked by fundraising progress and performance
-                </p>
+                <CardTitle className="text-base sm:text-lg mb-1">Top Performing Campaigns</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">
+                  Campaigns by fundraising progress
+                </CardDescription>
               </div>
               {hasPermission("view_campaigns") && (
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => onNavigate("admin-campaigns")}
-                  className="w-full sm:w-auto text-xs sm:text-sm border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                  className="w-full sm:w-auto text-xs sm:text-sm"
                 >
-                  View All Campaigns
+                  View All
                 </Button>
               )}
-            </div>
-            
-            <div className="space-y-4">
-              {loading ? (
-                Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="bg-gray-50 rounded-lg p-4 animate-pulse border border-gray-200">
-                    <div className="flex gap-4">
-                      <Skeleton className="h-12 w-12 rounded-lg" />
-                      <div className="flex-1 space-y-3">
-                        <Skeleton className="h-4 w-3/4" />
-                        <div className="grid grid-cols-2 gap-3">
-                          <Skeleton className="h-12 rounded-lg" />
-                          <Skeleton className="h-12 rounded-lg" />
-                        </div>
-                        <Skeleton className="h-2 w-full" />
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6 pt-0">
+              <div className="space-y-3 sm:space-y-4">
+                {loading ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <Skeleton className="h-4 sm:h-5 w-3/4" />
+                        <Skeleton className="h-4 sm:h-5 w-1/4" />
+                      </div>
+                      <Skeleton className="h-2 w-full" />
+                      <div className="flex justify-between text-xs text-gray-500 gap-2">
+                        <Skeleton className="h-3 w-1/3" />
+                        <Skeleton className="h-3 w-1/4" />
                       </div>
                     </div>
+                  ))
+                ) : topCampaigns.length > 0 ? (
+                  topCampaigns.map((campaign: Campaign) => {
+                    const collected = campaign.raised || 0;
+                    const goal = campaign.goal || 1;
+                    const progressRaw = (collected / goal) * 100;
+                    const progress = progressRaw < 1 ? progressRaw.toFixed(2) : Math.round(progressRaw);
+                    const progressValue = progressRaw < 1 ? progressRaw : Math.round(progressRaw);
+                    return (
+                      <div key={campaign.id} className="space-y-2">
+                        <div className="flex items-start sm:items-center justify-between gap-2 flex-wrap">
+                          <h4 className="font-medium text-sm sm:text-base text-gray-900 flex-1 min-w-0 truncate">
+                            {campaign.title}
+                          </h4>
+                          <div className="text-right flex-shrink-0">
+                            <p className="text-xs sm:text-sm font-medium text-green-600">
+                              {formatCurrency(collected)}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {campaign.donationCount || 0} donors
+                            </p>
+                          </div>
+                        </div>
+                        <Progress value={progressValue} className="h-1.5 sm:h-2" />
+                        <div className="flex justify-between text-xs text-gray-500 gap-2">
+                          <span>{progress}% complete</span>
+                          <span className="truncate">Goal: {formatCurrency(goal)}</span>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-6 sm:py-8 text-gray-500">
+                    <Target className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3" />
+                    <p className="text-base sm:text-lg font-medium mb-2">No Campaigns Yet</p>
+                    <p className="text-xs sm:text-sm mb-4 px-4">
+                      Start by creating your first fundraising campaign to track progress.
+                    </p>
+                    {hasPermission("create_campaign") && (
+                      <Button onClick={() => onNavigate("admin-campaigns")} size="sm" className="text-xs sm:text-sm">
+                        <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-2" /> Create New Campaign
+                      </Button>
+                    )}
                   </div>
-                ))
-              ) : topCampaigns.length > 0 ? (
-                topCampaigns.map((campaign: Campaign, index: number) => (
-                  <FuturisticCampaignCard
-                    key={campaign.id}
-                    campaign={campaign}
-                    formatCurrency={formatCurrency}
-                    rank={index + 1}
-                  />
-                ))
-              ) : (
-                <div className="text-center py-12 bg-gradient-to-br from-gray-50 to-slate-50 rounded-lg border border-gray-200">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center">
-                    <Target className="h-8 w-8 text-indigo-600" />
-                  </div>
-                  <p className="text-lg font-semibold text-gray-900 mb-2">No Campaigns Yet</p>
-                  <p className="text-sm text-gray-600 mb-4 px-4 max-w-md mx-auto">
-                    Start by creating your first fundraising campaign to track progress and performance.
-                  </p>
-                  {hasPermission("create_campaign") && (
-                    <Button 
-                      onClick={() => onNavigate("admin-campaigns")} 
-                      size="sm" 
-                      className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
-                    >
-                      <Plus className="w-4 h-4 mr-2" /> Create New Campaign
-                    </Button>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
        
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mb-6 sm:mb-8">
-          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
-            <div className="mb-4 flex items-center justify-between border-b border-gray-200 pb-3">
-              <div>
-                <h3 className="text-base font-semibold text-gray-900">Kiosks by Device OS</h3>
-                <p className="text-xs text-gray-500 mt-0.5">Distribution by operating system</p>
-              </div>
-              <Badge variant="secondary" className="bg-purple-50 text-purple-700 border-purple-200">
-                <Monitor className="w-3 h-3 mr-1" />
-                Pie
-              </Badge>
-            </div>
-            <div className="-mx-4 -mb-4">
+          <Card>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-base sm:text-lg">Kiosks by Device OS</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
+                Distribution of kiosks by operating system
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6 pt-0">
               {loading ? (
-                <div className="space-y-4 p-4">
-                  <Skeleton className="h-[450px] w-full rounded-xl" />
+                <div className="space-y-4">
+                  <Skeleton className="h-[250px] sm:h-[300px] w-full" />
                 </div>
               ) : (
-                <FuturisticPieChart data={deviceDistribution} />
+                <DeviceChart data={deviceDistribution} />
               )}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
-          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
-            <div className="mb-4 flex items-center justify-between border-b border-gray-200 pb-3">
-              <div>
-                <h3 className="text-base font-semibold text-gray-900">Recent Activity</h3>
-                <p className="text-xs text-gray-500 mt-0.5">Live activity feed</p>
+          <Card>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-base sm:text-lg">Recent Activity</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6 pt-0">
+              <div className="space-y-3 sm:space-y-4">
+                {loading ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="flex items-start space-x-2 sm:space-x-3">
+                      <Skeleton className="h-5 w-5 sm:h-6 sm:w-6 rounded-full flex-shrink-0" />
+                      <div className="flex-1 space-y-2 min-w-0">
+                        <Skeleton className="h-3 sm:h-4 w-3/4" />
+                        <Skeleton className="h-3 w-1/2" />
+                      </div>
+                    </div>
+                  ))
+                ) : recentActivities.length > 0 ? (
+                  recentActivities.map((activity: Activity) => (
+                    <div key={activity.id} className="flex items-start space-x-2 sm:space-x-3">
+                      <div className="flex-shrink-0 mt-0.5">
+                        {getActivityIcon(activity.type)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs sm:text-sm text-gray-900 break-words">
+                          {activity.message}
+                        </p>
+                        <div className="flex items-center flex-wrap space-x-2 mt-1 gap-1">
+                          <p className="text-xs text-gray-500">
+                            {activity.timestamp}
+                          </p>
+                          {activity.kioskId && (
+                            <Badge variant="secondary" className="text-xs">
+                              {activity.kioskId}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-6 sm:py-8 text-gray-500">
+                    <ActivityIcon className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3" />
+                    <p className="text-base sm:text-lg font-medium mb-2">No Recent Activity</p>
+                    <p className="text-xs sm:text-sm mb-4 px-4">
+                      Start by managing campaigns or configuring kiosks to see activity here.
+                    </p>
+                    <div className="flex flex-col sm:flex-row justify-center gap-2">
+                      {hasPermission("create_campaign") && (
+                        <Button onClick={() => onNavigate("admin-campaigns")} size="sm" className="text-xs sm:text-sm">
+                          <Settings className="w-3 h-3 sm:w-4 sm:h-4 mr-2" /> 
+                          <span className="hidden sm:inline">Manage Campaigns</span>
+                          <span className="sm:hidden">Campaigns</span>
+                        </Button>
+                      )}
+                      {hasPermission("create_kiosk") && (
+                        <Button onClick={() => onNavigate("admin-kiosks")} size="sm" variant="outline" className="text-xs sm:text-sm">
+                          <Monitor className="w-3 h-3 sm:w-4 sm:h-4 mr-2" /> 
+                          <span className="hidden sm:inline">Configure Kiosks</span>
+                          <span className="sm:hidden">Kiosks</span>
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
-              <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
-                <ActivityIcon className="w-3 h-3 mr-1" />
-                Live
-              </Badge>
-            </div>
-            <div className="-mx-4 -mb-4">
-              <FuturisticActivityFeed activities={recentActivities} loading={loading} />
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
-          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
-            <div className="mb-4 flex items-center justify-between border-b border-gray-200 pb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-1 h-6 bg-gradient-to-b from-yellow-500 to-orange-600 rounded-full" />
-                <h3 className="text-base font-semibold text-gray-900">System Alerts</h3>
-              </div>
-              <Badge variant="secondary" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-                <Bell className="w-3 h-3 mr-1" />
-                {alerts.length > 0 ? `${alerts.length} Active` : 'All Clear'}
-              </Badge>
-            </div>
-            
-            <div className="space-y-3">
-              {loading ? (
-                Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200 animate-pulse">
-                    <Skeleton className="h-10 w-10 rounded-lg flex-shrink-0" />
-                    <div className="flex-1 space-y-2">
-                      <Skeleton className="h-4 w-3/4" />
-                      <Skeleton className="h-3 w-1/2" />
+          <Card>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
+                <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600 flex-shrink-0" />
+                <span>System Alerts</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6 pt-0">
+              <div className="space-y-2 sm:space-y-3">
+                {loading ? (
+                  Array.from({ length: 2 }).map((_, i) => (
+                    <div key={i} className="flex items-start space-x-2 sm:space-x-3 p-2 sm:p-3 rounded-lg bg-gray-50">
+                      <Skeleton className="h-4 w-4 sm:h-5 sm:w-5 rounded-full flex-shrink-0" />
+                      <Skeleton className="h-3 sm:h-4 w-3/4" />
                     </div>
-                  </div>
-                ))
-              ) : alerts.length > 0 ? (
-                alerts.map((alert: Alert) => {
-                  const isWarning = alert.type === 'warning';
-                  const isInfo = alert.type === 'info';
-                  const bgColor = isWarning ? 'from-yellow-50 to-orange-50' : isInfo ? 'from-blue-50 to-indigo-50' : 'from-green-50 to-emerald-50';
-                  const borderColor = isWarning ? 'border-yellow-200' : isInfo ? 'border-blue-200' : 'border-green-200';
-                  const iconBg = isWarning ? 'from-yellow-500 to-orange-600' : isInfo ? 'from-blue-500 to-indigo-600' : 'from-green-500 to-emerald-600';
-                  
-                  return (
+                  ))
+                ) : alerts.length > 0 ? (
+                  alerts.map((alert: Alert) => (
                     <div
                       key={alert.id}
-                      className={`flex items-start gap-3 p-3 rounded-lg bg-gradient-to-r ${bgColor} border ${borderColor} hover:shadow-sm transition-all`}
+                      className="flex items-start space-x-2 sm:space-x-3 p-2 sm:p-3 rounded-lg bg-gray-50"
                     >
-                      <div className="relative flex-shrink-0">
-                        <div className={`absolute inset-0 bg-gradient-to-br ${iconBg} rounded-lg blur opacity-30`} />
-                        <div className={`relative h-10 w-10 rounded-lg bg-gradient-to-br ${iconBg} flex items-center justify-center shadow-sm`}>
-                          {getAlertIcon(alert.type)}
-                        </div>
+                      <div className="flex-shrink-0 mt-0.5">
+                        {getAlertIcon(alert.type)}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 break-words leading-relaxed">
-                          {alert.message}
-                        </p>
-                      </div>
+                      <p className="text-xs sm:text-sm text-gray-900 break-words">{alert.message}</p>
                     </div>
-                  );
-                })
-              ) : (
-                <div className="text-center py-12 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border border-green-200">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
-                    <CheckCircle className="h-8 w-8 text-green-600" />
+                  ))
+                ) : (
+                  <div className="text-center py-6 sm:py-8 text-gray-500">
+                    <AlertCircle className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3" />
+                    <p className="text-base sm:text-lg font-medium mb-2">No System Alerts</p>
+                    <p className="text-xs sm:text-sm mb-4 px-4">
+                      Your system is running smoothly. No alerts to display.
+                    </p>
                   </div>
-                  <p className="text-lg font-semibold text-gray-900 mb-2">All Systems Operational</p>
-                  <p className="text-sm text-gray-600 px-4">
-                    Your system is running smoothly with no alerts.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
-            <div className="mb-4 flex items-center justify-between border-b border-gray-200 pb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-1 h-6 bg-gradient-to-b from-indigo-500 to-purple-600 rounded-full" />
-                <h3 className="text-base font-semibold text-gray-900">Quick Actions</h3>
+                )}
               </div>
-              <Badge variant="secondary" className="bg-indigo-50 text-indigo-700 border-indigo-200">
-                <Rocket className="w-3 h-3 mr-1" />
-                Shortcuts
-              </Badge>
-            </div>
-            
-            <div className="grid grid-cols-1 gap-3">
-              {hasPermission("view_campaigns") && (
-                <button
-                  onClick={() => onNavigate("admin-campaigns")}
-                  className="group relative flex items-center gap-4 p-4 rounded-lg border border-gray-200 bg-gradient-to-r from-purple-50/50 to-pink-50/50 hover:from-purple-50 hover:to-pink-50 hover:border-purple-300 hover:shadow-md transition-all duration-300"
-                >
-                  <div className="relative flex-shrink-0">
-                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg blur opacity-30 group-hover:opacity-50 transition-opacity" />
-                    <div className="relative h-12 w-12 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-md">
-                      <Database className="h-6 w-6 text-white" />
-                    </div>
-                  </div>
-                  <div className="flex-1 text-left">
-                    <p className="font-semibold text-gray-900 mb-0.5">Manage Campaigns</p>
-                    <p className="text-xs text-gray-600">Create and edit fundraising campaigns</p>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-purple-600 group-hover:translate-x-1 transition-all" />
-                </button>
-              )}
-              
-              {hasPermission("view_kiosks") && (
-                <button
-                  onClick={() => onNavigate("admin-kiosks")}
-                  className="group relative flex items-center gap-4 p-4 rounded-lg border border-gray-200 bg-gradient-to-r from-cyan-50/50 to-blue-50/50 hover:from-cyan-50 hover:to-blue-50 hover:border-cyan-300 hover:shadow-md transition-all duration-300"
-                >
-                  <div className="relative flex-shrink-0">
-                    <div className="absolute inset-0 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg blur opacity-30 group-hover:opacity-50 transition-opacity" />
-                    <div className="relative h-12 w-12 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-md">
-                      <Monitor className="h-6 w-6 text-white" />
-                    </div>
-                  </div>
-                  <div className="flex-1 text-left">
-                    <p className="font-semibold text-gray-900 mb-0.5">Configure Kiosks</p>
-                    <p className="text-xs text-gray-600">Setup and manage donation kiosks</p>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-cyan-600 group-hover:translate-x-1 transition-all" />
-                </button>
-              )}
-              
-              {hasPermission("view_donations") && (
-                <button
-                  onClick={() => onNavigate("admin-donations")}
-                  className="group relative flex items-center gap-4 p-4 rounded-lg border border-gray-200 bg-gradient-to-r from-green-50/50 to-emerald-50/50 hover:from-green-50 hover:to-emerald-50 hover:border-green-300 hover:shadow-md transition-all duration-300"
-                >
-                  <div className="relative flex-shrink-0">
-                    <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg blur opacity-30 group-hover:opacity-50 transition-opacity" />
-                    <div className="relative h-12 w-12 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-md">
-                      <TrendingUp className="h-6 w-6 text-white" />
-                    </div>
-                  </div>
-                  <div className="flex-1 text-left">
-                    <p className="font-semibold text-gray-900 mb-0.5">View Donations</p>
-                    <p className="text-xs text-gray-600">Track all donation transactions</p>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-green-600 group-hover:translate-x-1 transition-all" />
-                </button>
-              )}
-              
-              {hasPermission("view_users") && (
-                <button
-                  onClick={() => onNavigate("admin-users")}
-                  className="group relative flex items-center gap-4 p-4 rounded-lg border border-gray-200 bg-gradient-to-r from-orange-50/50 to-red-50/50 hover:from-orange-50 hover:to-red-50 hover:border-orange-300 hover:shadow-md transition-all duration-300"
-                >
-                  <div className="relative flex-shrink-0">
-                    <div className="absolute inset-0 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg blur opacity-30 group-hover:opacity-50 transition-opacity" />
-                    <div className="relative h-12 w-12 rounded-lg bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-md">
-                      <UserCog className="h-6 w-6 text-white" />
-                    </div>
-                  </div>
-                  <div className="flex-1 text-left">
-                    <p className="font-semibold text-gray-900 mb-0.5">User Management</p>
-                    <p className="text-xs text-gray-600">Manage users and permissions</p>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-orange-600 group-hover:translate-x-1 transition-all" />
-                </button>
-              )}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-base sm:text-lg">More Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6 pt-0">
+              <div className="grid grid-cols-1 gap-2 sm:gap-3">
+                {hasPermission("view_campaigns") && (
+                  <Button
+                    variant="outline"
+                    className="justify-start h-10 sm:h-12 text-xs sm:text-sm"
+                    onClick={() => onNavigate("admin-campaigns")}
+                  >
+                    <Database className="w-3 h-3 sm:w-4 sm:h-4 mr-2 sm:mr-3 flex-shrink-0" />
+                    <span className="truncate">Manage Campaigns</span>
+                  </Button>
+                )}
+                {hasPermission("view_kiosks") && (
+                  <Button
+                    variant="outline"
+                    className="justify-start h-10 sm:h-12 text-xs sm:text-sm"
+                    onClick={() => onNavigate("admin-kiosks")}
+                  >
+                    <Settings className="w-3 h-3 sm:w-4 sm:h-4 mr-2 sm:mr-3 flex-shrink-0" />
+                    <span className="truncate">Configure Kiosks</span>
+                  </Button>
+                )}
+                {hasPermission("view_donations") && (
+                  <Button
+                    variant="outline"
+                    className="justify-start h-10 sm:h-12 text-xs sm:text-sm"
+                    onClick={() => onNavigate("admin-donations")}
+                  >
+                    <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 mr-2 sm:mr-3 flex-shrink-0" />
+                    <span className="truncate">View Donations</span>
+                  </Button>
+                )}
+                {hasPermission("view_users") && (
+                  <Button
+                    variant="outline"
+                    className="justify-start h-10 sm:h-12 text-xs sm:text-sm"
+                    onClick={() => onNavigate("admin-users")}
+                  >
+                    <UserCog className="w-3 h-3 sm:w-4 sm:h-4 mr-2 sm:mr-3 flex-shrink-0" />
+                    <span className="truncate">User Management</span>
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </main>
     </AdminLayout>
