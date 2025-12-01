@@ -138,6 +138,8 @@ export function AdminDashboard({
   const [stripeStatusMessage, setStripeStatusMessage] = useState<{ type: 'success' | 'error' | 'warning', message: string } | null>(null);
   const [showStripeStatusDialog, setShowStripeStatusDialog] = useState(false);
   const [isStripeOnboardingLoading, setIsStripeOnboardingLoading] = useState(false);
+  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
+  const [showActivityDialog, setShowActivityDialog] = useState(false);
 
   const { organization, loading: orgLoading, error: orgError } = useOrganization(
     userSession.user.organizationId ?? null
@@ -1140,9 +1142,9 @@ export function AdminDashboard({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mb-6 sm:mb-8">
           <Card>
             <CardHeader className="p-4 sm:p-6">
-              <CardTitle className="text-base sm:text-lg">Kiosks by Device OS</CardTitle>
+              <CardTitle className="text-base sm:text-lg">Donation Distribution by Amount</CardTitle>
               <CardDescription className="text-xs sm:text-sm">
-                Distribution of kiosks by operating system
+                Number of donations in different amount ranges
               </CardDescription>
             </CardHeader>
             <CardContent className="p-4 sm:p-6 pt-0">
@@ -1150,8 +1152,41 @@ export function AdminDashboard({
                 <div className="space-y-4">
                   <Skeleton className="h-[250px] sm:h-[300px] w-full" />
                 </div>
+              ) : stats.donationDistribution.length > 0 ? (
+                <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
+                  <LineChart data={stats.donationDistribution}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                      dataKey="range" 
+                      tick={{ fontSize: 12 }}
+                      angle={-45}
+                      textAnchor="end"
+                      height={80}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 12 }}
+                      label={{ value: 'Number of Donations', angle: -90, position: 'insideLeft', style: { fontSize: 12 } }}
+                    />
+                    <Tooltip contentStyle={{ fontSize: '12px' }} />
+                    <Legend wrapperStyle={{ fontSize: '12px' }} />
+                    <Line 
+                      type="monotone" 
+                      dataKey="count" 
+                      stroke="#6366F1" 
+                      strokeWidth={2} 
+                      dot={{ fill: '#6366F1', r: 4 }}
+                      name="Donations"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
               ) : (
-                <DeviceChart data={deviceDistribution} />
+                <div className="text-center py-6 sm:py-8 text-gray-500">
+                  <TrendingUp className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3" />
+                  <p className="text-base sm:text-lg font-medium mb-2">No Donation Data</p>
+                  <p className="text-xs sm:text-sm mb-4 px-4">
+                    Start receiving donations to see distribution trends.
+                  </p>
+                </div>
               )}
             </CardContent>
           </Card>
@@ -1174,7 +1209,14 @@ export function AdminDashboard({
                   ))
                 ) : recentActivities.length > 0 ? (
                   recentActivities.map((activity: Activity) => (
-                    <div key={activity.id} className="flex items-start space-x-2 sm:space-x-3">
+                    <div 
+                      key={activity.id} 
+                      className="flex items-start space-x-2 sm:space-x-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                      onClick={() => {
+                        setSelectedActivity(activity);
+                        setShowActivityDialog(true);
+                      }}
+                    >
                       <div className="flex-shrink-0 mt-0.5">
                         {getActivityIcon(activity.type)}
                       </div>
@@ -1184,7 +1226,7 @@ export function AdminDashboard({
                         </p>
                         <div className="flex items-center flex-wrap space-x-2 mt-1 gap-1">
                           <p className="text-xs text-gray-500">
-                            {activity.timestamp}
+                            {activity.timeAgo}
                           </p>
                           {activity.kioskId && (
                             <Badge variant="secondary" className="text-xs">
@@ -1317,6 +1359,141 @@ export function AdminDashboard({
           </Card>
         </div>
       </main>
+
+      {/* Donation Details Dialog */}
+      <Dialog open={showActivityDialog} onOpenChange={setShowActivityDialog}>
+        <DialogContent className="sm:max-w-[500px] mx-4">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2 text-base sm:text-lg">
+              <Heart className="h-5 w-5 text-green-600" />
+              <span>Donation Details</span>
+            </DialogTitle>
+            <DialogDescription className="text-sm">
+              Complete information about this donation
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedActivity && selectedActivity.donationData && (
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-3 items-center gap-4">
+                <span className="text-sm font-medium text-gray-700">Amount:</span>
+                <span className="col-span-2 text-sm font-semibold text-green-600">
+                  ${selectedActivity.donationData.amount}
+                </span>
+              </div>
+              
+              <div className="grid grid-cols-3 items-center gap-4">
+                <span className="text-sm font-medium text-gray-700">Campaign:</span>
+                <span className="col-span-2 text-sm text-gray-900">
+                  {selectedActivity.campaignName || 'N/A'}
+                </span>
+              </div>
+              
+              <div className="grid grid-cols-3 items-center gap-4">
+                <span className="text-sm font-medium text-gray-700">Date & Time:</span>
+                <span className="col-span-2 text-sm text-gray-900">
+                  {selectedActivity.displayTime}
+                </span>
+              </div>
+              
+              {selectedActivity.donationData.donorName && (
+                <div className="grid grid-cols-3 items-center gap-4">
+                  <span className="text-sm font-medium text-gray-700">Donor Name:</span>
+                  <span className="col-span-2 text-sm text-gray-900">
+                    {selectedActivity.donationData.donorName}
+                  </span>
+                </div>
+              )}
+              
+              {selectedActivity.donationData.donorEmail && (
+                <div className="grid grid-cols-3 items-center gap-4">
+                  <span className="text-sm font-medium text-gray-700">Email:</span>
+                  <span className="col-span-2 text-sm text-gray-900 break-all">
+                    {selectedActivity.donationData.donorEmail}
+                  </span>
+                </div>
+              )}
+              
+              {selectedActivity.donationData.donorPhone && (
+                <div className="grid grid-cols-3 items-center gap-4">
+                  <span className="text-sm font-medium text-gray-700">Phone:</span>
+                  <span className="col-span-2 text-sm text-gray-900">
+                    {selectedActivity.donationData.donorPhone}
+                  </span>
+                </div>
+              )}
+              
+              <div className="grid grid-cols-3 items-center gap-4">
+                <span className="text-sm font-medium text-gray-700">Type:</span>
+                <span className="col-span-2 text-sm">
+                  {selectedActivity.donationData.isRecurring ? (
+                    <Badge variant="default" className="bg-blue-600">
+                      Recurring ({selectedActivity.donationData.recurringInterval})
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary">One-time</Badge>
+                  )}
+                </span>
+              </div>
+              
+              {selectedActivity.donationData.isAnonymous && (
+                <div className="grid grid-cols-3 items-center gap-4">
+                  <span className="text-sm font-medium text-gray-700">Anonymous:</span>
+                  <span className="col-span-2 text-sm">
+                    <Badge variant="outline">Anonymous Donation</Badge>
+                  </span>
+                </div>
+              )}
+              
+              {selectedActivity.donationData.isGiftAid && (
+                <div className="grid grid-cols-3 items-center gap-4">
+                  <span className="text-sm font-medium text-gray-700">Gift Aid:</span>
+                  <span className="col-span-2 text-sm">
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                      Gift Aid Eligible
+                    </Badge>
+                  </span>
+                </div>
+              )}
+              
+              {selectedActivity.kioskId && (
+                <div className="grid grid-cols-3 items-center gap-4">
+                  <span className="text-sm font-medium text-gray-700">Platform:</span>
+                  <span className="col-span-2 text-sm text-gray-900">
+                    {selectedActivity.kioskId}
+                  </span>
+                </div>
+              )}
+              
+              {selectedActivity.donationData.transactionId && (
+                <div className="grid grid-cols-3 items-center gap-4">
+                  <span className="text-sm font-medium text-gray-700">Transaction ID:</span>
+                  <span className="col-span-2 text-xs text-gray-600 font-mono break-all">
+                    {selectedActivity.donationData.transactionId}
+                  </span>
+                </div>
+              )}
+              
+              {selectedActivity.donationData.donorMessage && (
+                <div className="grid grid-cols-3 items-start gap-4">
+                  <span className="text-sm font-medium text-gray-700">Message:</span>
+                  <span className="col-span-2 text-sm text-gray-900 italic">
+                    "{selectedActivity.donationData.donorMessage}"
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+          
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="secondary" className="w-full sm:w-auto">
+                Close
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }
