@@ -61,7 +61,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }, 1000) // Reduced timeout for faster loading
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      // console.log('AuthProvider: onAuthStateChanged triggered. FirebaseUser:', firebaseUser)
       clearTimeout(timeout) // Clear timeout when auth state changes
       
       if (firebaseUser) {
