@@ -42,6 +42,7 @@ export const organizationApi = {
     try {
       const docRef = await addDoc(collection(db, 'organizations'), {
         ...organization,
+        tags: organization.tags || [],
         createdAt: new Date().toISOString()
       });
       return docRef.id;
@@ -69,6 +70,34 @@ export const organizationApi = {
       await deleteDoc(docRef);
     } catch (error) {
       console.error('Error deleting organization:', error);
+      throw error;
+    }
+  },
+
+  // Get organization tags
+  async getOrganizationTags(organizationId: string): Promise<string[]> {
+    try {
+      const docRef = doc(db, 'organizations', organizationId);
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        return data.tags || [];
+      }
+      return [];
+    } catch (error) {
+      console.error('Error fetching organization tags:', error);
+      throw error;
+    }
+  },
+
+  // Update organization tags
+  async updateOrganizationTags(organizationId: string, tags: string[]): Promise<void> {
+    try {
+      const docRef = doc(db, 'organizations', organizationId);
+      await updateDoc(docRef, { tags });
+    } catch (error) {
+      console.error('Error updating organization tags:', error);
       throw error;
     }
   }
