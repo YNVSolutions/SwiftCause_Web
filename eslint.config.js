@@ -24,6 +24,7 @@ export default tseslint.config([
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      "no-console": ["error", { allow: ["warn", "error"] }],
       'import/no-restricted-paths': [
         'error',
         {
