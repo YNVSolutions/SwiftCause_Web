@@ -408,7 +408,6 @@ export function AdminDashboard({
 
         const allCampaignsQuery = query(campaignsRef, orgQuery);
         const allCampaignsSnapshot = await getDocs(allCampaignsQuery);
-        // console.log("all campaigns snapshot", allCampaignsSnapshot)
         const averageDonation: { [key: string]: number } = {};
         let average = 0;
         allCampaignsSnapshot.forEach((doc) => {
@@ -416,8 +415,6 @@ export function AdminDashboard({
           const donationCount = (doc.data() as Campaign).donationCount;
 
           if (raisedAmount > 0) {
-            // console.log("raised amount", raisedAmount);
-            // console.log("campaign", title);
             const average = raisedAmount / (donationCount || 1);
             averageDonation[doc.id] = average;
           }
