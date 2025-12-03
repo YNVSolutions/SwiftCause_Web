@@ -16,6 +16,7 @@ import {
   SidebarSeparator,
   SidebarInset,
   SidebarTrigger,
+  useSidebar,
 } from "../../shared/ui/sidebar";
 import { Button } from "../../shared/ui/button";
 import { Badge } from "../../shared/ui/badge";
@@ -46,6 +47,24 @@ interface AdminLayoutProps {
   activeScreen?: Screen;
 }
 
+function SidebarHeaderContent({ userSession }: { userSession: AdminSession }) {
+  const { state } = useSidebar();
+  const isExpanded = state === "expanded";
+  return (
+    <div className="flex items-center gap-2 px-2 py-1">
+      <img src="/logo.png" alt="Logo" className="h-8 w-8 rounded-md" />
+      {isExpanded && (
+        <div className="flex flex-col">
+          <span className="text-sm font-semibold">SwiftCause Admin</span>
+          <span className="text-xs text-gray-500 truncate">
+            {userSession.user.username}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function AdminLayout({
   onNavigate,
   onLogout,
@@ -61,15 +80,7 @@ export function AdminLayout({
     <SidebarProvider defaultOpen={true}>
       <Sidebar side="left" variant="sidebar" collapsible="icon" className="bg-white border-r">
         <SidebarHeader>
-          <div className="flex items-center gap-2 px-2 py-1">
-            <img src="/logo.png" alt="Logo" className="h-8 w-8 rounded-md" />
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold">SwiftCause Admin</span>
-              <span className="text-xs text-gray-500 truncate">
-                {userSession.user.username}
-              </span>
-            </div>
-          </div>
+          <SidebarHeaderContent userSession={userSession} />
         </SidebarHeader>
         <SidebarContent>
           <SidebarGroup>
@@ -158,13 +169,25 @@ export function AdminLayout({
         <header className="sticky top-0 z-20 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b">
           <div className="flex items-center justify-between px-3 h-14">
             <div className="flex items-center gap-2">
-              <SidebarTrigger className="lg:hidden" />
+              <SidebarTrigger />
               <span className="font-semibold text-sm sm:text-base">{currentLabel}</span>
             </div>
           </div>
         </header>
-        <div className="flex-1 w-full bg-slate-50 overflow-x-hidden">
-          <div className="px-2 sm:px-4 lg:px-6 py-4 sm:py-6 w-full max-w-full">{children}</div>
+        <div
+          className="flex-1 w-full bg-slate-50 overflow-x-hidden"
+          data-testid="main-content-area"
+        >
+          <div
+            className="w-full max-w-full transition-all duration-200"
+            style={{
+              paddingLeft: 0,
+              paddingRight: 0,
+            }}
+            data-slot="main-content-inner"
+          >
+            {children}
+          </div>
         </div>
       </SidebarInset>
     </SidebarProvider>
