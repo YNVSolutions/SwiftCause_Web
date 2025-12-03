@@ -95,6 +95,8 @@ import { useOrganization } from "../../shared/lib/hooks/useOrganization";
 import { auth } from "../../shared/lib/firebase";
 import { DeviceChart } from "./DeviceChart";
 import { AdminLayout } from "./AdminLayout";
+import { SystemAlertsWidget } from "./components/SystemAlertsWidget";
+import { useSystemAlerts } from "../../shared/lib/hooks/useSystemAlerts";
 
 interface AdminDashboardProps {
   onNavigate: (screen: Screen) => void;
@@ -144,6 +146,11 @@ export function AdminDashboard({
   const { organization, loading: orgLoading, error: orgError } = useOrganization(
     userSession.user.organizationId ?? null
   );
+
+  const { alerts: systemAlerts, loading: systemAlertsLoading } = useSystemAlerts({
+    organization,
+    organizationId: userSession.user.organizationId,
+  });
 
   useEffect(() => {
     const hash = window.location.hash;
@@ -708,6 +715,16 @@ export function AdminDashboard({
         ) : orgError ? (
           <p className="text-red-500">Error: {orgError}</p>
         ) : null}
+        
+        {/* System Alerts Widget */}
+        <div className="mb-6 sm:mb-8">
+          <SystemAlertsWidget
+            alerts={systemAlerts}
+            loading={systemAlertsLoading}
+            onNavigate={onNavigate}
+          />
+        </div>
+
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
           <Card className="aspect-square lg:aspect-auto">
             <CardContent className="p-4 sm:p-6 h-full flex flex-col justify-between">
