@@ -1482,32 +1482,32 @@ const CampaignManagement = ({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <Card className="hover:shadow-md transition-shadow duration-200 border border-gray-100">
-              <CardContent className="p-5">
+            <Card>
+              <CardContent className="p-4">
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-full h-12 border-0 shadow-none focus:ring-0 bg-transparent hover:bg-gray-50/50 text-base font-semibold text-gray-900 transition-colors [&>span]:font-semibold [&>span]:text-base [&_svg]:text-gray-400 [&_svg]:opacity-80">
+                  <SelectTrigger className="w-full h-12 border-0 shadow-none focus:ring-0 bg-transparent hover:bg-transparent font-semibold text-gray-900 [&>span]:font-semibold">
                     <SelectValue placeholder="All Statuses" />
                   </SelectTrigger>
-                  <SelectContent className="shadow-xl border-gray-200 min-w-[180px]">
-                    <SelectItem value="all" className="font-medium text-gray-900 cursor-pointer hover:bg-indigo-50 focus:bg-indigo-50">All Statuses</SelectItem>
-                    <SelectItem value="active" className="font-medium text-gray-900 cursor-pointer hover:bg-indigo-50 focus:bg-indigo-50">Active</SelectItem>
-                    <SelectItem value="paused" className="font-medium text-gray-900 cursor-pointer hover:bg-indigo-50 focus:bg-indigo-50">Paused</SelectItem>
-                    <SelectItem value="completed" className="font-medium text-gray-900 cursor-pointer hover:bg-indigo-50 focus:bg-indigo-50">Completed</SelectItem>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="paused">Paused</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
                   </SelectContent>
                 </Select>
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-md transition-shadow duration-200 border border-gray-100">
-              <CardContent className="p-5">
+            <Card>
+              <CardContent className="p-4">
                 <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                  <SelectTrigger className="w-full h-12 border-0 shadow-none focus:ring-0 bg-transparent hover:bg-gray-50/50 text-base font-semibold text-gray-900 transition-colors [&>span]:font-semibold [&>span]:text-base [&_svg]:text-gray-400 [&_svg]:opacity-80">
+                  <SelectTrigger className="w-full h-12 border-0 shadow-none focus:ring-0 bg-transparent hover:bg-transparent font-semibold text-gray-900 [&>span]:font-semibold">
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
-                  <SelectContent className="shadow-xl border-gray-200 min-w-[180px]">
-                    <SelectItem value="all" className="font-medium text-gray-900 cursor-pointer hover:bg-indigo-50 focus:bg-indigo-50">All Categories</SelectItem>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
                     {uniqueCategories.map((category) => (
-                      <SelectItem key={category} value={category} className="font-medium text-gray-900 cursor-pointer hover:bg-indigo-50 focus:bg-indigo-50">
+                      <SelectItem key={category} value={category}>
                         {category}
                       </SelectItem>
                     ))}
@@ -1516,32 +1516,32 @@ const CampaignManagement = ({
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-md transition-shadow duration-200 border border-gray-100">
-              <CardContent className="p-5">
+            <Card>
+              <CardContent className="p-4">
                 <Select value={sortOrder} onValueChange={setSortOrder}>
-                  <SelectTrigger className="w-full h-12 border-0 shadow-none focus:ring-0 bg-transparent hover:bg-gray-50/50 text-base font-semibold text-gray-900 transition-colors [&>span]:font-semibold [&>span]:text-base [&_svg]:text-gray-400 [&_svg]:opacity-80">
+                  <SelectTrigger className="w-full h-12 border-0 shadow-none focus:ring-0 bg-transparent hover:bg-transparent font-semibold text-gray-900 [&>span]:font-semibold">
                     <SelectValue placeholder="End Date" />
                   </SelectTrigger>
-                  <SelectContent className="shadow-xl border-gray-200 min-w-[180px]">
-                    <SelectItem value="endDate" className="font-medium text-gray-900 cursor-pointer hover:bg-indigo-50 focus:bg-indigo-50">End Date</SelectItem>
-                    <SelectItem value="title" className="font-medium text-gray-900 cursor-pointer hover:bg-indigo-50 focus:bg-indigo-50">Title</SelectItem>
-                    <SelectItem value="goal" className="font-medium text-gray-900 cursor-pointer hover:bg-indigo-50 focus:bg-indigo-50">Goal Amount</SelectItem>
-                    <SelectItem value="createdAt" className="font-medium text-gray-900 cursor-pointer hover:bg-indigo-50 focus:bg-indigo-50">Created Date</SelectItem>
+                  <SelectContent>
+                    <SelectItem value="endDate">End Date</SelectItem>
+                    <SelectItem value="title">Title</SelectItem>
+                    <SelectItem value="goal">Goal Amount</SelectItem>
+                    <SelectItem value="createdAt">Created Date</SelectItem>
                   </SelectContent>
                 </Select>
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-md transition-shadow duration-200 border border-gray-100">
-              <CardContent className="p-5">
+            <Card>
+              <CardContent className="p-4">
                 <Popover open={showCalendar} onOpenChange={setShowCalendar}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
-                      className="justify-between text-left text-base font-semibold w-full h-12 px-3 flex items-center border-0 shadow-none hover:bg-gray-50/50 bg-transparent text-gray-900 transition-colors"
+                      className="justify-between text-left font-semibold w-full h-12 px-3 flex items-center border-0 shadow-none hover:bg-transparent bg-transparent text-gray-900"
                     >
                       <div className="flex items-center">
-                        <CalendarIcon className="mr-2 h-4 w-4 text-gray-400" />
+                        <CalendarIcon className="mr-2 h-4 w-4" />
                         <span>
                           {dateFilter
                             ? dateFilter.toLocaleDateString()
@@ -1549,7 +1549,7 @@ const CampaignManagement = ({
                         </span>
                       </div>
                       <svg
-                        className="h-4 w-4 text-gray-400 opacity-80"
+                        className="h-4 w-4 opacity-50"
                         fill="none"
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -1561,7 +1561,7 @@ const CampaignManagement = ({
                       </svg>
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 shadow-xl border-gray-200" align="start">
+                  <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
                       selected={dateFilter}
@@ -1570,16 +1570,8 @@ const CampaignManagement = ({
                         setShowCalendar(false);
                       }}
                       initialFocus
-                      classNames={{
-                        head_row: "flex justify-between",
-                        head_cell: "text-muted-foreground rounded-md w-9 font-medium text-[0.8rem] flex items-center justify-center",
-                        row: "flex w-full mt-2 justify-between",
-                        cell: "text-center text-sm focus-within:relative focus-within:z-20 w-9",
-                        day: "size-9 p-0 font-normal aria-selected:opacity-100 hover:bg-indigo-50",
-                        caption_label: "font-semibold text-gray-900",
-                      }}
                     />
-                    <div className="p-3 border-t border-gray-200">
+                    <div className="p-3 border-t">
                       <Button
                         variant="ghost"
                         size="sm"
@@ -1587,7 +1579,7 @@ const CampaignManagement = ({
                           setDateFilter(undefined);
                           setShowCalendar(false);
                         }}
-                        className="w-full font-medium text-gray-900 hover:bg-indigo-50 transition-colors"
+                        className="w-full"
                       >
                         Clear Date Filter
                       </Button>
