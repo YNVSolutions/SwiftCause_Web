@@ -118,12 +118,13 @@ export function useSystemAlerts({ organization, organizationId }: UseSystemAlert
               const allExpired = assignedCampaigns.every((campaign) => {
                 if (!campaign.endDate) return false;
                 let endDate: Date;
-                if (campaign.endDate instanceof Date) {
-                  endDate = campaign.endDate;
-                } else if (typeof campaign.endDate === 'object' && 'seconds' in campaign.endDate) {
-                  endDate = new Date((campaign.endDate as any).seconds * 1000);
-                } else if (typeof campaign.endDate === 'string') {
-                  endDate = new Date(campaign.endDate);
+                const endDateValue = campaign.endDate as any;
+                if (endDateValue instanceof Date) {
+                  endDate = endDateValue;
+                } else if (typeof endDateValue === 'object' && endDateValue !== null && 'seconds' in endDateValue) {
+                  endDate = new Date(endDateValue.seconds * 1000);
+                } else if (typeof endDateValue === 'string') {
+                  endDate = new Date(endDateValue);
                 } else {
                   return false;
                 }
@@ -150,12 +151,13 @@ export function useSystemAlerts({ organization, organizationId }: UseSystemAlert
         campaigns.forEach((campaign) => {
           if (campaign.endDate && campaign.status === "active") {
             let endDate: Date;
-            if (campaign.endDate instanceof Date) {
-              endDate = campaign.endDate;
-            } else if (typeof campaign.endDate === 'object' && 'seconds' in campaign.endDate) {
-              endDate = new Date((campaign.endDate as any).seconds * 1000);
-            } else if (typeof campaign.endDate === 'string') {
-              endDate = new Date(campaign.endDate);
+            const endDateValue = campaign.endDate as any;
+            if (endDateValue instanceof Date) {
+              endDate = endDateValue;
+            } else if (typeof endDateValue === 'object' && endDateValue !== null && 'seconds' in endDateValue) {
+              endDate = new Date(endDateValue.seconds * 1000);
+            } else if (typeof endDateValue === 'string') {
+              endDate = new Date(endDateValue);
             } else {
               return;
             }
