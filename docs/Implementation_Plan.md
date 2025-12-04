@@ -8,6 +8,25 @@
 🗓️ **Est. Duration:** Intensive Sprint
 
 ---
+## 🎁 **Gift Aid Integration (Full Suite)**
+
+### ✔️ [[Issue #10 — Gift Aid Flow Integration](https://github.com/YNVSolutions/SwiftCause_Web/issues/10)](https://github.com/YNVSolutions/SwiftCause_Web/issues/10)
+*Goal:* Implement UK Gift Aid end-to-end.
+*Sprint:* 2 — *Large*
+
+### ✔️ [[Issue #158 — Gift Aid Declaration Form](https://github.com/YNVSolutions/SwiftCause_Web/issues/158)](https://github.com/YNVSolutions/SwiftCause_Web/issues/158)
+*Goal:* Create UI for tax declarations.
+*Sprint:* 1 — *Medium*
+
+### ✔️ [[Issue #159 — Store Gift Aid Declarations](https://github.com/YNVSolutions/SwiftCause_Web/issues/159)](https://github.com/YNVSolutions/SwiftCause_Web/issues/159)
+*Goal:* Firestore schema + secure storage.
+*Sprint:* 1 — *Medium*
+
+### ✔️ [[Issue #160 — HMRC Claim Generator](https://github.com/YNVSolutions/SwiftCause_Web/issues/160)](https://github.com/YNVSolutions/SwiftCause_Web/issues/160)
+*Goal:* Generate CSV/Reports for HMRC.
+*Sprint:* 2 — *Large*
+
+---
 
 ## 🔄 **Recurring Donation Foundation**
 
@@ -101,25 +120,7 @@
 
 ---
 
-## 🎁 **Gift Aid Integration (Full Suite)**
 
-### ✔️ [[Issue #10 — Gift Aid Flow Integration](https://github.com/YNVSolutions/SwiftCause_Web/issues/10)](https://github.com/YNVSolutions/SwiftCause_Web/issues/10)
-*Goal:* Implement UK Gift Aid end-to-end.
-*Sprint:* 2 — *Large*
-
-### ✔️ [[Issue #158 — Gift Aid Declaration Form](https://github.com/YNVSolutions/SwiftCause_Web/issues/158)](https://github.com/YNVSolutions/SwiftCause_Web/issues/158)
-*Goal:* Create UI for tax declarations.
-*Sprint:* 1 — *Medium*
-
-### ✔️ [[Issue #159 — Store Gift Aid Declarations](https://github.com/YNVSolutions/SwiftCause_Web/issues/159)](https://github.com/YNVSolutions/SwiftCause_Web/issues/159)
-*Goal:* Firestore schema + secure storage.
-*Sprint:* 1 — *Medium*
-
-### ✔️ [[Issue #160 — HMRC Claim Generator](https://github.com/YNVSolutions/SwiftCause_Web/issues/160)](https://github.com/YNVSolutions/SwiftCause_Web/issues/160)
-*Goal:* Generate CSV/Reports for HMRC.
-*Sprint:* 2 — *Large*
-
----
 
 # ✅ **PHASE 2 — FSD Architecture Migration (16 Issues)**
 
