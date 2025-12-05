@@ -52,8 +52,23 @@ import {
   AlertDialogTrigger,
 } from "../../shared/ui/alert-dialog";
 import { Calendar as CalendarIcon } from "lucide-react";
-import { AdminLayout } from './AdminLayout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../shared/ui/card";
+import { AdminLayout } from "./AdminLayout";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../../shared/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../../shared/ui/table";
+import { Badge } from "../../shared/ui/badge";
 
 interface CampaignDialogProps {
   open: boolean;
@@ -1310,6 +1325,11 @@ const CampaignManagement = ({
     return "bg-blue-500";
   };
 
+  const formatDate = (timestamp?: { seconds?: number }) => {
+    if (!timestamp?.seconds) return "—";
+    return new Date(timestamp.seconds * 1000).toLocaleDateString();
+  };
+
   const uniqueCategories: string[] = Array.from(
     new Set(
       (campaigns as any[])
@@ -1382,118 +1402,200 @@ const CampaignManagement = ({
       hasPermission={hasPermission}
       activeScreen="admin-campaigns"
     >
-      <div className="space-y-4 sm:space-y-6 w-full max-w-full overflow-x-hidden">
-        <div className="bg-white shadow-sm border rounded-lg p-3 sm:p-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-              <Button variant="ghost" size="sm" onClick={() => onNavigate('admin')} className="flex items-center space-x-1 flex-shrink-0 h-8">
-                <ArrowLeft className="w-4 h-4" />
-                <span className="hidden sm:inline">Back</span>
-              </Button>
-              <div className="h-8 w-px bg-gray-300 hidden sm:block flex-shrink-0" />
-              <div className="min-w-0 flex-1">
-                <h1 className="text-lg sm:text-xl font-bold text-gray-900 leading-tight">Campaign Management</h1>
-                <p className="text-xs text-gray-600 leading-tight">Configure and monitor campaigns</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 flex-shrink-0 w-full sm:w-auto">
-              <Button variant="outline" size="sm" className="flex-1 sm:flex-none h-8" onClick={() => exportToCsv(filteredAndSortedCampaigns)}>
-                <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                <span className="text-xs sm:text-sm">Export CSV</span>
-              </Button>
-              <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 flex-1 sm:flex-none h-8" onClick={() => setIsAddDialogOpen(true)}>
-                <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                <span className="text-xs sm:text-sm">Add Campaign</span>
-              </Button>
-            </div>
-          </div>
-        </div>
-        <main className="w-full max-w-full overflow-x-hidden">
-          {/* Search/Filters */}
-          <div className="bg-white shadow-sm border rounded-lg p-4 mb-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="w-full sm:max-w-md">
-                <div className="relative">
-                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input 
-                    placeholder="Search campaigns..." 
-                    value={searchTerm} 
-                    onChange={(e) => setSearchTerm(e.target.value)} 
-                    className="pl-10 h-10 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" 
-                  />
+      <div className="space-y-6">
+        <header className="bg-white shadow-sm border-b rounded-md">
+          <div className="px-2 sm:px-6 lg:px-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between h-auto sm:h-16 gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onNavigate("admin")}
+                  className="flex items-center space-x-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span className="hidden sm:inline">Back to Dashboard</span>
+                  <span className="sm:hidden">Back</span>
+                </Button>
+                <div className="h-6 w-px bg-gray-300 hidden sm:block" />
+                <div>
+                  <h1 className="text-xl font-semibold text-gray-900">
+                    Campaign Management
+                  </h1>
+                  <p className="text-sm text-gray-600 hidden lg:block">
+                    Configure and monitor campaigns
+                  </p>
                 </div>
               </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="hidden sm:inline-flex"
+                  onClick={() => exportToCsv(filteredAndSortedCampaigns)}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Export CSV
+                </Button>
+                <Button
+                  className="bg-indigo-600 text-white hidden sm:inline-flex"
+                  onClick={() => setIsAddDialogOpen(true)}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Campaign
+                </Button>
+              </div>
             </div>
           </div>
-          {/* Filter/Grid */}
-          <div className="bg-white shadow-sm border rounded-lg p-4 mb-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full h-10 border-gray-300"><SelectValue placeholder="Filter by status" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="paused">Paused</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-              </SelectContent>
-            </Select>
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-full h-10 border-gray-300"><SelectValue placeholder="Filter by category" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {uniqueCategories.map(category => (
-                    <SelectItem key={category} value={category}>{category}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={sortOrder} onValueChange={setSortOrder}>
-                <SelectTrigger className="w-full h-10 border-gray-300"><SelectValue placeholder="Sort by" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="endDate">End Date</SelectItem>
-                <SelectItem value="title">Title</SelectItem>
-                <SelectItem value="goal">Goal Amount</SelectItem>
-                <SelectItem value="createdAt">Created Date</SelectItem>
-              </SelectContent>
-            </Select>
-              <Popover open={showCalendar} onOpenChange={setShowCalendar}>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="justify-start text-left font-normal w-full h-10 px-3 flex items-center border-gray-300">
-                    <CalendarIcon className="mr-2 h-15 w-14" />
-                    {dateFilter ? dateFilter.toLocaleDateString() : "Filter by date"}
-                  </Button>
-                </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 shadow-lg" align="start" sideOffset={5}>
-                <div className="p-3">
-                  <Calendar 
-                    mode="single" 
-                    selected={dateFilter} 
-                    onSelect={(date) => { setDateFilter(date); setShowCalendar(false); }} 
-                    initialFocus 
-                    className="rounded-md"
-                  />
-                </div>
-                <div className="px-3 py-2 border-t bg-gray-50">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => { setDateFilter(undefined); setShowCalendar(false); }} 
-                    className="w-full h-8 text-xs hover:bg-gray-100"
-                  >
-                    Clear Date Filter
-                  </Button>
-                </div>
-                </PopoverContent>
-              </Popover>
+        </header>
+        <main className="px-2 sm:px-6 lg:px-8 py-4 sm:py-8">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-8">
+            <div className="w-full sm:max-w-md">
+              <div className="relative">
+                <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Search campaigns..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto sm:justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full sm:w-auto sm:hidden"
+                onClick={() => exportToCsv(filteredAndSortedCampaigns)}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export CSV
+              </Button>
+              <Button
+                className="bg-indigo-600 hover:bg-indigo-700 w-full sm:w-auto sm:hidden"
+                onClick={() => setIsAddDialogOpen(true)}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Campaign
+              </Button>
             </div>
           </div>
-          {/* Campaigns Table/List card (MATCH Donations) */}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <Card>
+              <CardContent className="p-4">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-full h-12 border-0 shadow-none focus:ring-0 bg-transparent hover:bg-transparent font-semibold text-gray-900 [&>span]:font-semibold">
+                    <SelectValue placeholder="All Statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="paused">Paused</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger className="w-full h-12 border-0 shadow-none focus:ring-0 bg-transparent hover:bg-transparent font-semibold text-gray-900 [&>span]:font-semibold">
+                    <SelectValue placeholder="All Categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {uniqueCategories.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <Select value={sortOrder} onValueChange={setSortOrder}>
+                  <SelectTrigger className="w-full h-12 border-0 shadow-none focus:ring-0 bg-transparent hover:bg-transparent font-semibold text-gray-900 [&>span]:font-semibold">
+                    <SelectValue placeholder="End Date" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="endDate">End Date</SelectItem>
+                    <SelectItem value="title">Title</SelectItem>
+                    <SelectItem value="goal">Goal Amount</SelectItem>
+                    <SelectItem value="createdAt">Created Date</SelectItem>
+                  </SelectContent>
+                </Select>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <Popover open={showCalendar} onOpenChange={setShowCalendar}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="justify-between text-left font-semibold w-full h-12 px-3 flex items-center border-0 shadow-none hover:bg-transparent bg-transparent text-gray-900"
+                    >
+                      <div className="flex items-center">
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        <span>
+                          {dateFilter
+                            ? dateFilter.toLocaleDateString()
+                            : "Filter by date"}
+                        </span>
+                      </div>
+                      <svg
+                        className="h-4 w-4 opacity-50"
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dateFilter}
+                      onSelect={(date) => {
+                        setDateFilter(date);
+                        setShowCalendar(false);
+                      }}
+                      initialFocus
+                    />
+                    <div className="p-3 border-t">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setDateFilter(undefined);
+                          setShowCalendar(false);
+                        }}
+                        className="w-full"
+                      >
+                        Clear Date Filter
+                      </Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </CardContent>
+            </Card>
+          </div>
+          {/* Campaigns Table/List – aligned with Donations layout */}
           <Card>
             <CardHeader>
               <CardTitle>Campaigns ({filteredAndSortedCampaigns.length})</CardTitle>
               <CardDescription>Manage your donation campaigns</CardDescription>
             </CardHeader>
             <CardContent>
-              {/* If loading, errors, or content: reuse the same code skeleton/ghost logic */}
               {loading ? (
                 <div className="space-y-4">
                   {Array.from({ length: 5 }).map((_, i) => (
@@ -1507,160 +1609,119 @@ const CampaignManagement = ({
                   ))}
                 </div>
               ) : filteredAndSortedCampaigns.length > 0 ? (
-                <>
-                  {/* Desktop Table View */}
-                  <div className="hidden lg:block overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Campaign</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progress</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Goal</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End Date</th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {filteredAndSortedCampaigns.map((campaign: any) => {
-                          const progress = campaign.goal > 0 ? Math.round((campaign.raised / campaign.goal) * 100) : 0;
-                          return (
-                            <tr key={campaign.id} className="hover:bg-gray-50">
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="flex items-center">
-                                  <div className="h-10 w-10 rounded-lg overflow-hidden mr-3 flex-shrink-0 bg-gray-100">
-                                    {campaign.coverImageUrl ? (
-                                      <img src={campaign.coverImageUrl} alt={campaign.title} className="h-full w-full object-cover" />
-                                    ) : (
-                                      <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-indigo-100 to-purple-100">
-                                        <FaImage className="w-5 h-5 text-indigo-400" />
-                                      </div>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Campaign</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Goal</TableHead>
+                        <TableHead>End Date</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredAndSortedCampaigns.map((campaign: any) => {
+                        const progress =
+                          campaign.goal && campaign.raised
+                            ? Math.min(
+                                (Number(campaign.raised) / Number(campaign.goal)) *
+                                  100,
+                                100
+                              )
+                            : 0;
+
+                        return (
+                          <TableRow key={campaign.id ?? campaign.title}>
+                            <TableCell>
+                              <div className="space-y-1">
+                                <div className="flex items-center justify-between gap-2">
+                                  <div>
+                                    <p className="font-medium text-gray-900">
+                                      {campaign.title}
+                                    </p>
+                                    {campaign.category && (
+                                      <p className="text-xs text-gray-500">
+                                        {campaign.category}
+                                      </p>
                                     )}
                                   </div>
-                                  <div className="min-w-0">
-                                    <div className="text-sm font-medium text-gray-900 truncate">{campaign.title}</div>
-                                    <div className="text-sm text-gray-500 truncate">
-                                      {campaign.description && campaign.description.length > 50 
-                                        ? `${campaign.description.substring(0, 50)}...` 
-                                        : campaign.description}
+                                  {typeof progress === "number" &&
+                                    progress > 0 && (
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-xs text-gray-500">
+                                          {progress.toFixed(0)}%
+                                        </span>
+                                        <div className="h-1.5 w-20 bg-gray-100 rounded-full overflow-hidden">
+                                          <div
+                                            className={`h-full ${getProgressColor(
+                                              progress
+                                            )}`}
+                                            style={{ width: `${progress}%` }}
+                                          />
+                                        </div>
+                                      </div>
+                                    )}
+                                </div>
+                                {Array.isArray(campaign.tags) &&
+                                  campaign.tags.length > 0 && (
+                                    <div className="flex flex-wrap gap-1">
+                                      {campaign.tags.map((tag: string) => (
+                                        <Badge
+                                          key={tag}
+                                          variant="secondary"
+                                          className="text-xs"
+                                        >
+                                          {tag}
+                                        </Badge>
+                                      ))}
                                     </div>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                  campaign.status === 'active' ? 'bg-green-100 text-green-800' :
-                                  campaign.status === 'paused' ? 'bg-yellow-100 text-yellow-800' :
-                                  'bg-gray-100 text-gray-800'
-                                }`}>
-                                  {campaign.status}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="flex items-center">
-                                  <div className="w-full bg-gray-200 rounded-full h-2 mr-2 max-w-[100px]">
-                                    <div className="bg-indigo-600 h-2 rounded-full" style={{ width: `${Math.min(progress, 100)}%` }}></div>
-                                  </div>
-                                  <span className="text-sm text-gray-700 whitespace-nowrap">{progress}%</span>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                ${campaign.goal?.toLocaleString() || 0}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {campaign.endDate?.seconds ? new Date(campaign.endDate.seconds * 1000).toLocaleDateString() : 'N/A'}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <Button variant="ghost" size="sm" onClick={() => { setEditingCampaign(campaign); setIsEditDialogOpen(true); }}>
-                                  <FaEdit className="w-4 h-4" />
+                                  )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                className={`text-xs px-2 py-1 rounded-full ${getStatusColor(
+                                  campaign.status ?? "unknown"
+                                )}`}
+                              >
+                                {campaign.status ?? "Unknown"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <span className="font-medium">
+                                {typeof campaign.goal === "number"
+                                  ? campaign.goal.toLocaleString()
+                                  : "—"}
+                              </span>
+                            </TableCell>
+                            <TableCell>{formatDate(campaign.endDate)}</TableCell>
+                            <TableCell className="text-right">
+                              <div className="inline-flex items-center gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => handleEditClick(campaign)}
+                                >
+                                  <FaEdit className="h-3 w-3" />
                                 </Button>
-                                <Button variant="ghost" size="sm" onClick={() => { setCampaignToDelete(campaign); setIsDeleteDialogOpen(true); }}>
-                                  <FaTrashAlt className="w-4 h-4 text-red-600" />
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-red-600 hover:text-red-700"
+                                  onClick={() => handleDeleteClick(campaign)}
+                                >
+                                  <FaTrashAlt className="h-3 w-3" />
                                 </Button>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Mobile Card View */}
-                  <div className="lg:hidden space-y-4">
-                    {filteredAndSortedCampaigns.map((campaign: any) => {
-                      const progress = campaign.goal > 0 ? Math.round((campaign.raised / campaign.goal) * 100) : 0;
-                      return (
-                        <div key={campaign.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                          <div className="flex items-start space-x-3 mb-3">
-                            <div className="h-16 w-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
-                              {campaign.coverImageUrl ? (
-                                <img src={campaign.coverImageUrl} alt={campaign.title} className="h-full w-full object-cover" />
-                              ) : (
-                                <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-indigo-100 to-purple-100">
-                                  <FaImage className="w-8 h-8 text-indigo-400" />
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h3 className="text-sm font-semibold text-gray-900 mb-1">{campaign.title}</h3>
-                              <p className="text-xs text-gray-500 line-clamp-2">{campaign.description}</p>
-                              <div className="mt-2">
-                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                  campaign.status === 'active' ? 'bg-green-100 text-green-800' :
-                                  campaign.status === 'paused' ? 'bg-yellow-100 text-yellow-800' :
-                                  'bg-gray-100 text-gray-800'
-                                }`}>
-                                  {campaign.status}
-                                </span>
                               </div>
-                            </div>
-                          </div>
-                          
-                          <div className="space-y-3">
-                            <div>
-                              <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
-                                <span>Progress</span>
-                                <span className="font-medium">{progress}%</span>
-                              </div>
-                              <div className="w-full bg-gray-200 rounded-full h-2">
-                                <div className="bg-indigo-600 h-2 rounded-full" style={{ width: `${Math.min(progress, 100)}%` }}></div>
-                              </div>
-                            </div>
-                            
-                            <div className="grid grid-cols-2 gap-3 text-xs">
-                              <div>
-                                <span className="text-gray-500">Raised:</span>
-                                <p className="font-medium text-gray-900">${campaign.raised?.toLocaleString() || 0}</p>
-                              </div>
-                              <div>
-                                <span className="text-gray-500">Goal:</span>
-                                <p className="font-medium text-gray-900">${campaign.goal?.toLocaleString() || 0}</p>
-                              </div>
-                            </div>
-                            
-                            <div className="text-xs">
-                              <span className="text-gray-500">End Date:</span>
-                              <p className="font-medium text-gray-900">
-                                {campaign.endDate?.seconds ? new Date(campaign.endDate.seconds * 1000).toLocaleDateString() : 'N/A'}
-                              </p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center justify-end space-x-2 mt-4 pt-3 border-t border-gray-100">
-                            <Button variant="outline" size="sm" onClick={() => { setEditingCampaign(campaign); setIsEditDialogOpen(true); }}>
-                              <FaEdit className="w-4 h-4 mr-1" />
-                              Edit
-                            </Button>
-                            <Button variant="outline" size="sm" onClick={() => { setCampaignToDelete(campaign); setIsDeleteDialogOpen(true); }} className="text-red-600 hover:text-red-700 hover:bg-red-50">
-                              <FaTrashAlt className="w-4 h-4 mr-1" />
-                              Delete
-                            </Button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
               ) : (
                 <div className="text-center py-8 text-gray-500">
                   <Ghost className="mx-auto h-12 w-12 text-gray-400 mb-3" />
