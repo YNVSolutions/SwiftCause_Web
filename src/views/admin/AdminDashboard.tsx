@@ -715,7 +715,7 @@ export function AdminDashboard({
         ) : orgError ? (
           <p className="text-red-500">Error: {orgError}</p>
         ) : null}
-
+        
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
           <Card className="aspect-square lg:aspect-auto">
             <CardContent className="p-4 sm:p-6 h-full flex flex-col justify-between">
@@ -1276,7 +1276,6 @@ export function AdminDashboard({
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
-          {/* System Alerts Widget */}
           <SystemAlertsWidget
             alerts={systemAlerts}
             loading={systemAlertsLoading}
