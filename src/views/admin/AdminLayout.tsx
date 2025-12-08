@@ -7,7 +7,6 @@ import {
   Sidebar,
   SidebarHeader,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
@@ -18,15 +17,12 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "../../shared/ui/sidebar";
-import { Button } from "../../shared/ui/button";
-import { Badge } from "../../shared/ui/badge";
 import {
   LayoutDashboard,
   Settings,
   Monitor,
   Database,
   Users,
-  LogOut,
 } from "lucide-react";
 
 const SCREEN_LABELS: Partial<Record<Screen, string>> = {
@@ -153,16 +149,6 @@ export function AdminLayout({
           </SidebarGroup>
           <SidebarSeparator />
         </SidebarContent>
-        <SidebarFooter>
-          <div className="px-2 py-2 flex items-center justify-between">
-            <Badge variant="secondary" className="text-xs">
-              {userSession.user.role}
-            </Badge>
-            <Button variant="ghost" size="sm" onClick={onLogout} className="text-gray-600">
-              <LogOut className="h-4 w-4 mr-1" /> Logout
-            </Button>
-          </div>
-        </SidebarFooter>
       </Sidebar>
 
       <SidebarInset className="overflow-x-hidden">
