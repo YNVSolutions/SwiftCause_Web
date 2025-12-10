@@ -95,6 +95,8 @@ import { useOrganization } from "../../shared/lib/hooks/useOrganization";
 import { auth } from "../../shared/lib/firebase";
 import { DeviceChart } from "./DeviceChart";
 import { AdminLayout } from "./AdminLayout";
+import { SystemAlertsWidget } from "./components/SystemAlertsWidget";
+import { useSystemAlerts } from "../../shared/lib/hooks/useSystemAlerts";
 
 interface AdminDashboardProps {
   onNavigate: (screen: Screen) => void;
@@ -144,6 +146,11 @@ export function AdminDashboard({
   const { organization, loading: orgLoading, error: orgError } = useOrganization(
     userSession.user.organizationId ?? null
   );
+
+  const { alerts: systemAlerts, loading: systemAlertsLoading } = useSystemAlerts({
+    organization,
+    organizationId: userSession.user.organizationId,
+  });
 
   useEffect(() => {
     const hash = window.location.hash;
@@ -705,6 +712,7 @@ export function AdminDashboard({
         ) : orgError ? (
           <p className="text-red-500">Error: {orgError}</p>
         ) : null}
+        
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
           <Card className="aspect-square lg:aspect-auto">
             <CardContent className="p-4 sm:p-6 h-full flex flex-col justify-between">
@@ -1265,46 +1273,11 @@ export function AdminDashboard({
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
-          <Card>
-            <CardHeader className="p-4 sm:p-6">
-              <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
-                <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600 flex-shrink-0" />
-                <span>System Alerts</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 sm:p-6 pt-0">
-              <div className="space-y-2 sm:space-y-3">
-                {loading ? (
-                  Array.from({ length: 2 }).map((_, i) => (
-                    <div key={i} className="flex items-start space-x-2 sm:space-x-3 p-2 sm:p-3 rounded-lg bg-gray-50">
-                      <Skeleton className="h-4 w-4 sm:h-5 sm:w-5 rounded-full flex-shrink-0" />
-                      <Skeleton className="h-3 sm:h-4 w-3/4" />
-                    </div>
-                  ))
-                ) : alerts.length > 0 ? (
-                  alerts.map((alert: Alert) => (
-                    <div
-                      key={alert.id}
-                      className="flex items-start space-x-2 sm:space-x-3 p-2 sm:p-3 rounded-lg bg-gray-50"
-                    >
-                      <div className="flex-shrink-0 mt-0.5">
-                        {getAlertIcon(alert.type)}
-                      </div>
-                      <p className="text-xs sm:text-sm text-gray-900 break-words">{alert.message}</p>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-6 sm:py-8 text-gray-500">
-                    <AlertCircle className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3" />
-                    <p className="text-base sm:text-lg font-medium mb-2">No System Alerts</p>
-                    <p className="text-xs sm:text-sm mb-4 px-4">
-                      Your system is running smoothly. No alerts to display.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <SystemAlertsWidget
+            alerts={systemAlerts}
+            loading={systemAlertsLoading}
+            onNavigate={onNavigate}
+          />
           <Card>
             <CardHeader className="p-4 sm:p-6">
               <CardTitle className="text-base sm:text-lg">More Actions</CardTitle>
