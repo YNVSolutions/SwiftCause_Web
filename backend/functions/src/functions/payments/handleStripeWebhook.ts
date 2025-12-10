@@ -42,8 +42,6 @@ export const handleStripeWebhook = functions.https.onRequest(
 
       try {
         await db.collection('donations').add(donationData);
-        console.log('Donation stored for:', paymentIntent.id);
-
         const campaignId = paymentIntent.metadata.campaignId;
         if (campaignId) {
           const campaignRef = db.collection('campaigns').doc(campaignId);
@@ -53,7 +51,6 @@ export const handleStripeWebhook = functions.https.onRequest(
             donationCount: admin.firestore.FieldValue.increment(1),
             lastUpdated: admin.firestore.Timestamp.now(),
           });
-          console.log('Campaign updated for donation:', campaignId);
         }
       } catch (error) {
         console.error('Error processing donation:', error);

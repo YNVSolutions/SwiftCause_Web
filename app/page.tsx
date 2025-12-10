@@ -10,7 +10,6 @@ export default function Home() {
   const router = useRouter()
   const { userRole, isLoadingAuth } = useAuth()
   
-  console.log('Home component - userRole:', userRole, 'isLoadingAuth:', isLoadingAuth)
 
   useEffect(() => {
     if (!isLoadingAuth) {
