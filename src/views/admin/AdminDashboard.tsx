@@ -495,7 +495,7 @@ export function AdminDashboard({
     };
 
     fetchChartData();
-  }, [userSession.user.organizationId, refreshDashboard]);
+  }, [userSession.user.organizationId]);
 
   const handleRefresh = () => {
     refreshDashboard();
