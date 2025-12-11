@@ -3,6 +3,7 @@ import { Screen, AdminSession, Permission } from "../../shared/types";
 import { DEFAULT_CAMPAIGN_CONFIG, DEFAULT_CAMPAIGN_VALUES } from "../../shared/config";
 import { DocumentData, Timestamp } from "firebase/firestore";
 import { useCampaignManagement } from "../../shared/lib/hooks/useCampaignManagement";
+import { useOrganizationTags } from "../../shared/lib/hooks/useOrganizationTags";
 import { deleteFile } from "../../shared/lib/firebase"; // Import deleteFile
 import * as firebaseService from "../../shared/api"; // Import firebaseService
 import UploadButton from "../../shared/ui/UploadButton"; // Import the new UploadButton component
@@ -25,6 +26,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../shared/ui/select";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "../../shared/ui/command";
+import { Badge } from "../../shared/ui/badge";
+import { X, Check, ChevronsUpDown } from "lucide-react";
 import {
   FaEdit,
   FaSearch,
@@ -74,6 +84,7 @@ interface CampaignDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   campaign?: DocumentData | null; // Optional campaign for editing
+  organizationId: string; // Add organizationId prop
   onSave: (
     data: DocumentData,
     isNew: boolean,
@@ -149,6 +160,7 @@ const CampaignDialog = ({
   open,
   onOpenChange,
   campaign,
+  organizationId,
   onSave,
 }: CampaignDialogProps) => {
   const [formData, setFormData] = useState<DocumentData>(getInitialFormData());
@@ -166,6 +178,14 @@ const CampaignDialog = ({
     setImagePreviewUrl,
     uploadFile, // Destructure the new uploadFile function
   } = useCampaignManagement();
+
+  // Organization tags hook
+  const { tags: organizationTags, addMultipleTags: addMultipleOrganizationTags } = useOrganizationTags(organizationId);
+
+  // Tags dropdown state
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [tagSearchOpen, setTagSearchOpen] = useState(false);
+  const [tagSearchValue, setTagSearchValue] = useState("");
 
   // New state for advanced image uploads
   const [selectedOrganizationLogo, setSelectedOrganizationLogo] =
@@ -290,6 +310,7 @@ const CampaignDialog = ({
         enableComments: campaign.configuration?.enableComments ?? true,
       };
       setFormData(editableData);
+      setSelectedTags(Array.isArray(campaign.tags) ? campaign.tags : []);
       setImagePreviewUrl(campaign.coverImageUrl || null);
       // Set initial previews for advanced images
       if (campaign.organizationInfo?.logo) {
@@ -304,6 +325,7 @@ const CampaignDialog = ({
       }
     } else if (!isEditMode) {
       setFormData(getInitialFormData());
+      setSelectedTags([]);
       setImagePreviewUrl(null);
       // Clear advanced image selections/previews for add mode
       setSelectedOrganizationLogo(null);
@@ -506,6 +528,19 @@ const CampaignDialog = ({
 
     let finalData = { ...formData };
 
+    // Process tags - convert selectedTags array to comma-separated string for formData
+    finalData.tags = selectedTags.join(", ");
+
+    // Add new tags to organization if they don't exist
+    const newTags = selectedTags.filter(tag => !organizationTags.includes(tag));
+    if (newTags.length > 0) {
+      try {
+        await addMultipleOrganizationTags(newTags);
+      } catch (error) {
+        console.error(`Failed to add new tags to organization:`, error);
+      }
+    }
+
     setIsSubmitting(true);
 
     // Upload organization logo
@@ -564,6 +599,10 @@ const CampaignDialog = ({
   const handleDialogClose = () => {
     clearImageSelection();
     setFormData(getInitialFormData()); // Reset for add mode
+    // Clear tags
+    setSelectedTags([]);
+    setTagSearchValue("");
+    setTagSearchOpen(false);
     // Clear advanced image selections/previews
     setSelectedOrganizationLogo(null);
     setOrganizationLogoPreview(null);
@@ -586,7 +625,7 @@ const CampaignDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center">
             {isEditMode ? (
@@ -621,7 +660,7 @@ const CampaignDialog = ({
           </nav>
         </div>
 
-        <div className="grid gap-6 py-4">
+        <div className="grid gap-6 py-4 px-1 flex-1 overflow-y-auto">
           {activeTab === "basic" && (
             <>
               <div className="grid grid-cols-4 items-center gap-4">
@@ -726,14 +765,106 @@ const CampaignDialog = ({
                 </Label>
                 <div className="col-span-3">
                   <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                    <Input
-                      id="tags"
-                      name="tags"
-                      value={formData.tags}
-                      onChange={handleChange}
-                      className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
-                      placeholder="health, education, etc."
-                    />
+                    <div className="space-y-2 p-3">
+                      <Popover open={tagSearchOpen} onOpenChange={setTagSearchOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          role="combobox"
+                          aria-expanded={tagSearchOpen}
+                          className="w-full justify-between h-12 border-0 bg-transparent hover:bg-transparent focus-visible:ring-0"
+                        >
+                          {selectedTags.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {selectedTags.slice(0, 2).map((tag) => (
+                                <Badge key={tag} variant="secondary" className="text-xs">
+                                  {tag}
+                                </Badge>
+                              ))}
+                              {selectedTags.length > 2 && (
+                                <Badge variant="secondary" className="text-xs">
+                                  +{selectedTags.length - 2} more
+                                </Badge>
+                              )}
+                            </div>
+                          ) : (
+                            "Select tags..."
+                          )}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0">
+                        <Command>
+                          <CommandInput 
+                            placeholder="Search or type new tag..." 
+                            value={tagSearchValue}
+                            onValueChange={setTagSearchValue}
+                          />
+                          <CommandEmpty>
+                            {tagSearchValue && (
+                              <div className="p-2">
+                                <Button
+                                  variant="ghost"
+                                  className="w-full justify-start"
+                                  onClick={() => {
+                                    if (tagSearchValue.trim() && !selectedTags.includes(tagSearchValue.trim())) {
+                                      setSelectedTags([...selectedTags, tagSearchValue.trim()]);
+                                      setTagSearchValue("");
+                                      setTagSearchOpen(false);
+                                    }
+                                  }}
+                                >
+                                  <Plus className="mr-2 h-4 w-4" />
+                                  Create "{tagSearchValue}"
+                                </Button>
+                              </div>
+                            )}
+                          </CommandEmpty>
+                          <CommandGroup>
+                            {organizationTags
+                              .filter(tag => !selectedTags.includes(tag))
+                              .map((tag) => (
+                                <CommandItem
+                                  key={tag}
+                                  onSelect={() => {
+                                    setSelectedTags([...selectedTags, tag]);
+                                    setTagSearchValue("");
+                                  }}
+                                >
+                                  <Check
+                                    className={`mr-2 h-4 w-4 ${
+                                      selectedTags.includes(tag) ? "opacity-100" : "opacity-0"
+                                    }`}
+                                  />
+                                  {tag}
+                                </CommandItem>
+                              ))}
+                          </CommandGroup>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    
+                    {/* Selected tags display */}
+                    {selectedTags.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {selectedTags.map((tag) => (
+                          <Badge key={tag} variant="secondary" className="text-sm">
+                            {tag}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="ml-1 h-4 w-4 p-0 hover:bg-transparent"
+                              onClick={() => {
+                                setSelectedTags(selectedTags.filter(t => t !== tag));
+                              }}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1079,7 +1210,7 @@ const CampaignDialog = ({
             </div>
           )}
         </div>
-        <div className="flex justify-end space-x-2 pt-4 border-t">
+        <div className="flex justify-end space-x-2 pt-4 border-t flex-shrink-0">
           <Button
             variant="outline"
             onClick={handleDialogClose}
@@ -1126,7 +1257,7 @@ const CampaignManagement = ({
   const [confirmDeleteInput, setConfirmDeleteInput] = useState("");
 
   const { campaigns, updateWithImage, createWithImage, remove, loading } =
-    useCampaignManagement(userSession.user.organizationId);
+    useCampaignManagement(userSession.user.organizationId || "");
 
   const handleDeleteClick = (campaign: DocumentData) => {
     setCampaignToDelete(campaign);
@@ -1734,8 +1865,8 @@ const CampaignManagement = ({
         </main>
       </div>
       {/* Dialogs remain after main content */}
-      <CampaignDialog open={isEditDialogOpen} onOpenChange={open => { setIsEditDialogOpen(open); if(!open) setEditingCampaign(null); }} campaign={editingCampaign} onSave={handleSave} />
-      <CampaignDialog open={isAddDialogOpen} onOpenChange={open => { setIsAddDialogOpen(open); }} onSave={(data, isNew) => handleSave(data, isNew, undefined)} />
+      <CampaignDialog open={isEditDialogOpen} onOpenChange={open => { setIsEditDialogOpen(open); if(!open) setEditingCampaign(null); }} campaign={editingCampaign} organizationId={userSession.user.organizationId || ""} onSave={handleSave} />
+      <CampaignDialog open={isAddDialogOpen} onOpenChange={open => { setIsAddDialogOpen(open); }} organizationId={userSession.user.organizationId || ""} onSave={(data, isNew) => handleSave(data, isNew, undefined)} />
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

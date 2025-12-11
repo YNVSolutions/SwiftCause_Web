@@ -66,6 +66,7 @@ export interface Organization {
   type?: string;
   size?: string;
   website?: string;
+  tags?: string[];
   createdAt?: string;
   stripe?: {
     accountId?: string;

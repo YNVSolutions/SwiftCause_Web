@@ -175,6 +175,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         type: signupData.organizationType,
         size: signupData.organizationSize,
         website: signupData.website,
+        currency: signupData.currency,
+        tags: [],
         createdAt: new Date().toISOString(),
       })
     } catch (error) {
