@@ -115,12 +115,36 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
   };
 
   const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(amount);
+  
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'online': return <Badge className="bg-green-100 text-green-800 border-green-200"><CheckCircle className="w-3 h-3 mr-1" />Online</Badge>;
-      case 'offline': return <Badge className="bg-red-100 text-red-800 border-red-200"><WifiOff className="w-3 h-3 mr-1" />Offline</Badge>;
-      case 'maintenance': return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200"><AlertTriangle className="w-3 h-3 mr-1" />Maintenance</Badge>;
-      default: return <Badge variant="secondary">{status}</Badge>;
+      case 'online': 
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 ring-1 ring-green-600/20">
+            <CheckCircle className="w-3 h-3 mr-1" />
+            Online
+          </span>
+        );
+      case 'offline': 
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700 ring-1 ring-red-600/20">
+            <WifiOff className="w-3 h-3 mr-1" />
+            Offline
+          </span>
+        );
+      case 'maintenance': 
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-50 text-yellow-700 ring-1 ring-yellow-600/20">
+            <AlertTriangle className="w-3 h-3 mr-1" />
+            Maintenance
+          </span>
+        );
+      default: 
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-50 text-gray-700 ring-1 ring-gray-600/20">
+            {status}
+          </span>
+        );
     }
   };
 
@@ -246,82 +270,112 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
             <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Donations</p><p className="text-2xl font-semibold text-gray-900">{totalStats.totalDonations.toLocaleString()}</p></div><Users className="h-8 w-8 text-purple-600" /></div></CardContent></Card>
             <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Maintenance</p><p className="text-2xl font-semibold text-gray-900">{totalStats.maintenance}</p></div><Activity className="h-8 w-8 text-orange-600" /></div></CardContent></Card>
           </div>
-          <Card>
-            <CardHeader>
-              <CardTitle>Kiosks ({filteredKiosks.length})</CardTitle>
-              <CardDescription>Monitor and manage your kiosk network</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                {filteredKiosks.length > 0 ? (
-                  <Table className="min-w-full">
-                    <TableHeader><TableRow><TableHead>Kiosk Details</TableHead><TableHead>Status</TableHead><TableHead>Performance</TableHead><TableHead>Campaign Assignment</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
-                    <TableBody>
-                      {filteredKiosks.map((kiosk) => (
-                        <TableRow key={kiosk.id}>
-                          <TableCell><div className="space-y-1"><div className="flex items-center space-x-2"><Monitor className="w-4 h-4 text-gray-400" /><span className="font-medium">{kiosk.name}</span></div><div className="flex items-center space-x-2 text-sm text-gray-500"><MapPin className="w-3 h-3" /><span>{kiosk.location}</span></div><p className="text-xs text-gray-400 font-mono">{kiosk.id}</p></div></TableCell>
-                          <TableCell>{getStatusBadge(kiosk.status)}</TableCell>
-                          <TableCell>
-                            <div className="space-y-1">
+          {/* Modern Table Container */}
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div className="px-6 py-5 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">Kiosks ({filteredKiosks.length})</h3>
+              <p className="text-sm text-gray-600 mt-1">Monitor and manage your kiosk network</p>
+            </div>
+            <div className="overflow-x-auto">
+              {filteredKiosks.length > 0 ? (
+                <Table className="min-w-full">
+                  <TableHeader>
+                    <TableRow className="bg-gray-50 border-b border-gray-200">
+                      <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Kiosk Details</TableHead>
+                      <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</TableHead>
+                      <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Performance</TableHead>
+                      <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Campaign Assignment</TableHead>
+                      <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredKiosks.map((kiosk) => (
+                      <TableRow key={kiosk.id} className="hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0">
+                        <TableCell className="px-6 py-4">
+                          <div className="space-y-1">
+                            <div className="flex items-center space-x-2">
+                              <Monitor className="w-4 h-4 text-gray-400" />
+                              <span className="text-sm font-medium text-gray-900">{kiosk.name}</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <MapPin className="w-3 h-3 text-gray-400" />
+                              <span className="text-sm text-gray-500">{kiosk.location}</span>
+                            </div>
+                            <p className="text-xs text-gray-400 font-mono">{kiosk.id}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-6 py-4">{getStatusBadge(kiosk.status)}</TableCell>
+                        <TableCell className="px-6 py-4">
+                          <div className="flex items-center space-x-2">
+                            <DollarSign className="w-4 h-4 text-gray-400" />
+                            <span className="text-sm font-medium text-gray-900">
+                              {formatCurrency(performanceData[kiosk.id]?.totalRaised || 0)}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-6 py-4">
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <Target className="w-4 h-4 text-gray-400" />
+                              <span className="text-sm text-gray-500">{kiosk.assignedCampaigns?.length || 0} assigned</span>
+                            </div>
+                            {kiosk.defaultCampaign && (
                               <div className="flex items-center space-x-2">
-                                <DollarSign className="w-4 h-4 text-gray-400" />
-                                <span className="text-sm font-medium">
-                                  {formatCurrency(performanceData[kiosk.id]?.totalRaised || 0)}
-                                </span>
+                                <Star className="w-4 h-4 text-yellow-500" />
+                                <span className="text-sm text-gray-500">{campaigns.find(c => c.id === kiosk.defaultCampaign)?.title?.slice(0, 20) || '...'}</span>
                               </div>
-                              
-                            </div>
-                          </TableCell>
-                          <TableCell><div className="space-y-2"><div className="flex items-center space-x-2"><Target className="w-4 h-4 text-gray-400" /><span className="text-sm">{kiosk.assignedCampaigns?.length || 0} assigned</span></div>{kiosk.defaultCampaign && (<div className="flex items-center space-x-2"><Star className="w-4 h-4 text-yellow-500" /><span className="text-sm">{campaigns.find(c => c.id === kiosk.defaultCampaign)?.title?.slice(0, 20) || '...'}</span></div>)}</div></TableCell>
-                          <TableCell>
-                            <div className="flex items-center space-x-1">
-                              {hasPermission('edit_kiosk') && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => {
-                                    setAssigningKiosk(kiosk);
-                                    setIsAssignmentDialogOpen(true);
-                                  }}
-                                  title="Edit Kiosk Details & Campaigns"
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </Button>
-                              )}
-                              {hasPermission('delete_kiosk') && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleDeleteKiosk(kiosk.id)}
-                                  className="text-red-600 hover:text-red-700"
-                                  title="Delete kiosk"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                ) : ( 
-                  <div className="text-center py-8 text-gray-500">
-                    <Ghost className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-                    <p className="text-lg font-medium mb-2">No Kiosks Found</p>
-                    <p className="text-sm mb-4">
-                      No kiosks have been registered yet.
-                    </p>
-                    {hasPermission("create_kiosk") && (
-                      <Button onClick={() => setIsCreateDialogOpen(true)}>
-                        <Plus className="w-4 h-4 mr-2" /> Register New Kiosk
-                      </Button>
-                    )}
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-6 py-4">
+                          <div className="flex items-center justify-end gap-2">
+                            {hasPermission('edit_kiosk') && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setAssigningKiosk(kiosk);
+                                  setIsAssignmentDialogOpen(true);
+                                }}
+                                className="h-8 w-8 hover:bg-indigo-50 hover:text-indigo-600"
+                                title="Edit Kiosk Details & Campaigns"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                            )}
+                            {hasPermission('delete_kiosk') && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeleteKiosk(kiosk.id)}
+                                className="h-8 w-8 hover:bg-red-50 hover:text-red-600"
+                                title="Delete kiosk"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Ghost className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                  <p className="text-lg font-medium mb-2">No Kiosks Found</p>
+                  <p className="text-sm mb-4">
+                    No kiosks have been registered yet.
+                  </p>
+                  {hasPermission("create_kiosk") && (
+                    <Button onClick={() => setIsCreateDialogOpen(true)}>
+                      <Plus className="w-4 h-4 mr-2" /> Register New Kiosk
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
         </main>
       </div>
 

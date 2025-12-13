@@ -30,58 +30,38 @@ export function SystemAlertsWidget({
       case "critical":
         return {
           icon: AlertCircle,
-          color: "text-red-600",
-          bgColor: "bg-red-50",
-          borderColor: "border-red-200",
-          badgeColor: "bg-red-100 text-red-800 border-red-200",
+          iconColor: "text-red-600",
+          bgColor: "bg-red-50/50",
+          borderColor: "border-l-4 border-red-500",
         };
       case "warning":
         return {
           icon: AlertTriangle,
-          color: "text-orange-600",
-          bgColor: "bg-orange-50",
-          borderColor: "border-orange-200",
-          badgeColor: "bg-orange-100 text-orange-800 border-orange-200",
+          iconColor: "text-yellow-600",
+          bgColor: "bg-yellow-50/50",
+          borderColor: "border-l-4 border-yellow-500",
         };
       case "info":
         return {
           icon: Info,
-          color: "text-blue-600",
-          bgColor: "bg-blue-50",
-          borderColor: "border-blue-200",
-          badgeColor: "bg-blue-100 text-blue-800 border-blue-200",
+          iconColor: "text-blue-600",
+          bgColor: "bg-blue-50/50",
+          borderColor: "border-l-4 border-blue-500",
         };
       case "success":
         return {
           icon: CheckCircle,
-          color: "text-green-600",
-          bgColor: "bg-green-50",
-          borderColor: "border-green-200",
-          badgeColor: "bg-green-100 text-green-800 border-green-200",
+          iconColor: "text-green-600",
+          bgColor: "bg-green-50/50",
+          borderColor: "border-l-4 border-green-500",
         };
       default:
         return {
           icon: Info,
-          color: "text-gray-600",
-          bgColor: "bg-gray-50",
-          borderColor: "border-gray-200",
-          badgeColor: "bg-gray-100 text-gray-800 border-gray-200",
+          iconColor: "text-gray-600",
+          bgColor: "bg-gray-50/50",
+          borderColor: "border-l-4 border-gray-500",
         };
-    }
-  };
-
-  const getSeverityLabel = (severity: AlertSeverity) => {
-    switch (severity) {
-      case "critical":
-        return "Critical";
-      case "warning":
-        return "Warning";
-      case "info":
-        return "Info";
-      case "success":
-        return "Success";
-      default:
-        return "Alert";
     }
   };
 
@@ -93,14 +73,16 @@ export function SystemAlertsWidget({
 
   if (loading) {
     return (
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-            <Shield className="h-5 w-5 text-indigo-600" />
+      <Card className="bg-white rounded-xl border border-gray-200 shadow-sm">
+        <CardHeader className="p-6 border-b border-gray-100">
+          <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
+            <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mr-3">
+              <Shield className="w-4 h-4" />
+            </div>
             System Alerts
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           <div className="space-y-3">
             <Skeleton className="h-16 w-full" />
             <Skeleton className="h-16 w-full" />
@@ -123,24 +105,25 @@ export function SystemAlertsWidget({
   ];
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-          <Shield className="h-5 w-5 text-indigo-600" />
-          System Alerts
+    <Card className="bg-white rounded-xl border border-gray-200 shadow-sm">
+      <CardHeader className="p-6 border-b border-gray-100">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
+            <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mr-3">
+              <Shield className="w-4 h-4" />
+            </div>
+            System Alerts
+          </CardTitle>
           {alerts.length > 0 && (
-            <Badge
-              variant="secondary"
-              className="ml-auto bg-indigo-100 text-indigo-800 border-indigo-200"
-            >
-              {alerts.length}
-            </Badge>
+            <button className="text-sm text-blue-600 hover:text-blue-500 font-medium transition-colors">
+              View All
+            </button>
           )}
-        </CardTitle>
+        </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0">
         {alerts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+          <div className="flex flex-col items-center justify-center px-4 text-center" style={{ minHeight: '320px' }}>
             <CheckCircle className="h-12 w-12 text-green-500 mb-3" />
             <p className="text-sm sm:text-base font-medium text-gray-900 mb-1">
               All systems operational
@@ -150,8 +133,8 @@ export function SystemAlertsWidget({
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {sortedAlerts.slice(0, 5).map((alert) => {
+          <div className="max-h-[320px] overflow-y-auto">
+            {sortedAlerts.map((alert, index) => {
               const config = getSeverityConfig(alert.severity);
               const Icon = config.icon;
 
@@ -159,38 +142,29 @@ export function SystemAlertsWidget({
                 <div
                   key={alert.id}
                   className={`
-                    p-3 sm:p-4 rounded-lg border cursor-pointer transition-all
-                    ${config.bgColor} ${config.borderColor}
-                    hover:shadow-md hover:scale-[1.01]
+                    ${config.borderColor} ${config.bgColor}
+                    p-4 cursor-pointer transition-all hover:bg-opacity-80
+                    ${index !== 0 ? 'border-t border-gray-100' : ''}
                   `}
                   onClick={() => handleAlertClick(alert)}
                 >
                   <div className="flex items-start gap-3">
-                    <div className={`flex-shrink-0 mt-0.5 ${config.color}`}>
+                    <div className={`flex-shrink-0 ${config.iconColor}`}>
                       <Icon className="h-5 w-5" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2 mb-1">
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-sm sm:text-base font-semibold text-gray-900 mb-1">
-                            {alert.title}
-                          </h4>
-                          <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">
-                            {alert.message}
-                          </p>
-                        </div>
-                        <Badge
-                          variant="outline"
-                          className={`${config.badgeColor} text-xs flex-shrink-0`}
-                        >
-                          {getSeverityLabel(alert.severity)}
-                        </Badge>
-                      </div>
+                      <h4 className="text-sm font-semibold text-gray-900 mb-1">
+                        {alert.title}
+                      </h4>
+                      <p className="text-sm text-gray-800 mb-1">
+                        {alert.message}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {alert.timestamp ? new Date(alert.timestamp).toLocaleString() : 'Just now'}
+                      </p>
                       {alert.actionScreen && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="mt-2 h-7 text-xs text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 p-0"
+                        <button
+                          className="mt-2 text-xs text-blue-600 hover:text-blue-500 font-medium inline-flex items-center transition-colors"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleAlertClick(alert);
@@ -198,20 +172,13 @@ export function SystemAlertsWidget({
                         >
                           View Details
                           <ArrowRight className="h-3 w-3 ml-1" />
-                        </Button>
+                        </button>
                       )}
                     </div>
                   </div>
                 </div>
               );
             })}
-            {alerts.length > 5 && (
-              <div className="pt-2 text-center">
-                <p className="text-xs sm:text-sm text-gray-500">
-                  +{alerts.length - 5} more alert{alerts.length - 5 !== 1 ? "s" : ""}
-                </p>
-              </div>
-            )}
           </div>
         )}
       </CardContent>

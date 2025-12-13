@@ -78,7 +78,6 @@ import {
   TableHeader,
   TableRow,
 } from "../../shared/ui/table";
-import { Badge } from "../../shared/ui/badge";
 
 interface CampaignDialogProps {
   open: boolean;
@@ -1765,49 +1764,58 @@ const CampaignManagement = ({
                         return (
                           <TableRow key={campaign.id ?? campaign.title}>
                             <TableCell>
-                              <div className="space-y-1">
-                                <div className="flex items-center justify-between gap-2">
-                                  <div>
-                                    <p className="font-medium text-gray-900">
-                                      {campaign.title}
-                                    </p>
-                                    {campaign.category && (
-                                      <p className="text-xs text-gray-500">
-                                        {campaign.category}
+                              <div className="flex items-start gap-3">
+                                {campaign.coverImageUrl && (
+                                  <img
+                                    src={campaign.coverImageUrl}
+                                    alt={campaign.title}
+                                    className="w-16 h-16 object-cover rounded-lg border border-gray-200 flex-shrink-0"
+                                  />
+                                )}
+                                <div className="space-y-1 flex-1">
+                                  <div className="flex items-center justify-between gap-2">
+                                    <div>
+                                      <p className="font-medium text-gray-900">
+                                        {campaign.title}
                                       </p>
-                                    )}
-                                  </div>
-                                  {typeof progress === "number" &&
-                                    progress > 0 && (
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-xs text-gray-500">
-                                          {progress.toFixed(0)}%
-                                        </span>
-                                        <div className="h-1.5 w-20 bg-gray-100 rounded-full overflow-hidden">
-                                          <div
-                                            className={`h-full ${getProgressColor(
-                                              progress
-                                            )}`}
-                                            style={{ width: `${progress}%` }}
-                                          />
+                                      {campaign.category && (
+                                        <p className="text-xs text-gray-500">
+                                          {campaign.category}
+                                        </p>
+                                      )}
+                                    </div>
+                                    {typeof progress === "number" &&
+                                      progress > 0 && (
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-xs text-gray-500">
+                                            {progress.toFixed(0)}%
+                                          </span>
+                                          <div className="h-1.5 w-20 bg-gray-100 rounded-full overflow-hidden">
+                                            <div
+                                              className={`h-full ${getProgressColor(
+                                                progress
+                                              )}`}
+                                              style={{ width: `${progress}%` }}
+                                            />
+                                          </div>
                                         </div>
+                                      )}
+                                  </div>
+                                  {Array.isArray(campaign.tags) &&
+                                    campaign.tags.length > 0 && (
+                                      <div className="flex flex-wrap gap-1">
+                                        {campaign.tags.map((tag: string) => (
+                                          <Badge
+                                            key={tag}
+                                            variant="secondary"
+                                            className="text-xs"
+                                          >
+                                            {tag}
+                                          </Badge>
+                                        ))}
                                       </div>
                                     )}
                                 </div>
-                                {Array.isArray(campaign.tags) &&
-                                  campaign.tags.length > 0 && (
-                                    <div className="flex flex-wrap gap-1">
-                                      {campaign.tags.map((tag: string) => (
-                                        <Badge
-                                          key={tag}
-                                          variant="secondary"
-                                          className="text-xs"
-                                        >
-                                          {tag}
-                                        </Badge>
-                                      ))}
-                                    </div>
-                                  )}
                               </div>
                             </TableCell>
                             <TableCell>
