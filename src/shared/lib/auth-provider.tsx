@@ -73,6 +73,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setCurrentAdminSession({
             user: userData,
             loginTime: new Date().toISOString(),
+            permissions: userData.permissions || []
           })
         } else {
           console.warn('AuthProvider: User document not found for UID:', firebaseUser.uid)

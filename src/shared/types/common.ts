@@ -80,6 +80,7 @@ export interface Organization {
 export interface AdminSession {
   user: User;
   loginTime: string;
+  permissions: Permission[];
 }
 
 export interface KioskSession {
