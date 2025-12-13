@@ -14,6 +14,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarSeparator,
   SidebarInset,
   SidebarTrigger,
   useSidebar,
@@ -165,10 +166,10 @@ export function AdminLayout({
             </SidebarMenu>
           </SidebarGroup>
         </SidebarContent>
-        <SidebarFooter className="p-3 flex justify-center">
+        <SidebarFooter className="p-3">
           <Button
             onClick={onLogout}
-            className="w-fit px-4 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2 shadow-sm"
+            className="w-full bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2"
             size="sm"
           >
             <LogOut className="h-4 w-4" />

@@ -58,6 +58,8 @@ export interface User {
   createdAt?: string;
   lastLogin?: string;
   organizationId?: string;
+  organizationName?: string;
+  photoURL?: string;
 }
 
 export interface Organization {
@@ -79,6 +81,7 @@ export interface Organization {
 export interface AdminSession {
   user: User;
   loginTime: string;
+  permissions: Permission[];
 }
 
 export interface KioskSession {

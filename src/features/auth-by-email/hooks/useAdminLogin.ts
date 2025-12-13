@@ -43,7 +43,8 @@ export function useAdminLogin(onLogin: OnLogin) {
 					...userData,
 					lastLogin: now
 				},
-				loginTime: now
+				loginTime: now,
+				permissions: userData.permissions || []
 			};
 
 			onLogin('admin', adminSession);
