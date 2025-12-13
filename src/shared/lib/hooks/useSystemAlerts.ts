@@ -12,6 +12,7 @@ export interface SystemAlert {
   message: string;
   actionScreen?: string;
   metadata?: Record<string, any>;
+  timestamp?: string;
 }
 
 interface UseSystemAlertsProps {
