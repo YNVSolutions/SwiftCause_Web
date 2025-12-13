@@ -2,17 +2,18 @@
 
 import React from "react";
 import { Screen, AdminSession, Permission } from "../../shared/types";
+import { Button } from "../../shared/ui/button";
 import {
   SidebarProvider,
   Sidebar,
   SidebarHeader,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarSeparator,
   SidebarInset,
   SidebarTrigger,
   useSidebar,
@@ -23,6 +24,8 @@ import {
   Monitor,
   Database,
   Users,
+  Gift,
+  LogOut,
 } from "lucide-react";
 
 const SCREEN_LABELS: Partial<Record<Screen, string>> = {
@@ -31,6 +34,7 @@ const SCREEN_LABELS: Partial<Record<Screen, string>> = {
   "admin-campaigns": "Campaigns",
   "admin-kiosks": "Kiosks",
   "admin-donations": "Donations",
+  "admin-gift-aid": "Gift Aid Donations",
   "admin-users": "Users",
 };
 
@@ -132,6 +136,19 @@ export function AdminLayout({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )}
+              {hasPermission("view_donations") && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    onClick={() => onNavigate("admin-gift-aid")}
+                    tooltip="Gift Aid Donations"
+                    isActive={isActive("admin-gift-aid")}
+                    className={isActive("admin-gift-aid") ? "border-l-4 border-indigo-600 bg-sidebar-accent" : ""}
+                  >
+                    <Gift />
+                    <span>Gift Aid Donations</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
               {hasPermission("view_users") && (
                 <SidebarMenuItem>
                   <SidebarMenuButton
@@ -147,8 +164,17 @@ export function AdminLayout({
               )}
             </SidebarMenu>
           </SidebarGroup>
-          <SidebarSeparator />
         </SidebarContent>
+        <SidebarFooter className="p-3 flex justify-center">
+          <Button
+            onClick={onLogout}
+            className="w-fit px-4 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2 shadow-sm"
+            size="sm"
+          >
+            <LogOut className="h-4 w-4" />
+            <span>Logout</span>
+          </Button>
+        </SidebarFooter>
       </Sidebar>
 
       <SidebarInset className="overflow-x-hidden">

@@ -16,3 +16,23 @@ export interface Donation {
   isGiftAid?: boolean;
   organizationId?: string;
 }
+
+export interface GiftAidDeclaration {
+  id?: string;
+  donationId: string;
+  donorName: string;
+  donorEmail: string;
+  donorAddress: string;
+  donorPostcode: string;
+  amount: number;
+  giftAidAmount: number;
+  campaignId: string;
+  campaignTitle: string;
+  donationDate: string;
+  giftAidStatus: "pending" | "claimed" | "rejected";
+  transactionId: string;
+  taxYear: string;
+  organizationId: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
