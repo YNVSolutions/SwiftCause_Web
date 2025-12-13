@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../shared/ui/card';
 import { Badge } from '../../shared/ui/badge';
 import { Switch } from '../../shared/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
-import { Checkbox } from '../../shared/ui/checkbox';
 import { Progress } from '../../shared/ui/progress';
 import { ImageWithFallback } from '../../shared/ui/figma/ImageWithFallback';
 import { NavigationHeader } from '../../shared/ui/NavigationHeader';
@@ -24,7 +23,7 @@ import {
   MapPin,
   Target
 } from 'lucide-react';
-import { Campaign, Donation, Organization } from '../../shared/types';
+import { Campaign, Donation } from '../../shared/types';
 import { formatCurrency } from '../../shared/lib/currencyFormatter';
 import { getOrganizationById } from '../../shared/api';
 
