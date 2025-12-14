@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Screen, AdminSession, Permission } from "../../shared/types";
 import { GiftAidDeclaration } from "../../shared/types/donation";
 import { AdminLayout } from "./AdminLayout";
@@ -129,17 +129,16 @@ export function GiftAidManagement({
               id: doc.id,
               donationId: data.donationId || doc.id,
               donorName: data.name || `${data.firstName || ""} ${data.lastName || ""}`.trim(),
-              donorEmail: data.email || "N/A", // Not in schema, will show N/A
               donorAddress: data.address || `${data.houseNumber || ""} ${data.streetAddress || ""}, ${data.townCity || ""}, ${data.county || ""}`.trim(),
               donorPostcode: data.postcode || "",
               amount: donationAmount,
               giftAidAmount: giftAidAmount,
               campaignId: data.campaignId || "",
               campaignTitle: data.campaignTitle || "Unknown Campaign",
-              donationDate: data.donationDate || data.date || data.createdAt || new Date().toISOString(),
+              donationDate: data.donationDate || data.date || data.createdAt || "Unknown Date",
               giftAidStatus: giftAidStatus,
               transactionId: data.transactionId || "",
-              taxYear: data.taxYear || "2024-25",
+              taxYear: data.taxYear || "Unknown Year",
               organizationId: data.organizationId || "",
               createdAt: data.createdAt || data.timestamp,
               updatedAt: data.updatedAt || data.timestamp,
@@ -147,8 +146,8 @@ export function GiftAidManagement({
           })
           .sort((a, b) => {
             // Sort by donation date, newest first
-            const dateA = new Date(a.donationDate).getTime();
-            const dateB = new Date(b.donationDate).getTime();
+            const dateA = a.donationDate === "Unknown Date" ? 0 : new Date(a.donationDate).getTime();
+            const dateB = b.donationDate === "Unknown Date" ? 0 : new Date(b.donationDate).getTime();
             return dateB - dateA;
           });
 
@@ -181,7 +180,6 @@ export function GiftAidManagement({
   const filteredDonations = giftAidDonations.filter((donation) => {
     const matchesSearch = 
       (donation.donorName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (donation.donorEmail || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (donation.campaignTitle || "").toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === "all" || donation.giftAidStatus === statusFilter;
@@ -225,7 +223,6 @@ export function GiftAidManagement({
     // Transform data for export with custom field names
     const exportData = filteredDonations.map(donation => ({
       "Donor Name": donation.donorName || "N/A",
-      "Email": donation.donorEmail || "N/A", 
       "Address": donation.donorAddress || "N/A",
       "Postcode": donation.donorPostcode || "N/A",
       "Donation Amount": donation.amount || 0,
@@ -280,14 +277,13 @@ export function GiftAidManagement({
             id: doc.id,
             donationId: data.donationId || doc.id,
             donorName: data.name || `${data.firstName || ""} ${data.lastName || ""}`.trim(),
-            donorEmail: data.email || "N/A", // Not in schema, will show N/A
             donorAddress: data.address || `${data.houseNumber || ""} ${data.streetAddress || ""}, ${data.townCity || ""}, ${data.county || ""}`.trim(),
             donorPostcode: data.postcode || "",
             amount: donationAmount,
             giftAidAmount: giftAidAmount,
             campaignId: data.campaignId || "",
             campaignTitle: data.campaignTitle || "Unknown Campaign",
-            donationDate: data.donationDate || data.date || data.createdAt || new Date().toISOString(),
+            donationDate: data.donationDate || data.date || data.createdAt || "Unknown Date",
             giftAidStatus: giftAidStatus,
             transactionId: data.transactionId || "",
             taxYear: data.taxYear || "2024-25",
@@ -298,8 +294,8 @@ export function GiftAidManagement({
         })
         .sort((a, b) => {
           // Sort by donation date, newest first
-          const dateA = new Date(a.donationDate).getTime();
-          const dateB = new Date(b.donationDate).getTime();
+          const dateA = a.donationDate === "Unknown Date" ? 0 : new Date(a.donationDate).getTime();
+          const dateB = b.donationDate === "Unknown Date" ? 0 : new Date(b.donationDate).getTime();
           return dateB - dateA;
         });
 
@@ -448,7 +444,7 @@ export function GiftAidManagement({
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                   <Input
-                    placeholder="Search by donor name, email, or campaign..."
+                    placeholder="Search by donor name or campaign..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10 border-2 border-gray-300 focus:border-indigo-500"
@@ -557,7 +553,7 @@ export function GiftAidManagement({
                         <TableCell className="py-4">
                           <div className="flex items-center gap-2">
                             <CalendarDays className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                            <p className="text-base text-gray-700">{donation.donationDate ? new Date(donation.donationDate).toLocaleDateString() : "N/A"}</p>
+                            <p className="text-base text-gray-700">{donation.donationDate && donation.donationDate !== "Unknown Date" ? new Date(donation.donationDate).toLocaleDateString() : "Unknown Date"}</p>
                           </div>
                         </TableCell>
                         <TableCell className="py-4">
@@ -617,15 +613,9 @@ export function GiftAidManagement({
             
             {selectedDonation && (
               <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700">Donor Name</Label>
-                    <p className="text-sm text-gray-900 mt-1">{selectedDonation.donorName || "N/A"}</p>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700">Email</Label>
-                    <p className="text-sm text-gray-900 mt-1">{selectedDonation.donorEmail || "N/A"}</p>
-                  </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Donor Name</Label>
+                  <p className="text-sm text-gray-900 mt-1">{selectedDonation.donorName || "N/A"}</p>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
@@ -647,7 +637,7 @@ export function GiftAidManagement({
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-sm font-medium text-gray-700">Donation Date</Label>
-                    <p className="text-sm text-gray-900 mt-1">{selectedDonation.donationDate ? new Date(selectedDonation.donationDate).toLocaleDateString() : "N/A"}</p>
+                    <p className="text-sm text-gray-900 mt-1">{selectedDonation.donationDate && selectedDonation.donationDate !== "Unknown Date" ? new Date(selectedDonation.donationDate).toLocaleDateString() : "Unknown Date"}</p>
                   </div>
                   <div>
                     <Label className="text-sm font-medium text-gray-700">Tax Year</Label>

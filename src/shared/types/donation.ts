@@ -21,7 +21,6 @@ export interface GiftAidDeclaration {
   id?: string;
   donationId: string;
   donorName: string;
-  donorEmail: string;
   donorAddress: string;
   donorPostcode: string;
   amount: number;
