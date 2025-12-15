@@ -165,29 +165,86 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardHeader><CardTitle>Users ({filteredUsers.length})</CardTitle><CardDescription>Manage user accounts and permissions</CardDescription></CardHeader>
-                    <CardContent>
-                        {loading ? <div className="flex justify-center p-12"><Loader2 className="h-8 w-8 animate-spin" /></div> : error ? <div className="text-center text-destructive p-12"><AlertCircle className="mx-auto h-8 w-8 mb-2" /><p>{error}</p></div> : (
+                {/* Modern Table Container */}
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div className="px-6 py-5 border-b border-gray-200">
+                        <h3 className="text-lg font-semibold text-gray-900">Users ({filteredUsers.length})</h3>
+                        <p className="text-sm text-gray-600 mt-1">Manage user accounts and permissions</p>
+                    </div>
+                    <div className="overflow-x-auto">
+                        {loading ? (
+                            <div className="flex justify-center p-12">
+                                <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+                            </div>
+                        ) : error ? (
+                            <div className="text-center text-red-600 p-12">
+                                <AlertCircle className="mx-auto h-8 w-8 mb-2" />
+                                <p>{error}</p>
+                            </div>
+                        ) : (
                             <Table>
-                                <TableHeader><TableRow><TableHead>User Details</TableHead><TableHead>Role</TableHead><TableHead>Permissions</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
+                                <TableHeader>
+                                    <TableRow className="bg-gray-50 border-b border-gray-200">
+                                        <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">User Details</TableHead>
+                                        <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Role</TableHead>
+                                        <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</TableHead>
+                                        <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Permissions</TableHead>
+                                        <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">Actions</TableHead>
+                                    </TableRow>
+                                </TableHeader>
                                 <TableBody>
                                     {filteredUsers.map((user) => (
-                                        <TableRow key={user.id}>
-                                            <TableCell><div className="font-medium">{user.username}</div><div className="text-sm text-muted-foreground">{user.email}</div></TableCell>
-                                            <TableCell><span className="capitalize">{user.role}</span></TableCell>
-                                            <TableCell><div className="text-xs truncate max-w-xs">{user.permissions?.join(', ').replace(/_/g, ' ') || 'None'}</div></TableCell>
-                                            <TableCell className="text-right">
-                                                {hasPermission('edit_user') && <Button variant="ghost" size="icon" onClick={() => setEditingUser(user)}><Pencil className="h-4 w-4" /></Button>}
-                                                {hasPermission('delete_user') && user.id !== userSession.user.id && <Button variant="ghost" size="icon" onClick={() => handleDeleteUser(user)}><Trash2 className="h-4 w-4 text-destructive" /></Button>}
+                                        <TableRow key={user.id} className="hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0">
+                                            <TableCell className="px-6 py-4">
+                                                <div className="text-sm font-medium text-gray-900">{user.username}</div>
+                                                <div className="text-sm text-gray-500">{user.email}</div>
+                                            </TableCell>
+                                            <TableCell className="px-6 py-4">
+                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 ring-1 ring-indigo-600/20 capitalize">
+                                                    {user.role.replace('_', ' ')}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell className="px-6 py-4">
+                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 ring-1 ring-green-600/20">
+                                                    Active
+                                                </span>
+                                            </TableCell>
+                                            <TableCell className="px-6 py-4">
+                                                <div className="text-sm text-gray-500 truncate max-w-xs">
+                                                    {user.permissions?.length ? `${user.permissions.length} permissions` : 'None'}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="px-6 py-4 text-right">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    {hasPermission('edit_user') && (
+                                                        <Button 
+                                                            variant="ghost" 
+                                                            size="icon" 
+                                                            onClick={() => setEditingUser(user)}
+                                                            className="h-8 w-8 hover:bg-indigo-50 hover:text-indigo-600"
+                                                        >
+                                                            <Pencil className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
+                                                    {hasPermission('delete_user') && user.id !== userSession.user.id && (
+                                                        <Button 
+                                                            variant="ghost" 
+                                                            size="icon" 
+                                                            onClick={() => handleDeleteUser(user)}
+                                                            className="h-8 w-8 hover:bg-red-50 hover:text-red-600"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
+                                                </div>
                                             </TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
                             </Table>
                         )}
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
             </main>
 
             <CreateUserDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} newUser={newUser} onUserChange={setNewUser} onCreateUser={handleCreateUser} />

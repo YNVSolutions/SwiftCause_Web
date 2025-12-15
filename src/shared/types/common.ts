@@ -57,6 +57,8 @@ export interface User {
   createdAt?: string;
   lastLogin?: string;
   organizationId?: string;
+  organizationName?: string;
+  photoURL?: string;
 }
 
 export interface Organization {
@@ -66,6 +68,7 @@ export interface Organization {
   type?: string;
   size?: string;
   website?: string;
+  tags?: string[];
   createdAt?: string;
   stripe?: {
     accountId?: string;
@@ -77,6 +80,7 @@ export interface Organization {
 export interface AdminSession {
   user: User;
   loginTime: string;
+  permissions: Permission[];
 }
 
 export interface KioskSession {

@@ -16,18 +16,34 @@ interface DeviceChartProps {
   data: DeviceData[];
 }
 
+// Professional color palette
 const CHART_COLORS = [
-  "#6366F1", // Sophisticated Blue
-  "#8B5CF6", // Vibrant Purple
-  "#EC4899", // Modern Pink
-  "#10B981", // Fresh Green
-  "#F59E0B", // Warm Amber
-  "#06B6D4", // Refreshing Cyan
-  "#F97316", // Earthy Orange
-  "#84CC16", // Lime Green
-  "#14B8A6", // Teal
-  "#64748B"  // Cool Slate Gray
+  "#4F46E5", // Indigo-600 (Primary)
+  "#10B981", // Emerald-500 (Secondary)
+  "#8B5CF6", // Violet-500
+  "#F59E0B", // Amber-500
+  "#06B6D4", // Cyan-500
+  "#EC4899", // Pink-500
+  "#F97316", // Orange-500
+  "#84CC16", // Lime-500
+  "#14B8A6", // Teal-500
+  "#64748B"  // Slate-500
 ];
+
+// Custom Tooltip Component
+const CustomTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white p-3 border border-gray-100 shadow-lg rounded-lg text-sm">
+        <p className="font-semibold text-gray-900 mb-1">{payload[0].name}</p>
+        <p className="text-gray-600">
+          <span className="font-medium text-gray-900">{payload[0].value}</span> kiosks
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
 
 export function DeviceChart({ data }: DeviceChartProps) {
   if (!data || data.length === 0) {
@@ -55,25 +71,18 @@ export function DeviceChart({ data }: DeviceChartProps) {
             data={dataWithColors}
             cx="50%"
             cy="50%"
-            innerRadius={60}
-            outerRadius={100}
-            paddingAngle={5}
+            innerRadius={70}
+            outerRadius={110}
+            paddingAngle={2}
             dataKey="value"
             nameKey="name"
+            strokeWidth={0}
           >
             {dataWithColors.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={entry.color} />
             ))}
           </Pie>
-          <Tooltip
-            formatter={(value: number, name: string) => [`${value} kiosks`, name]}
-            contentStyle={{
-              backgroundColor: 'white',
-              border: '1px solid #e5e7eb',
-              borderRadius: '8px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-            }}
-          />
+          <Tooltip content={<CustomTooltip />} />
         </PieChart>
       </ResponsiveContainer>
       

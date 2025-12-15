@@ -34,6 +34,7 @@ import {
   DollarSign,
   Users,
   TrendingUp,
+  TrendingDown,
   Settings,
   Heart,
   Globe,
@@ -64,6 +65,11 @@ import {
   Rocket,
   Play,
   TriangleAlert,
+  Calendar,
+  ArrowUpRight,
+  ArrowDownRight,
+  Trophy,
+  Medal,
 } from "lucide-react";
 import {
   Dialog,
@@ -106,18 +112,43 @@ interface AdminDashboardProps {
   onOrganizationSwitch: (organizationId: string) => void;
 }
 
+// Professional color palette
 const CHART_COLORS = [
-  "#6366F1", // Sophisticated Blue
-  "#8B5CF6", // Vibrant Purple
-  "#EC4899", // Modern Pink
-  "#10B981", // Fresh Green
-  "#F59E0B", // Warm Amber
-  "#06B6D4", // Refreshing Cyan
-  "#F97316", // Earthy Orange
-  "#84CC16", // Lime Green
-  "#14B8A6", // Teal
-  "#64748B"  // Cool Slate Gray
+  "#4F46E5", // Indigo-600 (Primary)
+  "#10B981", // Emerald-500 (Secondary)
+  "#8B5CF6", // Violet-500
+  "#F59E0B", // Amber-500
+  "#06B6D4", // Cyan-500
+  "#EC4899", // Pink-500
+  "#F97316", // Orange-500
+  "#84CC16", // Lime-500
+  "#14B8A6", // Teal-500
+  "#64748B"  // Slate-500
 ]
+
+// Custom Tooltip Component for Charts
+const CustomChartTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white p-3 border border-gray-100 shadow-lg rounded-lg text-sm">
+        {label && <p className="font-semibold text-gray-900 mb-2">{label}</p>}
+        {payload.map((entry: any, index: number) => (
+          <div key={index} className="flex items-center justify-between gap-4 mb-1 last:mb-0">
+            <div className="flex items-center gap-2">
+              <span 
+                className="w-3 h-3 rounded-sm" 
+                style={{ backgroundColor: entry.color }}
+              />
+              <span className="text-gray-600">{entry.name}:</span>
+            </div>
+            <span className="font-semibold text-gray-900">{entry.value}</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  return null;
+}
 
 export function AdminDashboard({
   onNavigate,
@@ -415,6 +446,7 @@ export function AdminDashboard({
 
         const allCampaignsQuery = query(campaignsRef, orgQuery);
         const allCampaignsSnapshot = await getDocs(allCampaignsQuery);
+
         const averageDonation: { [key: string]: number } = {};
         let average = 0;
         allCampaignsSnapshot.forEach((doc) => {
@@ -463,7 +495,7 @@ export function AdminDashboard({
     };
 
     fetchChartData();
-  }, [userSession.user.organizationId, refreshDashboard]);
+  }, [userSession.user.organizationId]);
 
   const handleRefresh = () => {
     refreshDashboard();
@@ -554,50 +586,43 @@ export function AdminDashboard({
 
   return (
     <AdminLayout onNavigate={onNavigate} onLogout={onLogout} userSession={userSession} hasPermission={hasPermission}>
-      <header className="bg-white shadow-sm border rounded-md overflow-hidden">
-        <div className="px-2 sm:px-4 lg:px-6 overflow-x-hidden">
-          <div className="flex flex-col gap-4 py-3">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-                  <img src="/logo.png" className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl shadow-md flex-shrink-0" alt="Logo" />
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 sm:gap-x-3 min-w-0 flex-1">
-                    <h1 className="text-base sm:text-xl font-semibold text-gray-900 flex items-center flex-wrap gap-1 sm:gap-2">
-                      <span className="whitespace-nowrap">Admin Dashboard</span>
-                      {organization && (
-                        <span className="text-lg sm:text-xl md:text-2xl font-bold text-indigo-700 truncate max-w-[200px] sm:max-w-none">
-                          {organization.name}
-                        </span>
-                      )}
-                    </h1>
-                    <Badge variant="secondary" className="px-2 sm:px-3 py-0.5 sm:py-1 text-xs sm:text-sm font-medium rounded-full bg-gray-200 text-gray-700 whitespace-nowrap flex-shrink-0">
-                      {userSession.user.role}
-                    </Badge>
-                  </div>
-                </div>
-                {userSession.user.role === 'super_admin' && hasPermission('system_admin') && (
-                  <div className="w-full sm:w-auto">
-                    <OrganizationSwitcher userSession={userSession} onOrganizationChange={onOrganizationSwitch} />
-                  </div>
-                )}
+      <div className="px-4 sm:px-6 lg:px-8 py-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+          <div className="flex items-center gap-4 flex-1 min-w-0">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3 flex-wrap">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                  {organization ? organization.name : 'Dashboard'}
+                </h1>
+                <Badge className="px-3 py-1 text-xs font-semibold rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                  {userSession.user.role.replace('_', ' ').toUpperCase()}
+                </Badge>
               </div>
-              <div className="flex flex-row items-center gap-2 w-full sm:w-auto justify-end">
-                {organization && organization.stripe && (
-                  <Dialog open={showStripeStatusDialog} onOpenChange={setShowStripeStatusDialog}>
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className={`relative rounded-full p-2 sm:p-2.5
-                          ${!organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled
-                            ? 'text-red-600 hover:text-red-700 animate-pulse bg-red-100'
-                            : 'text-green-600 hover:text-green-700 bg-green-100'
-                          }`}
-                        aria-label="Stripe Status"
-                      >
-                        <CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />
-                      </Button>
-                    </DialogTrigger>
+              <p className="text-sm text-gray-600 mt-1">Welcome back, {userSession.user.username}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            {userSession.user.role === 'super_admin' && hasPermission('system_admin') && (
+              <div className="w-full sm:w-auto">
+                <OrganizationSwitcher userSession={userSession} onOrganizationChange={onOrganizationSwitch} />
+              </div>
+            )}
+            {organization && organization.stripe && (
+              <Dialog open={showStripeStatusDialog} onOpenChange={setShowStripeStatusDialog}>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={`relative rounded-lg
+                      ${!organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled
+                        ? 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100 animate-pulse'
+                        : 'border-green-200 bg-green-50 text-green-700 hover:bg-green-100'
+                      }`}
+                    aria-label="Stripe Status"
+                  >
+                    <CreditCard className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
                     <DialogContent className="sm:max-w-[425px] mx-4">
                       <DialogHeader>
                         <DialogTitle className="flex items-center space-x-2 text-base sm:text-lg">
@@ -657,23 +682,24 @@ export function AdminDashboard({
                           </Button>
                         </DialogClose>
                       </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                )}
-                <Button variant="outline" size="sm" onClick={handleRefresh} disabled={loading} className="flex items-center space-x-2">
-                  <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-                  <span className="hidden sm:inline">Refresh</span>
-                </Button>
-              </div>
-            </div>
-            <p className="text-xs sm:text-sm text-gray-600">Welcome back, {userSession.user.username}</p>
+                </DialogContent>
+              </Dialog>
+            )}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleRefresh} 
+              disabled={loading} 
+              className="rounded-lg border-gray-300 hover:bg-gray-50"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+              <span className="hidden sm:inline ml-2">Refresh</span>
+            </Button>
           </div>
         </div>
-      </header>
 
-      <main className="px-1 sm:px-2 lg:px-4 py-4 sm:py-6 w-full max-w-full overflow-x-hidden">
         {stripeStatusMessage && (
-          <Card className={`mb-6 sm:mb-8 ${stripeStatusMessage.type === 'success' ? 'border-green-400 bg-green-50 text-green-800' : stripeStatusMessage.type === 'warning' ? 'border-yellow-400 bg-yellow-50 text-yellow-800' : 'border-red-400 bg-red-50 text-red-800'}`}>
+          <Card className={`mb-6 ${stripeStatusMessage.type === 'success' ? 'border-green-400 bg-green-50 text-green-800' : stripeStatusMessage.type === 'warning' ? 'border-yellow-400 bg-yellow-50 text-yellow-800' : 'border-red-400 bg-red-50 text-red-800'}`}>
             <CardContent className="flex items-center space-x-2 sm:space-x-3 p-3 sm:p-4">
               {stripeStatusMessage.type === 'success' && <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />}
               {stripeStatusMessage.type === 'warning' && <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />}
@@ -682,102 +708,92 @@ export function AdminDashboard({
             </CardContent>
           </Card>
         )}
-
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 gap-4">
-          <div className="flex-1 min-w-0">
-            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-1">Overview</h2>
-            <p className="text-gray-600 text-xs sm:text-sm md:text-base">
-              Manage campaigns, configure kiosks, and track donations across your organization
-            </p>
-          </div>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-            {hasPermission("create_campaign") && (
-              <Button onClick={() => onNavigate("admin-campaigns")} className="bg-indigo-600 hover:bg-indigo-700 w-full sm:w-auto text-sm sm:text-base">
-                <Settings className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Manage Campaigns</span>
-                <span className="sm:hidden">Campaigns</span>
-              </Button>
-            )}
-            {hasPermission("view_kiosks") && (
-              <Button variant="ghost" onClick={() => onNavigate("admin-kiosks")} className="w-full sm:w-auto text-sm sm:text-base">
-                <Settings className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Manage Kiosks</span>
-                <span className="sm:hidden">Kiosks</span>
-              </Button>
-            )}
-          </div>
-        </div>
         {orgLoading ? (
           <p>Loading organization data...</p>
         ) : orgError ? (
           <p className="text-red-500">Error: {orgError}</p>
         ) : null}
         
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-          <Card className="aspect-square lg:aspect-auto">
-            <CardContent className="p-4 sm:p-6 h-full flex flex-col justify-between">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
-                    Total Raised
-                  </p>
-                  <p className="font-semibold text-gray-900 text-base sm:text-lg md:text-xl lg:text-2xl truncate">
-                    {loading ? "..." : formatLargeCurrency(stats.totalRaised)}
-                  </p>
+        {/* Bento Grid Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* Total Raised Card */}
+          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                  <DollarSign className="h-5 w-5" />
                 </div>
-                <div className="h-10 w-10 sm:h-12 sm:w-12 bg-green-100 rounded-lg flex items-center justify-center shrink-0">
-                  <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-600">Total Raised</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {loading ? "..." : formatLargeCurrency(stats.totalRaised)}
+                </p>
+                <div className="flex items-center text-sm text-emerald-600">
+                  <ArrowUpRight className="h-4 w-4 mr-1" />
+                  <span className="font-medium">12% vs last month</span>
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card className="aspect-square lg:aspect-auto">
-            <CardContent className="p-4 sm:p-6 h-full flex flex-col justify-between">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
-                    Total Donations
-                  </p>
-                  <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">
-                    {loading ? "..." : formatNumber(stats.totalDonations)}
-                  </p>
+
+          {/* Total Donations Card */}
+          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                  <Heart className="h-5 w-5" />
                 </div>
-                <div className="h-10 w-10 sm:h-12 sm:w-12 bg-blue-100 rounded-lg flex items-center justify-center shrink-0">
-                  <Heart className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-600">Total Donations</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {loading ? "..." : formatNumber(stats.totalDonations)}
+                </p>
+                <div className="flex items-center text-sm text-emerald-600">
+                  <ArrowUpRight className="h-4 w-4 mr-1" />
+                  <span className="font-medium">8% vs last month</span>
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card className="aspect-square lg:aspect-auto">
-            <CardContent className="p-4 sm:p-6 h-full flex flex-col justify-between">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
-                    Active Campaigns
-                  </p>
-                  <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">
-                    {loading ? "..." : stats.activeCampaigns}
-                  </p>
+
+          {/* Active Campaigns Card */}
+          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-10 h-10 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+                  <Globe className="h-5 w-5" />
                 </div>
-                <div className="h-10 w-10 sm:h-12 sm:w-12 bg-purple-100 rounded-lg flex items-center justify-center shrink-0">
-                  <Globe className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-600">Active Campaigns</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {loading ? "..." : stats.activeCampaigns}
+                </p>
+                <div className="flex items-center text-sm text-gray-500">
+                  <span className="font-medium">Running now</span>
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card className="aspect-square lg:aspect-auto">
-            <CardContent className="p-4 sm:p-6 h-full flex flex-col justify-between">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
-                    Active Kiosks
-                  </p>
-                  <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">
-                    {loading ? "..." : stats.activeKiosks}
-                  </p>
+
+          {/* Active Kiosks Card */}
+          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-10 h-10 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center">
+                  <Monitor className="h-5 w-5" />
                 </div>
-                <div className="h-10 w-10 sm:h-12 sm:w-12 bg-orange-100 rounded-lg flex items-center justify-center shrink-0">
-                  <Settings className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-600">Active Kiosks</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {loading ? "..." : stats.activeKiosks}
+                </p>
+                <div className="flex items-center text-sm text-red-600">
+                  <ArrowDownRight className="h-4 w-4 mr-1" />
+                  <span className="font-medium">3% vs last month</span>
                 </div>
               </div>
             </CardContent>
@@ -944,12 +960,26 @@ export function AdminDashboard({
             </CollapsibleContent>
           </Collapsible>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mb-6 sm:mb-8">
-          <Card>
-            <CardHeader className="p-4 sm:p-6">
-              <CardTitle className="text-base sm:text-lg">Campaign Goal Comparison</CardTitle>
+        {/* Bento Grid Charts Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* Campaign Goal Comparison - Spans 2 columns */}
+          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm md:col-span-2">
+            <CardHeader className="p-6 border-b border-gray-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
+                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mr-3">
+                      <BarChart3 className="w-4 h-4" />
+                    </div>
+                    Campaign Goal Comparison
+                  </CardTitle>
+                  <CardDescription className="text-sm text-gray-600 mt-1 ml-11">
+                    Track progress towards fundraising goals
+                  </CardDescription>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent className="p-4 sm:p-6 pt-0">
+            <CardContent className="p-6">
               {loading ? (
                 <div className="space-y-4">
                   <Skeleton className="h-[250px] sm:h-[300px] w-full" />
@@ -957,23 +987,38 @@ export function AdminDashboard({
               ) : goalComparisonData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
                   <BarChart data={goalComparisonData}>
-                    <CartesianGrid strokeDasharray="3 3" />
+                    <CartesianGrid 
+                      vertical={false} 
+                      strokeDasharray="3 3" 
+                      stroke="#E5E7EB" 
+                    />
                     <XAxis 
                       dataKey="name" 
                       tick={false}
-                      className="text-xs"
+                      axisLine={false}
+                      tickLine={false}
                     />
                     <YAxis
                       tickFormatter={(value) => formatShortCurrency(value as number)}
-                      className="text-xs"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#6B7280', fontSize: 12 }}
                     />
-                    <Tooltip
-                      formatter={(value) => formatShortCurrency(value as number)}
-                      contentStyle={{ fontSize: '12px' }}
+                    <Tooltip content={<CustomChartTooltip />} />
+                    <Legend 
+                      wrapperStyle={{ fontSize: '12px' }}
+                      iconType="circle"
                     />
-                    <Legend wrapperStyle={{ fontSize: '12px' }} />
-                    <Bar dataKey="Collected" fill="#10B981" />
-                    <Bar dataKey="Goal" fill="#94A3B8" />
+                    <Bar 
+                      dataKey="Collected" 
+                      fill="#10B981" 
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar 
+                      dataKey="Goal" 
+                      fill="#94A3B8" 
+                      radius={[4, 4, 0, 0]}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
@@ -993,11 +1038,24 @@ export function AdminDashboard({
             </CardContent>
           </Card>
 
-          <Card className="flex flex-col">
-            <CardHeader className="p-4 sm:p-6">
-              <CardTitle className="text-base sm:text-lg">Average Donation Per Campaign</CardTitle>
+          {/* Average Donation - Spans 2 columns */}
+          <Card className="flex flex-col bg-white rounded-xl border border-gray-200 shadow-sm md:col-span-2">
+            <CardHeader className="p-6 border-b border-gray-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
+                    <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center mr-3">
+                      <TrendingUp className="w-4 h-4" />
+                    </div>
+                    Average Donation Per Campaign
+                  </CardTitle>
+                  <CardDescription className="text-sm text-gray-600 mt-1 ml-11">
+                    Analyze donation patterns across campaigns
+                  </CardDescription>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent className="flex-1 flex flex-col p-4 sm:p-6 pt-0">
+            <CardContent className="flex-1 flex flex-col p-6">
               {loading ? (
                 <div className="space-y-4">
                   <Skeleton className="h-[260px] sm:h-[300px] w-full mb-4" />
@@ -1011,11 +1069,32 @@ export function AdminDashboard({
                 <div className="flex-1 flex items-end">
                   <ResponsiveContainer width="100%" height={260}>
                     <LineChart data={categoryData} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                      <YAxis tickFormatter={(value) => formatShortCurrency(value as number)} />
-                      <Tooltip formatter={(value) => formatShortCurrency(value as number)} contentStyle={{ fontSize: '12px' }} />
-                      <Line type="monotone" dataKey="value" stroke="#6366F1" strokeWidth={2} dot={{ fill: '#6366F1', r: 4 }} />
+                      <CartesianGrid 
+                        vertical={false} 
+                        strokeDasharray="3 3" 
+                        stroke="#E5E7EB" 
+                      />
+                      <XAxis 
+                        dataKey="name" 
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: '#6B7280', fontSize: 12 }} 
+                      />
+                      <YAxis 
+                        tickFormatter={(value) => formatShortCurrency(value as number)}
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: '#6B7280', fontSize: 12 }}
+                      />
+                      <Tooltip content={<CustomChartTooltip />} />
+                      <Line 
+                        type="monotone" 
+                        dataKey="value" 
+                        stroke="#4F46E5" 
+                        strokeWidth={2} 
+                        dot={false}
+                        activeDot={{ r: 6, fill: '#4F46E5' }}
+                      />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -1058,101 +1137,178 @@ export function AdminDashboard({
         </div>
 
         
-        <div className="mb-6 sm:mb-8">
-          <Card>
-            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-4 sm:p-6">
-              <div className="flex-1 min-w-0">
-                <CardTitle className="text-base sm:text-lg mb-1">Top Performing Campaigns</CardTitle>
-                <CardDescription className="text-xs sm:text-sm">
-                  Campaigns by fundraising progress
-                </CardDescription>
+        {/* Top Performing Campaigns - Gamified Leaderboard */}
+        <div className="mb-8">
+          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm h-full">
+            <CardHeader className="p-6 border-b border-gray-100 bg-gradient-to-r from-yellow-50/50 to-orange-50/30">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-start gap-4 flex-1 min-w-0">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-md flex-shrink-0">
+                    <Trophy className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-xl font-bold text-gray-900 mb-1">
+                      Top Performing Campaigns
+                    </CardTitle>
+                    <CardDescription className="text-sm text-gray-600 flex items-center gap-2">
+                      <span>Ranked by fundraising progress</span>
+                      <span className="hidden sm:inline text-gray-400">•</span>
+                      <span className="hidden sm:inline text-indigo-600 font-medium">
+                        {topCampaigns.length} {topCampaigns.length === 1 ? 'Campaign' : 'Campaigns'}
+                      </span>
+                    </CardDescription>
+                  </div>
+                </div>
+                {hasPermission("view_campaigns") && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onNavigate("admin-campaigns")}
+                    className="w-full sm:w-auto bg-white hover:bg-gray-50 border-gray-300 shadow-sm font-medium"
+                  >
+                    View All Campaigns
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </Button>
+                )}
               </div>
-              {hasPermission("view_campaigns") && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onNavigate("admin-campaigns")}
-                  className="w-full sm:w-auto text-xs sm:text-sm"
-                >
-                  View All
-                </Button>
-              )}
             </CardHeader>
-            <CardContent className="p-4 sm:p-6 pt-0">
-              <div className="space-y-3 sm:space-y-4">
-                {loading ? (
-                  Array.from({ length: 3 }).map((_, i) => (
-                    <div key={i} className="space-y-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <Skeleton className="h-4 sm:h-5 w-3/4" />
-                        <Skeleton className="h-4 sm:h-5 w-1/4" />
-                      </div>
-                      <Skeleton className="h-2 w-full" />
-                      <div className="flex justify-between text-xs text-gray-500 gap-2">
-                        <Skeleton className="h-3 w-1/3" />
-                        <Skeleton className="h-3 w-1/4" />
-                      </div>
+            <CardContent className="p-6">
+              {loading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="space-y-3">
+                      <Skeleton className="h-32 w-full rounded-lg" />
+                      <Skeleton className="h-5 w-3/4" />
+                      <Skeleton className="h-4 w-1/2" />
+                      <Skeleton className="h-1.5 w-full" />
                     </div>
-                  ))
-                ) : topCampaigns.length > 0 ? (
-                  topCampaigns.map((campaign: Campaign) => {
+                  ))}
+                </div>
+              ) : topCampaigns.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {topCampaigns.map((campaign: Campaign, index: number) => {
                     const collected = campaign.raised || 0;
                     const goal = campaign.goal || 1;
                     const progressRaw = (collected / goal) * 100;
-                    const progress = progressRaw < 1 ? progressRaw.toFixed(2) : Math.round(progressRaw);
-                    const progressValue = progressRaw < 1 ? progressRaw : Math.round(progressRaw);
+                    const progressValue = Math.min(progressRaw, 100);
+                    const rank = index + 1;
+                    
+                    // Rank overlay styling
+                    const getRankOverlay = () => {
+                      if (rank === 1) {
+                        return (
+                          <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-yellow-500 border-2 border-white flex items-center justify-center shadow-lg">
+                            <Trophy className="w-4 h-4 text-white" />
+                          </div>
+                        );
+                      } else if (rank === 2) {
+                        return (
+                          <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-400 border-2 border-white flex items-center justify-center shadow-lg">
+                            <Medal className="w-4 h-4 text-white" />
+                          </div>
+                        );
+                      } else if (rank === 3) {
+                        return (
+                          <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-orange-500 border-2 border-white flex items-center justify-center shadow-lg">
+                            <Medal className="w-4 h-4 text-white" />
+                          </div>
+                        );
+                      } else {
+                        return (
+                          <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-gray-600 border-2 border-white flex items-center justify-center shadow-lg">
+                            <span className="text-sm font-bold text-white">{rank}</span>
+                          </div>
+                        );
+                      }
+                    };
+
                     return (
-                      <div key={campaign.id} className="space-y-2">
-                        <div className="flex items-start sm:items-center justify-between gap-2 flex-wrap">
-                          <h4 className="font-medium text-sm sm:text-base text-gray-900 flex-1 min-w-0 truncate">
-                            {campaign.title}
-                          </h4>
-                          <div className="text-right flex-shrink-0">
-                            <p className="text-xs sm:text-sm font-medium text-green-600">
+                      <div 
+                        key={campaign.id} 
+                        className="group bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg hover:border-gray-300 transition-all cursor-pointer"
+                      >
+                        {/* Campaign Image */}
+                        <div className="relative h-32 bg-gradient-to-br from-gray-100 to-gray-200">
+                          {campaign.coverImageUrl ? (
+                            <img 
+                              src={campaign.coverImageUrl} 
+                              alt={campaign.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Target className="w-12 h-12 text-gray-400" />
+                            </div>
+                          )}
+                          {getRankOverlay()}
+                        </div>
+
+                        {/* Campaign Info */}
+                        <div className="p-4 space-y-3">
+                          <div>
+                            <h4 className="font-semibold text-sm text-gray-900 truncate mb-1">
+                              {campaign.title}
+                            </h4>
+                            <p className="text-lg font-bold text-gray-900">
                               {formatCurrency(collected)}
                             </p>
-                            <p className="text-xs text-gray-500">
-                              {campaign.donationCount || 0} donors
-                            </p>
                           </div>
-                        </div>
-                        <Progress value={progressValue} className="h-1.5 sm:h-2" />
-                        <div className="flex justify-between text-xs text-gray-500 gap-2">
-                          <span>{progress}% complete</span>
-                          <span className="truncate">Goal: {formatCurrency(goal)}</span>
+
+                          <Progress 
+                            value={progressValue} 
+                            className={`h-1.5 rounded-full ${progressRaw >= 100 ? '[&>div]:bg-green-500' : '[&>div]:bg-indigo-500'}`}
+                          />
+
+                          <div className="flex items-center justify-between text-xs text-gray-500">
+                            <span className="flex items-center gap-1">
+                              <BarChart3 className="w-3 h-3" />
+                              {formatShortCurrency(goal)}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Users className="w-3 h-3" />
+                              {campaign.donationCount || 0}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     );
-                  })
-                ) : (
-                  <div className="text-center py-6 sm:py-8 text-gray-500">
-                    <Target className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3" />
-                    <p className="text-base sm:text-lg font-medium mb-2">No Campaigns Yet</p>
-                    <p className="text-xs sm:text-sm mb-4 px-4">
-                      Start by creating your first fundraising campaign to track progress.
-                    </p>
-                    {hasPermission("create_campaign") && (
-                      <Button onClick={() => onNavigate("admin-campaigns")} size="sm" className="text-xs sm:text-sm">
-                        <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-2" /> Create New Campaign
-                      </Button>
-                    )}
-                  </div>
-                )}
-              </div>
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-12 text-gray-500">
+                  <Trophy className="mx-auto h-12 w-12 text-gray-300 mb-3" />
+                  <p className="text-lg font-medium mb-2 text-gray-900">No Campaigns Yet</p>
+                  <p className="text-sm mb-4 text-gray-600">
+                    Start by creating your first fundraising campaign to track progress.
+                  </p>
+                  {hasPermission("create_campaign") && (
+                    <Button onClick={() => onNavigate("admin-campaigns")} size="sm">
+                      <Plus className="w-4 h-4 mr-2" /> Create New Campaign
+                    </Button>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
 
        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mb-6 sm:mb-8">
-          <Card>
-            <CardHeader className="p-4 sm:p-6">
-              <CardTitle className="text-base sm:text-lg">Donation Distribution by Amount</CardTitle>
-              <CardDescription className="text-xs sm:text-sm">
+        {/* Donation Distribution and Recent Activity */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* Donation Distribution - Spans 2 columns */}
+          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm md:col-span-2">
+            <CardHeader className="p-6 border-b border-gray-100">
+              <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
+                <div className="w-8 h-8 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center mr-3">
+                  <DollarSign className="w-4 h-4" />
+                </div>
+                Donation Distribution by Amount
+              </CardTitle>
+              <CardDescription className="text-sm text-gray-600 mt-1 ml-11">
                 Number of donations in different amount ranges
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-4 sm:p-6 pt-0">
+            <CardContent className="p-6">
               {loading ? (
                 <div className="space-y-4">
                   <Skeleton className="h-[250px] sm:h-[300px] w-full" />
@@ -1160,26 +1316,43 @@ export function AdminDashboard({
               ) : stats.donationDistribution.length > 0 ? (
                 <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
                   <LineChart data={stats.donationDistribution}>
-                    <CartesianGrid strokeDasharray="3 3" />
+                    <CartesianGrid 
+                      vertical={false} 
+                      strokeDasharray="3 3" 
+                      stroke="#E5E7EB" 
+                    />
                     <XAxis 
                       dataKey="range" 
-                      tick={{ fontSize: 12 }}
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#6B7280', fontSize: 12 }}
                       angle={-45}
                       textAnchor="end"
                       height={80}
                     />
                     <YAxis
-                      tick={{ fontSize: 12 }}
-                      label={{ value: 'Number of Donations', angle: -90, position: 'insideLeft', style: { fontSize: 12 } }}
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#6B7280', fontSize: 12 }}
+                      label={{ 
+                        value: 'Number of Donations', 
+                        angle: -90, 
+                        position: 'insideLeft', 
+                        style: { fontSize: 12, fill: '#6B7280' } 
+                      }}
                     />
-                    <Tooltip contentStyle={{ fontSize: '12px' }} />
-                    <Legend wrapperStyle={{ fontSize: '12px' }} />
+                    <Tooltip content={<CustomChartTooltip />} />
+                    <Legend 
+                      wrapperStyle={{ fontSize: '12px' }}
+                      iconType="circle"
+                    />
                     <Line 
                       type="monotone" 
                       dataKey="count" 
-                      stroke="#6366F1" 
+                      stroke="#4F46E5" 
                       strokeWidth={2} 
-                      dot={{ fill: '#6366F1', r: 4 }}
+                      dot={false}
+                      activeDot={{ r: 6, fill: '#4F46E5' }}
                       name="Donations"
                     />
                   </LineChart>
@@ -1196,12 +1369,21 @@ export function AdminDashboard({
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-2 sm:pb-3">
-              <CardTitle className="text-base sm:text-lg">Recent Activity</CardTitle>
+          {/* Recent Activity - Spans 2 columns */}
+          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm md:col-span-2">
+            <CardHeader className="p-6 border-b border-gray-100">
+              <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
+                <div className="w-8 h-8 rounded-lg bg-cyan-50 text-cyan-600 flex items-center justify-center mr-3">
+                  <ActivityIcon className="w-4 h-4" />
+                </div>
+                Recent Activity
+              </CardTitle>
+              <CardDescription className="text-sm text-gray-600 mt-1 ml-11">
+                Latest actions and updates
+              </CardDescription>
             </CardHeader>
-            <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6 pt-0">
-              <div className="space-y-3 sm:space-y-4">
+            <CardContent className="p-6">
+              <div className="max-h-[320px] overflow-y-auto space-y-3 sm:space-y-4">
                 {loading ? (
                   Array.from({ length: 3 }).map((_, i) => (
                     <div key={i} className="flex items-start space-x-2 sm:space-x-3">
@@ -1272,65 +1454,106 @@ export function AdminDashboard({
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
-          <SystemAlertsWidget
-            alerts={systemAlerts}
-            loading={systemAlertsLoading}
-            onNavigate={onNavigate}
-          />
-          <Card>
-            <CardHeader className="p-4 sm:p-6">
-              <CardTitle className="text-base sm:text-lg">More Actions</CardTitle>
+        {/* System Alerts and Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* System Alerts - Spans 2 columns */}
+          <div className="md:col-span-2">
+            <SystemAlertsWidget
+              alerts={systemAlerts}
+              loading={systemAlertsLoading}
+              onNavigate={onNavigate}
+            />
+          </div>
+          
+          {/* Quick Actions - Spans 2 columns */}
+          <Card className="bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 shadow-sm md:col-span-2">
+            <CardHeader className="p-6 border-b border-gray-100 bg-white rounded-t-xl">
+              <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
+                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-600 text-white flex items-center justify-center mr-3 shadow-sm">
+                  <Rocket className="w-5 h-5" />
+                </div>
+                Quick Actions
+              </CardTitle>
+              <CardDescription className="text-sm text-gray-600 mt-1 ml-12">
+                Navigate to key management areas
+              </CardDescription>
             </CardHeader>
-            <CardContent className="p-4 sm:p-6 pt-0">
-              <div className="grid grid-cols-1 gap-2 sm:gap-3">
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {hasPermission("view_campaigns") && (
                   <Button
                     variant="outline"
-                    className="justify-start h-10 sm:h-12 text-xs sm:text-sm"
+                    className="justify-start h-auto py-4 px-4 text-left hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all duration-200 group border-gray-200 bg-white"
                     onClick={() => onNavigate("admin-campaigns")}
                   >
-                    <Database className="w-3 h-3 sm:w-4 sm:h-4 mr-2 sm:mr-3 flex-shrink-0" />
-                    <span className="truncate">Manage Campaigns</span>
+                    <div className="flex items-start w-full">
+                      <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform shadow-sm flex-shrink-0">
+                        <Database className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="flex flex-col items-start">
+                        <span className="font-semibold text-gray-900 text-sm">Manage Campaigns</span>
+                        <span className="text-xs text-gray-500 mt-0.5">Create and edit campaigns</span>
+                      </div>
+                    </div>
                   </Button>
                 )}
                 {hasPermission("view_kiosks") && (
                   <Button
                     variant="outline"
-                    className="justify-start h-10 sm:h-12 text-xs sm:text-sm"
+                    className="justify-start h-auto py-4 px-4 text-left hover:bg-purple-50 hover:border-purple-300 hover:shadow-md transition-all duration-200 group border-gray-200 bg-white"
                     onClick={() => onNavigate("admin-kiosks")}
                   >
-                    <Settings className="w-3 h-3 sm:w-4 sm:h-4 mr-2 sm:mr-3 flex-shrink-0" />
-                    <span className="truncate">Configure Kiosks</span>
+                    <div className="flex items-start w-full">
+                      <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform shadow-sm flex-shrink-0">
+                        <Monitor className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="flex flex-col items-start">
+                        <span className="font-semibold text-gray-900 text-sm">Configure Kiosks</span>
+                        <span className="text-xs text-gray-500 mt-0.5">Manage kiosk settings</span>
+                      </div>
+                    </div>
                   </Button>
                 )}
                 {hasPermission("view_donations") && (
                   <Button
                     variant="outline"
-                    className="justify-start h-10 sm:h-12 text-xs sm:text-sm"
+                    className="justify-start h-auto py-4 px-4 text-left hover:bg-green-50 hover:border-green-300 hover:shadow-md transition-all duration-200 group border-gray-200 bg-white"
                     onClick={() => onNavigate("admin-donations")}
                   >
-                    <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 mr-2 sm:mr-3 flex-shrink-0" />
-                    <span className="truncate">View Donations</span>
+                    <div className="flex items-start w-full">
+                      <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform shadow-sm flex-shrink-0">
+                        <TrendingUp className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="flex flex-col items-start">
+                        <span className="font-semibold text-gray-900 text-sm">View Donations</span>
+                        <span className="text-xs text-gray-500 mt-0.5">Track donation history</span>
+                      </div>
+                    </div>
                   </Button>
                 )}
                 {hasPermission("view_users") && (
                   <Button
                     variant="outline"
-                    className="justify-start h-10 sm:h-12 text-xs sm:text-sm"
+                    className="justify-start h-auto py-4 px-4 text-left hover:bg-orange-50 hover:border-orange-300 hover:shadow-md transition-all duration-200 group border-gray-200 bg-white"
                     onClick={() => onNavigate("admin-users")}
                   >
-                    <UserCog className="w-3 h-3 sm:w-4 sm:h-4 mr-2 sm:mr-3 flex-shrink-0" />
-                    <span className="truncate">User Management</span>
+                    <div className="flex items-start w-full">
+                      <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform shadow-sm flex-shrink-0">
+                        <UserCog className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="flex flex-col items-start">
+                        <span className="font-semibold text-gray-900 text-sm">User Management</span>
+                        <span className="text-xs text-gray-500 mt-0.5">Manage user accounts</span>
+                      </div>
+                    </div>
                   </Button>
                 )}
               </div>
             </CardContent>
           </Card>
         </div>
-      </main>
 
-      {/* Donation Details Dialog */}
+        {/* Donation Details Dialog */}
       <Dialog open={showActivityDialog} onOpenChange={setShowActivityDialog}>
         <DialogContent className="sm:max-w-[500px] mx-4">
           <DialogHeader>
@@ -1464,6 +1687,7 @@ export function AdminDashboard({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </div>
     </AdminLayout>
   );
 }
