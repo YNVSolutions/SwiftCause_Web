@@ -175,7 +175,7 @@ const CampaignDialog = ({
     clearImageSelection,
     setImagePreviewUrl,
     uploadFile, // Destructure the new uploadFile function
-  } = useCampaignManagement();
+  } = useCampaignManagement(); 
 
   // Organization tags hook
   const { tags: organizationTags, addMultipleTags: addMultipleOrganizationTags } = useOrganizationTags(organizationId);
