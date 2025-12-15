@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Screen, AdminSession, Permission } from "../../shared/types";
-import { DEFAULT_CAMPAIGN_CONFIG, DEFAULT_CAMPAIGN_VALUES } from "../../shared/config";
+import { DEFAULT_CAMPAIGN_CONFIG, DEFAULT_CAMPAIGN_VALUES, DEFAULT_CAMPAIGN_IMAGE } from "../../shared/config";
 import { DocumentData, Timestamp } from "firebase/firestore";
 import { useCampaignManagement } from "../../shared/lib/hooks/useCampaignManagement";
 import { useOrganizationTags } from "../../shared/lib/hooks/useOrganizationTags";
@@ -50,6 +50,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "../../shared/ui/popover
 import { AlertTriangle } from "lucide-react"; // Import AlertTriangle
 import { Skeleton } from "../../shared/ui/skeleton";
 import { Ghost } from "lucide-react";
+import { ImageWithFallback } from "../../shared/ui/figma/ImageWithFallback";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -399,6 +400,15 @@ const CampaignDialog = ({
     }
   };
 
+  const handleRemoveCoverImage = () => {
+    clearImageSelection();
+    setImagePreviewUrl(null);
+    setFormData((prev) => ({ ...prev, coverImageUrl: "" }));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   const handleOrganizationLogoUpload = async () => {
     if (selectedOrganizationLogo) {
       setIsUploadingOrganizationLogo(true); // Set loading state
@@ -716,6 +726,14 @@ const CampaignDialog = ({
                             : "Selected image"}
                         </p>
                       </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="text-red-600 hover:text-red-700"
+                        onClick={handleRemoveCoverImage}
+                      >
+                        Remove
+                      </Button>
                     </div>
                   )}
                   <div className="space-y-3">
@@ -1765,13 +1783,12 @@ const CampaignManagement = ({
                           <TableRow key={campaign.id ?? campaign.title}>
                             <TableCell>
                               <div className="flex items-start gap-3">
-                                {campaign.coverImageUrl && (
-                                  <img
-                                    src={campaign.coverImageUrl}
-                                    alt={campaign.title}
-                                    className="w-16 h-16 object-cover rounded-lg border border-gray-200 flex-shrink-0"
-                                  />
-                                )}
+                                <ImageWithFallback
+                                  src={campaign.coverImageUrl}
+                                  alt={campaign.title}
+                                  className="w-16 h-16 object-cover rounded-lg border border-gray-200 flex-shrink-0"
+                                  fallbackSrc={DEFAULT_CAMPAIGN_IMAGE}
+                                />
                                 <div className="space-y-1 flex-1">
                                   <div className="flex items-center justify-between gap-2">
                                     <div>

@@ -22,6 +22,8 @@ export const ROUTES = {
   TERMS: '/terms',
 } as const;
 
+export const DEFAULT_CAMPAIGN_IMAGE = '/campaign-placeholder.jpg';
+
 export const USER_ROLES = {
   SUPER_ADMIN: 'super_admin',
   ADMIN: 'admin',

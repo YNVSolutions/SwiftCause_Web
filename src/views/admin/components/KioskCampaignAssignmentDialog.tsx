@@ -50,6 +50,8 @@ import {
   Eye,
 } from "lucide-react";
 import { Kiosk, Campaign } from "../../../shared/types";
+import { ImageWithFallback } from "../../../shared/ui/figma/ImageWithFallback";
+import { DEFAULT_CAMPAIGN_IMAGE } from "../../../shared/config";
 
 type DeviceInfoForm = (Kiosk["deviceInfo"]) & {
   modelCustom?: string;
@@ -501,10 +503,11 @@ export function KioskCampaignAssignmentDialog({
                         className="flex items-center gap-4 p-6 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 transition-colors"
                       >
                         <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 shadow-sm">
-                          <img
+                          <ImageWithFallback
                             src={campaign.coverImageUrl}
                             alt={campaign.title}
                             className="w-full h-full object-cover"
+                            fallbackSrc={DEFAULT_CAMPAIGN_IMAGE}
                           />
                         </div>
                         
@@ -577,10 +580,11 @@ export function KioskCampaignAssignmentDialog({
                           className="flex items-center gap-4 p-6 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
                         >
                           <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 shadow-sm">
-                            <img
+                            <ImageWithFallback
                               src={campaign.coverImageUrl}
                               alt={campaign.title}
                               className="w-full h-full object-cover"
+                              fallbackSrc={DEFAULT_CAMPAIGN_IMAGE}
                             />
                           </div>
                           
@@ -634,10 +638,11 @@ export function KioskCampaignAssignmentDialog({
                         className="flex items-center gap-4 p-6 bg-green-50 border border-green-200 rounded-xl"
                       >
                         <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 shadow-sm">
-                          <img
+                          <ImageWithFallback
                             src={campaign.coverImageUrl}
                             alt={campaign.title}
                             className="w-full h-full object-cover"
+                            fallbackSrc={DEFAULT_CAMPAIGN_IMAGE}
                           />
                         </div>
                         
