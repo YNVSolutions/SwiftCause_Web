@@ -26,7 +26,11 @@ const deleteFile = async (fileUrl: string) => {
     const fileRef = ref(storage, fileUrl);
     await deleteObject(fileRef);
     console.log(`File deleted successfully: ${fileUrl}`);
-  } catch (error) {
+  } catch (error: any) {
+    // Swallow missing-file errors so UI can clean up without noisy logs
+    if (error?.code === "storage/object-not-found") {
+      return;
+    }
     console.error(`Error deleting file ${fileUrl}:`, error);
     throw error; // Re-throw the error for handling in the calling component
   }

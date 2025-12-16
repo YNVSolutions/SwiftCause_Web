@@ -6,8 +6,6 @@ import { useCampaignManagement } from "../../shared/lib/hooks/useCampaignManagem
 import { useOrganizationTags } from "../../shared/lib/hooks/useOrganizationTags";
 import { deleteFile } from "../../shared/lib/firebase"; // Import deleteFile
 import * as firebaseService from "../../shared/api"; // Import firebaseService
-import UploadButton from "../../shared/ui/UploadButton"; // Import the new UploadButton component
-
 import { Button } from "../../shared/ui/button";
 import { Input } from "../../shared/ui/input";
 import { Label } from "../../shared/ui/label";
@@ -39,9 +37,8 @@ import {
   FaEdit,
   FaSearch,
   FaEllipsisV,
-  FaUpload,
   FaImage,
-  FaTrashAlt, // Added FaTrashAlt
+  FaTrashAlt,
   FaPlus, // Import FaPlus
 } from "react-icons/fa";
 import { Plus, ArrowLeft, Settings, Download } from "lucide-react";
@@ -201,9 +198,6 @@ const CampaignDialog = ({
     []
   );
 
-  // New states for specific image upload loading
-  const [isUploadingOrganizationLogo, setIsUploadingOrganizationLogo] = useState(false);
-  const [isUploadingGalleryImages, setIsUploadingGalleryImages] = useState(false);
   // Loading state for the dialog submit (create/save)
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -385,21 +379,6 @@ const CampaignDialog = ({
     }
   };
 
-  const handleCoverImageUpload = async () => {
-    if (selectedImage) {
-      try {
-        const uploadedData = await handleImageUpload(campaign?.id, formData);
-        if (uploadedData && uploadedData.coverImageUrl) {
-          setFormData((prev) => ({ ...prev, coverImageUrl: uploadedData.coverImageUrl }));
-          setImagePreviewUrl(uploadedData.coverImageUrl); // Update preview with uploaded URL
-        }
-      } catch (error) {
-        console.error("Error uploading cover image:", error);
-        alert("Failed to upload cover image. Please try again.");
-      }
-    }
-  };
-
   const handleRemoveCoverImage = () => {
     clearImageSelection();
     setImagePreviewUrl(null);
@@ -409,123 +388,45 @@ const CampaignDialog = ({
     }
   };
 
-  const handleOrganizationLogoUpload = async () => {
-    if (selectedOrganizationLogo) {
-      setIsUploadingOrganizationLogo(true); // Set loading state
-      try {
-        const url = await uploadFile(
-          selectedOrganizationLogo,
-          `campaigns/${campaign?.id || "new"}/organizationLogo/${selectedOrganizationLogo.name
-          }`
-        );
-        if (url) {
-          setFormData((prev) => ({ ...prev, organizationInfoLogo: url }));
-          setOrganizationLogoPreview(url); // Update preview with uploaded URL
-        }
-      } catch (error) {
-        console.error("Error uploading organization logo:", error);
-        alert("Failed to upload organization logo. Please try again.");
-      } finally {
-        setIsUploadingOrganizationLogo(false); // Reset loading state
-      }
-    }
-  };
-
-  const handleGalleryImagesUpload = async () => {
-    if (selectedGalleryImages.length > 0) {
-      setIsUploadingGalleryImages(true); // Set loading state
-      try {
-        const imageUrls: string[] = [];
-        // Combine existing gallery images with newly selected ones for upload
-        const allImagesToUpload = [
-          ...(formData.galleryImages
-            ? String(formData.galleryImages).split(",").filter(Boolean)
-            : []), // Existing URLs
-          ...selectedGalleryImages, // New files
-        ];
-
-        // Filter out any files that are already URLs (meaning they are existing images)
-        const filesToUpload = allImagesToUpload.filter(
-          (item) => typeof item !== "string"
-        ) as File[];
-
-        // Keep track of existing URLs that are not being deleted
-        const existingUrls = allImagesToUpload.filter(
-          (item) => typeof item === "string"
-        ) as string[];
-
-        for (const file of filesToUpload) {
-          try {
-            const url = await uploadFile(
-              file,
-              `campaigns/${campaign?.id || "new"}/galleryImages/${file.name}`
-            );
-            if (url) {
-              imageUrls.push(url);
-            }
-          } catch (error) {
-            console.error(`Error uploading gallery image ${file.name}:`, error);
-            alert(
-              `Failed to upload gallery image ${file.name}. Please try again.`
-            );
-            return;
-          }
-        }
-        if (imageUrls.length > 0 || existingUrls.length > 0) {
-          const finalGalleryImages = [...existingUrls, ...imageUrls];
-          setFormData((prev) => ({
-            ...prev,
-            galleryImages: finalGalleryImages.join(","),
-          }));
-          setGalleryImagePreviews(finalGalleryImages); // Update preview with uploaded URLs
-          setSelectedGalleryImages([]); // Clear selected files after upload
-        }
-      } catch (error) {
-        console.error("Error uploading gallery images:", error);
-        alert("Failed to upload gallery images. Please try again.");
-      } finally {
-        setIsUploadingGalleryImages(false); // Reset loading state
-      }
-    }
-  };
-
   const handleDeleteGalleryImage = async (imageToDelete: string, index: number) => {
-    if (!campaign?.id) {
-      // If it's a new campaign and the image hasn't been uploaded yet, just remove from state
+    const existingCount = galleryImagePreviews.length - selectedGalleryImages.length;
+    const removeFromState = () => {
+      // Remove from previews (combined existing + new)
       setGalleryImagePreviews((prev) => prev.filter((_, i) => i !== index));
-      setSelectedGalleryImages((prev) => prev.filter((_, i) => i !== index));
-      setFormData((prev) => ({
-        ...prev,
-        galleryImages: (prev.galleryImages as string)
-          .split(",")
-          .filter((img) => img !== imageToDelete)
-          .join(","),
-      }));
+
+      // Remove from persisted URLs
+      setFormData((prev) => {
+        const updated = prev.galleryImages
+          ? String(prev.galleryImages).split(",").filter(Boolean).filter((url) => url !== imageToDelete)
+          : [];
+        return { ...prev, galleryImages: updated.join(",") };
+      });
+
+      // If this was a newly selected file, remove the corresponding entry
+      const newIndex = index - existingCount;
+      if (newIndex >= 0) {
+        setSelectedGalleryImages((prev) =>
+          prev.filter((_, i) => i !== newIndex)
+        );
+      }
+    };
+
+    // For new campaigns or local previews (data/blob), just remove locally
+    if (!campaign?.id || imageToDelete.startsWith("data:") || imageToDelete.startsWith("blob:")) {
+      removeFromState();
       return;
     }
 
     try {
-      // Attempt to delete from storage
-      await deleteFile(imageToDelete); // Call the deleteFile function
-
-      // Remove from form data and previews
-      const updatedGalleryImages = (formData.galleryImages as string)
-        .split(",")
-        .filter((img) => img !== imageToDelete);
-      setFormData((prev) => ({
-        ...prev,
-        galleryImages: updatedGalleryImages.join(","),
-      }));
-      setGalleryImagePreviews(updatedGalleryImages);
-
-      // Also update selectedGalleryImages if the deleted image was a newly selected file
-      setSelectedGalleryImages((prev) =>
-        prev.filter((file) => URL.createObjectURL(file) !== imageToDelete)
-      );
-      alert("Image deleted successfully.");
+      await deleteFile(imageToDelete);
+      removeFromState();
     } catch (error) {
-      console.error("Error deleting gallery image:", error);
-      alert("Failed to delete image. Please try again.");
+      // Ignore if the file is already gone; otherwise log
+      // @ts-ignore
+      if (error?.code !== "storage/object-not-found") {
+        console.error("Error deleting gallery image:", error);
+      }
+      removeFromState();
     }
   };
 
@@ -552,8 +453,24 @@ const CampaignDialog = ({
 
     setIsSubmitting(true);
 
+    // Auto-upload cover image if a new file was selected
+    if (selectedImage) {
+      try {
+        const uploadedData = await handleImageUpload(campaign?.id, finalData);
+        if (uploadedData?.coverImageUrl) {
+          finalData = { ...finalData, coverImageUrl: uploadedData.coverImageUrl };
+          setImagePreviewUrl(uploadedData.coverImageUrl);
+        }
+      } catch (error) {
+        console.error("Error uploading cover image:", error);
+        alert("Failed to upload cover image. Please try again.");
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
     // Upload organization logo
-    if (selectedOrganizationLogo && !finalData.organizationInfoLogo) { // Only upload if not already uploaded
+    if (selectedOrganizationLogo) { // Always upload a newly selected logo
       try {
         const url = await uploadFile(
           selectedOrganizationLogo,
@@ -562,6 +479,7 @@ const CampaignDialog = ({
         );
         if (url) {
           finalData = { ...finalData, organizationInfoLogo: url };
+          setOrganizationLogoPreview(url);
         }
       } catch (error) {
         console.error("Error uploading organization logo:", error);
@@ -571,9 +489,12 @@ const CampaignDialog = ({
       }
     }
 
-    // Upload gallery images
-    if (selectedGalleryImages.length > 0 && !finalData.galleryImages) { // Only upload if not already uploaded
-      const imageUrls: string[] = [];
+    // Upload gallery images (auto on save) and persist current gallery state (after deletions)
+    const existingGalleryUrls = galleryImagePreviews.filter(
+      (src) => !src.startsWith("data:") && !src.startsWith("blob:")
+    );
+    const uploadedUrls: string[] = [];
+    if (selectedGalleryImages.length > 0) {
       for (const file of selectedGalleryImages) {
         try {
           const url = await uploadFile(
@@ -581,7 +502,7 @@ const CampaignDialog = ({
             `campaigns/${campaign?.id || "new"}/galleryImages/${file.name}`
           );
           if (url) {
-            imageUrls.push(url);
+            uploadedUrls.push(url);
           }
         } catch (error) {
           console.error(`Error uploading gallery image ${file.name}:`, error);
@@ -592,10 +513,12 @@ const CampaignDialog = ({
           return;
         }
       }
-      if (imageUrls.length > 0) {
-        finalData = { ...finalData, galleryImages: imageUrls.join(",") };
-      }
     }
+    const combinedGallery = [...existingGalleryUrls, ...uploadedUrls];
+    finalData = {
+      ...finalData,
+      galleryImages: combinedGallery.join(","),
+    };
 
     try {
       await onSave(finalData, !isEditMode, campaign?.id);
@@ -629,8 +552,7 @@ const CampaignDialog = ({
   const saveButtonText = isEditMode ? "Save Changes" : "Create Campaign";
   const isSaveDisabled =
     uploadingImage || !formData.title || !formData.description ||
-    (selectedOrganizationLogo && !formData.organizationInfoLogo) ||
-    (selectedGalleryImages.length > 0 && !formData.galleryImages);
+    (selectedOrganizationLogo && !formData.organizationInfoLogo);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -714,26 +636,23 @@ const CampaignDialog = ({
                 <div className="col-span-3 space-y-4">
                   {imagePreview && (
                     <div className="flex items-center space-x-4">
-                      <img
-                        src={imagePreview}
-                        alt="Campaign cover"
-                        className="w-20 h-20 object-cover rounded-lg border"
-                      />
-                      <div className="text-sm text-gray-600">
-                        <p>
-                          {isEditMode
-                            ? "Current cover image"
-                            : "Selected image"}
-                        </p>
+                      <div className="relative inline-block">
+                        <img
+                          src={imagePreview}
+                          alt="Campaign cover"
+                          className="w-20 h-20 object-cover rounded-lg border"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-white shadow text-gray-500 hover:text-gray-700"
+                          onClick={handleRemoveCoverImage}
+                          aria-label="Remove cover image"
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
                       </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        className="text-red-600 hover:text-red-700"
-                        onClick={handleRemoveCoverImage}
-                      >
-                        Remove
-                      </Button>
                     </div>
                   )}
                   <div className="space-y-3">
@@ -755,13 +674,6 @@ const CampaignDialog = ({
                         <FaImage className="w-4 h-4" />
                         <span>Select Image</span>
                       </Button>
-                      {selectedImage && (
-                        <UploadButton
-                          onClick={handleCoverImageUpload}
-                          disabled={false}
-                          isUploading={uploadingImage}
-                        />
-                      )}
                     </div>
                     {selectedImage && (
                       <div className="text-sm text-gray-600">
@@ -1041,11 +953,13 @@ const CampaignDialog = ({
                             className="w-20 h-20 object-cover rounded-lg border"
                           />
                           <button
+                            type="button"
                             onClick={() => handleDeleteGalleryImage(src, index)}
-                            className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                            title="Delete"
+                            className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-white shadow text-gray-500 hover:text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                            title="Remove image"
+                            aria-label="Remove image"
                           >
-                            <FaTrashAlt className="h-4 w-4" />
+                            <X className="h-3 w-3" />
                           </button>
                         </div>
                       ))}
@@ -1074,13 +988,6 @@ const CampaignDialog = ({
                         <FaPlus className="w-4 h-4" />
                         <span>Add Image</span>
                       </Button>
-                      {selectedGalleryImages.length > 0 && (
-                        <UploadButton
-                          onClick={handleGalleryImagesUpload}
-                          disabled={false}
-                          isUploading={isUploadingGalleryImages}
-                        />
-                      )}
                     </div>
                     {selectedGalleryImages.length > 0 && (
                       <div className="text-sm text-gray-600">
@@ -1271,8 +1178,6 @@ const CampaignManagement = ({
   const [showCalendar, setShowCalendar] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [campaignToDelete, setCampaignToDelete] = useState<DocumentData | null>(null);
-  const [confirmDeleteInput, setConfirmDeleteInput] = useState("");
-
   const { campaigns, updateWithImage, createWithImage, remove, loading } =
     useCampaignManagement(userSession.user.organizationId || "");
 
@@ -1282,20 +1187,15 @@ const CampaignManagement = ({
   };
 
   const handleConfirmDelete = async () => {
-    if (campaignToDelete && confirmDeleteInput === campaignToDelete.title) {
-      try {
-        await remove(campaignToDelete.id);
-        setIsDeleteDialogOpen(false);
-        setCampaignToDelete(null);
-        setConfirmDeleteInput("");
-        // Optionally, show a success toast or message
-      } catch (error) {
-        console.error("Error deleting campaign:", error);
-        // Optionally, show an error toast or message
-      }
-    } else {
-      // Optionally, show an error message if input doesn't match
-      console.log("Confirmation input does not match campaign title.");
+    if (!campaignToDelete) return;
+    try {
+      await remove(campaignToDelete.id);
+      setIsDeleteDialogOpen(false);
+      setCampaignToDelete(null);
+      // Optionally, show a success toast or message
+    } catch (error) {
+      console.error("Error deleting campaign:", error);
+      // Optionally, show an error toast or message
     }
   };
 
