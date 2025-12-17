@@ -127,6 +127,7 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
       recurringInterval: isRecurring ? recurringInterval : undefined,
       isAnonymous: donorInfo.isAnonymous,
       isGiftAid: isGiftAid,
+      donorName: "" // No gift aid details collected yet, so no donor name
     };
 
     onSubmit(donation);
@@ -178,6 +179,7 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
                 src={campaign.coverImageUrl}
                 alt={campaign.title}
                 className="w-full h-full object-cover"
+                fallbackType="campaign"
               />
               <Badge className="absolute top-4 left-4 bg-white/90 text-gray-800">
                 {campaign.category}

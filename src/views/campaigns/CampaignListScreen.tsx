@@ -5,6 +5,7 @@ import { Campaign, KioskSession, Kiosk } from '../../shared/types';
 import { Button } from '../../shared/ui/button';
 import { RotateCcw, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
 import { updateKiosk } from '../../shared/api';
+import { formatCurrency } from '../../shared/lib/currencyFormatter';
 
 interface CampaignListScreenProps {
   campaigns: Campaign[];
@@ -13,7 +14,7 @@ interface CampaignListScreenProps {
   isDetailedView: boolean;
   kioskSession?: KioskSession | null;
   onViewToggle: (value: boolean) => void;
-  onSelectCampaign: (campaign: Campaign) => void;
+  onSelectCampaign: (campaign: Campaign, amount?: number) => void;
   onViewDetails: (campaign: Campaign) => void;
   isDefaultCampaign: (campaignId: string) => boolean;
   onLogout: () => void;
@@ -151,15 +152,39 @@ export function CampaignListScreen({
               layoutMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "flex flex-col space-y-4"
             }>
               {currentCampaigns.map(campaign => (
-                <CampaignCard
-                  key={campaign.id}
-                  campaign={campaign}
-                  variant={layoutMode === 'grid' ? 'detailed' : 'compact'}
-                  onDonate={() => onSelectCampaign(campaign)}
-                  onViewDetails={() => onViewDetails(campaign)}
-                  isDefault={isDefaultCampaign(campaign.id)}
-                  organizationCurrency={kioskSession?.organizationCurrency}
-                />
+                <div key={campaign.id} className="space-y-4">
+                  <CampaignCard
+                    campaign={campaign}
+                    variant={layoutMode === 'grid' ? 'detailed' : 'compact'}
+                    onViewDetails={() => onViewDetails(campaign)}
+                    isDefault={isDefaultCampaign(campaign.id)}
+                    organizationCurrency={kioskSession?.organizationCurrency}
+                  />
+                  {/* Payment Amount Buttons */}
+                  <div className="space-y-3 p-4 bg-white/90 rounded-lg border border-gray-200">
+                    {/* Top 3 predefined amounts */}
+                    <div className="grid grid-cols-3 gap-3">
+                      {getTop3Amounts(campaign).map((amount, index) => (
+                        <Button
+                          key={index}
+                          onClick={() => onSelectCampaign(campaign, amount)}
+                          className="h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all duration-200"
+                        >
+                          {formatCurrency(amount, kioskSession?.organizationCurrency || 'USD')}
+                        </Button>
+                      ))}
+                    </div>
+                    {/* Second row: Custom Amount */}
+                    <div className="w-full">
+                      <Button
+                        onClick={() => onSelectCampaign(campaign)}
+                        className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all duration-200"
+                      >
+                        Custom Amount
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
           )
@@ -193,13 +218,32 @@ export function CampaignListScreen({
 
 interface CampaignCarouselProps {
   campaigns: Campaign[];
-  onSelectCampaign: (campaign: Campaign) => void;
+  onSelectCampaign: (campaign: Campaign, amount?: number) => void;
   onViewDetails: (campaign: Campaign) => void;
   isDefaultCampaign: (campaignId: string) => boolean;
   autoRotate: boolean;
   rotationInterval: number;
   kioskSession?: KioskSession | null;
 }
+
+// Helper function to get top 3 predefined amounts for a campaign
+const getTop3Amounts = (campaign: Campaign): number[] => {
+  const predefinedAmounts = campaign.configuration?.predefinedAmounts || [];
+  // Sort amounts in ascending order and take the first 3
+  const sortedAmounts = [...predefinedAmounts].sort((a, b) => a - b);
+  // If less than 3 amounts, pad with default values
+  const top3 = sortedAmounts.slice(0, 3);
+  while (top3.length < 3) {
+    const defaultAmounts = [10, 25, 50];
+    const nextDefault = defaultAmounts[top3.length];
+    if (!top3.includes(nextDefault)) {
+      top3.push(nextDefault);
+    } else {
+      top3.push((top3[top3.length - 1] || 10) * 2);
+    }
+  }
+  return top3;
+};
 
 const CampaignCarousel = ({
   campaigns,
@@ -259,15 +303,38 @@ const CampaignCarousel = ({
         >
           {campaigns.map((campaign, index) => (
             <div key={campaign.id} className="w-full flex-shrink-0 px-4">
-              <div className="max-w-2xl mx-auto">
+              <div className="max-w-2xl mx-auto space-y-4">
                 <CampaignCard
                   campaign={campaign}
                   variant="detailed"
-                  onDonate={() => onSelectCampaign(campaign)}
                   onViewDetails={() => onViewDetails(campaign)}
                   isDefault={isDefaultCampaign(campaign.id)}
                   organizationCurrency={kioskSession?.organizationCurrency}
                 />
+                {/* Payment Amount Buttons */}
+                <div className="space-y-3 p-4 bg-white/90 rounded-lg border border-gray-200">
+                  {/* Top 3 predefined amounts */}
+                  <div className="grid grid-cols-3 gap-3">
+                    {getTop3Amounts(campaign).map((amount, index) => (
+                      <Button
+                        key={index}
+                        onClick={() => onSelectCampaign(campaign, amount)}
+                        className="h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all duration-200"
+                      >
+                        {formatCurrency(amount, kioskSession?.organizationCurrency || 'USD')}
+                      </Button>
+                    ))}
+                  </div>
+                  {/* Second row: Custom Amount */}
+                  <div className="w-full">
+                    <Button
+                      onClick={() => onSelectCampaign(campaign)}
+                      className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all duration-200"
+                    >
+                      Custom Amount
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
           ))}

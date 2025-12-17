@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "../../../shared/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../shared/ui/tabs";
+import { ImageWithFallback } from "../../../shared/ui/figma/ImageWithFallback";
 import {
   Card,
   CardContent,
@@ -501,10 +502,11 @@ export function KioskCampaignAssignmentDialog({
                         className="flex items-center gap-4 p-6 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 transition-colors"
                       >
                         <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 shadow-sm">
-                          <img
+                          <ImageWithFallback
                             src={campaign.coverImageUrl}
                             alt={campaign.title}
                             className="w-full h-full object-cover"
+                            fallbackType="campaign"
                           />
                         </div>
                         
@@ -577,10 +579,11 @@ export function KioskCampaignAssignmentDialog({
                           className="flex items-center gap-4 p-6 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
                         >
                           <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 shadow-sm">
-                            <img
+                            <ImageWithFallback
                               src={campaign.coverImageUrl}
                               alt={campaign.title}
                               className="w-full h-full object-cover"
+                              fallbackType="campaign"
                             />
                           </div>
                           
@@ -634,10 +637,11 @@ export function KioskCampaignAssignmentDialog({
                         className="flex items-center gap-4 p-6 bg-green-50 border border-green-200 rounded-xl"
                       >
                         <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 shadow-sm">
-                          <img
+                          <ImageWithFallback
                             src={campaign.coverImageUrl}
                             alt={campaign.title}
                             className="w-full h-full object-cover"
+                            fallbackType="campaign"
                           />
                         </div>
                         

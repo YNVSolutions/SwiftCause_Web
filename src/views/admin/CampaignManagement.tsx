@@ -7,6 +7,7 @@ import { useOrganizationTags } from "../../shared/lib/hooks/useOrganizationTags"
 import { deleteFile } from "../../shared/lib/firebase"; // Import deleteFile
 import * as firebaseService from "../../shared/api"; // Import firebaseService
 import UploadButton from "../../shared/ui/UploadButton"; // Import the new UploadButton component
+import { ImageWithFallback } from "../../shared/ui/figma/ImageWithFallback";
 
 import { Button } from "../../shared/ui/button";
 import { Input } from "../../shared/ui/input";
@@ -1765,13 +1766,14 @@ const CampaignManagement = ({
                           <TableRow key={campaign.id ?? campaign.title}>
                             <TableCell>
                               <div className="flex items-start gap-3">
-                                {campaign.coverImageUrl && (
-                                  <img
+                                <div className="w-16 h-16 rounded-lg border border-gray-200 flex-shrink-0 overflow-hidden">
+                                  <ImageWithFallback
                                     src={campaign.coverImageUrl}
                                     alt={campaign.title}
-                                    className="w-16 h-16 object-cover rounded-lg border border-gray-200 flex-shrink-0"
+                                    className="w-full h-full object-cover"
+                                    fallbackType="campaign"
                                   />
-                                )}
+                                </div>
                                 <div className="space-y-1 flex-1">
                                   <div className="flex items-center justify-between gap-2">
                                     <div>

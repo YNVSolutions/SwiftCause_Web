@@ -117,7 +117,8 @@ export function CampaignScreen({
       amount: getCurrentAmount(),
       isRecurring,
       recurringInterval: isRecurring ? recurringInterval : undefined,
-      isAnonymous: donorInfo.isAnonymous
+      isAnonymous: donorInfo.isAnonymous,
+      donorName: "" // No gift aid in this flow, so no donor name
     };
 
     onSubmit(donation);
@@ -162,6 +163,7 @@ export function CampaignScreen({
                 src={campaign.coverImageUrl}
                 alt={campaign.title}
                 className="w-full h-full object-cover"
+                fallbackType="campaign"
               />
               <Badge className="absolute top-4 left-4 bg-white/90 text-gray-800">
                 {campaign.category}
