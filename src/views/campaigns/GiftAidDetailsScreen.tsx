@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '../../shared/ui/button';
 import { Input } from '../../shared/ui/input';
 import { Label } from '../../shared/ui/label';
@@ -24,6 +24,10 @@ export function GiftAidDetailsScreen({
   onBack,
   organizationCurrency = 'USD'
 }: GiftAidDetailsScreenProps) {
+  // Loading state for initial screen load
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   // Donor Information
   const [fullName, setFullName] = useState('');
   const [postcode, setPostcode] = useState('');
@@ -39,8 +43,55 @@ export function GiftAidDetailsScreen({
     taxpayer?: string;
   }>({});
 
+  // Show loading screen briefly when component mounts
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsInitialLoading(false);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
   const giftAidAmount = amount * 0.25;
   const totalWithGiftAid = amount + giftAidAmount;
+
+  // Show loading screen when initially loading
+  if (isInitialLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <NavigationHeader
+          title="Gift Aid Details"
+          onBack={onBack}
+          backLabel="Back"
+        />
+        <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading Gift Aid form...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Show loading screen when submitting
+  if (isSubmitting) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <NavigationHeader
+          title="Gift Aid Details"
+          onBack={onBack}
+          backLabel="Back"
+        />
+        <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Processing your details...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   const validateForm = () => {
     const newErrors: {
@@ -79,45 +130,50 @@ export function GiftAidDetailsScreen({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
-      const currentDate = new Date().toISOString();
-      const currentYear = new Date().getFullYear();
-      const taxYear = `${currentYear}-${(currentYear + 1).toString().slice(-2)}`;
+      setIsSubmitting(true);
       
-      // Split full name into first name and surname
-      const nameParts = fullName.trim().split(' ').filter(part => part.length > 0);
-      const firstName = nameParts[0] || '';
-      const surname = nameParts.slice(1).join(' ') || '';
-      
-      const giftAidDetails: GiftAidDetails = {
-        // Donor Information
-        firstName: firstName,
-        surname: surname,
-        houseNumber: '', // Default to empty string
-        address: '', // Default to empty string
-        town: '', // Default to empty string
-        postcode: postcode.trim().toUpperCase(),
+      // Add a small delay to show the loading state
+      setTimeout(() => {
+        const currentDate = new Date().toISOString();
+        const currentYear = new Date().getFullYear();
+        const taxYear = `${currentYear}-${(currentYear + 1).toString().slice(-2)}`;
         
-        // Declaration Requirements
-        giftAidConsent,
-        ukTaxpayerConfirmation,
-        declarationText: "I confirm that I am a UK taxpayer and understand that if I pay less Income Tax and/or Capital Gains Tax in the current tax year than the amount of Gift Aid claimed on all my donations, it is my responsibility to pay any difference.",
-        declarationDate: currentDate,
+        // Split full name into first name and surname
+        const nameParts = fullName.trim().split(' ').filter(part => part.length > 0);
+        const firstName = nameParts[0] || '';
+        const surname = nameParts.slice(1).join(' ') || '';
         
-        // Donation Details
-        donationAmount: amount,
-        donationDate: currentDate,
-        organizationId: campaign.organizationId || '',
-        donationId: '', // Default empty string
+        const giftAidDetails: GiftAidDetails = {
+          // Donor Information
+          firstName: firstName,
+          surname: surname,
+          houseNumber: '', // Default to empty string
+          address: '', // Default to empty string
+          town: '', // Default to empty string
+          postcode: postcode.trim().toUpperCase(),
+          
+          // Declaration Requirements
+          giftAidConsent,
+          ukTaxpayerConfirmation,
+          declarationText: "I confirm that I am a UK taxpayer and understand that if I pay less Income Tax and/or Capital Gains Tax in the current tax year than the amount of Gift Aid claimed on all my donations, it is my responsibility to pay any difference.",
+          declarationDate: currentDate,
+          
+          // Donation Details
+          donationAmount: amount,
+          donationDate: currentDate,
+          organizationId: campaign.organizationId || '',
+          donationId: '', // Default empty string
+          
+          // Audit Trail
+          timestamp: currentDate,
+          taxYear: taxYear
+        };
         
-        // Audit Trail
-        timestamp: currentDate,
-        taxYear: taxYear
-      };
-      
-      onSubmit(giftAidDetails);
+        onSubmit(giftAidDetails);
+      }, 500);
     }
   };
 
@@ -287,12 +343,22 @@ export function GiftAidDetailsScreen({
                 {/* Submit Button */}
                 <Button
                   type="submit"
-                  disabled={!giftAidConsent || !ukTaxpayerConfirmation}
+                  disabled={!giftAidConsent || !ukTaxpayerConfirmation || isSubmitting}
                   className="w-full h-16 bg-green-600 hover:bg-green-700 text-white font-bold text-lg rounded-xl transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <ArrowRight className="w-6 h-6 mr-3" />
-                  Continue to Payment
-                  <ArrowRight className="w-6 h-6 ml-3" />
+                  {isSubmitting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-3"></div>
+                      Processing...
+                      <div className="w-6 h-6 ml-3"></div>
+                    </>
+                  ) : (
+                    <>
+                      <ArrowRight className="w-6 h-6 mr-3" />
+                      Continue to Payment
+                      <ArrowRight className="w-6 h-6 ml-3" />
+                    </>
+                  )}
                 </Button>
 
                 {/* Additional Info */}

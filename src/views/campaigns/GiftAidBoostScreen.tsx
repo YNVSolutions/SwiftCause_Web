@@ -27,19 +27,68 @@ export function GiftAidBoostScreen({
   organizationCurrency = 'USD'
 }: GiftAidBoostScreenProps) {
   const [customAmount, setCustomAmount] = useState(amount.toString());
+  const [isLoading, setIsLoading] = useState(false);
   const currentAmount = isCustomAmount ? parseFloat(customAmount) || 0 : amount;
   const giftAidAmount = currentAmount * 0.25; // 25% Gift Aid
   const totalWithGiftAid = currentAmount + giftAidAmount;
 
   const isValidAmount = currentAmount > 0 && currentAmount <= 10000;
 
+  const handleAcceptGiftAid = async () => {
+    setIsLoading(true);
+    // Add a small delay to show the loading state
+    setTimeout(() => {
+      onAcceptGiftAid(currentAmount);
+    }, 500);
+  };
+
+  const handleDeclineGiftAid = async () => {
+    setIsLoading(true);
+    // Add a small delay to show the loading state
+    setTimeout(() => {
+      onDeclineGiftAid(currentAmount);
+    }, 500);
+  };
+
+  // Show loading screen when processing
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        {/* Custom Header */}
+        <div className="bg-white border-b border-gray-200 px-4 py-4">
+          <div className="flex items-center max-w-4xl mx-auto">
+            <div className="p-2 mr-4 opacity-50">
+              <ArrowLeft className="w-6 h-6" />
+            </div>
+            <h1 className="text-xl font-semibold text-gray-900">Boost your donation</h1>
+          </div>
+        </div>
+        <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Processing your choice...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <NavigationHeader
-        title="Boost your donation"
-        onBack={onBack}
-        backLabel="Back to Campaigns"
-      />
+      {/* Custom Header */}
+      <div className="bg-white border-b border-gray-200 px-4 py-4">
+        <div className="flex items-center max-w-4xl mx-auto">
+          <Button 
+            variant="ghost" 
+            onClick={onBack}
+            className="p-2 mr-4"
+            disabled={isLoading}
+          >
+            <ArrowLeft className="w-6 h-6" />
+          </Button>
+          <h1 className="text-xl font-semibold text-gray-900">Boost your donation</h1>
+        </div>
+      </div>
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-center">
@@ -115,20 +164,20 @@ export function GiftAidBoostScreen({
               {/* Action Buttons */}
               <div className="space-y-4">
                 <Button
-                  onClick={() => onAcceptGiftAid(currentAmount)}
-                  disabled={!isValidAmount}
+                  onClick={handleAcceptGiftAid}
+                  disabled={!isValidAmount || isLoading}
                   className="w-full h-14 bg-green-600 hover:bg-green-700 text-white font-semibold text-lg rounded-xl transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Yes, Boost My Donation
+                  {isLoading ? 'Processing...' : 'Yes, Boost My Donation'}
                 </Button>
                 
                 <Button
-                  onClick={() => onDeclineGiftAid(currentAmount)}
-                  disabled={!isValidAmount}
+                  onClick={handleDeclineGiftAid}
+                  disabled={!isValidAmount || isLoading}
                   variant="ghost"
                   className="w-full h-12 text-gray-500 hover:text-gray-700 font-medium text-base disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  No, continue with {isValidAmount ? formatCurrency(currentAmount, organizationCurrency) : '$0.00'}
+                  {isLoading ? 'Processing...' : `No, continue with ${isValidAmount ? formatCurrency(currentAmount, organizationCurrency) : '$0.00'}`}
                 </Button>
               </div>
 
