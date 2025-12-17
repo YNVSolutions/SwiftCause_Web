@@ -2,20 +2,23 @@
 
 import React, { useState } from "react";
 import { Screen, AdminSession, Permission } from "../../shared/types";
+import { Button } from "../../shared/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "../../shared/ui/avatar";
+import { Badge } from "../../shared/ui/badge";
 import {
   SidebarProvider,
   Sidebar,
   SidebarHeader,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarSeparator,
+
   SidebarInset,
   SidebarTrigger,
-  SidebarFooter,
   SidebarRail,
   useSidebar,
 } from "../../shared/ui/sidebar";
@@ -25,18 +28,14 @@ import {
   Monitor,
   Database,
   Users,
+  Gift,
   LogOut,
-  User,
   X,
   Mail,
   Building2,
   Shield,
   Calendar,
-  ChevronsUpDown,
 } from "lucide-react";
-import { Button } from "../../shared/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "../../shared/ui/avatar";
-import { Badge } from "../../shared/ui/badge";
 
 const SCREEN_LABELS: Partial<Record<Screen, string>> = {
   admin: "Dashboard",
@@ -44,6 +43,7 @@ const SCREEN_LABELS: Partial<Record<Screen, string>> = {
   "admin-campaigns": "Campaigns",
   "admin-kiosks": "Kiosks",
   "admin-donations": "Donations",
+  "admin-gift-aid": "Gift Aid Donations",
   "admin-users": "Users",
 };
 
@@ -54,27 +54,6 @@ interface AdminLayoutProps {
   hasPermission: (permission: Permission) => boolean;
   children: React.ReactNode;
   activeScreen?: Screen;
-}
-
-function SidebarHeaderContent() {
-  const { state } = useSidebar();
-  const isExpanded = state === "expanded";
-  return (
-    <div className="flex items-center gap-3 px-4 py-4">
-      <div className="relative">
-        <img src="/logo.png" alt="SwiftCause Logo" className="h-10 w-10 rounded-xl shadow-md" />
-        <div className="absolute -bottom-1 -right-1 h-3 w-3 bg-green-500 rounded-full border-2 border-white"></div>
-      </div>
-      {isExpanded && (
-        <div className="flex flex-col">
-          <span className="text-base font-bold text-gray-900">SwiftCause</span>
-          <span className="text-xs font-medium text-gray-500">
-            Admin Portal
-          </span>
-        </div>
-      )}
-    </div>
-  );
 }
 
 // Get user initials for avatar
@@ -113,12 +92,12 @@ const getRoleBadgeColor = (role: string) => {
   return colorMap[role] || 'bg-white/20 text-white border-white/30';
 };
 
-function ProfileSidebar({ 
-  isOpen, 
-  onClose, 
-  userSession, 
-  onLogout 
-}: { 
+function ProfileSidebar({
+  isOpen,
+  onClose,
+  userSession,
+  onLogout
+}: {
   isOpen: boolean;
   onClose: () => void;
   userSession: AdminSession;
@@ -166,7 +145,7 @@ function ProfileSidebar({
             </Badge>
           </div>
         </div>
-
+        
         {/* Content */}
         <div className="p-6 space-y-6 overflow-y-auto h-[calc(100%-280px)]">
           {/* User Information Section */}
@@ -188,7 +167,7 @@ function ProfileSidebar({
                   </p>
                 </div>
               </div>
-
+              
               {/* Organization */}
               {userSession.user.organizationName && (
                 <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
@@ -203,7 +182,7 @@ function ProfileSidebar({
                   </div>
                 </div>
               )}
-
+              
               {/* Role */}
               <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
                 <div className="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
@@ -216,7 +195,7 @@ function ProfileSidebar({
                   </p>
                 </div>
               </div>
-
+              
               {/* Member Since */}
               {userSession.user.createdAt && (
                 <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
@@ -237,7 +216,7 @@ function ProfileSidebar({
               )}
             </div>
           </div>
-
+          
           {/* Permissions Section */}
           {userSession.permissions && userSession.permissions.length > 0 && (
             <div className="space-y-4">
@@ -246,9 +225,9 @@ function ProfileSidebar({
               </h3>
               <div className="flex flex-wrap gap-2">
                 {userSession.permissions.map((permission) => (
-                  <Badge 
-                    key={permission} 
-                    variant="outline" 
+                  <Badge
+                    key={permission}
+                    variant="outline"
                     className="text-xs bg-blue-50 text-blue-700 border-blue-200"
                   >
                     {permission.replace(/_/g, ' ')}
@@ -258,7 +237,7 @@ function ProfileSidebar({
             </div>
           )}
         </div>
-
+        
         {/* Footer with Logout Button */}
         <div className="absolute bottom-0 left-0 right-0 p-6 bg-gray-50 border-t border-gray-200">
           <Button
@@ -274,35 +253,42 @@ function ProfileSidebar({
   );
 }
 
-function SidebarUserFooter({ 
-  userSession, 
-  onLogout
-}: { 
+function SidebarUserFooter({
+  userSession,
+  onLogout,
+  onProfileClick
+}: {
   userSession: AdminSession;
   onLogout: () => void;
+  onProfileClick: () => void;
 }) {
   const { state } = useSidebar();
   const isExpanded = state === "expanded";
-
+  
   return (
     <div className="border-t border-gray-200 p-3 bg-gray-50/50">
       <div className="flex items-center gap-3">
-        <Avatar className="h-9 w-9 ring-2 ring-indigo-100 shadow-sm">
-          <AvatarImage src={userSession.user.photoURL || undefined} />
-          <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white text-xs font-semibold">
-            {getInitials(userSession.user.username || userSession.user.email || 'U')}
-          </AvatarFallback>
-        </Avatar>
-        {isExpanded && (
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-900 truncate">
-              {userSession.user.username || 'User'}
-            </p>
-            <p className="text-xs text-gray-500 truncate">
-              {userSession.user.email}
-            </p>
-          </div>
-        )}
+        <button
+          onClick={onProfileClick}
+          className="flex items-center gap-3 flex-1 min-w-0 hover:bg-gray-100 rounded-lg p-1 transition-colors"
+        >
+          <Avatar className="h-9 w-9 ring-2 ring-indigo-100 shadow-sm">
+            <AvatarImage src={userSession.user.photoURL || undefined} />
+            <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white text-xs font-semibold">
+              {getInitials(userSession.user.username || userSession.user.email || 'U')}
+            </AvatarFallback>
+          </Avatar>
+          {isExpanded && (
+            <div className="flex-1 min-w-0 text-left">
+              <p className="text-sm font-semibold text-gray-900 truncate">
+                {userSession.user.username || 'User'}
+              </p>
+              <p className="text-xs text-gray-500 truncate">
+                {userSession.user.email}
+              </p>
+            </div>
+          )}
+        </button>
         {isExpanded ? (
           <Button
             variant="ghost"
@@ -325,6 +311,27 @@ function SidebarUserFooter({
           </Button>
         )}
       </div>
+    </div>
+  );
+}
+
+function SidebarHeaderContent() {
+  const { state } = useSidebar();
+  const isExpanded = state === "expanded";
+  return (
+    <div className="flex items-center gap-3 px-4 py-4">
+      <div className="relative">
+        <img src="/logo.png" alt="SwiftCause Logo" className="h-10 w-10 rounded-xl shadow-md" />
+        <div className="absolute -bottom-1 -right-1 h-3 w-3 bg-green-500 rounded-full border-2 border-white"></div>
+      </div>
+      {isExpanded && (
+        <div className="flex flex-col">
+          <span className="text-base font-bold text-gray-900">SwiftCause</span>
+          <span className="text-xs font-medium text-gray-500">
+            Admin Portal
+          </span>
+        </div>
+      )}
     </div>
   );
 }
@@ -429,6 +436,24 @@ export function AdminLayout({
                 </SidebarMenuItem>
               )}
               
+              {hasPermission("view_donations") && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    onClick={() => onNavigate("admin-gift-aid")}
+                    tooltip="Gift Aid Donations"
+                    isActive={isActive("admin-gift-aid")}
+                    className={
+                      isActive("admin-gift-aid")
+                        ? "bg-indigo-50 text-indigo-700 font-semibold shadow-sm rounded-md hover:bg-indigo-100"
+                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md"
+                    }
+                  >
+                    <Gift className="h-5 w-5" />
+                    <span>Gift Aid Donations</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+              
               {hasPermission("view_users") && (
                 <SidebarMenuItem>
                   <SidebarMenuButton
@@ -452,8 +477,9 @@ export function AdminLayout({
         
         <SidebarFooter className="mt-auto shrink-0">
           <SidebarUserFooter 
-            userSession={userSession} 
+            userSession={userSession}
             onLogout={onLogout}
+            onProfileClick={() => setIsProfileOpen(true)}
           />
         </SidebarFooter>
         <SidebarRail />
