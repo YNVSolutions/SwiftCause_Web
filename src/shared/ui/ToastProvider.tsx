@@ -31,7 +31,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
   const showToast = (
     message: string,
     variant: ToastVariant = 'info',
-    durationMs = 2500
+    _durationMs = 2500
   ) => {
     setToastMessage(message)
     setToastVariant(variant)

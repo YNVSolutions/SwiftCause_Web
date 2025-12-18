@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { CampaignCard } from '../../entities/campaign';
 import { NavigationHeader } from '../../shared/ui/NavigationHeader';
-import { Campaign, KioskSession, Kiosk } from '../../shared/types';
+import { Campaign, KioskSession } from '../../shared/types';
 import { Button } from '../../shared/ui/button';
 import { RotateCcw, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
 import { updateKiosk } from '../../shared/api';
@@ -28,9 +28,7 @@ export function CampaignListScreen({
   campaigns,
   loading,
   error,
-  isDetailedView,
   kioskSession,
-  onViewToggle,
   onSelectCampaign,
   onViewDetails,
   isDefaultCampaign,
@@ -235,7 +233,6 @@ const CampaignCarousel = ({
     return null; // Or some placeholder
   }
 
-  const currentCampaign = campaigns[currentIndex];
 
   return (
     <div className="relative w-full overflow-hidden bg-white/80 backdrop-blur-sm rounded-2xl shadow-md border border-gray-100 p-4">
@@ -257,7 +254,7 @@ const CampaignCarousel = ({
           className="flex transition-transform duration-500 ease-in-out"
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}
         >
-          {campaigns.map((campaign, index) => (
+          {campaigns.map((campaign) => (
             <div key={campaign.id} className="w-full flex-shrink-0 px-4">
               <div className="max-w-2xl mx-auto">
                 <CampaignCard

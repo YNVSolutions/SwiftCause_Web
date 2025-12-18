@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../shared/ui/card';
 import { Badge } from '../../shared/ui/badge';
 import { Switch } from '../../shared/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
-import { Checkbox } from '../../shared/ui/checkbox';
 import { Progress } from '../../shared/ui/progress';
 import { ImageWithFallback } from '../../shared/ui/figma/ImageWithFallback';
 import { NavigationHeader } from '../../shared/ui/NavigationHeader';
@@ -15,16 +14,13 @@ import {
   ArrowRight, 
   Users, 
   Clock, 
-  Share2,
   Gift,
   Percent,
   ChevronDown,
   ChevronUp,
-  Calendar,
-  MapPin,
   Target
 } from 'lucide-react';
-import { Campaign, Donation, Organization } from '../../shared/types';
+import { Campaign, Donation } from '../../shared/types';
 import { formatCurrency } from '../../shared/lib/currencyFormatter';
 import { getOrganizationById } from '../../shared/api';
 
@@ -48,10 +44,9 @@ export function CampaignScreen({
   view = 'donate', // Default to 'donate' view
   onSubmit,
   onBack,
-  onViewChange,
   initialShowDetails = false // Default to collapsed
 }: CampaignScreenProps) {
-  const [currentView, setCurrentView] = useState<CampaignView>(view);
+  const [currentView] = useState<CampaignView>(view);
   const [showDetails, setShowDetails] = useState(initialShowDetails); // Use new prop for initial state
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState('');
@@ -59,7 +54,7 @@ export function CampaignScreen({
   const [recurringInterval, setRecurringInterval] = useState<'monthly' | 'quarterly' | 'yearly'>(
     campaign.configuration.defaultRecurringInterval
   );
-  const [donorInfo, setDonorInfo] = useState<DonorInfo>({
+  const [donorInfo] = useState<DonorInfo>({
     isAnonymous: false
   });
   const [organizationCurrency, setOrganizationCurrency] = useState<string | undefined>(undefined);
@@ -103,10 +98,6 @@ export function CampaignScreen({
     return amount;
   };
 
-  const handleViewChange = (newView: CampaignView) => {
-    setCurrentView(newView);
-    onViewChange?.(newView);
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

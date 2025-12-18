@@ -4,7 +4,6 @@ import { Input } from '../../../shared/ui/input';
 import { Label } from '../../../shared/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../../../shared/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../shared/ui/select';
-import { Checkbox } from '../../../shared/ui/checkbox';
 import { UserRole } from '../../../shared/types';
 
 
@@ -32,9 +31,7 @@ export function CreateUserDialog({
   onOpenChange,
   newUser,
   onUserChange,
-  onCreateUser,
-  onKioskAccessChange
-}: CreateUserDialogProps) {
+  onCreateUser}: CreateUserDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">

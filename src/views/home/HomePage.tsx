@@ -1,12 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '../../shared/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../shared/ui/card';
+import { Card, CardContent } from '../../shared/ui/card';
 import { Badge } from '../../shared/ui/badge';
-import { Progress } from '../../shared/ui/progress';
 import { DemoModal } from '../../widgets/payment-flow/DemoModal';
 import { EnterprisePlatformShowcase } from '../../widgets/payment-flow/EnterprisePlatformShowcase';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '../../shared/ui/carousel';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shared/ui/tabs';
 import { 
   Heart,
   Shield,
@@ -15,45 +12,17 @@ import {
   Award,
   CheckCircle,
   ArrowRight,
-  DollarSign,
-  Users,
   Settings,
-  Star,
   MapPin,
   Smartphone,
   CreditCard,
   BarChart3,
   QrCode,
-  Zap,
   Target,
   UserCog,
   PlayCircle,
-  Quote,
-  ArrowDown,
-  ChevronRight,
-  Monitor,
-  Database,
-  Clock,
-  Calendar,
-  Layers,
-  Handshake,
-  Wifi,
-  Lock,
-  Cloud,
-  Building,
-  CheckSquare,
-  Tablet,
-  Activity,
-  PieChart,
-  Download,
-  Upload,
-  Eye,
-  Pause,
-  Play,
-  RotateCcw
-} from 'lucide-react';
+  ChevronRight} from 'lucide-react';
 
-import { ImageWithFallback } from '../../shared/ui/figma/ImageWithFallback';
 import { Footer } from '../../shared/ui/Footer';
 import swiftCauseLogo from '../../shared/assets/logo.png';
 

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Campaign } from '../model';
 import { CampaignCard } from './CampaignCard';
 

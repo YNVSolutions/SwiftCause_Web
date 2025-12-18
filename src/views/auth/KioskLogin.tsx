@@ -8,7 +8,6 @@ import {
 	Monitor,
 	KeyRound,
 	ArrowRight,
-	Shield,
 } from 'lucide-react';
 
 interface KioskLoginProps {
@@ -21,7 +20,7 @@ interface KioskLoginProps {
 	onSubmit: (e: React.FormEvent) => void;
 }
 
-export function KioskLogin({ kioskId, accessCode, error, loading, onKioskIdChange, onAccessCodeChange, onSubmit }: KioskLoginProps) {
+export function KioskLogin({ kioskId, accessCode, error, onKioskIdChange, onAccessCodeChange, onSubmit }: KioskLoginProps) {
 	return (
 		<>
 			<div className="text-center mb-4">

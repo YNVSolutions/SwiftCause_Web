@@ -13,12 +13,9 @@ import {
   Award,
   CheckCircle,
   DollarSign,
-  Clock,
-  Star,
   UserCog,
   Monitor,
   ArrowLeft,
-  Home,
 } from 'lucide-react';
 import { UserRole, KioskSession, AdminSession } from '../../shared/types';
 import { KioskLoginContainer } from '../../features/auth-by-kiosk';

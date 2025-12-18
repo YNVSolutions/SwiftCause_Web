@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "../../../shared/ui/button";
 import { Input } from "../../../shared/ui/input";
 import { Label } from "../../../shared/ui/label";
@@ -26,28 +26,20 @@ import {
 } from "../../../shared/ui/card";
 import { Badge } from "../../../shared/ui/badge";
 import { Switch } from "../../../shared/ui/switch";
-import { Checkbox } from "../../../shared/ui/checkbox";
-import { Separator } from "../../../shared/ui/separator";
 import { ScrollArea } from "../../../shared/ui/scroll-area";
 import {
   Monitor,
   Settings,
   Target,
-  Users,
-  DollarSign,
-  MapPin,
   Star,
   Globe,
   LayoutGrid,
   List,
   Shuffle,
-  Clock,
   CheckCircle,
   AlertCircle,
   Plus,
   Minus,
-  RotateCcw,
-  Eye,
 } from "lucide-react";
 import { Kiosk, Campaign } from "../../../shared/types";
 

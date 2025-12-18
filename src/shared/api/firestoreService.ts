@@ -52,7 +52,7 @@ export async function updateCampaign(campaignId: string, data: any) {
   await updateDoc(ref, data);
 }
 
-export async function updateCampaignWithImage(campaignId: string, data: any, imageFile: File | null = null) {
+export async function updateCampaignWithImage(campaignId: string, data: any, _imageFile: File | null = null) {
   const ref = doc(db, 'campaigns', campaignId);
   await updateDoc(ref, data);
   return data;
@@ -107,7 +107,7 @@ export async function createCampaign(data: any) {
   return { id: docRef.id, ...data, raised: data.raised || 0 };
 }
 
-export async function createCampaignWithImage(data: any, imageFile: File | null = null) {
+export async function createCampaignWithImage(data: any, _imageFile: File | null = null) {
   const campaignData = {
     ...data,
     raised: 0,

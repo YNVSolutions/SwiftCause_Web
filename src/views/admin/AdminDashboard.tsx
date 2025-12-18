@@ -26,15 +26,11 @@ import {
   LineChart,
   Line,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
 } from "recharts";
 import {
   DollarSign,
   Users,
   TrendingUp,
-  TrendingDown,
   Settings,
   Heart,
   Globe,
@@ -43,7 +39,6 @@ import {
   CheckCircle,
   Database,
   UserCog,
-  LogOut,
   Plus,
   RefreshCw,
   Smartphone,
@@ -65,7 +60,6 @@ import {
   Rocket,
   Play,
   TriangleAlert,
-  Calendar,
   ArrowUpRight,
   ArrowDownRight,
   Trophy,
@@ -94,12 +88,10 @@ import {
 import {
   useDashboardData,
   Activity,
-  Alert,
 } from "../../shared/lib/hooks/useDashboardData";
 import { OrganizationSwitcher } from "./OrganizationSwitcher";
 import { useOrganization } from "../../shared/lib/hooks/useOrganization";
 import { auth } from "../../shared/lib/firebase";
-import { DeviceChart } from "./DeviceChart";
 import { AdminLayout } from "./AdminLayout";
 import { SystemAlertsWidget } from "./components/SystemAlertsWidget";
 import { useSystemAlerts } from "../../shared/lib/hooks/useSystemAlerts";

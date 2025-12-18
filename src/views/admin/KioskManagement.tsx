@@ -9,25 +9,22 @@ import {
   doc,
   addDoc,
   deleteDoc,
-  DocumentData,
 } from 'firebase/firestore';
-import { Screen, Kiosk, Campaign, AdminSession, Permission } from '../../shared/types';
+import { Screen, Kiosk, AdminSession, Permission } from '../../shared/types';
 
 // UI Components
 import { Button } from '../../shared/ui/button';
 import { Input } from '../../shared/ui/input';
 import { Label } from '../../shared/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../shared/ui/card';
-import { Badge } from '../../shared/ui/badge';
+import { Card, CardContent, CardHeader } from '../../shared/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../../shared/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../shared/ui/table';
 import { KioskCampaignAssignmentDialog } from './components/KioskCampaignAssignmentDialog';
 
 
 import {
   Plus, Edit, Trash2, Search, ArrowLeft, Settings, Activity, MapPin,
-  DollarSign, Users, WifiOff, CheckCircle, Monitor, Download, Target, Star, AlertTriangle
+  DollarSign, Users, WifiOff, CheckCircle, Monitor, Target, Star, AlertTriangle
 } from 'lucide-react';
 import { Skeleton } from "../../shared/ui/skeleton"; // Import Skeleton
 import { Ghost } from "lucide-react"; // Import Ghost
@@ -40,12 +37,12 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
   userSession: AdminSession;
   hasPermission: (permission: Permission) => boolean;
 }) {
-  const { kiosks, loading: kiosksLoading, error: kiosksError, refresh: refreshKiosks } = useKiosks(userSession.user.organizationId);
-  const { campaigns, loading: campaignsLoading, error: campaignsError, refresh: refreshCampaigns } = useCampaigns(userSession.user.organizationId);
+  const { kiosks, loading: kiosksLoading, refresh: refreshKiosks } = useKiosks(userSession.user.organizationId);
+  const { campaigns, loading: campaignsLoading, refresh: refreshCampaigns } = useCampaigns(userSession.user.organizationId);
   const performanceData = useKioskPerformance(kiosks);
   
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter] = useState('all');
   const isLoading = kiosksLoading || campaignsLoading;
 
 
@@ -64,20 +61,6 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
   const handleCreateKiosk = async () => {
     if (!newKiosk.name || !newKiosk.location || !userSession) return;
     try {
-      const newKioskData: Omit<Kiosk, 'id'> = {
-        ...newKiosk,
-        status: 'offline',
-        lastActive: new Date().toISOString(),
-        totalDonations: 0,
-        totalRaised: 0,
-        assignedCampaigns: [],
-        defaultCampaign: '',
-        deviceInfo: {},
-        operatingHours: {},
-        settings: { displayMode: 'grid', showAllCampaigns: true, maxCampaignsDisplay: 6, autoRotateCampaigns: false },
-        organizationId: userSession.user.organizationId,
-      };
-      const docRef = await addDoc(collection(db, 'kiosks'), newKioskData);
       //setKiosks(prev => [...prev, { id: docRef.id, ...newKioskData }]);
       refreshKiosks();
       setNewKiosk({ name: '', location: '', accessCode: '' });
@@ -98,10 +81,6 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
     }
   };
   
-  const handleAssignCampaigns = (kiosk: Kiosk) => {
-    setAssigningKiosk(kiosk);
-    setIsAssignmentDialogOpen(true);
-  };
   
   const handleSaveKioskAssignment = async (updatedKiosk: Kiosk) => {
     const { id, ...dataToSave } = updatedKiosk;

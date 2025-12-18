@@ -1,4 +1,3 @@
-import React from 'react';
 import { CampaignListScreen } from '../../../views/campaigns/CampaignListScreen';
 import { Campaign, KioskSession } from '../../../shared/types';
 import { useCampaignList } from '../hooks/useCampaignList';

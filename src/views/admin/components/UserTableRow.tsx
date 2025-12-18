@@ -1,8 +1,7 @@
-import React from 'react';
 import { Button } from '../../../shared/ui/button';
 import { Badge } from '../../../shared/ui/badge';
 import { TableCell, TableRow } from '../../../shared/ui/table';
-import { Edit, Trash2, Users, Shield, Key } from 'lucide-react';
+import { Edit, Trash2, Users } from 'lucide-react';
 import { User } from '../../../shared/types';
 import { formatDate, getRoleBadge, getLastLoginStatus } from '../../../shared/lib/userManagementHelpers';
 

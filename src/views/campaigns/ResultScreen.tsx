@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button } from '../../shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../shared/ui/card';
 import { CheckCircle, XCircle, Mail, Home, RefreshCw } from 'lucide-react';

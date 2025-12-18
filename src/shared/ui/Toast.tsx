@@ -92,7 +92,7 @@ interface ToastHostProps {
   align?: "top" | "bottom";
 }
 
-export function ToastHost({ children, visible, onClose, align = "top" }: ToastHostProps) {
+export function ToastHost({ children, visible, align = "top" }: ToastHostProps) {
   if (!visible) return null;
   const vertical = align === "top" ? "top-4" : "bottom-4";
   return (

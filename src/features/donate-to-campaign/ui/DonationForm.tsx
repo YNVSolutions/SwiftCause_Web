@@ -36,7 +36,6 @@ export function DonationForm({
   allowCustomAmount = true,
   minCustomAmount = 1,
   maxCustomAmount = 10000,
-  suggestedAmounts = [5, 15, 30, 75],
   enableRecurring = false,
   recurringIntervals = ["monthly", "quarterly", "yearly"],
   defaultRecurringInterval = "monthly",

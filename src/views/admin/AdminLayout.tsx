@@ -12,7 +12,6 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarSeparator,
   SidebarInset,
   SidebarTrigger,
   SidebarFooter,
@@ -26,13 +25,11 @@ import {
   Database,
   Users,
   LogOut,
-  User,
   X,
   Mail,
   Building2,
   Shield,
   Calendar,
-  ChevronsUpDown,
 } from "lucide-react";
 import { Button } from "../../shared/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../../shared/ui/avatar";

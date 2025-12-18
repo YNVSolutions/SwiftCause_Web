@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Button } from '../../../shared/ui/button';
 import { Input } from '../../../shared/ui/input';
 import { Label } from '../../../shared/ui/label';
@@ -10,7 +10,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Badge } from '../../../shared/ui/badge';
 import { Switch } from '../../../shared/ui/switch';
 import { Checkbox } from '../../../shared/ui/checkbox';
-import { Slider } from '../../../shared/ui/slider';
 import { Separator } from '../../../shared/ui/separator';
 import {
   Settings,
@@ -18,14 +17,8 @@ import {
   Palette,
   Users,
   Share2,
-  Eye,
   Plus,
   X,
-  Wand2,
-  Zap,
-  Heart,
-  Clock,
-  Globe,
   Phone,
   Mail,
   MapPin,

@@ -4,7 +4,7 @@ import { Button } from '../../shared/ui/button';
 import { Input } from '../../shared/ui/input';
 import { Label } from '../../shared/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../shared/ui/card';
-import { Mail, Send, Home, CheckCircle, ArrowLeft } from 'lucide-react';
+import { Mail, Send, Home, CheckCircle } from 'lucide-react';
 
 interface EmailConfirmationScreenProps {
   transactionId?: string;

@@ -1,11 +1,10 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Screen, AdminSession, Permission } from "../../shared/types";
-import { DEFAULT_CAMPAIGN_CONFIG, DEFAULT_CAMPAIGN_VALUES } from "../../shared/config";
+import { DEFAULT_CAMPAIGN_CONFIG } from "../../shared/config";
 import { DocumentData, Timestamp } from "firebase/firestore";
 import { useCampaignManagement } from "../../shared/lib/hooks/useCampaignManagement";
 import { useOrganizationTags } from "../../shared/lib/hooks/useOrganizationTags";
 import { deleteFile } from "../../shared/lib/firebase"; // Import deleteFile
-import * as firebaseService from "../../shared/api"; // Import firebaseService
 import UploadButton from "../../shared/ui/UploadButton"; // Import the new UploadButton component
 
 import { Button } from "../../shared/ui/button";
@@ -38,8 +37,6 @@ import { X, Check, ChevronsUpDown } from "lucide-react";
 import {
   FaEdit,
   FaSearch,
-  FaEllipsisV,
-  FaUpload,
   FaImage,
   FaTrashAlt, // Added FaTrashAlt
   FaPlus, // Import FaPlus
@@ -47,7 +44,6 @@ import {
 import { Plus, ArrowLeft, Settings, Download } from "lucide-react";
 import { Calendar } from "../../shared/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "../../shared/ui/popover";
-import { AlertTriangle } from "lucide-react"; // Import AlertTriangle
 import { Skeleton } from "../../shared/ui/skeleton";
 import { Ghost } from "lucide-react";
 import {
@@ -56,10 +52,8 @@ import {
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
-  AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "../../shared/ui/alert-dialog";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { AdminLayout } from "./AdminLayout";
@@ -399,27 +393,6 @@ const CampaignDialog = ({
     }
   };
 
-  const handleOrganizationLogoUpload = async () => {
-    if (selectedOrganizationLogo) {
-      setIsUploadingOrganizationLogo(true); // Set loading state
-      try {
-        const url = await uploadFile(
-          selectedOrganizationLogo,
-          `campaigns/${campaign?.id || "new"}/organizationLogo/${selectedOrganizationLogo.name
-          }`
-        );
-        if (url) {
-          setFormData((prev) => ({ ...prev, organizationInfoLogo: url }));
-          setOrganizationLogoPreview(url); // Update preview with uploaded URL
-        }
-      } catch (error) {
-        console.error("Error uploading organization logo:", error);
-        alert("Failed to upload organization logo. Please try again.");
-      } finally {
-        setIsUploadingOrganizationLogo(false); // Reset loading state
-      }
-    }
-  };
 
   const handleGalleryImagesUpload = async () => {
     if (selectedGalleryImages.length > 0) {

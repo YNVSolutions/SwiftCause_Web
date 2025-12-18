@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../../shared/ui/dialog';
 import { Button } from '../../shared/ui/button';
 import { Badge } from '../../shared/ui/badge';
 import { Progress } from '../../shared/ui/progress';
 import { Card, CardContent } from '../../shared/ui/card';
 import { 
-  X, 
   Play, 
   Pause, 
   RotateCcw,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '../../shared/ui/button';
-import { ArrowLeft, AlertTriangle, FileText, CheckCircle, ExternalLink } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, FileText, CheckCircle } from 'lucide-react';
 import { Footer } from '../../shared/ui/Footer';
 import swiftCauseLogo from '../../shared/assets/logo.png';
 

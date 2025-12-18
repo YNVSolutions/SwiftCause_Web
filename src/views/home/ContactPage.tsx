@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '../../shared/ui/button';
-import { ArrowLeft, Mail, Phone, Building, SendHorizontal, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Mail, Building, SendHorizontal, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { Footer } from '../../shared/ui/Footer';
 import swiftCauseLogo from '../../shared/assets/logo.png';
 import { submitFeedback } from '../../shared/api/firestoreService';
