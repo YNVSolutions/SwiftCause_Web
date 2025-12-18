@@ -163,6 +163,7 @@ const CampaignDialog = ({
   const [formData, setFormData] = useState<DocumentData>(getInitialFormData());
   const [activeTab, setActiveTab] = useState<"basic" | "advanced">("basic");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const galleryFileInputRef = useRef<HTMLInputElement>(null);
   const isEditMode = !!campaign;
 
   const {
@@ -636,9 +637,25 @@ const CampaignDialog = ({
 
               <div className="grid grid-cols-4 items-start gap-4">
                 <Label className="text-right pt-2">Cover Image</Label>
-                <div className="col-span-3 space-y-4">
-                  {imagePreview && (
-                    <div className="flex items-center space-x-4">
+                <div className="col-span-3 space-y-3">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    name="coverImageUrl"
+                  />
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-500 hover:border-indigo-500 hover:text-indigo-600 transition-colors"
+                      aria-label="Select cover image"
+                    >
+                      <Plus className="w-6 h-6" />
+                    </button>
+                    {imagePreview ? (
                       <div className="relative inline-block">
                         <img
                           src={imagePreview}
@@ -656,38 +673,16 @@ const CampaignDialog = ({
                           <X className="w-3 h-3" />
                         </Button>
                       </div>
-                    </div>
-                  )}
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-3">
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileSelect}
-                        className="hidden"
-                        name="coverImageUrl"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="flex items-center space-x-2"
-                      >
-                        <FaImage className="w-4 h-4" />
-                        <span>Select Image</span>
-                      </Button>
-                    </div>
-                    {selectedImage && (
-                      <div className="text-sm text-gray-600">
-                        <p>Selected: {selectedImage.name}</p>
-                        <p>
-                          Size: {(selectedImage.size / 1024 / 1024).toFixed(2)}{" "}
-                          MB
-                        </p>
-                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500">No cover image selected</p>
                     )}
                   </div>
+                  {selectedImage && (
+                    <div className="text-sm text-gray-600">
+                      <p>Selected: {selectedImage.name}</p>
+                      <p>Size: {(selectedImage.size / 1024 / 1024).toFixed(2)} MB</p>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -945,76 +940,61 @@ const CampaignDialog = ({
                 <Label htmlFor="galleryImages" className="text-right">
                   Gallery Images
                 </Label>
-                <div className="col-span-3 space-y-4">
-                  {galleryImagePreviews.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {galleryImagePreviews.map((src, index) => (
-                        <div key={index} className="relative group">
-                          <img
-                            src={src}
-                            alt={`Gallery preview ${index + 1}`}
-                            className="w-20 h-20 object-cover rounded-lg border"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteGalleryImage(src, index)}
-                            className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-white shadow text-gray-500 hover:text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-                            title="Remove image"
-                            aria-label="Remove image"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </div>
-                      ))}
+                <div className="col-span-3 space-y-3">
+                  <input
+                    ref={galleryFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    name="galleryImages"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    multiple
+                  />
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => galleryFileInputRef.current?.click()}
+                      className="w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-500 hover:border-indigo-500 hover:text-indigo-600 transition-colors disabled:opacity-50"
+                      aria-label="Add gallery image"
+                      disabled={galleryImagePreviews.length >= 4}
+                    >
+                      <Plus className="w-6 h-6" />
+                    </button>
+                    {galleryImagePreviews.map((src, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={src}
+                          alt={`Gallery preview ${index + 1}`}
+                          className="w-20 h-20 object-cover rounded-lg border"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteGalleryImage(src, index)}
+                          className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-white shadow text-gray-500 hover:text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                          title="Remove image"
+                          aria-label="Remove image"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  {selectedGalleryImages.length > 0 && (
+                    <div className="text-sm text-gray-600">
+                      <p>
+                        Selected: {selectedGalleryImages.map((file) => file.name).join(", ")}
+                      </p>
+                      <p>
+                        Total Size:{" "}
+                        {(
+                          selectedGalleryImages.reduce((sum, file) => sum + file.size, 0) /
+                          1024 /
+                          1024
+                        ).toFixed(2)}{" "}
+                        MB
+                      </p>
                     </div>
                   )}
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-3">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        name="galleryImages"
-                        onChange={handleFileSelect}
-                        className="hidden"
-                        id="galleryImagesInput"
-                        multiple
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() =>
-                          document.getElementById("galleryImagesInput")?.click()
-                        }
-                        className="flex items-center space-x-2"
-                        disabled={galleryImagePreviews.length >= 4}
-                      >
-                        <FaPlus className="w-4 h-4" />
-                        <span>Add Image</span>
-                      </Button>
-                    </div>
-                    {selectedGalleryImages.length > 0 && (
-                      <div className="text-sm text-gray-600">
-                        <p>
-                          Selected:{" "}
-                          {selectedGalleryImages
-                            .map((file) => file.name)
-                            .join(", ")}
-                        </p>
-                        <p>
-                          Total Size:{" "}
-                          {(
-                            selectedGalleryImages.reduce(
-                              (sum, file) => sum + file.size,
-                              0
-                            ) /
-                            1024 /
-                            1024
-                          ).toFixed(2)}{" "}
-                          MB
-                        </p>
-                      </div>
-                    )}
-                  </div>
                 </div>
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mt-8">Pricing Options</h3>
