@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Screen, AdminSession, Permission } from "../../shared/types";
-import { DEFAULT_CAMPAIGN_CONFIG, DEFAULT_CAMPAIGN_VALUES, DEFAULT_CAMPAIGN_IMAGE } from "../../shared/config";
+import { DEFAULT_CAMPAIGN_CONFIG, DEFAULT_CAMPAIGN_VALUES } from "../../shared/config";
 import { DocumentData, Timestamp } from "firebase/firestore";
 import { useCampaignManagement } from "../../shared/lib/hooks/useCampaignManagement";
 import { useOrganizationTags } from "../../shared/lib/hooks/useOrganizationTags";
@@ -1670,7 +1670,6 @@ const CampaignManagement = ({
                                   src={campaign.coverImageUrl}
                                   alt={campaign.title}
                                   className="w-16 h-16 object-cover rounded-lg border border-gray-200 flex-shrink-0"
-                                  fallbackSrc={DEFAULT_CAMPAIGN_IMAGE}
                                 />
                                 <div className="space-y-1 flex-1">
                                   <div className="flex items-center justify-between gap-2">
