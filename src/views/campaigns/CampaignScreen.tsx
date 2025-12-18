@@ -26,6 +26,7 @@ import {
 import { Campaign, Donation } from '../../shared/types';
 import { formatCurrency } from '../../shared/lib/currencyFormatter';
 import { getOrganizationById } from '../../shared/api';
+import { DEFAULT_CAMPAIGN_IMAGE } from '../../shared/config';
 
 type CampaignView = 'overview' | 'donate';
 
@@ -161,6 +162,7 @@ export function CampaignScreen({
                 src={campaign.coverImageUrl}
                 alt={campaign.title}
                 className="w-full h-full object-cover"
+                fallbackSrc={DEFAULT_CAMPAIGN_IMAGE}
               />
               <Badge className="absolute top-4 left-4 bg-white/90 text-gray-800">
                 {campaign.category}
@@ -203,6 +205,7 @@ export function CampaignScreen({
                       src={campaign.organizationInfo.logo}
                       alt={`${campaign.organizationInfo.name} logo`}
                       className="w-16 h-16 object-contain rounded-full mb-2"
+                      fallbackSrc={DEFAULT_CAMPAIGN_IMAGE}
                     />
                   )}
                   <p className="text-sm text-gray-600">{campaign.organizationInfo.description}</p>
@@ -269,8 +272,8 @@ export function CampaignScreen({
                           )}
                           {campaign.galleryImages && campaign.galleryImages.length > 0 && (
                             <div className="grid grid-cols-2 gap-2">
-                              {campaign.galleryImages.map((img: string, idx: number) => (
-                                <ImageWithFallback key={idx} src={img} alt={`${campaign.title} gallery image ${idx + 1}`} className="w-full h-auto rounded-md object-cover" />
+                          {campaign.galleryImages.map((img: string, idx: number) => (
+                                <ImageWithFallback key={idx} src={img} alt={`${campaign.title} gallery image ${idx + 1}`} className="w-full h-auto rounded-md object-cover" fallbackSrc={DEFAULT_CAMPAIGN_IMAGE} />
                               ))}
                             </div>
                           )}

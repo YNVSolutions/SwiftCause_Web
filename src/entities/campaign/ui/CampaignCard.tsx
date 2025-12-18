@@ -7,6 +7,7 @@ import { ImageWithFallback } from '../../../shared/ui/figma/ImageWithFallback';
 import { Heart, Info, ArrowRight, Star } from 'lucide-react';
 import { Campaign } from '../../../shared/types';
 import { formatCurrency } from '../../../shared/lib/currencyFormatter';
+import { DEFAULT_CAMPAIGN_IMAGE } from '../../../shared/config';
 
 interface CampaignCardProps {
   campaign: Campaign;
@@ -46,6 +47,7 @@ export function CampaignCard({
               src={campaign.coverImageUrl}
               alt={campaign.title}
               className="w-full h-full object-cover"
+              fallbackSrc={DEFAULT_CAMPAIGN_IMAGE}
             />
             {isDefault && (
               <div className="absolute top-1 left-1">
@@ -131,6 +133,7 @@ export function CampaignCard({
           src={campaign.coverImageUrl}
           alt={campaign.title}
           className="w-full h-full object-cover"
+          fallbackSrc={DEFAULT_CAMPAIGN_IMAGE}
         />
         <Badge className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-white/90 text-gray-800 text-xs">
           {campaign.category}
