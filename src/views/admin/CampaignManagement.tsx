@@ -1,11 +1,13 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Screen, AdminSession, Permission } from "../../shared/types";
-import { DEFAULT_CAMPAIGN_CONFIG, DEFAULT_CAMPAIGN_VALUES } from "../../shared/config";
+import { DEFAULT_CAMPAIGN_CONFIG } from "../../shared/config";
 import { DocumentData, Timestamp } from "firebase/firestore";
 import { useCampaignManagement } from "../../shared/lib/hooks/useCampaignManagement";
 import { useOrganizationTags } from "../../shared/lib/hooks/useOrganizationTags";
 import { deleteFile } from "../../shared/lib/firebase"; // Import deleteFile
 import * as firebaseService from "../../shared/api"; // Import firebaseService
+import UploadButton from "../../shared/ui/UploadButton"; // Import the new UploadButton component
+
 import { Button } from "../../shared/ui/button";
 import { Input } from "../../shared/ui/input";
 import { Label } from "../../shared/ui/label";

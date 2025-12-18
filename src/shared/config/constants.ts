@@ -53,3 +53,251 @@ export const PERMISSIONS = {
   MANAGE_PERMISSIONS: 'manage_permissions',
   SYSTEM_ADMIN: 'system_admin',
 } as const;
+
+// Campaign-related constants
+export const CAMPAIGN_CATEGORIES = [
+  'Global Health', 
+  'Education', 
+  'Emergency Relief', 
+  'Food Security', 
+  'Environmental', 
+  'Community Development', 
+  'Animal Welfare', 
+  'Arts & Culture'
+] as const;
+
+export const CAMPAIGN_THEMES = [
+  { value: 'default', label: 'Default', description: 'Clean, professional design' },
+  { value: 'minimal', label: 'Minimal', description: 'Simple, distraction-free' },
+  { value: 'vibrant', label: 'Vibrant', description: 'Bold colors and gradients' },
+  { value: 'elegant', label: 'Elegant', description: 'Sophisticated typography' }
+] as const;
+
+export const PREDEFINED_AMOUNT_SETS = [
+  { name: 'Small Donations', amounts: [5, 10, 25, 50, 100] },
+  { name: 'Medium Donations', amounts: [25, 50, 100, 250, 500] },
+  { name: 'Large Donations', amounts: [100, 250, 500, 1000, 2500] },
+  { name: 'Major Gifts', amounts: [500, 1000, 2500, 5000, 10000] }
+] as const;
+
+export const DEFAULT_CAMPAIGN_CONFIG = {
+  predefinedAmounts: [25, 50, 100, 250, 500],
+  allowCustomAmount: true,
+  minCustomAmount: 1,
+  maxCustomAmount: 10000,
+  suggestedAmounts: [25, 50, 100],
+  enableRecurring: true,
+  recurringIntervals: ['monthly', 'quarterly'] as const,
+  defaultRecurringInterval: 'monthly' as const,
+  recurringDiscount: 0,
+  displayStyle: 'grid' as const,
+  showProgressBar: true,
+  showDonorCount: true,
+  showRecentDonations: true,
+  maxRecentDonations: 5,
+  primaryCTAText: 'Donate Now',
+  secondaryCTAText: 'Learn More',
+  theme: 'default' as const,
+  requiredFields: ['email'] as const,
+  optionalFields: ['name'] as const,
+  enableAnonymousDonations: true,
+  enableSocialSharing: true,
+  enableDonorWall: true,
+  enableComments: false
+} as const;
+
+export const DEFAULT_CAMPAIGN_VALUES = {
+  goal: 10000,
+  raised: 0,
+  status: 'active' as const,
+  category: '',
+  organizationId: 'ORG-NEW',
+  isGlobal: false,
+  assignedKiosks: [],
+  galleryImages: [],
+  impactMetrics: {
+    peopleHelped: 0,
+    itemsProvided: 0
+  }
+} as const;
+
+export const CAMPAIGN_STATUS_OPTIONS = [
+  { value: 'active', label: 'Active' },
+  { value: 'paused', label: 'Paused' },
+  { value: 'completed', label: 'Completed' }
+] as const;
+
+export const RECURRING_INTERVALS = [
+  { value: 'monthly', label: 'Monthly' },
+  { value: 'quarterly', label: 'Quarterly' },
+  { value: 'yearly', label: 'Yearly' }
+] as const;
+
+export const DISPLAY_STYLES = [
+  { value: 'grid', label: 'Grid' },
+  { value: 'list', label: 'List' },
+  { value: 'carousel', label: 'Carousel' }
+] as const;
+
+export const FORM_FIELDS = [
+  { value: 'email', label: 'Email' },
+  { value: 'name', label: 'Name' },
+  { value: 'phone', label: 'Phone' },
+  { value: 'address', label: 'Address' },
+  { value: 'message', label: 'Message' }
+] as const;
+
+// UI and validation constants
+export const VALIDATION_LIMITS = {
+  campaign: {
+    title: { min: 3, max: 100 },
+    description: { min: 10, max: 500 },
+    goal: { min: 1, max: 10000000 },
+    maxCustomAmount: { min: 1, max: 100000 },
+    maxRecentDonations: { min: 1, max: 50 }
+  },
+  user: {
+    username: { min: 3, max: 30 },
+    email: { max: 100 },
+    firstName: { min: 1, max: 50 },
+    lastName: { min: 1, max: 50 }
+  },
+  organization: {
+    name: { min: 2, max: 100 },
+    website: { max: 200 }
+  }
+} as const;
+
+export const FILE_UPLOAD_LIMITS = {
+  image: {
+    maxSize: 5 * 1024 * 1024, // 5MB
+    allowedTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+    maxDimensions: { width: 4000, height: 4000 }
+  },
+  document: {
+    maxSize: 10 * 1024 * 1024, // 10MB
+    allowedTypes: ['application/pdf', 'text/plain', 'application/msword']
+  }
+} as const;
+
+export const PAGINATION_DEFAULTS = {
+  campaigns: { pageSize: 12, maxPageSize: 50 },
+  donations: { pageSize: 20, maxPageSize: 100 },
+  users: { pageSize: 10, maxPageSize: 50 },
+  kiosks: { pageSize: 10, maxPageSize: 50 }
+} as const;
+
+export const TOAST_DEFAULTS = {
+  duration: 2500,
+  position: 'top-right'
+} as const;
+
+export const LOADING_STATES = {
+  short: 500,
+  medium: 1000,
+  long: 2000
+} as const;
+
+export const BREAKPOINTS = {
+  mobile: 768,
+  tablet: 1024,
+  desktop: 1280
+} as const;
+
+export const ANIMATION_DURATIONS = {
+  fast: 150,
+  normal: 300,
+  slow: 500
+} as const;
+
+// User and organization-related constants
+export const ORGANIZATION_TYPES = [
+  'Non-Profit',
+  'Charity',
+  'Foundation',
+  'Religious Organization',
+  'Educational Institution',
+  'Healthcare Organization',
+  'Environmental Group',
+  'Community Organization',
+  'International NGO',
+  'Other'
+] as const;
+
+export const ORGANIZATION_SIZES = [
+  '1-10 employees',
+  '11-50 employees',
+  '51-200 employees',
+  '201-500 employees',
+  '500+ employees'
+] as const;
+
+export const CURRENCY_OPTIONS = [
+  { value: 'USD', label: 'US Dollar ($)', symbol: '$' },
+  { value: 'EUR', label: 'Euro (€)', symbol: '€' },
+  { value: 'GBP', label: 'British Pound (£)', symbol: '£' },
+  { value: 'CAD', label: 'Canadian Dollar (C$)', symbol: 'C$' },
+  { value: 'AUD', label: 'Australian Dollar (A$)', symbol: 'A$' },
+  { value: 'JPY', label: 'Japanese Yen (¥)', symbol: '¥' },
+  { value: 'CHF', label: 'Swiss Franc (CHF)', symbol: 'CHF' },
+  { value: 'SEK', label: 'Swedish Krona (kr)', symbol: 'kr' },
+  { value: 'NOK', label: 'Norwegian Krone (kr)', symbol: 'kr' },
+  { value: 'DKK', label: 'Danish Krone (kr)', symbol: 'kr' }
+] as const;
+
+export const DEFAULT_USER_PERMISSIONS = {
+  admin: [
+    'view_dashboard',
+    'view_campaigns',
+    'create_campaign',
+    'edit_campaign',
+    'delete_campaign',
+    'view_kiosks',
+    'create_kiosk',
+    'edit_kiosk',
+    'delete_kiosk',
+    'assign_campaigns',
+    'view_donations',
+    'export_donations',
+    'view_users',
+    'create_user',
+    'edit_user',
+    'delete_user',
+    'manage_permissions'
+  ],
+  manager: [
+    'view_dashboard',
+    'view_campaigns',
+    'create_campaign',
+    'edit_campaign',
+    'view_kiosks',
+    'create_kiosk',
+    'edit_kiosk',
+    'assign_campaigns',
+    'view_donations',
+    'export_donations',
+    'view_users',
+    'create_user',
+    'edit_user'
+  ],
+  operator: [
+    'view_dashboard',
+    'view_campaigns',
+    'view_kiosks',
+    'view_donations'
+  ],
+  viewer: [
+    'view_dashboard',
+    'view_campaigns',
+    'view_kiosks',
+    'view_donations'
+  ]
+} as const;
+
+export const PASSWORD_REQUIREMENTS = {
+  minLength: 8,
+  requireUppercase: true,
+  requireLowercase: true,
+  requireNumbers: true,
+  requireSpecialChars: false
+} as const;
