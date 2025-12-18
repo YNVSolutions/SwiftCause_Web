@@ -2,7 +2,7 @@ import React from 'react';
 import { Button } from '../../shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../shared/ui/card';
 import { Badge } from '../../shared/ui/badge';
-import { ArrowLeft, CreditCard, Shield, CreditCard as CreditCardIcon } from 'lucide-react';
+import { ArrowLeft, CreditCard, Shield, CreditCard as CreditCardIcon, Loader2 } from 'lucide-react';
 import { Campaign, Donation } from '../../shared/types';
 import PaymentForm from '../../widgets/payment-flow/PaymentForm';
 import { Checkbox } from '../../shared/ui/checkbox';
@@ -47,8 +47,30 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
     await handlePaymentSubmit(donation.amount, metadata, organizationCurrency || 'USD'); 
   };
 
+  if (isProcessing) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
+        <header className="bg-white shadow-sm border-b">
+          <div className="max-w-4xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
+            <Button variant="ghost" disabled className="mb-2 sm:mb-4 p-2 sm:p-3 opacity-60">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              <span className="text-sm sm:text-base">Back to Donation</span>
+            </Button>
+          </div>
+        </header>
+        <main className="flex-1 flex items-center justify-center px-4">
+          <div className="text-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto" />
+            <p className="text-gray-700 text-base sm:text-lg font-medium">Processing your donation...</p>
+            <p className="text-gray-500 text-sm">This usually takes only a moment.</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="relative min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100" aria-busy={isProcessing}>
       {/* Mobile-optimized header */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-4xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
