@@ -422,8 +422,11 @@ const CampaignDialog = ({
       removeFromState();
     } catch (error) {
       // Ignore if the file is already gone; otherwise log
-      // @ts-ignore
-      if (error?.code !== "storage/object-not-found") {
+      const errorCode =
+        typeof error === "object" && error !== null && "code" in error
+          ? (error as { code?: string }).code
+          : undefined;
+      if (errorCode !== "storage/object-not-found") {
         console.error("Error deleting gallery image:", error);
       }
       removeFromState();
