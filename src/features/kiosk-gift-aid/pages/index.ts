@@ -1,0 +1,1 @@
+export { GiftAidPage } from './GiftAidPage';

@@ -106,7 +106,7 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
     (customAmount && parseFloat(customAmount) > 0);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#FAFAFA]">
       <CampaignDetailsHeader onBack={onBack} />
 
       {/* 5/6 width container centered */}

@@ -6,8 +6,7 @@ import { useState, useEffect, use } from 'react';
 import { Campaign, GiftAidDetails } from '@/shared/types';
 import { getCampaignById } from '@/shared/api/firestoreService';
 import { CampaignDetailsContainer } from '@/features/kiosk-campaign-details';
-import { GiftAidBoostScreen } from '@/views/campaigns/GiftAidBoostScreen';
-import { GiftAidDetailsScreen } from '@/views/campaigns/GiftAidDetailsScreen';
+import { GiftAidPage } from '@/features/kiosk-gift-aid';
 
 export default function CampaignPage({
   params,
@@ -20,8 +19,6 @@ export default function CampaignPage({
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showGiftAidDetails, setShowGiftAidDetails] = useState(false);
-  const [selectedGiftAidAmount, setSelectedGiftAidAmount] = useState<number | null>(null);
 
   // Unwrap the params Promise
   const { campaignId } = use(params);
@@ -59,31 +56,18 @@ export default function CampaignPage({
     fetchCampaign();
   }, [campaignId]);
 
-  // Set initial gift aid amount from URL
-  useEffect(() => {
-    if (showGiftAid && initialAmount) {
-      setSelectedGiftAidAmount(initialAmount);
-    } else if (showGiftAid && isCustomAmount) {
-      // Custom amount mode - start with 0 or default
-      setSelectedGiftAidAmount(0);
-    }
-  }, [showGiftAid, initialAmount, isCustomAmount]);
-
   // Back to campaign list
   const handleBackToList = () => {
     router.push('/campaigns');
   };
 
-  // Back from gift aid screens - go to details if came from there, otherwise list
+  // Back from gift aid - go to details if came from there, otherwise list
   const handleBackFromGiftAid = () => {
     if (fromDetails && initialAmount) {
-      // Go back to details with amount pre-selected
       router.push(`/campaign/${campaignId}?preselect=${initialAmount}`);
     } else if (fromDetails) {
-      // Go back to details without amount
       router.push(`/campaign/${campaignId}`);
     } else {
-      // Came from list, go back to list
       router.push('/campaigns');
     }
   };
@@ -93,11 +77,22 @@ export default function CampaignPage({
     router.push(`/campaign/${campaignId}?amount=${amount}&giftaid=true&from=details`);
   };
 
-  const handleAcceptGiftAid = (finalAmount: number) => {
-    setSelectedGiftAidAmount(finalAmount);
-    setShowGiftAidDetails(true);
+  // Gift Aid accepted - save details and go to payment
+  const handleAcceptGiftAid = (details: GiftAidDetails) => {
+    const donation = {
+      campaignId: campaign?.id,
+      amount: details.donationAmount,
+      isGiftAid: true,
+      giftAidDetails: details,
+      kioskId: currentKioskSession?.kioskId,
+      donorName: `${details.firstName} ${details.surname}`,
+    };
+    sessionStorage.setItem('donation', JSON.stringify(donation));
+    sessionStorage.setItem('giftAidData', JSON.stringify(details));
+    router.push(`/payment/${campaignId}`);
   };
 
+  // Gift Aid declined - save donation and go to payment
   const handleDeclineGiftAid = (finalAmount: number) => {
     const donation = {
       campaignId: campaign?.id,
@@ -110,48 +105,17 @@ export default function CampaignPage({
     router.push(`/payment/${campaignId}`);
   };
 
-  const handleGiftAidDetailsSubmit = (details: GiftAidDetails) => {
-    const donation = {
-      campaignId: campaign?.id,
-      amount: selectedGiftAidAmount,
-      isGiftAid: true,
-      giftAidDetails: details,
-      kioskId: currentKioskSession?.kioskId,
-      donorName: `${details.firstName} ${details.surname}`,
-    };
-    sessionStorage.setItem('donation', JSON.stringify(donation));
-    sessionStorage.setItem('giftAidData', JSON.stringify(details));
-    router.push(`/payment/${campaignId}`);
-  };
-
-  const handleBackFromGiftAidDetails = () => {
-    setShowGiftAidDetails(false);
-  };
-
-  // Show Gift Aid Details screen
-  if (showGiftAid && showGiftAidDetails && campaign && selectedGiftAidAmount) {
+  // Show Gift Aid page (with sliding panels)
+  if (showGiftAid && campaign) {
     return (
-      <GiftAidDetailsScreen
+      <GiftAidPage
         campaign={campaign}
-        amount={selectedGiftAidAmount}
-        onSubmit={handleGiftAidDetailsSubmit}
-        onBack={handleBackFromGiftAidDetails}
-        organizationCurrency={currentKioskSession?.organizationCurrency}
-      />
-    );
-  }
-
-  // Show Gift Aid Boost screen
-  if (showGiftAid && campaign && (selectedGiftAidAmount !== null || isCustomAmount)) {
-    return (
-      <GiftAidBoostScreen
-        campaign={campaign}
-        amount={selectedGiftAidAmount || 0}
-        isCustomAmount={isCustomAmount}
+        amount={initialAmount || 0}
+        isCustomAmount={isCustomAmount || !initialAmount}
+        currency={currentKioskSession?.organizationCurrency || 'USD'}
         onAcceptGiftAid={handleAcceptGiftAid}
         onDeclineGiftAid={handleDeclineGiftAid}
         onBack={handleBackFromGiftAid}
-        organizationCurrency={currentKioskSession?.organizationCurrency}
       />
     );
   }

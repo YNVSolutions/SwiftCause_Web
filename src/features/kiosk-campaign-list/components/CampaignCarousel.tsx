@@ -30,7 +30,9 @@ export const CampaignCarousel: React.FC<CampaignCarouselProps> = ({
 
           const handleDonateClick = (e: React.MouseEvent) => {
             e.stopPropagation();
-            onViewDetails(campaign);
+            // Pass the middle predefined amount
+            const middleAmount = top3Amounts.length >= 2 ? top3Amounts[1] : top3Amounts[0] || 25;
+            onSelectCampaign(campaign, middleAmount);
           };
 
           return (

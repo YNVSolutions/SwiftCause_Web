@@ -25,7 +25,7 @@ export interface CampaignCardProps {
   campaign: Campaign;
   currency: string;
   onSelectAmount: (amount: number) => void;
-  onDonate: () => void;
+  onDonate: (amount: number) => void;
   onCardClick: () => void;
 }
 

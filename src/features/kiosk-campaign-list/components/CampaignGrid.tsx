@@ -16,7 +16,7 @@ export const CampaignGrid: React.FC<CampaignGridProps> = ({
           campaign={campaign}
           currency={currency}
           onSelectAmount={(amount) => onSelectCampaign(campaign, amount)}
-          onDonate={() => onSelectCampaign(campaign)}
+          onDonate={(amount) => onSelectCampaign(campaign, amount)}
           onCardClick={() => onViewDetails(campaign)}
         />
       ))}

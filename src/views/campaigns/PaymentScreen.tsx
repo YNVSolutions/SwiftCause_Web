@@ -1,6 +1,4 @@
-import { Button } from '../../shared/ui/button';
-import { Card, CardContent } from '../../shared/ui/card';
-import { ArrowLeft, CheckCircle, Lock } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Lock, Heart } from 'lucide-react';
 import { Campaign, Donation } from '../../shared/types';
 import PaymentForm from '../../widgets/payment-flow/PaymentForm';
 import { formatCurrency } from '../../shared/lib/currencyFormatter';
@@ -30,6 +28,11 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
   const isGiftAid = donation.isGiftAid || false;
   const giftAidAmount = isGiftAid ? donation.amount * 0.25 : 0;
   const totalImpact = donation.amount + giftAidAmount;
+
+  // Format amount without decimals
+  const formatAmount = (amount: number) => {
+    return formatCurrency(amount, organizationCurrency || 'USD').replace(/\.00$/, '');
+  };
 
   const handleSubmit = async () => {
     // Store complete Gift Aid data in sessionStorage for backup
@@ -72,19 +75,19 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
 
   if (isProcessing) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
-        <header className="bg-white shadow-sm border-b">
-          <div className="max-w-4xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
-            <Button variant="ghost" disabled className="mb-2 sm:mb-4 p-2 sm:p-3 opacity-60">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              <span className="text-sm sm:text-base">Back to Donation</span>
-            </Button>
+      <div className="min-h-screen bg-[#FAFAFA] flex flex-col">
+        <header className="bg-white border-b border-gray-100">
+          <div className="w-5/6 mx-auto py-4 flex items-center">
+            <button disabled className="p-2 -ml-2 rounded-full opacity-50">
+              <ArrowLeft className="w-6 h-6 text-[#0A0A0A]" />
+            </button>
+            <h1 className="ml-4 text-xl font-semibold text-[#0A0A0A]">Complete Donation</h1>
           </div>
         </header>
         <main className="flex-1 flex items-center justify-center px-4">
           <div className="text-center space-y-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto" />
-            <p className="text-gray-700 text-base sm:text-lg font-medium">Processing your donation...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#159A6F] mx-auto" />
+            <p className="text-[#0A0A0A] text-lg font-medium">Processing your donation...</p>
             <p className="text-gray-500 text-sm">This usually takes only a moment.</p>
           </div>
         </main>
@@ -93,95 +96,111 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
   }
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100" aria-busy={isProcessing}>
-      {/* Mobile-optimized header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-6xl mx-auto px-6 py-4">
-          <Button variant="ghost" onClick={onBack} disabled={isProcessing} className="p-3">
-            <ArrowLeft className="mr-2 h-5 w-5" />
-            <span className="text-lg font-medium">Complete Donation</span>
-          </Button>
+    <div className="min-h-screen bg-[#FAFAFA]" aria-busy={isProcessing}>
+      {/* Header */}
+      <header className="bg-white border-b border-gray-100">
+        <div className="w-5/6 mx-auto py-4 flex items-center">
+          <button
+            onClick={onBack}
+            disabled={isProcessing}
+            className="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors disabled:opacity-50"
+          >
+            <ArrowLeft className="w-6 h-6 text-[#0A0A0A]" />
+          </button>
+          <h1 className="ml-4 text-xl font-semibold text-[#0A0A0A]">Complete Donation</h1>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-6 py-12">
-        <Card className="bg-white shadow-2xl rounded-3xl overflow-hidden">
-          <CardContent className="p-12">
-            {/* Donation Summary Section */}
-            <div className="mb-12">
-              <div className="space-y-6">
-                {/* Donation Amount */}
-                <div className="flex justify-between items-center">
-                  <span className="text-xl text-gray-600">Donation Amount</span>
-                  <span className="text-3xl font-bold text-gray-900">
-                    {formatCurrency(donation.amount, organizationCurrency || 'USD')}
-                  </span>
+      <main className="w-5/6 mx-auto py-8">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+            {/* Campaign Header */}
+            <div className="bg-[#159A6F] text-white p-6 text-center">
+              <div className="flex justify-center mb-3">
+                <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center">
+                  <Heart className="w-7 h-7" />
+                </div>
+              </div>
+              <p className="text-white/80 text-sm mb-1">Donating to</p>
+              <h2 className="text-xl lg:text-2xl font-bold">{campaign.title}</h2>
+            </div>
+
+            <div className="p-8 lg:p-10">
+              {/* Donation Summary Section */}
+              <div className="mb-10">
+                <div className="space-y-5">
+                  {/* Donation Amount */}
+                  <div className="flex justify-between items-center">
+                    <span className="text-lg text-gray-600">Donation Amount</span>
+                    <span className="text-2xl font-bold text-[#0A0A0A]">
+                      {formatAmount(donation.amount)}
+                    </span>
+                  </div>
+
+                  {/* Gift Aid Section */}
+                  {isGiftAid && (
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center space-x-2">
+                        <CheckCircle className="h-5 w-5 text-[#159A6F]" />
+                        <span className="text-lg text-[#159A6F] font-medium">Gift Aid (25%)</span>
+                      </div>
+                      <span className="text-xl font-bold text-[#159A6F]">
+                        +{formatAmount(giftAidAmount)}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Total Impact */}
+                  <div className="pt-5 border-t border-gray-200">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xl font-bold text-[#0A0A0A]">Total Impact</span>
+                      <span className="text-3xl font-bold text-[#159A6F]">
+                        {formatAmount(totalImpact)}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Gift Aid Section */}
-                {isGiftAid && (
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="h-5 w-5 text-green-600" />
-                      <span className="text-xl text-green-600 font-medium">Gift Aid (25%)</span>
+                {/* Gift Aid Declaration Details */}
+                {isGiftAid && giftAidDetails && (
+                  <div className="mt-6 p-5 bg-[#E6FBF2] rounded-xl">
+                    <div className="space-y-2">
+                      <p className="text-sm text-gray-600">
+                        <span className="font-semibold text-[#0A0A0A]">Declaration:</span> I confirm I have paid enough UK Income/Capital Gains 
+                        Tax to cover all my Gift Aid donations.
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        <span className="font-semibold text-[#0A0A0A]">Details:</span> {giftAidDetails.firstName} {giftAidDetails.surname}, {giftAidDetails.postcode}
+                      </p>
                     </div>
-                    <span className="text-2xl font-bold text-green-600">
-                      +{formatCurrency(giftAidAmount, organizationCurrency || 'USD')}
-                    </span>
                   </div>
                 )}
+              </div>
 
-                {/* Total Impact */}
-                <div className="pt-4 border-t border-gray-200">
-                  <div className="flex justify-between items-center">
-                    <span className="text-2xl font-bold text-gray-900">Total Impact</span>
-                    <span className="text-4xl font-bold text-blue-600">
-                      {formatCurrency(totalImpact, organizationCurrency || 'USD')}
-                    </span>
-                  </div>
+              {/* Payment Method Section */}
+              <div className="mb-6">
+                <div className="flex items-center mb-5">
+                  <Lock className="h-5 w-5 text-gray-400 mr-2" />
+                  <h2 className="text-lg font-semibold text-[#0A0A0A]">Payment Method</h2>
+                </div>
+
+                {/* Payment Form */}
+                <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
+                  <PaymentForm 
+                    loading={isProcessing}
+                    error={error}
+                    onSubmit={handleSubmit}
+                  />
                 </div>
               </div>
 
-              {/* Gift Aid Declaration Details */}
-              {isGiftAid && giftAidDetails && (
-                <div className="mt-8 p-6 bg-gray-50 rounded-2xl">
-                  <div className="space-y-3">
-                    <p className="text-gray-600">
-                      <span className="font-semibold">Declaration:</span> I confirm I have paid enough UK Income/Capital Gains 
-                      Tax to cover all my Gift Aid donations. This is my own money and I 
-                      am not receiving anything in return.
-                    </p>
-                    <p className="text-gray-600">
-                      <span className="font-semibold">Details:</span> {giftAidDetails.firstName} {giftAidDetails.surname}, {giftAidDetails.postcode}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Payment Method Section */}
-            <div className="mb-8">
-              <div className="flex items-center mb-6">
-                <Lock className="h-6 w-6 text-gray-600 mr-3" />
-                <h2 className="text-2xl font-bold text-gray-900">Payment Method</h2>
-              </div>
-
-              {/* Payment Form - Highlighted and Focused */}
-              <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-8 shadow-lg">
-                <PaymentForm 
-                  loading={isProcessing}
-                  error={error}
-                  onSubmit={handleSubmit}
-                />
+              {/* Security Notice */}
+              <div className="text-center text-gray-400 text-xs">
+                <p>Your payment information is encrypted and secure.</p>
               </div>
             </div>
-
-            {/* Security Notice */}
-            <div className="text-center text-gray-500 text-sm">
-              <p>Your payment information is encrypted and secure. We use industry-standard security measures.</p>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </main>
     </div>
   );

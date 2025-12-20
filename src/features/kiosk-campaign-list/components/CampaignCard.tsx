@@ -13,6 +13,9 @@ export const CampaignCard: React.FC<CampaignCardProps> = ({
   const top3Amounts = getTop3Amounts(campaign);
   const progress = getProgressPercentage(campaign.raised || 0, campaign.goal);
 
+  // Get middle amount for donate button
+  const middleAmount = top3Amounts.length >= 2 ? top3Amounts[1] : top3Amounts[0] || 25;
+
   const handleAmountClick = (e: React.MouseEvent, amount: number) => {
     e.stopPropagation();
     onSelectAmount(amount);
@@ -20,7 +23,8 @@ export const CampaignCard: React.FC<CampaignCardProps> = ({
 
   const handleDonateClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onDonate();
+    // Pass the middle predefined amount
+    onDonate(middleAmount);
   };
 
   // Format amount without decimals
