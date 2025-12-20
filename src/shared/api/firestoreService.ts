@@ -171,3 +171,43 @@ export async function submitFeedback(feedback: FeedbackData) {
   const docRef = await addDoc(feedbackRef, feedbackData);
   return { id: docRef.id, ...feedbackData };
 }
+
+export async function storeGiftAidDeclaration(giftAidData: any, transactionId: string) {
+  const giftAidRef = collection(db, 'giftAidDeclarations');
+  const giftAidDeclaration = {
+    // Donor Information
+    firstName: giftAidData.firstName,
+    surname: giftAidData.surname,
+    houseNumber: giftAidData.houseNumber || '',
+    address: giftAidData.address || '',
+    town: giftAidData.town || '',
+    postcode: giftAidData.postcode,
+    
+    // Declaration Requirements
+    giftAidConsent: giftAidData.giftAidConsent,
+    ukTaxpayerConfirmation: giftAidData.ukTaxpayerConfirmation,
+    declarationText: giftAidData.declarationText,
+    declarationDate: new Date(giftAidData.declarationDate),
+    
+    // Donation Details
+    donationAmount: giftAidData.donationAmount,
+    donationDate: new Date(giftAidData.donationDate),
+    organizationId: giftAidData.organizationId,
+    donationId: giftAidData.donationId || '',
+    
+    // Audit Trail
+    timestamp: new Date(giftAidData.timestamp),
+    taxYear: giftAidData.taxYear,
+    
+    // Payment Reference
+    transactionId: transactionId,
+    
+    // Firebase metadata
+    createdAt: Timestamp.now(),
+    status: 'active'
+  };
+  
+  const docRef = await addDoc(giftAidRef, giftAidDeclaration);
+  console.log('Gift Aid declaration stored with ID:', docRef.id);
+  return { id: docRef.id, ...giftAidDeclaration };
+}

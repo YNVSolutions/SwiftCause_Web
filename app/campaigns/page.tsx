@@ -8,8 +8,13 @@ export default function CampaignsPage() {
   const router = useRouter()
   const { currentKioskSession, handleLogout, refreshCurrentKioskSession } = useAuth()
 
-  const handleSelectCampaign = (campaign: any) => {
-    router.push(`/campaign/${campaign.id}`)
+  const handleSelectCampaign = (campaign: any, amount?: number) => {
+    if (amount) {
+      router.push(`/campaign/${campaign.id}?amount=${amount}`)
+    } else {
+      // This is the custom amount case
+      router.push(`/campaign/${campaign.id}?custom=true`)
+    }
   }
 
   const handleViewDetails = (campaign: any) => {

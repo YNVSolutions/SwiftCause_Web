@@ -127,6 +127,7 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
       recurringInterval: isRecurring ? recurringInterval : undefined,
       isAnonymous: donorInfo.isAnonymous,
       isGiftAid: isGiftAid,
+      donorName: "" // No gift aid details collected yet, so no donor name
     };
 
     onSubmit(donation);

@@ -10,6 +10,7 @@ import {
 import { Badge } from "../../shared/ui/badge";
 import { Progress } from "../../shared/ui/progress";
 import { Skeleton } from "../../shared/ui/skeleton";
+import { ImageWithFallback } from "../../shared/ui/figma/ImageWithFallback";
 import {
   Collapsible,
   CollapsibleContent,
@@ -1229,17 +1230,12 @@ export function AdminDashboard({
                       >
                         {/* Campaign Image */}
                         <div className="relative h-32 bg-gradient-to-br from-gray-100 to-gray-200">
-                          {campaign.coverImageUrl ? (
-                            <img 
-                              src={campaign.coverImageUrl} 
-                              alt={campaign.title}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <Target className="w-12 h-12 text-gray-400" />
-                            </div>
-                          )}
+                          <ImageWithFallback
+                            src={campaign.coverImageUrl}
+                            alt={campaign.title}
+                            className="w-full h-full object-cover"
+                            fallbackType="campaign"
+                          />
                           {getRankOverlay()}
                         </div>
 

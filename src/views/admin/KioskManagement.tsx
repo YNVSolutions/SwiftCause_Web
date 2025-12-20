@@ -55,6 +55,10 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
 
   const [isAssignmentDialogOpen, setIsAssignmentDialogOpen] = useState(false);
   const [assigningKiosk, setAssigningKiosk] = useState<Kiosk | null>(null);
+  
+  // Delete confirmation dialog state
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [kioskToDelete, setKioskToDelete] = useState<Kiosk | null>(null);
 
   useEffect(() => {
     refreshKiosks();
@@ -87,14 +91,21 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
     }
   };
 
-  const handleDeleteKiosk = async (kioskId: string) => {
-    if (window.confirm('Are you sure you want to delete this kiosk?')) {
-      try {
-        await deleteDoc(doc(db, 'kiosks', kioskId));
-        refreshKiosks();
-      } catch (error) {
-        console.error("Error deleting kiosk: ", error);
-      }
+  const handleDeleteKiosk = (kiosk: Kiosk) => {
+    setKioskToDelete(kiosk);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteKiosk = async () => {
+    if (!kioskToDelete) return;
+    
+    try {
+      await deleteDoc(doc(db, 'kiosks', kioskToDelete.id));
+      refreshKiosks();
+      setIsDeleteDialogOpen(false);
+      setKioskToDelete(null);
+    } catch (error) {
+      console.error("Error deleting kiosk: ", error);
     }
   };
   
@@ -347,7 +358,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => handleDeleteKiosk(kiosk.id)}
+                                onClick={() => handleDeleteKiosk(kiosk)}
                                 className="h-8 w-8 hover:bg-red-50 hover:text-red-600"
                                 title="Delete kiosk"
                               >
@@ -427,6 +438,50 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
       </Dialog>
       
       <KioskCampaignAssignmentDialog open={isAssignmentDialogOpen} onOpenChange={setIsAssignmentDialogOpen} kiosk={assigningKiosk} campaigns={campaigns} onSave={handleSaveKioskAssignment} />
+      
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[400px] p-0 border-0 shadow-2xl">
+          <div className="bg-white rounded-2xl p-8 text-center">
+            {/* Warning Icon */}
+            <div className="flex justify-center mb-6">
+              <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                  <AlertTriangle className="w-6 h-6 text-red-500" />
+                </div>
+              </div>
+            </div>
+            
+            {/* Title */}
+            <h2 className="text-xl font-semibold text-gray-900 mb-3">
+              Delete kiosk
+            </h2>
+            
+            {/* Description */}
+            <p className="text-gray-600 mb-8 leading-relaxed">
+              Are you sure you want to delete this kiosk?<br />
+              This action cannot be undone.
+            </p>
+            
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsDeleteDialogOpen(false)}
+                className="flex-1 h-11 border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={confirmDeleteKiosk}
+                className="flex-1 h-11 bg-red-500 hover:bg-red-600 text-white border-0"
+              >
+                Delete
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }

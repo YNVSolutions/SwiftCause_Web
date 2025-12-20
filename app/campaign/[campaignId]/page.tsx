@@ -2,9 +2,11 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 import { CampaignScreen } from '@/views/campaigns/CampaignScreen'
+import { GiftAidBoostScreen } from '@/views/campaigns/GiftAidBoostScreen'
+import { GiftAidDetailsScreen } from '@/views/campaigns/GiftAidDetailsScreen'
 import { useAuth } from '@/shared/lib/auth-provider'
 import { useState, useEffect, use } from 'react'
-import { Campaign } from '@/shared/types'
+import { Campaign, GiftAidDetails } from '@/shared/types'
 import { getCampaignById } from '@/shared/api/firestoreService'
 
 export default function CampaignPage({ params }: { params: Promise<{ campaignId: string }> }) {
@@ -15,6 +17,10 @@ export default function CampaignPage({ params }: { params: Promise<{ campaignId:
   const [initialShowDetails, setInitialShowDetails] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [selectedAmount, setSelectedAmount] = useState<number | null>(null)
+  const [showGiftAidBoost, setShowGiftAidBoost] = useState(false)
+  const [showGiftAidDetails, setShowGiftAidDetails] = useState(false)
+  const [isCustomAmount, setIsCustomAmount] = useState(false)
   
   // Unwrap the params Promise
   const { campaignId } = use(params)
@@ -22,7 +28,21 @@ export default function CampaignPage({ params }: { params: Promise<{ campaignId:
   useEffect(() => {
     if (searchParams) {
       const view = searchParams.get('view')
+      const amount = searchParams.get('amount')
+      const custom = searchParams.get('custom')
+      
       setInitialShowDetails(view === 'overview')
+      
+      if (amount) {
+        const amountNum = parseInt(amount)
+        setSelectedAmount(amountNum)
+        setShowGiftAidBoost(true)
+        setIsCustomAmount(false)
+      } else if (custom === 'true') {
+        setSelectedAmount(25) // Default amount for custom
+        setShowGiftAidBoost(true)
+        setIsCustomAmount(true)
+      }
     }
     
     // Fetch campaign data based on campaignId
@@ -72,6 +92,58 @@ export default function CampaignPage({ params }: { params: Promise<{ campaignId:
     router.push(newUrl)
   }
 
+  const handleAcceptGiftAid = (finalAmount: number) => {
+    setSelectedAmount(finalAmount)
+    setShowGiftAidBoost(false)
+    setShowGiftAidDetails(true)
+  }
+
+  const handleDeclineGiftAid = (finalAmount: number) => {
+    if (campaign) {
+      const donation = {
+        campaignId: campaign.id,
+        amount: finalAmount,
+        isGiftAid: false,
+        kioskId: currentKioskSession?.kioskId,
+        donorName: "", // No gift aid, so no donor name
+      }
+      sessionStorage.setItem('donation', JSON.stringify(donation))
+      router.push(`/payment/${campaignId}`)
+    }
+  }
+
+  const handleBackFromGiftAid = () => {
+    setShowGiftAidBoost(false)
+    setSelectedAmount(null)
+    router.push('/campaigns')
+  }
+
+  const handleGiftAidDetailsSubmit = (details: GiftAidDetails) => {
+    if (selectedAmount && campaign) {
+      const donation = {
+        campaignId: campaign.id,
+        amount: selectedAmount,
+        isGiftAid: true,
+        giftAidDetails: details,
+        kioskId: currentKioskSession?.kioskId,
+        donorName: `${details.firstName} ${details.surname}`, // Include donor name from gift aid
+      }
+      
+      // Store donation object with Gift Aid details
+      sessionStorage.setItem('donation', JSON.stringify(donation))
+      
+      // Store Gift Aid data separately for easy access
+      sessionStorage.setItem('giftAidData', JSON.stringify(details))
+      
+      router.push(`/payment/${campaignId}`)
+    }
+  }
+
+  const handleBackFromGiftAidDetails = () => {
+    setShowGiftAidDetails(false)
+    setShowGiftAidBoost(true)
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
@@ -90,6 +162,34 @@ export default function CampaignPage({ params }: { params: Promise<{ campaignId:
 
   if (!campaign) {
     return <div>No campaign data available</div>
+  }
+
+  // Show Gift Aid details screen
+  if (showGiftAidDetails && selectedAmount) {
+    return (
+      <GiftAidDetailsScreen
+        campaign={campaign}
+        amount={selectedAmount}
+        onSubmit={handleGiftAidDetailsSubmit}
+        onBack={handleBackFromGiftAidDetails}
+        organizationCurrency={currentKioskSession?.organizationCurrency}
+      />
+    )
+  }
+
+  // Show Gift Aid boost screen if amount is selected
+  if (showGiftAidBoost && selectedAmount) {
+    return (
+      <GiftAidBoostScreen
+        campaign={campaign}
+        amount={selectedAmount}
+        isCustomAmount={isCustomAmount}
+        onAcceptGiftAid={handleAcceptGiftAid}
+        onDeclineGiftAid={handleDeclineGiftAid}
+        onBack={handleBackFromGiftAid}
+        organizationCurrency={currentKioskSession?.organizationCurrency}
+      />
+    )
   }
 
   return (
