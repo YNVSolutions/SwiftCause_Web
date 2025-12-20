@@ -77,22 +77,25 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
         setIsDeleteDialogOpen(true);
     };
 
-    const confirmDeleteUser = async () => {
-        if (!userToDelete) return;
-        
-        setIsDeletingUser(true);
-        try {
-            await deleteUser(userToDelete.id);
-            setIsDeleteDialogOpen(false);
-            setUserToDelete(null);
-        } catch (err) {
+const confirmDeleteUser = async () => {
+    if (!userToDelete) return;
+
+    setIsDeletingUser(true);
+    try {
+        await deleteUser(userToDelete.id);
+        setIsDeleteDialogOpen(false);
+        setUserToDelete(null);
+    } catch (err) {
+        setIsDeleteDialogOpen(false);
+        setUserToDelete(null);
+
+        setTimeout(() => {
             setDialogMessage(`Error: ${(err as Error).message}`);
-        } finally {
-            setIsDeletingUser(false);
-            setIsDeleteDialogOpen(false);
-            setUserToDelete(null);
-        }
-    };
+        }, 0);
+    } finally {
+        setIsDeletingUser(false);
+    }
+};
 
     const handleUpdateUser = async (userId: string, updates: Partial<User>) => {
         setIsUpdatingUser(true);
@@ -152,7 +155,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                     <div className="w-full sm:max-w-md">
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                            <Input placeholder="Search users by name or email..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
+                            <Input placeholder="Search users by name or email..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 border border-gray-300" />
                         </div>
                     </div>
                     {hasPermission('create_user') && (
@@ -170,21 +173,23 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                 </div>
 
                 <Card className="mb-8">
-                    <CardContent className="p-5">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <Select value={roleFilter} onValueChange={setRoleFilter}>
-                                <SelectTrigger className="w-full h-12"><SelectValue placeholder="Filter by role" /></SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All Roles</SelectItem>
-                                    <SelectItem value="admin">Admin</SelectItem>
-                                    <SelectItem value="manager">Manager</SelectItem>
-                                    <SelectItem value="operator">Operator</SelectItem>
-                                    <SelectItem value="viewer">Viewer</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </CardContent>
-                </Card>
+    <CardContent className="p-5">
+        <div className="flex items-center gap-4">
+            <Select value={roleFilter} onValueChange={setRoleFilter}>
+                <SelectTrigger className="h-12 min-w-[220px]">
+                    <SelectValue placeholder="Filter by role" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">All Roles</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="manager">Manager</SelectItem>
+                    <SelectItem value="operator">Operator</SelectItem>
+                    <SelectItem value="viewer">Viewer</SelectItem>
+                </SelectContent>
+            </Select>
+        </div>
+    </CardContent>
+</Card>
 
                 {/* Modern Table Container */}
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -287,7 +292,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
             
             {/* Delete Confirmation Dialog */}
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-                <DialogContent className="sm:max-w-[400px] p-0 border-0 shadow-2xl">
+                <DialogContent className="sm:max-w-[400px] p-0 border-0 shadow-2xl color-white z-100">
                     <div className="bg-white rounded-2xl p-8 text-center">
                         {/* Warning Icon */}
                         <div className="flex justify-center mb-6">
