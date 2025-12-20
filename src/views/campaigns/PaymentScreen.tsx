@@ -1,5 +1,6 @@
-import { ArrowLeft, CheckCircle, Lock, Heart } from 'lucide-react';
+import { CheckCircle, Lock, Heart } from 'lucide-react';
 import { Campaign, Donation } from '../../shared/types';
+import { KioskHeader } from '../../shared/components/KioskHeader';
 import PaymentForm from '../../widgets/payment-flow/PaymentForm';
 import { formatCurrency } from '../../shared/lib/currencyFormatter';
 
@@ -76,14 +77,7 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
   if (isProcessing) {
     return (
       <div className="min-h-screen bg-[#FAFAFA] flex flex-col">
-        <header className="bg-white border-b border-gray-100">
-          <div className="w-5/6 mx-auto py-4 flex items-center">
-            <button disabled className="p-2 -ml-2 rounded-full opacity-50">
-              <ArrowLeft className="w-6 h-6 text-[#0A0A0A]" />
-            </button>
-            <h1 className="ml-4 text-xl font-semibold text-[#0A0A0A]">Complete Donation</h1>
-          </div>
-        </header>
+        <KioskHeader title="Complete Donation" />
         <main className="flex-1 flex items-center justify-center px-4">
           <div className="text-center space-y-4">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#159A6F] mx-auto" />
@@ -97,19 +91,7 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
 
   return (
     <div className="min-h-screen bg-[#FAFAFA]" aria-busy={isProcessing}>
-      {/* Header */}
-      <header className="bg-white border-b border-gray-100">
-        <div className="w-5/6 mx-auto py-4 flex items-center">
-          <button
-            onClick={onBack}
-            disabled={isProcessing}
-            className="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors disabled:opacity-50"
-          >
-            <ArrowLeft className="w-6 h-6 text-[#0A0A0A]" />
-          </button>
-          <h1 className="ml-4 text-xl font-semibold text-[#0A0A0A]">Complete Donation</h1>
-        </div>
-      </header>
+      <KioskHeader title="Complete Donation" backText="Back" onBack={onBack} />
 
       <main className="w-5/6 mx-auto py-8">
         <div className="max-w-2xl mx-auto">

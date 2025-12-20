@@ -1,10 +1,10 @@
 import React from 'react';
+import { KioskHeader } from '@/shared/components/KioskHeader';
 import { CampaignListPageProps } from '../types';
 import {
   LoadingState,
   ErrorState,
   EmptyState,
-  CampaignListHeader,
   CampaignGrid,
   CampaignListLayout,
   CampaignCarousel,
@@ -41,7 +41,7 @@ export const CampaignListPage: React.FC<CampaignListPageProps> = ({
   // Main content
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
-      <CampaignListHeader onBack={onLogout} />
+      <KioskHeader title="Choose a cause" backText="Logout" onBack={onLogout} />
 
       <main className="max-w-5/6 mx-auto px-6 lg:px-12 xl:px-16 py-6 overflow-y-auto">
         {campaigns.length === 0 ? (

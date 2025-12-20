@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { ArrowLeft } from 'lucide-react';
 import { Campaign, GiftAidDetails } from '@/shared/types';
+import { KioskHeader } from '@/shared/components/KioskHeader';
 import { GiftAidBoostPanel, GiftAidDetailsPanel } from '../components';
 
 interface GiftAidPageProps {
@@ -47,18 +47,7 @@ export const GiftAidPage: React.FC<GiftAidPageProps> = ({
 
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-100 px-4 py-4">
-        <div className="w-5/6 mx-auto flex items-center">
-          <button
-            onClick={onBack}
-            className="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors"
-          >
-            <ArrowLeft className="w-6 h-6 text-[#0A0A0A]" />
-          </button>
-          <h1 className="ml-4 text-xl font-semibold text-[#0A0A0A]">Boost your donation</h1>
-        </div>
-      </div>
+      <KioskHeader title="Boost your donation" backText="Back" onBack={onBack} />
 
       {/* Main Content */}
       <main className="py-8 overflow-hidden">

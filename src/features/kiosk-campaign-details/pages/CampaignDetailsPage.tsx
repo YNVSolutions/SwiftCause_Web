@@ -1,8 +1,8 @@
 import React from 'react';
 import { formatCurrency } from '@/shared/lib/currencyFormatter';
+import { KioskHeader } from '@/shared/components/KioskHeader';
 import { CampaignDetailsPageProps } from '../types';
 import {
-  CampaignDetailsHeader,
   ImageCarousel,
   AmountSelector,
   DonateButton,
@@ -106,17 +106,17 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
     (customAmount && parseFloat(customAmount) > 0);
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA]">
-      <CampaignDetailsHeader onBack={onBack} />
+    <div className="h-screen flex flex-col bg-[#FAFAFA] overflow-hidden">
+      <KioskHeader title="Campaign Details" backText="Back" onBack={onBack} />
 
-      {/* 5/6 width container centered */}
-      <main className="w-5/6 mx-auto py-8">
-        {/* 3:2 grid layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12">
-          {/* Left Column (3/5): Image Carousel + Long Description */}
-          <div className="lg:col-span-3 space-y-6">
+      {/* 5/6 width container centered - fills remaining height */}
+      <main className="w-5/6 mx-auto py-8 flex-1 overflow-hidden">
+        {/* 3:2 grid layout - full height */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12 h-full">
+          {/* Left Column (3/5): Scrollable - Image Carousel + Long Description */}
+          <div className="lg:col-span-3 space-y-6 overflow-y-auto pr-2">
             {/* Image Carousel */}
-            <div className="h-80 lg:h-[450px]">
+            <div className="h-80 lg:h-[450px] flex-shrink-0">
               <ImageCarousel
                 images={galleryImages}
                 currentIndex={currentImageIndex}
@@ -126,15 +126,15 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
             </div>
 
             {/* Description below images */}
-            <div className="prose prose-gray max-w-none">
+            <div className="prose prose-gray max-w-none pb-4">
               <div className="text-gray-600 text-lg leading-relaxed">
                 {renderDescription(belowImageDescription)}
               </div>
             </div>
           </div>
 
-          {/* Right Column (2/5): Title + Description + Progress + Amounts + Video */}
-          <div className="lg:col-span-2 space-y-6">
+          {/* Right Column (2/5): Fixed - Title + Description + Progress + Amounts + Video */}
+          <div className="lg:col-span-2 space-y-6 overflow-hidden">
             {/* Title */}
             <h1 className="text-3xl lg:text-4xl font-semibold text-[#0A0A0A] leading-tight">
               {campaign.title}
