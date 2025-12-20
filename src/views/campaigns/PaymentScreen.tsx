@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '../../shared/ui/button';
 import { Card, CardContent } from '../../shared/ui/card';
-import { ArrowLeft, CheckCircle, Lock } from 'lucide-react';
+import { CheckCircle, Lock } from 'lucide-react';
 import {CardDescription, CardHeader, CardTitle } from '../../shared/ui/card';
 import { Badge } from '../../shared/ui/badge';
 import { ArrowLeft, CreditCard, Shield, CreditCard as CreditCardIcon, Loader2 } from 'lucide-react';

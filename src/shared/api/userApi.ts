@@ -1,4 +1,4 @@
-import { collection, getDocs, doc, DocumentData, query, where } from 'firebase/firestore';
+import { collection, getDocs, query, where, DocumentData, doc, updateDoc } from 'firebase/firestore';
 import { getAuth } from "firebase/auth";
 import { db } from '../lib/firebase';
 import { User, UserRole, Permission } from '../types';
@@ -52,11 +52,29 @@ export async function fetchAllUsers(organizationId?: string): Promise<DocumentDa
 
 export async function updateUser(userId: string, data: Partial<User>): Promise<any> {
   try {
-    const result = await callAuthenticatedFunction('updateUser', 'POST', { userId, data });
-    return result;
+    const userRef = doc(db, 'users', userId);
+    
+    // Update the user document in Firestore
+    await updateDoc(userRef, {
+      ...data,
+      updatedAt: new Date().toISOString(),
+    });
+    
+    return { success: true, message: 'User updated successfully' };
   } catch (error) {
     console.error('Error updating user:', error);
-    throw error;
+    
+    // Provide more specific error messages
+    if (error instanceof Error) {
+      if (error.message.includes('permission')) {
+        throw new Error('You do not have permission to update users.');
+      } else if (error.message.includes('not found')) {
+        throw new Error('User not found. The user may have been deleted.');
+      } else {
+        throw new Error(`Failed to update user: ${error.message}`);
+      }
+    }
+    throw new Error('Failed to update user due to an unknown error.');
   }
 }
 

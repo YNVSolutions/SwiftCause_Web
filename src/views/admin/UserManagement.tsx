@@ -1,22 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '../../shared/ui/button';
 import { Input } from '../../shared/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../shared/ui/card';
+import { Card, CardContent } from '../../shared/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../shared/ui/table';
 import {
   Plus, Search, ArrowLeft, UserCog, Users, Shield, Activity,
   Loader2, AlertCircle, Pencil, Trash2, AlertTriangle
 } from 'lucide-react';
-import { Skeleton } from "../../shared/ui/skeleton";
-import { Ghost } from "lucide-react";
+
 import { Screen, User, UserRole, AdminSession, Permission } from '../../shared/types';
 import { calculateUserStats } from '../../shared/lib/userManagementHelpers';
 import { useUsers } from '../../shared/lib/hooks/useUsers';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../../shared/ui/dialog';
 import { Label } from '../../shared/ui/label';
 import { Checkbox } from '../../shared/ui/checkbox';
-import { DialogPortal } from '@radix-ui/react-dialog';
 import { AdminLayout } from './AdminLayout';
 
 const allPermissions: Permission[] = [
@@ -43,6 +41,10 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
         username: '', email: '', password: '', role: 'viewer' as UserRole, permissions: [] as Permission[],
     });
     
+    // Loading states for different actions
+    const [isCreatingUser, setIsCreatingUser] = useState(false);
+    const [isUpdatingUser, setIsUpdatingUser] = useState(false);
+    const [isDeletingUser, setIsDeletingUser] = useState(false);
 
     const [dialogMessage, setDialogMessage] = useState<string | null>(null);
     const [dialogAction, setDialogAction] = useState<(() => void) | null>(null);
@@ -57,12 +59,16 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
             setDialogMessage("Username, email, and password are required.");
             return;
         }
+        
+        setIsCreatingUser(true);
         try {
             await addUser({ ...newUser, organizationId: userSession.user.organizationId! });
             setCreateDialogOpen(false);
             setNewUser({ username: '', email: '', password: '', role: 'viewer', permissions: [] });
         } catch (err) {
             setDialogMessage(`Error: ${(err as Error).message}`);
+        } finally {
+            setIsCreatingUser(false);
         }
     };
 
@@ -74,23 +80,30 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
     const confirmDeleteUser = async () => {
         if (!userToDelete) return;
         
+        setIsDeletingUser(true);
         try {
             await deleteUser(userToDelete.id);
             setIsDeleteDialogOpen(false);
             setUserToDelete(null);
         } catch (err) {
             setDialogMessage(`Error: ${(err as Error).message}`);
+        } finally {
+            setIsDeletingUser(false);
             setIsDeleteDialogOpen(false);
             setUserToDelete(null);
         }
     };
 
     const handleUpdateUser = async (userId: string, updates: Partial<User>) => {
+        setIsUpdatingUser(true);
         try {
             await updateUser(userId, updates);
             setEditingUser(null);
         } catch (err) {
+            console.log("error", err);
             setDialogMessage(`Error: ${(err as Error).message}`);
+        } finally {
+            setIsUpdatingUser(false);
         }
     };
 
@@ -255,8 +268,22 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                 </div>
             </main>
 
-            <CreateUserDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} newUser={newUser} onUserChange={setNewUser} onCreateUser={handleCreateUser} />
-            {editingUser && <EditUserDialog user={editingUser} onUpdate={handleUpdateUser} onClose={() => setEditingUser(null)} />}
+            <CreateUserDialog 
+                open={createDialogOpen} 
+                onOpenChange={setCreateDialogOpen} 
+                newUser={newUser} 
+                onUserChange={setNewUser} 
+                onCreateUser={handleCreateUser}
+                isLoading={isCreatingUser}
+            />
+            {editingUser && (
+                <EditUserDialog 
+                    user={editingUser} 
+                    onUpdate={handleUpdateUser} 
+                    onClose={() => setEditingUser(null)}
+                    isLoading={isUpdatingUser}
+                />
+            )}
             
             {/* Delete Confirmation Dialog */}
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -273,13 +300,19 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                         
                         {/* Title */}
                         <h2 className="text-xl font-semibold text-gray-900 mb-3">
-                            Delete user
+                            {isDeletingUser ? 'Deleting user...' : 'Delete user'}
                         </h2>
                         
                         {/* Description */}
                         <p className="text-gray-600 mb-8 leading-relaxed">
-                            Are you sure you want to delete this user?<br />
-                            This action cannot be undone.
+                            {isDeletingUser ? (
+                                'Please wait while we delete the user.'
+                            ) : (
+                                <>
+                                    Are you sure you want to delete this user?<br />
+                                    This action cannot be undone.
+                                </>
+                            )}
                         </p>
                         
                         {/* Action Buttons */}
@@ -287,42 +320,88 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                             <Button 
                                 variant="outline" 
                                 onClick={() => setIsDeleteDialogOpen(false)}
-                                className="flex-1 h-11 border-gray-300 text-gray-700 hover:bg-gray-50"
+                                disabled={isDeletingUser}
+                                className="flex-1 h-11 border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
                             >
                                 Cancel
                             </Button>
                             <Button 
                                 onClick={confirmDeleteUser}
-                                className="flex-1 h-11 bg-red-500 hover:bg-red-600 text-white border-0"
+                                disabled={isDeletingUser}
+                                className="flex-1 h-11 bg-red-500 hover:bg-red-600 text-white border-0 disabled:opacity-50"
                             >
-                                Delete
+                                {isDeletingUser ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        Deleting...
+                                    </>
+                                ) : (
+                                    'Delete'
+                                )}
                             </Button>
                         </div>
                     </div>
                 </DialogContent>
             </Dialog>
             
-            {dialogMessage && (
-                <Dialog open={true} onOpenChange={() => setDialogMessage(null)}>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Error</DialogTitle>
-                        </DialogHeader>
-                        <DialogDescription>
+            {/* Error Dialog */}
+            <Dialog
+                open={!!dialogMessage}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setDialogMessage(null);
+                    }
+                }}
+            >
+                <DialogContent 
+                    className="sm:max-w-[400px] p-0 border-0 shadow-2xl"
+                    onPointerDownOutside={(e) => {
+                        e.preventDefault();
+                        setDialogMessage(null);
+                    }}
+                    onEscapeKeyDown={(e) => {
+                        e.preventDefault();
+                        setDialogMessage(null);
+                    }}
+                >
+                    <div className="bg-white rounded-2xl p-8 text-center">
+                        <div className="flex justify-center mb-6">
+                            <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center">
+                                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                                    <AlertCircle className="w-6 h-6 text-red-500" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <h2 className="text-xl font-semibold text-gray-900 mb-3">
+                            Error
+                        </h2>
+
+                        <p className="text-gray-600 mb-8 leading-relaxed">
                             {dialogMessage}
-                        </DialogDescription>
-                        <DialogFooter>
-                            <Button onClick={() => setDialogMessage(null)}>Close</Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-            )}
+                        </p>
+
+                        <Button
+                            type="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setDialogMessage(null);
+                            }}
+                            className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white"
+                        >
+                            Close
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+
         </div>
         </AdminLayout>
     );
 }
 
-function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateUser }: any) {
+function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateUser, isLoading }: any) {
     const onPermissionChange = (permission: Permission, checked: boolean) => {
         const currentPermissions = newUser.permissions || [];
         const newPermissions = checked ? [...currentPermissions, permission] : currentPermissions.filter((p: Permission) => p !== permission);
@@ -332,7 +411,10 @@ function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateU
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader><DialogTitle>Create New User</DialogTitle><DialogDescription>Fill in the details to add a new user to your organization.</DialogDescription></DialogHeader>
+                <DialogHeader>
+                    <DialogTitle>{isLoading ? 'Creating User...' : 'Create New User'}</DialogTitle>
+                    <DialogDescription>Fill in the details to add a new user to your organization.</DialogDescription>
+                </DialogHeader>
                 <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="username" className="text-right">Username</Label>
@@ -344,6 +426,7 @@ function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateU
                                     onChange={(e) => onUserChange({ ...newUser, username: e.target.value })} 
                                     className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
                                     placeholder="Enter username"
+                                    disabled={isLoading}
                                 />
                             </div>
                         </div>
@@ -359,6 +442,7 @@ function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateU
                                     onChange={(e) => onUserChange({ ...newUser, email: e.target.value })} 
                                     className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
                                     placeholder="Enter email address"
+                                    disabled={isLoading}
                                 />
                             </div>
                         </div>
@@ -374,6 +458,7 @@ function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateU
                                     onChange={(e) => onUserChange({ ...newUser, password: e.target.value })} 
                                     className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
                                     placeholder="Enter password"
+                                    disabled={isLoading}
                                 />
                             </div>
                         </div>
@@ -382,7 +467,11 @@ function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateU
                         <Label htmlFor="role" className="text-right">Role</Label>
                         <div className="col-span-3">
                             <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                                <Select value={newUser.role} onValueChange={(value: UserRole) => onUserChange({ ...newUser, role: value })}>
+                                <Select 
+                                    value={newUser.role} 
+                                    onValueChange={(value: UserRole) => onUserChange({ ...newUser, role: value })}
+                                    disabled={isLoading}
+                                >
                                     <SelectTrigger className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent">
                                         <SelectValue placeholder="Select role" />
                                     </SelectTrigger>
@@ -405,7 +494,8 @@ function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateU
                                     <Checkbox 
                                         id={`create-${p}`} 
                                         checked={newUser.permissions.includes(p)} 
-                                        onCheckedChange={(c) => onPermissionChange(p, !!c)} 
+                                        onCheckedChange={(c) => onPermissionChange(p, !!c)}
+                                        disabled={isLoading}
                                     />
                                     <Label htmlFor={`create-${p}`} className="text-sm font-normal capitalize">
                                         {p.replace(/_/g, ' ')}
@@ -415,13 +505,34 @@ function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateU
                         </div>
                     </div>
                 </div>
-                <DialogFooter><Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button><Button onClick={onCreateUser}>Create User</Button></DialogFooter>
+                <DialogFooter>
+                    <Button 
+                        variant="outline" 
+                        onClick={() => onOpenChange(false)}
+                        disabled={isLoading}
+                    >
+                        Cancel
+                    </Button>
+                    <Button 
+                        onClick={onCreateUser}
+                        disabled={isLoading}
+                    >
+                        {isLoading ? (
+                            <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Creating...
+                            </>
+                        ) : (
+                            'Create User'
+                        )}
+                    </Button>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     );
 }
 
-function EditUserDialog({ user, onUpdate, onClose }: { user: User, onUpdate: (userId: string, updates: Partial<User>) => void, onClose: () => void }) {
+function EditUserDialog({ user, onUpdate, onClose, isLoading }: { user: User, onUpdate: (userId: string, updates: Partial<User>) => void, onClose: () => void, isLoading: boolean }) {
     const [editedUser, setEditedUser] = useState(user);
     useEffect(() => { setEditedUser(user); }, [user]);
 
@@ -434,13 +545,20 @@ function EditUserDialog({ user, onUpdate, onClose }: { user: User, onUpdate: (us
     return (
         <Dialog open={true} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader><DialogTitle>Edit User: {editedUser.username}</DialogTitle><DialogDescription>Update the user's role and permissions.</DialogDescription></DialogHeader>
+                <DialogHeader>
+                    <DialogTitle>{isLoading ? 'Updating User...' : `Edit User: ${editedUser.username}`}</DialogTitle>
+                    <DialogDescription>Update the user's role and permissions.</DialogDescription>
+                </DialogHeader>
                 <div className="grid gap-6 py-4">
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="role" className="text-right">Role</Label>
                         <div className="col-span-3">
                             <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                                <Select value={editedUser.role} onValueChange={(value: UserRole) => setEditedUser({ ...editedUser, role: value })}>
+                                <Select 
+                                    value={editedUser.role} 
+                                    onValueChange={(value: UserRole) => setEditedUser({ ...editedUser, role: value })}
+                                    disabled={isLoading}
+                                >
                                     <SelectTrigger className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent">
                                         <SelectValue />
                                     </SelectTrigger>
@@ -463,7 +581,8 @@ function EditUserDialog({ user, onUpdate, onClose }: { user: User, onUpdate: (us
                                     <Checkbox 
                                         id={`edit-${p}`} 
                                         checked={editedUser.permissions?.includes(p)} 
-                                        onCheckedChange={(c) => handlePermissionChange(p, !!c)} 
+                                        onCheckedChange={(c) => handlePermissionChange(p, !!c)}
+                                        disabled={isLoading}
                                     />
                                     <Label htmlFor={`edit-${p}`} className="text-sm font-normal capitalize">
                                         {p.replace(/_/g, ' ')}
@@ -474,7 +593,29 @@ function EditUserDialog({ user, onUpdate, onClose }: { user: User, onUpdate: (us
                     </div>
                 </div>
 
-                <DialogFooter><Button variant="outline" onClick={onClose}>Cancel</Button><Button onClick={() => onUpdate(editedUser.id, { role: editedUser.role, permissions: editedUser.permissions })}>Save Changes</Button></DialogFooter>
+                <DialogFooter>
+                    <Button 
+                        type="button"
+                        variant="outline" 
+                        onClick={onClose}
+                        disabled={isLoading}
+                    >
+                        Cancel
+                    </Button>
+                    <Button 
+                        onClick={() => onUpdate(editedUser.id, { role: editedUser.role, permissions: editedUser.permissions })}
+                        disabled={isLoading}
+                    >
+                        {isLoading ? (
+                            <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Saving...
+                            </>
+                        ) : (
+                            'Save Changes'
+                        )}
+                    </Button>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     );               
