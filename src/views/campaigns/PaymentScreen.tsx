@@ -2,9 +2,16 @@ import React from 'react';
 import { Button } from '../../shared/ui/button';
 import { Card, CardContent } from '../../shared/ui/card';
 import { ArrowLeft, CheckCircle, Lock } from 'lucide-react';
+import {CardDescription, CardHeader, CardTitle } from '../../shared/ui/card';
+import { Badge } from '../../shared/ui/badge';
+import {CreditCard, Shield, CreditCard as CreditCardIcon } from 'lucide-react';
 import { Campaign, Donation } from '../../shared/types';
 import PaymentForm from '../../widgets/payment-flow/PaymentForm';
 import { formatCurrency } from '../../shared/lib/currencyFormatter';
+import { Label } from '../../shared/ui/label';
+import { Input } from '../../shared/ui/input';
+import { Collapsible, CollapsibleContent } from "../../shared/ui/collapsible";
+import { Textarea } from "../../shared/ui/textarea";
 
 interface PaymentScreenProps {
   campaign: Campaign;

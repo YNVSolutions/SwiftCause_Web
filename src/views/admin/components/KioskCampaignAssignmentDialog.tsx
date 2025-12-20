@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "../../../shared/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../shared/ui/tabs";
-import { ImageWithFallback } from "../../../shared/ui/figma/ImageWithFallback";
+// import { ImageWithFallback } from "../../../shared/ui/figma/ImageWithFallback";
 import {
   Card,
   CardContent,
@@ -51,6 +51,8 @@ import {
   Eye,
 } from "lucide-react";
 import { Kiosk, Campaign } from "../../../shared/types";
+import { ImageWithFallback } from "../../../shared/ui/figma/ImageWithFallback";
+import { DEFAULT_CAMPAIGN_IMAGE } from "../../../shared/config";
 
 type DeviceInfoForm = (Kiosk["deviceInfo"]) & {
   modelCustom?: string;
@@ -506,7 +508,7 @@ export function KioskCampaignAssignmentDialog({
                             src={campaign.coverImageUrl}
                             alt={campaign.title}
                             className="w-full h-full object-cover"
-                            fallbackType="campaign"
+                            fallbackSrc={DEFAULT_CAMPAIGN_IMAGE}
                           />
                         </div>
                         
@@ -583,7 +585,7 @@ export function KioskCampaignAssignmentDialog({
                               src={campaign.coverImageUrl}
                               alt={campaign.title}
                               className="w-full h-full object-cover"
-                              fallbackType="campaign"
+                              fallbackSrc={DEFAULT_CAMPAIGN_IMAGE}
                             />
                           </div>
                           
@@ -641,7 +643,7 @@ export function KioskCampaignAssignmentDialog({
                             src={campaign.coverImageUrl}
                             alt={campaign.title}
                             className="w-full h-full object-cover"
-                            fallbackType="campaign"
+                            fallbackSrc={DEFAULT_CAMPAIGN_IMAGE}
                           />
                         </div>
                         
