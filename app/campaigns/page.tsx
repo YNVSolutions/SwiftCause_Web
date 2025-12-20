@@ -3,12 +3,13 @@
 import { useRouter } from 'next/navigation'
 import { CampaignListContainer } from '@/features/campaigns'
 import { useAuth } from '@/shared/lib/auth-provider'
+import { Campaign } from '@/shared/types'
 
 export default function CampaignsPage() {
   const router = useRouter()
   const { currentKioskSession, handleLogout, refreshCurrentKioskSession } = useAuth()
 
-  const handleSelectCampaign = (campaign: any, amount?: number) => {
+  const handleSelectCampaign = (campaign: Campaign, amount?: number) => {
     if (amount) {
       router.push(`/campaign/${campaign.id}?amount=${amount}`)
     } else {
@@ -17,7 +18,7 @@ export default function CampaignsPage() {
     }
   }
 
-  const handleViewDetails = (campaign: any) => {
+  const handleViewDetails = (campaign: Campaign) => {
     router.push(`/campaign/${campaign.id}?view=overview`)
   }
 

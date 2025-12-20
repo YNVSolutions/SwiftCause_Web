@@ -81,7 +81,9 @@ export default function CampaignPage({ params }: { params: Promise<{ campaignId:
   }
 
   const handleBack = () => {
-    router.push('/campaigns')
+    // Use router.back() to go to the actual previous page in history
+    // This ensures consistent behavior with browser gestures
+    router.back()
   }
 
   const handleViewChange = (view: 'overview' | 'donate') => {
@@ -113,9 +115,12 @@ export default function CampaignPage({ params }: { params: Promise<{ campaignId:
   }
 
   const handleBackFromGiftAid = () => {
+    // Go back to the campaign donation screen (previous screen in workflow)
     setShowGiftAidBoost(false)
     setSelectedAmount(null)
-    router.push('/campaigns')
+    // Use router.back() to go to the actual previous page in history
+    // This ensures consistent behavior with browser gestures
+    router.back()
   }
 
   const handleGiftAidDetailsSubmit = (details: GiftAidDetails) => {
@@ -140,8 +145,11 @@ export default function CampaignPage({ params }: { params: Promise<{ campaignId:
   }
 
   const handleBackFromGiftAidDetails = () => {
+    // Go back to Gift Aid Boost screen by updating state
     setShowGiftAidDetails(false)
     setShowGiftAidBoost(true)
+    // Update URL to reflect the Gift Aid Boost screen
+    router.replace(`/campaign/${campaignId}?amount=${selectedAmount}`)
   }
 
   if (loading) {
