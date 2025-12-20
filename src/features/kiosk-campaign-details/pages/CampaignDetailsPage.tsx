@@ -64,9 +64,40 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
   // Description to show below images (long description if available, else short)
   const belowImageDescription = campaign.longDescription || campaign.description;
 
-  // Format description: convert **text** to <strong>text</strong> (supports <br> and <hr> already via dangerouslySetInnerHTML)
-  const formatDescription = (text: string) => {
-    return text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  // Parse and render description safely (supports <br>, <hr>, and **bold**)
+  const renderDescription = (text: string) => {
+    // Split by <hr> first
+    const hrParts = text.split(/<hr\s*\/?>/gi);
+
+    return hrParts.map((hrPart, hrIndex) => {
+      // Split each part by <br>
+      const brParts = hrPart.split(/<br\s*\/?>/gi);
+
+      const content = brParts.map((brPart, brIndex) => {
+        // Handle **bold** syntax
+        const boldParts = brPart.split(/(\*\*.+?\*\*)/g);
+        const rendered = boldParts.map((part, partIndex) => {
+          if (part.startsWith('**') && part.endsWith('**')) {
+            return <strong key={partIndex}>{part.slice(2, -2)}</strong>;
+          }
+          return part;
+        });
+
+        return (
+          <React.Fragment key={brIndex}>
+            {brIndex > 0 && <br />}
+            {rendered}
+          </React.Fragment>
+        );
+      });
+
+      return (
+        <React.Fragment key={hrIndex}>
+          {hrIndex > 0 && <hr className="my-4 border-gray-200" />}
+          {content}
+        </React.Fragment>
+      );
+    });
   };
 
   // Check if donate is enabled (has selected amount or custom amount)
@@ -96,10 +127,9 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
 
             {/* Description below images */}
             <div className="prose prose-gray max-w-none">
-              <div
-                className="text-gray-600 text-lg leading-relaxed [&>hr]:my-4 [&>hr]:border-gray-200"
-                dangerouslySetInnerHTML={{ __html: formatDescription(belowImageDescription) }}
-              />
+              <div className="text-gray-600 text-lg leading-relaxed">
+                {renderDescription(belowImageDescription)}
+              </div>
             </div>
           </div>
 
