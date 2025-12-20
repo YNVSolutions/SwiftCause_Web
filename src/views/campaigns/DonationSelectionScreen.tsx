@@ -20,7 +20,6 @@ import {
   Percent
 } from 'lucide-react';
 import { Campaign, Donation } from '../../shared/types';
-import { DEFAULT_CAMPAIGN_IMAGE } from '../../shared/config';
 
 interface DonationSelectionScreenProps {
   campaign: Campaign;
@@ -180,7 +179,6 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
                 src={campaign.coverImageUrl}
                 alt={campaign.title}
                 className="w-full h-full object-cover"
-                fallbackSrc={DEFAULT_CAMPAIGN_IMAGE}
               />
               <Badge className="absolute top-4 left-4 bg-white/90 text-gray-800">
                 {campaign.category}
