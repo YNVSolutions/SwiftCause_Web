@@ -69,9 +69,10 @@ export function useUsers(organizationId?: string) {
       setUsers(prev => prev.map(user => (user.id === userId ? { ...user, ...userData } : user)));
       await updateUserApi(userId, userData);
     } catch (error) {
-      console.error(error);
-      refreshUsers();
-      throw new Error("Failed to update user.");
+      console.error('Error updating user:', error);
+      refreshUsers(); // Revert the optimistic update
+      // Throw the actual error instead of a generic message
+      throw error;
     }
   }, [refreshUsers]);
 
