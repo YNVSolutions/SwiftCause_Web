@@ -49,6 +49,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "../../shared/ui/popover
 import { AlertTriangle } from "lucide-react"; // Import AlertTriangle
 import { Skeleton } from "../../shared/ui/skeleton";
 import { Ghost } from "lucide-react";
+import { ImageWithFallback } from "../../shared/ui/figma/ImageWithFallback";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -1581,13 +1583,15 @@ const CampaignManagement = ({
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-8">
             <div className="w-full sm:max-w-md">
               <div className="relative">
-                <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  placeholder="Search campaigns..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+                <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 mr-2" />
+                <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                  <Input
+                    placeholder="Search campaigns..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="ml-5 pl-10 w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
+                  />
+                </div>
               </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto sm:justify-end">
@@ -1612,9 +1616,9 @@ const CampaignManagement = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <Card>
-              <CardContent className="p-4">
+              <CardContent className="p-2">
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-full h-12 border-0 shadow-none focus:ring-0 bg-transparent hover:bg-transparent font-semibold text-gray-900 [&>span]:font-semibold">
+                  <SelectTrigger className="w-full h-5 border-0 shadow-none focus:ring-0 bg-transparent hover:bg-transparent font-semibold text-gray-900 [&>span]:font-semibold">
                     <SelectValue placeholder="All Statuses" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1628,9 +1632,9 @@ const CampaignManagement = ({
             </Card>
 
             <Card>
-              <CardContent className="p-4">
+              <CardContent className="p-3">
                 <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                  <SelectTrigger className="w-full h-12 border-0 shadow-none focus:ring-0 bg-transparent hover:bg-transparent font-semibold text-gray-900 [&>span]:font-semibold">
+                  <SelectTrigger className="w-full h-10 border-0 shadow-none focus:ring-0 bg-transparent hover:bg-transparent font-semibold text-gray-900 [&>span]:font-semibold">
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1646,9 +1650,9 @@ const CampaignManagement = ({
             </Card>
 
             <Card>
-              <CardContent className="p-4">
+              <CardContent className="p-3">
                 <Select value={sortOrder} onValueChange={setSortOrder}>
-                  <SelectTrigger className="w-full h-12 border-0 shadow-none focus:ring-0 bg-transparent hover:bg-transparent font-semibold text-gray-900 [&>span]:font-semibold">
+                  <SelectTrigger className="w-full h-10 border-0 shadow-none focus:ring-0 bg-transparent hover:bg-transparent font-semibold text-gray-900 [&>span]:font-semibold">
                     <SelectValue placeholder="End Date" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1662,12 +1666,12 @@ const CampaignManagement = ({
             </Card>
 
             <Card>
-              <CardContent className="p-4">
+              <CardContent className="p-3">
                 <Popover open={showCalendar} onOpenChange={setShowCalendar}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
-                      className="justify-between text-left font-semibold w-full h-12 px-3 flex items-center border-0 shadow-none hover:bg-transparent bg-transparent text-gray-900"
+                      className="justify-between text-left font-semibold w-full h-10 px-3 flex items-center border-0 shadow-none hover:bg-transparent bg-transparent text-gray-900"
                     >
                       <div className="flex items-center">
                         <CalendarIcon className="mr-2 h-4 w-4" />
@@ -1847,10 +1851,11 @@ const CampaignManagement = ({
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-8 w-8 text-red-600 hover:text-red-700"
+                                  className="h-8 w-8 hover:bg-red-50 hover:text-red-600"
                                   onClick={() => handleDeleteClick(campaign)}
+                                  title="Delete campaign"
                                 >
-                                  <FaTrashAlt className="h-3 w-3" />
+                                  <FaTrashAlt className="h-4 w-4" />
                                 </Button>
                               </div>
                             </TableCell>
@@ -1874,20 +1879,49 @@ const CampaignManagement = ({
       {/* Dialogs remain after main content */}
       <CampaignDialog open={isEditDialogOpen} onOpenChange={open => { setIsEditDialogOpen(open); if(!open) setEditingCampaign(null); }} campaign={editingCampaign} organizationId={userSession.user.organizationId || ""} onSave={handleSave} />
       <CampaignDialog open={isAddDialogOpen} onOpenChange={open => { setIsAddDialogOpen(open); }} organizationId={userSession.user.organizationId || ""} onSave={(data, isNew) => handleSave(data, isNew, undefined)} />
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your campaign.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="flex items-center justify-end space-x-2">
-            <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete}>Delete</AlertDialogAction>
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[400px] p-0 border-0 shadow-2xl">
+          <div className="bg-white rounded-2xl p-8 text-center">
+            {/* Warning Icon */}
+            <div className="flex justify-center mb-6">
+              <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                  <AlertTriangle className="w-6 h-6 text-red-500" />
+                </div>
+              </div>
+            </div>
+            
+            {/* Title */}
+            <h2 className="text-xl font-semibold text-gray-900 mb-3">
+              Delete campaign
+            </h2>
+            
+            {/* Description */}
+            <p className="text-gray-600 mb-8 leading-relaxed">
+              Are you sure you want to delete this campaign?<br />
+              This action cannot be undone.
+            </p>
+            
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsDeleteDialogOpen(false)}
+                className="flex-1 h-11 border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleConfirmDelete}
+                className="flex-1 h-11 bg-red-500 hover:bg-red-600 text-white border-0"
+              >
+                Delete
+              </Button>
+            </div>
           </div>
-        </AlertDialogContent>
-      </AlertDialog>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 };
