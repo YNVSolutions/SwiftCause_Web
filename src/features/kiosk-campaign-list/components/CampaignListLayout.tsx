@@ -1,5 +1,4 @@
 import React from 'react';
-import { Button } from '@/shared/ui/button';
 import { formatCurrency } from '@/shared/lib/currencyFormatter';
 import { CampaignListLayoutProps } from '../types';
 import { getTop3Amounts, getProgressPercentage } from '../lib/campaignUtils';
@@ -8,76 +7,92 @@ export const CampaignListLayout: React.FC<CampaignListLayoutProps> = ({
   campaigns,
   currency,
   onSelectCampaign,
+  onViewDetails,
 }) => {
+  // Format amount without decimals
+  const formatAmount = (amount: number) => {
+    return formatCurrency(amount, currency).replace(/\.00$/, '');
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {campaigns.map((campaign) => {
         const top3Amounts = getTop3Amounts(campaign);
         const progress = getProgressPercentage(campaign.raised || 0, campaign.goal);
 
+        const handleAmountClick = (e: React.MouseEvent, amount: number) => {
+          e.stopPropagation();
+          onSelectCampaign(campaign, amount);
+        };
+
+        const handleDonateClick = (e: React.MouseEvent) => {
+          e.stopPropagation();
+          onViewDetails(campaign);
+        };
+
         return (
           <div
             key={campaign.id}
-            className="bg-white rounded-2xl overflow-hidden shadow-lg flex flex-col md:flex-row"
+            onClick={() => onViewDetails(campaign)}
+            className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition-shadow duration-200"
           >
             {/* Campaign Image */}
-            <div className="relative w-full md:w-64 h-48 md:h-auto shrink-0">
+            <div className="relative h-52 overflow-hidden">
               <img
                 src={campaign.coverImageUrl || '/campaign-fallback.svg'}
                 alt={campaign.title}
                 className="w-full h-full object-cover"
               />
-              {/* Progress Bar Overlay */}
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-4 md:hidden">
-                <div className="w-full bg-white/30 rounded-full h-2">
-                  <div
-                    className="bg-white h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-              </div>
             </div>
 
             {/* Campaign Info */}
-            <div className="flex-1 p-6 flex flex-col justify-between">
-              <div>
-                <h2 className="text-xl font-bold text-gray-900 mb-2">
-                  {campaign.title}
-                </h2>
-                <p className="text-gray-600 mb-4 line-clamp-2">{campaign.description}</p>
+            <div className="p-6">
+              <h2 className="text-xl font-semibold text-[#0A0A0A] mb-2 line-clamp-1">
+                {campaign.title}
+              </h2>
+              <p className="text-sm text-gray-500 mb-4 line-clamp-2 min-h-[40px]">
+                {campaign.description}
+              </p>
 
-                {/* Progress bar for desktop */}
-                <div className="hidden md:block mb-4">
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {progress.toFixed(0)}% of goal reached
-                  </p>
-                </div>
+              {/* Progress Info */}
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm text-[#0A0A0A]">
+                  {formatAmount(campaign.raised || 0)} / {formatAmount(campaign.goal)}
+                </span>
+                <span className="text-sm text-gray-500">{Math.round(progress)}%</span>
               </div>
 
-              {/* Donation Amount Buttons */}
-              <div className="flex flex-wrap gap-2">
+              {/* Progress Bar - Black */}
+              <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
+                <div
+                  className="bg-[#0A0A0A] h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+
+              {/* Amount Buttons - Soft green background */}
+              <div className="grid grid-cols-3 gap-3 mb-4">
                 {top3Amounts.map((amount, index) => (
-                  <Button
+                  <button
                     key={index}
-                    onClick={() => onSelectCampaign(campaign, amount)}
-                    className="h-10 bg-gray-100 hover:bg-gray-200 text-blue-600 font-semibold rounded-xl border-0 transition-all duration-200 text-sm"
+                    onClick={(e) => handleAmountClick(e, amount)}
+                    className="h-12 rounded-xl bg-[#E6FBF2] text-[#159A6F] font-medium text-base hover:bg-[#d0f5e6] transition-colors duration-200"
                   >
-                    💙 {formatCurrency(amount, currency)}
-                  </Button>
+                    {formatAmount(amount)}
+                  </button>
                 ))}
-                <Button
-                  onClick={() => onSelectCampaign(campaign)}
-                  className="h-10 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all duration-200"
-                >
-                  Custom
-                </Button>
               </div>
+
+              {/* Donate Button */}
+              <button
+                onClick={handleDonateClick}
+                className="w-full h-12 rounded-xl font-medium text-white transition-colors duration-200"
+                style={{ backgroundColor: '#159A6F' }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#128A62')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#159A6F')}
+              >
+                Donate
+              </button>
             </div>
           </div>
         );

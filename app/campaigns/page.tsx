@@ -1,28 +1,33 @@
-'use client'
+'use client';
 
-import { useRouter } from 'next/navigation'
-import { CampaignListContainer } from '@/features/kiosk-campaign-list'
-import { useAuth } from '@/shared/lib/auth-provider'
-import { Campaign } from '@/shared/types'
+import { useRouter } from 'next/navigation';
+import { CampaignListContainer } from '@/features/kiosk-campaign-list';
+import { useAuth } from '@/shared/lib/auth-provider';
+import { Campaign } from '@/shared/types';
 
 export default function CampaignsPage() {
-  const router = useRouter()
-  const { currentKioskSession, handleLogout, refreshCurrentKioskSession } = useAuth()
+  const router = useRouter();
+  const { currentKioskSession, handleLogout, refreshCurrentKioskSession } = useAuth();
 
   const handleSelectCampaign = (campaign: Campaign, amount?: number) => {
     if (amount) {
-      router.push(`/campaign/${campaign.id}?amount=${amount}`)
+      router.push(`/campaign/${campaign.id}?amount=${amount}`);
     } else {
-      router.push(`/campaign/${campaign.id}?custom=true`)
+      router.push(`/campaign/${campaign.id}?custom=true`);
     }
-  }
+  };
+
+  const handleViewDetails = (campaign: Campaign) => {
+    router.push(`/campaign/${campaign.id}?view=overview`);
+  };
 
   return (
     <CampaignListContainer
       kioskSession={currentKioskSession}
       onSelectCampaign={handleSelectCampaign}
+      onViewDetails={handleViewDetails}
       onLogout={handleLogout}
       refreshCurrentKioskSession={refreshCurrentKioskSession}
     />
-  )
+  );
 }

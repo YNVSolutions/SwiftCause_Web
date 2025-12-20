@@ -6,6 +6,7 @@ import { useCampaignListState } from '../hooks';
 interface CampaignListContainerProps {
   kioskSession: KioskSession | null;
   onSelectCampaign: (campaign: Campaign, amount?: number) => void;
+  onViewDetails: (campaign: Campaign) => void;
   onLogout: () => void;
   refreshCurrentKioskSession: () => Promise<void>;
 }
@@ -17,9 +18,10 @@ interface CampaignListContainerProps {
 export const CampaignListContainer: React.FC<CampaignListContainerProps> = ({
   kioskSession,
   onSelectCampaign,
+  onViewDetails,
   onLogout,
 }) => {
-  const { state, actions } = useCampaignListState({ kioskSession });
+  const { state } = useCampaignListState({ kioskSession });
 
   const handleSelectCampaign = useCallback(
     (campaign: Campaign, amount?: number) => {
@@ -28,11 +30,11 @@ export const CampaignListContainer: React.FC<CampaignListContainerProps> = ({
     [onSelectCampaign]
   );
 
-  const handlePageChange = useCallback(
-    (page: number) => {
-      actions.setPage(page);
+  const handleViewDetails = useCallback(
+    (campaign: Campaign) => {
+      onViewDetails(campaign);
     },
-    [actions]
+    [onViewDetails]
   );
 
   return (
@@ -40,7 +42,7 @@ export const CampaignListContainer: React.FC<CampaignListContainerProps> = ({
       state={state}
       kioskSession={kioskSession}
       onSelectCampaign={handleSelectCampaign}
-      onPageChange={handlePageChange}
+      onViewDetails={handleViewDetails}
       onLogout={onLogout}
     />
   );

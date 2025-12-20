@@ -1,10 +1,7 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useMemo } from 'react';
 import { Campaign, KioskSession } from '@/shared/types';
 import { useCampaigns } from '@/entities/campaign';
 import { CampaignListState, CampaignLayoutMode } from '../types';
-import { paginateCampaigns } from '../lib/campaignUtils';
-
-const CAMPAIGNS_PER_PAGE = 6;
 
 interface UseCampaignListStateProps {
   kioskSession: KioskSession | null;
@@ -13,20 +10,19 @@ interface UseCampaignListStateProps {
 interface UseCampaignListStateReturn {
   state: CampaignListState;
   actions: {
-    setPage: (page: number) => void;
     refresh: () => Promise<void>;
   };
-  filteredCampaigns: Campaign[];
 }
 
 export function useCampaignListState({
   kioskSession,
 }: UseCampaignListStateProps): UseCampaignListStateReturn {
-  const { campaigns: rawCampaigns, loading, error, refresh } = useCampaigns(
-    kioskSession?.organizationId
-  );
-
-  const [currentPage, setCurrentPage] = useState(1);
+  const {
+    campaigns: rawCampaigns,
+    loading,
+    error,
+    refresh,
+  } = useCampaigns(kioskSession?.organizationId);
 
   // Filter campaigns based on kiosk assignments
   const filteredCampaigns = useMemo(() => {
@@ -57,35 +53,20 @@ export function useCampaignListState({
     return filtered;
   }, [rawCampaigns, kioskSession]);
 
-  // Get paginated campaigns
-  const { campaigns: paginatedCampaigns, totalPages } = useMemo(() => {
-    return paginateCampaigns(filteredCampaigns, currentPage, CAMPAIGNS_PER_PAGE);
-  }, [filteredCampaigns, currentPage]);
-
   // Determine layout mode from kiosk settings
   const layoutMode: CampaignLayoutMode =
     (kioskSession?.settings?.displayMode as CampaignLayoutMode) || 'grid';
 
-  // Reset page when campaigns change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filteredCampaigns.length]);
-
   const state: CampaignListState = {
-    campaigns: paginatedCampaigns,
+    campaigns: filteredCampaigns,
     loading,
     error,
-    currentPage,
-    totalPages,
     layoutMode,
   };
 
   const actions = {
-    setPage: useCallback((page: number) => {
-      setCurrentPage(page);
-    }, []),
     refresh,
   };
 
-  return { state, actions, filteredCampaigns };
+  return { state, actions };
 }

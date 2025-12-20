@@ -8,8 +8,6 @@ export interface CampaignListState {
   campaigns: Campaign[];
   loading: boolean;
   error: string | null;
-  currentPage: number;
-  totalPages: number;
   layoutMode: CampaignLayoutMode;
 }
 
@@ -18,7 +16,7 @@ export interface CampaignListPageProps {
   state: CampaignListState;
   kioskSession: KioskSession | null;
   onSelectCampaign: (campaign: Campaign, amount?: number) => void;
-  onPageChange: (page: number) => void;
+  onViewDetails: (campaign: Campaign) => void;
   onLogout: () => void;
 }
 
@@ -27,7 +25,8 @@ export interface CampaignCardProps {
   campaign: Campaign;
   currency: string;
   onSelectAmount: (amount: number) => void;
-  onSelectCustom: () => void;
+  onDonate: () => void;
+  onCardClick: () => void;
 }
 
 // Props for grid layout
@@ -35,6 +34,7 @@ export interface CampaignGridProps {
   campaigns: Campaign[];
   currency: string;
   onSelectCampaign: (campaign: Campaign, amount?: number) => void;
+  onViewDetails: (campaign: Campaign) => void;
 }
 
 // Props for list layout
@@ -42,6 +42,7 @@ export interface CampaignListLayoutProps {
   campaigns: Campaign[];
   currency: string;
   onSelectCampaign: (campaign: Campaign, amount?: number) => void;
+  onViewDetails: (campaign: Campaign) => void;
 }
 
 // Props for carousel layout
@@ -49,6 +50,7 @@ export interface CampaignCarouselProps {
   campaigns: Campaign[];
   currency: string;
   onSelectCampaign: (campaign: Campaign, amount?: number) => void;
+  onViewDetails: (campaign: Campaign) => void;
 }
 
 // Props for pagination

@@ -5,7 +5,6 @@ import {
   ErrorState,
   EmptyState,
   CampaignListHeader,
-  Pagination,
   CampaignGrid,
   CampaignListLayout,
   CampaignCarousel,
@@ -23,10 +22,10 @@ export const CampaignListPage: React.FC<CampaignListPageProps> = ({
   state,
   kioskSession,
   onSelectCampaign,
-  onPageChange,
+  onViewDetails,
   onLogout,
 }) => {
-  const { campaigns, loading, error, currentPage, totalPages, layoutMode } = state;
+  const { campaigns, loading, error, layoutMode } = state;
   const currency = kioskSession?.organizationCurrency || 'USD';
 
   // Loading state
@@ -41,10 +40,10 @@ export const CampaignListPage: React.FC<CampaignListPageProps> = ({
 
   // Main content
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#FFFFFF]">
       <CampaignListHeader onBack={onLogout} />
 
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      <main className="max-w-5/6 mx-auto px-6 lg:px-12 xl:px-16 py-6 overflow-y-auto">
         {campaigns.length === 0 ? (
           <EmptyState kioskName={kioskSession?.kioskName} />
         ) : (
@@ -55,6 +54,7 @@ export const CampaignListPage: React.FC<CampaignListPageProps> = ({
                 campaigns={campaigns}
                 currency={currency}
                 onSelectCampaign={onSelectCampaign}
+                onViewDetails={onViewDetails}
               />
             </div>
 
@@ -65,6 +65,7 @@ export const CampaignListPage: React.FC<CampaignListPageProps> = ({
                   campaigns={campaigns}
                   currency={currency}
                   onSelectCampaign={onSelectCampaign}
+                  onViewDetails={onViewDetails}
                 />
               )}
 
@@ -73,6 +74,7 @@ export const CampaignListPage: React.FC<CampaignListPageProps> = ({
                   campaigns={campaigns}
                   currency={currency}
                   onSelectCampaign={onSelectCampaign}
+                  onViewDetails={onViewDetails}
                 />
               )}
 
@@ -81,15 +83,10 @@ export const CampaignListPage: React.FC<CampaignListPageProps> = ({
                   campaigns={campaigns}
                   currency={currency}
                   onSelectCampaign={onSelectCampaign}
+                  onViewDetails={onViewDetails}
                 />
               )}
             </div>
-
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={onPageChange}
-            />
           </>
         )}
       </main>
