@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { PaymentContainer } from '@/features/payment'
 import { useState, useEffect, use } from 'react'
 import { Campaign, Donation } from '@/shared/types'
-import { getCampaignById } from '@/shared/api/firestoreService'
+import { getCampaignById, storeGiftAidDeclaration } from '@/shared/api/firestoreService'
 
 export default function PaymentPage({ params }: { params: Promise<{ campaignId: string }> }) {
   const router = useRouter()
@@ -49,9 +49,30 @@ export default function PaymentPage({ params }: { params: Promise<{ campaignId: 
     fetchData()
   }, [campaignId])
 
-  const handlePaymentComplete = (result: { success: boolean; message?: string; transactionId?: string }) => {
-    // Store payment result and navigate to result page
+  const handlePaymentComplete = async (result: { success: boolean; message?: string; transactionId?: string }) => {
+    // Store payment result
     sessionStorage.setItem('paymentResult', JSON.stringify(result))
+    
+    // If payment successful and Gift Aid data exists, store it to Firebase
+    if (result.success && result.transactionId) {
+      try {
+        const completeGiftAidData = sessionStorage.getItem('completeGiftAidData');
+        if (completeGiftAidData) {
+          const giftAidData = JSON.parse(completeGiftAidData);
+          await storeGiftAidDeclaration(giftAidData, result.transactionId);
+          console.log('Gift Aid declaration successfully stored to Firebase');
+          
+          // Clean up session storage after successful storage
+          sessionStorage.removeItem('completeGiftAidData');
+          sessionStorage.removeItem('giftAidData');
+        }
+      } catch (error) {
+        console.error('Error storing Gift Aid declaration:', error);
+        // Don't block the user flow if Gift Aid storage fails
+      }
+    }
+    
+    // Navigate to result page
     router.push('/result')
   }
 

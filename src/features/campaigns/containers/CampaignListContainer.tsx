@@ -4,7 +4,7 @@ import { Campaign, KioskSession } from '../../../shared/types';
 import { useCampaignList } from '../hooks/useCampaignList';
 
 interface CampaignListContainerProps {
-  onSelectCampaign: (campaign: Campaign) => void;
+  onSelectCampaign: (campaign: Campaign, amount?: number) => void;
   onViewDetails: (campaign: Campaign) => void;
   kioskSession?: KioskSession | null;
   onLogout: () => void;

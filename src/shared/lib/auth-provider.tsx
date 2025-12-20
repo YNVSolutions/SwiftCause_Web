@@ -51,12 +51,71 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [currentAdminSession, setCurrentAdminSession] = useState<AdminSession | null>(null)
   const [isLoadingAuth, setIsLoadingAuth] = useState(true)
 
-  useEffect(() => {
-    console.log('AuthProvider: onAuthStateChanged listener set up.')
+  // Define refreshCurrentKioskSession function first
+  const refreshCurrentKioskSession = async (kioskIdToRefresh?: string) => {
+    const targetKioskId = kioskIdToRefresh || currentKioskSession?.kioskId
     
+    if (targetKioskId) {
+      try {
+        const kioskRef = doc(db, 'kiosks', targetKioskId)
+        const kioskSnap = await getDoc(kioskRef)
+        if (kioskSnap.exists()) {
+          const kioskData = kioskSnap.data() as any
+          
+          setCurrentKioskSession((prev) => ({
+            ...prev!,
+            ...kioskData,
+          }))
+        } else {
+          console.warn('Kiosk document not found during refresh:', targetKioskId)
+        }
+      } catch (error) {
+        console.error('Error refreshing kiosk session:', error)
+      }
+    }
+  }
+
+  // Load persisted kiosk session on mount
+  useEffect(() => {
+    const loadPersistedSession = async () => {
+      try {
+        const persistedKioskSession = localStorage.getItem('kioskSession')
+        const persistedUserRole = localStorage.getItem('userRole')
+
+        if (persistedKioskSession && persistedUserRole === 'kiosk') {
+          const kioskSession = JSON.parse(persistedKioskSession) as KioskSession
+          
+          setUserRole('kiosk')
+          setCurrentKioskSession(kioskSession)
+          // Refresh the session to get latest data
+          await refreshCurrentKioskSession(kioskSession.kioskId)
+        }
+      } catch (error) {
+        console.error('Error loading persisted session:', error)
+        // Clear corrupted data
+        localStorage.removeItem('kioskSession')
+        localStorage.removeItem('userRole')
+      }
+    }
+
+    loadPersistedSession()
+  }, [])
+
+  // Persist kiosk session changes to localStorage
+  useEffect(() => {
+    if (currentKioskSession) {
+      try {
+        localStorage.setItem('kioskSession', JSON.stringify(currentKioskSession))
+        localStorage.setItem('userRole', 'kiosk')
+      } catch (error) {
+        console.error('Error persisting kiosk session:', error)
+      }
+    }
+  }, [currentKioskSession])
+
+  useEffect(() => {
     // Set a timeout to prevent infinite loading if Firebase is not configured
     const timeout = setTimeout(() => {
-      console.log('AuthProvider: Timeout reached, setting loading to false')
       setIsLoadingAuth(false)
     }, 1000) // Reduced timeout for faster loading
 
@@ -77,11 +136,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           })
         } else {
           console.warn('AuthProvider: User document not found for UID:', firebaseUser.uid)
-          handleLogout()
+          // Only logout if we don't have a kiosk session
+          if (userRole !== 'kiosk') {
+            handleLogout()
+          }
         }
       } else {
-        console.log('AuthProvider: Firebase user is signed out.')
-        handleLogout()
+        // Only logout if we don't have a kiosk session
+        if (userRole !== 'kiosk' && !currentKioskSession) {
+          handleLogout()
+        }
       }
       setIsLoadingAuth(false)
     })
@@ -112,25 +176,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUserRole(null)
     setCurrentKioskSession(null)
     setCurrentAdminSession(null)
-  }
-
-  const refreshCurrentKioskSession = async (kioskIdToRefresh?: string) => {
-    const targetKioskId = kioskIdToRefresh || currentKioskSession?.kioskId
-    if (targetKioskId) {
-      try {
-        const kioskRef = doc(db, 'kiosks', targetKioskId)
-        const kioskSnap = await getDoc(kioskRef)
-        if (kioskSnap.exists()) {
-          setCurrentKioskSession((prev) => ({
-            ...prev!,
-            ...(kioskSnap.data() as any),
-          }))
-        } else {
-          console.warn('Kiosk document not found during refresh:', targetKioskId)
-        }
-      } catch (error) {
-        console.error('Error refreshing kiosk session:', error)
-      }
+    
+    // Clear persisted session data
+    try {
+      localStorage.removeItem('kioskSession')
+      localStorage.removeItem('userRole')
+    } catch (error) {
+      console.error('Error clearing persisted session:', error)
     }
   }
 
