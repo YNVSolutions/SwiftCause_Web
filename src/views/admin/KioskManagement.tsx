@@ -23,6 +23,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../shared/ui/table';
 import { KioskCampaignAssignmentDialog } from './components/KioskCampaignAssignmentDialog';
+import { KioskCredentialsCard } from './components/KioskCredentialsCard';
 
 
 import {
@@ -303,16 +304,22 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                     {filteredKiosks.map((kiosk) => (
                       <TableRow key={kiosk.id} className="hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0">
                         <TableCell className="px-6 py-4">
-                          <div className="space-y-1">
-                            <div className="flex items-center space-x-2">
-                              <Monitor className="w-4 h-4 text-gray-400" />
-                              <span className="text-sm font-medium text-gray-900">{kiosk.name}</span>
+                          <div className="space-y-3">
+                            <div className="space-y-1">
+                              <div className="flex items-center space-x-2">
+                                <Monitor className="w-4 h-4 text-gray-400" />
+                                <span className="text-sm font-medium text-gray-900">{kiosk.name}</span>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <MapPin className="w-3 h-3 text-gray-400" />
+                                <span className="text-sm text-gray-500">{kiosk.location}</span>
+                              </div>
                             </div>
-                            <div className="flex items-center space-x-2">
-                              <MapPin className="w-3 h-3 text-gray-400" />
-                              <span className="text-sm text-gray-500">{kiosk.location}</span>
-                            </div>
-                            <p className="text-xs text-gray-400 font-mono">{kiosk.id}</p>
+                            <KioskCredentialsCard
+                              kioskId={kiosk.id}
+                              accessCode={kiosk.accessCode}
+                              className="w-full max-w-md"
+                            />
                           </div>
                         </TableCell>
                         <TableCell className="px-6 py-4">{getStatusBadge(kiosk.status)}</TableCell>
