@@ -1,212 +1,176 @@
-'use client'
+'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation'
-import { CampaignScreen } from '@/views/campaigns/CampaignScreen'
-import { GiftAidBoostScreen } from '@/views/campaigns/GiftAidBoostScreen'
-import { GiftAidDetailsScreen } from '@/views/campaigns/GiftAidDetailsScreen'
-import { useAuth } from '@/shared/lib/auth-provider'
-import { useState, useEffect, use } from 'react'
-import { Campaign, GiftAidDetails } from '@/shared/types'
-import { getCampaignById } from '@/shared/api/firestoreService'
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useAuth } from '@/shared/lib/auth-provider';
+import { useState, useEffect, use } from 'react';
+import { Campaign, GiftAidDetails } from '@/shared/types';
+import { getCampaignById } from '@/shared/api/firestoreService';
+import { CampaignDetailsContainer } from '@/features/kiosk-campaign-details';
+import { GiftAidBoostScreen } from '@/views/campaigns/GiftAidBoostScreen';
+import { GiftAidDetailsScreen } from '@/views/campaigns/GiftAidDetailsScreen';
 
-export default function CampaignPage({ params }: { params: Promise<{ campaignId: string }> }) {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const { currentKioskSession } = useAuth()
-  const [campaign, setCampaign] = useState<Campaign | null>(null)
-  const [initialShowDetails, setInitialShowDetails] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [selectedAmount, setSelectedAmount] = useState<number | null>(null)
-  const [showGiftAidBoost, setShowGiftAidBoost] = useState(false)
-  const [showGiftAidDetails, setShowGiftAidDetails] = useState(false)
-  const [isCustomAmount, setIsCustomAmount] = useState(false)
-  
+export default function CampaignPage({
+  params,
+}: {
+  params: Promise<{ campaignId: string }>;
+}) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { currentKioskSession } = useAuth();
+  const [campaign, setCampaign] = useState<Campaign | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showGiftAidDetails, setShowGiftAidDetails] = useState(false);
+  const [selectedGiftAidAmount, setSelectedGiftAidAmount] = useState<number | null>(null);
+
   // Unwrap the params Promise
-  const { campaignId } = use(params)
+  const { campaignId } = use(params);
+
+  // Get URL params
+  const initialAmount = searchParams?.get('amount')
+    ? parseInt(searchParams.get('amount')!)
+    : null;
+  const showGiftAid = searchParams?.get('giftaid') === 'true';
+  const isCustomAmount = searchParams?.get('custom') === 'true';
+  const fromDetails = searchParams?.get('from') === 'details';
 
   useEffect(() => {
-    if (searchParams) {
-      const view = searchParams.get('view')
-      const amount = searchParams.get('amount')
-      const custom = searchParams.get('custom')
-      
-      setInitialShowDetails(view === 'overview')
-      
-      if (amount) {
-        const amountNum = parseInt(amount)
-        setSelectedAmount(amountNum)
-        setShowGiftAidBoost(true)
-        setIsCustomAmount(false)
-      } else if (custom === 'true') {
-        setSelectedAmount(25) // Default amount for custom
-        setShowGiftAidBoost(true)
-        setIsCustomAmount(true)
-      }
-    }
-    
-    // Fetch campaign data based on campaignId
     const fetchCampaign = async () => {
-      if (!campaignId) return
-      
+      if (!campaignId) return;
+
       try {
-        setLoading(true)
-        setError(null)
-        const campaignData = await getCampaignById(campaignId)
-        
+        setLoading(true);
+        setError(null);
+        const campaignData = await getCampaignById(campaignId);
+
         if (campaignData) {
-          setCampaign(campaignData as Campaign)
+          setCampaign(campaignData as Campaign);
         } else {
-          setError('Campaign not found')
+          setError('Campaign not found');
         }
       } catch (err) {
-        console.error('Error fetching campaign:', err)
-        setError('Failed to load campaign. Please try again.')
+        console.error('Error fetching campaign:', err);
+        setError('Failed to load campaign. Please try again.');
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
+    };
+
+    fetchCampaign();
+  }, [campaignId]);
+
+  // Set initial gift aid amount from URL
+  useEffect(() => {
+    if (showGiftAid && initialAmount) {
+      setSelectedGiftAidAmount(initialAmount);
+    } else if (showGiftAid && isCustomAmount) {
+      // Custom amount mode - start with 0 or default
+      setSelectedGiftAidAmount(0);
     }
-    
-    fetchCampaign()
-  }, [searchParams, campaignId])
+  }, [showGiftAid, initialAmount, isCustomAmount]);
 
-  const handleDonationSubmit = (donation: any) => {
-    // Store donation data in sessionStorage or pass via URL
-    const donationWithKiosk = {
-      ...donation,
-      kioskId: currentKioskSession?.kioskId,
+  // Back to campaign list
+  const handleBackToList = () => {
+    router.push('/campaigns');
+  };
+
+  // Back from gift aid screens - go to details if came from there, otherwise list
+  const handleBackFromGiftAid = () => {
+    if (fromDetails && initialAmount) {
+      // Go back to details with amount pre-selected
+      router.push(`/campaign/${campaignId}?preselect=${initialAmount}`);
+    } else if (fromDetails) {
+      // Go back to details without amount
+      router.push(`/campaign/${campaignId}`);
+    } else {
+      // Came from list, go back to list
+      router.push('/campaigns');
     }
-    sessionStorage.setItem('donation', JSON.stringify(donationWithKiosk))
-    router.push(`/payment/${campaignId}`)
-  }
+  };
 
-  const handleBack = () => {
-    // Use router.back() to go to the actual previous page in history
-    // This ensures consistent behavior with browser gestures
-    router.back()
-  }
-
-  const handleViewChange = (view: 'overview' | 'donate') => {
-    // Update URL to reflect view change
-    const newUrl = view === 'overview' 
-      ? `/campaign/${campaignId}?view=overview`
-      : `/campaign/${campaignId}`
-    router.push(newUrl)
-  }
+  // Donate from details screen - add from=details param
+  const handleDonate = (_campaign: Campaign, amount: number) => {
+    router.push(`/campaign/${campaignId}?amount=${amount}&giftaid=true&from=details`);
+  };
 
   const handleAcceptGiftAid = (finalAmount: number) => {
-    setSelectedAmount(finalAmount)
-    setShowGiftAidBoost(false)
-    setShowGiftAidDetails(true)
-  }
+    setSelectedGiftAidAmount(finalAmount);
+    setShowGiftAidDetails(true);
+  };
 
   const handleDeclineGiftAid = (finalAmount: number) => {
-    if (campaign) {
-      const donation = {
-        campaignId: campaign.id,
-        amount: finalAmount,
-        isGiftAid: false,
-        kioskId: currentKioskSession?.kioskId,
-        donorName: "", // No gift aid, so no donor name
-      }
-      sessionStorage.setItem('donation', JSON.stringify(donation))
-      router.push(`/payment/${campaignId}`)
-    }
-  }
-
-  const handleBackFromGiftAid = () => {
-    // Go back to the campaign donation screen (previous screen in workflow)
-    setShowGiftAidBoost(false)
-    setSelectedAmount(null)
-    // Use router.back() to go to the actual previous page in history
-    // This ensures consistent behavior with browser gestures
-    router.back()
-  }
+    const donation = {
+      campaignId: campaign?.id,
+      amount: finalAmount,
+      isGiftAid: false,
+      kioskId: currentKioskSession?.kioskId,
+      donorName: '',
+    };
+    sessionStorage.setItem('donation', JSON.stringify(donation));
+    router.push(`/payment/${campaignId}`);
+  };
 
   const handleGiftAidDetailsSubmit = (details: GiftAidDetails) => {
-    if (selectedAmount && campaign) {
-      const donation = {
-        campaignId: campaign.id,
-        amount: selectedAmount,
-        isGiftAid: true,
-        giftAidDetails: details,
-        kioskId: currentKioskSession?.kioskId,
-        donorName: `${details.firstName} ${details.surname}`, // Include donor name from gift aid
-      }
-      
-      // Store donation object with Gift Aid details
-      sessionStorage.setItem('donation', JSON.stringify(donation))
-      
-      // Store Gift Aid data separately for easy access
-      sessionStorage.setItem('giftAidData', JSON.stringify(details))
-      
-      router.push(`/payment/${campaignId}`)
-    }
-  }
+    const donation = {
+      campaignId: campaign?.id,
+      amount: selectedGiftAidAmount,
+      isGiftAid: true,
+      giftAidDetails: details,
+      kioskId: currentKioskSession?.kioskId,
+      donorName: `${details.firstName} ${details.surname}`,
+    };
+    sessionStorage.setItem('donation', JSON.stringify(donation));
+    sessionStorage.setItem('giftAidData', JSON.stringify(details));
+    router.push(`/payment/${campaignId}`);
+  };
 
   const handleBackFromGiftAidDetails = () => {
-    // Go back to Gift Aid Boost screen by updating state
-    setShowGiftAidDetails(false)
-    setShowGiftAidBoost(true)
-    // Update URL to reflect the Gift Aid Boost screen
-    router.replace(`/campaign/${campaignId}?amount=${selectedAmount}`)
-  }
+    setShowGiftAidDetails(false);
+  };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto" />
-          <p className="text-gray-700 text-base sm:text-lg font-medium">Loading campaign...</p>
-          <p className="text-gray-500 text-sm">Fetching the latest details.</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return <div className="p-4 text-red-600">{error}</div>
-  }
-
-  if (!campaign) {
-    return <div>No campaign data available</div>
-  }
-
-  // Show Gift Aid details screen
-  if (showGiftAidDetails && selectedAmount) {
+  // Show Gift Aid Details screen
+  if (showGiftAid && showGiftAidDetails && campaign && selectedGiftAidAmount) {
     return (
       <GiftAidDetailsScreen
         campaign={campaign}
-        amount={selectedAmount}
+        amount={selectedGiftAidAmount}
         onSubmit={handleGiftAidDetailsSubmit}
         onBack={handleBackFromGiftAidDetails}
         organizationCurrency={currentKioskSession?.organizationCurrency}
       />
-    )
+    );
   }
 
-  // Show Gift Aid boost screen if amount is selected
-  if (showGiftAidBoost && selectedAmount) {
+  // Show Gift Aid Boost screen
+  if (showGiftAid && campaign && (selectedGiftAidAmount !== null || isCustomAmount)) {
     return (
       <GiftAidBoostScreen
         campaign={campaign}
-        amount={selectedAmount}
+        amount={selectedGiftAidAmount || 0}
         isCustomAmount={isCustomAmount}
         onAcceptGiftAid={handleAcceptGiftAid}
         onDeclineGiftAid={handleDeclineGiftAid}
         onBack={handleBackFromGiftAid}
         organizationCurrency={currentKioskSession?.organizationCurrency}
       />
-    )
+    );
   }
 
+  // Get preselected amount for details screen (when coming back from gift aid)
+  const preselectAmount = searchParams?.get('preselect')
+    ? parseInt(searchParams.get('preselect')!)
+    : null;
+
+  // Show Campaign Details
   return (
-    <CampaignScreen
+    <CampaignDetailsContainer
       campaign={campaign}
-      initialShowDetails={initialShowDetails}
-      onSubmit={handleDonationSubmit}
-      onBack={handleBack}
-      onViewChange={handleViewChange}
+      loading={loading}
+      error={error}
+      currency={currentKioskSession?.organizationCurrency || 'USD'}
+      initialAmount={preselectAmount || initialAmount}
+      onBack={handleBackToList}
+      onDonate={handleDonate}
     />
-  )
+  );
 }

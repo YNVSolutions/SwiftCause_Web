@@ -9,16 +9,20 @@ export default function CampaignsPage() {
   const router = useRouter();
   const { currentKioskSession, handleLogout, refreshCurrentKioskSession } = useAuth();
 
+  // Donate with predefined amount - skip details, go straight to gift aid
   const handleSelectCampaign = (campaign: Campaign, amount?: number) => {
     if (amount) {
-      router.push(`/campaign/${campaign.id}?amount=${amount}`);
+      // Predefined amount selected - go to gift aid with amount
+      router.push(`/campaign/${campaign.id}?amount=${amount}&giftaid=true`);
     } else {
-      router.push(`/campaign/${campaign.id}?custom=true`);
+      // Donate button clicked (no amount) - go to gift aid with custom amount input
+      router.push(`/campaign/${campaign.id}?giftaid=true&custom=true`);
     }
   };
 
+  // View campaign details (card click)
   const handleViewDetails = (campaign: Campaign) => {
-    router.push(`/campaign/${campaign.id}?view=overview`);
+    router.push(`/campaign/${campaign.id}`);
   };
 
   return (
