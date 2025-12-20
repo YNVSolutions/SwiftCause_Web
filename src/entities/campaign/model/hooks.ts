@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { getCampaigns, getTopCampaigns, getAllCampaigns, updateCampaign, updateCampaignWithImage, createCampaign, createCampaignWithImage, deleteCampaign } from '../../../shared/api';
+import { getCampaigns, getTopCampaigns, updateCampaign, updateCampaignWithImage, createCampaign, createCampaignWithImage, deleteCampaign } from '../../../shared/api';
 import type { Campaign } from '../../../shared/types/campaign';
 
 export function useCampaigns(organizationId?: string) {

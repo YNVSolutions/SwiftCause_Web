@@ -90,7 +90,13 @@ export interface KioskSession {
   startTime: string;
   assignedCampaigns: string[];
   defaultCampaign?: string;
-  settings: any;
+  settings: {
+    displayMode?: "grid" | "list" | "carousel";
+    showAllCampaigns?: boolean;
+    maxCampaignsDisplay?: number;
+    autoRotateCampaigns?: boolean;
+    rotationInterval?: number;
+  };
   loginMethod: "qr" | "manual";
   organizationId?: string;
   organizationCurrency?: string;

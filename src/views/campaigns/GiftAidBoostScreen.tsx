@@ -36,18 +36,14 @@ export function GiftAidBoostScreen({
 
   const handleAcceptGiftAid = async () => {
     setIsLoading(true);
-    // Add a small delay to show the loading state
-    setTimeout(() => {
-      onAcceptGiftAid(currentAmount);
-    }, 500);
+    // Process immediately without artificial delay
+    onAcceptGiftAid(currentAmount);
   };
 
   const handleDeclineGiftAid = async () => {
     setIsLoading(true);
-    // Add a small delay to show the loading state
-    setTimeout(() => {
-      onDeclineGiftAid(currentAmount);
-    }, 500);
+    // Process immediately without artificial delay
+    onDeclineGiftAid(currentAmount);
   };
 
   // Show loading screen when processing

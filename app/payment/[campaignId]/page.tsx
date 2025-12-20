@@ -77,7 +77,9 @@ export default function PaymentPage({ params }: { params: Promise<{ campaignId: 
   }
 
   const handleBack = () => {
-    router.push(`/campaign/${campaignId}`)
+    // Use router.back() to go to the actual previous page in history
+    // This ensures consistent behavior with browser gestures
+    router.back()
   }
 
   if (loading) {
