@@ -77,14 +77,12 @@ export function CampaignListScreen({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-        <NavigationHeader title="Available Campaigns" />
-        <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading campaigns...</p>
-          </div>
-        </main>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto" />
+          <p className="text-gray-700 text-base sm:text-lg font-medium">Loading campaigns...</p>
+          <p className="text-gray-500 text-sm">Fetching the latest assignments for this kiosk.</p>
+        </div>
       </div>
     );
   }
