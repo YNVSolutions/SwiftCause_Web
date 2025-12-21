@@ -74,24 +74,9 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
     await handlePaymentSubmit(donation.amount, metadata, organizationCurrency || 'USD'); 
   };
 
-  if (isProcessing) {
-    return (
-      <div className="min-h-screen bg-[#FAFAFA] flex flex-col">
-        <KioskHeader title="Complete Donation" />
-        <main className="flex-1 flex items-center justify-center px-4">
-          <div className="text-center space-y-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#159A6F] mx-auto" />
-            <p className="text-[#0A0A0A] text-lg font-medium">Processing your donation...</p>
-            <p className="text-gray-500 text-sm">This usually takes only a moment.</p>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-[#FAFAFA]" aria-busy={isProcessing}>
-      <KioskHeader title="Complete Donation" backText="Back" onBack={onBack} />
+      <KioskHeader title="Complete Donation" backText="Back" onBack={isProcessing ? undefined : onBack} />
 
       <main className="w-5/6 mx-auto py-8">
         <div className="max-w-2xl mx-auto">
@@ -166,7 +151,7 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
                   <h2 className="text-lg font-semibold text-[#0A0A0A]">Payment Method</h2>
                 </div>
 
-                {/* Payment Form */}
+                {/* Payment Form - Always mounted to keep Stripe Elements alive */}
                 <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
                   <PaymentForm 
                     loading={isProcessing}
