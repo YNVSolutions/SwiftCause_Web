@@ -109,14 +109,14 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
     <div className="h-screen flex flex-col bg-[#FAFAFA] overflow-hidden">
       <KioskHeader title="Campaign Details" backText="Back" onBack={onBack} />
 
-      {/* 5/6 width container centered - fills remaining height */}
-      <main className="w-5/6 mx-auto py-8 flex-1 overflow-hidden">
+      {/* Large screens: Two-column layout */}
+      <main className="hidden lg:flex w-5/6 mx-auto py-8 flex-1 overflow-hidden">
         {/* 3:2 grid layout - full height */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12 h-full">
+        <div className="grid grid-cols-5 gap-12 h-full w-full">
           {/* Left Column (3/5): Scrollable - Image Carousel + Long Description */}
-          <div className="lg:col-span-3 space-y-6 overflow-y-auto pr-2">
+          <div className="col-span-3 space-y-6 overflow-y-auto pr-2">
             {/* Image Carousel */}
-            <div className="h-80 lg:h-[450px] flex-shrink-0">
+            <div className="h-[450px] shrink-0">
               <ImageCarousel
                 images={galleryImages}
                 currentIndex={currentImageIndex}
@@ -134,7 +134,7 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
           </div>
 
           {/* Right Column (2/5): Fixed - Title + Description + Progress + Amounts + Video */}
-          <div className="lg:col-span-2 space-y-6 overflow-hidden">
+          <div className="col-span-2 space-y-6 overflow-hidden">
             {/* Title */}
             <h1 className="text-3xl lg:text-4xl font-semibold text-[#0A0A0A] leading-tight">
               {campaign.title}
@@ -181,6 +181,76 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
           </div>
         </div>
       </main>
+
+      {/* Small screens: Single column with sticky donate controls */}
+      <div className="lg:hidden flex flex-col flex-1 overflow-hidden">
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto px-4 pb-4">
+          {/* Image Carousel */}
+          <div className="h-64 sm:h-80 mb-6">
+            <ImageCarousel
+              images={galleryImages}
+              currentIndex={currentImageIndex}
+              onIndexChange={onImageChange}
+              fallbackImage={campaign.coverImageUrl}
+            />
+          </div>
+
+          {/* Title */}
+          <h1 className="text-2xl sm:text-3xl font-semibold text-[#0A0A0A] leading-tight mb-3">
+            {campaign.title}
+          </h1>
+
+          {/* Short Description */}
+          <p className="text-gray-500 text-sm sm:text-base mb-4">{campaign.description}</p>
+
+          {/* Progress Section */}
+          <div className="space-y-2 mb-6">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-[#0A0A0A]">
+                {formatAmount(campaign.raised || 0)} / {formatAmount(campaign.goal)}
+              </span>
+              <span className="text-sm text-gray-500">{Math.round(progress)}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-[#0A0A0A] h-2 rounded-full transition-all duration-300"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Long Description */}
+          <div className="prose prose-gray max-w-none mb-6">
+            <div className="text-gray-600 text-base leading-relaxed">
+              {renderDescription(belowImageDescription)}
+            </div>
+          </div>
+
+          {/* Video Player */}
+          {campaign.videoUrl && (
+            <div className="mb-6">
+              <VideoPlayer videoUrl={campaign.videoUrl} />
+            </div>
+          )}
+        </div>
+
+        {/* Sticky donate controls at bottom */}
+        <div className="shrink-0 bg-white border-t border-gray-200 px-4 py-4 space-y-4">
+          {/* Amount Selector */}
+          <AmountSelector
+            amounts={predefinedAmounts}
+            selectedAmount={selectedAmount}
+            customAmount={customAmount}
+            currency={currency}
+            onSelectAmount={onSelectAmount}
+            onCustomAmountChange={onCustomAmountChange}
+          />
+
+          {/* Donate Button */}
+          <DonateButton disabled={!hasValidAmount} onClick={onDonate} />
+        </div>
+      </div>
     </div>
   );
 };

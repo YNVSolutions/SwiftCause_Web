@@ -70,7 +70,7 @@ export function EmailConfirmationScreen({ transactionId, onComplete }: EmailConf
                   onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#159A6F')}
                 >
                   <Home className="w-5 h-5" />
-                  Complete Transaction
+                  Back to Campaigns
                 </button>
 
                 {/* Footer Message */}
