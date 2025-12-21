@@ -23,8 +23,8 @@ export const CampaignCard: React.FC<CampaignCardProps> = ({
 
   const handleDonateClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // Pass the middle predefined amount
-    onDonate(middleAmount);
+    // Go to details page
+    onDonate();
   };
 
   // Format amount without decimals

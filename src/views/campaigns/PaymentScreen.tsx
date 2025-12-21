@@ -75,11 +75,11 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA]" aria-busy={isProcessing}>
+    <div className="h-screen flex flex-col bg-[#FAFAFA]" aria-busy={isProcessing}>
       <KioskHeader title="Complete Donation" backText="Back" onBack={isProcessing ? undefined : onBack} />
 
-      <main className="w-5/6 mx-auto py-8">
-        <div className="max-w-2xl mx-auto">
+      <main className="flex-1 flex items-center justify-center px-4">
+        <div className="w-full max-w-2xl">
           <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
             {/* Campaign Header */}
             <div className="bg-[#159A6F] text-white p-6 text-center">

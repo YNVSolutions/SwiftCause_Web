@@ -9,12 +9,13 @@ export default function CampaignsPage() {
   const router = useRouter();
   const { currentKioskSession, handleLogout, refreshCurrentKioskSession } = useAuth();
 
-  // All interactions go to details page
+  // Predefined amount click - go directly to gift aid with selected amount
   const handleSelectCampaign = (campaign: Campaign, amount?: number) => {
-    // Go to details page, optionally with preselected amount
     if (amount) {
-      router.push(`/campaign/${campaign.id}?preselect=${amount}`);
+      // Predefined amount selected - go straight to gift aid
+      router.push(`/campaign/${campaign.id}?amount=${amount}&giftaid=true`);
     } else {
+      // No amount (donate button) - go to details page
       router.push(`/campaign/${campaign.id}`);
     }
   };

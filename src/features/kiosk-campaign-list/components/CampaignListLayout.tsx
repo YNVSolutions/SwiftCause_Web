@@ -27,9 +27,8 @@ export const CampaignListLayout: React.FC<CampaignListLayoutProps> = ({
 
         const handleDonateClick = (e: React.MouseEvent) => {
           e.stopPropagation();
-          // Pass the middle predefined amount
-          const middleAmount = top3Amounts.length >= 2 ? top3Amounts[1] : top3Amounts[0] || 25;
-          onSelectCampaign(campaign, middleAmount);
+          // Go to details page
+          onViewDetails(campaign);
         };
 
         return (
