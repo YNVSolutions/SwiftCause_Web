@@ -5,8 +5,6 @@ import { DocumentData, Timestamp } from "firebase/firestore";
 import { useCampaignManagement } from "../../shared/lib/hooks/useCampaignManagement";
 import { useOrganizationTags } from "../../shared/lib/hooks/useOrganizationTags";
 import { deleteFile } from "../../shared/lib/firebase"; // Import deleteFile
-import UploadButton from "../../shared/ui/UploadButton"; // Import the new UploadButton component
-
 import { Button } from "../../shared/ui/button";
 import { Input } from "../../shared/ui/input";
 import { Label } from "../../shared/ui/label";
@@ -203,7 +201,6 @@ const CampaignDialog = ({
 
   // New states for specific image upload loading
   const [isUploadingOrganizationLogo, setIsUploadingOrganizationLogo] = useState(false);
-  const [isUploadingGalleryImages, setIsUploadingGalleryImages] = useState(false);
   // Loading state for the dialog submit (create/save)
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -385,21 +382,6 @@ const CampaignDialog = ({
     }
   };
 
-  const handleCoverImageUpload = async () => {
-    if (selectedImage) {
-      try {
-        const uploadedData = await handleImageUpload(campaign?.id, formData);
-        if (uploadedData && uploadedData.coverImageUrl) {
-          setFormData((prev) => ({ ...prev, coverImageUrl: uploadedData.coverImageUrl }));
-          setImagePreviewUrl(uploadedData.coverImageUrl); // Update preview with uploaded URL
-        }
-      } catch (error) {
-        console.error("Error uploading cover image:", error);
-        alert("Failed to upload cover image. Please try again.");
-      }
-    }
-  };
-
   const handleOrganizationLogoUpload = async () => {
     if (selectedOrganizationLogo) {
       setIsUploadingOrganizationLogo(true); // Set loading state
@@ -418,64 +400,6 @@ const CampaignDialog = ({
         alert("Failed to upload organization logo. Please try again.");
       } finally {
         setIsUploadingOrganizationLogo(false); // Reset loading state
-      }
-    }
-  };
-
-  const handleGalleryImagesUpload = async () => {
-    if (selectedGalleryImages.length > 0) {
-      setIsUploadingGalleryImages(true); // Set loading state
-      try {
-        const imageUrls: string[] = [];
-        // Combine existing gallery images with newly selected ones for upload
-        const allImagesToUpload = [
-          ...(formData.galleryImages
-            ? String(formData.galleryImages).split(",").filter(Boolean)
-            : []), // Existing URLs
-          ...selectedGalleryImages, // New files
-        ];
-
-        // Filter out any files that are already URLs (meaning they are existing images)
-        const filesToUpload = allImagesToUpload.filter(
-          (item) => typeof item !== "string"
-        ) as File[];
-
-        // Keep track of existing URLs that are not being deleted
-        const existingUrls = allImagesToUpload.filter(
-          (item) => typeof item === "string"
-        ) as string[];
-
-        for (const file of filesToUpload) {
-          try {
-            const url = await uploadFile(
-              file,
-              `campaigns/${campaign?.id || "new"}/galleryImages/${file.name}`
-            );
-            if (url) {
-              imageUrls.push(url);
-            }
-          } catch (error) {
-            console.error(`Error uploading gallery image ${file.name}:`, error);
-            alert(
-              `Failed to upload gallery image ${file.name}. Please try again.`
-            );
-            return;
-          }
-        }
-        if (imageUrls.length > 0 || existingUrls.length > 0) {
-          const finalGalleryImages = [...existingUrls, ...imageUrls];
-          setFormData((prev) => ({
-            ...prev,
-            galleryImages: finalGalleryImages.join(","),
-          }));
-          setGalleryImagePreviews(finalGalleryImages); // Update preview with uploaded URLs
-          setSelectedGalleryImages([]); // Clear selected files after upload
-        }
-      } catch (error) {
-        console.error("Error uploading gallery images:", error);
-        alert("Failed to upload gallery images. Please try again.");
-      } finally {
-        setIsUploadingGalleryImages(false); // Reset loading state
       }
     }
   };
@@ -543,6 +467,22 @@ const CampaignDialog = ({
 
     setIsSubmitting(true);
 
+    // Upload cover image if a new one was selected
+    if (selectedImage) {
+      try {
+        const uploadedData = await handleImageUpload(campaign?.id, finalData);
+        if (uploadedData?.coverImageUrl) {
+          finalData = { ...finalData, coverImageUrl: uploadedData.coverImageUrl };
+          setImagePreviewUrl(uploadedData.coverImageUrl);
+        }
+      } catch (error) {
+        console.error("Error uploading cover image:", error);
+        alert("Failed to upload cover image. Please try again.");
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
     // Upload organization logo
     if (selectedOrganizationLogo && !finalData.organizationInfoLogo) { // Only upload if not already uploaded
       try {
@@ -562,29 +502,32 @@ const CampaignDialog = ({
       }
     }
 
-    // Upload gallery images
-    if (selectedGalleryImages.length > 0 && !finalData.galleryImages) { // Only upload if not already uploaded
-      const imageUrls: string[] = [];
+    // Upload gallery images (append to existing list if present)
+    if (selectedGalleryImages.length > 0) {
+      const uploadedUrls: string[] = [];
+      const existingUrls = finalData.galleryImages
+        ? String(finalData.galleryImages).split(",").filter(Boolean)
+        : [];
+
       for (const file of selectedGalleryImages) {
         try {
           const url = await uploadFile(
             file,
             `campaigns/${campaign?.id || "new"}/galleryImages/${file.name}`
           );
-          if (url) {
-            imageUrls.push(url);
-          }
+          if (url) uploadedUrls.push(url);
         } catch (error) {
           console.error(`Error uploading gallery image ${file.name}:`, error);
-          alert(
-            `Failed to upload gallery image ${file.name}. Please try again.`
-          );
+          alert(`Failed to upload gallery image ${file.name}. Please try again.`);
           setIsSubmitting(false);
           return;
         }
       }
-      if (imageUrls.length > 0) {
-        finalData = { ...finalData, galleryImages: imageUrls.join(",") };
+
+      if (uploadedUrls.length > 0 || existingUrls.length > 0) {
+        const finalGalleryImages = [...existingUrls, ...uploadedUrls];
+        finalData = { ...finalData, galleryImages: finalGalleryImages.join(",") };
+        setGalleryImagePreviews(finalGalleryImages);
       }
     }
 
@@ -619,9 +562,7 @@ const CampaignDialog = ({
     : "Fill in the details below to create a new campaign.";
   const saveButtonText = isEditMode ? "Save Changes" : "Create Campaign";
   const isSaveDisabled =
-    uploadingImage || !formData.title || !formData.description ||
-    (selectedOrganizationLogo && !formData.organizationInfoLogo) ||
-    (selectedGalleryImages.length > 0 && !formData.galleryImages);
+    uploadingImage || !formData.title || !formData.description;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -713,9 +654,7 @@ const CampaignDialog = ({
                     <div className="text-sm text-gray-600">
                       <p>
                         {imagePreview || formData.coverImageUrl
-                          ? isEditMode
-                            ? "Current cover image"
-                            : "Selected image"
+                          ? "Selected image"
                           : "Using default placeholder image"}
                       </p>
                     </div>
@@ -739,13 +678,6 @@ const CampaignDialog = ({
                         <FaImage className="w-4 h-4" />
                         <span>Select Image</span>
                       </Button>
-                      {selectedImage && (
-                        <UploadButton
-                          onClick={handleCoverImageUpload}
-                          disabled={false}
-                          isUploading={uploadingImage}
-                        />
-                      )}
                     </div>
                     {selectedImage && (
                       <div className="text-sm text-gray-600">
@@ -1059,13 +991,6 @@ const CampaignDialog = ({
                         <FaPlus className="w-4 h-4" />
                         <span>Add Image</span>
                       </Button>
-                      {selectedGalleryImages.length > 0 && (
-                        <UploadButton
-                          onClick={handleGalleryImagesUpload}
-                          disabled={false}
-                          isUploading={isUploadingGalleryImages}
-                        />
-                      )}
                     </div>
                     {selectedGalleryImages.length > 0 && (
                       <div className="text-sm text-gray-600">
