@@ -703,22 +703,23 @@ const CampaignDialog = ({
               <div className="grid grid-cols-4 items-start gap-4">
                 <Label className="text-right pt-2">Cover Image</Label>
                 <div className="col-span-3 space-y-4">
-                  {imagePreview && (
-                    <div className="flex items-center space-x-4">
-                      <img
-                        src={imagePreview}
-                        alt="Campaign cover"
-                        className="w-20 h-20 object-cover rounded-lg border"
-                      />
-                      <div className="text-sm text-gray-600">
-                        <p>
-                          {isEditMode
+                  <div className="flex items-center space-x-4">
+                    <ImageWithFallback
+                      src={imagePreview || formData.coverImageUrl}
+                      alt="Campaign cover"
+                      className="w-20 h-20 object-cover rounded-lg border bg-gray-100"
+                      fallbackSrc="/campaign-fallback.svg"
+                    />
+                    <div className="text-sm text-gray-600">
+                      <p>
+                        {imagePreview || formData.coverImageUrl
+                          ? isEditMode
                             ? "Current cover image"
-                            : "Selected image"}
-                        </p>
-                      </div>
+                            : "Selected image"
+                          : "Using default placeholder image"}
+                      </p>
                     </div>
-                  )}
+                  </div>
                   <div className="space-y-3">
                     <div className="flex items-center space-x-3">
                       <input
@@ -1018,10 +1019,11 @@ const CampaignDialog = ({
                     <div className="flex flex-wrap gap-2">
                       {galleryImagePreviews.map((src, index) => (
                         <div key={index} className="relative group">
-                          <img
+                          <ImageWithFallback
                             src={src}
                             alt={`Gallery preview ${index + 1}`}
-                            className="w-20 h-20 object-cover rounded-lg border"
+                            className="w-20 h-20 object-cover rounded-lg border bg-gray-100"
+                            fallbackSrc="/campaign-fallback.svg"
                           />
                           <button
                             onClick={() => handleDeleteGalleryImage(src, index)}
@@ -1768,13 +1770,12 @@ const CampaignManagement = ({
                           <TableRow key={campaign.id ?? campaign.title}>
                             <TableCell>
                               <div className="flex items-start gap-3">
-                                {campaign.coverImageUrl && (
-                                  <img
-                                    src={campaign.coverImageUrl}
-                                    alt={campaign.title}
-                                    className="w-16 h-16 object-cover rounded-lg border border-gray-200 flex-shrink-0"
-                                  />
-                                )}
+                                <ImageWithFallback
+                                  src={campaign.coverImageUrl}
+                                  alt={campaign.title}
+                                  className="w-16 h-16 object-cover rounded-lg border border-gray-200 flex-shrink-0 bg-gray-100"
+                                  fallbackSrc="/campaign-fallback.svg"
+                                />
                                 <div className="space-y-1 flex-1">
                                   <div className="flex items-center justify-between gap-2">
                                     <div>
