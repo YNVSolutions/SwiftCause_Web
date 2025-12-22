@@ -648,7 +648,7 @@ const CampaignDialog = ({
                           fileInputRef.current?.click();
                         }
                       }}
-                      className="flex items-center justify-center w-[88px] h-[88px] border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 transition cursor-pointer bg-white"
+                      className="flex items-center justify-center w-20 h-20 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 transition cursor-pointer bg-white"
                       aria-label="Select cover image"
                     >
                       <div className="flex flex-col items-center gap-1 text-sm font-medium">
@@ -976,7 +976,7 @@ const CampaignDialog = ({
                           }
                         }
                       }}
-                      className={`flex items-center justify-center w-[88px] h-[88px] border-2 border-dashed rounded-lg text-gray-500 transition cursor-pointer bg-white ${
+                      className={`flex items-center justify-center w-20 h-20 border-2 border-dashed rounded-lg text-gray-500 transition cursor-pointer bg-white ${
                         galleryImagePreviews.length >= 4
                           ? "border-gray-200 text-gray-300 cursor-not-allowed"
                           : "border-gray-300 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50"
