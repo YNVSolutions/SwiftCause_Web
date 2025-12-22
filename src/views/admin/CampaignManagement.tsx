@@ -540,7 +540,11 @@ const CampaignDialog = ({
     setOrganizationLogoPreview(null);
     setSelectedGalleryImages([]);
     setGalleryImagePreviews([]);
-    // Removed onOpenChange(false) to prevent infinite loop
+  };
+
+  const handleCancel = () => {
+    handleDialogClose();
+    onOpenChange(false);
   };
 
   const dialogTitle = isEditMode
@@ -1141,7 +1145,7 @@ const CampaignDialog = ({
         <div className="flex justify-end space-x-2 pt-4 border-t flex-shrink-0">
           <Button
             variant="outline"
-            onClick={handleDialogClose}
+            onClick={handleCancel}
             disabled={uploadingImage || isSubmitting}
           >
             Cancel
