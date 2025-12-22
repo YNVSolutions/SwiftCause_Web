@@ -1207,7 +1207,6 @@ const CampaignManagement = ({
   const [showCalendar, setShowCalendar] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [campaignToDelete, setCampaignToDelete] = useState<DocumentData | null>(null);
-  const [confirmDeleteInput, setConfirmDeleteInput] = useState("");
 
   const { campaigns, updateWithImage, createWithImage, remove, loading } =
     useCampaignManagement(userSession.user.organizationId || "");
@@ -1218,20 +1217,16 @@ const CampaignManagement = ({
   };
 
   const handleConfirmDelete = async () => {
-    if (campaignToDelete && confirmDeleteInput === campaignToDelete.title) {
+    if (campaignToDelete) {
       try {
         await remove(campaignToDelete.id);
         setIsDeleteDialogOpen(false);
         setCampaignToDelete(null);
-        setConfirmDeleteInput("");
         // Optionally, show a success toast or message
       } catch (error) {
         console.error("Error deleting campaign:", error);
         // Optionally, show an error toast or message
       }
-    } else {
-      // Optionally, show an error message if input doesn't match
-      console.log("Confirmation input does not match campaign title.");
     }
   };
 
@@ -1834,6 +1829,7 @@ const CampaignManagement = ({
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[400px] p-0 border-0 shadow-2xl">
+          <DialogTitle className="sr-only">Delete campaign confirmation</DialogTitle>
           <div className="bg-white rounded-2xl p-8 text-center">
             {/* Warning Icon */}
             <div className="flex justify-center mb-6">
