@@ -29,8 +29,9 @@ export function useCampaignList(kioskSession?: KioskSession | null): UseCampaign
   const availableCampaigns = useMemo(() => {
     if (!kioskSession) return campaigns; 
 
+    const showGlobals = kioskSession.settings?.showAllCampaigns ?? false;
     let filtered = campaigns.filter(c => {
-      if (c.isGlobal) return true;
+      if (c.isGlobal) return showGlobals;
       return kioskSession.assignedCampaigns?.includes(c.id);
     });
 
@@ -44,10 +45,8 @@ export function useCampaignList(kioskSession?: KioskSession | null): UseCampaign
       });
     }
 
-    const { maxCampaignsDisplay } = kioskSession.settings || { maxCampaignsDisplay: 6 };
-    return maxCampaignsDisplay && filtered.length > maxCampaignsDisplay
-      ? filtered.slice(0, maxCampaignsDisplay)
-      : filtered;
+    // Do not hard-limit here—UI pagination/rotation should decide how many to show.
+    return filtered;
   }, [campaigns, kioskSession]);
 
   const isDefaultCampaign = (campaignId: string) => {
@@ -61,5 +60,3 @@ export function useCampaignList(kioskSession?: KioskSession | null): UseCampaign
 
   return { campaigns, loading, error, isDetailedView, setIsDetailedView, availableCampaigns, isDefaultCampaign, layoutMode, refreshCampaigns: refresh, autoRotateCampaigns, rotationInterval };
 }
-
-
