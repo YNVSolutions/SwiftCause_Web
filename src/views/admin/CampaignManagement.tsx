@@ -4,7 +4,6 @@ import { DEFAULT_CAMPAIGN_CONFIG } from "../../shared/config";
 import { DocumentData, Timestamp } from "firebase/firestore";
 import { useCampaignManagement } from "../../shared/lib/hooks/useCampaignManagement";
 import { useOrganizationTags } from "../../shared/lib/hooks/useOrganizationTags";
-import { deleteFile } from "../../shared/lib/firebase"; // Import deleteFile
 import { Button } from "../../shared/ui/button";
 import { Input } from "../../shared/ui/input";
 import { Label } from "../../shared/ui/label";
@@ -404,43 +403,33 @@ const CampaignDialog = ({
     }
   };
 
-  const handleDeleteGalleryImage = async (imageToDelete: string, index: number) => {
-    if (!campaign?.id) {
-      // If it's a new campaign and the image hasn't been uploaded yet, just remove from state
-      setGalleryImagePreviews((prev) => prev.filter((_, i) => i !== index));
-      setSelectedGalleryImages((prev) => prev.filter((_, i) => i !== index));
+  const handleRemoveCoverImage = () => {
+    setFormData((prev) => ({ ...prev, coverImageUrl: "" }));
+    setImagePreviewUrl(null);
+    clearImageSelection();
+  };
+
+  const handleDeleteGalleryImage = (imageToDelete: string, index: number) => {
+    const existingUrls = (formData.galleryImages as string)
+      ?.split(",")
+      .map((url) => url.trim())
+      .filter(Boolean) || [];
+    const existingCount = existingUrls.length;
+
+    // Remove from previews
+    setGalleryImagePreviews((prev) => prev.filter((_, i) => i !== index));
+
+    if (index < existingCount) {
+      // Removing an existing (already saved) image; update form data so it is removed on save.
+      const updatedExisting = existingUrls.filter((_, i) => i !== index);
       setFormData((prev) => ({
         ...prev,
-        galleryImages: (prev.galleryImages as string)
-          .split(",")
-          .filter((img) => img !== imageToDelete)
-          .join(","),
+        galleryImages: updatedExisting.join(","),
       }));
-      return;
-    }
-
-    try {
-      // Attempt to delete from storage
-      await deleteFile(imageToDelete); // Call the deleteFile function
-
-      // Remove from form data and previews
-      const updatedGalleryImages = (formData.galleryImages as string)
-        .split(",")
-        .filter((img) => img !== imageToDelete);
-      setFormData((prev) => ({
-        ...prev,
-        galleryImages: updatedGalleryImages.join(","),
-      }));
-      setGalleryImagePreviews(updatedGalleryImages);
-
-      // Also update selectedGalleryImages if the deleted image was a newly selected file
-      setSelectedGalleryImages((prev) =>
-        prev.filter((file) => URL.createObjectURL(file) !== imageToDelete)
-      );
-      alert("Image deleted successfully.");
-    } catch (error) {
-      console.error("Error deleting gallery image:", error);
-      alert("Failed to delete image. Please try again.");
+    } else {
+      // Removing a newly selected image; update the pending files.
+      const newIndex = index - existingCount;
+      setSelectedGalleryImages((prev) => prev.filter((_, i) => i !== newIndex));
     }
   };
 
@@ -645,12 +634,24 @@ const CampaignDialog = ({
                 <Label className="text-right pt-2">Cover Image</Label>
                 <div className="col-span-3 space-y-4">
                   <div className="flex items-center space-x-4">
-                    <ImageWithFallback
-                      src={imagePreview || formData.coverImageUrl}
-                      alt="Campaign cover"
-                      className="w-20 h-20 object-cover rounded-lg border bg-gray-100"
-                      fallbackSrc="/campaign-fallback.svg"
-                    />
+                    <div className="relative w-20 h-20">
+                      <ImageWithFallback
+                        src={imagePreview || formData.coverImageUrl}
+                        alt="Campaign cover"
+                        className="w-20 h-20 object-cover rounded-lg border bg-gray-100"
+                        fallbackSrc="/campaign-fallback.svg"
+                      />
+                      {(imagePreview || formData.coverImageUrl) && (
+                        <button
+                          type="button"
+                          onClick={handleRemoveCoverImage}
+                          className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow transition-colors hover:bg-red-50 hover:border-red-200 group"
+                          aria-label="Remove cover image"
+                        >
+                          <X className="w-3 h-3 text-gray-600 transition-colors group-hover:text-red-600" />
+                        </button>
+                      )}
+                    </div>
                     <div className="text-sm text-gray-600">
                       <p>
                         {imagePreview || formData.coverImageUrl
@@ -959,10 +960,10 @@ const CampaignDialog = ({
                           />
                           <button
                             onClick={() => handleDeleteGalleryImage(src, index)}
-                            className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                            title="Delete"
+                            className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow opacity-0 group-hover:opacity-100 transition duration-150 hover:bg-red-50 hover:border-red-200"
+                            title="Remove image"
                           >
-                            <FaTrashAlt className="h-4 w-4" />
+                            <X className="h-3 w-3 text-gray-600 transition-colors group-hover:text-red-600" />
                           </button>
                         </div>
                       ))}
