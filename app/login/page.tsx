@@ -18,7 +18,6 @@ export default function Login() {
   const handleLoginWithToast = async (role: UserRole, sessionData?: KioskSession | AdminSession) => {
     try {
       await handleLogin(role, sessionData)
-      showToast('Sign in successful', 'success')
       
       // Navigate based on role
       if (role === 'admin' || role === 'super_admin' || role === 'manager' || role === 'operator' || role === 'viewer') {
