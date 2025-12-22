@@ -636,64 +636,71 @@ const CampaignDialog = ({
 
               <div className="grid grid-cols-4 items-start gap-4">
                 <Label className="text-right pt-2">Cover Image</Label>
-                <div className="col-span-3 space-y-4">
-                  <div className="flex items-center space-x-4">
-                    <div className="relative w-20 h-20">
-                      <ImageWithFallback
-                        src={imagePreview || formData.coverImageUrl}
-                        alt="Campaign cover"
-                        className="w-20 h-20 object-cover rounded-lg border bg-gray-100"
-                        fallbackSrc="/campaign-fallback.svg"
-                      />
-                      {(imagePreview || formData.coverImageUrl) && (
-                        <button
-                          type="button"
-                          onClick={handleRemoveCoverImage}
-                          className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow transition-colors hover:bg-red-50 hover:border-red-200 group"
-                          aria-label="Remove cover image"
-                        >
-                          <X className="w-3 h-3 text-gray-600 transition-colors group-hover:text-red-600" />
-                        </button>
-                      )}
+                <div className="col-span-3 space-y-3">
+                  <div className="flex items-center gap-4">
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => fileInputRef.current?.click()}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          fileInputRef.current?.click();
+                        }
+                      }}
+                      className="flex items-center justify-center w-[88px] h-[88px] border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 transition cursor-pointer bg-white"
+                      aria-label="Select cover image"
+                    >
+                      <div className="flex flex-col items-center gap-1 text-sm font-medium">
+                        <Plus className="w-5 h-5" />
+                        <span>Add image</span>
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-600">
-                      <p>
-                        {imagePreview || formData.coverImageUrl
-                          ? "Selected image"
-                          : "Using default placeholder image"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-3">
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileSelect}
-                        className="hidden"
-                        name="coverImageUrl"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="flex items-center space-x-2"
-                      >
-                        <FaImage className="w-4 h-4" />
-                        <span>Select Image</span>
-                      </Button>
-                    </div>
-                    {selectedImage && (
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                      name="coverImageUrl"
+                    />
+                    <div className="flex items-center gap-3">
+                      <div className="relative w-20 h-20">
+                        <ImageWithFallback
+                          src={imagePreview || formData.coverImageUrl}
+                          alt="Campaign cover"
+                          className="w-20 h-20 object-cover rounded-lg border bg-gray-100"
+                          fallbackSrc="/campaign-fallback.svg"
+                        />
+                        {(imagePreview || formData.coverImageUrl) && (
+                          <button
+                            type="button"
+                            onClick={handleRemoveCoverImage}
+                            className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow transition-colors hover:bg-red-50 hover:border-red-200 group"
+                            aria-label="Remove cover image"
+                          >
+                            <X className="w-3 h-3 text-gray-600 transition-colors group-hover:text-red-600" />
+                          </button>
+                        )}
+                      </div>
                       <div className="text-sm text-gray-600">
-                        <p>Selected: {selectedImage.name}</p>
                         <p>
-                          Size: {(selectedImage.size / 1024 / 1024).toFixed(2)}{" "}
-                          MB
+                          {imagePreview || formData.coverImageUrl
+                            ? "Selected image"
+                            : "Using default placeholder image"}
                         </p>
                       </div>
-                    )}
+                    </div>
                   </div>
+                  {selectedImage && (
+                    <div className="text-sm text-gray-600">
+                      <p>Selected: {selectedImage.name}</p>
+                      <p>
+                        Size: {(selectedImage.size / 1024 / 1024).toFixed(2)}{" "}
+                        MB
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -951,75 +958,89 @@ const CampaignDialog = ({
                 <Label htmlFor="galleryImages" className="text-right">
                   Gallery Images
                 </Label>
-                <div className="col-span-3 space-y-4">
-                  {galleryImagePreviews.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {galleryImagePreviews.map((src, index) => (
-                        <div key={index} className="relative group">
-                          <ImageWithFallback
-                            src={src}
-                            alt={`Gallery preview ${index + 1}`}
-                            className="w-20 h-20 object-cover rounded-lg border bg-gray-100"
-                            fallbackSrc="/campaign-fallback.svg"
-                          />
-                          <button
-                            onClick={() => handleDeleteGalleryImage(src, index)}
-                            className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow opacity-0 group-hover:opacity-100 transition duration-150 hover:bg-red-50 hover:border-red-200"
-                            title="Remove image"
-                          >
-                            <X className="h-3 w-3 text-gray-600 transition-colors group-hover:text-red-600" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-3">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        name="galleryImages"
-                        onChange={handleFileSelect}
-                        className="hidden"
-                        id="galleryImagesInput"
-                        multiple
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() =>
-                          document.getElementById("galleryImagesInput")?.click()
+                <div className="col-span-3 space-y-3">
+                  <div className="flex items-start gap-3 flex-wrap">
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() =>
+                        galleryImagePreviews.length >= 4
+                          ? null
+                          : document.getElementById("galleryImagesInput")?.click()
+                      }
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          if (galleryImagePreviews.length < 4) {
+                            document.getElementById("galleryImagesInput")?.click();
+                          }
                         }
-                        className="flex items-center space-x-2"
-                        disabled={galleryImagePreviews.length >= 4}
-                      >
-                        <FaPlus className="w-4 h-4" />
-                        <span>Add Image</span>
-                      </Button>
+                      }}
+                      className={`flex items-center justify-center w-[88px] h-[88px] border-2 border-dashed rounded-lg text-gray-500 transition cursor-pointer bg-white ${
+                        galleryImagePreviews.length >= 4
+                          ? "border-gray-200 text-gray-300 cursor-not-allowed"
+                          : "border-gray-300 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50"
+                      }`}
+                      aria-label="Add gallery image"
+                    >
+                      <div className="flex flex-col items-center gap-1 text-sm font-medium">
+                        <Plus className="w-5 h-5" />
+                        <span>Add image</span>
+                      </div>
                     </div>
-                    {selectedGalleryImages.length > 0 && (
-                      <div className="text-sm text-gray-600">
-                        <p>
-                          Selected:{" "}
-                          {selectedGalleryImages
-                            .map((file) => file.name)
-                            .join(", ")}
-                        </p>
-                        <p>
-                          Total Size:{" "}
-                          {(
-                            selectedGalleryImages.reduce(
-                              (sum, file) => sum + file.size,
-                              0
-                            ) /
-                            1024 /
-                            1024
-                          ).toFixed(2)}{" "}
-                          MB
-                        </p>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      name="galleryImages"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                      id="galleryImagesInput"
+                      multiple
+                    />
+                    {galleryImagePreviews.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {galleryImagePreviews.map((src, index) => (
+                          <div key={index} className="relative group">
+                            <ImageWithFallback
+                              src={src}
+                              alt={`Gallery preview ${index + 1}`}
+                              className="w-20 h-20 object-cover rounded-lg border bg-gray-100"
+                              fallbackSrc="/campaign-fallback.svg"
+                            />
+                            <button
+                              onClick={() => handleDeleteGalleryImage(src, index)}
+                              className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow opacity-0 group-hover:opacity-100 transition duration-150 hover:bg-red-50 hover:border-red-200"
+                              title="Remove image"
+                            >
+                              <X className="h-3 w-3 text-gray-600 transition-colors group-hover:text-red-600" />
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
+                  {selectedGalleryImages.length > 0 && (
+                    <div className="text-sm text-gray-600">
+                      <p>
+                        Selected:{" "}
+                        {selectedGalleryImages
+                          .map((file) => file.name)
+                          .join(", ")}
+                      </p>
+                      <p>
+                        Total Size:{" "}
+                        {(
+                          selectedGalleryImages.reduce(
+                            (sum, file) => sum + file.size,
+                            0
+                          ) /
+                          1024 /
+                          1024
+                        ).toFixed(2)}{" "}
+                        MB
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mt-8">Pricing Options</h3>
