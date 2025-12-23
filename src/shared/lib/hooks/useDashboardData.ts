@@ -14,6 +14,7 @@ interface DashboardStats {
   topLocations: Array<{ name: string; totalRaised: number }>;
   deviceDistribution: Array<{ name: string; value: number }>;
   donationDistribution: Array<{ range: string; count: number }>;
+  donationDistributionError?: string;
 }
 
 type FirestoreTimestamp = { seconds: number; nanoseconds: number };
@@ -112,51 +113,104 @@ export function useDashboardData(organizationId?: string) {
         .map(([name, value]) => ({ name, value }))
         .sort((a, b) => b.value - a.value);
 
-      // Fetch donation distribution using aggregation queries (more efficient)
-      // Define amount ranges
+      // Fetch donation distribution - simple approach
       const ranges = [
-        { min: 0, max: 100, label: '$0-$100' },
-        { min: 100, max: 200, label: '$100-$200' },
-        { min: 200, max: 300, label: '$200-$300' },
-        { min: 300, max: 400, label: '$300-$400' },
-        { min: 400, max: 500, label: '$400-$500' },
-        { min: 500, max: 10000, label: '$500+' } // Set reasonable upper limit
+        { min: 0, max: 25, label: '$0-$25' },
+        { min: 25, max: 50, label: '$25-$50' },
+        { min: 50, max: 100, label: '$50-$100' },
+        { min: 100, max: 250, label: '$100-$250' },
+        { min: 250, max: 500, label: '$250-$500' },
+        { min: 500, max: 10000, label: '$500+' }
       ];
 
-      // Use Promise.all to fetch counts in parallel for better performance
-      const donationDistribution = await Promise.all(
-        ranges.map(async (range) => {
+      let donationDistribution: Array<{ range: string; count: number }> = [];
+      let donationDistributionError: string | undefined;
+      
+      try {
+        // First, try to get a simple count to check if donations exist
+        const totalQuery = query(
+          collection(db, 'donations'),
+          where("organizationId", "==", organizationId)
+        );
+        const totalSnapshot = await getCountFromServer(totalQuery);
+        const totalDonations = totalSnapshot.data().count;
+        
+        console.log(`Total donations found: ${totalDonations}`);
+        
+        if (totalDonations === 0) {
+          // No donations exist, return empty distribution
+          donationDistribution = ranges.map(range => ({
+            range: range.label,
+            count: 0
+          }));
+        } else {
+          // Try efficient count queries first
           try {
-            // Build query for this range
-            let rangeQuery = collection(db, 'donations');
-            const constraints = [];
+            donationDistribution = await Promise.all(
+              ranges.map(async (range) => {
+                const constraints = [where("organizationId", "==", organizationId)];
+                
+                // Add amount range constraints
+                constraints.push(where("amount", ">=", range.min));
+                if (range.max !== 10000) { // Don't add upper limit for last range
+                  constraints.push(where("amount", "<", range.max));
+                }
+                
+                const rangeQuery = query(collection(db, 'donations'), ...constraints);
+                const snapshot = await getCountFromServer(rangeQuery);
+                
+                return {
+                  range: range.label,
+                  count: snapshot.data().count
+                };
+              })
+            );
             
-            if (organizationId) {
-              constraints.push(where("organizationId", "==", organizationId));
-            }
-            constraints.push(where("amount", ">=", range.min));
-            if (range.max !== 10000) { // Don't add upper limit for last range
-              constraints.push(where("amount", "<", range.max));
-            }
+            console.log('Count queries successful:', donationDistribution);
+          } catch (countError) {
+            console.error('Count queries failed, trying fallback:', countError);
             
-            const q = query(rangeQuery, ...constraints);
+            // Fallback: fetch limited documents and calculate manually
+            const { getDocs, limit } = await import('firebase/firestore');
+            const fallbackQuery = query(
+              collection(db, 'donations'),
+              where("organizationId", "==", organizationId),
+              limit(1000) // Limit to prevent excessive downloads
+            );
+            const fallbackSnapshot = await getDocs(fallbackQuery);
             
-            // Use getCountFromServer for efficient counting (doesn't download documents)
-            const snapshot = await getCountFromServer(q);
+            console.log(`Fallback: Processing ${fallbackSnapshot.size} donations`);
             
-            return {
-              range: range.label,
-              count: snapshot.data().count
-            };
-          } catch (error) {
-            console.error(`Error fetching count for range ${range.label}:`, error);
-            return {
+            // Initialize counts
+            donationDistribution = ranges.map(range => ({
               range: range.label,
               count: 0
-            };
+            }));
+            
+            // Count donations in each range
+            fallbackSnapshot.forEach((doc) => {
+              const donation = doc.data();
+              let amount = typeof donation.amount === 'string' ? parseFloat(donation.amount) : donation.amount;
+              
+              if (typeof amount === 'number' && !isNaN(amount)) {
+                for (let i = 0; i < ranges.length; i++) {
+                  const range = ranges[i];
+                  if (amount >= range.min && (range.max === 10000 || amount < range.max)) {
+                    donationDistribution[i].count++;
+                    break;
+                  }
+                }
+              }
+            });
+            
+            console.log('Fallback calculation complete:', donationDistribution);
           }
-        })
-      );
+        }
+      } catch (error) {
+        console.error('All donation distribution methods failed:', error);
+        donationDistribution = [];
+        donationDistributionError = 'Error in fetching donation data';
+      }
 
       setStats({
         totalRaised,
@@ -165,7 +219,8 @@ export function useDashboardData(organizationId?: string) {
         activeKiosks,
         topLocations,
         deviceDistribution,
-        donationDistribution
+        donationDistribution,
+        donationDistributionError
       });
 
       const formattedActivities = recentDonationsData.map((donation: Donation): Activity => {
