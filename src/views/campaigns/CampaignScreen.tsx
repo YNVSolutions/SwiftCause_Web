@@ -23,6 +23,7 @@ import {
 import { Campaign, Donation } from '../../shared/types';
 import { formatCurrency } from '../../shared/lib/currencyFormatter';
 import { getOrganizationById } from '../../shared/api';
+import { RecurringInterval } from '../../features/donate-to-campaign/model';
 
 type CampaignView = 'overview' | 'donate';
 
@@ -51,7 +52,7 @@ export function CampaignScreen({
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState('');
   const [isRecurring, setIsRecurring] = useState(false);
-  const [recurringInterval, setRecurringInterval] = useState<'monthly' | 'quarterly' | 'yearly'>(
+  const [recurringInterval, setRecurringInterval] = useState<RecurringInterval>(
     campaign.configuration.defaultRecurringInterval
   );
   const [donorInfo] = useState<DonorInfo>({
@@ -363,7 +364,12 @@ export function CampaignScreen({
                       <Switch
                         id="recurring"
                         checked={isRecurring}
-                        onCheckedChange={setIsRecurring}
+                        onCheckedChange={(checked) => {
+                          setIsRecurring(checked);
+                          if (checked) {
+                            setRecurringInterval(RecurringInterval.MONTHLY);
+                          }
+                        }}
                       />
                     </div>
 

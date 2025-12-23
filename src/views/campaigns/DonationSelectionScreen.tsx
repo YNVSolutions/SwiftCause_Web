@@ -20,6 +20,7 @@ import {
   Percent
 } from 'lucide-react';
 import { Campaign, Donation } from '../../shared/types';
+import { RecurringInterval } from '../../features/donate-to-campaign/model';
 
 interface DonationSelectionScreenProps {
   campaign: Campaign;
@@ -40,7 +41,7 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState('');
   const [isRecurring, setIsRecurring] = useState(false);
-  const [recurringInterval, setRecurringInterval] = useState<'monthly' | 'quarterly' | 'yearly'>(
+  const [recurringInterval, setRecurringInterval] = useState<RecurringInterval>(
     campaign.configuration.defaultRecurringInterval
   );
   const [donorInfo, setDonorInfo] = useState<DonorInfo>({
@@ -338,7 +339,12 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
                       <Switch
                         id="recurring"
                         checked={isRecurring}
-                        onCheckedChange={setIsRecurring}
+                        onCheckedChange={(checked) => {
+                          setIsRecurring(checked);
+                          if (checked) {
+                            setRecurringInterval(RecurringInterval.MONTHLY);
+                          }
+                        }}
                       />
                     </div>
 

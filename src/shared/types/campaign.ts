@@ -1,4 +1,6 @@
 // Campaign-related types
+import { RecurringInterval } from '../../features/donate-to-campaign/model';
+
 export interface CampaignConfiguration {
   predefinedAmounts: number[];
   allowCustomAmount: boolean;
@@ -6,8 +8,8 @@ export interface CampaignConfiguration {
   maxCustomAmount: number;
   suggestedAmounts: number[];
   enableRecurring: boolean;
-  recurringIntervals: ("monthly" | "quarterly" | "yearly")[];
-  defaultRecurringInterval: "monthly" | "quarterly" | "yearly";
+  recurringIntervals: RecurringInterval[];
+  defaultRecurringInterval: RecurringInterval;
   recurringDiscount?: number;
   displayStyle: "grid" | "list" | "carousel";
   showProgressBar: boolean;

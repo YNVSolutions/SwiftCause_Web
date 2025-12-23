@@ -32,6 +32,7 @@ import {
   DEFAULT_CAMPAIGN_CONFIG,
   DEFAULT_CAMPAIGN_VALUES
 } from '../../../shared/config';
+import { RecurringInterval } from '../../../features/donate-to-campaign/model';
 
 interface CampaignConfigurationDialogProps {
   open: boolean;
@@ -115,7 +116,7 @@ export function CampaignConfigurationDialog({
     updateConfiguration({ predefinedAmounts: [...amounts] as number[] });
   };
 
-  const toggleRecurringInterval = (interval: 'monthly' | 'quarterly' | 'yearly') => {
+  const toggleRecurringInterval = (interval: RecurringInterval) => {
     const current = formData.configuration.recurringIntervals;
     const updated = current.includes(interval)
       ? current.filter(i => i !== interval)
@@ -386,7 +387,7 @@ export function CampaignConfigurationDialog({
                       <div className="space-y-3">
                         <Label>Recurring Intervals</Label>
                         <div className="space-y-2">
-                          {(['monthly', 'quarterly', 'yearly'] as const).map(interval => (
+                          {Object.values(RecurringInterval).map(interval => (
                             <div key={interval} className="flex items-center space-x-2">
                               <Checkbox
                                 id={interval}
@@ -402,7 +403,7 @@ export function CampaignConfigurationDialog({
                           <Label htmlFor="defaultInterval">Default Interval</Label>
                           <Select
                             value={formData.configuration.defaultRecurringInterval}
-                            onValueChange={(value: 'monthly' | 'quarterly' | 'yearly') => 
+                            onValueChange={(value: RecurringInterval) => 
                               updateConfiguration({ defaultRecurringInterval: value })
                             }
                           >

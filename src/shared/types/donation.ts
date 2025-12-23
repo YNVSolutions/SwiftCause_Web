@@ -1,9 +1,11 @@
 // Donation-related types
+import { RecurringInterval } from '../../features/donate-to-campaign/model';
+
 export interface Donation {
   campaignId: string;
   amount: number;
   isRecurring: boolean;
-  recurringInterval?: "monthly" | "quarterly" | "yearly";
+  recurringInterval?: RecurringInterval;
   id?: string;
   donorEmail?: string;
   donorName?: string;

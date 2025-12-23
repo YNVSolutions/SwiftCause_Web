@@ -6,6 +6,7 @@ import { useCampaignManagement } from "../../shared/lib/hooks/useCampaignManagem
 import { useOrganizationTags } from "../../shared/lib/hooks/useOrganizationTags";
 import { deleteFile } from "../../shared/lib/firebase"; // Import deleteFile
 import UploadButton from "../../shared/ui/UploadButton"; // Import the new UploadButton component
+import { RecurringInterval, getRecurringIntervalLabel } from "../../features/donate-to-campaign/model";
 
 import { Button } from "../../shared/ui/button";
 import { Input } from "../../shared/ui/input";
@@ -269,7 +270,7 @@ const CampaignDialog = ({
           ? campaign.configuration.recurringIntervals.join(", ")
           : "",
         defaultRecurringInterval:
-          campaign.configuration?.defaultRecurringInterval || "monthly",
+          campaign.configuration?.defaultRecurringInterval || RecurringInterval.MONTHLY,
         recurringDiscount: campaign.configuration?.recurringDiscount ?? 0,
         // Adding Display Settings fields
         displayStyle: campaign.configuration?.displayStyle || "grid",
@@ -496,6 +497,15 @@ const CampaignDialog = ({
     if (!formData.title || !formData.description) {
       alert("Title and Description are required.");
       return;
+    }
+
+    // Validate recurring intervals when recurring is enabled
+    if (formData.enableRecurring) {
+      const selectedIntervals = formData.recurringIntervals.split(',').map((s: string) => s.trim()).filter(Boolean);
+      if (selectedIntervals.length === 0) {
+        alert("At least one recurring interval must be selected when recurring donations are enabled.");
+        return;
+      }
     }
 
     let finalData = { ...formData };
@@ -1103,32 +1113,89 @@ const CampaignDialog = ({
               <h3 className="text-lg font-semibold text-gray-900 mt-8">Subscription Settings</h3>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="enableRecurring" className="text-right">Enable Recurring</Label>
-                <input type="checkbox" id="enableRecurring" name="enableRecurring" checked={formData.enableRecurring} onChange={handleChange} className="col-span-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
+                <input 
+                  type="checkbox" 
+                  id="enableRecurring" 
+                  name="enableRecurring" 
+                  checked={formData.enableRecurring} 
+                  onChange={(e) => {
+                    const isChecked = e.target.checked;
+                    handleChange(e);
+                    if (isChecked) {
+                      // Automatically select monthly when enabling recurring donations
+                      handleChange({ target: { name: 'recurringIntervals', value: RecurringInterval.MONTHLY } } as any);
+                    } else {
+                      // Clear recurring intervals when disabling recurring donations
+                      handleChange({ target: { name: 'recurringIntervals', value: '' } } as any);
+                    }
+                  }}
+                  className="col-span-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" 
+                />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="recurringIntervals" className="text-right">Recurring Intervals</Label>
                 <div className="col-span-3">
-                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                    <Input id="recurringIntervals" name="recurringIntervals" value={formData.recurringIntervals} onChange={handleChange} className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent" placeholder="Comma-separated: monthly, quarterly, yearly" />
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap gap-3">
+                      {Object.values(RecurringInterval).map((interval) => {
+                        const isSelected = formData.recurringIntervals.includes(interval);
+                        const isDisabled = !formData.enableRecurring;
+                        return (
+                          <label 
+                            key={interval} 
+                            className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                              isDisabled 
+                                ? 'bg-gray-100 border-2 border-gray-200 cursor-not-allowed opacity-50'
+                                : `cursor-pointer hover:shadow-md ${
+                                    isSelected 
+                                      ? 'bg-indigo-50 border-2 border-indigo-500 shadow-sm' 
+                                      : 'bg-gray-50 border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-100'
+                                  }`
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              disabled={isDisabled}
+                              onChange={(e) => {
+                                if (isDisabled) return;
+                                const currentIntervals = formData.recurringIntervals.split(',').map((s: string) => s.trim()).filter(Boolean);
+                                let newIntervals;
+                                if (e.target.checked) {
+                                  newIntervals = [...currentIntervals, interval];
+                                } else {
+                                  newIntervals = currentIntervals.filter((i: string) => i !== interval);
+                                }
+                                handleChange({ target: { name: 'recurringIntervals', value: newIntervals.join(', ') } } as any);
+                              }}
+                              className={`rounded border-2 text-indigo-600 focus:ring-indigo-500 ${
+                                isDisabled 
+                                  ? 'border-gray-300 cursor-not-allowed' 
+                                  : isSelected ? 'border-indigo-500' : 'border-gray-300'
+                              }`}
+                            />
+                            <span className={`text-sm font-medium ${
+                              isDisabled 
+                                ? 'text-gray-400'
+                                : isSelected ? 'text-indigo-800' : 'text-gray-700'
+                            }`}>
+                              {getRecurringIntervalLabel(interval)}
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                    {formData.enableRecurring && formData.recurringIntervals.split(',').map((s: string) => s.trim()).filter(Boolean).length === 0 && (
+                      <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-md">
+                        <p className="text-xs text-amber-800 font-medium">
+                          ⚠️ At least one recurring interval must be selected
+                        </p>
+                      </div>
+                    )}
+                    <p className="text-xs text-gray-500">Select which recurring intervals to offer to donors</p>
                   </div>
                 </div>
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="defaultRecurringInterval" className="text-right">Default Recurring Interval</Label>
-                <Select name="defaultRecurringInterval" value={formData.defaultRecurringInterval} onValueChange={(value: string) => handleChange({ target: { name: 'defaultRecurringInterval', value } } as any)}>
-                  <div className="col-span-3">
-                    <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                      <SelectTrigger id="defaultRecurringInterval" className="w-full"><SelectValue /></SelectTrigger>
-                    </div>
-                  </div>
-                  <SelectContent>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                    <SelectItem value="quarterly">Quarterly</SelectItem>
-                    <SelectItem value="yearly">Yearly</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
               <h3 className="text-lg font-semibold text-gray-900 mt-8">Display Settings</h3>
 
               <div className="grid grid-cols-4 items-center gap-4">

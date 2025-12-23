@@ -1,4 +1,6 @@
 // Campaign-related constants
+import { RecurringInterval } from '../../features/donate-to-campaign/model';
+
 export const CAMPAIGN_CATEGORIES = [
   'Global Health', 
   'Education', 
@@ -31,8 +33,8 @@ export const DEFAULT_CAMPAIGN_CONFIG = {
   maxCustomAmount: 10000,
   suggestedAmounts: [25, 50, 100],
   enableRecurring: true,
-  recurringIntervals: ['monthly', 'quarterly'] as const,
-  defaultRecurringInterval: 'monthly' as const,
+  recurringIntervals: [RecurringInterval.MONTHLY, RecurringInterval.QUARTERLY],
+  defaultRecurringInterval: RecurringInterval.MONTHLY,
   recurringDiscount: 0,
   displayStyle: 'grid' as const,
   showProgressBar: true,
@@ -72,9 +74,9 @@ export const CAMPAIGN_STATUS_OPTIONS = [
 ] as const;
 
 export const RECURRING_INTERVALS = [
-  { value: 'monthly', label: 'Monthly' },
-  { value: 'quarterly', label: 'Quarterly' },
-  { value: 'yearly', label: 'Yearly' }
+  { value: RecurringInterval.MONTHLY, label: 'Monthly' },
+  { value: RecurringInterval.QUARTERLY, label: 'Quarterly' },
+  { value: RecurringInterval.YEARLY, label: 'Yearly' }
 ] as const;
 
 export const DISPLAY_STYLES = [
