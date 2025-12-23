@@ -5,7 +5,6 @@ import { DocumentData, Timestamp } from "firebase/firestore";
 import { useCampaignManagement } from "../../shared/lib/hooks/useCampaignManagement";
 import { useOrganizationTags } from "../../shared/lib/hooks/useOrganizationTags";
 import { deleteFile } from "../../shared/lib/firebase"; // Import deleteFile
-import * as firebaseService from "../../shared/api"; // Import firebaseService
 import UploadButton from "../../shared/ui/UploadButton"; // Import the new UploadButton component
 
 import { Button } from "../../shared/ui/button";
@@ -39,8 +38,9 @@ import {
   FaEdit,
   FaSearch,
   FaEllipsisV,
+  FaUpload,
   FaImage,
-  FaTrashAlt,
+  FaTrashAlt, // Added FaTrashAlt
   FaPlus, // Import FaPlus
 } from "react-icons/fa";
 import { Plus, ArrowLeft, Settings, Download } from "lucide-react";
@@ -50,6 +50,7 @@ import { AlertTriangle } from "lucide-react"; // Import AlertTriangle
 import { Skeleton } from "../../shared/ui/skeleton";
 import { Ghost } from "lucide-react";
 import { ImageWithFallback } from "../../shared/ui/figma/ImageWithFallback";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -165,7 +166,6 @@ const CampaignDialog = ({
   const [formData, setFormData] = useState<DocumentData>(getInitialFormData());
   const [activeTab, setActiveTab] = useState<"basic" | "advanced">("basic");
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const galleryFileInputRef = useRef<HTMLInputElement>(null);
   const isEditMode = !!campaign;
 
   const {
@@ -201,6 +201,9 @@ const CampaignDialog = ({
     []
   );
 
+  // New states for specific image upload loading
+  const [isUploadingOrganizationLogo, setIsUploadingOrganizationLogo] = useState(false);
+  const [isUploadingGalleryImages, setIsUploadingGalleryImages] = useState(false);
   // Loading state for the dialog submit (create/save)
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -382,57 +385,138 @@ const CampaignDialog = ({
     }
   };
 
-  const handleRemoveCoverImage = () => {
-    clearImageSelection();
-    setImagePreviewUrl(null);
-    setFormData((prev) => ({ ...prev, coverImageUrl: "" }));
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+  const handleCoverImageUpload = async () => {
+    if (selectedImage) {
+      try {
+        const uploadedData = await handleImageUpload(campaign?.id, formData);
+        if (uploadedData && uploadedData.coverImageUrl) {
+          setFormData((prev) => ({ ...prev, coverImageUrl: uploadedData.coverImageUrl }));
+          setImagePreviewUrl(uploadedData.coverImageUrl); // Update preview with uploaded URL
+        }
+      } catch (error) {
+        console.error("Error uploading cover image:", error);
+        alert("Failed to upload cover image. Please try again.");
+      }
+    }
+  };
+
+  const handleOrganizationLogoUpload = async () => {
+    if (selectedOrganizationLogo) {
+      setIsUploadingOrganizationLogo(true); // Set loading state
+      try {
+        const url = await uploadFile(
+          selectedOrganizationLogo,
+          `campaigns/${campaign?.id || "new"}/organizationLogo/${selectedOrganizationLogo.name
+          }`
+        );
+        if (url) {
+          setFormData((prev) => ({ ...prev, organizationInfoLogo: url }));
+          setOrganizationLogoPreview(url); // Update preview with uploaded URL
+        }
+      } catch (error) {
+        console.error("Error uploading organization logo:", error);
+        alert("Failed to upload organization logo. Please try again.");
+      } finally {
+        setIsUploadingOrganizationLogo(false); // Reset loading state
+      }
+    }
+  };
+
+  const handleGalleryImagesUpload = async () => {
+    if (selectedGalleryImages.length > 0) {
+      setIsUploadingGalleryImages(true); // Set loading state
+      try {
+        const imageUrls: string[] = [];
+        // Combine existing gallery images with newly selected ones for upload
+        const allImagesToUpload = [
+          ...(formData.galleryImages
+            ? String(formData.galleryImages).split(",").filter(Boolean)
+            : []), // Existing URLs
+          ...selectedGalleryImages, // New files
+        ];
+
+        // Filter out any files that are already URLs (meaning they are existing images)
+        const filesToUpload = allImagesToUpload.filter(
+          (item) => typeof item !== "string"
+        ) as File[];
+
+        // Keep track of existing URLs that are not being deleted
+        const existingUrls = allImagesToUpload.filter(
+          (item) => typeof item === "string"
+        ) as string[];
+
+        for (const file of filesToUpload) {
+          try {
+            const url = await uploadFile(
+              file,
+              `campaigns/${campaign?.id || "new"}/galleryImages/${file.name}`
+            );
+            if (url) {
+              imageUrls.push(url);
+            }
+          } catch (error) {
+            console.error(`Error uploading gallery image ${file.name}:`, error);
+            alert(
+              `Failed to upload gallery image ${file.name}. Please try again.`
+            );
+            return;
+          }
+        }
+        if (imageUrls.length > 0 || existingUrls.length > 0) {
+          const finalGalleryImages = [...existingUrls, ...imageUrls];
+          setFormData((prev) => ({
+            ...prev,
+            galleryImages: finalGalleryImages.join(","),
+          }));
+          setGalleryImagePreviews(finalGalleryImages); // Update preview with uploaded URLs
+          setSelectedGalleryImages([]); // Clear selected files after upload
+        }
+      } catch (error) {
+        console.error("Error uploading gallery images:", error);
+        alert("Failed to upload gallery images. Please try again.");
+      } finally {
+        setIsUploadingGalleryImages(false); // Reset loading state
+      }
     }
   };
 
   const handleDeleteGalleryImage = async (imageToDelete: string, index: number) => {
-    const existingCount = galleryImagePreviews.length - selectedGalleryImages.length;
-    const removeFromState = () => {
-      // Remove from previews (combined existing + new)
+    if (!campaign?.id) {
+      // If it's a new campaign and the image hasn't been uploaded yet, just remove from state
       setGalleryImagePreviews((prev) => prev.filter((_, i) => i !== index));
-
-      // Remove from persisted URLs
-      setFormData((prev) => {
-        const updated = prev.galleryImages
-          ? String(prev.galleryImages).split(",").filter(Boolean).filter((url) => url !== imageToDelete)
-          : [];
-        return { ...prev, galleryImages: updated.join(",") };
-      });
-
-      // If this was a newly selected file, remove the corresponding entry
-      const newIndex = index - existingCount;
-      if (newIndex >= 0) {
-        setSelectedGalleryImages((prev) =>
-          prev.filter((_, i) => i !== newIndex)
-        );
-      }
-    };
-
-    // For new campaigns or local previews (data/blob), just remove locally
-    if (!campaign?.id || imageToDelete.startsWith("data:") || imageToDelete.startsWith("blob:")) {
-      removeFromState();
+      setSelectedGalleryImages((prev) => prev.filter((_, i) => i !== index));
+      setFormData((prev) => ({
+        ...prev,
+        galleryImages: (prev.galleryImages as string)
+          .split(",")
+          .filter((img) => img !== imageToDelete)
+          .join(","),
+      }));
       return;
     }
 
     try {
-      await deleteFile(imageToDelete);
-      removeFromState();
+      // Attempt to delete from storage
+      await deleteFile(imageToDelete); // Call the deleteFile function
+
+      // Remove from form data and previews
+      const updatedGalleryImages = (formData.galleryImages as string)
+        .split(",")
+        .filter((img) => img !== imageToDelete);
+      setFormData((prev) => ({
+        ...prev,
+        galleryImages: updatedGalleryImages.join(","),
+      }));
+      setGalleryImagePreviews(updatedGalleryImages);
+
+      // Also update selectedGalleryImages if the deleted image was a newly selected file
+      setSelectedGalleryImages((prev) =>
+        prev.filter((file) => URL.createObjectURL(file) !== imageToDelete)
+      );
+      alert("Image deleted successfully.");
     } catch (error) {
-      // Ignore if the file is already gone; otherwise log
-      const errorCode =
-        typeof error === "object" && error !== null && "code" in error
-          ? (error as { code?: string }).code
-          : undefined;
-      if (errorCode !== "storage/object-not-found") {
-        console.error("Error deleting gallery image:", error);
-      }
-      removeFromState();
+      console.error("Error deleting gallery image:", error);
+      alert("Failed to delete image. Please try again.");
     }
   };
 
@@ -459,24 +543,8 @@ const CampaignDialog = ({
 
     setIsSubmitting(true);
 
-    // Auto-upload cover image if a new file was selected
-    if (selectedImage) {
-      try {
-        const uploadedData = await handleImageUpload(campaign?.id, finalData);
-        if (uploadedData?.coverImageUrl) {
-          finalData = { ...finalData, coverImageUrl: uploadedData.coverImageUrl };
-          setImagePreviewUrl(uploadedData.coverImageUrl);
-        }
-      } catch (error) {
-        console.error("Error uploading cover image:", error);
-        alert("Failed to upload cover image. Please try again.");
-        setIsSubmitting(false);
-        return;
-      }
-    }
-
     // Upload organization logo
-    if (selectedOrganizationLogo) { // Always upload a newly selected logo
+    if (selectedOrganizationLogo && !finalData.organizationInfoLogo) { // Only upload if not already uploaded
       try {
         const url = await uploadFile(
           selectedOrganizationLogo,
@@ -485,7 +553,6 @@ const CampaignDialog = ({
         );
         if (url) {
           finalData = { ...finalData, organizationInfoLogo: url };
-          setOrganizationLogoPreview(url);
         }
       } catch (error) {
         console.error("Error uploading organization logo:", error);
@@ -495,12 +562,9 @@ const CampaignDialog = ({
       }
     }
 
-    // Upload gallery images (auto on save) and persist current gallery state (after deletions)
-    const existingGalleryUrls = galleryImagePreviews.filter(
-      (src) => !src.startsWith("data:") && !src.startsWith("blob:")
-    );
-    const uploadedUrls: string[] = [];
-    if (selectedGalleryImages.length > 0) {
+    // Upload gallery images
+    if (selectedGalleryImages.length > 0 && !finalData.galleryImages) { // Only upload if not already uploaded
+      const imageUrls: string[] = [];
       for (const file of selectedGalleryImages) {
         try {
           const url = await uploadFile(
@@ -508,7 +572,7 @@ const CampaignDialog = ({
             `campaigns/${campaign?.id || "new"}/galleryImages/${file.name}`
           );
           if (url) {
-            uploadedUrls.push(url);
+            imageUrls.push(url);
           }
         } catch (error) {
           console.error(`Error uploading gallery image ${file.name}:`, error);
@@ -519,12 +583,10 @@ const CampaignDialog = ({
           return;
         }
       }
+      if (imageUrls.length > 0) {
+        finalData = { ...finalData, galleryImages: imageUrls.join(",") };
+      }
     }
-    const combinedGallery = [...existingGalleryUrls, ...uploadedUrls];
-    finalData = {
-      ...finalData,
-      galleryImages: combinedGallery.join(","),
-    };
 
     try {
       await onSave(finalData, !isEditMode, campaign?.id);
@@ -558,7 +620,8 @@ const CampaignDialog = ({
   const saveButtonText = isEditMode ? "Save Changes" : "Create Campaign";
   const isSaveDisabled =
     uploadingImage || !formData.title || !formData.description ||
-    (selectedOrganizationLogo && !formData.organizationInfoLogo);
+    (selectedOrganizationLogo && !formData.organizationInfoLogo) ||
+    (selectedGalleryImages.length > 0 && !formData.galleryImages);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -639,52 +702,60 @@ const CampaignDialog = ({
 
               <div className="grid grid-cols-4 items-start gap-4">
                 <Label className="text-right pt-2">Cover Image</Label>
-                <div className="col-span-3 space-y-3">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileSelect}
-                    className="hidden"
-                    name="coverImageUrl"
-                  />
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-500 hover:border-indigo-500 hover:text-indigo-600 transition-colors"
-                      aria-label="Select cover image"
-                    >
-                      <Plus className="w-6 h-6" />
-                    </button>
-                    {imagePreview ? (
-                      <div className="relative inline-block">
-                        <img
-                          src={imagePreview}
-                          alt="Campaign cover"
-                          className="w-20 h-20 object-cover rounded-lg border"
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-white shadow text-gray-500 hover:text-gray-700"
-                          onClick={handleRemoveCoverImage}
-                          aria-label="Remove cover image"
-                        >
-                          <X className="w-3 h-3" />
-                        </Button>
+                <div className="col-span-3 space-y-4">
+                  {imagePreview && (
+                    <div className="flex items-center space-x-4">
+                      <img
+                        src={imagePreview}
+                        alt="Campaign cover"
+                        className="w-20 h-20 object-cover rounded-lg border"
+                      />
+                      <div className="text-sm text-gray-600">
+                        <p>
+                          {isEditMode
+                            ? "Current cover image"
+                            : "Selected image"}
+                        </p>
                       </div>
-                    ) : (
-                      <p className="text-sm text-gray-500">No cover image selected</p>
-                    )}
-                  </div>
-                  {selectedImage && (
-                    <div className="text-sm text-gray-600">
-                      <p>Selected: {selectedImage.name}</p>
-                      <p>Size: {(selectedImage.size / 1024 / 1024).toFixed(2)} MB</p>
                     </div>
                   )}
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-3">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                        name="coverImageUrl"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex items-center space-x-2"
+                      >
+                        <FaImage className="w-4 h-4" />
+                        <span>Select Image</span>
+                      </Button>
+                      {selectedImage && (
+                        <UploadButton
+                          onClick={handleCoverImageUpload}
+                          disabled={false}
+                          isUploading={uploadingImage}
+                        />
+                      )}
+                    </div>
+                    {selectedImage && (
+                      <div className="text-sm text-gray-600">
+                        <p>Selected: {selectedImage.name}</p>
+                        <p>
+                          Size: {(selectedImage.size / 1024 / 1024).toFixed(2)}{" "}
+                          MB
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -942,61 +1013,81 @@ const CampaignDialog = ({
                 <Label htmlFor="galleryImages" className="text-right">
                   Gallery Images
                 </Label>
-                <div className="col-span-3 space-y-3">
-                  <input
-                    ref={galleryFileInputRef}
-                    type="file"
-                    accept="image/*"
-                    name="galleryImages"
-                    onChange={handleFileSelect}
-                    className="hidden"
-                    multiple
-                  />
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <button
-                      type="button"
-                      onClick={() => galleryFileInputRef.current?.click()}
-                      className="w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-500 hover:border-indigo-500 hover:text-indigo-600 transition-colors disabled:opacity-50"
-                      aria-label="Add gallery image"
-                      disabled={galleryImagePreviews.length >= 4}
-                    >
-                      <Plus className="w-6 h-6" />
-                    </button>
-                    {galleryImagePreviews.map((src, index) => (
-                      <div key={index} className="relative group">
-                        <img
-                          src={src}
-                          alt={`Gallery preview ${index + 1}`}
-                          className="w-20 h-20 object-cover rounded-lg border"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteGalleryImage(src, index)}
-                          className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-white shadow text-gray-500 hover:text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-                          title="Remove image"
-                          aria-label="Remove image"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                  {selectedGalleryImages.length > 0 && (
-                    <div className="text-sm text-gray-600">
-                      <p>
-                        Selected: {selectedGalleryImages.map((file) => file.name).join(", ")}
-                      </p>
-                      <p>
-                        Total Size:{" "}
-                        {(
-                          selectedGalleryImages.reduce((sum, file) => sum + file.size, 0) /
-                          1024 /
-                          1024
-                        ).toFixed(2)}{" "}
-                        MB
-                      </p>
+                <div className="col-span-3 space-y-4">
+                  {galleryImagePreviews.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {galleryImagePreviews.map((src, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={src}
+                            alt={`Gallery preview ${index + 1}`}
+                            className="w-20 h-20 object-cover rounded-lg border"
+                          />
+                          <button
+                            onClick={() => handleDeleteGalleryImage(src, index)}
+                            className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Delete"
+                          >
+                            <FaTrashAlt className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   )}
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-3">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        name="galleryImages"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                        id="galleryImagesInput"
+                        multiple
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() =>
+                          document.getElementById("galleryImagesInput")?.click()
+                        }
+                        className="flex items-center space-x-2"
+                        disabled={galleryImagePreviews.length >= 4}
+                      >
+                        <FaPlus className="w-4 h-4" />
+                        <span>Add Image</span>
+                      </Button>
+                      {selectedGalleryImages.length > 0 && (
+                        <UploadButton
+                          onClick={handleGalleryImagesUpload}
+                          disabled={false}
+                          isUploading={isUploadingGalleryImages}
+                        />
+                      )}
+                    </div>
+                    {selectedGalleryImages.length > 0 && (
+                      <div className="text-sm text-gray-600">
+                        <p>
+                          Selected:{" "}
+                          {selectedGalleryImages
+                            .map((file) => file.name)
+                            .join(", ")}
+                        </p>
+                        <p>
+                          Total Size:{" "}
+                          {(
+                            selectedGalleryImages.reduce(
+                              (sum, file) => sum + file.size,
+                              0
+                            ) /
+                            1024 /
+                            1024
+                          ).toFixed(2)}{" "}
+                          MB
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mt-8">Pricing Options</h3>
@@ -1163,6 +1254,8 @@ const CampaignManagement = ({
   const [showCalendar, setShowCalendar] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [campaignToDelete, setCampaignToDelete] = useState<DocumentData | null>(null);
+  const [confirmDeleteInput, setConfirmDeleteInput] = useState("");
+
   const { campaigns, updateWithImage, createWithImage, remove, loading } =
     useCampaignManagement(userSession.user.organizationId || "");
 
@@ -1172,15 +1265,20 @@ const CampaignManagement = ({
   };
 
   const handleConfirmDelete = async () => {
-    if (!campaignToDelete) return;
-    try {
-      await remove(campaignToDelete.id);
-      setIsDeleteDialogOpen(false);
-      setCampaignToDelete(null);
-      // Optionally, show a success toast or message
-    } catch (error) {
-      console.error("Error deleting campaign:", error);
-      // Optionally, show an error toast or message
+    if (campaignToDelete && confirmDeleteInput === campaignToDelete.title) {
+      try {
+        await remove(campaignToDelete.id);
+        setIsDeleteDialogOpen(false);
+        setCampaignToDelete(null);
+        setConfirmDeleteInput("");
+        // Optionally, show a success toast or message
+      } catch (error) {
+        console.error("Error deleting campaign:", error);
+        // Optionally, show an error toast or message
+      }
+    } else {
+      // Optionally, show an error message if input doesn't match
+      console.log("Confirmation input does not match campaign title.");
     }
   };
 
@@ -1485,13 +1583,15 @@ const CampaignManagement = ({
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-8">
             <div className="w-full sm:max-w-md">
               <div className="relative">
-                <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  placeholder="Search campaigns..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+                <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 mr-2" />
+                <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                  <Input
+                    placeholder="Search campaigns..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="ml-5 pl-10 w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
+                  />
+                </div>
               </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto sm:justify-end">
@@ -1516,9 +1616,9 @@ const CampaignManagement = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <Card>
-              <CardContent className="p-4">
+              <CardContent className="p-2">
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-full h-12 border-0 shadow-none focus:ring-0 bg-transparent hover:bg-transparent font-semibold text-gray-900 [&>span]:font-semibold">
+                  <SelectTrigger className="w-full h-5 border-0 shadow-none focus:ring-0 bg-transparent hover:bg-transparent font-semibold text-gray-900 [&>span]:font-semibold">
                     <SelectValue placeholder="All Statuses" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1532,9 +1632,9 @@ const CampaignManagement = ({
             </Card>
 
             <Card>
-              <CardContent className="p-4">
+              <CardContent className="p-3">
                 <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                  <SelectTrigger className="w-full h-12 border-0 shadow-none focus:ring-0 bg-transparent hover:bg-transparent font-semibold text-gray-900 [&>span]:font-semibold">
+                  <SelectTrigger className="w-full h-10 border-0 shadow-none focus:ring-0 bg-transparent hover:bg-transparent font-semibold text-gray-900 [&>span]:font-semibold">
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1550,9 +1650,9 @@ const CampaignManagement = ({
             </Card>
 
             <Card>
-              <CardContent className="p-4">
+              <CardContent className="p-3">
                 <Select value={sortOrder} onValueChange={setSortOrder}>
-                  <SelectTrigger className="w-full h-12 border-0 shadow-none focus:ring-0 bg-transparent hover:bg-transparent font-semibold text-gray-900 [&>span]:font-semibold">
+                  <SelectTrigger className="w-full h-10 border-0 shadow-none focus:ring-0 bg-transparent hover:bg-transparent font-semibold text-gray-900 [&>span]:font-semibold">
                     <SelectValue placeholder="End Date" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1566,12 +1666,12 @@ const CampaignManagement = ({
             </Card>
 
             <Card>
-              <CardContent className="p-4">
+              <CardContent className="p-3">
                 <Popover open={showCalendar} onOpenChange={setShowCalendar}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
-                      className="justify-between text-left font-semibold w-full h-12 px-3 flex items-center border-0 shadow-none hover:bg-transparent bg-transparent text-gray-900"
+                      className="justify-between text-left font-semibold w-full h-10 px-3 flex items-center border-0 shadow-none hover:bg-transparent bg-transparent text-gray-900"
                     >
                       <div className="flex items-center">
                         <CalendarIcon className="mr-2 h-4 w-4" />
@@ -1668,11 +1768,13 @@ const CampaignManagement = ({
                           <TableRow key={campaign.id ?? campaign.title}>
                             <TableCell>
                               <div className="flex items-start gap-3">
-                                <ImageWithFallback
-                                  src={campaign.coverImageUrl}
-                                  alt={campaign.title}
-                                  className="w-16 h-16 object-cover rounded-lg border border-gray-200 flex-shrink-0"
-                                />
+                                {campaign.coverImageUrl && (
+                                  <img
+                                    src={campaign.coverImageUrl}
+                                    alt={campaign.title}
+                                    className="w-16 h-16 object-cover rounded-lg border border-gray-200 flex-shrink-0"
+                                  />
+                                )}
                                 <div className="space-y-1 flex-1">
                                   <div className="flex items-center justify-between gap-2">
                                     <div>
@@ -1749,10 +1851,11 @@ const CampaignManagement = ({
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-8 w-8 text-red-600 hover:text-red-700"
+                                  className="h-8 w-8 hover:bg-red-50 hover:text-red-600"
                                   onClick={() => handleDeleteClick(campaign)}
+                                  title="Delete campaign"
                                 >
-                                  <FaTrashAlt className="h-3 w-3" />
+                                  <FaTrashAlt className="h-4 w-4" />
                                 </Button>
                               </div>
                             </TableCell>
@@ -1776,20 +1879,49 @@ const CampaignManagement = ({
       {/* Dialogs remain after main content */}
       <CampaignDialog open={isEditDialogOpen} onOpenChange={open => { setIsEditDialogOpen(open); if(!open) setEditingCampaign(null); }} campaign={editingCampaign} organizationId={userSession.user.organizationId || ""} onSave={handleSave} />
       <CampaignDialog open={isAddDialogOpen} onOpenChange={open => { setIsAddDialogOpen(open); }} organizationId={userSession.user.organizationId || ""} onSave={(data, isNew) => handleSave(data, isNew, undefined)} />
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your campaign.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="flex items-center justify-end space-x-2">
-            <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete}>Delete</AlertDialogAction>
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[400px] p-0 border-0 shadow-2xl">
+          <div className="bg-white rounded-2xl p-8 text-center">
+            {/* Warning Icon */}
+            <div className="flex justify-center mb-6">
+              <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                  <AlertTriangle className="w-6 h-6 text-red-500" />
+                </div>
+              </div>
+            </div>
+            
+            {/* Title */}
+            <h2 className="text-xl font-semibold text-gray-900 mb-3">
+              Delete campaign
+            </h2>
+            
+            {/* Description */}
+            <p className="text-gray-600 mb-8 leading-relaxed">
+              Are you sure you want to delete this campaign?<br />
+              This action cannot be undone.
+            </p>
+            
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsDeleteDialogOpen(false)}
+                className="flex-1 h-11 border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleConfirmDelete}
+                className="flex-1 h-11 bg-red-500 hover:bg-red-600 text-white border-0"
+              >
+                Delete
+              </Button>
+            </div>
           </div>
-        </AlertDialogContent>
-      </AlertDialog>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 };

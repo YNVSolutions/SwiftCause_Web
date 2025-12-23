@@ -55,7 +55,7 @@ export function useCampaignList(kioskSession?: KioskSession | null): UseCampaign
     return kioskSession.defaultCampaign === campaignId;
   };
 
-  const layoutMode: 'grid' | 'list' | 'carousel' = (kioskSession?.settings?.displayMode as any) || 'grid';
+  const layoutMode: 'grid' | 'list' | 'carousel' = kioskSession?.settings?.displayMode || 'grid';
   const autoRotateCampaigns: boolean = kioskSession?.settings?.autoRotateCampaigns ?? false;
   const rotationInterval: number = kioskSession?.settings?.rotationInterval ?? 30;
 

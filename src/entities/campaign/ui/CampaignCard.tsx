@@ -7,7 +7,6 @@ import { ImageWithFallback } from '../../../shared/ui/figma/ImageWithFallback';
 import { Heart, Info, ArrowRight, Star } from 'lucide-react';
 import { Campaign } from '../../../shared/types';
 import { formatCurrency } from '../../../shared/lib/currencyFormatter';
-import { DEFAULT_CAMPAIGN_IMAGE } from '../../../shared/config';
 
 interface CampaignCardProps {
   campaign: Campaign;
@@ -47,7 +46,6 @@ export function CampaignCard({
               src={campaign.coverImageUrl}
               alt={campaign.title}
               className="w-full h-full object-cover"
-              fallbackSrc={DEFAULT_CAMPAIGN_IMAGE}
             />
             {isDefault && (
               <div className="absolute top-1 left-1">
@@ -105,7 +103,7 @@ export function CampaignCard({
                   className="bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 ease-in-out text-sm"
                 >
                   <Heart className="mr-1 h-4 w-4" />
-                  Donate
+                  Donate 
                 </Button>
               )}
 
@@ -133,7 +131,6 @@ export function CampaignCard({
           src={campaign.coverImageUrl}
           alt={campaign.title}
           className="w-full h-full object-cover"
-          fallbackSrc={DEFAULT_CAMPAIGN_IMAGE}
         />
         <Badge className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-white/90 text-gray-800 text-xs">
           {campaign.category}
@@ -192,7 +189,7 @@ export function CampaignCard({
               size="lg"
             >
               <Heart className="mr-2 h-5 w-5" />
-              <span className="text-base sm:text-lg">Donate</span>
+              <span className="text-base sm:text-lg">Donate Now</span>
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           )}

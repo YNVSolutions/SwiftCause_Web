@@ -2,8 +2,13 @@ import { useCallback, useState } from 'react';
 import { authApi } from '../api';
 import { User } from '../../../entities/user';
 
-function getFriendlyAuthMessage(error: any) {
-  const code = error?.code || '';
+function getFriendlyAuthMessage(error: unknown) {
+  // Type guard to check if error has a code property
+  const hasCode = (err: unknown): err is { code: string } => {
+    return typeof err === 'object' && err !== null && 'code' in err;
+  };
+  
+  const code = hasCode(error) ? error.code : '';
   switch (code) {
     case 'auth/invalid-credential':
     case 'auth/wrong-password':
@@ -38,7 +43,7 @@ export function useAuth() {
       }
       setUser(profile);
       return profile;
-    } catch (e: any) {
+    } catch (e: unknown) {
       setError(getFriendlyAuthMessage(e));
       setUser(null);
       return null;

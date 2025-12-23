@@ -115,12 +115,12 @@ export function useDashboardData(organizationId?: string) {
 
       // Fetch donation distribution - simple approach
       const ranges = [
-        { min: 0, max: 25, label: '$0-$25' },
-        { min: 25, max: 50, label: '$25-$50' },
-        { min: 50, max: 100, label: '$50-$100' },
-        { min: 100, max: 250, label: '$100-$250' },
-        { min: 250, max: 500, label: '$250-$500' },
-        { min: 500, max: 10000, label: '$500+' }
+        { min: 0, max: 25, label: '$0-$25', isLast: false },
+        { min: 25, max: 50, label: '$25-$50', isLast: false },
+        { min: 50, max: 100, label: '$50-$100', isLast: false },
+        { min: 100, max: 250, label: '$100-$250', isLast: false },
+        { min: 250, max: 500, label: '$250-$500', isLast: false },
+        { min: 500, max: Infinity, label: '$500+', isLast: true }
       ];
 
       let donationDistribution: Array<{ range: string; count: number }> = [];
@@ -152,7 +152,7 @@ export function useDashboardData(organizationId?: string) {
                 
                 // Add amount range constraints
                 constraints.push(where("amount", ">=", range.min));
-                if (range.max !== 10000) { // Don't add upper limit for last range
+                if (!range.isLast) { // Don't add upper limit for last range
                   constraints.push(where("amount", "<", range.max));
                 }
                 
@@ -195,9 +195,17 @@ export function useDashboardData(organizationId?: string) {
               if (typeof amount === 'number' && !isNaN(amount)) {
                 for (let i = 0; i < ranges.length; i++) {
                   const range = ranges[i];
-                  if (amount >= range.min && (range.max === 10000 || amount < range.max)) {
-                    donationDistribution[i].count++;
-                    break;
+                  // Use consistent boundary logic: [min, max) except for last range which is [min, ∞)
+                  if (range.isLast) {
+                    if (amount >= range.min) {
+                      donationDistribution[i].count++;
+                      break;
+                    }
+                  } else {
+                    if (amount >= range.min && amount < range.max) {
+                      donationDistribution[i].count++;
+                      break;
+                    }
                   }
                 }
               }

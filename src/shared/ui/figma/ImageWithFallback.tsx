@@ -10,15 +10,15 @@ type ImageWithFallbackProps = React.ImgHTMLAttributes<HTMLImageElement> & {
 export function ImageWithFallback({
   src,
   alt,
-  className,
   style,
-  fallbackSrc,
+  className,
   onError,
+  fallbackSrc,
   ...rest
 }: ImageWithFallbackProps) {
   const [didError, setDidError] = useState(false)
 
-  // Reset error state whenever the source changes so newly loaded images can attempt to render.
+  // Reset error state when source changes so a new image can attempt to load.
   useEffect(() => {
     setDidError(false)
   }, [src])
