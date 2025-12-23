@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { NavigationHeader } from '../../shared/ui/NavigationHeader';
 import { Campaign, KioskSession } from '../../shared/types';
 import { Button } from '../../shared/ui/button';
@@ -28,9 +28,7 @@ export function CampaignListScreen({
   campaigns,
   loading,
   error,
-  isDetailedView,
   kioskSession,
-  onViewToggle,
   onSelectCampaign,
   onViewDetails,
   isDefaultCampaign,
@@ -297,10 +295,6 @@ const getTop3Amounts = (campaign: Campaign): number[] => {
 const CampaignCarousel = ({
   campaigns,
   onSelectCampaign,
-  onViewDetails,
-  isDefaultCampaign,
-  autoRotate,
-  rotationInterval,
   kioskSession,
   isLoadingPayment
 }: CampaignCarouselProps) => {

@@ -184,6 +184,7 @@ export function AdminDashboard({
     organizationId: userSession.user.organizationId,
   });
 
+  // console.log(stats);
   useEffect(() => {
     const hash = window.location.hash;
     const params = new URLSearchParams(hash.split("?")[1]);
