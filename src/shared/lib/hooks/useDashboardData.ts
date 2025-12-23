@@ -5,6 +5,20 @@ import { db } from '../firebase';
 import { Campaign } from '../../types';
 import { Kiosk, Donation } from '../../types';
 
+const toErrorDetails = (error: unknown) => {
+  if (error instanceof Error) {
+    return { code: (error as any)?.code || 'error', message: error.message, stack: error.stack || 'No stack trace' };
+  }
+  if (typeof error === 'object' && error !== null) {
+    return {
+      code: (error as any).code || 'unknown',
+      message: (error as any).message || JSON.stringify(error),
+      stack: (error as any).stack || 'No stack trace',
+    };
+  }
+  return { code: 'unknown', message: String(error), stack: 'No stack trace' };
+};
+
 
 interface DashboardStats {
   totalRaised: number;
@@ -165,16 +179,9 @@ export function useDashboardData(organizationId?: string) {
                 count: count
               };
             } catch (error: unknown) {
-              const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-              const errorCode = (error as any)?.code || 'unknown';
-              const errorStack = (error as any)?.stack || 'No stack trace';
-              
-              console.error(`Error fetching count for range ${range.label}:`, error);
-              console.error('Error details:', {
-                code: errorCode,
-                message: errorMessage,
-                stack: errorStack
-              });
+              const details = toErrorDetails(error);
+              console.error(`Error fetching count for range ${range.label}:`, details.message);
+              console.error('Error details:', details);
               return {
                 range: range.label,
                 count: 0

@@ -332,18 +332,36 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                           </div>
                         </TableCell>
                         <TableCell className="px-6 py-4">
-                          <div className="space-y-2">
-                            <div className="flex items-center space-x-2">
-                              <Target className="w-4 h-4 text-gray-400" />
-                              <span className="text-sm text-gray-500">{kiosk.assignedCampaigns?.length || 0} assigned</span>
-                            </div>
-                            {kiosk.defaultCampaign && (
-                              <div className="flex items-center space-x-2">
-                                <Star className="w-4 h-4 text-yellow-500" />
-                                <span className="text-sm text-gray-500">{campaigns.find(c => c.id === kiosk.defaultCampaign)?.title?.slice(0, 20) || '...'}</span>
+                          {(() => {
+                            const assignedIds = Array.from(new Set(kiosk.assignedCampaigns || [])).filter(Boolean);
+                            const assignedCount = campaigns.filter((c) => assignedIds.includes(c.id)).length;
+                            const globalCount = kiosk.settings?.showAllCampaigns
+                              ? campaigns.filter((c) => c.isGlobal).length
+                              : 0;
+                            return (
+                              <div className="space-y-2">
+                                <div className="flex items-center space-x-2">
+                                  <Target className="w-4 h-4 text-gray-400" />
+                                  <span className="text-sm text-gray-500">
+                                    {assignedCount} assigned
+                                    {globalCount > 0 && (
+                                      <span className="text-xs text-gray-400 ml-2">
+                                        (+{globalCount} global showing)
+                                      </span>
+                                    )}
+                                  </span>
+                                </div>
+                                {kiosk.defaultCampaign && (
+                                  <div className="flex items-center space-x-2">
+                                    <Star className="w-4 h-4 text-yellow-500" />
+                                    <span className="text-sm text-gray-500">
+                                      {campaigns.find((c) => c.id === kiosk.defaultCampaign)?.title?.slice(0, 20) || '...'}
+                                    </span>
+                                  </div>
+                                )}
                               </div>
-                            )}
-                          </div>
+                            );
+                          })()}
                         </TableCell>
                         <TableCell className="px-6 py-4">
                           <div className="flex items-center justify-end gap-2">
