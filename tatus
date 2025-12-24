@@ -1,0 +1,239 @@
+[1mdiff --git a/src/views/campaigns/CampaignListScreen.tsx b/src/views/campaigns/CampaignListScreen.tsx[m
+[1mindex 30eec2e..2ddae69 100644[m
+[1m--- a/src/views/campaigns/CampaignListScreen.tsx[m
+[1m+++ b/src/views/campaigns/CampaignListScreen.tsx[m
+[36m@@ -1,13 +1,9 @@[m
+[31m-<<<<<<< HEAD[m
+ import { useState, useEffect } from 'react';[m
+ import { CampaignCard } from '../../entities/campaign';[m
+[31m-=======[m
+[31m-import React, { useState } from 'react';[m
+[31m->>>>>>> main[m
+ import { NavigationHeader } from '../../shared/ui/NavigationHeader';[m
+ import { Campaign, KioskSession } from '../../shared/types';[m
+ import { Button } from '../../shared/ui/button';[m
+[31m-import { ChevronLeft } from 'lucide-react';[m
+[32m+[m[32mimport { ChevronLeft, ChevronRight } from 'lucide-react';[m
+ import { updateKiosk } from '../../shared/api';[m
+ import { formatCurrency } from '../../shared/lib/currencyFormatter';[m
+ [m
+[36m@@ -26,7 +22,7 @@[m [minterface CampaignListScreenProps {[m
+   layoutMode: 'grid' | 'list' | 'carousel';[m
+   autoRotateCampaigns: boolean;[m
+   rotationInterval: number;[m
+[31m-  refreshCurrentKioskSession: () => Promise<void>; // Added refreshCurrentKioskSession prop[m
+[32m+[m[32m  refreshCurrentKioskSession: () => Promise<void>;[m
+ }[m
+ [m
+ export function CampaignListScreen({[m
+[36m@@ -63,7 +59,7 @@[m [mexport function CampaignListScreen({[m
+     if (kioskSession && kioskSession.kioskId) {[m
+       try {[m
+         await updateKiosk(kioskSession.kioskId, { settings: { ...kioskSession.settings, displayMode: newLayout } });[m
+[31m-        await refreshCurrentKioskSession(); // Refresh kiosk session to get updated settings[m
+[32m+[m[32m        await refreshCurrentKioskSession();[m
+       } catch (e) {[m
+         console.error("Failed to update kiosk display mode:", e);[m
+       }[m
+[36m@@ -72,7 +68,6 @@[m [mexport function CampaignListScreen({[m
+ [m
+   const handleSelectCampaign = async (campaign: Campaign, amount?: number) => {[m
+     setIsLoadingPayment(true);[m
+[31m-    // Add a small delay to show the loading state[m
+     setTimeout(() => {[m
+       onSelectCampaign(campaign, amount);[m
+     }, 500);[m
+[36m@@ -93,7 +88,6 @@[m [mexport function CampaignListScreen({[m
+   if (isLoadingPayment) {[m
+     return ([m
+       <div className="min-h-screen bg-white">[m
+[31m-        {/* Header */}[m
+         <div className="bg-white border-b border-gray-200 px-4 py-4">[m
+           <div className="flex items-center justify-between max-w-7xl mx-auto">[m
+             <div className="p-2 opacity-50">[m
+[36m@@ -136,7 +130,6 @@[m [mexport function CampaignListScreen({[m
+ [m
+   return ([m
+     <div className="min-h-screen bg-white">[m
+[31m-      {/* Header */}[m
+       <div className="bg-white border-b border-gray-200 px-4 py-4">[m
+         <div className="flex items-center justify-between max-w-7xl mx-auto">[m
+           <Button [m
+[36m@@ -147,11 +140,10 @@[m [mexport function CampaignListScreen({[m
+             <ChevronLeft className="w-6 h-6" />[m
+           </Button>[m
+           <h1 className="text-xl font-semibold text-gray-900">Choose a cause</h1>[m
+[31m-          <div className="w-10" /> {/* Spacer for centering */}[m
+[32m+[m[32m          <div className="w-10" />[m
+         </div>[m
+       </div>[m
+ [m
+[31m-      {/* Main Content */}[m
+       <main className="max-w-7xl mx-auto px-4 py-6">[m
+         {campaigns.length === 0 ? ([m
+           <div className="flex flex-col items-center justify-center py-12 text-center">[m
+[36m@@ -182,14 +174,12 @@[m [mexport function CampaignListScreen({[m
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">[m
+             {currentCampaigns.map(campaign => ([m
+               <div key={campaign.id} className="bg-white rounded-2xl overflow-hidden shadow-lg">[m
+[31m-                {/* Campaign Image */}[m
+                 <div className="relative h-48 overflow-hidden rounded-t-2xl">[m
+                   <img[m
+                     src={campaign.coverImageUrl || '/campaign-fallback.svg'}[m
+                     alt={campaign.title}[m
+                     className="w-full h-full object-cover"[m
+                   />[m
+[31m-                  {/* Progress Bar Overlay */}[m
+                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-4">[m
+                     <div className="w-full bg-white/30 rounded-full h-2">[m
+                       <div [m
+[36m@@ -202,14 +192,11 @@[m [mexport function CampaignListScreen({[m
+                   </div>[m
+                 </div>[m
+ [m
+[31m-                {/* Campaign Info */}[m
+                 <div className="p-6">[m
+                   <h2 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">{campaign.title}</h2>[m
+                   <p className="text-gray-600 mb-6 line-clamp-3">{campaign.description}</p>[m
+ [m
+[31m-                  {/* Donation Amount Buttons */}[m
+                   <div className="space-y-3">[m
+[31m-                    {/* Top 3 predefined amounts */}[m
+                     <div className="grid grid-cols-3 gap-2">[m
+                       {getTop3Amounts(campaign).map((amount, index) => ([m
+                         <Button[m
+[36m@@ -223,7 +210,6 @@[m [mexport function CampaignListScreen({[m
+                       ))}[m
+                     </div>[m
+                     [m
+[31m-                    {/* Custom Amount Button */}[m
+                     <Button[m
+                       onClick={() => handleSelectCampaign(campaign)}[m
+                       disabled={isLoadingPayment}[m
+[36m@@ -238,7 +224,6 @@[m [mexport function CampaignListScreen({[m
+           </div>[m
+         )}[m
+ [m
+[31m-        {/* Pagination Controls */}[m
+         {totalPages > 1 && ([m
+           <div className="flex justify-center mt-8 space-x-2">[m
+             <Button[m
+[36m@@ -278,12 +263,9 @@[m [minterface CampaignCarouselProps {[m
+   isLoadingPayment: boolean;[m
+ }[m
+ [m
+[31m-// Helper function to get top 3 predefined amounts for a campaign[m
+ const getTop3Amounts = (campaign: Campaign): number[] => {[m
+   const predefinedAmounts = campaign.configuration?.predefinedAmounts || [];[m
+[31m-  // Sort amounts in ascending order and take the first 3[m
+   const sortedAmounts = [...predefinedAmounts].sort((a, b) => a - b);[m
+[31m-  // If less than 3 amounts, pad with default values[m
+   const top3 = sortedAmounts.slice(0, 3);[m
+   while (top3.length < 3) {[m
+     const defaultAmounts = [10, 25, 50];[m
+[36m@@ -307,12 +289,31 @@[m [mconst CampaignCarousel = ({[m
+   kioskSession,[m
+   isLoadingPayment[m
+ }: CampaignCarouselProps) => {[m
+[32m+[m[32m  const [currentIndex, setCurrentIndex] = useState(0);[m
+[32m+[m
+[32m+[m[32m  const goToPrevious = () => {[m
+[32m+[m[32m    setCurrentIndex((prevIndex) =>[m[41m [m
+[32m+[m[32m      prevIndex === 0 ? campaigns.length - 1 : prevIndex - 1[m
+[32m+[m[32m    );[m
+[32m+[m[32m  };[m
+[32m+[m
+[32m+[m[32m  const goToNext = () => {[m
+[32m+[m[32m    setCurrentIndex((prevIndex) =>[m[41m [m
+[32m+[m[32m      prevIndex === campaigns.length - 1 ? 0 : prevIndex + 1[m
+[32m+[m[32m    );[m
+[32m+[m[32m  };[m
+[32m+[m
+[32m+[m[32m  useEffect(() => {[m
+[32m+[m[32m    if (autoRotate && campaigns.length > 1) {[m
+[32m+[m[32m      const interval = setInterval(goToNext, rotationInterval * 1000);[m
+[32m+[m[32m      return () => clearInterval(interval);[m
+[32m+[m[32m    }[m
+[32m+[m[32m  }, [autoRotate, rotationInterval, campaigns.length]);[m
+[32m+[m
+   if (campaigns.length === 0) {[m
+     return null;[m
+   }[m
+ [m
+[31m-<<<<<<< HEAD[m
+[31m-[m
+   return ([m
+     <div className="relative w-full overflow-hidden bg-white/80 backdrop-blur-sm rounded-2xl shadow-md border border-gray-100 p-4">[m
+       <button[m
+[36m@@ -344,67 +345,11 @@[m [mconst CampaignCarousel = ({[m
+                   isDefault={isDefaultCampaign(campaign.id)}[m
+                   organizationCurrency={kioskSession?.organizationCurrency}[m
+                 />[m
+[31m-=======[m
+[31m-  return ([m
+[31m-    <div className="w-full max-w-4xl mx-auto">[m
+[31m-      <div className="space-y-8">[m
+[31m-        {campaigns.map((campaign) => ([m
+[31m-          <div key={campaign.id} className="bg-white rounded-2xl overflow-hidden shadow-lg">[m
+[31m-            {/* Campaign Image */}[m
+[31m-            <div className="relative h-64 md:h-80 overflow-hidden">[m
+[31m-              <img[m
+[31m-                src={campaign.coverImageUrl || '/campaign-fallback.svg'}[m
+[31m-                alt={campaign.title}[m
+[31m-                className="w-full h-full object-cover"[m
+[31m-              />[m
+[31m-              {/* Progress Bar Overlay */}[m
+[31m-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-6">[m
+[31m-                <div className="w-full bg-white/30 rounded-full h-3">[m
+[31m-                  <div [m
+[31m-                    className="bg-white h-3 rounded-full transition-all duration-300"[m
+[31m-                    style={{ [m
+[31m-                      width: `${Math.min(((campaign.raised || 0) / campaign.goal) * 100, 100)}%` [m
+[31m-                    }}[m
+[31m-                  />[m
+[31m-                </div>[m
+[31m->>>>>>> main[m
+               </div>[m
+             </div>[m
+[31m-[m
+[31m-            {/* Campaign Info */}[m
+[31m-            <div className="p-6 md:p-8">[m
+[31m-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{campaign.title}</h2>[m
+[31m-              <p className="text-gray-600 mb-8 text-lg">{campaign.description}</p>[m
+[31m-[m
+[31m-              {/* Donation Amount Buttons */}[m
+[31m-              <div className="space-y-4">[m
+[31m-                {/* Top 3 predefined amounts */}[m
+[31m-                <div className="grid grid-cols-3 gap-4">[m
+[31m-                  {getTop3Amounts(campaign).map((amount, index) => ([m
+[31m-                    <Button[m
+[31m-                      key={index}[m
+[31m-                      onClick={() => onSelectCampaign(campaign, amount)}[m
+[31m-                      disabled={isLoadingPayment}[m
+[31m-                      className="h-14 bg-gray-100 hover:bg-gray-200 text-blue-600 font-semibold rounded-xl border-0 transition-all duration-200 text-lg disabled:opacity-50 disabled:cursor-not-allowed"[m
+[31m-                    >[m
+[31m-                      💙 {formatCurrency(amount, kioskSession?.organizationCurrency || 'USD')}[m
+[31m-                    </Button>[m
+[31m-                  ))}[m
+[31m-                </div>[m
+[31m-                [m
+[31m-                {/* Custom Amount Button */}[m
+[31m-                <Button[m
+[31m-                  onClick={() => onSelectCampaign(campaign)}[m
+[31m-                  disabled={isLoadingPayment}[m
+[31m-                  className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all duration-200 text-lg disabled:opacity-50 disabled:cursor-not-allowed"[m
+[31m-                >[m
+[31m-                  {isLoadingPayment ? 'Loading...' : 'Custom Amount or Monthly'}[m
+[31m-                </Button>[m
+[31m-              </div>[m
+[31m-            </div>[m
+[31m-          </div>[m
+[31m-        ))}[m
+[32m+[m[32m          ))}[m
+[32m+[m[32m        </div>[m
+       </div>[m
+     </div>[m
+   );[m
+[31m-};[m
+[32m+[m[32m};[m
+\ No newline at end of file[m

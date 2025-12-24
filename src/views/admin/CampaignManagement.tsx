@@ -42,7 +42,7 @@ import {
   FaTrashAlt, // Added FaTrashAlt
   FaPlus, // Import FaPlus
 } from "react-icons/fa";
-import { Plus, ArrowLeft, Settings, Download } from "lucide-react";
+import { Plus, ArrowLeft, Settings, Download, AlertTriangle } from "lucide-react";
 import { Calendar } from "../../shared/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "../../shared/ui/popover";
 import { Skeleton } from "../../shared/ui/skeleton";

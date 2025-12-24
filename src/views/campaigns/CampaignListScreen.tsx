@@ -1,13 +1,9 @@
-<<<<<<< HEAD
 import { useState, useEffect } from 'react';
 import { CampaignCard } from '../../entities/campaign';
-=======
-import React, { useState } from 'react';
->>>>>>> main
 import { NavigationHeader } from '../../shared/ui/NavigationHeader';
 import { Campaign, KioskSession } from '../../shared/types';
 import { Button } from '../../shared/ui/button';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { updateKiosk } from '../../shared/api';
 import { formatCurrency } from '../../shared/lib/currencyFormatter';
 
@@ -26,7 +22,7 @@ interface CampaignListScreenProps {
   layoutMode: 'grid' | 'list' | 'carousel';
   autoRotateCampaigns: boolean;
   rotationInterval: number;
-  refreshCurrentKioskSession: () => Promise<void>; // Added refreshCurrentKioskSession prop
+  refreshCurrentKioskSession: () => Promise<void>;
 }
 
 export function CampaignListScreen({
@@ -63,7 +59,7 @@ export function CampaignListScreen({
     if (kioskSession && kioskSession.kioskId) {
       try {
         await updateKiosk(kioskSession.kioskId, { settings: { ...kioskSession.settings, displayMode: newLayout } });
-        await refreshCurrentKioskSession(); // Refresh kiosk session to get updated settings
+        await refreshCurrentKioskSession();
       } catch (e) {
         console.error("Failed to update kiosk display mode:", e);
       }
@@ -72,7 +68,6 @@ export function CampaignListScreen({
 
   const handleSelectCampaign = async (campaign: Campaign, amount?: number) => {
     setIsLoadingPayment(true);
-    // Add a small delay to show the loading state
     setTimeout(() => {
       onSelectCampaign(campaign, amount);
     }, 500);
@@ -93,7 +88,6 @@ export function CampaignListScreen({
   if (isLoadingPayment) {
     return (
       <div className="min-h-screen bg-white">
-        {/* Header */}
         <div className="bg-white border-b border-gray-200 px-4 py-4">
           <div className="flex items-center justify-between max-w-7xl mx-auto">
             <div className="p-2 opacity-50">
@@ -136,7 +130,6 @@ export function CampaignListScreen({
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
       <div className="bg-white border-b border-gray-200 px-4 py-4">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <Button 
@@ -147,11 +140,10 @@ export function CampaignListScreen({
             <ChevronLeft className="w-6 h-6" />
           </Button>
           <h1 className="text-xl font-semibold text-gray-900">Choose a cause</h1>
-          <div className="w-10" /> {/* Spacer for centering */}
+          <div className="w-10" />
         </div>
       </div>
 
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-6">
         {campaigns.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -182,14 +174,12 @@ export function CampaignListScreen({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {currentCampaigns.map(campaign => (
               <div key={campaign.id} className="bg-white rounded-2xl overflow-hidden shadow-lg">
-                {/* Campaign Image */}
                 <div className="relative h-48 overflow-hidden rounded-t-2xl">
                   <img
                     src={campaign.coverImageUrl || '/campaign-fallback.svg'}
                     alt={campaign.title}
                     className="w-full h-full object-cover"
                   />
-                  {/* Progress Bar Overlay */}
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-4">
                     <div className="w-full bg-white/30 rounded-full h-2">
                       <div 
@@ -202,14 +192,11 @@ export function CampaignListScreen({
                   </div>
                 </div>
 
-                {/* Campaign Info */}
                 <div className="p-6">
                   <h2 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">{campaign.title}</h2>
                   <p className="text-gray-600 mb-6 line-clamp-3">{campaign.description}</p>
 
-                  {/* Donation Amount Buttons */}
                   <div className="space-y-3">
-                    {/* Top 3 predefined amounts */}
                     <div className="grid grid-cols-3 gap-2">
                       {getTop3Amounts(campaign).map((amount, index) => (
                         <Button
@@ -223,7 +210,6 @@ export function CampaignListScreen({
                       ))}
                     </div>
                     
-                    {/* Custom Amount Button */}
                     <Button
                       onClick={() => handleSelectCampaign(campaign)}
                       disabled={isLoadingPayment}
@@ -238,7 +224,6 @@ export function CampaignListScreen({
           </div>
         )}
 
-        {/* Pagination Controls */}
         {totalPages > 1 && (
           <div className="flex justify-center mt-8 space-x-2">
             <Button
@@ -278,12 +263,9 @@ interface CampaignCarouselProps {
   isLoadingPayment: boolean;
 }
 
-// Helper function to get top 3 predefined amounts for a campaign
 const getTop3Amounts = (campaign: Campaign): number[] => {
   const predefinedAmounts = campaign.configuration?.predefinedAmounts || [];
-  // Sort amounts in ascending order and take the first 3
   const sortedAmounts = [...predefinedAmounts].sort((a, b) => a - b);
-  // If less than 3 amounts, pad with default values
   const top3 = sortedAmounts.slice(0, 3);
   while (top3.length < 3) {
     const defaultAmounts = [10, 25, 50];
@@ -307,11 +289,30 @@ const CampaignCarousel = ({
   kioskSession,
   isLoadingPayment
 }: CampaignCarouselProps) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const goToPrevious = () => {
+    setCurrentIndex((prevIndex) => 
+      prevIndex === 0 ? campaigns.length - 1 : prevIndex - 1
+    );
+  };
+
+  const goToNext = () => {
+    setCurrentIndex((prevIndex) => 
+      prevIndex === campaigns.length - 1 ? 0 : prevIndex + 1
+    );
+  };
+
+  useEffect(() => {
+    if (autoRotate && campaigns.length > 1) {
+      const interval = setInterval(goToNext, rotationInterval * 1000);
+      return () => clearInterval(interval);
+    }
+  }, [autoRotate, rotationInterval, campaigns.length]);
+
   if (campaigns.length === 0) {
     return null;
   }
-
-<<<<<<< HEAD
 
   return (
     <div className="relative w-full overflow-hidden bg-white/80 backdrop-blur-sm rounded-2xl shadow-md border border-gray-100 p-4">
@@ -344,66 +345,10 @@ const CampaignCarousel = ({
                   isDefault={isDefaultCampaign(campaign.id)}
                   organizationCurrency={kioskSession?.organizationCurrency}
                 />
-=======
-  return (
-    <div className="w-full max-w-4xl mx-auto">
-      <div className="space-y-8">
-        {campaigns.map((campaign) => (
-          <div key={campaign.id} className="bg-white rounded-2xl overflow-hidden shadow-lg">
-            {/* Campaign Image */}
-            <div className="relative h-64 md:h-80 overflow-hidden">
-              <img
-                src={campaign.coverImageUrl || '/campaign-fallback.svg'}
-                alt={campaign.title}
-                className="w-full h-full object-cover"
-              />
-              {/* Progress Bar Overlay */}
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-6">
-                <div className="w-full bg-white/30 rounded-full h-3">
-                  <div 
-                    className="bg-white h-3 rounded-full transition-all duration-300"
-                    style={{ 
-                      width: `${Math.min(((campaign.raised || 0) / campaign.goal) * 100, 100)}%` 
-                    }}
-                  />
-                </div>
->>>>>>> main
               </div>
             </div>
-
-            {/* Campaign Info */}
-            <div className="p-6 md:p-8">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{campaign.title}</h2>
-              <p className="text-gray-600 mb-8 text-lg">{campaign.description}</p>
-
-              {/* Donation Amount Buttons */}
-              <div className="space-y-4">
-                {/* Top 3 predefined amounts */}
-                <div className="grid grid-cols-3 gap-4">
-                  {getTop3Amounts(campaign).map((amount, index) => (
-                    <Button
-                      key={index}
-                      onClick={() => onSelectCampaign(campaign, amount)}
-                      disabled={isLoadingPayment}
-                      className="h-14 bg-gray-100 hover:bg-gray-200 text-blue-600 font-semibold rounded-xl border-0 transition-all duration-200 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      💙 {formatCurrency(amount, kioskSession?.organizationCurrency || 'USD')}
-                    </Button>
-                  ))}
-                </div>
-                
-                {/* Custom Amount Button */}
-                <Button
-                  onClick={() => onSelectCampaign(campaign)}
-                  disabled={isLoadingPayment}
-                  className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all duration-200 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isLoadingPayment ? 'Loading...' : 'Custom Amount or Monthly'}
-                </Button>
-              </div>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
