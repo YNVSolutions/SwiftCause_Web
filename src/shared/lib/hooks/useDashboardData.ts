@@ -14,6 +14,7 @@ interface DashboardStats {
   topLocations: Array<{ name: string; totalRaised: number }>;
   deviceDistribution: Array<{ name: string; value: number }>;
   donationDistribution: Array<{ range: string; count: number }>;
+  donationDistributionError?: boolean;
 }
 
 type FirestoreTimestamp = { seconds: number; nanoseconds: number };
@@ -46,6 +47,7 @@ export function useDashboardData(organizationId?: string) {
     topLocations: [],
     deviceDistribution: [],
     donationDistribution: [],
+    donationDistributionError: false,
   });
   const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
@@ -113,50 +115,82 @@ export function useDashboardData(organizationId?: string) {
         .sort((a, b) => b.value - a.value);
 
       // Fetch donation distribution using aggregation queries (more efficient)
-      // Define amount ranges
-      const ranges = [
-        { min: 0, max: 100, label: '$0-$100' },
-        { min: 100, max: 200, label: '$100-$200' },
-        { min: 200, max: 300, label: '$200-$300' },
-        { min: 300, max: 400, label: '$300-$400' },
-        { min: 400, max: 500, label: '$400-$500' },
-        { min: 500, max: 10000, label: '$500+' } // Set reasonable upper limit
-      ];
+      let donationDistribution: Array<{ range: string; count: number }> = [];
+      let donationDistributionError = false;
+      try {
+        // Define amount ranges
+        const ranges = [
+          { min: 0, max: 100, label: '$0-$100' },
+          { min: 100, max: 200, label: '$100-$200' },
+          { min: 200, max: 300, label: '$200-$300' },
+          { min: 300, max: 400, label: '$300-$400' },
+          { min: 400, max: 500, label: '$400-$500' },
+          { min: 500, max: 10000, label: '$500+' } // Set reasonable upper limit
+        ];
 
-      // Use Promise.all to fetch counts in parallel for better performance
-      const donationDistribution = await Promise.all(
-        ranges.map(async (range) => {
-          try {
-            // Build query for this range
-            let rangeQuery = collection(db, 'donations');
-            const constraints = [];
-            
-            if (organizationId) {
-              constraints.push(where("organizationId", "==", organizationId));
+        console.log('Starting donation distribution queries for organization:', organizationId);
+
+        // Use Promise.all to fetch counts in parallel for better performance
+        donationDistribution = await Promise.all(
+          ranges.map(async (range) => {
+            try {
+              // Build query for this range
+              let rangeQuery = collection(db, 'donations');
+              const constraints = [];
+              
+              if (organizationId) {
+                constraints.push(where("organizationId", "==", organizationId));
+              }
+              constraints.push(where("amount", ">=", range.min));
+              if (range.max !== 10000) { // Don't add upper limit for last range
+                constraints.push(where("amount", "<", range.max));
+              }
+              
+              const q = query(rangeQuery, ...constraints);
+              
+              console.log(`Querying donations for range ${range.label} with constraints:`, {
+                organizationId,
+                minAmount: range.min,
+                maxAmount: range.max !== 10000 ? range.max : 'unlimited'
+              });
+              
+              // Use getCountFromServer for efficient counting (doesn't download documents)
+              const snapshot = await getCountFromServer(q);
+              const count = snapshot.data().count;
+              
+              console.log(`Count for range ${range.label}:`, count);
+              
+              return {
+                range: range.label,
+                count: count
+              };
+            } catch (error: unknown) {
+              const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+              const errorCode = (error as any)?.code || 'unknown';
+              const errorStack = (error as any)?.stack || 'No stack trace';
+              
+              console.error(`Error fetching count for range ${range.label}:`, error);
+              console.error('Error details:', {
+                code: errorCode,
+                message: errorMessage,
+                stack: errorStack
+              });
+              return {
+                range: range.label,
+                count: 0
+              };
             }
-            constraints.push(where("amount", ">=", range.min));
-            if (range.max !== 10000) { // Don't add upper limit for last range
-              constraints.push(where("amount", "<", range.max));
-            }
-            
-            const q = query(rangeQuery, ...constraints);
-            
-            // Use getCountFromServer for efficient counting (doesn't download documents)
-            const snapshot = await getCountFromServer(q);
-            
-            return {
-              range: range.label,
-              count: snapshot.data().count
-            };
-          } catch (error) {
-            console.error(`Error fetching count for range ${range.label}:`, error);
-            return {
-              range: range.label,
-              count: 0
-            };
-          }
-        })
-      );
+          })
+        );
+
+        console.log('Final donation distribution data:', donationDistribution);
+        console.log('Total donations across all ranges:', donationDistribution.reduce((sum, item) => sum + item.count, 0));
+      } catch (error: unknown) {
+        console.error('Failed to fetch donation distribution data:', error);
+        // Set empty array so the chart shows "No Donation Data" instead of breaking
+        donationDistribution = [];
+        donationDistributionError = true;
+      }
 
       setStats({
         totalRaised,
@@ -165,7 +199,8 @@ export function useDashboardData(organizationId?: string) {
         activeKiosks,
         topLocations,
         deviceDistribution,
-        donationDistribution
+        donationDistribution,
+        donationDistributionError
       });
 
       const formattedActivities = recentDonationsData.map((donation: Donation): Activity => {

@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "../../../shared/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../shared/ui/tabs";
+// import { ImageWithFallback } from "../../../shared/ui/figma/ImageWithFallback";
 import {
   Card,
   CardContent,

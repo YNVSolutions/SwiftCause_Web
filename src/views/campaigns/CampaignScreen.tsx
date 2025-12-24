@@ -109,7 +109,8 @@ export function CampaignScreen({
       amount: getCurrentAmount(),
       isRecurring,
       recurringInterval: isRecurring ? recurringInterval : undefined,
-      isAnonymous: donorInfo.isAnonymous
+      isAnonymous: donorInfo.isAnonymous,
+      donorName: "" // No gift aid in this flow, so no donor name
     };
 
     onSubmit(donation);

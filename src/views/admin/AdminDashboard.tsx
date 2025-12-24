@@ -10,6 +10,7 @@ import {
 import { Badge } from "../../shared/ui/badge";
 import { Progress } from "../../shared/ui/progress";
 import { Skeleton } from "../../shared/ui/skeleton";
+import { ImageWithFallback } from "../../shared/ui/figma/ImageWithFallback";
 import {
   Collapsible,
   CollapsibleContent,
@@ -1221,17 +1222,11 @@ export function AdminDashboard({
                       >
                         {/* Campaign Image */}
                         <div className="relative h-32 bg-gradient-to-br from-gray-100 to-gray-200">
-                          {campaign.coverImageUrl ? (
-                            <img 
-                              src={campaign.coverImageUrl} 
-                              alt={campaign.title}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <Target className="w-12 h-12 text-gray-400" />
-                            </div>
-                          )}
+                          <ImageWithFallback
+                            src={campaign.coverImageUrl}
+                            alt={campaign.title}
+                            className="w-full h-full object-cover"
+                          />
                           {getRankOverlay()}
                         </div>
 
@@ -1304,6 +1299,14 @@ export function AdminDashboard({
               {loading ? (
                 <div className="space-y-4">
                   <Skeleton className="h-[250px] sm:h-[300px] w-full" />
+                </div>
+              ) : stats.donationDistributionError ? (
+                <div className="text-center py-6 sm:py-8 text-red-500">
+                  <AlertCircle className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-red-400 mb-3" />
+                  <p className="text-base sm:text-lg font-medium mb-2">Error in fetching donation data</p>
+                  <p className="text-xs sm:text-sm mb-4 px-4">
+                    Unable to load donation distribution. Please try refreshing the page.
+                  </p>
                 </div>
               ) : stats.donationDistribution.length > 0 ? (
                 <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">

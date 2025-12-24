@@ -29,63 +29,25 @@ This phase consolidates configuration files and removes unused constants to simp
 ls -la src/shared/config/
 ```
 
-Expected files:
-- `campaign.ts`
+Expected files (post-merge):
 - `constants.ts`
 - `env.ts`
-- `ui.ts`
-- `user.ts`
 
 ### 1.2 Check Usage of Each Config
 
 ```bash
 # For each config file, check where it's imported
-grep -r "from.*config/campaign" src/
 grep -r "from.*config/constants" src/
 grep -r "from.*config/env" src/
-grep -r "from.*config/ui" src/
-grep -r "from.*config/user" src/
 ```
 
 ---
 
 ## Step 2: Consolidate Related Configurations
 
-### 2.1 Evaluate Campaign Config
+All entity-specific constants (campaign, user, UI, and general app constants) are merged into a single file.
 
-**File: `src/shared/config/campaign.ts`**
-
-Check if this contains constants that could be merged elsewhere.
-
-**Example content:**
-```typescript
-export const CAMPAIGN_STATUS = {
-  ACTIVE: 'active',
-  PAUSED: 'paused',
-  COMPLETED: 'completed',
-} as const;
-
-export const DEFAULT_CAMPAIGN_GOAL = 10000;
-```
-
-**Decision:** If these are entity-specific, move to entity config.
-
-### 2.2 Evaluate User Config
-
-**File: `src/shared/config/user.ts`**
-
-**Example content:**
-```typescript
-export const USER_ROLES = {
-  ADMIN: 'admin',
-  MANAGER: 'manager',
-  VIEWER: 'viewer',
-} as const;
-```
-
-**Decision:** Move to entity if entity-specific, or merge into constants.
-
-### 2.3 Create Consolidated Constants File
+### 2.1 Consolidated Constants File
 
 **File: `src/shared/config/constants.ts`**
 
@@ -138,6 +100,13 @@ export const KIOSK_STATUS = {
   MAINTENANCE: 'maintenance',
 } as const;
 
+// UI Constants
+export const BREAKPOINTS = {
+  mobile: 768,
+  tablet: 1024,
+  desktop: 1280,
+} as const;
+
 // Type exports
 export type CampaignStatus = typeof CAMPAIGN_STATUS[keyof typeof CAMPAIGN_STATUS];
 export type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES];
@@ -148,28 +117,9 @@ export type KioskStatus = typeof KIOSK_STATUS[keyof typeof KIOSK_STATUS];
 
 ## Step 3: Consolidate UI Configuration
 
-### 3.1 Review UI Config
+### 3.1 UI Config Status
 
-**File: `src/shared/config/ui.ts`**
-
-**Example content:**
-```typescript
-export const THEME_COLORS = {
-  primary: '#3b82f6',
-  secondary: '#64748b',
-  success: '#22c55e',
-  error: '#ef4444',
-};
-
-export const BREAKPOINTS = {
-  sm: 640,
-  md: 768,
-  lg: 1024,
-  xl: 1280,
-};
-```
-
-**Decision:** Keep if actively used, otherwise move to Tailwind config.
+UI constants (such as breakpoints) are merged into `constants.ts`. Rely on Tailwind config for theme tokens; add UI items to `constants.ts` only if they are shared across components.
 
 ### 3.2 Check Tailwind Config
 
@@ -186,18 +136,15 @@ If UI constants duplicate Tailwind config, remove them and use Tailwind directly
 **File: `src/shared/config/env.ts`**
 
 ```typescript
-export const env = {
-  apiUrl: process.env.NEXT_PUBLIC_API_URL || '',
-  firebaseConfig: {
-    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || '',
-    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || '',
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || '',
-    // ... other firebase config
-  },
-  stripePublicKey: process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY || '',
-  isDevelopment: process.env.NODE_ENV === 'development',
-  isProduction: process.env.NODE_ENV === 'production',
-};
+export const ENV = {
+  STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+  FIREBASE_API_KEY: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  FIREBASE_AUTH_DOMAIN: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  FIREBASE_PROJECT_ID: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  FIREBASE_STORAGE_BUCKET: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  FIREBASE_MESSAGING_SENDER_ID: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+} as const;
 ```
 
 **Keep this file** - it's essential for environment variable management.
@@ -276,31 +223,9 @@ Delete constants that are defined but never imported/used.
 
 ## Step 6: Update Imports Throughout Codebase
 
-### 6.1 Update Campaign Config Imports
+All imports should point to `@/shared/config/constants` or the barrel `@/shared/config`.
 
-**Before:**
-```typescript
-import { CAMPAIGN_STATUS } from '@/shared/config/campaign';
-```
-
-**After:**
-```typescript
-import { CAMPAIGN_STATUS } from '@/shared/config/constants';
-```
-
-### 6.2 Update User Config Imports
-
-**Before:**
-```typescript
-import { USER_ROLES } from '@/shared/config/user';
-```
-
-**After:**
-```typescript
-import { USER_ROLES } from '@/shared/config/constants';
-```
-
-### 6.3 Automated Find and Replace
+### 6.1 Automated Find and Replace
 
 Use IDE find and replace:
 
@@ -308,6 +233,9 @@ Use IDE find and replace:
 **Replace:** `from '@/shared/config/constants'`
 
 **Find:** `from '@/shared/config/user'`  
+**Replace:** `from '@/shared/config/constants'`
+
+**Find:** `from '@/shared/config/ui'`  
 **Replace:** `from '@/shared/config/constants'`
 
 ---
@@ -320,6 +248,7 @@ Use IDE find and replace:
 # Only delete after confirming all imports are updated
 rm src/shared/config/campaign.ts
 rm src/shared/config/user.ts
+rm src/shared/config/ui.ts
 ```
 
 ### 7.2 Update Config Barrel Export
@@ -329,7 +258,6 @@ rm src/shared/config/user.ts
 ```typescript
 export * from './constants';
 export * from './env';
-// Remove exports for deleted files
 ```
 
 ---
@@ -383,6 +311,7 @@ const role = USER_ROLES.ADMIN;
 # Should return 0 results
 grep -r "from.*config/campaign" src/
 grep -r "from.*config/user" src/
+grep -r "from.*config/ui" src/
 ```
 
 ### 9.2 TypeScript Compilation
@@ -430,14 +359,15 @@ npm run test:run
 ## Expected Results
 
 **Files Before:**
-- `campaign.ts` (~30 lines)
-- `user.ts` (~20 lines)
-- `ui.ts` (~30 lines) - if removed
-- `constants.ts` (~50 lines)
+- `campaign.ts`
+- `user.ts`
+- `ui.ts`
+- `constants.ts`
+- `env.ts`
 
 **Files After:**
-- `constants.ts` (~100 lines)
-- `env.ts` (~50 lines)
+- `constants.ts`
+- `env.ts`
 
 **Lines Removed:**
 - Duplicate constants: ~50 lines

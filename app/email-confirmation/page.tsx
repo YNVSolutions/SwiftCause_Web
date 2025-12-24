@@ -42,7 +42,14 @@ function EmailConfirmationContent() {
   }
 
   if (!transactionId) {
-    return <div>Loading...</div>
+    return (
+      <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#159A6F] mx-auto" />
+          <p className="text-[#0A0A0A] text-lg font-medium">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -55,8 +62,17 @@ function EmailConfirmationContent() {
 
 export default function EmailConfirmationPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center">
+          <div className="text-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#159A6F] mx-auto" />
+            <p className="text-[#0A0A0A] text-lg font-medium">Loading...</p>
+          </div>
+        </div>
+      }
+    >
       <EmailConfirmationContent />
     </Suspense>
-  )
+  );
 }
