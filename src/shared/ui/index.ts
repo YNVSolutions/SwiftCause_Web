@@ -11,6 +11,7 @@ export * from './checkbox';
 export * from './tabs';
 export * from './dialog';
 export * from './alert';
+export * from './AlertDialog';
 export * from './Toast';
 export * from './Loader';
 export * from './skeleton';

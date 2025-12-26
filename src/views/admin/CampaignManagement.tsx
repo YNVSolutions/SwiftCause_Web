@@ -50,6 +50,7 @@ import { AlertTriangle } from "lucide-react"; // Import AlertTriangle
 import { Skeleton } from "../../shared/ui/skeleton";
 import { Ghost } from "lucide-react";
 import { ImageWithFallback } from "../../shared/ui/figma/ImageWithFallback";
+import { useAlertDialog, AlertDialogComponent } from "../../shared/ui/AlertDialog";
 
 import {
   AlertDialog,
@@ -206,6 +207,9 @@ const CampaignDialog = ({
   const [isUploadingGalleryImages, setIsUploadingGalleryImages] = useState(false);
   // Loading state for the dialog submit (create/save)
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Custom alert dialog state
+  const { alertState, showAlert, closeAlert } = useAlertDialog();
 
   useEffect(() => {
     if (isEditMode && campaign) {
@@ -367,7 +371,7 @@ const CampaignDialog = ({
 
         // Limit to a maximum of 4 images including existing ones
         if (selectedGalleryImages.length + newFiles.length > 4) {
-          alert("You can only upload a maximum of 4 gallery images.");
+          showAlert("You can only upload a maximum of 4 gallery images.", "warning");
           return;
         }
 
@@ -395,7 +399,7 @@ const CampaignDialog = ({
         }
       } catch (error) {
         console.error("Error uploading cover image:", error);
-        alert("Failed to upload cover image. Please try again.");
+        showAlert("Failed to upload cover image. Please try again.", "error");
       }
     }
   };
@@ -415,7 +419,7 @@ const CampaignDialog = ({
         }
       } catch (error) {
         console.error("Error uploading organization logo:", error);
-        alert("Failed to upload organization logo. Please try again.");
+        showAlert("Failed to upload organization logo. Please try again.", "error");
       } finally {
         setIsUploadingOrganizationLogo(false); // Reset loading state
       }
@@ -456,8 +460,9 @@ const CampaignDialog = ({
             }
           } catch (error) {
             console.error(`Error uploading gallery image ${file.name}:`, error);
-            alert(
-              `Failed to upload gallery image ${file.name}. Please try again.`
+            showAlert(
+              `Failed to upload gallery image ${file.name}. Please try again.`,
+              "error"
             );
             return;
           }
@@ -473,7 +478,7 @@ const CampaignDialog = ({
         }
       } catch (error) {
         console.error("Error uploading gallery images:", error);
-        alert("Failed to upload gallery images. Please try again.");
+        showAlert("Failed to upload gallery images. Please try again.", "error");
       } finally {
         setIsUploadingGalleryImages(false); // Reset loading state
       }
@@ -513,16 +518,16 @@ const CampaignDialog = ({
       setSelectedGalleryImages((prev) =>
         prev.filter((file) => URL.createObjectURL(file) !== imageToDelete)
       );
-      alert("Image deleted successfully.");
+      showAlert("Image deleted successfully.", "success");
     } catch (error) {
       console.error("Error deleting gallery image:", error);
-      alert("Failed to delete image. Please try again.");
+      showAlert("Failed to delete image. Please try again.", "error");
     }
   };
 
   const handleSaveChanges = async () => {
     if (!formData.title || !formData.description) {
-      alert("Title and Description are required.");
+      showAlert("Title and Description are required.", "warning");
       return;
     }
 
@@ -556,7 +561,7 @@ const CampaignDialog = ({
         }
       } catch (error) {
         console.error("Error uploading organization logo:", error);
-        alert("Failed to upload organization logo. Please try again.");
+        showAlert("Failed to upload organization logo. Please try again.", "error");
         setIsSubmitting(false);
         return;
       }
@@ -576,8 +581,9 @@ const CampaignDialog = ({
           }
         } catch (error) {
           console.error(`Error uploading gallery image ${file.name}:`, error);
-          alert(
-            `Failed to upload gallery image ${file.name}. Please try again.`
+          showAlert(
+            `Failed to upload gallery image ${file.name}. Please try again.`,
+            "error"
           );
           setIsSubmitting(false);
           return;
@@ -624,7 +630,15 @@ const CampaignDialog = ({
     (selectedGalleryImages.length > 0 && !formData.galleryImages);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <>
+      <AlertDialogComponent
+        isOpen={alertState.isOpen}
+        title={alertState.title}
+        message={alertState.message}
+        type={alertState.type}
+        onClose={closeAlert}
+      />
+      <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center">
@@ -1224,6 +1238,7 @@ const CampaignDialog = ({
         </div>
       </DialogContent>
     </Dialog>
+    </>
   );
 };
 
@@ -1427,8 +1442,9 @@ const CampaignManagement = ({
         isNew ? "Error creating campaign: " : "Error updating document: ",
         error
       );
-      alert(
-        `Failed to ${isNew ? "create" : "update"} campaign. Please try again.`
+      showAlert(
+        `Failed to ${isNew ? "create" : "update"} campaign. Please try again.`,
+        "error"
       );
     } finally {
       setIsEditDialogOpen(false);
@@ -1502,7 +1518,7 @@ const CampaignManagement = ({
 
   const exportToCsv = (data: DocumentData[]) => {
     if (data.length === 0) {
-      alert("No campaign data to export.");
+      showAlert("No campaign data to export.", "warning");
       return;
     }
 

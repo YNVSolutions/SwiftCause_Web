@@ -1,11 +1,18 @@
 // Shared CSV export utility
+import { AlertType } from '../ui/AlertDialog';
+
 export const exportToCsv = <T extends Record<string, any>>(
   data: T[],
   filename: string,
-  customHeaders?: string[]
+  customHeaders?: string[],
+  onAlert?: (message: string, type: AlertType) => void
 ) => {
   if (data.length === 0) {
-    alert("No data to export.");
+    if (onAlert) {
+      onAlert("No data to export.", "warning");
+    } else {
+      alert("No data to export.");
+    }
     return;
   }
 

@@ -5,6 +5,7 @@ import { Input } from '../../shared/ui/input';
 import { Label } from '../../shared/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../shared/ui/card';
 import { Mail, Send, Home, CheckCircle, ArrowLeft } from 'lucide-react';
+import { useAlertDialog, AlertDialogComponent } from '../../shared/ui/AlertDialog';
 
 interface EmailConfirmationScreenProps {
   transactionId?: string;
@@ -15,6 +16,7 @@ export function EmailConfirmationScreen({ transactionId, onComplete }: EmailConf
   const [email, setEmail] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const { alertState, showAlert, closeAlert } = useAlertDialog();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,11 +24,11 @@ export function EmailConfirmationScreen({ transactionId, onComplete }: EmailConf
 
     try {
       await createThankYouMail(email);
-      alert('Thank you! Your receipt has been sent.');
+      showAlert('Thank you! Your receipt has been sent.', 'success');
       setEmailSent(true);
     } catch (err) {
       console.error('Error sending receipt email:', err);
-      alert('There was an issue sending your receipt. Please try again.');
+      showAlert('There was an issue sending your receipt. Please try again.', 'error');
     } finally {
       setIsSending(false);
     }
@@ -38,8 +40,16 @@ export function EmailConfirmationScreen({ transactionId, onComplete }: EmailConf
 
   if (emailSent) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md text-center">
+      <>
+        <AlertDialogComponent
+          isOpen={alertState.isOpen}
+          title={alertState.title}
+          message={alertState.message}
+          type={alertState.type}
+          onClose={closeAlert}
+        />
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md text-center">
           <CardHeader>
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
               <CheckCircle className="h-10 w-10 text-green-600" />
@@ -66,12 +76,21 @@ export function EmailConfirmationScreen({ transactionId, onComplete }: EmailConf
             </div>
           </CardContent>
         </Card>
-      </div>
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <>
+      <AlertDialogComponent
+        isOpen={alertState.isOpen}
+        title={alertState.title}
+        message={alertState.message}
+        type={alertState.type}
+        onClose={closeAlert}
+      />
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
@@ -148,5 +167,6 @@ export function EmailConfirmationScreen({ transactionId, onComplete }: EmailConf
         </CardContent>
       </Card>
     </div>
+    </>
   );
 }

@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { getKiosks, getRecentDonations, getCampaigns } from '../../api/firestoreService';
-import { getCountFromServer, collection, query, where } from 'firebase/firestore';
+import { getCountFromServer, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Campaign } from '../../types';
 import { Kiosk, Donation } from '../../types';
@@ -117,6 +117,7 @@ export function useDashboardData(organizationId?: string) {
       // Fetch donation distribution using aggregation queries (more efficient)
       let donationDistribution: Array<{ range: string; count: number }> = [];
       let donationDistributionError = false;
+      let aggregationFailed = false;
       try {
         // Define amount ranges
         const ranges = [
@@ -127,6 +128,34 @@ export function useDashboardData(organizationId?: string) {
           { min: 400, max: 500, label: '$400-$500' },
           { min: 500, max: 10000, label: '$500+' } // Set reasonable upper limit
         ];
+
+        // Fallback that avoids composite index requirements by counting client-side
+        const buildDistributionFallback = async () => {
+          const donationsRef = collection(db, 'donations');
+          const constraints = organizationId ? [where('organizationId', '==', organizationId)] : [];
+          const snapshot = constraints.length
+            ? await getDocs(query(donationsRef, ...constraints))
+            : await getDocs(donationsRef);
+
+          const counts = ranges.map(() => 0);
+
+          snapshot.forEach(doc => {
+            const amount = Number((doc.data() as any)?.amount);
+            if (!Number.isFinite(amount)) return;
+
+            const matchIndex = ranges.findIndex(range => {
+              const inLowerBound = amount >= range.min;
+              const inUpperBound = range.max === 10000 ? amount < Number.POSITIVE_INFINITY : amount < range.max;
+              return inLowerBound && inUpperBound;
+            });
+
+            if (matchIndex !== -1) {
+              counts[matchIndex] += 1;
+            }
+          });
+
+          return ranges.map((range, index) => ({ range: range.label, count: counts[index] }));
+        };
 
         console.log('Starting donation distribution queries for organization:', organizationId);
 
@@ -168,9 +197,11 @@ export function useDashboardData(organizationId?: string) {
               const errorMessage = error instanceof Error ? error.message : 'Unknown error';
               const errorCode = (error as any)?.code || 'unknown';
               const errorStack = (error as any)?.stack || 'No stack trace';
+
+              aggregationFailed = true;
               
-              console.error(`Error fetching count for range ${range.label}:`, error);
-              console.error('Error details:', {
+              console.warn(`Error fetching count for range ${range.label}:`, error);
+              console.warn('Error details:', {
                 code: errorCode,
                 message: errorMessage,
                 stack: errorStack
@@ -182,6 +213,12 @@ export function useDashboardData(organizationId?: string) {
             }
           })
         );
+
+        if (aggregationFailed) {
+          console.warn('Aggregation queries failed (likely missing Firestore index). Falling back to client-side distribution.');
+          donationDistributionError = true;
+          donationDistribution = await buildDistributionFallback();
+        }
 
         console.log('Final donation distribution data:', donationDistribution);
         console.log('Total donations across all ranges:', donationDistribution.reduce((sum, item) => sum + item.count, 0));
