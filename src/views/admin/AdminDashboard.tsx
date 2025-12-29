@@ -801,61 +801,7 @@ export function AdminDashboard({
           </Card>
         </div>
         <div className="mb-8">
-          <Collapsible open={showFeatures} onOpenChange={setShowFeatures}>
-            <CollapsibleTrigger asChild>
-              <Button
-                variant="ghost"
-                className="w-full justify-between p-2 sm:p-3 h-auto mb-2 text-left"
-              >
-                <div className="flex items-center space-x-2">
-                  <Rocket className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 flex-shrink-0" />
-                  <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900">
-                    Platform Features
-                  </h3>
-                </div>
-                {showFeatures ? (
-                  <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                ) : (
-                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                )}
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-4 mb-6 sm:mb-8">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {platformFeatures.map((feature, index) => (
-                  <Card
-                    key={index}
-                    className="hover:shadow-md transition-shadow"
-                  >
-                    <CardContent className="p-4 sm:p-6">
-                      <div
-                        className={`inline-flex p-2 sm:p-3 rounded-lg ${feature.color} mb-3 sm:mb-4`}
-                      >
-                        {feature.icon}
-                      </div>
-                      <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
-                        {feature.title}
-                      </h4>
-                      <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">
-                        {feature.description}
-                      </p>
-                      <ul className="space-y-1.5 sm:space-y-2">
-                        {feature.benefits.map((benefit, idx) => (
-                          <li
-                            key={idx}
-                            className="flex items-center text-xs sm:text-sm text-gray-600"
-                          >
-                            <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 mr-2 flex-shrink-0" />
-                            <span>{benefit}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
+          
 
           <Collapsible
             open={showGettingStarted}
