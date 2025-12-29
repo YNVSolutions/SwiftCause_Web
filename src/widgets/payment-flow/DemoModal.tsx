@@ -42,8 +42,8 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
       features: ["Live donation tracking", "Campaign categories", "Impact metrics", "Progress visualization"],
       mockData: {
         campaign: "Clean Water Initiative",
-        raised: "$32,450",
-        goal: "$50,000",
+        raised: "£32,450",
+        goal: "£50,000",
         progress: 65,
         donors: 247,
         category: "Health & Environment"
@@ -76,7 +76,7 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
       description: "Comprehensive insights and reporting dashboard for administrators",
       features: ["Live dashboards", "Donor analytics", "Campaign performance", "Export capabilities"],
       mockData: {
-        totalRaised: "$125,430",
+        totalRaised: "£125,430",
         campaigns: 12,
         growth: "+23%",
         kiosks: 8,
