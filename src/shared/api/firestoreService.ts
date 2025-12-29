@@ -96,9 +96,30 @@ export async function getAllCampaigns(organizationId?: string) {
   return snapshot.docs.map(d => ({ id: d.id, ...(d.data() as object) }));
 }
 
+/**
+ * Recursively removes undefined values from an object to prevent Firestore errors
+ */
+function removeUndefinedValues<T extends Record<string, any>>(obj: T): Partial<T> {
+  const cleaned: any = { ...obj };
+  
+  Object.keys(cleaned).forEach(key => {
+    const value = cleaned[key];
+    
+    if (value === undefined) {
+      delete cleaned[key];
+    } else if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+      // Recursively clean nested objects
+      cleaned[key] = removeUndefinedValues(value);
+    }
+  });
+  
+  return cleaned;
+}
+
 export async function updateKiosk(kioskId: string, data: any) {
   const ref = doc(db, 'kiosks', kioskId);
-  await updateDoc(ref, data);
+  const cleanedData = removeUndefinedValues(data);
+  await updateDoc(ref, cleanedData);
 }
 
 export async function createCampaign(data: any) {
@@ -210,4 +231,32 @@ export async function storeGiftAidDeclaration(giftAidData: any, transactionId: s
   const docRef = await addDoc(giftAidRef, giftAidDeclaration);
   console.log('Gift Aid declaration stored with ID:', docRef.id);
   return { id: docRef.id, ...giftAidDeclaration };
+}
+
+export interface CurrencyRequestData {
+  email: string;
+  requestedCurrency: string;
+  notes?: string;
+  organizationName: string;
+  firstName: string;
+  lastName: string;
+}
+
+export async function submitCurrencyRequest(data: CurrencyRequestData) {
+  const currencyRequestsRef = collection(db, 'currencyRequests');
+  const requestData = {
+    email: data.email,
+    requestedCurrency: data.requestedCurrency,
+    notes: data.notes || '',
+    organizationName: data.organizationName,
+    firstName: data.firstName,
+    lastName: data.lastName,
+    status: 'pending',
+    createdAt: Timestamp.now(),
+    timestamp: Timestamp.now()
+  };
+  
+  const docRef = await addDoc(currencyRequestsRef, requestData);
+  console.log('Currency request submitted with ID:', docRef.id);
+  return { id: docRef.id, ...requestData };
 }
