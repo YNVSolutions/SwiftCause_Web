@@ -242,7 +242,7 @@ export function EnterprisePlatformShowcase() {
                   <span>+12%</span>
                 </div>
               </div>
-              <div className="text-2xl font-bold text-green-900">${totalAmountToday.toLocaleString()}</div>
+              <div className="text-2xl font-bold text-green-900">£{totalAmountToday.toLocaleString('en-GB')}</div>
               <div className="text-xs text-green-700">Today's Donations</div>
             </div>
             
@@ -277,7 +277,7 @@ export function EnterprisePlatformShowcase() {
                   <div className="flex items-center space-x-3">
                     <div className={`w-2 h-2 rounded-full ${donation.isRecurring ? 'bg-purple-500' : 'bg-green-500'}`} />
                     <div>
-                      <div className="text-sm font-medium text-gray-900">${donation.amount}</div>
+                      <div className="text-sm font-medium text-gray-900">£{donation.amount}</div>
                       <div className="text-xs text-gray-600">{donation.campaignTitle}</div>
                     </div>
                   </div>
@@ -335,7 +335,7 @@ export function EnterprisePlatformShowcase() {
                   </div>
                   <div className="text-right">
                     <div className="text-lg font-bold text-gray-900">
-                      ${campaign.raised.toLocaleString()}
+                      £{campaign.raised.toLocaleString('en-GB')}
                     </div>
                     <div className="flex items-center space-x-1 text-xs">
                       {campaign.trend === 'up' ? (
@@ -358,10 +358,10 @@ export function EnterprisePlatformShowcase() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-gray-600">
-                      {campaign.progress}% of ${campaign.goal.toLocaleString()} goal
+                      {campaign.progress}% of £{campaign.goal.toLocaleString('en-GB')} goal
                     </span>
                     <span className="font-medium text-purple-600">
-                      ${(campaign.goal - campaign.raised).toLocaleString()} remaining
+                      £{(campaign.goal - campaign.raised).toLocaleString('en-GB')} remaining
                     </span>
                   </div>
                   <Progress value={campaign.progress} className="h-3" />
@@ -412,7 +412,7 @@ export function EnterprisePlatformShowcase() {
                 
                 <div className="text-right">
                   <div className="text-sm font-bold text-gray-900">
-                    ${kiosk.todayAmount.toLocaleString()}
+                    £{kiosk.todayAmount.toLocaleString('en-GB')}
                   </div>
                   <div className="text-xs text-gray-600">
                     {kiosk.todayDonations} donations today
@@ -434,7 +434,7 @@ export function EnterprisePlatformShowcase() {
                 <div className="text-xs text-blue-700">Online</div>
               </div>
               <div>
-                <div className="text-lg font-bold text-green-900">${totalAmountToday.toLocaleString()}</div>
+                <div className="text-lg font-bold text-green-900">£{totalAmountToday.toLocaleString('en-GB')}</div>
                 <div className="text-xs text-green-700">Today</div>
               </div>
               <div>
