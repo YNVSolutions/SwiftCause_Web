@@ -76,6 +76,8 @@ import {
   TableHeader,
   TableRow,
 } from "../../shared/ui/table";
+import { useOrganization } from "../../shared/lib/hooks/useOrganization";
+import { useStripeOnboarding, StripeOnboardingDialog } from "../../features/stripe-onboarding";
 
 interface CampaignDialogProps {
   open: boolean;
@@ -1211,6 +1213,12 @@ const CampaignManagement = ({
   const { campaigns, updateWithImage, createWithImage, remove, loading } =
     useCampaignManagement(userSession.user.organizationId || "");
 
+  const { organization, loading: orgLoading } = useOrganization(
+    userSession.user.organizationId ?? null
+  );
+  const { isStripeOnboarded, needsOnboarding } = useStripeOnboarding(organization);
+  const [showOnboardingDialog, setShowOnboardingDialog] = useState(false);
+
   const handleDeleteClick = (campaign: DocumentData) => {
     setCampaignToDelete(campaign);
     setIsDeleteDialogOpen(true);
@@ -1517,11 +1525,18 @@ const CampaignManagement = ({
                   Export CSV
                 </Button>
                 <Button
-                  className="bg-indigo-600 text-white hidden sm:inline-flex"
-                  onClick={() => setIsAddDialogOpen(true)}
+                  className="bg-indigo-600 text-white hidden sm:inline-flex disabled:opacity-60 disabled:cursor-not-allowed"
+                  onClick={() => {
+                    if (!isStripeOnboarded) {
+                      setShowOnboardingDialog(true);
+                    } else {
+                      setIsAddDialogOpen(true);
+                    }
+                  }}
+                  disabled={!isStripeOnboarded}
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  Add Campaign
+                  {!isStripeOnboarded ? 'Onboard Stripe First' : 'Add Campaign'}
                 </Button>
               </div>
             </div>
@@ -1553,11 +1568,18 @@ const CampaignManagement = ({
                 Export CSV
               </Button>
               <Button
-                className="bg-indigo-600 hover:bg-indigo-700 w-full sm:w-auto sm:hidden"
-                onClick={() => setIsAddDialogOpen(true)}
+                className="bg-indigo-600 hover:bg-indigo-700 w-full sm:w-auto sm:hidden disabled:opacity-60 disabled:cursor-not-allowed"
+                onClick={() => {
+                  if (!isStripeOnboarded) {
+                    setShowOnboardingDialog(true);
+                  } else {
+                    setIsAddDialogOpen(true);
+                  }
+                }}
+                disabled={!isStripeOnboarded}
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Add Campaign
+                {!isStripeOnboarded ? 'Onboard Stripe First' : 'Add Campaign'}
               </Button>
             </div>
           </div>
@@ -1870,6 +1892,14 @@ const CampaignManagement = ({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Stripe Onboarding Dialog */}
+      <StripeOnboardingDialog
+        open={showOnboardingDialog}
+        onOpenChange={setShowOnboardingDialog}
+        organization={organization}
+        loading={orgLoading}
+      />
     </AdminLayout>
   );
 };
