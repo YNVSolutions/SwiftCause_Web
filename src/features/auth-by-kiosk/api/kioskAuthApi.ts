@@ -35,7 +35,7 @@ export const kioskAuthApi = {
         },
         loginMethod: 'manual',
         organizationId: kiosk.organizationId,
-        organizationCurrency: organizationCurrency || 'USD',
+        organizationCurrency: organizationCurrency || 'GBP',
       };
 
       return kioskSession;

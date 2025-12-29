@@ -91,15 +91,15 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
   }, []);
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-GB', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'GBP',
       minimumFractionDigits: 0
     }).format(amount);
   };
 
   const formatNumber = (num: number) => {
-    return new Intl.NumberFormat('en-US').format(num);
+    return new Intl.NumberFormat('en-GB').format(num);
   };
 
   const toggleFaq = (index: number) => {

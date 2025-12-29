@@ -175,8 +175,8 @@ export function CampaignScreen({
               {config.showProgressBar && campaign.goal > 0 && (
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between text-sm">
-                    <span>Raised: {formatCurrency(campaign.raised, organizationCurrency || 'USD')}</span>
-                    <span>Goal: {formatCurrency(campaign.goal, organizationCurrency || 'USD')}</span>
+                    <span>Raised: {formatCurrency(campaign.raised, organizationCurrency || 'GBP')}</span>
+                    <span>Goal: {formatCurrency(campaign.goal, organizationCurrency || 'GBP')}</span>
                   </div>
                   <Progress value={getProgressPercentage(campaign.raised || 0, campaign.goal || 0)} className="h-2" />
                   <p className="text-sm text-gray-600">{getProgressPercentage(campaign.raised || 0, campaign.goal || 0).toFixed(1)}% funded</p>
@@ -191,7 +191,7 @@ export function CampaignScreen({
                   </div>
                   <div className="flex items-center space-x-1">
                     <Heart className="w-4 h-4" />
-                    <span>{formatCurrency(151, organizationCurrency || 'USD')} avg</span>
+                    <span>{formatCurrency(151, organizationCurrency || 'GBP')} avg</span>
                   </div>
                 </div>
               )}
@@ -315,10 +315,10 @@ export function CampaignScreen({
                           selectedAmount === amount ? 'bg-indigo-600 hover:bg-indigo-700' : ''
                         }`}
                       >
-                        <span className="text-lg font-semibold">{formatCurrency(amount, organizationCurrency || 'USD')}</span>
+                        <span className="text-lg font-semibold">{formatCurrency(amount, organizationCurrency || 'GBP')}</span>
                         {config.enableRecurring && isRecurring && config.recurringDiscount && (
                           <span className="text-xs opacity-75">
-                            {formatCurrency(amount * (1 - config.recurringDiscount / 100), organizationCurrency || 'USD')} after discount
+                            {formatCurrency(amount * (1 - config.recurringDiscount / 100), organizationCurrency || 'GBP')} after discount
                           </span>
                         )}
                       </Button>
@@ -337,7 +337,7 @@ export function CampaignScreen({
                           min={config.minCustomAmount}
                           max={config.maxCustomAmount}
                           step="0.01"
-                          placeholder={`${formatCurrency(config.minCustomAmount, organizationCurrency || 'USD')} - ${formatCurrency(config.maxCustomAmount, organizationCurrency || 'USD')}`}
+                          placeholder={`${formatCurrency(config.minCustomAmount, organizationCurrency || 'GBP')} - ${formatCurrency(config.maxCustomAmount, organizationCurrency || 'GBP')}`}
                           value={customAmount}
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleCustomAmountChange(e.target.value)}
                           className="pl-8 h-12"
@@ -345,7 +345,7 @@ export function CampaignScreen({
                         />
                       </div>
                       <p className="text-sm text-gray-500">
-                        Enter between {formatCurrency(config.minCustomAmount, organizationCurrency || 'USD')} and {formatCurrency(config.maxCustomAmount, organizationCurrency || 'USD')}
+                        Enter between {formatCurrency(config.minCustomAmount, organizationCurrency || 'GBP')} and {formatCurrency(config.maxCustomAmount, organizationCurrency || 'GBP')}
                       </p>
                     </div>
                   )}
@@ -403,11 +403,11 @@ export function CampaignScreen({
                       <span className="font-medium">Your donation:</span>
                       <div className="text-right">
                         <div className="text-xl font-semibold">
-                          {formatCurrency(getDiscountedAmount(), organizationCurrency || 'USD')}
+                          {formatCurrency(getDiscountedAmount(), organizationCurrency || 'GBP')}
                         </div>
                         {isRecurring && config.recurringDiscount && getCurrentAmount() !== getDiscountedAmount() && (
                           <div className="text-sm text-gray-500 line-through">
-                            {formatCurrency(getCurrentAmount(), organizationCurrency || 'USD')}
+                            {formatCurrency(getCurrentAmount(), organizationCurrency || 'GBP')}
                           </div>
                         )}
                       </div>

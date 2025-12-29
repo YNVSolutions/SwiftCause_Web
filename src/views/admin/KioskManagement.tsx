@@ -126,7 +126,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
     }
   };
 
-  const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(amount);
+  const formatCurrency = (amount: number) => new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', minimumFractionDigits: 0 }).format(amount);
   
   const getStatusBadge = (status: string) => {
     switch (status) {

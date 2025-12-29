@@ -112,7 +112,7 @@ export default function CampaignPage({
         campaign={campaign}
         amount={initialAmount || 0}
         isCustomAmount={isCustomAmount || !initialAmount}
-        currency={currentKioskSession?.organizationCurrency || 'USD'}
+        currency={currentKioskSession?.organizationCurrency || 'GBP'}
         onAcceptGiftAid={handleAcceptGiftAid}
         onDeclineGiftAid={handleDeclineGiftAid}
         onBack={handleBackFromGiftAid}
@@ -131,7 +131,7 @@ export default function CampaignPage({
       campaign={campaign}
       loading={loading}
       error={error}
-      currency={currentKioskSession?.organizationCurrency || 'USD'}
+      currency={currentKioskSession?.organizationCurrency || 'GBP'}
       initialAmount={preselectAmount || initialAmount}
       onBack={handleBackToList}
       onDonate={handleDonate}

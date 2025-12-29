@@ -189,7 +189,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
   const platformStats = [
     {
       icon: <DollarSign className="w-6 h-6 text-green-600" />,
-      value: '$15.8M+',
+      value: '£15.8M+',
       label: 'Total Raised',
       description: 'Funds raised through our platform'
     },

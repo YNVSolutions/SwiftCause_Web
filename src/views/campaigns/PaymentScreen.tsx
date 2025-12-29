@@ -32,7 +32,7 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
 
   // Format amount without decimals
   const formatAmount = (amount: number) => {
-    return formatCurrency(amount, organizationCurrency || 'USD').replace(/\.00$/, '');
+    return formatCurrency(amount, organizationCurrency || 'GBP').replace(/\.00$/, '');
   };
 
   const handleSubmit = async () => {
@@ -71,7 +71,7 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
       } : {})
     };
     console.log('PaymentScreen - handleSubmit: Final metadata object', metadata);
-    await handlePaymentSubmit(donation.amount, metadata, organizationCurrency || 'USD'); 
+    await handlePaymentSubmit(donation.amount, metadata, organizationCurrency || 'GBP'); 
   };
 
   return (

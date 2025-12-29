@@ -119,9 +119,9 @@ export function KioskCampaignAssignmentDialog({
   const [activeTab, setActiveTab] = useState("campaigns");
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-GB", {
       style: "currency",
-      currency: "USD",
+      currency: "GBP",
       minimumFractionDigits: 0,
     }).format(amount);
   };
@@ -148,6 +148,13 @@ export function KioskCampaignAssignmentDialog({
     delete (normalizedDevice as any).modelCustom;
     delete (normalizedDevice as any).osCustom;
     delete (normalizedDevice as any).screenSizeCustom;
+
+    // Remove undefined values from deviceInfo to prevent Firestore errors
+    Object.keys(normalizedDevice).forEach(key => {
+      if (normalizedDevice[key as keyof typeof normalizedDevice] === undefined) {
+        delete normalizedDevice[key as keyof typeof normalizedDevice];
+      }
+    });
 
     const payload: Kiosk = { ...(formData as Kiosk), deviceInfo: normalizedDevice };
     onSave(payload);

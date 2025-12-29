@@ -134,12 +134,12 @@ export function useDashboardData(organizationId?: string) {
       try {
         // Define amount ranges
         const ranges = [
-          { min: 0, max: 100, label: '$0-$100' },
-          { min: 100, max: 200, label: '$100-$200' },
-          { min: 200, max: 300, label: '$200-$300' },
-          { min: 300, max: 400, label: '$300-$400' },
-          { min: 400, max: 500, label: '$400-$500' },
-          { min: 500, max: 10000, label: '$500+' } // Set reasonable upper limit
+          { min: 0, max: 100, label: '£0-£100' },
+          { min: 100, max: 200, label: '£100-£200' },
+          { min: 200, max: 300, label: '£200-£300' },
+          { min: 300, max: 400, label: '£300-£400' },
+          { min: 400, max: 500, label: '£400-£500' },
+          { min: 500, max: 10000, label: '£500+' } // Set reasonable upper limit
         ];
 
         console.log('Starting donation distribution queries for organization:', organizationId);
