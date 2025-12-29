@@ -252,7 +252,7 @@ export function CampaignListScreen({
                           disabled={isLoadingPayment}
                           className="h-10 bg-gray-100 hover:bg-gray-200 text-blue-600 font-semibold rounded-xl border-0 transition-all duration-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          💙 {formatCurrency(amount, kioskSession?.organizationCurrency || 'USD')}
+                          💙 {formatCurrency(amount, kioskSession?.organizationCurrency || 'GBP')}
                         </Button>
                       ))}
                     </div>
@@ -364,7 +364,7 @@ const CampaignCarousel = ({
                       disabled={isLoadingPayment}
                       className="h-14 bg-gray-100 hover:bg-gray-200 text-blue-600 font-semibold rounded-xl border-0 transition-all duration-200 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      💙 {formatCurrency(amount, kioskSession?.organizationCurrency || 'USD')}
+                      💙 {formatCurrency(amount, kioskSession?.organizationCurrency || 'GBP')}
                     </Button>
                   ))}
                 </div>
