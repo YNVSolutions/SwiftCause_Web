@@ -77,7 +77,7 @@ export function CampaignListScreen({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto" />
           <p className="text-gray-700 text-base sm:text-lg font-medium">Loading campaigns...</p>
@@ -112,7 +112,7 @@ export function CampaignListScreen({
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100">
         <NavigationHeader title="Available Campaigns" />
         <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
           <div className="text-center py-12">
@@ -175,19 +175,28 @@ export function CampaignListScreen({
             kioskSession={kioskSession}
             isLoadingPayment={isLoadingPayment}
           />
+        ) : layoutMode === 'list' ? (
+          <CampaignListView
+            campaigns={currentCampaigns}
+            onSelectCampaign={handleSelectCampaign}
+            onViewDetails={onViewDetails}
+            isDefaultCampaign={isDefaultCampaign}
+            kioskSession={kioskSession}
+            isLoadingPayment={isLoadingPayment}
+          />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
             {currentCampaigns.map(campaign => (
-              <div key={campaign.id} className="bg-white rounded-2xl overflow-hidden shadow-lg">
+              <div key={campaign.id} className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-200">
                 {/* Campaign Image */}
-                <div className="relative h-48 overflow-hidden rounded-t-2xl">
+                <div className="relative h-40 sm:h-48 overflow-hidden rounded-t-2xl cursor-pointer group" onClick={() => onViewDetails(campaign)}>
                   <img
                     src={campaign.coverImageUrl || '/campaign-fallback.svg'}
                     alt={campaign.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   {/* Progress Bar Overlay */}
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-4">
+                  <div className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/50 to-transparent p-3 sm:p-4">
                     <div className="w-full bg-white/30 rounded-full h-2">
                       <div 
                         className="bg-white h-2 rounded-full transition-all duration-300"
@@ -200,20 +209,20 @@ export function CampaignListScreen({
                 </div>
 
                 {/* Campaign Info */}
-                <div className="p-6">
-                  <h2 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">{campaign.title}</h2>
-                  <p className="text-gray-600 mb-6 line-clamp-3">{campaign.description}</p>
+                <div className="p-4 sm:p-6">
+                  <h2 className="text-base sm:text-xl font-bold text-gray-900 mb-2 line-clamp-2 cursor-pointer hover:text-blue-600" onClick={() => onViewDetails(campaign)}>{campaign.title}</h2>
+                  <p className="text-xs sm:text-sm text-gray-600 mb-4 line-clamp-2 sm:line-clamp-3">{campaign.description}</p>
 
                   {/* Donation Amount Buttons */}
-                  <div className="space-y-3">
+                  <div className="space-y-2 sm:space-y-3">
                     {/* Top 3 predefined amounts */}
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                       {getTop3Amounts(campaign).map((amount, index) => (
                         <Button
                           key={index}
                           onClick={() => handleSelectCampaign(campaign, amount)}
                           disabled={isLoadingPayment}
-                          className="h-10 bg-gray-100 hover:bg-gray-200 text-blue-600 font-semibold rounded-xl border-0 transition-all duration-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="h-9 sm:h-10 bg-gray-100 hover:bg-gray-200 text-blue-600 font-semibold rounded-lg sm:rounded-xl border-0 transition-all duration-200 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           💙 {formatCurrency(amount, kioskSession?.organizationCurrency || 'USD')}
                         </Button>
@@ -224,9 +233,9 @@ export function CampaignListScreen({
                     <Button
                       onClick={() => handleSelectCampaign(campaign)}
                       disabled={isLoadingPayment}
-                      className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full h-10 sm:h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg sm:rounded-xl transition-all duration-200 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {isLoadingPayment ? 'Loading...' : 'Custom Amount or Monthly'}
+                      {isLoadingPayment ? 'Loading...' : 'Custom Amount'}
                     </Button>
                   </div>
                 </div>
@@ -275,6 +284,15 @@ interface CampaignCarouselProps {
   isLoadingPayment: boolean;
 }
 
+interface CampaignListViewProps {
+  campaigns: Campaign[];
+  onSelectCampaign: (campaign: Campaign, amount?: number) => void;
+  onViewDetails: (campaign: Campaign) => void;
+  isDefaultCampaign: (campaignId: string) => boolean;
+  kioskSession?: KioskSession | null;
+  isLoadingPayment: boolean;
+}
+
 // Helper function to get top 3 predefined amounts for a campaign
 const getTop3Amounts = (campaign: Campaign): number[] => {
   const predefinedAmounts = campaign.configuration?.predefinedAmounts || [];
@@ -294,6 +312,98 @@ const getTop3Amounts = (campaign: Campaign): number[] => {
   return top3;
 };
 
+const CampaignListView = ({
+  campaigns,
+  onSelectCampaign,
+  onViewDetails,
+  isDefaultCampaign,
+  kioskSession,
+  isLoadingPayment
+}: CampaignListViewProps) => {
+  if (campaigns.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="w-full">
+      <div className="space-y-4">
+        {campaigns.map((campaign) => {
+          const progress = Math.min(((campaign.raised || 0) / campaign.goal) * 100, 100);
+          
+          return (
+            <div 
+              key={campaign.id} 
+              className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-200 flex flex-col sm:flex-row gap-4 p-4 sm:p-6"
+            >
+              {/* Campaign Image */}
+              <div className="w-full sm:w-40 sm:h-40 shrink-0 overflow-hidden rounded-xl">
+                <img
+                  src={campaign.coverImageUrl || '/campaign-fallback.svg'}
+                  alt={campaign.title}
+                  className="w-full h-40 sm:h-40 object-cover cursor-pointer hover:scale-105 transition-transform duration-200"
+                  onClick={() => onViewDetails(campaign)}
+                />
+              </div>
+
+              {/* Campaign Info */}
+              <div className="grow flex flex-col justify-between">
+                <div>
+                  <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 line-clamp-2 cursor-pointer hover:text-blue-600" onClick={() => onViewDetails(campaign)}>
+                    {campaign.title}
+                  </h2>
+                  <p className="text-sm sm:text-base text-gray-600 mb-3 line-clamp-2">{campaign.description}</p>
+
+                  {/* Progress Info */}
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs sm:text-sm font-medium text-gray-700">
+                      {formatCurrency(campaign.raised || 0, kioskSession?.organizationCurrency || 'USD')} / {formatCurrency(campaign.goal, kioskSession?.organizationCurrency || 'USD')}
+                    </span>
+                    <span className="text-xs sm:text-sm text-gray-500">{Math.round(progress)}%</span>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                    <div
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Donation Amount Buttons */}
+                <div className="space-y-2">
+                  {/* Top 3 predefined amounts */}
+                  <div className="grid grid-cols-3 gap-2">
+                    {getTop3Amounts(campaign).map((amount, index) => (
+                      <Button
+                        key={index}
+                        onClick={() => onSelectCampaign(campaign, amount)}
+                        disabled={isLoadingPayment}
+                        className="h-9 sm:h-10 bg-gray-100 hover:bg-gray-200 text-blue-600 font-semibold rounded-lg border-0 transition-all duration-200 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        💙 {formatCurrency(amount, kioskSession?.organizationCurrency || 'USD')}
+                      </Button>
+                    ))}
+                  </div>
+                  
+                  {/* Custom Amount Button */}
+                  <Button
+                    onClick={() => onSelectCampaign(campaign)}
+                    disabled={isLoadingPayment}
+                    className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all duration-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isLoadingPayment ? 'Loading...' : 'Custom Amount'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 const CampaignCarousel = ({
   campaigns,
   onSelectCampaign,
@@ -309,22 +419,22 @@ const CampaignCarousel = ({
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
-      <div className="space-y-8">
+    <div className="w-full">
+      <div className="space-y-6 sm:space-y-8">
         {campaigns.map((campaign) => (
           <div key={campaign.id} className="bg-white rounded-2xl overflow-hidden shadow-lg">
             {/* Campaign Image */}
-            <div className="relative h-64 md:h-80 overflow-hidden">
+            <div className="relative h-48 sm:h-64 md:h-80 overflow-hidden cursor-pointer group" onClick={() => onViewDetails(campaign)}>
               <img
                 src={campaign.coverImageUrl || '/campaign-fallback.svg'}
                 alt={campaign.title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
               {/* Progress Bar Overlay */}
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-6">
-                <div className="w-full bg-white/30 rounded-full h-3">
+              <div className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/50 to-transparent p-4 sm:p-6">
+                <div className="w-full bg-white/30 rounded-full h-2 sm:h-3">
                   <div 
-                    className="bg-white h-3 rounded-full transition-all duration-300"
+                    className="bg-white h-2 sm:h-3 rounded-full transition-all duration-300"
                     style={{ 
                       width: `${Math.min(((campaign.raised || 0) / campaign.goal) * 100, 100)}%` 
                     }}
@@ -334,20 +444,28 @@ const CampaignCarousel = ({
             </div>
 
             {/* Campaign Info */}
-            <div className="p-6 md:p-8">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{campaign.title}</h2>
-              <p className="text-gray-600 mb-8 text-lg">{campaign.description}</p>
+            <div className="p-4 sm:p-6 md:p-8">
+              <h2 className="text-xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2 sm:mb-4 cursor-pointer hover:text-blue-600" onClick={() => onViewDetails(campaign)}>{campaign.title}</h2>
+              <p className="text-sm sm:text-base md:text-lg text-gray-600 mb-4 sm:mb-8 line-clamp-2 sm:line-clamp-none">{campaign.description}</p>
+
+              {/* Progress Info for smaller screens */}
+              <div className="flex justify-between items-center mb-3 sm:hidden text-xs">
+                <span className="font-medium text-gray-700">
+                  {formatCurrency(campaign.raised || 0, kioskSession?.organizationCurrency || 'USD')} / {formatCurrency(campaign.goal, kioskSession?.organizationCurrency || 'USD')}
+                </span>
+                <span className="text-gray-500">{Math.round(Math.min(((campaign.raised || 0) / campaign.goal) * 100, 100))}%</span>
+              </div>
 
               {/* Donation Amount Buttons */}
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {/* Top 3 predefined amounts */}
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-3 gap-2 sm:gap-4">
                   {getTop3Amounts(campaign).map((amount, index) => (
                     <Button
                       key={index}
                       onClick={() => onSelectCampaign(campaign, amount)}
                       disabled={isLoadingPayment}
-                      className="h-14 bg-gray-100 hover:bg-gray-200 text-blue-600 font-semibold rounded-xl border-0 transition-all duration-200 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="h-10 sm:h-12 md:h-14 bg-gray-100 hover:bg-gray-200 text-blue-600 font-semibold rounded-lg sm:rounded-xl border-0 transition-all duration-200 text-xs sm:text-base md:text-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       💙 {formatCurrency(amount, kioskSession?.organizationCurrency || 'USD')}
                     </Button>
@@ -358,8 +476,7 @@ const CampaignCarousel = ({
                 <Button
                   onClick={() => onSelectCampaign(campaign)}
                   disabled={isLoadingPayment}
-                  className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all duration-200 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                >
+                  className="w-full h-10 sm:h-12 md:h-14 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg sm:rounded-xl transition-all duration-200 text-xs sm:text-base md:text-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   {isLoadingPayment ? 'Loading...' : 'Custom Amount or Monthly'}
                 </Button>
               </div>
