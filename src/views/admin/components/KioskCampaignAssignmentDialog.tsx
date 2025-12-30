@@ -134,15 +134,15 @@ export function KioskCampaignAssignmentDialog({
       model:
         device.model === "Custom" && device.modelCustom
           ? device.modelCustom
-          : device.model,
+          : (device.model || "Unknown"),
       os:
         device.os === "Other" && device.osCustom
           ? device.osCustom
-          : device.os,
+          : (device.os || "Unknown"),
       screenSize:
         device.screenSize === "Custom" && device.screenSizeCustom
           ? device.screenSizeCustom
-          : device.screenSize,
+          : (device.screenSize || "Unknown"),
     };
     
     delete (normalizedDevice as any).modelCustom;
