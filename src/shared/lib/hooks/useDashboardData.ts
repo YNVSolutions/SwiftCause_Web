@@ -282,7 +282,7 @@ export function useDashboardData(organizationId?: string) {
 
   useEffect(() => {
     fetchDashboardData();
-  }, [organizationId]);
+  }, [fetchDashboardData]);
 
   return { loading, error, stats, recentActivities, alerts, refreshDashboard: fetchDashboardData };
 }
