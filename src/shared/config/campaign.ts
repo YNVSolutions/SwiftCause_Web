@@ -32,7 +32,7 @@ export const DEFAULT_CAMPAIGN_CONFIG = {
   minCustomAmount: 1,
   maxCustomAmount: 10000,
   suggestedAmounts: [25, 50, 100],
-  enableRecurring: true,
+  enableRecurring: false,
   recurringIntervals: [RecurringInterval.MONTHLY, RecurringInterval.QUARTERLY],
   defaultRecurringInterval: RecurringInterval.MONTHLY,
   recurringDiscount: 0,
