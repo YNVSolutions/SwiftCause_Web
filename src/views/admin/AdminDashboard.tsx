@@ -282,86 +282,7 @@ export function AdminDashboard({
   };
 
 
-  const platformFeatures = [
-    {
-      icon: <Smartphone className="w-6 h-6" />,
-      title: "Touch-Friendly Kiosks",
-      description:
-        "Intuitive donation kiosks optimized for mobile and touch interfaces",
-      benefits: [
-        "Mobile-first design",
-        "Responsive layouts",
-        "Touch gestures",
-        "iOS/Android compatibility",
-      ],
-      color: "bg-blue-50 text-blue-600 border-blue-200",
-    },
-    {
-      icon: <CreditCard className="w-6 h-6" />,
-      title: "Secure Payment Processing",
-      description:
-        "PCI-compliant payment processing with multiple payment methods",
-      benefits: [
-        "Credit/Debit cards",
-        "Digital wallets",
-        "Recurring donations",
-        "Fraud protection",
-      ],
-      color: "bg-green-50 text-green-600 border-green-200",
-    },
-    {
-      icon: <BarChart3 className="w-6 h-6" />,
-      title: "Advanced Analytics",
-      description:
-        "Real-time insights and detailed reporting for data-driven decisions",
-      benefits: [
-        "Real-time dashboards",
-        "Custom reports",
-        "Donor insights",
-        "Performance metrics",
-      ],
-      color: "bg-purple-50 text-purple-600 border-purple-200",
-    },
-    {
-      icon: <Settings className="w-6 h-6" />,
-      title: "Campaign Management",
-      description:
-        "Fully customizable campaigns with flexible configuration options",
-      benefits: [
-        "Custom pricing tiers",
-        "Visual themes",
-        "Goal tracking",
-        "Multi-location support",
-      ],
-      color: "bg-indigo-50 text-indigo-600 border-indigo-200",
-    },
-    {
-      icon: <QrCode className="w-6 h-6" />,
-      title: "QR Code Access",
-      description:
-        "Quick kiosk access via QR codes or device-specific access codes",
-      benefits: [
-        "QR code login",
-        "Secure access codes",
-        "Session management",
-        "User tracking",
-      ],
-      color: "bg-orange-50 text-orange-600 border-orange-200",
-    },
-    {
-      icon: <Shield className="w-6 h-6" />,
-      title: "User & Permission System",
-      description:
-        "Granular permission controls for different user roles and access levels",
-      benefits: [
-        "Role-based access",
-        "Granular permissions",
-        "User management",
-        "Audit trails",
-      ],
-      color: "bg-red-50 text-red-600 border-red-200",
-    },
-  ];
+
 
   const gettingStartedSteps = [
     {
@@ -1959,61 +1880,7 @@ export function AdminDashboard({
           </Card>
         </div>
         <div className="mb-8">
-          <Collapsible open={showFeatures} onOpenChange={setShowFeatures}>
-            <CollapsibleTrigger asChild>
-              <Button
-                variant="ghost"
-                className="w-full justify-between p-2 sm:p-3 h-auto mb-2 text-left"
-              >
-                <div className="flex items-center space-x-2">
-                  <Rocket className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 flex-shrink-0" />
-                  <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900">
-                    Platform Features
-                  </h3>
-                </div>
-                {showFeatures ? (
-                  <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                ) : (
-                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                )}
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-4 mb-6 sm:mb-8">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {platformFeatures.map((feature, index) => (
-                  <Card
-                    key={index}
-                    className="hover:shadow-md transition-shadow"
-                  >
-                    <CardContent className="p-4 sm:p-6">
-                      <div
-                        className={`inline-flex p-2 sm:p-3 rounded-lg ${feature.color} mb-3 sm:mb-4`}
-                      >
-                        {feature.icon}
-                      </div>
-                      <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
-                        {feature.title}
-                      </h4>
-                      <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">
-                        {feature.description}
-                      </p>
-                      <ul className="space-y-1.5 sm:space-y-2">
-                        {feature.benefits.map((benefit, idx) => (
-                          <li
-                            key={idx}
-                            className="flex items-center text-xs sm:text-sm text-gray-600"
-                          >
-                            <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 mr-2 flex-shrink-0" />
-                            <span>{benefit}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
+          
 
           <Collapsible
             open={showGettingStarted}
@@ -2498,8 +2365,13 @@ export function AdminDashboard({
                       label={{ 
                         value: 'Number of Donations', 
                         angle: -90, 
-                        position: 'insideLeft', 
-                        style: { fontSize: 12, fill: '#6B7280' } 
+                        position: 'insideLeft',
+                        offset: 10,
+                        style: { 
+                          fontSize: 12, 
+                          fill: '#6B7280',
+                          textAnchor: 'middle'
+                        } 
                       }}
                     />
                     <Tooltip content={<CustomChartTooltip />} />

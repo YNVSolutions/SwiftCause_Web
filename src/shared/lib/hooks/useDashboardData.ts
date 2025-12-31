@@ -5,6 +5,20 @@ import { db } from '../firebase';
 import { Campaign } from '../../types';
 import { Kiosk, Donation } from '../../types';
 
+const toErrorDetails = (error: unknown) => {
+  if (error instanceof Error) {
+    return { code: (error as any)?.code || 'error', message: error.message, stack: error.stack || 'No stack trace' };
+  }
+  if (typeof error === 'object' && error !== null) {
+    return {
+      code: (error as any).code || 'unknown',
+      message: (error as any).message || JSON.stringify(error),
+      stack: (error as any).stack || 'No stack trace',
+    };
+  }
+  return { code: 'unknown', message: String(error), stack: 'No stack trace' };
+};
+
 
 interface DashboardStats {
   totalRaised: number;
@@ -113,109 +127,79 @@ export function useDashboardData(organizationId?: string) {
         .map(([name, value]) => ({ name, value }))
         .sort((a, b) => b.value - a.value);
 
-      // Fetch donation distribution - simple approach
-      const ranges = [
-        { min: 0, max: 25, label: '$0-$25', isLast: false },
-        { min: 25, max: 50, label: '$25-$50', isLast: false },
-        { min: 50, max: 100, label: '$50-$100', isLast: false },
-        { min: 100, max: 250, label: '$100-$250', isLast: false },
-        { min: 250, max: 500, label: '$250-$500', isLast: false },
-        { min: 500, max: Infinity, label: '$500+', isLast: true }
-      ];
-
+      // Fetch donation distribution - using client-side counting to avoid index requirements
       let donationDistribution: Array<{ range: string; count: number }> = [];
       let donationDistributionError: string | undefined;
       
       try {
-        // First, try to get a simple count to check if donations exist
-        const totalQuery = query(
+        // Define amount ranges
+        const ranges = [
+          { min: 0, max: 100, label: '$0-$100', isLast: false },
+          { min: 100, max: 200, label: '$100-$200', isLast: false },
+          { min: 200, max: 300, label: '$200-$300', isLast: false },
+          { min: 300, max: 400, label: '$300-$400', isLast: false },
+          { min: 400, max: 500, label: '$400-$500', isLast: false },
+          { min: 500, max: 10000, label: '$500+', isLast: true }
+        ];
+
+        console.log('Fetching donations for distribution analysis, organization:', organizationId);
+
+        // Fetch all donations for this organization (client-side counting approach)
+        const { getDocs } = await import('firebase/firestore');
+        const donationsQuery = query(
           collection(db, 'donations'),
           where("organizationId", "==", organizationId)
         );
-        const totalSnapshot = await getCountFromServer(totalQuery);
-        const totalDonations = totalSnapshot.data().count;
+        const donationsSnapshot = await getDocs(donationsQuery);
         
-        console.log(`Total donations found: ${totalDonations}`);
-        
-        if (totalDonations === 0) {
-          // No donations exist, return empty distribution
-          donationDistribution = ranges.map(range => ({
-            range: range.label,
-            count: 0
-          }));
-        } else {
-          // Try efficient count queries first
-          try {
-            donationDistribution = await Promise.all(
-              ranges.map(async (range) => {
-                const constraints = [where("organizationId", "==", organizationId)];
-                
-                // Add amount range constraints
-                constraints.push(where("amount", ">=", range.min));
-                if (!range.isLast) { // Don't add upper limit for last range
-                  constraints.push(where("amount", "<", range.max));
-                }
-                
-                const rangeQuery = query(collection(db, 'donations'), ...constraints);
-                const snapshot = await getCountFromServer(rangeQuery);
-                
-                return {
-                  range: range.label,
-                  count: snapshot.data().count
-                };
-              })
-            );
-            
-            console.log('Count queries successful:', donationDistribution);
-          } catch (countError) {
-            console.error('Count queries failed, trying fallback:', countError);
-            
-            // Fallback: fetch limited documents and calculate manually
-            const { getDocs, limit } = await import('firebase/firestore');
-            const fallbackQuery = query(
-              collection(db, 'donations'),
-              where("organizationId", "==", organizationId),
-              limit(1000) // Limit to prevent excessive downloads
-            );
-            const fallbackSnapshot = await getDocs(fallbackQuery);
-            
-            console.log(`Fallback: Processing ${fallbackSnapshot.size} donations`);
-            
-            // Initialize counts
-            donationDistribution = ranges.map(range => ({
-              range: range.label,
-              count: 0
-            }));
-            
-            // Count donations in each range
-            fallbackSnapshot.forEach((doc) => {
-              const donation = doc.data();
-              let amount = typeof donation.amount === 'string' ? parseFloat(donation.amount) : donation.amount;
-              
-              if (typeof amount === 'number' && !isNaN(amount)) {
-                for (let i = 0; i < ranges.length; i++) {
-                  const range = ranges[i];
-                  // Use consistent boundary logic: [min, max) except for last range which is [min, ∞)
-                  if (range.isLast) {
-                    if (amount >= range.min) {
-                      donationDistribution[i].count++;
-                      break;
-                    }
-                  } else {
-                    if (amount >= range.min && amount < range.max) {
-                      donationDistribution[i].count++;
-                      break;
-                    }
-                  }
-                }
-              }
-            });
-            
-            console.log('Fallback calculation complete:', donationDistribution);
+        console.log(`Total donations fetched: ${donationsSnapshot.size}`);
+
+        // Initialize counts for each range
+        donationDistribution = ranges.map(range => ({
+          range: range.label,
+          count: 0
+        }));
+
+        // Count donations in each range
+        donationsSnapshot.forEach((doc) => {
+          const donation = doc.data();
+          let amount = donation.amount;
+          
+          // Handle string amounts
+          if (typeof amount === 'string') {
+            amount = parseFloat(amount);
           }
-        }
+          
+          // Skip invalid amounts
+          if (typeof amount !== 'number' || isNaN(amount)) {
+            console.warn('Invalid amount in donation:', doc.id, amount);
+            return;
+          }
+
+          // Find which range this donation belongs to
+          for (let i = 0; i < ranges.length; i++) {
+            const range = ranges[i];
+            if (range.isLast) {
+              // Last range: amount >= min
+              if (amount >= range.min) {
+                donationDistribution[i].count++;
+                break;
+              }
+            } else {
+              // Other ranges: min <= amount < max
+              if (amount >= range.min && amount < range.max) {
+                donationDistribution[i].count++;
+                break;
+              }
+            }
+          }
+        });
+        
+        console.log('Donation distribution calculated:', donationDistribution);
       } catch (error) {
-        console.error('All donation distribution methods failed:', error);
+        console.error('Donation distribution query failed:', error);
+        const details = toErrorDetails(error);
+        console.error('Error details:', details);
         donationDistribution = [];
         donationDistributionError = 'Error in fetching donation data';
       }

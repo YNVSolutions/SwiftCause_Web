@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavigationHeader } from '../../shared/ui/NavigationHeader';
 import { Campaign, KioskSession } from '../../shared/types';
 import { Button } from '../../shared/ui/button';
@@ -42,12 +42,22 @@ export function CampaignListScreen({
 
   const [page, setPage] = useState(1);
   const [isLoadingPayment, setIsLoadingPayment] = useState(false);
-  const campaignsPerPage = 6;
-  const totalPages = Math.ceil(campaigns.length / campaignsPerPage);
+  const campaignsPerPage =
+    kioskSession?.settings?.maxCampaignsDisplay && kioskSession.settings.maxCampaignsDisplay > 0
+      ? kioskSession.settings.maxCampaignsDisplay
+      : 6;
+  const totalPages = Math.max(1, Math.ceil(campaigns.length / campaignsPerPage));
 
   const startIdx = (page - 1) * campaignsPerPage;
   const endIdx = startIdx + campaignsPerPage;
   const currentCampaigns = campaigns.slice(startIdx, endIdx);
+
+  // Ensure we don't stay on an out-of-range page after data changes
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
 
   const handleRefresh = async () => {
     await refreshCampaigns();
@@ -72,6 +82,31 @@ export function CampaignListScreen({
       onSelectCampaign(campaign, amount);
     }, 500);
   };
+
+  const paginationControls =
+    totalPages > 1 ? (
+      <div className="flex justify-center mt-6 space-x-2">
+        <Button
+          onClick={() => setPage((p) => Math.max(p - 1, 1))}
+          disabled={page === 1}
+          variant="outline"
+          className="px-4 py-2 disabled:opacity-50"
+        >
+          ← Previous
+        </Button>
+        <span className="px-4 py-2 text-gray-600 flex items-center">
+          {page} of {totalPages}
+        </span>
+        <Button
+          onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+          disabled={page === totalPages}
+          variant="outline"
+          className="px-4 py-2 disabled:opacity-50"
+        >
+          Next →
+        </Button>
+      </div>
+    ) : null;
 
   if (loading) {
     return (
@@ -148,6 +183,8 @@ export function CampaignListScreen({
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-6">
+        {paginationControls}
+
         {campaigns.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <div className="text-gray-400 mb-4">
@@ -164,7 +201,7 @@ export function CampaignListScreen({
           </div>
         ) : layoutMode === 'carousel' ? (
           <CampaignCarousel
-            campaigns={campaigns}
+            campaigns={currentCampaigns}
             onSelectCampaign={handleSelectCampaign}
             onViewDetails={onViewDetails}
             isDefaultCampaign={isDefaultCampaign}
@@ -234,29 +271,7 @@ export function CampaignListScreen({
         )}
 
         {/* Pagination Controls */}
-        {totalPages > 1 && (
-          <div className="flex justify-center mt-8 space-x-2">
-            <Button
-              onClick={() => setPage((p) => Math.max(p - 1, 1))}
-              disabled={page === 1}
-              variant="outline"
-              className="px-4 py-2 disabled:opacity-50"
-            >
-              ← Previous
-            </Button>
-            <span className="px-4 py-2 text-gray-600 flex items-center">
-              {page} of {totalPages}
-            </span>
-            <Button
-              onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-              disabled={page === totalPages}
-              variant="outline"
-              className="px-4 py-2 disabled:opacity-50"
-            >
-              Next →
-            </Button>
-          </div>
-        )}
+        {paginationControls}
       </main>
     </div>
   );

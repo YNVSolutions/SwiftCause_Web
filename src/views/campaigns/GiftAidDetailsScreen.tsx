@@ -189,20 +189,24 @@ export function GiftAidDetailsScreen({
         <div className="flex justify-center">
           <Card className="w-full max-w-2xl bg-white shadow-xl rounded-2xl overflow-hidden">
             <CardHeader className="bg-gradient-to-r from-green-600 to-green-700 text-white p-8">
-              <CardTitle className="text-center">
+              <div className="text-center">
                 <div className="flex justify-center mb-4">
                   <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
                     <ArrowRight className="w-8 h-8 rotate-45" />
                   </div>
                 </div>
-                <h1 className="text-2xl sm:text-3xl font-bold mb-2">
+                <div
+                  role="heading"
+                  aria-level={2}
+                  className="text-2xl sm:text-3xl font-bold mb-2"
+                >
                   Boosting your {formatCurrency(amount, organizationCurrency)} to{' '}
                   {formatCurrency(totalWithGiftAid, organizationCurrency)}
-                </h1>
+                </div>
                 <p className="text-green-100 text-lg">
                   Just a few details to claim your extra {formatCurrency(giftAidAmount, organizationCurrency)}
                 </p>
-              </CardTitle>
+              </div>
             </CardHeader>
 
             <CardContent className="p-8">

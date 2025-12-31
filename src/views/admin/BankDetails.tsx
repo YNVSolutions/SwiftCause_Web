@@ -100,7 +100,13 @@ export function BankDetails({ onNavigate, onLogout, userSession, hasPermission }
   const payoutsEnabled = organization?.stripe?.payoutsEnabled;
 
   return (
-    <AdminLayout onNavigate={onNavigate} onLogout={onLogout} userSession={userSession} hasPermission={hasPermission}>
+    <AdminLayout 
+      onNavigate={onNavigate} 
+      onLogout={onLogout} 
+      userSession={userSession} 
+      hasPermission={hasPermission}
+      activeScreen="admin-bank-details"
+    >
       <div className="p-6 max-w-6xl mx-auto space-y-6">
       {/* Page Header */}
       <div className="mb-8">
