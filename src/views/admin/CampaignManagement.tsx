@@ -43,7 +43,7 @@ import {
   FaTrashAlt, // Added FaTrashAlt
   FaPlus, // Import FaPlus
 } from "react-icons/fa";
-import { Plus, ArrowLeft, Settings, Download } from "lucide-react";
+import { Plus, ArrowLeft, Settings, Download, RefreshCw } from "lucide-react";
 import { Calendar } from "../../shared/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "../../shared/ui/popover";
 import { AlertTriangle } from "lucide-react"; // Import AlertTriangle
@@ -1255,6 +1255,7 @@ const CampaignManagement = ({
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [campaignToDelete, setCampaignToDelete] = useState<DocumentData | null>(null);
   const [confirmDeleteInput, setConfirmDeleteInput] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const { campaigns, updateWithImage, createWithImage, remove, loading } =
     useCampaignManagement(userSession.user.organizationId || "");
@@ -1265,7 +1266,8 @@ const CampaignManagement = ({
   };
 
   const handleConfirmDelete = async () => {
-    if (campaignToDelete && confirmDeleteInput === campaignToDelete.title) {
+    if (campaignToDelete) {
+      setIsDeleting(true);
       try {
         await remove(campaignToDelete.id);
         setIsDeleteDialogOpen(false);
@@ -1275,10 +1277,9 @@ const CampaignManagement = ({
       } catch (error) {
         console.error("Error deleting campaign:", error);
         // Optionally, show an error toast or message
+      } finally {
+        setIsDeleting(false);
       }
-    } else {
-      // Optionally, show an error message if input doesn't match
-      console.log("Confirmation input does not match campaign title.");
     }
   };
 
@@ -1882,6 +1883,12 @@ const CampaignManagement = ({
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[400px] p-0 border-0 shadow-2xl">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Delete campaign</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this campaign? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
           <div className="bg-white rounded-2xl p-8 text-center">
             {/* Warning Icon */}
             <div className="flex justify-center mb-6">
@@ -1908,15 +1915,24 @@ const CampaignManagement = ({
               <Button 
                 variant="outline" 
                 onClick={() => setIsDeleteDialogOpen(false)}
+                disabled={isDeleting}
                 className="flex-1 h-11 border-gray-300 text-gray-700 hover:bg-gray-50"
               >
                 Cancel
               </Button>
               <Button 
                 onClick={handleConfirmDelete}
+                disabled={isDeleting}
                 className="flex-1 h-11 bg-red-500 hover:bg-red-600 text-white border-0"
               >
-                Delete
+                {isDeleting ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete'
+                )}
               </Button>
             </div>
           </div>
