@@ -15,6 +15,7 @@ export type Screen =
   | "admin-donations"
   | "admin-gift-aid"
   | "admin-users"
+  | "admin-bank-details"
   | "about"
   | "contact"
   | "docs"

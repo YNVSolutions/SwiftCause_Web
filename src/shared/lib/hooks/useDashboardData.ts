@@ -28,7 +28,7 @@ interface DashboardStats {
   topLocations: Array<{ name: string; totalRaised: number }>;
   deviceDistribution: Array<{ name: string; value: number }>;
   donationDistribution: Array<{ range: string; count: number }>;
-  donationDistributionError?: boolean;
+  donationDistributionError?: string;
 }
 
 type FirestoreTimestamp = { seconds: number; nanoseconds: number };
@@ -61,7 +61,6 @@ export function useDashboardData(organizationId?: string) {
     topLocations: [],
     deviceDistribution: [],
     donationDistribution: [],
-    donationDistributionError: false,
   });
   const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
@@ -128,75 +127,81 @@ export function useDashboardData(organizationId?: string) {
         .map(([name, value]) => ({ name, value }))
         .sort((a, b) => b.value - a.value);
 
-      // Fetch donation distribution using aggregation queries (more efficient)
+      // Fetch donation distribution - using client-side counting to avoid index requirements
       let donationDistribution: Array<{ range: string; count: number }> = [];
-      let donationDistributionError = false;
+      let donationDistributionError: string | undefined;
+      
       try {
         // Define amount ranges
         const ranges = [
-          { min: 0, max: 100, label: '$0-$100' },
-          { min: 100, max: 200, label: '$100-$200' },
-          { min: 200, max: 300, label: '$200-$300' },
-          { min: 300, max: 400, label: '$300-$400' },
-          { min: 400, max: 500, label: '$400-$500' },
-          { min: 500, max: 10000, label: '$500+' } // Set reasonable upper limit
+          { min: 0, max: 100, label: '$0-$100', isLast: false },
+          { min: 100, max: 200, label: '$100-$200', isLast: false },
+          { min: 200, max: 300, label: '$200-$300', isLast: false },
+          { min: 300, max: 400, label: '$300-$400', isLast: false },
+          { min: 400, max: 500, label: '$400-$500', isLast: false },
+          { min: 500, max: 10000, label: '$500+', isLast: true }
         ];
 
-        console.log('Starting donation distribution queries for organization:', organizationId);
+        console.log('Fetching donations for distribution analysis, organization:', organizationId);
 
-        // Use Promise.all to fetch counts in parallel for better performance
-        donationDistribution = await Promise.all(
-          ranges.map(async (range) => {
-            try {
-              // Build query for this range
-              let rangeQuery = collection(db, 'donations');
-              const constraints = [];
-              
-              if (organizationId) {
-                constraints.push(where("organizationId", "==", organizationId));
-              }
-              constraints.push(where("amount", ">=", range.min));
-              if (range.max !== 10000) { // Don't add upper limit for last range
-                constraints.push(where("amount", "<", range.max));
-              }
-              
-              const q = query(rangeQuery, ...constraints);
-              
-              console.log(`Querying donations for range ${range.label} with constraints:`, {
-                organizationId,
-                minAmount: range.min,
-                maxAmount: range.max !== 10000 ? range.max : 'unlimited'
-              });
-              
-              // Use getCountFromServer for efficient counting (doesn't download documents)
-              const snapshot = await getCountFromServer(q);
-              const count = snapshot.data().count;
-              
-              console.log(`Count for range ${range.label}:`, count);
-              
-              return {
-                range: range.label,
-                count: count
-              };
-            } catch (error: unknown) {
-              const details = toErrorDetails(error);
-              console.error(`Error fetching count for range ${range.label}:`, details.message);
-              console.error('Error details:', details);
-              return {
-                range: range.label,
-                count: 0
-              };
-            }
-          })
+        // Fetch all donations for this organization (client-side counting approach)
+        const { getDocs } = await import('firebase/firestore');
+        const donationsQuery = query(
+          collection(db, 'donations'),
+          where("organizationId", "==", organizationId)
         );
+        const donationsSnapshot = await getDocs(donationsQuery);
+        
+        console.log(`Total donations fetched: ${donationsSnapshot.size}`);
 
-        console.log('Final donation distribution data:', donationDistribution);
-        console.log('Total donations across all ranges:', donationDistribution.reduce((sum, item) => sum + item.count, 0));
-      } catch (error: unknown) {
-        console.error('Failed to fetch donation distribution data:', error);
-        // Set empty array so the chart shows "No Donation Data" instead of breaking
+        // Initialize counts for each range
+        donationDistribution = ranges.map(range => ({
+          range: range.label,
+          count: 0
+        }));
+
+        // Count donations in each range
+        donationsSnapshot.forEach((doc) => {
+          const donation = doc.data();
+          let amount = donation.amount;
+          
+          // Handle string amounts
+          if (typeof amount === 'string') {
+            amount = parseFloat(amount);
+          }
+          
+          // Skip invalid amounts
+          if (typeof amount !== 'number' || isNaN(amount)) {
+            console.warn('Invalid amount in donation:', doc.id, amount);
+            return;
+          }
+
+          // Find which range this donation belongs to
+          for (let i = 0; i < ranges.length; i++) {
+            const range = ranges[i];
+            if (range.isLast) {
+              // Last range: amount >= min
+              if (amount >= range.min) {
+                donationDistribution[i].count++;
+                break;
+              }
+            } else {
+              // Other ranges: min <= amount < max
+              if (amount >= range.min && amount < range.max) {
+                donationDistribution[i].count++;
+                break;
+              }
+            }
+          }
+        });
+        
+        console.log('Donation distribution calculated:', donationDistribution);
+      } catch (error) {
+        console.error('Donation distribution query failed:', error);
+        const details = toErrorDetails(error);
+        console.error('Error details:', details);
         donationDistribution = [];
-        donationDistributionError = true;
+        donationDistributionError = 'Error in fetching donation data';
       }
 
       setStats({
