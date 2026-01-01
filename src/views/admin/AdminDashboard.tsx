@@ -2252,6 +2252,7 @@ export function AdminDashboard({
                       <div 
                         key={campaign.id} 
                         className="group bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg hover:border-gray-300 transition-all cursor-pointer"
+                        onClick={() => onNavigate("admin-campaigns")}
                       >
                         {/* Campaign Image */}
                         <div className="relative h-32 bg-gradient-to-br from-gray-100 to-gray-200">
