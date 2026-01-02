@@ -7,3 +7,7 @@ export {
 export {
   getConnectionToken,
 } from './functions/terminal';
+
+export {
+  onDonationCreated,
+} from './functions/donations';

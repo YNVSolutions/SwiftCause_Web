@@ -13,6 +13,7 @@ import {
 } from '@/shared/types'
 import { createUserWithEmailAndPassword } from 'firebase/auth'
 import { setDoc } from 'firebase/firestore'
+import { createWelcomeMail } from '@/shared/api/firestoreService'
 import { getFirestore } from 'firebase/firestore'
 
 const auth = getAuth()
@@ -232,6 +233,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         tags: [],
         createdAt: new Date().toISOString(),
       })
+
+      try {
+        await createWelcomeMail(
+          signupData.email,
+          `${signupData.firstName} ${signupData.lastName}`.trim(),
+          signupData.organizationName
+        )
+      } catch (mailError) {
+        console.error('Welcome email failed:', mailError)
+      }
     } catch (error) {
       if (error instanceof Error) {
         console.error('Signup error:', error)
