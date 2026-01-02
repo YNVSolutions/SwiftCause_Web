@@ -22,13 +22,9 @@ import {
   EyeOff,
   AlertCircle,
   TrendingUp,
-  CheckSquare,
-  Clock,
   DollarSign
 } from 'lucide-react';
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
-import { getFirestore, doc, setDoc } from 'firebase/firestore';
-import { ORGANIZATION_TYPES, ORGANIZATION_SIZES, CURRENCY_OPTIONS } from '../../../shared/config';
+import { ORGANIZATION_TYPES, ORGANIZATION_SIZES } from '../../../shared/config';
 
 interface SignupScreenProps {
   onSignup: (data: SignupFormData) => Promise<void>;
@@ -66,9 +62,6 @@ interface SignupFormData {
   agreeToTerms: boolean;
 }
 
-const auth = getAuth();
-const firestore = getFirestore();
-
 export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupScreenProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
@@ -92,25 +85,6 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
 
   const organizationTypes = ORGANIZATION_TYPES;
   const organizationSizes = ORGANIZATION_SIZES;
-
-  const featureOptions = [
-    { id: 'kiosks', label: 'Donation Kiosks', description: 'Touch-friendly donation interfaces' },
-    { id: 'analytics', label: 'Advanced Analytics', description: 'Real-time insights and reporting' },
-    { id: 'campaigns', label: 'Campaign Management', description: 'Flexible campaign configuration' },
-    { id: 'security', label: 'Enterprise Security', description: 'Bank-level security features' },
-    { id: 'mobile', label: 'Mobile Optimization', description: 'Mobile-first design approach' },
-    { id: 'integrations', label: 'API Integrations', description: 'Connect with existing systems' }
-  ];
-
-  const hearAboutUsOptions = [
-    'Search Engine (Google, Bing)',
-    'Social Media',
-    'Referral from colleague',
-    'Conference/Event',
-    'Industry publication',
-    'Partner recommendation',
-    'Other'
-  ];
 
   const updateFormData = (field: keyof SignupFormData, value: any) => {
     setFormData(prev => ({
