@@ -35,6 +35,8 @@ import {
   Building2,
   Shield,
   Calendar,
+  Compass,
+  Wallet,
 } from "lucide-react";
 
 const SCREEN_LABELS: Partial<Record<Screen, string>> = {
@@ -45,6 +47,7 @@ const SCREEN_LABELS: Partial<Record<Screen, string>> = {
   "admin-donations": "Donations",
   "admin-gift-aid": "Gift Aid Donations",
   "admin-users": "Users",
+  "admin-bank-details": "Bank Details",
 };
 
 interface AdminLayoutProps {
@@ -54,6 +57,7 @@ interface AdminLayoutProps {
   hasPermission: (permission: Permission) => boolean;
   children: React.ReactNode;
   activeScreen?: Screen;
+  onStartTour?: () => void;
 }
 
 // Get user initials for avatar
@@ -343,6 +347,7 @@ export function AdminLayout({
   hasPermission,
   children,
   activeScreen = "admin-dashboard",
+  onStartTour,
 }: AdminLayoutProps) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const isActive = (...screens: Screen[]) => screens.includes(activeScreen);
@@ -471,6 +476,22 @@ export function AdminLayout({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )}
+              
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={() => onNavigate("admin-bank-details")}
+                  tooltip="Bank Details"
+                  isActive={isActive("admin-bank-details")}
+                  className={
+                    isActive("admin-bank-details")
+                      ? "bg-indigo-50 text-indigo-700 font-semibold shadow-sm rounded-md hover:bg-indigo-100"
+                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md"
+                  }
+                >
+                  <Wallet className="h-5 w-5" />
+                  <span>Bank Details</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroup>
         </SidebarContent>
@@ -485,8 +506,8 @@ export function AdminLayout({
         <SidebarRail />
       </Sidebar>
 
-      <SidebarInset className="flex-1 flex flex-col overflow-hidden">
-        <header className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm shrink-0">
+      <SidebarInset className="flex-1 flex flex-col overflow-hidden relative">
+        <header className="absolute top-0 left-0 right-0 z-20 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm">
           <div className="flex items-center justify-between px-4 sm:px-6 h-16">
             <div className="flex items-center gap-3">
               <SidebarTrigger className="text-gray-600 hover:text-gray-900" />
@@ -494,26 +515,42 @@ export function AdminLayout({
               <h1 className="font-bold text-lg text-gray-900">{currentLabel}</h1>
             </div>
             
-            {/* Profile Icon in Header */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsProfileOpen(true)}
-              className="h-10 w-10 rounded-full hover:bg-gray-100 transition-colors"
-              title="View Profile"
-            >
-              <Avatar className="h-8 w-8 ring-2 ring-gray-200 hover:ring-blue-300 transition-all">
-                <AvatarImage src={userSession.user.photoURL || undefined} />
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-xs font-semibold">
-                  {getInitials(userSession.user.username || userSession.user.email || 'U')}
-                </AvatarFallback>
-              </Avatar>
-            </Button>
+            {/* Right side buttons */}
+            <div className="flex items-center gap-2">
+              {/* Get a Tour Button */}
+              {onStartTour && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onStartTour}
+                  className="hidden sm:flex items-center gap-2 border-blue-200 text-blue-600 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 transition-colors animate-pulse"
+                >
+                  <Compass className="h-4 w-4" />
+                  <span className="font-medium">Get a Tour</span>
+                </Button>
+              )}
+              
+              {/* Profile Icon in Header */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsProfileOpen(true)}
+                className="h-10 w-10 rounded-full hover:bg-gray-100 transition-colors"
+                title="View Profile"
+              >
+                <Avatar className="h-8 w-8 ring-2 ring-gray-200 hover:ring-blue-300 transition-all">
+                  <AvatarImage src={userSession.user.photoURL || undefined} />
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-xs font-semibold">
+                    {getInitials(userSession.user.username || userSession.user.email || 'U')}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </div>
           </div>
         </header>
         
         <main
-          className="flex-1 w-full bg-slate-50 overflow-y-auto overflow-x-hidden"
+          className="flex-1 w-full bg-slate-50 overflow-y-auto overflow-x-hidden pt-16"
           data-testid="main-content-area"
         >
           {children}

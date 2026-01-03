@@ -30,7 +30,7 @@ import {
   CommandItem,
 } from "../../shared/ui/command";
 import { Badge } from "../../shared/ui/badge";
-import { X, Check, ChevronsUpDown } from "lucide-react";
+import { X, Check, ChevronsUpDown, Trash2 } from "lucide-react";
 import {
   FaEdit,
   FaSearch,
@@ -40,7 +40,7 @@ import {
   FaTrashAlt, // Added FaTrashAlt
   FaPlus, // Import FaPlus
 } from "react-icons/fa";
-import { Plus, ArrowLeft, Settings, Download } from "lucide-react";
+import { Plus, ArrowLeft, Settings, Download, RefreshCw } from "lucide-react";
 import { Calendar } from "../../shared/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "../../shared/ui/popover";
 import { AlertTriangle } from "lucide-react"; // Import AlertTriangle
@@ -637,70 +637,82 @@ const CampaignDialog = ({
               </div>
 
               <div className="grid grid-cols-4 items-start gap-4">
-                <Label className="text-right pt-2">Cover Image</Label>
+                <Label className="text-right pt-2">Cover Image *</Label>
                 <div className="col-span-3 space-y-3">
-                  <div className="flex items-center gap-4">
-                    <div
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => fileInputRef.current?.click()}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          fileInputRef.current?.click();
-                        }
-                      }}
-                      className="flex items-center justify-center w-20 h-20 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 transition cursor-pointer bg-white"
-                      aria-label="Select cover image"
-                    >
-                      <div className="flex flex-col items-center gap-1 text-sm font-medium">
-                        <Plus className="w-5 h-5" />
-                        <span>Add image</span>
-                      </div>
-                    </div>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileSelect}
-                      className="hidden"
-                      name="coverImageUrl"
-                    />
-                    <div className="flex items-center gap-3">
-                      <div className="relative w-20 h-20">
-                        <ImageWithFallback
-                          src={imagePreview || formData.coverImageUrl}
-                          alt="Campaign cover"
-                          className="w-20 h-20 object-cover rounded-lg border bg-gray-100"
-                          fallbackSrc="/campaign-fallback.svg"
-                        />
-                        {(imagePreview || formData.coverImageUrl) && (
+                  <p className="text-xs text-gray-500 mb-2">Upload a primary cover image for your campaign. For additional images, use the Gallery Images section in Advanced Settings.</p>
+                  {/* Large drag & drop area */}
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => fileInputRef.current?.click()}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        fileInputRef.current?.click();
+                      }
+                    }}
+                    className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 rounded-lg text-gray-400 hover:border-indigo-400 hover:text-indigo-500 hover:bg-gray-50 transition cursor-pointer bg-white"
+                    aria-label="Select cover image"
+                  >
+                    {imagePreview || formData.coverImageUrl ? (
+                      <div className="relative w-full h-full group">
+                        <div className="absolute inset-0 p-4">
+                          <ImageWithFallback
+                            src={imagePreview || formData.coverImageUrl}
+                            alt="Campaign cover"
+                            className="w-full h-full object-cover rounded-lg"
+                            fallbackSrc="/campaign-fallback.svg"
+                          />
+                        </div>
+                        {/* Overlay with action buttons */}
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200 rounded-lg flex items-center justify-center gap-3">
                           <button
                             type="button"
-                            onClick={handleRemoveCoverImage}
-                            className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow transition-colors hover:bg-red-50 hover:border-red-200 group"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              fileInputRef.current?.click();
+                            }}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white rounded-lg p-3 shadow-lg hover:bg-gray-50 flex items-center gap-2"
+                            aria-label="Change cover image"
+                          >
+                            <FaImage className="w-5 h-5 text-gray-700" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveCoverImage();
+                            }}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white rounded-lg p-3 shadow-lg hover:bg-red-50 flex items-center gap-2"
                             aria-label="Remove cover image"
                           >
-                            <X className="w-3 h-3 text-gray-600 transition-colors group-hover:text-red-600" />
+                            <Trash2 className="w-5 h-5 text-red-600" />
                           </button>
-                        )}
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-600">
-                        <p>
-                          {imagePreview || formData.coverImageUrl
-                            ? "Selected image"
-                            : "Using default placeholder image"}
-                        </p>
+                    ) : (
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center">
+                          <FaImage className="w-6 h-6 text-gray-400" />
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm font-medium text-gray-600">Click to upload or drag & drop</p>
+                          <p className="text-xs text-gray-400 mt-1">PNG, JPG or WebP (max. 5MB)</p>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    name="coverImageUrl"
+                  />
                   {selectedImage && (
-                    <div className="text-sm text-gray-600">
-                      <p>Selected: {selectedImage.name}</p>
-                      <p>
-                        Size: {(selectedImage.size / 1024 / 1024).toFixed(2)}{" "}
-                        MB
-                      </p>
+                    <div className="text-xs text-gray-500">
+                      <p>Selected: {selectedImage.name} ({(selectedImage.size / 1024 / 1024).toFixed(2)} MB)</p>
                     </div>
                   )}
                 </div>
@@ -711,107 +723,57 @@ const CampaignDialog = ({
                   Tags
                 </Label>
                 <div className="col-span-3">
-                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                    <div className="space-y-2 p-3">
-                      <Popover open={tagSearchOpen} onOpenChange={setTagSearchOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          role="combobox"
-                          aria-expanded={tagSearchOpen}
-                          className="w-full justify-between h-12 border-0 bg-transparent hover:bg-transparent focus-visible:ring-0"
-                        >
-                          {selectedTags.length > 0 ? (
-                            <div className="flex flex-wrap gap-1">
-                              {selectedTags.slice(0, 2).map((tag) => (
-                                <Badge key={tag} variant="secondary" className="text-xs">
-                                  {tag}
-                                </Badge>
-                              ))}
-                              {selectedTags.length > 2 && (
-                                <Badge variant="secondary" className="text-xs">
-                                  +{selectedTags.length - 2} more
-                                </Badge>
-                              )}
-                            </div>
-                          ) : (
-                            "Select tags..."
-                          )}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-full p-0">
-                        <Command>
-                          <CommandInput 
-                            placeholder="Search or type new tag..." 
-                            value={tagSearchValue}
-                            onValueChange={setTagSearchValue}
-                          />
-                          <CommandEmpty>
-                            {tagSearchValue && (
-                              <div className="p-2">
-                                <Button
-                                  variant="ghost"
-                                  className="w-full justify-start"
-                                  onClick={() => {
-                                    if (tagSearchValue.trim() && !selectedTags.includes(tagSearchValue.trim())) {
-                                      setSelectedTags([...selectedTags, tagSearchValue.trim()]);
-                                      setTagSearchValue("");
-                                      setTagSearchOpen(false);
-                                    }
-                                  }}
-                                >
-                                  <Plus className="mr-2 h-4 w-4" />
-                                  Create "{tagSearchValue}"
-                                </Button>
-                              </div>
-                            )}
-                          </CommandEmpty>
-                          <CommandGroup>
-                            {organizationTags
-                              .filter(tag => !selectedTags.includes(tag))
-                              .map((tag) => (
-                                <CommandItem
-                                  key={tag}
-                                  onSelect={() => {
-                                    setSelectedTags([...selectedTags, tag]);
-                                    setTagSearchValue("");
-                                  }}
-                                >
-                                  <Check
-                                    className={`mr-2 h-4 w-4 ${
-                                      selectedTags.includes(tag) ? "opacity-100" : "opacity-0"
-                                    }`}
-                                  />
-                                  {tag}
-                                </CommandItem>
-                              ))}
-                          </CommandGroup>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                    
-                    {/* Selected tags display */}
-                    {selectedTags.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-2">
+                  <div className="space-y-2">
+                    {/* Tags input field */}
+                    <div className="border-2 border-indigo-200 rounded-lg p-3 focus-within:border-indigo-500 transition-colors min-h-[56px]">
+                      <div className="flex flex-wrap gap-2 items-center">
+                        {/* Display selected tags */}
                         {selectedTags.map((tag) => (
-                          <Badge key={tag} variant="secondary" className="text-sm">
+                          <Badge 
+                            key={tag} 
+                            variant="secondary" 
+                            className="bg-gray-100 text-gray-700 px-3 py-1 text-sm font-medium rounded-md flex items-center gap-1"
+                          >
                             {tag}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="ml-1 h-4 w-4 p-0 hover:bg-transparent"
+                            <button
+                              type="button"
+                              className="ml-1 hover:bg-gray-200 rounded-full p-0.5"
                               onClick={() => {
                                 setSelectedTags(selectedTags.filter(t => t !== tag));
                               }}
                             >
                               <X className="h-3 w-3" />
-                            </Button>
+                            </button>
                           </Badge>
                         ))}
+                        {/* Input for new tags */}
+                        <input
+                          type="text"
+                          value={tagSearchValue}
+                          onChange={(e) => setTagSearchValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              const newTag = tagSearchValue.trim();
+                              if (newTag && !selectedTags.includes(newTag) && selectedTags.length < 5) {
+                                setSelectedTags([...selectedTags, newTag]);
+                                setTagSearchValue("");
+                              }
+                            } else if (e.key === 'Backspace' && tagSearchValue === '' && selectedTags.length > 0) {
+                              // Remove last tag when backspace is pressed on empty input
+                              e.preventDefault();
+                              setSelectedTags(selectedTags.slice(0, -1));
+                            }
+                          }}
+                          placeholder={selectedTags.length === 0 ? "Type and press Enter to add tags" : ""}
+                          className="flex-1 min-w-[120px] outline-none bg-transparent text-sm"
+                          disabled={selectedTags.length >= 5}
+                        />
                       </div>
-                    )}
                     </div>
+                    <p className="text-xs text-gray-500">
+                      Add up to 5 tags to categorize your campaign.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -961,6 +923,7 @@ const CampaignDialog = ({
                   Gallery Images
                 </Label>
                 <div className="col-span-3 space-y-3">
+                  <p className="text-xs text-gray-500 mb-2">Upload up to 4 additional images for your campaign gallery.</p>
                   <div className="flex items-start gap-3 flex-wrap">
                     <div
                       role="button"
@@ -978,16 +941,16 @@ const CampaignDialog = ({
                           }
                         }
                       }}
-                      className={`flex items-center justify-center w-20 h-20 border-2 border-dashed rounded-lg text-gray-500 transition cursor-pointer bg-white ${
+                      className={`flex flex-col items-center justify-center w-32 h-32 border-2 border-dashed rounded-lg transition cursor-pointer bg-white ${
                         galleryImagePreviews.length >= 4
                           ? "border-gray-200 text-gray-300 cursor-not-allowed"
-                          : "border-gray-300 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50"
+                          : "border-indigo-400 text-indigo-600 hover:border-indigo-500 hover:bg-indigo-50"
                       }`}
                       aria-label="Add gallery image"
                     >
-                      <div className="flex flex-col items-center gap-1 text-sm font-medium">
-                        <Plus className="w-5 h-5" />
-                        <span>Add image</span>
+                      <div className="flex flex-col items-center gap-2">
+                        <Plus className="w-8 h-8" />
+                        <p className="text-sm font-medium uppercase">Add Image</p>
                       </div>
                     </div>
                     <input
@@ -1000,21 +963,28 @@ const CampaignDialog = ({
                       multiple
                     />
                     {galleryImagePreviews.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-2 mt-3">
                         {galleryImagePreviews.map((src, index) => (
-                          <div key={index} className="relative group">
+                          <div key={index} className="relative group w-32 h-32">
                             <ImageWithFallback
                               src={src}
                               alt={`Gallery preview ${index + 1}`}
-                              className="w-20 h-20 object-cover rounded-lg border bg-gray-100"
+                              className="w-full h-full object-cover rounded-lg border bg-gray-100"
                               fallbackSrc="/campaign-fallback.svg"
                             />
+                            {index === 0 && (
+                              <div className="absolute top-2 left-2">
+                                <Badge className="bg-indigo-600 text-white text-[10px] px-1.5 py-0.5 font-semibold uppercase">
+                                  Primary
+                                </Badge>
+                              </div>
+                            )}
                             <button
                               onClick={() => handleDeleteGalleryImage(src, index)}
-                              className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow opacity-0 group-hover:opacity-100 transition duration-150 hover:bg-red-50 hover:border-red-200"
+                              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:bg-red-50"
                               title="Remove image"
                             >
-                              <X className="h-3 w-3 text-gray-600 transition-colors group-hover:text-red-600" />
+                              <Trash2 className="h-5 w-5 text-red-600" />
                             </button>
                           </div>
                         ))}
@@ -1209,6 +1179,8 @@ const CampaignManagement = ({
   const [showCalendar, setShowCalendar] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [campaignToDelete, setCampaignToDelete] = useState<DocumentData | null>(null);
+  const [confirmDeleteInput, setConfirmDeleteInput] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const { campaigns, updateWithImage, createWithImage, remove, loading } =
     useCampaignManagement(userSession.user.organizationId || "");
@@ -1226,6 +1198,7 @@ const CampaignManagement = ({
 
   const handleConfirmDelete = async () => {
     if (campaignToDelete) {
+      setIsDeleting(true);
       try {
         await remove(campaignToDelete.id);
         setIsDeleteDialogOpen(false);
@@ -1234,6 +1207,8 @@ const CampaignManagement = ({
       } catch (error) {
         console.error("Error deleting campaign:", error);
         // Optionally, show an error toast or message
+      } finally {
+        setIsDeleting(false);
       }
     }
   };
@@ -1851,7 +1826,12 @@ const CampaignManagement = ({
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[400px] p-0 border-0 shadow-2xl">
-          <DialogTitle className="sr-only">Delete campaign confirmation</DialogTitle>
+          <DialogHeader className="sr-only">
+            <DialogTitle>Delete campaign</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this campaign? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
           <div className="bg-white rounded-2xl p-8 text-center">
             {/* Warning Icon */}
             <div className="flex justify-center mb-6">
@@ -1878,15 +1858,24 @@ const CampaignManagement = ({
               <Button 
                 variant="outline" 
                 onClick={() => setIsDeleteDialogOpen(false)}
+                disabled={isDeleting}
                 className="flex-1 h-11 border-gray-300 text-gray-700 hover:bg-gray-50"
               >
                 Cancel
               </Button>
               <Button 
                 onClick={handleConfirmDelete}
+                disabled={isDeleting}
                 className="flex-1 h-11 bg-red-500 hover:bg-red-600 text-white border-0"
               >
-                Delete
+                {isDeleting ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete'
+                )}
               </Button>
             </div>
           </div>

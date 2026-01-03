@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../shared/ui/table';
 import { Calendar } from '../../shared/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '../../shared/ui/popover';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../../shared/ui/dialog';
 import {
   Search,
   ArrowLeft,
@@ -20,7 +21,8 @@ import {
   Clock,
   CreditCard,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Eye
 } from 'lucide-react';
 import { Skeleton } from "../../shared/ui/skeleton"; // Import Skeleton
 import { Ghost } from "lucide-react"; // Import Ghost
@@ -75,6 +77,8 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
   const [campaignFilter, setCampaignFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [ selectedDonation, setSelectedDonation] = useState<FetchedDonation | null>(null);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
 
   
   useEffect(() => {
@@ -179,6 +183,11 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
     exportToCsv(donations, "donations");
   };
 
+  const handleViewDetails = (donation: FetchedDonation) => {
+    setSelectedDonation(donation);
+    setIsDetailsDialogOpen(true);
+  };
+
   return (
     <AdminLayout
       onNavigate={onNavigate}
@@ -210,7 +219,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
               <Button
                 variant="outline"
                 size="sm"
-                className="hidden sm:inline-flex"
+                className="hidden sm:inline-flex hover:bg-gray-100 transition-colors"
                 onClick={handleExportDonations}
               >
                 <Download className="w-4 h-4 mr-2" />
@@ -402,20 +411,20 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
           {/* Donations Section */}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
             <div className="w-full sm:max-w-md">
-              <div className="relative">
+              <div className="relative border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
                   placeholder="Search donations..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 border-0 focus-visible:ring-0 focus-visible:border-transparent"
                 />
               </div>
             </div>
             <Button
               variant="outline"
               size="sm"
-              className="sm:hidden"
+              className="sm:hidden hover:bg-gray-100 transition-colors"
               onClick={handleExportDonations}
             >
               <Download className="w-4 h-4 mr-2" />
@@ -433,30 +442,34 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
           <Card className="mb-8">
             <CardContent className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-full h-12"><SelectValue placeholder="Filter by status" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="success">Success</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="failed">Failed</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={campaignFilter} onValueChange={setCampaignFilter}>
-                  <SelectTrigger className="w-full h-12"><SelectValue placeholder="Filter by campaign" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Campaigns</SelectItem>
-                    {campaigns.map(campaign => (
-                      <SelectItem key={campaign.id} value={campaign.id}>{campaign.title}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-full h-12 border-0 focus:ring-0"><SelectValue placeholder="Filter by status" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Statuses</SelectItem>
+                      <SelectItem value="success">Success</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="failed">Failed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                  <Select value={campaignFilter} onValueChange={setCampaignFilter}>
+                    <SelectTrigger className="w-full h-12 border-0 focus:ring-0"><SelectValue placeholder="Filter by campaign" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Campaigns</SelectItem>
+                      {campaigns.map(campaign => (
+                        <SelectItem key={campaign.id} value={campaign.id}>{campaign.title}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <Popover open={showCalendar} onOpenChange={setShowCalendar}>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className="justify-start text-left font-normal w-full h-12 px-3 flex items-center"><CalendarIcon className="mr-2 h-4 w-4" />{dateFilter ? dateFilter.toLocaleDateString() : "Filter by date"}</Button>
+                    <Button variant="outline" className="border !border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors justify-start text-left font-normal w-full h-12 px-3 flex items-center hover:bg-gray-100"><CalendarIcon className="mr-2 h-4 w-4" />{dateFilter ? dateFilter.toLocaleDateString() : "Filter by date"}</Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar mode="single" selected={dateFilter} onSelect={(date) => { setDateFilter(date); setShowCalendar(false); }} initialFocus />
+                  <PopoverContent className="w-auto p-0" align="center" side="bottom" sideOffset={8} avoidCollisions={false} collisionPadding={0}>
+                    <Calendar mode="single" selected={dateFilter} onSelect={(date) => { setDateFilter(date); setShowCalendar(false); }} />
                     <div className="p-3 border-t"><Button variant="ghost" size="sm" onClick={() => { setDateFilter(undefined); setShowCalendar(false); }} className="w-full">Clear Date Filter</Button></div>
                   </PopoverContent>
                 </Popover>
@@ -499,11 +512,21 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                       <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Details</TableHead>
                       <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</TableHead>
                       <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Platform</TableHead>
+                      <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <div className="flex items-center gap-2">
+                          <Eye className="h-4 w-4 text-gray-500" />
+                          Actions
+                        </div>
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredDonations.map((donation) => (
-                      <TableRow key={donation.id} className="hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0">
+                      <TableRow 
+                        key={donation.id} 
+                        className="cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
+                        onClick={() => handleViewDetails(donation)}
+                      >
                         <TableCell className="px-6 py-4">
                           <div className="space-y-1">
                             <div className="flex items-center space-x-2">
@@ -556,6 +579,21 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                               </Badge>
                             </div>
                           </div>
+                        </TableCell>
+
+                        <TableCell className="px-6 py-4">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewDetails(donation);
+                            }}
+                            className="hover:bg-gray-100"
+                            title="View donation details"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}

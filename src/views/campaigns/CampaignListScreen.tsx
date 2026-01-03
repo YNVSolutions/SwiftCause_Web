@@ -28,9 +28,7 @@ export function CampaignListScreen({
   campaigns,
   loading,
   error,
-  isDetailedView,
   kioskSession,
-  onViewToggle,
   onSelectCampaign,
   onViewDetails,
   isDefaultCampaign,
@@ -312,10 +310,6 @@ const getTop3Amounts = (campaign: Campaign): number[] => {
 const CampaignCarousel = ({
   campaigns,
   onSelectCampaign,
-  onViewDetails,
-  isDefaultCampaign,
-  autoRotate,
-  rotationInterval,
   kioskSession,
   isLoadingPayment
 }: CampaignCarouselProps) => {
