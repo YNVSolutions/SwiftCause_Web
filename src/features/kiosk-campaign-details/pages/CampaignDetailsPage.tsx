@@ -63,6 +63,9 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
   // Get predefined amounts
   const predefinedAmounts = campaign.configuration?.predefinedAmounts || [10, 25, 100];
   const enableRecurring = campaign.configuration?.enableRecurring ?? false;
+  const recurringIntervals = (campaign.configuration?.recurringIntervals?.length
+    ? campaign.configuration.recurringIntervals
+    : ['monthly', 'quarterly', 'yearly']) as ('monthly' | 'quarterly' | 'yearly')[];
 
   // Calculate progress
   const progress =
@@ -118,11 +121,11 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
     (customAmount && parseFloat(customAmount) > 0);
 
   return (
-    <div className="h-screen flex flex-col bg-[#FAFAFA] overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-[#FAFAFA]">
       <KioskHeader title="Campaign Details" backText="Back" onBack={onBack} />
 
       {/* Large screens: Two-column layout */}
-      <main className="hidden lg:flex w-5/6 mx-auto py-8 flex-1 overflow-hidden">
+      <main className="hidden lg:flex w-5/6 mx-auto py-8 flex-1 overflow-y-auto">
         {/* 3:2 grid layout - full height */}
         <div className="grid grid-cols-5 gap-12 h-full w-full">
           {/* Left Column (3/5): Scrollable - Image Carousel + Long Description */}
@@ -146,7 +149,7 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
           </div>
 
           {/* Right Column (2/5): Fixed - Title + Description + Progress + Amounts + Video */}
-          <div className="col-span-2 space-y-6 overflow-hidden">
+          <div className="col-span-2 space-y-6">
             {/* Title */}
             <h1 className="text-3xl lg:text-4xl font-semibold text-[#0A0A0A] leading-tight">
               {campaign.title}
@@ -178,6 +181,7 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
               customAmount={customAmount}
               currency={currency}
               enableRecurring={enableRecurring}
+              recurringIntervals={recurringIntervals}
               isRecurring={isRecurring}
               recurringInterval={recurringInterval}
               onSelectAmount={onSelectAmount}
@@ -200,7 +204,7 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
       </main>
 
       {/* Small screens: Single column with sticky donate controls */}
-      <div className="lg:hidden flex flex-col flex-1 overflow-hidden">
+      <div className="lg:hidden flex flex-col flex-1">
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto px-4 pb-4">
           {/* Image Carousel */}
@@ -261,6 +265,7 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
             customAmount={customAmount}
             currency={currency}
             enableRecurring={enableRecurring}
+            recurringIntervals={recurringIntervals}
             isRecurring={isRecurring}
             recurringInterval={recurringInterval}
             onSelectAmount={onSelectAmount}

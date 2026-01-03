@@ -45,6 +45,7 @@ export interface AmountSelectorProps {
   customAmount: string;
   currency: string;
   enableRecurring: boolean;
+  recurringIntervals?: ('monthly' | 'quarterly' | 'yearly')[];
   recurringInterval: 'monthly' | 'quarterly' | 'yearly';
   isRecurring: boolean;
   onSelectAmount: (amount: number) => void;

@@ -9,6 +9,7 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
   customAmount,
   currency,
   enableRecurring,
+  recurringIntervals = ['monthly', 'quarterly', 'yearly'],
   isRecurring,
   recurringInterval,
   onSelectAmount,
@@ -41,6 +42,22 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
         ? 'Quarterly'
         : 'Yearly';
 
+  const recurringUnitLabel =
+    recurringInterval === 'monthly'
+      ? 'month'
+      : recurringInterval === 'quarterly'
+        ? 'quarter'
+        : 'year';
+
+  const defaultOrder: Array<'monthly' | 'quarterly' | 'yearly'> = ['monthly', 'quarterly', 'yearly'];
+  const normalizedIntervals =
+    recurringIntervals && recurringIntervals.length > 0
+      ? recurringIntervals
+      : defaultOrder;
+  const availableIntervals = defaultOrder.filter(
+    (interval) => normalizedIntervals.includes(interval) || interval === 'yearly'
+  );
+
   const getCurrencySymbol = () => {
     if (currency === 'GBP') return '\u00a3';
     if (currency === 'EUR') return '\u20ac';
@@ -67,50 +84,76 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
         ? effectiveAmount * 4
         : effectiveAmount;
 
+  const frequencyOptions = [
+    {
+      key: 'one-time',
+      label: 'One-time',
+      sublabel: 'Give once',
+      icon: Calendar,
+      active: !isRecurring,
+      onSelect: () => {
+        onRecurringToggle(false);
+      }
+    },
+    ...availableIntervals.map((interval) => ({
+      key: interval,
+      label:
+        interval === 'monthly'
+          ? 'Monthly'
+          : interval === 'quarterly'
+            ? 'Quarterly'
+            : 'Yearly',
+      sublabel:
+        interval === 'monthly'
+          ? 'Renews every month'
+          : interval === 'quarterly'
+            ? 'Renews every quarter'
+            : 'Renews every year',
+      icon:
+        interval === 'monthly'
+          ? CalendarClock
+          : interval === 'quarterly'
+            ? CalendarRange
+            : Calendar,
+      active: isRecurring && recurringInterval === interval,
+      onSelect: () => {
+        onRecurringToggle(true);
+        onRecurringIntervalChange(interval);
+      }
+    }))
+  ];
+
   return (
     <div className="space-y-4">
       {enableRecurring && (
-        <div className="bg-white border border-gray-200 rounded-xl p-2 shadow-sm">
-          <div className="flex items-center justify-between gap-2" role="tablist" aria-label="Donation frequency">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={!isRecurring}
-              onClick={() => onRecurringToggle(false)}
-              className={`flex-1 h-10 rounded-lg text-sm font-semibold transition-colors ${
-                !isRecurring
-                  ? 'bg-[#159A6F] text-white shadow-sm'
-                  : 'bg-transparent text-[#0A0A0A] hover:bg-gray-50'
-              }`}
-            >
-              <span className="inline-flex items-center gap-2 justify-center">
-                <Calendar className="w-4 h-4" aria-hidden="true" />
-                One-time
-              </span>
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={isRecurring}
-              onClick={() => onRecurringIntervalChange(recurringInterval)}
-              className={`flex-1 h-10 rounded-lg text-sm font-semibold transition-colors ${
-                isRecurring
-                  ? 'bg-[#159A6F] text-white shadow-sm'
-                  : 'bg-transparent text-[#0A0A0A] hover:bg-gray-50'
-              }`}
-            >
-              <span className="inline-flex items-center gap-2 justify-center">
-                {recurringInterval === 'monthly' ? (
-                  <CalendarClock className="w-4 h-4" aria-hidden="true" />
-                ) : recurringInterval === 'quarterly' ? (
-                  <CalendarRange className="w-4 h-4" aria-hidden="true" />
-                ) : (
-                  <Calendar className="w-4 h-4" aria-hidden="true" />
-                )}
-                {recurringLabel}
-              </span>
-            </button>
-          </div>
+        <div
+          className="grid grid-cols-2 sm:grid-cols-4 gap-2"
+          role="radiogroup"
+          aria-label="Donation frequency"
+        >
+          {frequencyOptions.map((option) => {
+            const Icon = option.icon;
+            return (
+              <button
+                key={option.key}
+                type="button"
+                role="radio"
+                aria-checked={option.active}
+                onClick={option.onSelect}
+                className={`h-full rounded-lg border text-left transition-colors p-3 flex flex-col gap-1 ${
+                  option.active
+                    ? 'border-[#159A6F] bg-[#E6FBF2] text-[#0A0A0A]'
+                    : 'border-gray-200 bg-white hover:border-[#159A6F]/60'
+                }`}
+              >
+                <span className="inline-flex items-center gap-2 font-semibold text-sm">
+                  <Icon className="w-4 h-4" aria-hidden="true" />
+                  {option.label}
+                </span>
+                <span className="text-xs text-gray-600">{option.sublabel}</span>
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -150,6 +193,21 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
         />
       </div>
 
+      {isRecurring && effectiveAmount > 0 && (
+        <div className="rounded-xl bg-white border border-gray-200 px-4 py-3 shadow-sm">
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-semibold text-gray-700">Cost preview</span>
+            <span className="text-sm text-gray-500">Est.</span>
+          </div>
+          <p className="text-lg font-bold text-[#0A0A0A] mt-1">
+            {formatAmount(effectiveAmount)}/{recurringUnitLabel}
+          </p>
+          <p className="text-sm text-gray-600">
+            Equals {formatAmount(annualAmount)} per year
+          </p>
+        </div>
+      )}
+
       {enableRecurring && (
         <div className="rounded-lg bg-gray-50/70 px-3 py-2 flex items-center justify-center gap-2 text-[15px] shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
           <span className="relative flex items-center justify-center w-8 h-8 shrink-0" aria-hidden="true">
@@ -166,21 +224,6 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
               Multiply your impact. Make it {recurringLabel.toLowerCase()}!
             </span>
           )}
-        </div>
-      )}
-
-      {isRecurring && effectiveAmount > 0 && (
-        <div className="rounded-xl bg-white border border-gray-200 px-4 py-3 shadow-sm">
-          <div className="flex justify-between items-center">
-            <span className="text-sm font-semibold text-gray-700">Cost preview</span>
-            <span className="text-sm text-gray-500">Est.</span>
-          </div>
-          <p className="text-lg font-bold text-[#0A0A0A] mt-1">
-            {formatAmount(effectiveAmount)}/{recurringLabel.toLowerCase()}
-          </p>
-          <p className="text-sm text-gray-600">
-            Equals {formatAmount(annualAmount)} per year
-          </p>
         </div>
       )}
 
