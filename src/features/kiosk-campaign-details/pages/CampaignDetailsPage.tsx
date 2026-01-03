@@ -66,6 +66,7 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
   const recurringIntervals = (campaign.configuration?.recurringIntervals?.length
     ? campaign.configuration.recurringIntervals
     : ['monthly', 'quarterly', 'yearly']) as ('monthly' | 'quarterly' | 'yearly')[];
+  const fallbackImage = campaign.coverImageUrl || '/campaign-fallback.svg';
 
   // Calculate progress
   const progress =
@@ -136,7 +137,7 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
                 images={galleryImages}
                 currentIndex={currentImageIndex}
                 onIndexChange={onImageChange}
-                fallbackImage={campaign.coverImageUrl}
+                fallbackImage={fallbackImage}
               />
             </div>
 
@@ -213,7 +214,7 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
               images={galleryImages}
               currentIndex={currentImageIndex}
               onIndexChange={onImageChange}
-              fallbackImage={campaign.coverImageUrl}
+              fallbackImage={fallbackImage}
             />
           </div>
 

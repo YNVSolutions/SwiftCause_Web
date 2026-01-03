@@ -35,14 +35,14 @@ export const CampaignCard: React.FC<CampaignCardProps> = ({
   return (
     <div
       onClick={onCardClick}
-      className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition-shadow duration-200"
+      className="group bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition-shadow duration-200"
     >
       {/* Campaign Image */}
       <div className="relative h-64 overflow-hidden">
         <img
           src={campaign.coverImageUrl || '/campaign-fallback.svg'}
           alt={campaign.title}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-105"
         />
       </div>
 
