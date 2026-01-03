@@ -32,6 +32,7 @@ import { getDonations } from '../../shared/lib/hooks/donationsService';
 import { getAllCampaigns } from '../../shared/api';
 import { AdminLayout } from './AdminLayout';
 import { exportToCsv } from '../../shared/utils/csvExport';
+import { useOrganization } from "../../shared/lib/hooks/useOrganization";
 interface FetchedDonation extends Omit<Donation, 'timestamp'> {
   id: string;
   amount: number;
@@ -63,6 +64,10 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const { organization, loading: orgLoading } = useOrganization(
+    userSession.user.organizationId ?? null
+  );
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -424,100 +429,6 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
           </Card>
         </main>
       </div>
-
-      {/* Donation Details Dialog */}
-      <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Heart className="w-5 h-5 text-indigo-600" />
-              Donation Details
-            </DialogTitle>
-            <DialogDescription>
-              Complete information about this donation
-            </DialogDescription>
-          </DialogHeader>
-
-          {selectedDonation && (
-            <div className="space-y-4 py-2">
-              {/* Donor Information */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Donor Name</label>
-                  <p className="text-sm text-gray-900 mt-1">{selectedDonation.donorName || 'Anonymous'}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Donation Amount</label>
-                  <p className="text-lg font-semibold text-gray-900 mt-1">
-                    {formatCurrency(selectedDonation.amount, selectedDonation.currency)}
-                  </p>
-                </div>
-              </div>
-
-              {/* Campaign and Gift Aid */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Campaign</label>
-                  <p className="text-sm text-gray-900 mt-1">
-                    {campaignMap[selectedDonation.campaignId] || selectedDonation.campaignId}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Gift Aid</label>
-                  <div className="mt-1">
-                    {selectedDonation.isGiftAid ? (
-                      <Badge className="bg-purple-100 text-purple-700">Eligible</Badge>
-                    ) : (
-                      <Badge variant="secondary">Not Eligible</Badge>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Payment Details */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Donation Date</label>
-                  <p className="text-sm text-gray-900 mt-1">{selectedDonation.timestamp}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Platform</label>
-                  <p className="text-sm text-gray-900 mt-1">{selectedDonation.platform}</p>
-                </div>
-              </div>
-
-              {/* Status and Donor ID */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Status</label>
-                  <div className="mt-1">{getStatusBadge(selectedDonation.paymentStatus)}</div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Donor ID</label>
-                  <p className="text-sm text-gray-900 mt-1 font-mono">
-                    {selectedDonation.donorId || 'Anonymous'}
-                  </p>
-                </div>
-              </div>
-
-              {/* Transaction ID */}
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-2">Transaction ID</label>
-                <p className="text-xs text-gray-700 font-mono break-all bg-green-50 px-2 py-1 rounded border border-green-100 inline-block">
-                  {(selectedDonation as any).transactionId || selectedDonation.stripePaymentIntentId || 'N/A'}
-                </p>
-              </div>
-
-              {/* Close Button */}
-              <div className="flex justify-end mt-3">
-                <Button onClick={() => setIsDetailsDialogOpen(false)} variant="outline">
-                  Close
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </AdminLayout>
   );
 }

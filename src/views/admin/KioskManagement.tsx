@@ -33,6 +33,8 @@ import {
 import { Skeleton } from "../../shared/ui/skeleton"; // Import Skeleton
 import { Ghost } from "lucide-react"; // Import Ghost
 import { AdminLayout } from './AdminLayout';
+import { useOrganization } from "../../shared/lib/hooks/useOrganization";
+import { useStripeOnboarding, StripeOnboardingDialog } from "../../features/stripe-onboarding";
 
 
 export function KioskManagement({ onNavigate, onLogout, userSession, hasPermission }: {
@@ -44,6 +46,12 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
   const { kiosks, loading: kiosksLoading, error: kiosksError, refresh: refreshKiosks } = useKiosks(userSession.user.organizationId);
   const { campaigns, loading: campaignsLoading, error: campaignsError, refresh: refreshCampaigns } = useCampaigns(userSession.user.organizationId);
   const performanceData = useKioskPerformance(kiosks);
+  
+  const { organization, loading: orgLoading } = useOrganization(
+    userSession.user.organizationId ?? null
+  );
+  const { isStripeOnboarded, needsOnboarding } = useStripeOnboarding(organization);
+  const [showOnboardingDialog, setShowOnboardingDialog] = useState(false);
   
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -267,8 +275,14 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                   </div>
                 </div>
                 {hasPermission('create_kiosk') && (
-                  <Button onClick={() => setIsCreateDialogOpen(true)} className="bg-indigo-600 hover:bg-indigo-700">
-                    <Plus className="w-4 h-4 mr-2" />Add Kiosk
+                  <Button 
+                    onClick={() => {
+                      setIsCreateDialogOpen(true);
+                    }}
+                    className="bg-indigo-600 hover:bg-indigo-700"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Kiosk
                   </Button>
                 )}
               </div>
@@ -507,6 +521,14 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Stripe Onboarding Dialog */}
+      <StripeOnboardingDialog
+        open={showOnboardingDialog}
+        onOpenChange={setShowOnboardingDialog}
+        organization={organization}
+        loading={orgLoading}
+      />
     </AdminLayout>
   );
 }

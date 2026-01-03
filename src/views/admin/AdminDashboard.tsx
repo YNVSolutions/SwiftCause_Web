@@ -72,6 +72,8 @@ import {
   ArrowDownRight,
   Trophy,
   Medal,
+  X,
+  Zap,
 } from "lucide-react";
 import {
   Dialog,
@@ -79,7 +81,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
   DialogClose,
 } from "../../shared/ui/dialog";
@@ -108,6 +109,8 @@ import { auth } from "../../shared/lib/firebase";
 import { AdminLayout } from "./AdminLayout";
 import { SystemAlertsWidget } from "./components/SystemAlertsWidget";
 import { useSystemAlerts } from "../../shared/lib/hooks/useSystemAlerts";
+import { useStripeOnboarding, StripeOnboardingDialog } from "../../features/stripe-onboarding";
+import { useToast } from "../../shared/ui/ToastProvider";
 
 interface AdminDashboardProps {
   onNavigate: (screen: Screen) => void;
@@ -177,7 +180,6 @@ export function AdminDashboard({
   const [isLegendExpanded, setIsLegendExpanded] = useState(false);
   const [stripeStatusMessage, setStripeStatusMessage] = useState<{ type: 'success' | 'error' | 'warning', message: string } | null>(null);
   const [showStripeStatusDialog, setShowStripeStatusDialog] = useState(false);
-  const [isStripeOnboardingLoading, setIsStripeOnboardingLoading] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [showActivityDialog, setShowActivityDialog] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -217,7 +219,14 @@ export function AdminDashboard({
     organizationId: userSession.user.organizationId,
   });
 
-  // console.log(stats);
+
+  const { isStripeOnboarded, needsOnboarding } = useStripeOnboarding(organization);
+  const { showToast } = useToast();
+  const [showOnboardingPopup, setShowOnboardingPopup] = useState(false);
+  const [showSmallPopup, setShowSmallPopup] = useState(false);
+
+  // Handle return from Stripe onboarding
+
   useEffect(() => {
     const hash = window.location.hash;
     const params = new URLSearchParams(hash.split("?")[1]);
@@ -229,60 +238,32 @@ export function AdminDashboard({
         message:
           "Stripe onboarding complete! Your account is being reviewed and will be payout-ready shortly.",
       });
+      showToast("Stripe onboarding completed successfully!", "success", 3000);
+      // Organization data will auto-refresh via Firestore listener
     } else if (stripeStatus === "refresh") {
       setStripeStatusMessage({
         type: "warning",
         message: "Stripe onboarding session expired or was cancelled. Please try again.",
       });
+      showToast("Stripe onboarding was cancelled. Please try again.", "warning", 3000);
     }
 
     if (stripeStatus) {
       const newHash = hash.split("?")[0];
       window.history.replaceState(null, '', newHash);
     }
-  }, []);
+  }, [showToast]);
 
-  const handleStripeOnboarding = async () => {
-    if (!organization?.id) {
-      console.error("Organization ID not available for Stripe onboarding.");
-      return;
+  // Auto-open Stripe onboarding popup on mount if not onboarded
+  useEffect(() => {
+    if (!orgLoading && organization && needsOnboarding) {
+      // Show small popup after a short delay for better UX
+      const timer = setTimeout(() => {
+        setShowSmallPopup(true);
+      }, 1000);
+      return () => clearTimeout(timer);
     }
-
-    if (!auth.currentUser) {
-      console.error("No authenticated Firebase user found.");
-      return;
-    }
-
-    try {
-      setIsStripeOnboardingLoading(true);
-      const idToken = await auth.currentUser.getIdToken();
-      
-      const response = await fetch('https://createonboardinglink-j2f5w4qwxq-uc.a.run.app', {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${idToken}`,
-        },
-        body: JSON.stringify({ orgId: organization.id }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || response.statusText || "Failed to create onboarding link.");
-      }
-
-      const { url } = await response.json();
-      if (url) {
-        window.location.href = url;
-      }
-    } catch (error) {
-      console.error("Error creating Stripe onboarding link:", error);
-      setStripeStatusMessage({ type: 'error', message: `Failed to start Stripe onboarding: ${(error as Error).message}` });
-    } finally {
-      setIsStripeOnboardingLoading(false);
-    }
-  };
-
+  }, [orgLoading, organization, needsOnboarding]);
 
 
 
@@ -293,10 +274,13 @@ export function AdminDashboard({
       description:
         "Set up a donation campaign with custom goals, pricing, and branding",
       action: "Create Campaign",
-      actionFunction: () => onNavigate("admin-campaigns"),
+      actionFunction: () => {
+        onNavigate("admin-campaigns");
+      },
       icon: <Target className="w-5 h-5" />,
       estimated: "5 minutes",
       canAccess: hasPermission("create_campaign"),
+      requiresStripe: false,
     },
     {
       step: 2,
@@ -304,10 +288,13 @@ export function AdminDashboard({
       description:
         "Set up kiosks in your locations with QR codes and access controls",
       action: "Setup Kiosks",
-      actionFunction: () => onNavigate("admin-kiosks"),
+      actionFunction: () => {
+        onNavigate("admin-kiosks");
+      },
       icon: <Monitor className="w-5 h-5" />,
       estimated: "10 minutes",
       canAccess: hasPermission("create_kiosk"),
+      requiresStripe: false,
     },
     {
       step: 3,
@@ -319,6 +306,7 @@ export function AdminDashboard({
       icon: <Workflow className="w-5 h-5" />,
       estimated: "3 minutes",
       canAccess: hasPermission("assign_campaigns"),
+      requiresStripe: false,
     },
     {
       step: 4,
@@ -330,6 +318,7 @@ export function AdminDashboard({
       icon: <Users className="w-5 h-5" />,
       estimated: "5 minutes",
       canAccess: hasPermission("create_user"),
+      requiresStripe: false,
     },
   ];
 
@@ -1596,21 +1585,11 @@ export function AdminDashboard({
                             </div>
                           </div>
                           <Button
-                            onClick={handleStripeOnboarding}
+                            onClick={() => setShowStripeStatusDialog(true)}
                             className="w-full bg-yellow-600 hover:bg-yellow-700 h-12 text-base font-semibold"
-                            disabled={isStripeOnboardingLoading}
                           >
-                            {isStripeOnboardingLoading ? (
-                              <>
-                                <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
-                                Processing...
-                              </>
-                            ) : (
-                              <>
-                                <CreditCard className="w-5 h-5 mr-2" />
-                                Complete Stripe Onboarding
-                              </>
-                            )}
+                            <CreditCard className="w-5 h-5 mr-2" />
+                            Complete Stripe Onboarding
                           </Button>
                         </>
                       ) : organization && organization.stripe && organization.stripe.chargesEnabled && !organization.stripe.payoutsEnabled ? (
@@ -1690,82 +1669,61 @@ export function AdminDashboard({
               </div>
             )}
             {organization && organization.stripe && (
-              <Dialog open={showStripeStatusDialog} onOpenChange={setShowStripeStatusDialog}>
-                <DialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={`relative rounded-lg
-                      ${!organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled
-                        ? 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100 animate-pulse'
-                        : 'border-green-200 bg-green-50 text-green-700 hover:bg-green-100'
-                      }`}
-                    aria-label="Stripe Status"
-                  >
-                    <CreditCard className="h-4 w-4" />
-                  </Button>
-                </DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px] mx-4">
-                      <DialogHeader>
-                        <DialogTitle className="flex items-center space-x-2 text-base sm:text-lg">
-                          {!organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled ? (
-                            <CreditCard className="h-5 w-5 text-red-600" />
-                          ) : (
-                            <CreditCard className="h-5 w-5 text-green-600" />
-                          )}
-                          <span>Stripe Account Status</span>
-                        </DialogTitle>
-                        <DialogDescription className="text-sm">
-                          Review the current status of your Stripe integration.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="grid gap-4 py-4">
-                        {orgLoading ? (
-                          <p className="text-sm">Loading organization data...</p>
-                        ) : orgError ? (
-                          <p className="text-sm text-red-500">Error: {orgError}</p>
-                        ) : organization &&
-                          organization.stripe &&
-                          !organization.stripe.chargesEnabled ? (
-                          <>
-                            <p className="text-sm text-yellow-700">
-                              Your organization needs to complete Stripe onboarding to accept donations and receive payouts.
-                            </p>
-                            <Button
-                              onClick={handleStripeOnboarding}
-                              className="bg-yellow-600 hover:bg-yellow-700 w-full sm:w-auto"
-                              disabled={isStripeOnboardingLoading}
-                            >
-                              {isStripeOnboardingLoading ? (
-                                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                              ) : (
-                                <CreditCard className="w-4 h-4 mr-2" />
-                              )}
-                              {isStripeOnboardingLoading ? "Processing..." : "Complete Stripe Onboarding"}
-                            </Button>
-                          </>
-                        ) : organization &&
-                          organization.stripe &&
-                          organization.stripe.chargesEnabled &&
-                          !organization.stripe.payoutsEnabled ? (
-                          <p className="text-sm text-blue-700">
-                            Your Stripe account is being reviewed. Payouts will be enabled shortly.
-                          </p>
-                        ) : (
-                          <p className="text-sm text-green-700">
-                            Your Stripe account is fully configured and ready to accept donations and process payouts.
-                          </p>
-                        )}
+              <div className="relative">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowStripeStatusDialog(true)}
+                  className={`relative rounded-lg
+                    ${!organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled
+                      ? 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100 animate-pulse'
+                      : 'border-green-200 bg-green-50 text-green-700 hover:bg-green-100'
+                    }`}
+                  aria-label="Stripe Status"
+                >
+                  <CreditCard className="h-4 w-4" />
+                </Button>
+                {needsOnboarding && (
+                  <div className="absolute -bottom-2 -right-2 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse" />
+                )}
+
+                {/* Small popup notification */}
+                {showSmallPopup && needsOnboarding && (
+                  <div className="fixed sm:absolute top-16 sm:top-full right-2 sm:right-0 mt-2 w-[calc(100vw-1rem)] sm:w-80 max-w-sm bg-white rounded-lg shadow-xl border-2 border-yellow-400 p-3 sm:p-4 z-50 animate-in slide-in-from-top-2">
+                    <button
+                      onClick={() => setShowSmallPopup(false)}
+                      className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 z-10"
+                      aria-label="Close notification"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                    <div className="flex items-start space-x-2 sm:space-x-3">
+                      <div className="flex-shrink-0">
+                        <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600" />
                       </div>
-                      <DialogFooter>
-                        <DialogClose asChild>
-                          <Button type="button" variant="secondary" className="w-full sm:w-auto">
-                            Close
-                          </Button>
-                        </DialogClose>
-                      </DialogFooter>
-                </DialogContent>
-              </Dialog>
+                      <div className="flex-1 min-w-0 pr-6">
+                        <h4 className="text-xs sm:text-sm font-semibold text-gray-900 mb-1">
+                          Complete Stripe Onboarding
+                        </h4>
+                        <p className="text-[10px] sm:text-xs text-gray-600 mb-2 sm:mb-3">
+                          You need to onboard with Stripe to accept donations and create campaigns.
+                        </p>
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            setShowSmallPopup(false);
+                            setShowStripeStatusDialog(true);
+                          }}
+                          className="bg-yellow-600 hover:bg-yellow-700 text-xs h-7 sm:h-8 w-full sm:w-auto"
+                        >
+                          <CreditCard className="w-3 h-3 mr-1" />
+                          Onboard Now
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
             <Button 
               variant="outline" 
@@ -1881,6 +1839,58 @@ export function AdminDashboard({
             </CardContent>
           </Card>
         </div>
+
+        {/* Stripe Onboarding Alert Card */}
+        {needsOnboarding && organization && (
+          <Card className="mb-8 border-l-4 border-l-yellow-500 bg-gradient-to-r from-yellow-50 to-orange-50 shadow-lg hover:shadow-xl transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-start space-x-4 flex-1">
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-yellow-100 flex items-center justify-center animate-pulse">
+                      <CreditCard className="w-6 h-6 sm:w-7 sm:h-7 text-yellow-600" />
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                      <AlertCircle className="w-5 h-5 text-yellow-600" />
+                      Complete Stripe Onboarding
+                    </h3>
+                    <p className="text-sm sm:text-base text-gray-700 mb-3">
+                      Your organization needs to connect with Stripe to accept donations and process payments. 
+                      <span className="hidden sm:inline"> This quick setup takes only 5-10 minutes.</span>
+                    </p>
+                    <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-gray-600">
+                      <div className="flex items-center gap-1.5">
+                        <Shield className="w-4 h-4 text-green-600" />
+                        <span>Secure</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Zap className="w-4 h-4 text-purple-600" />
+                        <span>Fast Setup</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <TrendingUp className="w-4 h-4 text-blue-600" />
+                        <span>Accept Donations</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="w-full sm:w-auto flex-shrink-0">
+                  <Button
+                    onClick={() => setShowStripeStatusDialog(true)}
+                    className="w-full sm:w-auto bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all h-11 sm:h-12 px-6"
+                  >
+                    <CreditCard className="w-5 h-5 mr-2" />
+                    Start Onboarding
+                    <ArrowUpRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="mb-8">
           
 
@@ -2520,7 +2530,9 @@ export function AdminDashboard({
                   <Button
                     variant="outline"
                     className="justify-start h-auto py-4 px-4 text-left hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all duration-200 group border-gray-200 bg-white"
-                    onClick={() => onNavigate("admin-campaigns")}
+                    onClick={() => {
+                      onNavigate("admin-campaigns");
+                    }}
                   >
                     <div className="flex items-start w-full">
                       <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform shadow-sm flex-shrink-0">
@@ -2528,7 +2540,9 @@ export function AdminDashboard({
                       </div>
                       <div className="flex flex-col items-start">
                         <span className="font-semibold text-gray-900 text-sm">Manage Campaigns</span>
-                        <span className="text-xs text-gray-500 mt-0.5">Create and edit campaigns</span>
+                        <span className="text-xs text-gray-500 mt-0.5">
+                          Create and edit campaigns
+                        </span>
                       </div>
                     </div>
                   </Button>
@@ -2537,7 +2551,9 @@ export function AdminDashboard({
                   <Button
                     variant="outline"
                     className="justify-start h-auto py-4 px-4 text-left hover:bg-purple-50 hover:border-purple-300 hover:shadow-md transition-all duration-200 group border-gray-200 bg-white"
-                    onClick={() => onNavigate("admin-kiosks")}
+                    onClick={() => {
+                      onNavigate("admin-kiosks");
+                    }}
                   >
                     <div className="flex items-start w-full">
                       <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform shadow-sm flex-shrink-0">
@@ -2545,7 +2561,9 @@ export function AdminDashboard({
                       </div>
                       <div className="flex flex-col items-start">
                         <span className="font-semibold text-gray-900 text-sm">Configure Kiosks</span>
-                        <span className="text-xs text-gray-500 mt-0.5">Manage kiosk settings</span>
+                        <span className="text-xs text-gray-500 mt-0.5">
+                          Manage kiosk settings
+                        </span>
                       </div>
                     </div>
                   </Button>
@@ -2723,6 +2741,22 @@ export function AdminDashboard({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Centralized Stripe Onboarding Dialog - New Redesigned Version */}
+      <StripeOnboardingDialog
+        open={showStripeStatusDialog}
+        onOpenChange={setShowStripeStatusDialog}
+        organization={organization}
+        loading={orgLoading}
+      />
+
+      {/* Additional Onboarding Dialog for other triggers */}
+      <StripeOnboardingDialog
+        open={showOnboardingPopup}
+        onOpenChange={setShowOnboardingPopup}
+        organization={organization}
+        loading={orgLoading}
+      />
       </div>
       </>
       ) : (
