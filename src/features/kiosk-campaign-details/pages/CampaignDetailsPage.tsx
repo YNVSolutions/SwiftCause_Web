@@ -21,10 +21,21 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
   onBack,
   onSelectAmount,
   onCustomAmountChange,
+  onRecurringToggle,
+  onRecurringIntervalChange,
   onDonate,
   onImageChange,
 }) => {
-  const { campaign, loading, error, selectedAmount, customAmount, currentImageIndex } = state;
+  const {
+    campaign,
+    loading,
+    error,
+    selectedAmount,
+    customAmount,
+    currentImageIndex,
+    isRecurring,
+    recurringInterval,
+  } = state;
 
   // Loading state
   if (loading) {
@@ -51,6 +62,7 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
 
   // Get predefined amounts
   const predefinedAmounts = campaign.configuration?.predefinedAmounts || [10, 25, 100];
+  const enableRecurring = campaign.configuration?.enableRecurring ?? false;
 
   // Calculate progress
   const progress =
@@ -165,8 +177,13 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
               selectedAmount={selectedAmount}
               customAmount={customAmount}
               currency={currency}
+              enableRecurring={enableRecurring}
+              isRecurring={isRecurring}
+              recurringInterval={recurringInterval}
               onSelectAmount={onSelectAmount}
               onCustomAmountChange={onCustomAmountChange}
+              onRecurringToggle={onRecurringToggle}
+              onRecurringIntervalChange={onRecurringIntervalChange}
             />
 
             {/* Donate Button */}
@@ -243,8 +260,13 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
             selectedAmount={selectedAmount}
             customAmount={customAmount}
             currency={currency}
+            enableRecurring={enableRecurring}
+            isRecurring={isRecurring}
+            recurringInterval={recurringInterval}
             onSelectAmount={onSelectAmount}
             onCustomAmountChange={onCustomAmountChange}
+            onRecurringToggle={onRecurringToggle}
+            onRecurringIntervalChange={onRecurringIntervalChange}
           />
 
           {/* Donate Button */}
