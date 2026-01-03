@@ -33,7 +33,6 @@ import { getAllCampaigns } from '../../shared/api';
 import { AdminLayout } from './AdminLayout';
 import { exportToCsv } from '../../shared/utils/csvExport';
 import { useOrganization } from "../../shared/lib/hooks/useOrganization";
-import { useStripeOnboarding, StripeOnboardingDialog } from "../../features/stripe-onboarding";
 interface FetchedDonation extends Omit<Donation, 'timestamp'> {
   id: string;
   amount: number;
@@ -69,8 +68,6 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
   const { organization, loading: orgLoading } = useOrganization(
     userSession.user.organizationId ?? null
   );
-  const { isStripeOnboarded, isFullyOnboarded, isPartiallyOnboarded } = useStripeOnboarding(organization);
-  const [showOnboardingDialog, setShowOnboardingDialog] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -230,185 +227,6 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
         </header>
 
         <main className="px-2 sm:px-6 lg:px-8 py-4 sm:py-8">
-          {/* Stripe Status Section */}
-          <Card className="mb-8 border-l-4 border-l-indigo-500">
-            <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                  <CardTitle className="flex items-center space-x-2 text-lg">
-                    <CreditCard className="w-5 h-5 text-indigo-600" />
-                    <span>Stripe Integration Status</span>
-                  </CardTitle>
-                  <CardDescription className="mt-1">
-                    Payment processing and account status
-                  </CardDescription>
-                </div>
-                {!isStripeOnboarded && (
-                  <Button
-                    onClick={() => setShowOnboardingDialog(true)}
-                    className="bg-yellow-600 hover:bg-yellow-700 w-full sm:w-auto"
-                    size="sm"
-                  >
-                    <CreditCard className="w-4 h-4 mr-2" />
-                    Complete Onboarding
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className="pt-6">
-              {orgLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {Array.from({ length: 3 }).map((_, i) => (
-                    <Skeleton key={i} className="h-24 w-full" />
-                  ))}
-                </div>
-              ) : organization ? (
-                <div className="space-y-6">
-                  {/* Status Cards */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Card className="border-2">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium text-gray-600 uppercase tracking-wide mb-1">
-                              Account ID
-                            </p>
-                            <p className="text-sm font-semibold text-gray-900 truncate">
-                              {organization.stripe?.accountId || 'Not connected'}
-                            </p>
-                          </div>
-                          <div className="ml-3 flex-shrink-0">
-                            <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
-                              <CreditCard className="w-5 h-5 text-indigo-600" />
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="border-2">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <p className="text-xs font-medium text-gray-600 uppercase tracking-wide mb-1">
-                              Charges
-                            </p>
-                            <div className="flex items-center space-x-2">
-                              {organization.stripe?.chargesEnabled ? (
-                                <>
-                                  <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                                  <span className="text-sm font-semibold text-green-600">Enabled</span>
-                                </>
-                              ) : (
-                                <>
-                                  <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                                  <span className="text-sm font-semibold text-red-600">Disabled</span>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                          <div className="ml-3 flex-shrink-0">
-                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                              organization.stripe?.chargesEnabled ? 'bg-green-100' : 'bg-red-100'
-                            }`}>
-                              {organization.stripe?.chargesEnabled ? (
-                                <CheckCircle className="w-5 h-5 text-green-600" />
-                              ) : (
-                                <AlertCircle className="w-5 h-5 text-red-600" />
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="border-2">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <p className="text-xs font-medium text-gray-600 uppercase tracking-wide mb-1">
-                              Payouts
-                            </p>
-                            <div className="flex items-center space-x-2">
-                              {organization.stripe?.payoutsEnabled ? (
-                                <>
-                                  <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                                  <span className="text-sm font-semibold text-green-600">Enabled</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Clock className="w-5 h-5 text-yellow-600 flex-shrink-0" />
-                                  <span className="text-sm font-semibold text-yellow-600">Pending</span>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                          <div className="ml-3 flex-shrink-0">
-                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                              organization.stripe?.payoutsEnabled ? 'bg-green-100' : 'bg-yellow-100'
-                            }`}>
-                              {organization.stripe?.payoutsEnabled ? (
-                                <CheckCircle className="w-5 h-5 text-green-600" />
-                              ) : (
-                                <Clock className="w-5 h-5 text-yellow-600" />
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  {/* Status Banner */}
-                  {isFullyOnboarded ? (
-                    <div className="flex items-start space-x-3 p-4 bg-green-50 border-l-4 border-green-500 rounded-r-lg">
-                      <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold text-green-900">
-                          Fully Configured
-                        </p>
-                        <p className="text-sm text-green-700 mt-1">
-                          Your Stripe account is ready to accept donations and process payouts.
-                        </p>
-                      </div>
-                    </div>
-                  ) : isPartiallyOnboarded ? (
-                    <div className="flex items-start space-x-3 p-4 bg-blue-50 border-l-4 border-blue-500 rounded-r-lg">
-                      <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold text-blue-900">
-                          Account Under Review
-                        </p>
-                        <p className="text-sm text-blue-700 mt-1">
-                          Payouts will be enabled shortly. You can already accept donations.
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-start space-x-3 p-4 bg-yellow-50 border-l-4 border-yellow-500 rounded-r-lg">
-                      <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold text-yellow-900">
-                          Onboarding Required
-                        </p>
-                        <p className="text-sm text-yellow-700 mt-1">
-                          Complete Stripe onboarding to start accepting donations.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <AlertCircle className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-                  <p className="text-lg font-medium mb-2">Organization Not Found</p>
-                  <p className="text-sm">Unable to load organization data.</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Donations Section */}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
             <div className="w-full sm:max-w-md">
               <div className="relative border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
@@ -611,14 +429,6 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
           </Card>
         </main>
       </div>
-
-      {/* Stripe Onboarding Dialog */}
-      <StripeOnboardingDialog
-        open={showOnboardingDialog}
-        onOpenChange={setShowOnboardingDialog}
-        organization={organization}
-        loading={orgLoading}
-      />
     </AdminLayout>
   );
 }
