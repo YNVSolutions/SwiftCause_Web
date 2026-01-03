@@ -99,6 +99,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
 
     loadPersistedSession()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Persist kiosk session changes to localStorage
@@ -154,6 +155,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       clearTimeout(timeout)
       unsubscribe()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleLogin = async (role: UserRole, sessionData?: KioskSession | AdminSession) => {

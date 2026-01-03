@@ -134,12 +134,12 @@ export function useDashboardData(organizationId?: string) {
       try {
         // Define amount ranges
         const ranges = [
-          { min: 0, max: 100, label: '$0-$100', isLast: false },
-          { min: 100, max: 200, label: '$100-$200', isLast: false },
-          { min: 200, max: 300, label: '$200-$300', isLast: false },
-          { min: 300, max: 400, label: '$300-$400', isLast: false },
-          { min: 400, max: 500, label: '$400-$500', isLast: false },
-          { min: 500, max: 10000, label: '$500+', isLast: true }
+          { min: 0, max: 100, label: '£0-£100' },
+          { min: 100, max: 200, label: '£100-£200' },
+          { min: 200, max: 300, label: '£200-£300' },
+          { min: 300, max: 400, label: '£300-£400' },
+          { min: 400, max: 500, label: '£400-£500' },
+          { min: 500, max: 10000, label: '£500+' }
         ];
 
         console.log('Fetching donations for distribution analysis, organization:', organizationId);
@@ -287,7 +287,7 @@ export function useDashboardData(organizationId?: string) {
 
   useEffect(() => {
     fetchDashboardData();
-  }, [organizationId]);
+  }, [fetchDashboardData]);
 
   return { loading, error, stats, recentActivities, alerts, refreshDashboard: fetchDashboardData };
 }

@@ -211,3 +211,31 @@ export async function storeGiftAidDeclaration(giftAidData: any, transactionId: s
   console.log('Gift Aid declaration stored with ID:', docRef.id);
   return { id: docRef.id, ...giftAidDeclaration };
 }
+
+export interface CurrencyRequestData {
+  email: string;
+  requestedCurrency: string;
+  notes?: string;
+  organizationName: string;
+  firstName: string;
+  lastName: string;
+}
+
+export async function submitCurrencyRequest(data: CurrencyRequestData) {
+  const currencyRequestsRef = collection(db, 'currencyRequests');
+  const requestData = {
+    email: data.email,
+    requestedCurrency: data.requestedCurrency,
+    notes: data.notes || '',
+    organizationName: data.organizationName,
+    firstName: data.firstName,
+    lastName: data.lastName,
+    status: 'pending',
+    createdAt: Timestamp.now(),
+    timestamp: Timestamp.now()
+  };
+  
+  const docRef = await addDoc(currencyRequestsRef, requestData);
+  console.log('Currency request submitted with ID:', docRef.id);
+  return { id: docRef.id, ...requestData };
+}

@@ -60,7 +60,6 @@ export default function PaymentPage({ params }: { params: Promise<{ campaignId: 
         if (completeGiftAidData) {
           const giftAidData = JSON.parse(completeGiftAidData);
           await storeGiftAidDeclaration(giftAidData, result.transactionId);
-          console.log('Gift Aid declaration successfully stored to Firebase');
           
           // Clean up session storage after successful storage
           sessionStorage.removeItem('completeGiftAidData');

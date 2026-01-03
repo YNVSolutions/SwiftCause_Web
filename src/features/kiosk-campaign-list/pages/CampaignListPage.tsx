@@ -26,7 +26,7 @@ export const CampaignListPage: React.FC<CampaignListPageProps> = ({
   onLogout,
 }) => {
   const { campaigns, loading, error, layoutMode } = state;
-  const currency = kioskSession?.organizationCurrency || 'USD';
+  const currency = kioskSession?.organizationCurrency || 'GBP';
 
   // Loading state
   if (loading) {

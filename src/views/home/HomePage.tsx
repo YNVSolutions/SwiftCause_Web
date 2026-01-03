@@ -91,15 +91,15 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
   }, []);
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-GB', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'GBP',
       minimumFractionDigits: 0
     }).format(amount);
   };
 
   const formatNumber = (num: number) => {
-    return new Intl.NumberFormat('en-US').format(num);
+    return new Intl.NumberFormat('en-GB').format(num);
   };
 
   const toggleFaq = (index: number) => {
@@ -225,7 +225,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
             <div className="flex items-center space-x-3">
               <div className="h-10 w-10">
                 <img 
-                  src={swiftCauseLogo.src} 
+                  src={swiftCauseLogo} 
                   alt="Swift Cause Logo" 
                   className="w-full h-full object-contain"
                 />
@@ -327,7 +327,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
                       <div className="flex items-center space-x-2">
                         <div className="w-8 h-8">
                           <img 
-                            src={swiftCauseLogo.src} 
+                            src={swiftCauseLogo} 
                             alt="Swift Cause" 
                             className="w-full h-full object-contain"
                           />

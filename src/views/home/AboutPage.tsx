@@ -327,7 +327,7 @@ export function AboutPage({ onNavigate }: { onNavigate?: (screen: string) => voi
               <div className="text-gray-600">Organizations Served</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-indigo-600 mb-2">$2M+</div>
+              <div className="text-4xl font-bold text-indigo-600 mb-2">£2M+</div>
               <div className="text-gray-600">Raised for Good Causes</div>
             </div>
             <div className="text-center">

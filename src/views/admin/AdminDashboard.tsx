@@ -146,7 +146,9 @@ const CustomChartTooltip = ({ active, payload, label }: any) => {
               />
               <span className="text-gray-600">{entry.name}:</span>
             </div>
-            <span className="font-semibold text-gray-900">{entry.value}</span>
+            <span className="font-semibold text-gray-900">
+              {typeof entry.value === 'number' ? `£${entry.value.toLocaleString('en-GB')}` : entry.value}
+            </span>
           </div>
         ))}
       </div>
@@ -626,16 +628,16 @@ export function AdminDashboard({
   }, [showLinkingForm, userSession.user.organizationId]);
 
   const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat("en-US", {
+    new Intl.NumberFormat("en-GB", {
       style: "currency",
-      currency: "USD",
+      currency: "GBP",
       minimumFractionDigits: 0,
     }).format(amount);
   const formatNumber = (num: number) =>
-    new Intl.NumberFormat("en-US").format(num);
+    new Intl.NumberFormat("en-GB").format(num);
 
   const formatLargeCurrency = (amount: number) => {
-    if (amount === 0) return "$0";
+    if (amount === 0) return "£0";
     if (typeof amount !== "number") return "...";
 
     const tiers = [
@@ -649,13 +651,13 @@ export function AdminDashboard({
 
     if (tier) {
       const value = (amount / tier.value).toFixed(1);
-      return `$${value}${tier.name}`;
+      return `£${value}${tier.name}`;
     }
 
     return formatCurrency(amount);
   };
   const formatShortCurrency = (amount: number) => {
-    if (amount === 0) return "$0";
+    if (amount === 0) return "£0";
     if (typeof amount !== "number") return "...";
     const tiers = [
       { value: 1e12, name: "T" },
@@ -666,9 +668,9 @@ export function AdminDashboard({
     const tier = tiers.find((t) => amount >= t.value);
     if (tier) {
       const value = (amount / tier.value).toFixed(1);
-      return `$${value}${tier.name}`;
+      return `£${value}${tier.name}`;
     }
-    return `$${amount}`;
+    return `£${amount}`;
   };
 
   const getActivityIcon = (type: string) => {
