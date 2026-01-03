@@ -1502,16 +1502,11 @@ const CampaignManagement = ({
                 <Button
                   className="bg-indigo-600 text-white hidden sm:inline-flex disabled:opacity-60 disabled:cursor-not-allowed"
                   onClick={() => {
-                    if (!isStripeOnboarded) {
-                      setShowOnboardingDialog(true);
-                    } else {
-                      setIsAddDialogOpen(true);
-                    }
+                    setIsAddDialogOpen(true);
                   }}
-                  disabled={!isStripeOnboarded}
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  {!isStripeOnboarded ? 'Onboard Stripe First' : 'Add Campaign'}
+                  Add Campaign
                 </Button>
               </div>
             </div>
@@ -1551,10 +1546,9 @@ const CampaignManagement = ({
                     setIsAddDialogOpen(true);
                   }
                 }}
-                disabled={!isStripeOnboarded}
               >
                 <Plus className="w-4 h-4 mr-2" />
-                {!isStripeOnboarded ? 'Onboard Stripe First' : 'Add Campaign'}
+                Add Campaign
               </Button>
             </div>
           </div>

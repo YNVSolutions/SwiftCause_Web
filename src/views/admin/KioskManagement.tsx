@@ -277,17 +277,12 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                 {hasPermission('create_kiosk') && (
                   <Button 
                     onClick={() => {
-                      if (!isStripeOnboarded) {
-                        setShowOnboardingDialog(true);
-                      } else {
-                        setIsCreateDialogOpen(true);
-                      }
+                      setIsCreateDialogOpen(true);
                     }}
-                    className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed"
-                    disabled={!isStripeOnboarded}
+                    className="bg-indigo-600 hover:bg-indigo-700"
                   >
                     <Plus className="w-4 h-4 mr-2" />
-                    {!isStripeOnboarded ? 'Onboard Stripe First' : 'Add Kiosk'}
+                    Add Kiosk
                   </Button>
                 )}
               </div>
