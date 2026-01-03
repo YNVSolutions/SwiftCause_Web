@@ -1,5 +1,5 @@
 import { useState, FormEvent, ChangeEvent } from 'react';
-import { createThankYouMail, attachDonorEmailToDonation } from '../../shared/api';
+import { createThankYouMail } from '../../shared/api';
 import { Mail, Send, Home, CheckCircle } from 'lucide-react';
 import { KioskHeader } from '../../shared/components/KioskHeader';
 
@@ -20,17 +20,6 @@ export function EmailConfirmationScreen({ transactionId, onComplete }: EmailConf
     setError(null);
 
     try {
-      if (transactionId) {
-        try {
-          const updated = await attachDonorEmailToDonation(transactionId, email);
-          if (!updated) {
-            console.warn('No donation found to attach email for transaction', transactionId);
-          }
-        } catch (err) {
-          console.error('Error updating donation with donorEmail', err);
-        }
-      }
-
       await createThankYouMail(email);
       setEmailSent(true);
     } catch (err) {

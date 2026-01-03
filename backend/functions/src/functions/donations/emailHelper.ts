@@ -87,3 +87,33 @@ export const enqueueDonationThankYouEmail = async (
 
   await db.collection('mail').add(emailDoc);
 };
+
+/**
+ * Enqueue a welcome email for new users. Uses the Firestore-triggered email extension.
+ */
+export const enqueueWelcomeEmail = async (email: string, name?: string): Promise<void> => {
+  if (!email) return;
+
+  const recipientName = name || 'Friend';
+
+  const emailDoc = {
+    to: [email],
+    message: {
+      subject: 'Welcome to SwiftCause',
+      text: `Hi ${recipientName},\n\nThanks for joining SwiftCause! We're excited to have you.\n\nCheers,\nSwiftCause Team`,
+      html: `<!DOCTYPE html>
+<html>
+  <body style="font-family: Arial, sans-serif; color: #333;">
+    <p>Hi ${recipientName},</p>
+    <p>Thanks for joining <strong>SwiftCause</strong>! We're excited to have you.</p>
+    <p>Cheers,<br/>SwiftCause Team</p>
+  </body>
+</html>`,
+    },
+    metadata: {
+      type: 'welcome',
+    },
+  };
+
+  await db.collection('mail').add(emailDoc);
+};

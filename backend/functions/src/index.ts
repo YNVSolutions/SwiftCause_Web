@@ -11,3 +11,7 @@ export {
 export {
   onDonationCreated,
 } from './functions/donations';
+
+export {
+  onUserCreated,
+} from './functions/users';

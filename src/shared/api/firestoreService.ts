@@ -150,68 +150,6 @@ export async function createThankYouMail(recipientEmail: string) {
   await addDoc(mailRef, donationThankYouEmail);
 }
 
-export async function createWelcomeMail(
-  recipientEmail: string,
-  recipientName?: string,
-  organizationName?: string
-) {
-  const mailRef = collection(db, 'mail');
-  const name = recipientName?.trim() || 'there';
-  const orgLabel = organizationName?.trim()
-    ? ` at ${organizationName.trim()}`
-    : '';
-
-  const welcomeEmail = {
-    to: [recipientEmail],
-    message: {
-      subject: 'Welcome to SwiftCause',
-      text: `Hi ${name},\n\nWelcome to SwiftCause${orgLabel}! Your account is set up and ready. You can now log in, configure campaigns, and manage your fundraising in one place.\n\nIf you need help, reply to this email and our team will jump in.\n\nThanks for joining us,\nSwiftCause Team`,
-      html: `<!DOCTYPE html>
-<html>
-  <body style="font-family: Arial, sans-serif; color: #333;">
-    <p>Hi ${name},</p>
-    <p>Welcome to <strong>SwiftCause${orgLabel}</strong>! Your account is set up and ready.</p>
-    <p>You can now log in, configure campaigns, and manage your fundraising in one place.</p>
-    <p>If you need help, reply to this email and our team will jump in.</p>
-    <p>Thanks for joining us,<br/>SwiftCause Team</p>
-  </body>
-</html>`,
-    },
-    metadata: {
-      type: 'welcome',
-      organizationName: organizationName || null,
-    },
-  };
-
-  await addDoc(mailRef, welcomeEmail);
-}
-
-export async function attachDonorEmailToDonation(
-  transactionId: string,
-  donorEmail: string
-): Promise<boolean> {
-  const donationsRef = collection(db, 'donations');
-  const matchingDonations = query(
-    donationsRef,
-    where('stripePaymentIntentId', '==', transactionId)
-  );
-
-  const snapshot = await getDocs(matchingDonations);
-  if (snapshot.empty) {
-    return false;
-  }
-
-  await Promise.all(
-    snapshot.docs.map((donationDoc) =>
-      updateDoc(doc(db, 'donations', donationDoc.id), {
-        donorEmail,
-      })
-    )
-  );
-
-  return true;
-}
-
 export interface FeedbackData {
   firstName: string;
   lastName: string;
