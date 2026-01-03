@@ -234,6 +234,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         tags: [],
         createdAt: new Date().toISOString(),
       })
+
     } catch (error) {
       if (error instanceof Error) {
         console.error('Signup error:', error)
