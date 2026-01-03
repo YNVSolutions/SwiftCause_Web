@@ -73,6 +73,7 @@ import {
   Trophy,
   Medal,
   X,
+  Zap,
 } from "lucide-react";
 import {
   Dialog,
@@ -272,16 +273,12 @@ export function AdminDashboard({
         "Set up a donation campaign with custom goals, pricing, and branding",
       action: "Create Campaign",
       actionFunction: () => {
-        if (!isStripeOnboarded) {
-          setShowOnboardingPopup(true);
-        } else {
-          onNavigate("admin-campaigns");
-        }
+        onNavigate("admin-campaigns");
       },
       icon: <Target className="w-5 h-5" />,
       estimated: "5 minutes",
       canAccess: hasPermission("create_campaign"),
-      requiresStripe: true,
+      requiresStripe: false,
     },
     {
       step: 2,
@@ -290,16 +287,12 @@ export function AdminDashboard({
         "Set up kiosks in your locations with QR codes and access controls",
       action: "Setup Kiosks",
       actionFunction: () => {
-        if (!isStripeOnboarded) {
-          setShowOnboardingPopup(true);
-        } else {
-          onNavigate("admin-kiosks");
-        }
+        onNavigate("admin-kiosks");
       },
       icon: <Monitor className="w-5 h-5" />,
       estimated: "10 minutes",
       canAccess: hasPermission("create_kiosk"),
-      requiresStripe: true,
+      requiresStripe: false,
     },
     {
       step: 3,
@@ -1590,21 +1583,11 @@ export function AdminDashboard({
                             </div>
                           </div>
                           <Button
-                            onClick={handleStripeOnboarding}
+                            onClick={() => setShowStripeStatusDialog(true)}
                             className="w-full bg-yellow-600 hover:bg-yellow-700 h-12 text-base font-semibold"
-                            disabled={isStripeOnboardingLoading}
                           >
-                            {isStripeOnboardingLoading ? (
-                              <>
-                                <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
-                                Processing...
-                              </>
-                            ) : (
-                              <>
-                                <CreditCard className="w-5 h-5 mr-2" />
-                                Complete Stripe Onboarding
-                              </>
-                            )}
+                            <CreditCard className="w-5 h-5 mr-2" />
+                            Complete Stripe Onboarding
                           </Button>
                         </>
                       ) : organization && organization.stripe && organization.stripe.chargesEnabled && !organization.stripe.payoutsEnabled ? (
@@ -1854,6 +1837,58 @@ export function AdminDashboard({
             </CardContent>
           </Card>
         </div>
+
+        {/* Stripe Onboarding Alert Card */}
+        {needsOnboarding && organization && (
+          <Card className="mb-8 border-l-4 border-l-yellow-500 bg-gradient-to-r from-yellow-50 to-orange-50 shadow-lg hover:shadow-xl transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-start space-x-4 flex-1">
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-yellow-100 flex items-center justify-center animate-pulse">
+                      <CreditCard className="w-6 h-6 sm:w-7 sm:h-7 text-yellow-600" />
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                      <AlertCircle className="w-5 h-5 text-yellow-600" />
+                      Complete Stripe Onboarding
+                    </h3>
+                    <p className="text-sm sm:text-base text-gray-700 mb-3">
+                      Your organization needs to connect with Stripe to accept donations and process payments. 
+                      <span className="hidden sm:inline"> This quick setup takes only 5-10 minutes.</span>
+                    </p>
+                    <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-gray-600">
+                      <div className="flex items-center gap-1.5">
+                        <Shield className="w-4 h-4 text-green-600" />
+                        <span>Secure</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Zap className="w-4 h-4 text-purple-600" />
+                        <span>Fast Setup</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <TrendingUp className="w-4 h-4 text-blue-600" />
+                        <span>Accept Donations</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="w-full sm:w-auto flex-shrink-0">
+                  <Button
+                    onClick={() => setShowStripeStatusDialog(true)}
+                    className="w-full sm:w-auto bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all h-11 sm:h-12 px-6"
+                  >
+                    <CreditCard className="w-5 h-5 mr-2" />
+                    Start Onboarding
+                    <ArrowUpRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="mb-8">
           
 
@@ -1907,28 +1942,15 @@ export function AdminDashboard({
                           </p>
                           <div className="flex items-center justify-between gap-2 flex-wrap">
                             {step.canAccess ? (
-                              step.requiresStripe && !isStripeOnboarded ? (
-                                <Button
-                                  onClick={step.actionFunction}
-                                  size="sm"
-                                  variant="outline"
-                                  className="bg-yellow-50 border-yellow-300 text-yellow-700 hover:bg-yellow-100 text-xs sm:text-sm"
-                                >
-                                  <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                                  <span className="hidden sm:inline">Requires Stripe</span>
-                                  <span className="sm:hidden">Stripe</span>
-                                </Button>
-                              ) : (
-                                <Button
-                                  onClick={step.actionFunction}
-                                  size="sm"
-                                  className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm"
-                                >
-                                  <Play className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                                  <span className="hidden sm:inline">{step.action}</span>
-                                  <span className="sm:hidden">Go</span>
-                                </Button>
-                              )
+                              <Button
+                                onClick={step.actionFunction}
+                                size="sm"
+                                className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm"
+                              >
+                                <Play className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                                <span className="hidden sm:inline">{step.action}</span>
+                                <span className="sm:hidden">Go</span>
+                              </Button>
                             ) : (
                               <Badge variant="secondary" className="text-xs">
                                 <HelpCircle className="w-3 h-3 mr-1" />
@@ -2505,15 +2527,10 @@ export function AdminDashboard({
                 {hasPermission("view_campaigns") && (
                   <Button
                     variant="outline"
-                    className="justify-start h-auto py-4 px-4 text-left hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all duration-200 group border-gray-200 bg-white disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="justify-start h-auto py-4 px-4 text-left hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all duration-200 group border-gray-200 bg-white"
                     onClick={() => {
-                      if (!isStripeOnboarded) {
-                        setShowOnboardingPopup(true);
-                      } else {
-                        onNavigate("admin-campaigns");
-                      }
+                      onNavigate("admin-campaigns");
                     }}
-                    disabled={!isStripeOnboarded}
                   >
                     <div className="flex items-start w-full">
                       <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform shadow-sm flex-shrink-0">
@@ -2522,7 +2539,7 @@ export function AdminDashboard({
                       <div className="flex flex-col items-start">
                         <span className="font-semibold text-gray-900 text-sm">Manage Campaigns</span>
                         <span className="text-xs text-gray-500 mt-0.5">
-                          {!isStripeOnboarded ? 'Requires Stripe onboarding' : 'Create and edit campaigns'}
+                          Create and edit campaigns
                         </span>
                       </div>
                     </div>
@@ -2531,15 +2548,10 @@ export function AdminDashboard({
                 {hasPermission("view_kiosks") && (
                   <Button
                     variant="outline"
-                    className="justify-start h-auto py-4 px-4 text-left hover:bg-purple-50 hover:border-purple-300 hover:shadow-md transition-all duration-200 group border-gray-200 bg-white disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="justify-start h-auto py-4 px-4 text-left hover:bg-purple-50 hover:border-purple-300 hover:shadow-md transition-all duration-200 group border-gray-200 bg-white"
                     onClick={() => {
-                      if (!isStripeOnboarded) {
-                        setShowOnboardingPopup(true);
-                      } else {
-                        onNavigate("admin-kiosks");
-                      }
+                      onNavigate("admin-kiosks");
                     }}
-                    disabled={!isStripeOnboarded}
                   >
                     <div className="flex items-start w-full">
                       <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform shadow-sm flex-shrink-0">
@@ -2548,7 +2560,7 @@ export function AdminDashboard({
                       <div className="flex flex-col items-start">
                         <span className="font-semibold text-gray-900 text-sm">Configure Kiosks</span>
                         <span className="text-xs text-gray-500 mt-0.5">
-                          {!isStripeOnboarded ? 'Requires Stripe onboarding' : 'Manage kiosk settings'}
+                          Manage kiosk settings
                         </span>
                       </div>
                     </div>
