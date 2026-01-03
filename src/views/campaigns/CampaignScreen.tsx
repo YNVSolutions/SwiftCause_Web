@@ -14,13 +14,10 @@ import {
   ArrowRight, 
   Users, 
   Clock, 
-  Share2,
   Gift,
   Percent,
   ChevronDown,
   ChevronUp,
-  Calendar,
-  MapPin,
   Target
 } from 'lucide-react';
 import { Campaign, Donation } from '../../shared/types';

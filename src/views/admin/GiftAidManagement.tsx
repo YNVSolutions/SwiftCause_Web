@@ -664,7 +664,9 @@ export function GiftAidManagement({
                 
                 <div>
                   <Label className="text-sm font-medium text-gray-700">Transaction ID</Label>
-                  <p className="text-xs text-gray-600 font-mono mt-1">{selectedDonation.transactionId || "N/A"}</p>
+                  <p className="text-xs text-gray-700 font-mono mt-1 bg-green-50 px-2 py-1 rounded border border-green-100 inline-block">
+                    {selectedDonation.transactionId || "N/A"}
+                  </p>
                 </div>
               </div>
             )}

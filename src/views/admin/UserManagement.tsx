@@ -97,7 +97,9 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
     const filteredUsers = users.filter(user => {
         const matchesSearch = user.username?.toLowerCase().includes(searchTerm.toLowerCase()) || user.email?.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-        return matchesSearch && matchesRole;
+        // Hide super_admin users from non-super-admin users
+        const canViewSuperAdmin = userSession.user.role === 'super_admin' || user.role !== 'super_admin';
+        return matchesSearch && matchesRole && canViewSuperAdmin;
     });
 
     const stats = calculateUserStats(users);
@@ -137,9 +139,9 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
             <main className="px-2 sm:px-6 lg:px-8 py-4 sm:py-8">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-8">
                     <div className="w-full sm:max-w-md">
-                        <div className="relative">
+                        <div className="relative border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                            <Input placeholder="Search users by name or email..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
+                            <Input placeholder="Search users by name or email..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 border-0 focus-visible:ring-0 focus-visible:border-transparent" />
                         </div>
                     </div>
                     {hasPermission('create_user') && (
@@ -159,16 +161,18 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                 <Card className="mb-8">
                     <CardContent className="p-5">
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <Select value={roleFilter} onValueChange={setRoleFilter}>
-                                <SelectTrigger className="w-full h-12"><SelectValue placeholder="Filter by role" /></SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All Roles</SelectItem>
-                                    <SelectItem value="admin">Admin</SelectItem>
-                                    <SelectItem value="manager">Manager</SelectItem>
-                                    <SelectItem value="operator">Operator</SelectItem>
-                                    <SelectItem value="viewer">Viewer</SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                                <Select value={roleFilter} onValueChange={setRoleFilter}>
+                                    <SelectTrigger className="w-full h-12 border-0 focus:ring-0"><SelectValue placeholder="Filter by role" /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Roles</SelectItem>
+                                        <SelectItem value="admin">Admin</SelectItem>
+                                        <SelectItem value="manager">Manager</SelectItem>
+                                        <SelectItem value="operator">Operator</SelectItem>
+                                        <SelectItem value="viewer">Viewer</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
@@ -255,8 +259,8 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                 </div>
             </main>
 
-            <CreateUserDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} newUser={newUser} onUserChange={setNewUser} onCreateUser={handleCreateUser} />
-            {editingUser && <EditUserDialog user={editingUser} onUpdate={handleUpdateUser} onClose={() => setEditingUser(null)} />}
+            <CreateUserDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} newUser={newUser} onUserChange={setNewUser} onCreateUser={handleCreateUser} userSession={userSession} />
+            {editingUser && <EditUserDialog user={editingUser} onUpdate={handleUpdateUser} onClose={() => setEditingUser(null)} userSession={userSession} />}
             
             {/* Delete Confirmation Dialog */}
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -322,12 +326,14 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
     );
 }
 
-function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateUser }: any) {
+function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateUser, userSession }: any) {
     const onPermissionChange = (permission: Permission, checked: boolean) => {
         const currentPermissions = newUser.permissions || [];
         const newPermissions = checked ? [...currentPermissions, permission] : currentPermissions.filter((p: Permission) => p !== permission);
         onUserChange({ ...newUser, permissions: newPermissions });
     };
+
+    const isSuperAdmin = userSession?.user?.role === 'super_admin';
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -387,7 +393,7 @@ function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateU
                                         <SelectValue placeholder="Select role" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="super_admin">Super Admin</SelectItem>
+                                        {isSuperAdmin && <SelectItem value="super_admin">Super Admin</SelectItem>}
                                         <SelectItem value="admin">Admin</SelectItem>
                                         <SelectItem value="manager">Manager</SelectItem>
                                         <SelectItem value="operator">Operator</SelectItem>
@@ -421,7 +427,7 @@ function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateU
     );
 }
 
-function EditUserDialog({ user, onUpdate, onClose }: { user: User, onUpdate: (userId: string, updates: Partial<User>) => void, onClose: () => void }) {
+function EditUserDialog({ user, onUpdate, onClose, userSession }: { user: User, onUpdate: (userId: string, updates: Partial<User>) => void, onClose: () => void, userSession: AdminSession }) {
     const [editedUser, setEditedUser] = useState(user);
     useEffect(() => { setEditedUser(user); }, [user]);
 
@@ -430,6 +436,8 @@ function EditUserDialog({ user, onUpdate, onClose }: { user: User, onUpdate: (us
         const newPermissions = checked ? [...currentPermissions, permission] : currentPermissions.filter((p: Permission) => p !== permission);
         setEditedUser(prev => ({ ...prev, permissions: newPermissions }));
     };
+
+    const isSuperAdmin = userSession?.user?.role === 'super_admin';
 
     return (
         <Dialog open={true} onOpenChange={onClose}>
@@ -445,7 +453,7 @@ function EditUserDialog({ user, onUpdate, onClose }: { user: User, onUpdate: (us
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="super_admin">Super Admin</SelectItem>
+                                        {isSuperAdmin && <SelectItem value="super_admin">Super Admin</SelectItem>}
                                         <SelectItem value="admin">Admin</SelectItem>
                                         <SelectItem value="manager">Manager</SelectItem>
                                         <SelectItem value="operator">Operator</SelectItem>

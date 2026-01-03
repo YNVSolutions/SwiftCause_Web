@@ -223,15 +223,15 @@ export function KioskCampaignAssignmentDialog({
   
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
           <TabsList className="flex w-full mb-6 flex-shrink-0">
-            <TabsTrigger value="details" className="flex items-center gap-2 py-3">
+            <TabsTrigger value="details" className="flex items-center gap-2 py-3 hover:shadow-sm transition-shadow">
               <Monitor className="w-4 h-4" />
               <span>Details</span>
             </TabsTrigger>
-            <TabsTrigger value="campaigns" className="flex items-center gap-2 py-3">
+            <TabsTrigger value="campaigns" className="flex items-center gap-2 py-3 hover:shadow-sm transition-shadow">
               <Target className="w-4 h-4" />
               <span>Campaigns</span>
             </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center gap-2 py-3">
+            <TabsTrigger value="settings" className="flex items-center gap-2 py-3 hover:shadow-sm transition-shadow">
               <Settings className="w-4 h-4" />
               <span>Display</span>
             </TabsTrigger>
@@ -259,57 +259,64 @@ export function KioskCampaignAssignmentDialog({
                         <Label htmlFor="name" className="text-sm font-medium text-gray-700">
                           Kiosk Name
                         </Label>
-                        <Input
-                          id="name"
-                          name="name"
-                          value={formData.name}
-                          onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))}
-                          className="h-10"
-                          placeholder="Enter kiosk name"
-                        />
+                        <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                          <Input
+                            id="name"
+                            name="name"
+                            value={formData.name}
+                            onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))}
+                            className="h-10 border-0 focus-visible:ring-0 focus-visible:border-transparent"
+                            placeholder="Enter kiosk name"
+                          />
+                        </div>
                       </div>
                       
                       <div className="space-y-2">
                         <Label htmlFor="location" className="text-sm font-medium text-gray-700">
                           Location
                         </Label>
-                        <Input
-                          id="location"
-                          name="location"
-                          value={formData.location}
-                          onChange={(e) => setFormData(p => ({ ...p, location: e.target.value }))}
-                          className="h-10"
-                          placeholder="Enter location"
-                        />
+                        <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                          <Input
+                            id="location"
+                            name="location"
+                            value={formData.location}
+                            onChange={(e) => setFormData(p => ({ ...p, location: e.target.value }))}
+                            className="h-10 border-0 focus-visible:ring-0 focus-visible:border-transparent"
+                            placeholder="Enter location"
+                          />
+                        </div>
                       </div>
                       
                       <div className="space-y-2">
                         <Label htmlFor="accessCode" className="text-sm font-medium text-gray-700">
                           Access Code
                         </Label>
-                        <Input
-                          id="accessCode"
-                          name="accessCode"
-                          value={formData.accessCode}
-                          onChange={(e) => setFormData(p => ({ ...p, accessCode: e.target.value }))}
-                          className="h-10"
-                          placeholder="Enter access code"
-                        />
+                        <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                          <Input
+                            id="accessCode"
+                            name="accessCode"
+                            value={formData.accessCode}
+                            onChange={(e) => setFormData(p => ({ ...p, accessCode: e.target.value }))}
+                            className="h-10 border-0 focus-visible:ring-0 focus-visible:border-transparent"
+                            placeholder="Enter access code"
+                          />
+                        </div>
                       </div>
                       
                       <div className="space-y-2">
                         <Label htmlFor="status" className="text-sm font-medium text-gray-700">
                           Status
                         </Label>
-                        <Select
-                          name="status"
-                          value={formData.status}
-                          onValueChange={(value) => setFormData(p => ({ ...p!, status: value as Kiosk['status'] }))}
-                        >
-                          <SelectTrigger className="h-10">
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                          <SelectContent>
+                        <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                          <Select
+                            name="status"
+                            value={formData.status}
+                            onValueChange={(value) => setFormData(p => ({ ...p!, status: value as Kiosk['status'] }))}
+                          >
+                            <SelectTrigger className="h-10 border-0 focus:ring-0">
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                            <SelectContent>
                             <SelectItem value="online">
                               <div className="flex items-center gap-2">
                                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
@@ -330,6 +337,7 @@ export function KioskCampaignAssignmentDialog({
                             </SelectItem>
                           </SelectContent>
                         </Select>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -345,38 +353,42 @@ export function KioskCampaignAssignmentDialog({
                         <Label htmlFor="model" className="text-sm font-medium text-gray-700">
                           Device Model
                         </Label>
-                        <Select
-                          value={formData.deviceInfo?.model || ''}
-                          onValueChange={(value) => setFormData(prev => ({
-                            ...prev!,
-                            deviceInfo: { ...prev!.deviceInfo, model: value }
-                          }))}
-                        >
-                          <SelectTrigger className="h-10">
-                            <SelectValue placeholder="Select or type a model" />
-                          </SelectTrigger>
-                          <SelectContent>
-                           
-                            <SelectItem value="iPad 10.2">iPad 10.2</SelectItem>
-                            <SelectItem value="iPad Pro 12.9">iPad Pro 12.9</SelectItem>
-                            <SelectItem value="Samsung Galaxy Tab A8">Samsung Galaxy Tab A8</SelectItem>
-                            <SelectItem value="Samsung Galaxy Tab S7">Samsung Galaxy Tab S7</SelectItem>
-                            <SelectItem value="Surface Pro 7">Surface Pro 7</SelectItem>
-                            <SelectItem value="Custom">Custom...</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                          <Select
+                            value={formData.deviceInfo?.model || ''}
+                            onValueChange={(value) => setFormData(prev => ({
+                              ...prev!,
+                              deviceInfo: { ...prev!.deviceInfo, model: value }
+                            }))}
+                          >
+                            <SelectTrigger className="h-10 border-0 focus:ring-0">
+                              <SelectValue placeholder="Select or type a model" />
+                            </SelectTrigger>
+                            <SelectContent>
+                             
+                              <SelectItem value="iPad 10.2">iPad 10.2</SelectItem>
+                              <SelectItem value="iPad Pro 12.9">iPad Pro 12.9</SelectItem>
+                              <SelectItem value="Samsung Galaxy Tab A8">Samsung Galaxy Tab A8</SelectItem>
+                              <SelectItem value="Samsung Galaxy Tab S7">Samsung Galaxy Tab S7</SelectItem>
+                              <SelectItem value="Surface Pro 7">Surface Pro 7</SelectItem>
+                              <SelectItem value="Custom">Custom...</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                         {formData.deviceInfo?.model === 'Custom' && (
-                        <Input
-                          id="model"
-                          name="model"
+                        <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors mt-2">
+                          <Input
+                            id="model"
+                            name="model"
                             value={formData.deviceInfo?.modelCustom || ''}
-                          onChange={(e) => setFormData(prev => ({
-                            ...prev!,
+                            onChange={(e) => setFormData(prev => ({
+                              ...prev!,
                               deviceInfo: { ...prev!.deviceInfo, modelCustom: e.target.value }
-                          }))}
-                            className="h-10 mt-2"
+                            }))}
+                            className="h-10 border-0 focus-visible:ring-0 focus-visible:border-transparent"
                             placeholder="Enter custom model"
-                        />
+                          />
+                        </div>
                         )}
                       </div>
                       
@@ -384,37 +396,41 @@ export function KioskCampaignAssignmentDialog({
                         <Label htmlFor="os" className="text-sm font-medium text-gray-700">
                           Operating System
                         </Label>
-                        <Select
-                          value={formData.deviceInfo?.os || ''}
-                          onValueChange={(value) => setFormData(prev => ({
-                            ...prev!,
-                            deviceInfo: { ...prev!.deviceInfo, os: value }
-                          }))}
-                        >
-                          <SelectTrigger className="h-10">
-                            <SelectValue placeholder="Select OS" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="iOS">iOS</SelectItem>
-                            <SelectItem value="Android">Android</SelectItem>
-                            <SelectItem value="Windows">Windows</SelectItem>
-                            <SelectItem value="ChromeOS">ChromeOS</SelectItem>
-                            <SelectItem value="Linux">Linux</SelectItem>
-                            <SelectItem value="Other">Other</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        {formData.deviceInfo?.os === 'Other' && (
-                          <Input
-                            id="os"
-                            name="osCustom"
-                            value={formData.deviceInfo?.osCustom || ''}
-                            onChange={(e) => setFormData(prev => ({
+                        <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                          <Select
+                            value={formData.deviceInfo?.os || ''}
+                            onValueChange={(value) => setFormData(prev => ({
                               ...prev!,
-                              deviceInfo: { ...prev!.deviceInfo, osCustom: e.target.value }
+                              deviceInfo: { ...prev!.deviceInfo, os: value }
                             }))}
-                            className="h-10 mt-2"
-                            placeholder="Enter OS name"
-                          />
+                          >
+                            <SelectTrigger className="h-10 border-0 focus:ring-0">
+                              <SelectValue placeholder="Select OS" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="iOS">iOS</SelectItem>
+                              <SelectItem value="Android">Android</SelectItem>
+                              <SelectItem value="Windows">Windows</SelectItem>
+                              <SelectItem value="ChromeOS">ChromeOS</SelectItem>
+                              <SelectItem value="Linux">Linux</SelectItem>
+                              <SelectItem value="Other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        {formData.deviceInfo?.os === 'Other' && (
+                          <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors mt-2">
+                            <Input
+                              id="os"
+                              name="osCustom"
+                              value={formData.deviceInfo?.osCustom || ''}
+                              onChange={(e) => setFormData(prev => ({
+                                ...prev!,
+                                deviceInfo: { ...prev!.deviceInfo, osCustom: e.target.value }
+                              }))}
+                              className="h-10 border-0 focus-visible:ring-0 focus-visible:border-transparent"
+                              placeholder="Enter OS name"
+                            />
+                          </div>
                         )}
                       </div>
                       
@@ -422,37 +438,41 @@ export function KioskCampaignAssignmentDialog({
                         <Label htmlFor="screenSize" className="text-sm font-medium text-gray-700">
                           Screen Size
                         </Label>
-                        <Select
-                          value={formData.deviceInfo?.screenSize || ''}
-                          onValueChange={(value) => setFormData(prev => ({
-                            ...prev!,
-                            deviceInfo: { ...prev!.deviceInfo, screenSize: value }
-                          }))}
-                        >
-                          <SelectTrigger className="h-10">
-                            <SelectValue placeholder="Select screen size" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="10.2 inches">10.2 inches</SelectItem>
-                            <SelectItem value="11 inches">11 inches</SelectItem>
-                            <SelectItem value="12.9 inches">12.9 inches</SelectItem>
-                            <SelectItem value="13.3 inches">13.3 inches</SelectItem>
-                            <SelectItem value="15 inches">15 inches</SelectItem>
-                            <SelectItem value="Custom">Custom...</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        {formData.deviceInfo?.screenSize === 'Custom' && (
-                          <Input
-                            id="screenSize"
-                            name="screenSizeCustom"
-                            value={formData.deviceInfo?.screenSizeCustom || ''}
-                            onChange={(e) => setFormData(prev => ({
+                        <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                          <Select
+                            value={formData.deviceInfo?.screenSize || ''}
+                            onValueChange={(value) => setFormData(prev => ({
                               ...prev!,
-                              deviceInfo: { ...prev!.deviceInfo, screenSizeCustom: e.target.value }
+                              deviceInfo: { ...prev!.deviceInfo, screenSize: value }
                             }))}
-                            className="h-10 mt-2"
-                            placeholder="Enter custom screen size"
-                          />
+                          >
+                            <SelectTrigger className="h-10 border-0 focus:ring-0">
+                              <SelectValue placeholder="Select screen size" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="10.2 inches">10.2 inches</SelectItem>
+                              <SelectItem value="11 inches">11 inches</SelectItem>
+                              <SelectItem value="12.9 inches">12.9 inches</SelectItem>
+                              <SelectItem value="13.3 inches">13.3 inches</SelectItem>
+                              <SelectItem value="15 inches">15 inches</SelectItem>
+                              <SelectItem value="Custom">Custom...</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        {formData.deviceInfo?.screenSize === 'Custom' && (
+                          <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors mt-2">
+                            <Input
+                              id="screenSize"
+                              name="screenSizeCustom"
+                              value={formData.deviceInfo?.screenSizeCustom || ''}
+                              onChange={(e) => setFormData(prev => ({
+                                ...prev!,
+                                deviceInfo: { ...prev!.deviceInfo, screenSizeCustom: e.target.value }
+                              }))}
+                              className="h-10 border-0 focus-visible:ring-0 focus-visible:border-transparent"
+                              placeholder="Enter custom screen size"
+                            />
+                          </div>
                         )}
                       </div>
                     </div>
@@ -483,7 +503,7 @@ export function KioskCampaignAssignmentDialog({
                           defaultCampaign: "",
                         }))
                       }
-                      className="gap-2"
+                      className="gap-2 hover:!bg-gray-100 transition-colors"
                     >
                       <Minus className="w-4 h-4" />
                       Clear All
@@ -614,7 +634,7 @@ export function KioskCampaignAssignmentDialog({
                             variant="outline"
                             size="sm"
                             onClick={() => toggleCampaignAssignment(campaign.id)}
-                            className="gap-2 flex-shrink-0"
+                            className="gap-2 flex-shrink-0 hover:!bg-gray-200 transition-colors"
                           >
                             <Plus className="w-4 h-4" />
                             Assign
@@ -696,55 +716,59 @@ export function KioskCampaignAssignmentDialog({
                         <Label htmlFor="displayMode" className="text-sm font-medium text-gray-700">
                           Display Layout
                         </Label>
-                        <Select
-                          value={formData.settings?.displayMode || "grid"}
-                          onValueChange={(value: "grid" | "list" | "carousel") =>
-                            updateSettings({ displayMode: value })
-                          }
-                        >
-                          <SelectTrigger className="h-12">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="grid">
-                              <div className="flex items-center gap-3 py-2">
-                                <LayoutGrid className="w-4 h-4" />
-                                <span>Grid Layout</span>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="list">
-                              <div className="flex items-center gap-3 py-2">
-                                <List className="w-4 h-4" />
-                                <span>List Layout</span>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="carousel">
-                              <div className="flex items-center gap-3 py-2">
-                                <Shuffle className="w-4 h-4" />
-                                <span>Carousel</span>
-                              </div>
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                          <Select
+                            value={formData.settings?.displayMode || "grid"}
+                            onValueChange={(value: "grid" | "list" | "carousel") =>
+                              updateSettings({ displayMode: value })
+                            }
+                          >
+                            <SelectTrigger className="h-12 border-0 focus:ring-0">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="grid">
+                                <div className="flex items-center gap-3 py-2">
+                                  <LayoutGrid className="w-4 h-4" />
+                                  <span>Grid Layout</span>
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="list">
+                                <div className="flex items-center gap-3 py-2">
+                                  <List className="w-4 h-4" />
+                                  <span>List Layout</span>
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="carousel">
+                                <div className="flex items-center gap-3 py-2">
+                                  <Shuffle className="w-4 h-4" />
+                                  <span>Carousel</span>
+                                </div>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
   
                       <div className="space-y-3">
                         <Label htmlFor="maxDisplay" className="text-sm font-medium text-gray-700">
                           Maximum Campaigns to Display
                         </Label>
-                        <Input
-                          id="maxDisplay"
-                          type="number"
-                          min="1"
-                          max="20"
-                          value={formData.settings?.maxCampaignsDisplay || 6}
-                          onChange={(e) =>
-                            updateSettings({
-                              maxCampaignsDisplay: parseInt(e.target.value) || 6,
-                            })
-                          }
-                          className="h-12"
-                        />
+                        <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                          <Input
+                            id="maxDisplay"
+                            type="number"
+                            min="1"
+                            max="20"
+                            value={formData.settings?.maxCampaignsDisplay || 6}
+                            onChange={(e) =>
+                              updateSettings({
+                                maxCampaignsDisplay: parseInt(e.target.value) || 6,
+                              })
+                            }
+                            className="h-12 border-0 focus-visible:ring-0 focus-visible:border-transparent"
+                          />
+                        </div>
                         <p className="text-sm text-gray-500">
                           Limit how many campaigns show at once
                         </p>
@@ -794,19 +818,21 @@ export function KioskCampaignAssignmentDialog({
                           <Label htmlFor="rotationInterval" className="text-sm font-medium text-gray-700">
                             Rotation Interval (seconds)
                           </Label>
-                          <Input
-                            id="rotationInterval"
-                            type="number"
-                            min="10"
-                            max="300"
-                            value={formData.settings?.rotationInterval || 30}
-                            onChange={(e) =>
-                              updateSettings({
-                                rotationInterval: parseInt(e.target.value) || 30,
-                              })
-                            }
-                            className="h-12"
-                          />
+                          <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                            <Input
+                              id="rotationInterval"
+                              type="number"
+                              min="10"
+                              max="300"
+                              value={formData.settings?.rotationInterval || 30}
+                              onChange={(e) =>
+                                updateSettings({
+                                  rotationInterval: parseInt(e.target.value) || 30,
+                                })
+                              }
+                              className="h-12 border-0 focus-visible:ring-0 focus-visible:border-transparent"
+                            />
+                          </div>
                           <p className="text-sm text-gray-500">
                             How often to switch between campaigns
                           </p>
@@ -821,7 +847,7 @@ export function KioskCampaignAssignmentDialog({
         </Tabs>
   
         <div className="flex justify-end gap-3 pt-6 border-t flex-shrink-0">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="px-6">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="px-6 hover:!bg-gray-100 transition-shadow">
             Cancel
           </Button>
           <Button
