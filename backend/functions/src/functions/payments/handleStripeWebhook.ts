@@ -177,4 +177,48 @@ async function upsertInvoice(invoice: Stripe.Invoice, succeeded: boolean) {
       });
     }
   }
+
+  // Maintain failure count on subscription doc
+  if (subscriptionId) {
+    const subRef = db.collection('subscriptions').doc(subscriptionId);
+    if (succeeded) {
+      await subRef.set(
+        {
+          failure_count: 0,
+          lastPaymentError: null,
+          updatedAt: admin.firestore.Timestamp.now(),
+        },
+        { merge: true }
+      );
+    } else {
+      await subRef.set(
+        {
+          failure_count: admin.firestore.FieldValue.increment(1),
+          lastPaymentError: invoice.last_finalization_error?.message ?? null,
+          updatedAt: admin.firestore.Timestamp.now(),
+        },
+        { merge: true }
+      );
+    }
+  }
+
+  // Optional: upsert a dedicated invoices collection
+  const invoicesRef = db.collection('invoices').doc(invoice.id);
+  await invoicesRef.set(
+    {
+      stripeInvoiceId: invoice.id,
+      subscriptionId,
+      customerId: invoice.customer,
+      amount: invoice.amount_paid ?? invoice.amount_due ?? 0,
+      currency: invoice.currency,
+      status: invoice.status,
+      paidAt: invoice.status === 'paid' ? admin.firestore.Timestamp.now() : null,
+      hostedInvoiceUrl: invoice.hosted_invoice_url ?? null,
+      createdAt: admin.firestore.Timestamp.fromMillis(
+        ((invoice.created ?? Math.floor(Date.now() / 1000)) as number) * 1000
+      ),
+      updatedAt: admin.firestore.Timestamp.now(),
+    },
+    { merge: true }
+  );
 }
