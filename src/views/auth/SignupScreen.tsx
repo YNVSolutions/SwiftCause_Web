@@ -7,8 +7,6 @@ import { Badge } from '../../shared/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
 import { Checkbox } from '../../shared/ui/checkbox';
 import { Progress } from '../../shared/ui/progress';
-import { CurrencyRequestDialog } from '../../shared/ui/CurrencyRequestDialog';
-import { PersistentNotification } from '../../shared/ui/PersistentNotification';
 import { submitCurrencyRequest } from '../../shared/api/firestoreService';
 import { 
   Heart,
@@ -35,7 +33,8 @@ import {
   Cloud,
   CheckSquare,
   Clock,
-  DollarSign
+  DollarSign,
+  ChevronDown
 } from 'lucide-react';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
@@ -87,8 +86,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
   const [errors, setErrors] = useState<Partial<SignupFormData>>({});
   const [requestDifferentCurrency, setRequestDifferentCurrency] = useState(false);
   const [currencyRequestSubmitted, setCurrencyRequestSubmitted] = useState(false);
-  const [showCurrencyDialog, setShowCurrencyDialog] = useState(false);
-  const [showSuccessNotification, setShowSuccessNotification] = useState(false);
+  const [requestedCurrency, setRequestedCurrency] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [formData, setFormData] = useState<SignupFormData>({
@@ -155,11 +153,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
       if (!formData.organizationType) newErrors.organizationType = 'Organization type is required';
       if (!formData.organizationSize) newErrors.organizationSize = 'Organization size is required';
     }  else if (step === 3) {
-      // Currency is hardcoded to GBP, no validation needed
-      // But if they checked the box, they must complete the request
-      if (requestDifferentCurrency && !currencyRequestSubmitted) {
-        newErrors.currency = 'Please complete your currency request or uncheck the option';
-      }
+      // Currency request is optional - no validation needed
     } else if (step === 4) {
       if (!formData.password) newErrors.password = 'Password is required';
       else if (formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
@@ -173,7 +167,15 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    // If on currency step (3) and user has entered a custom currency but not submitted yet
+    if (currentStep === 3 && requestDifferentCurrency && requestedCurrency && !currencyRequestSubmitted) {
+      // Submit the request and show success message, but don't move to next step
+      await handleCurrencySubmit();
+      return; // Stop here - user needs to click Next again to proceed
+    }
+    
+    // Normal flow - validate and move to next step
     if (validateStep(currentStep)) {
       setCurrentStep(prev => Math.min(prev + 1, 4));
     }
@@ -205,26 +207,22 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
     }
   };
 
-  const handleCurrencyRequest = async (currency: string, notes: string) => {
+  const handleCurrencySubmit = async () => {
+    if (!requestedCurrency || requestedCurrency.length !== 3) return;
+    
     try {
       await submitCurrencyRequest({
         email: formData.email,
-        requestedCurrency: currency,
-        notes: notes,
+        requestedCurrency: requestedCurrency,
+        notes: `User requested ${requestedCurrency} currency during signup`,
         organizationName: formData.organizationName,
         firstName: formData.firstName,
         lastName: formData.lastName,
       });
       
-      // Mark as submitted
       setCurrencyRequestSubmitted(true);
-      
-      // Show persistent notification
-      setShowSuccessNotification(true);
-      
     } catch (error) {
       console.error('Error submitting currency request:', error);
-      throw new Error('Failed to submit currency request. Please try again.');
     }
   };
 
@@ -614,7 +612,6 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                   )}
 
                   {/* Currency Selection */}
-                  {/* Currency Selection */}
                   {currentStep === 3 && (
                     <div className="space-y-4">
                       <div className="text-center mb-6">
@@ -622,7 +619,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                           <DollarSign className="h-6 w-6 text-yellow-600" />
                         </div>
                         <h3 className="text-lg font-semibold text-gray-900">Currency Settings</h3>
-                        <p className="text-sm text-gray-600">Your organization will use GBP for all transactions</p>
+                        <p className="text-sm text-gray-600">Select your preferred currency</p>
                       </div>
 
                       <div className="space-y-4">
@@ -640,58 +637,68 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                             </div>
                             <CheckCircle className="w-6 h-6 text-green-600" />
                           </div>
-                          <p className="text-xs text-gray-600 mt-3">
-                            All donations, campaigns, and financial reports will use GBP as the primary currency.
-                          </p>
                         </div>
 
-                        {/* Request Different Currency Checkbox */}
-                        <div className={`border rounded-lg p-4 bg-white ${errors.currency ? 'border-red-500' : 'border-gray-200'}`}>
-                          <div className="flex items-start space-x-3">
-                            <Checkbox
-                              id="requestDifferentCurrency"
-                              checked={requestDifferentCurrency}
-                              onCheckedChange={handleCurrencyCheckboxChange}
-                            />
-                            <div className="flex-1">
-                              <label 
-                                htmlFor="requestDifferentCurrency" 
-                                className="text-sm font-medium text-gray-900 cursor-pointer"
-                              >
-                                Request a different currency (USD, INR, or Custom)
-                              </label>
-                              <p className="text-xs text-gray-600 mt-1">
-                                Need to use a different currency? We'll review your request and notify you when it's available.
-                              </p>
+                        {/* Request Custom Currency - Inline Collapsible */}
+                        <div className="border rounded-lg bg-white border-gray-200">
+                          <button
+                            type="button"
+                            onClick={() => setRequestDifferentCurrency(!requestDifferentCurrency)}
+                            className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors rounded-lg"
+                          >
+                            <div className="flex items-center space-x-2">
+                              <span className="text-sm font-medium text-gray-900">
+                                Request a Custom Currency
+                              </span>
                               {currencyRequestSubmitted && (
-                                <div className="mt-2 flex items-center space-x-2 text-xs text-green-600">
-                                  <CheckCircle className="w-4 h-4" />
-                                  <span className="font-medium">Request submitted successfully</span>
+                                <CheckCircle className="w-4 h-4 text-green-600" />
+                              )}
+                            </div>
+                            <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${
+                              requestDifferentCurrency ? 'rotate-180' : ''
+                            }`} />
+                          </button>
+
+                          {/* Expandable Input Section */}
+                          {requestDifferentCurrency && (
+                            <div className="px-4 pb-4 space-y-3 border-t pt-4">
+                              <div className="space-y-2">
+                                <Label htmlFor="requestedCurrency">Currency Code</Label>
+                                <Input
+                                  id="requestedCurrency"
+                                  value={requestedCurrency}
+                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRequestedCurrency(e.target.value.toUpperCase())}
+                                  onBlur={handleCurrencySubmit}
+                                  placeholder="e.g., USD, EUR, INR"
+                                  className="uppercase"
+                                  maxLength={3}
+                                />
+                                <p className="text-xs text-gray-500">
+                                  Enter the 3-letter currency code (e.g., USD for US Dollar)
+                                </p>
+                              </div>
+
+                              {currencyRequestSubmitted && (
+                                <div className="flex items-center space-x-2 text-sm text-green-600 bg-green-50 p-3 rounded-lg">
+                                  <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                                  <span>Request submitted! We'll notify you when {requestedCurrency} is available.</span>
                                 </div>
                               )}
                             </div>
-                          </div>
-                          {errors.currency && (
-                            <p className="text-xs text-red-600 flex items-center mt-2 ml-7">
-                              <AlertCircle className="w-3 h-3 mr-1" />
-                              {errors.currency}
-                            </p>
                           )}
                         </div>
 
-                        {/* Info Box */}
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                          <div className="flex items-start space-x-3">
-                            <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                            <div className="text-sm text-blue-800">
-                              <p className="font-medium mb-1">Important Information</p>
-                              <p className="text-xs">
-                                Currency settings are configured during account setup and optimized for UK operations. 
-                                If you need a different currency, submit a request and we'll notify you when it's available.
+                        {/* Info Box - Only show when currency request is submitted */}
+                        {currencyRequestSubmitted && (
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                            <div className="flex items-start space-x-2">
+                              <AlertCircle className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                              <p className="text-xs text-blue-800">
+                                You can continue with GBP and we'll notify you when your requested currency is available.
                               </p>
                             </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                     </div>
                   )}
@@ -824,26 +831,6 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
           </div>
         </div>
       </div>
-
-      {/* Currency Request Dialog */}
-      <CurrencyRequestDialog
-        isOpen={showCurrencyDialog}
-        onClose={handleCurrencyDialogClose}
-        onSubmit={handleCurrencyRequest}
-        email={formData.email}
-        organizationName={formData.organizationName}
-        firstName={formData.firstName}
-        lastName={formData.lastName}
-      />
-
-      {/* Persistent Success Notification */}
-      <PersistentNotification
-        isOpen={showSuccessNotification}
-        onClose={() => setShowSuccessNotification(false)}
-        title="Currency Request Submitted"
-        message="We have submitted your request for currency updation. We will send you notification when it will be added to the system. Till then please use GBP."
-        type="success"
-      />
     </div>
   );
 }
