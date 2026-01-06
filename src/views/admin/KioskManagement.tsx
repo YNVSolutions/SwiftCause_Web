@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { db } from '../../shared/lib/firebase';
 import { useKiosks } from '../../shared/lib/hooks/useKiosks';
 import { useCampaigns } from '../../entities/campaign';
@@ -20,10 +20,9 @@ import { Badge } from '../../shared/ui/badge';
 import { Dialog, DialogContent, DialogTitle, VisuallyHidden } from '../../shared/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../shared/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
-import { KioskCampaignAssignmentDialog } from './components/KioskCampaignAssignmentDialog';
 
 import {
-  Plus, Edit, Trash2, MapPin, Monitor, AlertTriangle, Save, FileText, Grid3X3, List, GalleryThumbnails, Image, Eye, EyeOff, Copy, Check, Menu, X
+  Plus, Edit, Trash2, MapPin, Monitor, AlertTriangle, Save, Eye, EyeOff, Copy, Check, ArrowLeft, Search, DollarSign, Users, Wrench, Menu, X, Grid3X3, List, GalleryThumbnails, Image
 } from 'lucide-react';
 import { AdminLayout } from './AdminLayout';
 
@@ -40,6 +39,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
   const isLoading = kiosksLoading || campaignsLoading;
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [editingKiosk, setEditingKiosk] = useState<Kiosk | null>(null);
   const [newKiosk, setNewKiosk] = useState({ 
     name: '', 
     location: '', 
@@ -49,22 +49,19 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
     displayLayout: 'grid' as 'grid' | 'list' | 'carousel'
   });
   
-  // Scrollspy state and refs
+  // Dialog state for mobile navigation
   const [activeSection, setActiveSection] = useState('basic-info');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  
+  // Refs for scroll container
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const sectionRefs = useRef<{ [key: string]: HTMLElement | null }>({});
-  const availableCampaignsRef = useRef<HTMLDivElement>(null);
-
-  // Navigation items
+  
+  // Navigation items for dialog
   const navigationItems = [
     { id: 'basic-info', label: 'BASIC INFO' },
     { id: 'campaigns', label: 'CAMPAIGNS' },
     { id: 'display', label: 'DISPLAY' }
   ];
-
-  const [isAssignmentDialogOpen, setIsAssignmentDialogOpen] = useState(false);
-  const [assigningKiosk, setAssigningKiosk] = useState<Kiosk | null>(null);
   
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [kioskToDelete, setKioskToDelete] = useState<Kiosk | null>(null);
@@ -78,104 +75,121 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
     refreshCampaigns();
   }, [refreshKiosks, refreshCampaigns]);
 
-  // Scrollspy with IntersectionObserver
-  useEffect(() => {
-    if (!scrollContainerRef.current || !isCreateDialogOpen) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        let mostVisibleSection = 'basic-info';
-        let maxVisibleHeight = 0;
-
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const visibleHeight = entry.intersectionRect.height;
-            if (visibleHeight > maxVisibleHeight) {
-              maxVisibleHeight = visibleHeight;
-              mostVisibleSection = entry.target.id;
-            }
-          }
-        });
-
-        setActiveSection(mostVisibleSection);
-      },
-      {
-        root: scrollContainerRef.current,
-        rootMargin: '0px',
-        threshold: [0, 0.5, 1]
-      }
-    );
-
-    setTimeout(() => {
-      Object.values(sectionRefs.current).forEach((section) => {
-        if (section) {
-          observer.observe(section);
-        }
+  // Scroll to section function
+  const scrollToSection = (sectionId: string) => {
+    const container = scrollContainerRef.current;
+    const sectionElement = document.getElementById(sectionId);
+    
+    if (container && sectionElement) {
+      const containerRect = container.getBoundingClientRect();
+      const sectionRect = sectionElement.getBoundingClientRect();
+      const scrollTop = container.scrollTop;
+      
+      // Calculate target scroll position with 20px offset from top
+      const targetScrollTop = scrollTop + sectionRect.top - containerRect.top - 20;
+      
+      container.scrollTo({
+        top: Math.max(0, targetScrollTop), // Ensure we don't scroll to negative position
+        behavior: 'smooth'
       });
-    }, 100);
-
-    return () => observer.disconnect();
-  }, [isCreateDialogOpen]);
-
-  // Smooth scroll to section
-  const scrollToSection = useCallback((sectionId: string) => {
-    const section = sectionRefs.current[sectionId];
-    if (section && scrollContainerRef.current) {
-      section.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-      });
+      
+      // Set active section when clicking navigation
+      setActiveSection(sectionId);
     }
-  }, []);
+  };
 
   // Handle keyboard navigation
-  const handleNavKeyDown = useCallback((event: React.KeyboardEvent, sectionId: string) => {
+  const handleNavKeyDown = (event: React.KeyboardEvent, sectionId: string) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       scrollToSection(sectionId);
     }
-  }, [scrollToSection]);
+  };
 
-  // Scroll to available campaigns section within the modal
-  const scrollToAvailableCampaignsInModal = useCallback(() => {
-    if (availableCampaignsRef.current && scrollContainerRef.current) {
-      availableCampaignsRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-      });
-    }
-  }, []);
+  const handleAssignCampaign = (campaignId: string) => {
+    setNewKiosk(prev => ({
+      ...prev,
+      assignedCampaigns: [...prev.assignedCampaigns, campaignId]
+    }));
+  };
+
+  const handleUnassignCampaign = (campaignId: string) => {
+    setNewKiosk(prev => ({
+      ...prev,
+      assignedCampaigns: prev.assignedCampaigns.filter(id => id !== campaignId)
+    }));
+  };
 
   const handleCreateKiosk = async () => {
     if (!newKiosk.name || !newKiosk.location || !userSession) return;
     try {
-      const newKioskData: Omit<Kiosk, 'id'> = {
-        ...newKiosk,
-        status: newKiosk.status,
-        lastActive: new Date().toISOString(),
-        totalDonations: 0,
-        totalRaised: 0,
-        assignedCampaigns: newKiosk.assignedCampaigns,
-        defaultCampaign: '',
-        deviceInfo: {},
-        operatingHours: {},
-        settings: { 
-          displayMode: newKiosk.displayLayout, 
-          showAllCampaigns: true, 
-          maxCampaignsDisplay: 6, 
-          autoRotateCampaigns: false 
-        },
-        organizationId: userSession.user.organizationId,
-      };
-      await addDoc(collection(db, 'kiosks'), newKioskData);
+      if (editingKiosk) {
+        // Update existing kiosk
+        const updatedKioskData = {
+          ...newKiosk,
+          status: newKiosk.status,
+          lastActive: editingKiosk.lastActive,
+          totalDonations: editingKiosk.totalDonations,
+          totalRaised: editingKiosk.totalRaised,
+          assignedCampaigns: newKiosk.assignedCampaigns,
+          defaultCampaign: editingKiosk.defaultCampaign,
+          deviceInfo: editingKiosk.deviceInfo || {},
+          operatingHours: editingKiosk.operatingHours || {},
+          settings: { 
+            displayMode: newKiosk.displayLayout, 
+            showAllCampaigns: true, 
+            maxCampaignsDisplay: 6, 
+            autoRotateCampaigns: false,
+            ...editingKiosk.settings
+          },
+          organizationId: userSession.user.organizationId,
+        };
+        const kioskRef = doc(db, 'kiosks', editingKiosk.id);
+        await updateDoc(kioskRef, updatedKioskData);
+      } else {
+        // Create new kiosk
+        const newKioskData: Omit<Kiosk, 'id'> = {
+          ...newKiosk,
+          status: newKiosk.status,
+          lastActive: new Date().toISOString(),
+          totalDonations: 0,
+          totalRaised: 0,
+          assignedCampaigns: newKiosk.assignedCampaigns,
+          defaultCampaign: '',
+          deviceInfo: {},
+          operatingHours: {},
+          settings: { 
+            displayMode: newKiosk.displayLayout, 
+            showAllCampaigns: true, 
+            maxCampaignsDisplay: 6, 
+            autoRotateCampaigns: false 
+          },
+          organizationId: userSession.user.organizationId,
+        };
+        await addDoc(collection(db, 'kiosks'), newKioskData);
+      }
       refreshKiosks();
       setNewKiosk({ name: '', location: '', accessCode: '', status: 'offline', assignedCampaigns: [], displayLayout: 'grid' });
       setIsCreateDialogOpen(false);
+      setEditingKiosk(null);
       setActiveSection('basic-info');
       setIsMobileSidebarOpen(false);
     } catch (error) {
-      console.error("Error adding kiosk: ", error);
+      console.error("Error saving kiosk: ", error);
     }
+  };
+
+  const handleEditKiosk = (kiosk: Kiosk) => {
+    setEditingKiosk(kiosk);
+    setNewKiosk({
+      name: kiosk.name,
+      location: kiosk.location,
+      accessCode: kiosk.accessCode || '',
+      status: kiosk.status,
+      assignedCampaigns: kiosk.assignedCampaigns || [],
+      displayLayout: (kiosk.settings?.displayMode as 'grid' | 'list' | 'carousel') || 'grid'
+    });
+    setIsCreateDialogOpen(true);
   };
 
   const handleDeleteKiosk = (kiosk: Kiosk) => {
@@ -216,31 +230,6 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
     setShowAccessCodes(prev => ({
       ...prev,
       [kioskId]: !prev[kioskId]
-    }));
-  };
-  
-  const handleSaveKioskAssignment = async (updatedKiosk: Kiosk) => {
-    const { id, ...dataToSave } = updatedKiosk;
-    try {
-        const kioskRef = doc(db, 'kiosks', id);
-        await updateDoc(kioskRef, dataToSave);
-        refreshKiosks();
-    } catch (error) {
-        console.error("Error updating kiosk assignment: ", error);
-    }
-  };
-
-  const handleAssignCampaign = (campaignId: string) => {
-    setNewKiosk(prev => ({
-      ...prev,
-      assignedCampaigns: [...prev.assignedCampaigns, campaignId]
-    }));
-  };
-
-  const handleUnassignCampaign = (campaignId: string) => {
-    setNewKiosk(prev => ({
-      ...prev,
-      assignedCampaigns: prev.assignedCampaigns.filter(id => id !== campaignId)
     }));
   };
 
@@ -285,25 +274,13 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
         activeScreen="admin-kiosks"
       >
         <div className="min-h-screen bg-gray-50">
-          <header className="bg-white border-b border-gray-200">
-            <div className="px-4 sm:px-6 py-4">
-              <div className="flex items-center gap-4">
-                <div className="w-8 h-8 bg-black rounded flex items-center justify-center">
-                  <Monitor className="w-5 h-5 text-white" />
-                </div>
-                <h1 className="text-lg font-semibold text-gray-900">Kiosk Manager</h1>
-              </div>
+          <div className="text-center py-12">
+            <div className="animate-pulse">
+              <div className="w-12 h-12 bg-gray-300 rounded-full mx-auto mb-3"></div>
+              <div className="h-4 bg-gray-300 rounded w-32 mx-auto mb-2"></div>
+              <div className="h-3 bg-gray-300 rounded w-48 mx-auto"></div>
             </div>
-          </header>
-          <main className="p-4 sm:p-6">
-            <div className="text-center py-12">
-              <div className="animate-pulse">
-                <div className="w-12 h-12 bg-gray-300 rounded-full mx-auto mb-3"></div>
-                <div className="h-4 bg-gray-300 rounded w-32 mx-auto mb-2"></div>
-                <div className="h-3 bg-gray-300 rounded w-48 mx-auto"></div>
-              </div>
-            </div>
-          </main>
+          </div>
         </div>
       </AdminLayout>
     );
@@ -321,31 +298,96 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
         {/* Header */}
         <header className="bg-white border-b border-gray-200">
           <div className="px-4 sm:px-6 py-4">
-            <div className="flex items-center gap-4">
-              <div className="w-8 h-8 bg-black rounded flex items-center justify-center">
-                <Monitor className="w-5 h-5 text-white" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Button
+                  variant="ghost"
+                  onClick={() => onNavigate('admin-dashboard')}
+                  className="flex items-center gap-2 text-gray-600 hover:text-gray-800"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back to Dashboard
+                </Button>
               </div>
-              <h1 className="text-lg font-semibold text-gray-900">Kiosk Manager</h1>
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <Input
+                    placeholder="Search kiosks..."
+                    className="pl-10 w-64"
+                  />
+                </div>
+                <Button onClick={() => setIsCreateDialogOpen(true)} className="bg-blue-600 hover:bg-blue-700">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Kiosk
+                </Button>
+              </div>
             </div>
           </div>
         </header>
 
+        {/* Page Title */}
+        <div className="px-4 sm:px-6 py-6">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Kiosk Management</h1>
+          <p className="text-gray-600">Configure and monitor donation kiosks</p>
+        </div>
+
         {/* Main Content */}
         <main className="p-4 sm:p-6">
-          {/* Add New Kiosk Section - Always visible */}
-          <div className="mb-6 sm:mb-8">
-            <div className="max-w-2xl mx-auto">
-              <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 sm:p-12 text-center hover:border-gray-400 transition-colors font-lexend">
-                <div className="mb-4 sm:mb-6">
-                  <button
-                    onClick={() => setIsCreateDialogOpen(true)}
-                    className="w-12 h-12 sm:w-16 sm:h-16 bg-green-100 hover:bg-green-200 rounded-2xl flex items-center justify-center mx-auto mb-4 transition-colors"
-                  >
-                    <Plus className="w-6 h-6 sm:w-8 sm:h-8 text-green-600" />
-                  </button>
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="bg-white rounded-lg p-6 shadow-sm border">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total Kiosks</p>
+                  <p className="text-2xl font-bold text-gray-900">{kiosks.length}</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {kiosks.filter(k => k.status === 'online').length} online • {kiosks.filter(k => k.status === 'offline').length} offline
+                  </p>
                 </div>
-                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-2 sm:mb-3">Add New Kiosk</h2>
-                <p className="text-gray-500 text-sm sm:text-base">Deploy a new display unit to your fleet in seconds.</p>
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <Monitor className="w-6 h-6 text-blue-600" />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg p-6 shadow-sm border">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total Raised</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {formatCurrency(Object.values(performanceData).reduce((sum, data) => sum + (data?.totalRaised || 0), 0))}
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                  <DollarSign className="w-6 h-6 text-green-600" />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg p-6 shadow-sm border">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total Donations</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {Object.values(performanceData).reduce((sum, data) => sum + (data?.donorCount || 0), 0)}
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <Users className="w-6 h-6 text-purple-600" />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg p-6 shadow-sm border">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Maintenance</p>
+                  <p className="text-2xl font-bold text-gray-900">{kiosks.filter(k => k.status === 'maintenance').length}</p>
+                </div>
+                <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                  <Wrench className="w-6 h-6 text-orange-600" />
+                </div>
               </div>
             </div>
           </div>
@@ -353,6 +395,11 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
           {/* Kiosks Table */}
           {kiosks.length > 0 && (
             <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900">Kiosks ({kiosks.length})</h2>
+                <p className="text-sm text-gray-600">Monitor and manage your kiosk network</p>
+              </div>
+              
               {/* Mobile Card View */}
               <div className="block sm:hidden">
                 <div className="divide-y divide-gray-200">
@@ -454,10 +501,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => {
-                              setAssigningKiosk(kiosk);
-                              setIsAssignmentDialogOpen(true);
-                            }}
+                            onClick={() => handleEditKiosk(kiosk)}
                             className="text-gray-600 hover:text-gray-800 px-3 py-2"
                           >
                             <Edit className="w-4 h-4 mr-1" />
@@ -605,10 +649,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => {
-                                  setAssigningKiosk(kiosk);
-                                  setIsAssignmentDialogOpen(true);
-                                }}
+                                onClick={() => handleEditKiosk(kiosk)}
                                 className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600"
                                 title="Edit Kiosk"
                               >
@@ -637,7 +678,8 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
           )}
         </main>
       </div>
-      {/* Single Scrollable Kiosk Setup Modal */}
+
+      {/* Kiosk Setup/Edit Dialog */}
       <Dialog 
         open={isCreateDialogOpen} 
         onOpenChange={(open) => {
@@ -646,19 +688,20 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
             // Reset state when dialog closes
             setActiveSection('basic-info');
             setIsMobileSidebarOpen(false);
+            setEditingKiosk(null);
             setNewKiosk({ name: '', location: '', accessCode: '', status: 'offline', assignedCampaigns: [], displayLayout: 'grid' });
           }
         }}
       >
         <DialogContent className="sm:max-w-6xl p-0 border-0 shadow-2xl bg-white rounded-2xl overflow-hidden font-lexend max-h-[90vh] w-[95vw] sm:w-full">
           <VisuallyHidden>
-            <DialogTitle>Kiosk Setup Configuration</DialogTitle>
+            <DialogTitle>{editingKiosk ? 'Edit Kiosk Configuration' : 'Kiosk Setup Configuration'}</DialogTitle>
           </VisuallyHidden>
           <div className="flex flex-col sm:flex-row h-[90vh] sm:h-[700px]">
             {/* Mobile Header with Hamburger */}
             <div className="sm:hidden flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Kiosk Setup</h3>
+                <h3 className="text-lg font-semibold text-gray-900">{editingKiosk ? 'Edit Kiosk' : 'Kiosk Setup'}</h3>
                 <p className="text-sm text-gray-500">Configuration</p>
               </div>
               <Button
@@ -708,7 +751,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                         onClick={() => {
                           setActiveSection(item.id);
                           scrollToSection(item.id);
-                          setIsMobileSidebarOpen(false); // Close mobile sidebar after selection
+                          setIsMobileSidebarOpen(false);
                         }}
                         onKeyDown={(e) => handleNavKeyDown(e, item.id)}
                         className={`w-full flex items-center gap-3 px-4 sm:px-5 py-3 sm:py-4 rounded-lg cursor-pointer transition-colors text-left ${
@@ -733,7 +776,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
               <header className="hidden sm:flex items-center justify-between p-6 lg:p-8 border-b border-gray-200">
                 <div className="flex items-center gap-4">
                   <div className="text-base text-gray-500 uppercase tracking-wide font-medium">
-                    SETUP • NEW KIOSK
+                    {editingKiosk ? 'EDIT • KIOSK' : 'SETUP • NEW KIOSK'}
                   </div>
                 </div>
               </header>
@@ -742,23 +785,18 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
               <div 
                 ref={scrollContainerRef}
                 className="flex-1 overflow-y-auto"
-                role="main"
-                aria-label="Kiosk configuration content"
               >
                 {/* Basic Information Section */}
                 <section 
                   id="basic-info"
-                  ref={(el) => { sectionRefs.current['basic-info'] = el; }}
                   className="p-4 sm:p-6 lg:p-8 border-b border-gray-100"
-                  aria-labelledby="basic-info-heading"
                 >
                   <div className="max-w-4xl">
-                    <h2 id="basic-info-heading" className="text-xl sm:text-2xl font-semibold text-gray-900 mb-6 sm:mb-8">
+                    <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-6 sm:mb-8">
                       Basic Information
                     </h2>
                     
                     <div className="space-y-6">
-                      {/* Single column on mobile, two columns on larger screens */}
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <div className="lg:col-span-2">
                           <Label htmlFor="kioskName" className="text-sm font-medium text-gray-700 mb-2 block">
@@ -768,7 +806,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                             id="kioskName"
                             value={newKiosk.name}
                             onChange={(e) => setNewKiosk(p => ({ ...p, name: e.target.value }))}
-                            placeholder="e.g. West Wing Visitor Display"
+                            placeholder="e.g. Reception Donation Terminal"
                             className="h-12 text-base border-gray-300 rounded-lg focus:border-green-500 focus:ring-green-500"
                           />
                         </div>
@@ -781,7 +819,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                             id="kioskLocation"
                             value={newKiosk.location}
                             onChange={(e) => setNewKiosk(p => ({ ...p, location: e.target.value }))}
-                            placeholder="e.g. Headquarters, Building B, Near Elevators"
+                            placeholder="e.g. Main Foyer, Ground Floor, Near Lifts"
                             className="h-12 text-base border-gray-300 rounded-lg focus:border-green-500 focus:ring-green-500"
                           />
                         </div>
@@ -794,7 +832,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                             id="accessCode"
                             value={newKiosk.accessCode}
                             onChange={(e) => setNewKiosk(p => ({ ...p, accessCode: e.target.value }))}
-                            placeholder="e.g. TSK-0001-AB"
+                            placeholder="e.g. DON-001-UK"
                             className="h-12 text-base border-gray-300 rounded-lg focus:border-green-500 focus:ring-green-500"
                           />
                         </div>
@@ -825,12 +863,10 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                 {/* Campaigns Section */}
                 <section 
                   id="campaigns"
-                  ref={(el) => { sectionRefs.current['campaigns'] = el; }}
                   className="p-4 sm:p-6 lg:p-8 border-b border-gray-100"
-                  aria-labelledby="campaigns-heading"
                 >
                   <div className="max-w-4xl">
-                    <h2 id="campaigns-heading" className="text-xl sm:text-2xl font-semibold text-gray-900 mb-6 sm:mb-8">
+                    <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-6 sm:mb-8">
                       Campaigns
                     </h2>
                     
@@ -846,16 +882,15 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                         </Badge>
                       </div>
                       
-                      {/* Scrollable container for mobile */}
-                      <div className="max-h-64 sm:max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400">
+                      <div className="max-h-64 sm:max-h-80 overflow-y-auto">
                         {newKiosk.assignedCampaigns.length === 0 ? (
                           <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 sm:p-8 text-center">
                             <button
-                              onClick={scrollToAvailableCampaignsInModal}
-                              className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 hover:bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3 transition-colors cursor-pointer"
+                              onClick={() => scrollToSection('available-campaigns')}
+                              className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 hover:bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3 transition-colors cursor-pointer group"
                               aria-label="Scroll to available campaigns"
                             >
-                              <Plus className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400 hover:text-green-600 transition-colors" />
+                              <Plus className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400 group-hover:text-green-600 transition-colors" />
                             </button>
                             <h4 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No campaigns assigned</h4>
                             <p className="text-gray-500 text-sm">Select campaigns from the available list below to get started</p>
@@ -912,7 +947,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                     </div>
 
                     {/* Available Campaigns Section */}
-                    <div ref={availableCampaignsRef}>
+                    <div id="available-campaigns">
                       <div className="flex items-center gap-2 mb-4">
                         <Plus className="w-5 h-5 text-gray-400" />
                         <h3 className="text-base sm:text-lg font-medium text-gray-900">Available Campaigns</h3>
@@ -921,8 +956,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                         </Badge>
                       </div>
                       
-                      {/* Scrollable container for mobile */}
-                      <div className="max-h-64 sm:max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400">
+                      <div className="max-h-64 sm:max-h-80 overflow-y-auto">
                         <div className="space-y-3">
                           {campaigns
                             .filter(campaign => !newKiosk.assignedCampaigns.includes(campaign.id))
@@ -983,12 +1017,10 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                 {/* Display Section */}
                 <section 
                   id="display"
-                  ref={(el) => { sectionRefs.current['display'] = el; }}
                   className="p-4 sm:p-6 lg:p-8"
-                  aria-labelledby="display-heading"
                 >
                   <div className="max-w-4xl">
-                    <h2 id="display-heading" className="text-xl sm:text-2xl font-semibold text-gray-900 mb-6 sm:mb-8">
+                    <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-6 sm:mb-8">
                       Campaign View
                     </h2>
                     
@@ -1146,7 +1178,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                   }}
                   className="text-gray-600 hover:text-gray-800 w-full sm:w-auto order-2 sm:order-1"
                 >
-                  <FileText className="w-4 h-4 mr-2" />
+                  <Save className="w-4 h-4 mr-2" />
                   SAVE DRAFT
                 </Button>
                 
@@ -1168,7 +1200,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                     className="bg-black hover:bg-gray-800 text-white px-6 w-full sm:w-auto h-12 sm:h-auto"
                   >
                     <Save className="w-4 h-4 mr-2" />
-                    SAVE KIOSK
+                    {editingKiosk ? 'UPDATE KIOSK' : 'SAVE KIOSK'}
                   </Button>
                 </div>
               </footer>
@@ -1176,14 +1208,6 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
           </div>
         </DialogContent>
       </Dialog>
-      
-      <KioskCampaignAssignmentDialog 
-        open={isAssignmentDialogOpen} 
-        onOpenChange={setIsAssignmentDialogOpen} 
-        kiosk={assigningKiosk} 
-        campaigns={campaigns} 
-        onSave={handleSaveKioskAssignment} 
-      />
       
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
