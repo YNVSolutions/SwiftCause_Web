@@ -3,6 +3,8 @@ import { db } from '../../shared/lib/firebase';
 import { useKiosks } from '../../shared/lib/hooks/useKiosks';
 import { useCampaigns } from '../../entities/campaign';
 import { useKioskPerformance } from '../../shared/lib/hooks/useKioskPerformance';
+import { useOrganization } from "../../shared/lib/hooks/useOrganization";
+import { useStripeOnboarding, StripeOnboardingDialog } from "../../features/stripe-onboarding";
 import {
   collection,
   updateDoc,
@@ -36,7 +38,27 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
   const { campaigns, loading: campaignsLoading, refresh: refreshCampaigns } = useCampaigns(userSession.user.organizationId);
   const performanceData = useKioskPerformance(kiosks);
   
+  // Stripe onboarding state & hooks
+  const { organization, loading: orgLoading } = useOrganization(
+    userSession.user.organizationId ?? null
+  );
+  const { needsOnboarding } = useStripeOnboarding(organization);
+  const [showOnboardingDialog, setShowOnboardingDialog] = useState(false);
+  
+  // Search + status filter state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'online' | 'offline' | 'maintenance'>('all');
+  
   const isLoading = kiosksLoading || campaignsLoading;
+
+  // Filtered kiosks derived state
+  const filteredKiosks = kiosks.filter((kiosk) => {
+    const matchesSearch = kiosk.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      kiosk.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      kiosk.id.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || kiosk.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingKiosk, setEditingKiosk] = useState<Kiosk | null>(null);
@@ -107,6 +129,11 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
   };
 
   const handleAssignCampaign = (campaignId: string) => {
+    if (needsOnboarding) {
+      setShowOnboardingDialog(true);
+      return;
+    }
+    
     setNewKiosk(prev => ({
       ...prev,
       assignedCampaigns: [...prev.assignedCampaigns, campaignId]
@@ -121,26 +148,25 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
   };
 
   const handleCreateKiosk = async () => {
+    if (needsOnboarding) {
+      setShowOnboardingDialog(true);
+      return;
+    }
+    
     if (!newKiosk.name || !newKiosk.location || !userSession) return;
     try {
       if (editingKiosk) {
         // Update existing kiosk
         const updatedKioskData = {
-          ...newKiosk,
+          ...editingKiosk,
+          name: newKiosk.name,
+          location: newKiosk.location,
+          accessCode: newKiosk.accessCode,
           status: newKiosk.status,
-          lastActive: editingKiosk.lastActive,
-          totalDonations: editingKiosk.totalDonations,
-          totalRaised: editingKiosk.totalRaised,
           assignedCampaigns: newKiosk.assignedCampaigns,
-          defaultCampaign: editingKiosk.defaultCampaign,
-          deviceInfo: editingKiosk.deviceInfo || {},
-          operatingHours: editingKiosk.operatingHours || {},
-          settings: { 
-            displayMode: newKiosk.displayLayout, 
-            showAllCampaigns: true, 
-            maxCampaignsDisplay: 6, 
-            autoRotateCampaigns: false,
-            ...editingKiosk.settings
+          settings: {
+            ...editingKiosk.settings,
+            displayMode: newKiosk.displayLayout,
           },
           organizationId: userSession.user.organizationId,
         };
@@ -315,6 +341,8 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                   <Input
                     placeholder="Search kiosks..."
                     className="pl-10 w-64"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
                 <Button onClick={() => setIsCreateDialogOpen(true)} className="bg-blue-600 hover:bg-blue-700">
@@ -340,9 +368,9 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Total Kiosks</p>
-                  <p className="text-2xl font-bold text-gray-900">{kiosks.length}</p>
+                  <p className="text-2xl font-bold text-gray-900">{filteredKiosks.length}</p>
                   <p className="text-xs text-gray-500 mt-1">
-                    {kiosks.filter(k => k.status === 'online').length} online • {kiosks.filter(k => k.status === 'offline').length} offline
+                    {filteredKiosks.filter(k => k.status === 'online').length} online • {filteredKiosks.filter(k => k.status === 'offline').length} offline
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -383,7 +411,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Maintenance</p>
-                  <p className="text-2xl font-bold text-gray-900">{kiosks.filter(k => k.status === 'maintenance').length}</p>
+                  <p className="text-2xl font-bold text-gray-900">{filteredKiosks.filter(k => k.status === 'maintenance').length}</p>
                 </div>
                 <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
                   <Wrench className="w-6 h-6 text-orange-600" />
@@ -393,17 +421,17 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
           </div>
 
           {/* Kiosks Table */}
-          {kiosks.length > 0 && (
+          {filteredKiosks.length > 0 && (
             <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900">Kiosks ({kiosks.length})</h2>
+                <h2 className="text-lg font-semibold text-gray-900">Kiosks ({filteredKiosks.length})</h2>
                 <p className="text-sm text-gray-600">Monitor and manage your kiosk network</p>
               </div>
               
               {/* Mobile Card View */}
               <div className="block sm:hidden">
                 <div className="divide-y divide-gray-200">
-                  {kiosks.map((kiosk) => (
+                  {filteredKiosks.map((kiosk) => (
                     <div key={kiosk.id} className="p-4 space-y-4">
                       {/* Kiosk Header */}
                       <div className="flex items-start justify-between">
@@ -548,7 +576,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                     </TableRow>
                   </TableHeader>
                   <TableBody className="bg-white divide-y divide-gray-200">
-                    {kiosks.map((kiosk) => (
+                    {filteredKiosks.map((kiosk) => (
                       <TableRow key={kiosk.id} className="hover:bg-gray-50">
                         <TableCell className="px-4 lg:px-6 py-4 whitespace-nowrap">
                           <div className="space-y-3">
@@ -1247,6 +1275,14 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
           </div>
         </DialogContent>
       </Dialog>
+      
+      {/* Stripe Onboarding Dialog */}
+      <StripeOnboardingDialog
+        open={showOnboardingDialog}
+        onOpenChange={setShowOnboardingDialog}
+        organization={organization}
+        loading={orgLoading}
+      />
     </AdminLayout>
   );
 }
