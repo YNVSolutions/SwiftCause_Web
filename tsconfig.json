@@ -40,6 +40,12 @@
       ],
       "@/views/*": [
         "./src/views/*"
+      ],
+      "@/components/*": [
+        "./src/components/*"
+      ],
+      "@/services/*": [
+        "./src/services/*"
       ]
     }
   },
