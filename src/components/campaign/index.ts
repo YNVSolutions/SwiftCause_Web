@@ -1,1 +1,1 @@
-export { CampaignForm } from './CampaignForm';
+export { CampaignCreationForm } from './CampaignCreationForm';
