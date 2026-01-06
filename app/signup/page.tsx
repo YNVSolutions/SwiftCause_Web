@@ -14,8 +14,13 @@ export default function Signup() {
   const handleSignupWithToast = async (signupData: SignupFormData) => {
     try {
       await handleSignup(signupData)
-      showToast('Signup successful', 'success')
-      router.push('/login')
+      showToast('Account created successfully! Redirecting to dashboard...', 'success')
+      
+      // Small delay to ensure session is established
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
+      // Redirect to admin dashboard
+      router.push('/admin')
     } catch (error) {
       if (error instanceof Error) {
         showToast(`Signup failed: ${error.message}`, 'error', 3500)
