@@ -57,9 +57,9 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
   const config = campaign.configuration;
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-GB', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'GBP',
       minimumFractionDigits: 0
     }).format(amount);
   };

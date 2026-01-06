@@ -19,14 +19,16 @@ import { Button } from '../../shared/ui/button';
 import { Input } from '../../shared/ui/input';
 import { Label } from '../../shared/ui/label';
 import { Badge } from '../../shared/ui/badge';
+import { Card, CardContent } from '../../shared/ui/card';
 import { Dialog, DialogContent, DialogTitle, VisuallyHidden } from '../../shared/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../shared/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
 
 import {
-  Plus, Edit, Trash2, MapPin, Monitor, AlertTriangle, Save, Eye, EyeOff, Copy, Check, ArrowLeft, Search, DollarSign, Users, Wrench, Menu, X, Grid3X3, List, GalleryThumbnails, Image
+  Plus, Edit, Trash2, MapPin, Monitor, AlertTriangle, Save, Eye, EyeOff, Copy, Check, ArrowLeft, Search, DollarSign, Users, Wrench, Menu, X, Grid3X3, List, GalleryThumbnails, Image, Settings, Activity
 } from 'lucide-react';
 import { AdminLayout } from './AdminLayout';
+
 
 export function KioskManagement({ onNavigate, onLogout, userSession, hasPermission }: {
   onNavigate: (screen: Screen) => void;
@@ -42,7 +44,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
   const { organization, loading: orgLoading } = useOrganization(
     userSession.user.organizationId ?? null
   );
-  const { needsOnboarding } = useStripeOnboarding(organization);
+  const { isStripeOnboarded, needsOnboarding } = useStripeOnboarding(organization);
   const [showOnboardingDialog, setShowOnboardingDialog] = useState(false);
   
   // Search + status filter state
@@ -59,6 +61,15 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
     const matchesStatus = statusFilter === 'all' || kiosk.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  // Calculate total stats
+  const totalStats = {
+    online: filteredKiosks.filter(k => k.status === 'online').length,
+    offline: filteredKiosks.filter(k => k.status === 'offline').length,
+    maintenance: filteredKiosks.filter(k => k.status === 'maintenance').length,
+    totalRaised: Object.values(performanceData).reduce((sum, data) => sum + (data?.totalRaised || 0), 0),
+    totalDonations: Object.values(performanceData).reduce((sum, data) => sum + (data?.donorCount || 0), 0)
+  };
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingKiosk, setEditingKiosk] = useState<Kiosk | null>(null);
@@ -259,7 +270,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
     }));
   };
 
-  const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(amount);
+  const formatCurrency = (amount: number) => new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', minimumFractionDigits: 0 }).format(amount);
   
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -334,227 +345,54 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                   <ArrowLeft className="w-4 h-4" />
                   Back to Dashboard
                 </Button>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                  <Input
-                    placeholder="Search kiosks..."
-                    className="pl-10 w-64"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
+                <div className="h-6 w-px bg-gray-300 hidden sm:block" />
+                <div>
+                  <h1 className="text-xl font-semibold text-gray-900">Kiosk Management</h1>
+                  <p className="text-sm text-gray-600">Configure and monitor donation kiosks</p>
                 </div>
-                <Button onClick={() => setIsCreateDialogOpen(true)} className="bg-blue-600 hover:bg-blue-700">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Kiosk
-                </Button>
+              </div>
+              <div className="flex flex-col sm:flex-row items-stretch gap-2 mb-6 sm:mb-0 mt-2">
+                <div className="w-full sm:w-80">
+                  <div className="relative">
+                    <div className="h-10 items-center flex flex-row gap-5 border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                      <div>
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                      </div>
+                      <div>
+                        <Input
+                          placeholder="Search kiosks..."
+                          value={searchTerm}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+                          className="pl-10 w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {hasPermission('create_kiosk') && (
+                  <Button onClick={() => setIsCreateDialogOpen(true)} className="bg-indigo-600 hover:bg-indigo-700">
+                    <Plus className="w-4 h-4 mr-2" />Add Kiosk
+                  </Button>
+                )}
               </div>
             </div>
           </div>
         </header>
-
-        {/* Page Title */}
-        <div className="px-4 sm:px-6 py-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Kiosk Management</h1>
-          <p className="text-gray-600">Configure and monitor donation kiosks</p>
-        </div>
-
-        {/* Main Content */}
-        <main className="p-4 sm:p-6">
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-lg p-6 shadow-sm border">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Kiosks</p>
-                  <p className="text-2xl font-bold text-gray-900">{filteredKiosks.length}</p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {filteredKiosks.filter(k => k.status === 'online').length} online • {filteredKiosks.filter(k => k.status === 'offline').length} offline
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Monitor className="w-6 h-6 text-blue-600" />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg p-6 shadow-sm border">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Raised</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {formatCurrency(Object.values(performanceData).reduce((sum, data) => sum + (data?.totalRaised || 0), 0))}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <DollarSign className="w-6 h-6 text-green-600" />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg p-6 shadow-sm border">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Donations</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {Object.values(performanceData).reduce((sum, data) => sum + (data?.donorCount || 0), 0)}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <Users className="w-6 h-6 text-purple-600" />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg p-6 shadow-sm border">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Maintenance</p>
-                  <p className="text-2xl font-bold text-gray-900">{filteredKiosks.filter(k => k.status === 'maintenance').length}</p>
-                </div>
-                <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                  <Wrench className="w-6 h-6 text-orange-600" />
-                </div>
-              </div>
-            </div>
+        <main className="px-2 sm:px-6 lg:px-8 py-4 sm:py-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Kiosks</p><p className="text-2xl font-semibold text-gray-900">{filteredKiosks.length}</p><div className="flex items-center space-x-4 text-xs text-gray-500 mt-1"><span className="text-green-600">{totalStats.online} online</span><span className="text-red-600">{totalStats.offline} offline</span></div></div><Settings className="h-8 w-8 text-blue-600" /></div></CardContent></Card>
+            <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Raised</p><p className="text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.totalRaised)}</p></div><DollarSign className="h-8 w-8 text-green-600" /></div></CardContent></Card>
+            <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Donations</p><p className="text-2xl font-semibold text-gray-900">{totalStats.totalDonations.toLocaleString()}</p></div><Users className="h-8 w-8 text-purple-600" /></div></CardContent></Card>
+            <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Maintenance</p><p className="text-2xl font-semibold text-gray-900">{totalStats.maintenance}</p></div><Activity className="h-8 w-8 text-orange-600" /></div></CardContent></Card>
           </div>
-
-          {/* Kiosks Table */}
-          {filteredKiosks.length > 0 && (
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900">Kiosks ({filteredKiosks.length})</h2>
-                <p className="text-sm text-gray-600">Monitor and manage your kiosk network</p>
-              </div>
-              
-              {/* Mobile Card View */}
-              <div className="block sm:hidden">
-                <div className="divide-y divide-gray-200">
-                  {filteredKiosks.map((kiosk) => (
-                    <div key={kiosk.id} className="p-4 space-y-4">
-                      {/* Kiosk Header */}
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-base font-medium text-gray-900 truncate">{kiosk.name}</h3>
-                          <div className="flex items-center gap-1 mt-1">
-                            <MapPin className="w-3 h-3 text-gray-400 flex-shrink-0" />
-                            <span className="text-sm text-gray-500 truncate">{kiosk.location}</span>
-                          </div>
-                        </div>
-                        <div className="ml-2 flex-shrink-0">
-                          {getStatusBadge(kiosk.status)}
-                        </div>
-                      </div>
-
-                      {/* Performance */}
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-500">Total Raised:</span>
-                        <span className="font-medium text-gray-900">
-                          {formatCurrency(performanceData[kiosk.id]?.totalRaised || 0)}
-                        </span>
-                      </div>
-
-                      {/* Campaign Assignment */}
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-500">Campaigns:</span>
-                        <span className="text-gray-900">
-                          {(() => {
-                            const assignedIds = Array.from(new Set(kiosk.assignedCampaigns || [])).filter(Boolean);
-                            const assignedCount = campaigns.filter((c) => assignedIds.includes(c.id)).length;
-                            return `${assignedCount} assigned`;
-                          })()}
-                        </span>
-                      </div>
-
-                      {/* Kiosk Details */}
-                      <div className="bg-gray-50 rounded-lg p-3 text-xs space-y-2">
-                        <div>
-                          <div className="text-gray-500 uppercase font-medium mb-1">Kiosk ID</div>
-                          <div className="font-mono text-gray-900 flex items-center justify-between">
-                            <span className="truncate text-xs">{kiosk.id}</span>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => copyKioskId(kiosk.id)}
-                              className="h-auto p-1 text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                              title="Copy ID"
-                            >
-                              {copiedIds[kiosk.id] ? (
-                                <>
-                                  <Check className="w-3 h-3" />
-                                  <span className="hidden xs:inline">Copied</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Copy className="w-3 h-3" />
-                                  <span className="hidden xs:inline">Copy</span>
-                                </>
-                              )}
-                            </Button>
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-gray-500 uppercase font-medium mb-1">Access Code</div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-blue-600 font-medium font-mono text-xs">
-                              {showAccessCodes[kiosk.id] ? (kiosk.accessCode || 'Not set') : '••••••'}
-                            </span>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => toggleAccessCode(kiosk.id)}
-                              className="h-auto p-1 text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                              title={showAccessCodes[kiosk.id] ? "Hide Access Code" : "Show Access Code"}
-                            >
-                              {showAccessCodes[kiosk.id] ? (
-                                <>
-                                  <EyeOff className="w-3 h-3" />
-                                  <span className="hidden xs:inline">Hide</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Eye className="w-3 h-3" />
-                                  <span className="hidden xs:inline">Show</span>
-                                </>
-                              )}
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
-                        {hasPermission('edit_kiosk') && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEditKiosk(kiosk)}
-                            className="text-gray-600 hover:text-gray-800 px-3 py-2"
-                          >
-                            <Edit className="w-4 h-4 mr-1" />
-                            Edit
-                          </Button>
-                        )}
-                        {hasPermission('delete_kiosk') && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeleteKiosk(kiosk)}
-                            className="text-red-600 hover:text-red-800 border-red-200 hover:bg-red-50 px-3 py-2"
-                          >
-                            <Trash2 className="w-4 h-4 mr-1" />
-                            Delete
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Desktop Table View */}
-              <div className="hidden sm:block overflow-x-auto">
+          {/* Modern Table Container */}
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div className="px-6 py-5 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">Kiosks ({filteredKiosks.length})</h3>
+              <p className="text-sm text-gray-600 mt-1">Monitor and manage your kiosk network</p>
+            </div>
+            <div className="overflow-x-auto">
+              {filteredKiosks.length > 0 ? (
                 <Table className="min-w-full">
                   <TableHeader>
                     <TableRow className="bg-gray-50 border-b border-gray-200">
@@ -701,9 +539,13 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                     ))}
                   </TableBody>
                 </Table>
-              </div>
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-gray-500">No kiosks found matching your search criteria.</p>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </main>
       </div>
 

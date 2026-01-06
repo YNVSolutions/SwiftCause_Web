@@ -7,6 +7,9 @@ import { Badge } from '../../shared/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
 import { Checkbox } from '../../shared/ui/checkbox';
 import { Progress } from '../../shared/ui/progress';
+import { CurrencyRequestDialog } from '../../shared/ui/CurrencyRequestDialog';
+import { PersistentNotification } from '../../shared/ui/PersistentNotification';
+import { submitCurrencyRequest } from '../../shared/api/firestoreService';
 import { 
   Heart,
   Shield,
@@ -82,6 +85,10 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<Partial<SignupFormData>>({});
+  const [requestDifferentCurrency, setRequestDifferentCurrency] = useState(false);
+  const [currencyRequestSubmitted, setCurrencyRequestSubmitted] = useState(false);
+  const [showCurrencyDialog, setShowCurrencyDialog] = useState(false);
+  const [showSuccessNotification, setShowSuccessNotification] = useState(false);
   
   const [formData, setFormData] = useState<SignupFormData>({
     firstName: '',
@@ -147,7 +154,11 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
       if (!formData.organizationType) newErrors.organizationType = 'Organization type is required';
       if (!formData.organizationSize) newErrors.organizationSize = 'Organization size is required';
     }  else if (step === 3) {
-      if (!formData.currency) newErrors.currency = 'Currency is required';
+      // Currency is hardcoded to GBP, no validation needed
+      // But if they checked the box, they must complete the request
+      if (requestDifferentCurrency && !currencyRequestSubmitted) {
+        newErrors.currency = 'Please complete your currency request or uncheck the option';
+      }
     } else if (step === 4) {
       if (!formData.password) newErrors.password = 'Password is required';
       else if (formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
@@ -181,6 +192,50 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
           payoutsEnabled: false,
         },
       });
+    }
+  };
+
+  const handleCurrencyRequest = async (currency: string, notes: string) => {
+    try {
+      await submitCurrencyRequest({
+        email: formData.email,
+        requestedCurrency: currency,
+        notes: notes,
+        organizationName: formData.organizationName,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+      });
+      
+      // Mark as submitted
+      setCurrencyRequestSubmitted(true);
+      
+      // Show persistent notification
+      setShowSuccessNotification(true);
+      
+    } catch (error) {
+      console.error('Error submitting currency request:', error);
+      throw new Error('Failed to submit currency request. Please try again.');
+    }
+  };
+
+  const handleCurrencyCheckboxChange = (checked: boolean) => {
+    if (checked) {
+      // User wants to request different currency
+      setRequestDifferentCurrency(true);
+      setShowCurrencyDialog(true);
+    } else {
+      // User unchecked - reset everything
+      setRequestDifferentCurrency(false);
+      setCurrencyRequestSubmitted(false);
+      setShowCurrencyDialog(false);
+    }
+  };
+
+  const handleCurrencyDialogClose = () => {
+    setShowCurrencyDialog(false);
+    // If user closes dialog without submitting, uncheck the checkbox
+    if (!currencyRequestSubmitted) {
+      setRequestDifferentCurrency(false);
     }
   };
 
@@ -493,35 +548,84 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                   )}
 
                   {/* Currency Selection */}
+                  {/* Currency Selection */}
                   {currentStep === 3 && (
                     <div className="space-y-4">
                       <div className="text-center mb-6">
                         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-yellow-100">
                           <DollarSign className="h-6 w-6 text-yellow-600" />
                         </div>
-                        <h3 className="text-lg font-semibold text-gray-900">Select Your Currency</h3>
-                        <p className="text-sm text-gray-600">Choose the primary currency for your organization's payments.</p>
+                        <h3 className="text-lg font-semibold text-gray-900">Currency Settings</h3>
+                        <p className="text-sm text-gray-600">Your organization will use GBP for all transactions</p>
                       </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="currency">Currency</Label>
-                        <Select
-                          value={formData.currency}
-                          onValueChange={(value: string) => updateFormData('currency', value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select currency" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="GBP">GBP (£) - British Pound</SelectItem>
-                            <SelectItem value="USD">USD ($) - United States Dollar</SelectItem>
-                            <SelectItem value="EUR">EUR (€) - Euro</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <p className="text-xs text-red-600 flex items-center mt-1">
-                          <AlertCircle className="w-3 h-3 mr-1" />
-                          Important: You will not be able to change this currency later.
-                        </p>
+                      <div className="space-y-4">
+                        {/* Display Default Currency */}
+                        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-lg p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center">
+                                <DollarSign className="w-6 h-6 text-indigo-600" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-gray-700">Default Currency</p>
+                                <p className="text-lg font-bold text-gray-900">GBP (£) - British Pound</p>
+                              </div>
+                            </div>
+                            <CheckCircle className="w-6 h-6 text-green-600" />
+                          </div>
+                          <p className="text-xs text-gray-600 mt-3">
+                            All donations, campaigns, and financial reports will use GBP as the primary currency.
+                          </p>
+                        </div>
+
+                        {/* Request Different Currency Checkbox */}
+                        <div className={`border rounded-lg p-4 bg-white ${errors.currency ? 'border-red-500' : 'border-gray-200'}`}>
+                          <div className="flex items-start space-x-3">
+                            <Checkbox
+                              id="requestDifferentCurrency"
+                              checked={requestDifferentCurrency}
+                              onCheckedChange={handleCurrencyCheckboxChange}
+                            />
+                            <div className="flex-1">
+                              <label 
+                                htmlFor="requestDifferentCurrency" 
+                                className="text-sm font-medium text-gray-900 cursor-pointer"
+                              >
+                                Request a different currency (USD, INR, or Custom)
+                              </label>
+                              <p className="text-xs text-gray-600 mt-1">
+                                Need to use a different currency? We'll review your request and notify you when it's available.
+                              </p>
+                              {currencyRequestSubmitted && (
+                                <div className="mt-2 flex items-center space-x-2 text-xs text-green-600">
+                                  <CheckCircle className="w-4 h-4" />
+                                  <span className="font-medium">Request submitted successfully</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          {errors.currency && (
+                            <p className="text-xs text-red-600 flex items-center mt-2 ml-7">
+                              <AlertCircle className="w-3 h-3 mr-1" />
+                              {errors.currency}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Info Box */}
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                          <div className="flex items-start space-x-3">
+                            <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                            <div className="text-sm text-blue-800">
+                              <p className="font-medium mb-1">Important Information</p>
+                              <p className="text-xs">
+                                Currency settings are configured during account setup and optimized for UK operations. 
+                                If you need a different currency, submit a request and we'll notify you when it's available.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -650,6 +754,26 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
           </div>
         </div>
       </div>
+
+      {/* Currency Request Dialog */}
+      <CurrencyRequestDialog
+        isOpen={showCurrencyDialog}
+        onClose={handleCurrencyDialogClose}
+        onSubmit={handleCurrencyRequest}
+        email={formData.email}
+        organizationName={formData.organizationName}
+        firstName={formData.firstName}
+        lastName={formData.lastName}
+      />
+
+      {/* Persistent Success Notification */}
+      <PersistentNotification
+        isOpen={showSuccessNotification}
+        onClose={() => setShowSuccessNotification(false)}
+        title="Currency Request Submitted"
+        message="We have submitted your request for currency updation. We will send you notification when it will be added to the system. Till then please use GBP."
+        type="success"
+      />
     </div>
   );
 }

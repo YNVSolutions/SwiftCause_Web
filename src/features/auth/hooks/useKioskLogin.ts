@@ -51,7 +51,7 @@ export function useKioskLogin(onLogin: OnLogin) {
 				autoRotateCampaigns: false
 			},
 			loginMethod: 'manual',
-			organizationCurrency: organizationCurrency || 'USD',
+			organizationCurrency: organizationCurrency || 'GBP',
 		};
 
 		onLogin('kiosk', kioskSession);

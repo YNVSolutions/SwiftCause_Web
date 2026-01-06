@@ -76,11 +76,11 @@ export function CampaignCard({
               <div className="space-y-1">
                 <div className="flex justify-between text-xs sm:text-sm">
                   <span className="text-muted-foreground">Raised</span>
-                  <span className="text-green-600">{formatCurrency(raisedAmount, organizationCurrency || 'USD')}</span>
+                  <span className="text-green-600">{formatCurrency(raisedAmount, organizationCurrency || 'GBP')}</span>
                 </div>
                 <Progress value={getProgressPercentage(raisedAmount, campaign.goal)} className="h-1.5" />
                 <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>{getProgressPercentage(raisedAmount, campaign.goal).toFixed(0)}% of {formatCurrency(campaign.goal, organizationCurrency || 'USD')}</span>
+                  <span>{getProgressPercentage(raisedAmount, campaign.goal).toFixed(0)}% of {formatCurrency(campaign.goal, organizationCurrency || 'GBP')}</span>
                 </div>
               </div>
             </div>
@@ -159,14 +159,14 @@ export function CampaignCard({
         <div className="space-y-2">
           <div className="flex justify-between text-xs sm:text-sm">
             <span className="text-muted-foreground">Raised</span>
-            <span className="text-green-600">{formatCurrency(raisedAmount, organizationCurrency || 'USD')}</span>
+            <span className="text-green-600">{formatCurrency(raisedAmount, organizationCurrency || 'GBP')}</span>
           </div>
           <Progress value={getProgressPercentage(raisedAmount, campaign.goal)} className="h-2" />
           <div className="flex justify-between text-xs sm:text-sm">
             <span className="text-muted-foreground">
               {campaign.goal ? getProgressPercentage(raisedAmount, campaign.goal).toFixed(1) + "% of goal" : 'N/A'}
             </span>
-            <span className="text-muted-foreground">Goal: { campaign.goal ? formatCurrency(campaign.goal, organizationCurrency || 'USD') : 'N/A'}</span>
+            <span className="text-muted-foreground">Goal: { campaign.goal ? formatCurrency(campaign.goal, organizationCurrency || 'GBP') : 'N/A'}</span>
           </div>
         </div>
 
