@@ -89,6 +89,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
   const [currencyRequestSubmitted, setCurrencyRequestSubmitted] = useState(false);
   const [showCurrencyDialog, setShowCurrencyDialog] = useState(false);
   const [showSuccessNotification, setShowSuccessNotification] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [formData, setFormData] = useState<SignupFormData>({
     firstName: '',
@@ -163,7 +164,9 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
       if (!formData.password) newErrors.password = 'Password is required';
       else if (formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
       if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
-
+      
+      // Add terms validation
+      if (!formData.agreeToTerms) newErrors.agreeToTerms = 'You must agree to the Terms of Service';
     }
 
     setErrors(newErrors);
@@ -181,17 +184,24 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
   };
 
   // Updated handleSignup to include initial data for permissions and isActive
-  const handleSubmit = () => {
-    if (validateStep(currentStep)) {
-      onSignup({
-        ...formData,
-        organizationId: formData.organizationName.replace(/\s+/g, '-').toLowerCase(), // Generate organizationId
-        stripe: {
-          accountId: '',
-          chargesEnabled: false,
-          payoutsEnabled: false,
-        },
-      });
+  const handleSubmit = async () => {
+    if (validateStep(currentStep) && !isSubmitting) {
+      setIsSubmitting(true)
+      try {
+        await onSignup({
+          ...formData,
+          organizationId: formData.organizationName.replace(/\s+/g, '-').toLowerCase(), // Generate organizationId
+          stripe: {
+            accountId: '',
+            chargesEnabled: false,
+            payoutsEnabled: false,
+          },
+        })
+      } catch (error) {
+        // Error is handled by parent component
+        setIsSubmitting(false)
+      }
+      // Don't set isSubmitting to false on success - let redirect happen
     }
   };
 
@@ -270,6 +280,21 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
 
 
   const stepProgress = (currentStep / 4) * 100;
+
+  // Show loading overlay during submission
+  if (isSubmitting) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="mx-auto h-16 w-16 animate-spin rounded-full border-4 border-gray-200 border-t-indigo-600"></div>
+          <div className="space-y-2">
+            <h3 className="text-xl font-semibold text-gray-900">Creating Your Organization...</h3>
+            <p className="text-sm text-gray-600">Setting up your account and workspace</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -742,8 +767,12 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                         <ArrowRight className="w-4 h-4 ml-2" />
                       </Button>
                     ) : (
-                      <Button onClick={handleSubmit} className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white">
-                        Create Account
+                      <Button 
+                        onClick={handleSubmit} 
+                        disabled={isSubmitting || !formData.agreeToTerms}
+                        className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isSubmitting ? 'Creating Account...' : 'Create Account'}
                         <CheckCircle className="w-4 h-4 ml-2" />
                       </Button>
                     )}
