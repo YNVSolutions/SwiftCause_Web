@@ -1,4 +1,4 @@
-import * as functions from 'firebase-functions';
+ggimport * as functions from 'firebase-functions';
 import { Request, Response } from 'express';
 import { stripe, db, auth } from '../../config';
 import { SetupIntentRequest, SetupIntentResponse } from '../../types';
