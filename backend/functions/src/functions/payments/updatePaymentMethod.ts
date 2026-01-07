@@ -50,8 +50,12 @@ export const updatePaymentMethod = functions.https.onRequest(
       }
 
       // Attach payment method to customer if not already
-      await stripe.paymentMethods.attach(paymentMethodId, { customer: customerId }).catch((err: any) => {
-        if (err?.raw?.code !== 'resource_already_exists') {
+      await stripe.paymentMethods.attach(paymentMethodId, { customer: customerId }).catch((err: unknown) => {
+        const rawCode =
+          typeof err === 'object' && err !== null && 'raw' in err
+            ? (err as { raw?: { code?: string } }).raw?.code
+            : undefined;
+        if (rawCode !== 'resource_already_exists') {
           throw err;
         }
       });

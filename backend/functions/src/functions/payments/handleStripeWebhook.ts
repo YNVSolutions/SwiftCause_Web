@@ -1,11 +1,10 @@
 import * as functions from 'firebase-functions';
-import { Request, Response } from 'express';
 import Stripe from 'stripe';
 import { stripe, endpointSecret, db, admin } from '../../config';
 import { DonationData } from '../../types';
 
 export const handleStripeWebhook = functions.https.onRequest(
-  async (req: Request, res: Response): Promise<void> => {
+  async (req, res): Promise<void> => {
     let event: Stripe.Event;
 
     try {
@@ -15,7 +14,7 @@ export const handleStripeWebhook = functions.https.onRequest(
       }
       
       event = stripe.webhooks.constructEvent(
-        req.rawBody,
+        (req as functions.https.Request).rawBody,
         sig,
         endpointSecret
       );
@@ -97,6 +96,11 @@ async function upsertSubscription(subscription: Stripe.Subscription) {
       ? defaultPaymentMethod.card
       : undefined;
 
+  const currentPeriodEnd =
+    (subscription as unknown as { current_period_end?: number }).current_period_end ??
+    (subscription as unknown as { currentPeriodEnd?: number }).currentPeriodEnd ??
+    null;
+
   await docRef.set(
     {
       customerId: subscription.customer,
@@ -108,7 +112,7 @@ async function upsertSubscription(subscription: Stripe.Subscription) {
       priceId: subscription.items.data[0]?.price?.id ?? null,
       amount: subscription.items.data[0]?.price?.unit_amount ?? null,
       currency: subscription.items.data[0]?.price?.currency ?? null,
-      current_period_end: subscription.current_period_end,
+      current_period_end: currentPeriodEnd,
       latest_invoice_id: subscription.latest_invoice ?? null,
       platform: subscription.metadata?.platform ?? null,
       isGiftAid: subscription.metadata?.isGiftAid === 'true',
@@ -127,12 +131,20 @@ async function upsertSubscription(subscription: Stripe.Subscription) {
 }
 
 async function upsertInvoice(invoice: Stripe.Invoice, succeeded: boolean) {
-  const docRef = db.collection('donations').doc(invoice.id);
-  const subscriptionId = typeof invoice.subscription === 'string' ? invoice.subscription : null;
+  const extendedInvoice = invoice as Stripe.Invoice & {
+    subscription?: string | Stripe.Subscription | null;
+    payment_intent?: string | Stripe.PaymentIntent | null;
+  };
+
+  const docRef = db.collection('donations').doc(invoice.id || 'unknown-invoice');
+  const subscriptionId =
+    typeof extendedInvoice.subscription === 'string'
+      ? extendedInvoice.subscription
+      : null;
   const paymentIntentId =
-    typeof invoice.payment_intent === 'string'
-      ? invoice.payment_intent
-      : invoice.payment_intent?.id ?? null;
+    typeof extendedInvoice.payment_intent === 'string'
+      ? extendedInvoice.payment_intent
+      : (extendedInvoice.payment_intent as Stripe.PaymentIntent | null)?.id ?? null;
 
   const donation = {
     subscriptionId,
@@ -203,7 +215,7 @@ async function upsertInvoice(invoice: Stripe.Invoice, succeeded: boolean) {
   }
 
   // Optional: upsert a dedicated invoices collection
-  const invoicesRef = db.collection('invoices').doc(invoice.id);
+  const invoicesRef = db.collection('invoices').doc(invoice.id || 'unknown-invoice');
   await invoicesRef.set(
     {
       stripeInvoiceId: invoice.id,

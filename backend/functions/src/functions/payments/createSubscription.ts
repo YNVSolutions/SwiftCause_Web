@@ -77,9 +77,12 @@ export const createSubscription = functions.https.onRequest(
       }
 
       // Attach payment method to customer if not already
-      await stripe.paymentMethods.attach(paymentMethodId, { customer: customerId }).catch((err: any) => {
+      await stripe.paymentMethods.attach(paymentMethodId, { customer: customerId }).catch((err: unknown) => {
         // If already attached, ignore error
-        if (err?.raw?.code !== 'resource_already_exists') {
+        const rawCode = typeof err === 'object' && err !== null && 'raw' in err
+          ? (err as { raw?: { code?: string } }).raw?.code
+          : undefined;
+        if (rawCode !== 'resource_already_exists') {
           throw err;
         }
       });
@@ -111,7 +114,9 @@ export const createSubscription = functions.https.onRequest(
         expand: ['latest_invoice.payment_intent', 'default_payment_method'],
       });
 
-      const latestInvoice = subscription.latest_invoice as Stripe.Invoice | null;
+      const latestInvoice = subscription.latest_invoice as (Stripe.Invoice & {
+        payment_intent?: Stripe.PaymentIntent | string | null;
+      }) | null;
       const paymentIntent = latestInvoice?.payment_intent as Stripe.PaymentIntent | null;
 
       const response: CreateSubscriptionResponse = {
