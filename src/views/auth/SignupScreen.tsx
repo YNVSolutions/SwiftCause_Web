@@ -144,8 +144,8 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
       [field]: value
     }));
     
-    // Clear error when user starts typing
-    if (errors[field]) {
+    // Clear error when user starts typing (only for fields that have errors)
+    if (field in errors && errors[field as keyof SignupFormErrors]) {
       setErrors(prev => ({
         ...prev,
         [field]: undefined
@@ -235,27 +235,6 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
       setCurrencyRequestSubmitted(true);
     } catch (error) {
       console.error('Error submitting currency request:', error);
-    }
-  };
-
-  const handleCurrencyCheckboxChange = (checked: boolean) => {
-    if (checked) {
-      // User wants to request different currency
-      setRequestDifferentCurrency(true);
-      setShowCurrencyDialog(true);
-    } else {
-      // User unchecked - reset everything
-      setRequestDifferentCurrency(false);
-      setCurrencyRequestSubmitted(false);
-      setShowCurrencyDialog(false);
-    }
-  };
-
-  const handleCurrencyDialogClose = () => {
-    setShowCurrencyDialog(false);
-    // If user closes dialog without submitting, uncheck the checkbox
-    if (!currencyRequestSubmitted) {
-      setRequestDifferentCurrency(false);
     }
   };
 
