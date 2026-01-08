@@ -1,4 +1,5 @@
 import React from 'react';
+import { LogOut } from 'lucide-react';
 import { KioskHeader } from '@/shared/components/KioskHeader';
 import { CampaignListPageProps } from '../types';
 import {
@@ -41,7 +42,26 @@ export const CampaignListPage: React.FC<CampaignListPageProps> = ({
   // Main content
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
-      <KioskHeader title="Choose a cause" backText="Logout" onBack={onLogout} />
+      <KioskHeader
+        variant="hero"
+        title="Choose a cause"
+        subtitle="Browse our verified campaigns and help make a difference today."
+        logoSrc="/logo.png"
+        logoAlt="SwiftCause"
+        brandPrimary="Swift"
+        brandAccent="Cause"
+        accentColor="#0DA573"
+        actionButton={
+          <button
+            onClick={onLogout}
+            title="Logout"
+            aria-label="Logout"
+            className="flex items-center justify-center h-11 w-11 rounded-xl border border-[#f43f5e33] bg-white text-[#f43f5e] shadow-sm hover:bg-[#f43f5e10] hover:border-[#f43f5e55] transition-colors"
+          >
+            <LogOut className="h-5 w-5" strokeWidth={2.4} />
+          </button>
+        }
+      />
 
       <main className="max-w-5/6 mx-auto px-6 lg:px-12 xl:px-16 py-6 overflow-y-auto">
         {campaigns.length === 0 ? (

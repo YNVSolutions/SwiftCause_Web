@@ -85,7 +85,7 @@ export const DEFAULT_CAMPAIGN_CONFIG = {
   maxCustomAmount: 10000,
   suggestedAmounts: [25, 50, 100],
   enableRecurring: true,
-  recurringIntervals: ['monthly', 'quarterly'] as const,
+  recurringIntervals: ['monthly', 'quarterly', 'yearly'] as const,
   defaultRecurringInterval: 'monthly' as const,
   recurringDiscount: 0,
   displayStyle: 'grid' as const,

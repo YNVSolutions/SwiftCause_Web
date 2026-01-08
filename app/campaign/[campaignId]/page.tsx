@@ -29,6 +29,11 @@ export default function CampaignPage({
     : null;
   const showGiftAid = searchParams?.get('giftaid') === 'true';
   const isCustomAmount = searchParams?.get('custom') === 'true';
+  const isRecurringSelection = searchParams?.get('recurring') === 'true';
+  const recurringIntervalParam =
+    (searchParams?.get('interval') as 'monthly' | 'quarterly' | 'yearly') ||
+    campaign?.configuration?.defaultRecurringInterval ||
+    'monthly';
   const fromDetails = searchParams?.get('from') === 'details';
 
   useEffect(() => {
@@ -73,8 +78,13 @@ export default function CampaignPage({
   };
 
   // Donate from details screen - add from=details param
-  const handleDonate = (_campaign: Campaign, amount: number) => {
-    router.push(`/campaign/${campaignId}?amount=${amount}&giftaid=true&from=details`);
+  const handleDonate = (
+    _campaign: Campaign,
+    amount: number,
+    options: { isRecurring: boolean; recurringInterval: 'monthly' | 'quarterly' | 'yearly' }
+  ) => {
+    const recurringQuery = options.isRecurring ? `&recurring=true&interval=${options.recurringInterval}` : '';
+    router.push(`/campaign/${campaignId}?amount=${amount}&giftaid=true&from=details${recurringQuery}`);
   };
 
   // Gift Aid accepted - save details and go to payment
@@ -83,6 +93,8 @@ export default function CampaignPage({
       campaignId: campaign?.id,
       amount: details.donationAmount,
       isGiftAid: true,
+      isRecurring: isRecurringSelection,
+      recurringInterval: isRecurringSelection ? recurringIntervalParam : undefined,
       giftAidDetails: details,
       kioskId: currentKioskSession?.kioskId,
       donorName: `${details.firstName} ${details.surname}`,
@@ -98,6 +110,8 @@ export default function CampaignPage({
       campaignId: campaign?.id,
       amount: finalAmount,
       isGiftAid: false,
+      isRecurring: isRecurringSelection,
+      recurringInterval: isRecurringSelection ? recurringIntervalParam : undefined,
       kioskId: currentKioskSession?.kioskId,
       donorName: '',
     };

@@ -10,7 +10,11 @@ interface CampaignDetailsContainerProps {
   currency: string;
   initialAmount?: number | null;
   onBack: () => void;
-  onDonate: (campaign: Campaign, amount: number) => void;
+  onDonate: (
+    campaign: Campaign,
+    amount: number,
+    options: { isRecurring: boolean; recurringInterval: 'monthly' | 'quarterly' | 'yearly' }
+  ) => void;
 }
 
 /**
@@ -44,9 +48,12 @@ export const CampaignDetailsContainer: React.FC<CampaignDetailsContainerProps> =
   const handleDonate = useCallback(() => {
     const amount = actions.getEffectiveAmount();
     if (campaign && amount > 0) {
-      onDonate(campaign, amount);
+      onDonate(campaign, amount, {
+        isRecurring: state.isRecurring,
+        recurringInterval: state.recurringInterval,
+      });
     }
-  }, [campaign, actions, onDonate]);
+  }, [campaign, actions, onDonate, state.isRecurring, state.recurringInterval]);
 
   return (
     <CampaignDetailsPage
@@ -55,6 +62,8 @@ export const CampaignDetailsContainer: React.FC<CampaignDetailsContainerProps> =
       onBack={onBack}
       onSelectAmount={handleSelectAmount}
       onCustomAmountChange={actions.setCustomAmount}
+      onRecurringToggle={actions.setIsRecurring}
+      onRecurringIntervalChange={actions.setRecurringInterval}
       onDonate={handleDonate}
       onImageChange={actions.setCurrentImageIndex}
     />
