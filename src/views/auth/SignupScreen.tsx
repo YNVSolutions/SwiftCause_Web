@@ -76,6 +76,18 @@ interface SignupFormData {
   agreeToTerms: boolean;
 }
 
+interface SignupFormErrors {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  organizationName?: string;
+  organizationType?: string;
+  organizationSize?: string;
+  password?: string;
+  confirmPassword?: string;
+  agreeToTerms?: string;
+}
+
 const auth = getAuth();
 const firestore = getFirestore();
 
@@ -83,7 +95,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
   const [currentStep, setCurrentStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [errors, setErrors] = useState<Partial<SignupFormData>>({});
+  const [errors, setErrors] = useState<SignupFormErrors>({});
   const [requestDifferentCurrency, setRequestDifferentCurrency] = useState(false);
   const [currencyRequestSubmitted, setCurrencyRequestSubmitted] = useState(false);
   const [requestedCurrency, setRequestedCurrency] = useState('');
@@ -142,7 +154,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
   };
 
   const validateStep = (step: number): boolean => {
-    const newErrors: Partial<SignupFormData> = {};
+    const newErrors: SignupFormErrors = {};
 
     if (step === 1) {
       if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
