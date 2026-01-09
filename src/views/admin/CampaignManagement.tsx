@@ -164,6 +164,53 @@ const CampaignDialog = ({
 }: CampaignDialogProps) => {
   const [formData, setFormData] = useState<DocumentData>(getInitialFormData());
   const [activeTab, setActiveTab] = useState<"basic" | "media-gallery" | "funding-details" | "kiosk-distribution">("basic");
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  // Track scroll to update active tab automatically
+  useEffect(() => {
+    const container = contentRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const scrollTop = container.scrollTop;
+      const containerHeight = container.clientHeight;
+      const centerPoint = scrollTop + containerHeight / 3;
+
+      // Find the section closest to center of view
+      const basicInfoSection = container.querySelector('[data-section="basic"]') as HTMLElement;
+      const mediaSection = container.querySelector('[data-section="media-gallery"]') as HTMLElement;
+      const fundingSection = container.querySelector('[data-section="funding-details"]') as HTMLElement;
+      const kioskSection = container.querySelector('[data-section="kiosk-distribution"]') as HTMLElement;
+
+      const sections = [
+        { element: basicInfoSection, id: 'basic' },
+        { element: mediaSection, id: 'media-gallery' },
+        { element: fundingSection, id: 'funding-details' },
+        { element: kioskSection, id: 'kiosk-distribution' }
+      ];
+
+      let closestSection = 'basic';
+      let closestDistance = Infinity;
+
+      sections.forEach(({ element, id }) => {
+        if (!element) return;
+        const sectionTop = element.offsetTop;
+        const sectionHeight = element.offsetHeight;
+        const sectionCenter = sectionTop + sectionHeight / 2;
+        const distance = Math.abs(sectionCenter - centerPoint);
+
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestSection = id;
+        }
+      });
+
+      setActiveTab(closestSection as any);
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isEditMode = !!campaign;
 
@@ -653,11 +700,11 @@ const CampaignDialog = ({
           </div>
 
           {/* Right Content - Form */}
-          <div className="flex-1 overflow-y-scroll bg-gray-50" style={{ scrollbarGutter: 'stable' }}>
+          <div ref={contentRef} className="flex-1 overflow-y-scroll bg-gray-50" style={{ scrollbarGutter: 'stable' }}>
             <form onSubmit={(e) => { e.preventDefault(); handleSaveChanges(); }} className="p-8 space-y-8">
               {/* Basic Info Tab */}
               {activeTab === "basic" && (
-                <div className="space-y-8">
+                <div data-section="basic" className="space-y-8">
                   <div>
                     <h2 className="text-3xl font-bold text-gray-900 mb-2">General Information</h2>
                     <p className="text-sm text-gray-600">Add basic details about your campaign</p>
@@ -732,7 +779,7 @@ const CampaignDialog = ({
 
               {/* Media & Gallery Tab */}
               {activeTab === "media-gallery" && (
-                <div className="space-y-6">
+                <div data-section="media-gallery" className="space-y-6">
                   <h2 className="text-2xl font-bold text-gray-900">Visual Identity</h2>
 
                   {/* Primary Cover Image */}
@@ -848,7 +895,7 @@ const CampaignDialog = ({
 
               {/* Funding Details Tab */}
               {activeTab === "funding-details" && (
-                <div className="space-y-8">
+                <div data-section="funding-details" className="space-y-8">
                   <div>
                     <h2 className="text-3xl font-bold text-gray-900 mb-2">Financial Goals</h2>
                     <p className="text-sm text-gray-600">Set your fundraising target and donation tiers</p>
@@ -938,7 +985,7 @@ const CampaignDialog = ({
 
               {/* Kiosk Distribution Tab */}
               {activeTab === "kiosk-distribution" && (
-                <div className="space-y-6">
+                <div data-section="kiosk-distribution" className="space-y-6">
                   <h2 className="text-2xl font-bold text-gray-900">Kiosk Distribution</h2>
 
                   <label className="flex items-center p-4 rounded-lg cursor-pointer transition"
