@@ -335,49 +335,43 @@ const CampaignDialog = ({
     }
   }, [campaign, isEditMode, setImagePreviewUrl]);
 
-  // Scroll detection to update active tab based on visible section
+  // Auto-update active tab as user scrolls through sections
   useEffect(() => {
     const formContainer = formContainerRef.current;
     if (!formContainer) return;
 
-    let scrollTimeout: NodeJS.Timeout;
+    let animationFrameId: number;
 
     const handleScroll = () => {
-      // Debounce the scroll detection to avoid excessive updates
-      clearTimeout(scrollTimeout);
+      // Use requestAnimationFrame for smooth updates
+      cancelAnimationFrame(animationFrameId);
       
-      scrollTimeout = setTimeout(() => {
+      animationFrameId = requestAnimationFrame(() => {
         const scrollTop = formContainer.scrollTop;
+        const containerHeight = formContainer.clientHeight;
         
-        // Get all section headers by their data attributes
+        // Get all sections
         const sections = formContainer.querySelectorAll('[data-section]');
-        let closestSection = 'basic';
-        let closestDistance = Infinity;
-
+        let currentSection = 'basic';
+        
         sections.forEach((section: Element) => {
           const element = section as HTMLElement;
           const rect = element.getBoundingClientRect();
           const containerRect = formContainer.getBoundingClientRect();
-          const relativeTop = rect.top - containerRect.top + scrollTop;
           
-          // Calculate distance from top of visible area (only if section is above scroll position)
-          if (relativeTop < scrollTop + 150) {
-            const distance = scrollTop - relativeTop;
-            
-            if (distance >= 0 && distance < closestDistance) {
-              closestDistance = distance;
-              closestSection = element.getAttribute('data-section') || 'basic';
-            }
+          // Check if section is in the upper half of viewport
+          if (rect.top < containerHeight / 2 && rect.bottom > 0) {
+            currentSection = element.getAttribute('data-section') || 'basic';
           }
         });
 
-        setActiveTab(closestSection as any);
-      }, 100); // Debounce for 100ms
+        setActiveTab(currentSection as any);
+      });
     };
 
-    formContainer.addEventListener('scroll', handleScroll);
+    formContainer.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
-      clearTimeout(scrollTimeout);
+      cancelAnimationFrame(animationFrameId);
       formContainer.removeEventListener('scroll', handleScroll);
     };
   }, []);
