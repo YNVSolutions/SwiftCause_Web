@@ -27,7 +27,7 @@ import { KioskCredentialsCard } from './components/KioskCredentialsCard';
 
 
 import {
-  Plus, Edit, Trash2, Search, ArrowLeft, Settings, Activity, MapPin,
+  Plus, Edit, Trash2, Search, ChevronLeft, Settings, Activity, MapPin,
   DollarSign, Users, WifiOff, CheckCircle, Monitor, Download, Target, Star, AlertTriangle
 } from 'lucide-react';
 import { Skeleton } from "../../shared/ui/skeleton"; // Import Skeleton
@@ -242,54 +242,64 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
       hasPermission={hasPermission}
       activeScreen="admin-kiosks"
     >
-      <div className="space-y-6">
-        <header className="bg-white shadow-sm border-b rounded-md">
-          <div className="px-2 sm:px-6 lg:px-8">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between h-auto sm:h-16 gap-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                <Button variant="ghost" size="sm" onClick={() => onNavigate('admin')} className="flex items-center space-x-2">
-                  <ArrowLeft className="w-4 h-4" /><span>Back to Dashboard</span>
+      <div className="space-y-4">
+        <header className="bg-white shadow-sm border-b">
+          <div className="px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex flex-col gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onNavigate('admin')}
+                  className="w-fit px-0 text-xs font-semibold uppercase tracking-widest text-gray-500 hover:text-gray-800"
+                >
+                  <ChevronLeft className="w-4 h-4 mr-0" />
+                  Back to Dashboard
                 </Button>
-                <div className="h-6 w-px bg-gray-300 hidden sm:block" />
                 <div>
-                  <h1 className="text-xl font-semibold text-gray-900">Kiosk Management</h1>
+                  <h1 className="text-2xl font-semibold text-gray-900 sm:text-3xl">Kiosk Management</h1>
                   <p className="text-sm text-gray-600">Configure and monitor donation kiosks</p>
                 </div>
               </div>
-              <div className="flex flex-col sm:flex-row items-stretch gap-2 mb-6 sm:mb-0 mt-2">
-                <div className="w-full sm:w-80">
-                  <div className="relative">
-                    <div className="h-10 items-center flex flex-row gap-5 border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                      <div>
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                      </div>
-                      <div>
-                        <Input
-                          placeholder="Search kiosks..."
-                          value={searchTerm}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
-                          className="pl-10 w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                {hasPermission('create_kiosk') && (
-                  <Button 
-                    onClick={() => {
-                      setIsCreateDialogOpen(true);
-                    }}
-                    className="bg-indigo-600 hover:bg-indigo-700"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Kiosk
-                  </Button>
-                )}
-              </div>
+              {hasPermission('create_kiosk') && (
+                <Button
+                  onClick={() => {
+                    setIsCreateDialogOpen(true);
+                  }}
+                  className="bg-indigo-600 hover:bg-indigo-700 h-10 px-4 text-white self-start hidden sm:inline-flex"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Kiosk
+                </Button>
+              )}
             </div>
           </div>
         </header>
-        <main className="px-2 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <main className="px-2 sm:px-6 lg:px-8 pt-2 pb-4 sm:pt-4 sm:pb-8">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-8">
+            <div className="w-full sm:max-w-md">
+              <div className="relative border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Search kiosks..."
+                  value={searchTerm}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+                  className="pl-10 w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
+                />
+              </div>
+            </div>
+            {hasPermission('create_kiosk') && (
+              <Button
+                onClick={() => {
+                  setIsCreateDialogOpen(true);
+                }}
+                className="bg-indigo-600 text-white w-full sm:w-auto sm:hidden h-12 text-base font-semibold"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Kiosk
+              </Button>
+            )}
+          </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Kiosks</p><p className="text-2xl font-semibold text-gray-900">{kiosks.length}</p><div className="flex items-center space-x-4 text-xs text-gray-500 mt-1"><span className="text-green-600">{totalStats.online} online</span><span className="text-red-600">{totalStats.offline} offline</span></div></div><Settings className="h-8 w-8 text-blue-600" /></div></CardContent></Card>
             <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Raised</p><p className="text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.totalRaised)}</p></div><DollarSign className="h-8 w-8 text-green-600" /></div></CardContent></Card>
