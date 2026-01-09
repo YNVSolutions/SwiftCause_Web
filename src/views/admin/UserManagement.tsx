@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../shared/ui/table';
 import {
   Plus, Search, ChevronLeft, UserCog, Users, Shield, Activity,
-  Loader2, AlertCircle, Pencil, Trash2, AlertTriangle
+  Loader2, AlertCircle, Pencil, Trash2, AlertTriangle, MoreVertical
 } from 'lucide-react';
 import { Skeleton } from "../../shared/ui/skeleton";
 import { Ghost } from "lucide-react";
@@ -18,6 +18,12 @@ import { Label } from '../../shared/ui/label';
 import { Checkbox } from '../../shared/ui/checkbox';
 import { DialogPortal } from '@radix-ui/react-dialog';
 import { AdminLayout } from './AdminLayout';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../../shared/ui/dropdown-menu";
 
 const allPermissions: Permission[] = [
     'view_dashboard', 'manage_permissions', 'create_user', 'edit_user', 'delete_user',
@@ -131,33 +137,11 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                                 <p className="text-sm text-gray-600">Manage platform users and permissions</p>
                             </div>
                         </div>
-                        {hasPermission('create_user') && (
-                            <Button
-                                className="bg-indigo-600 text-white hidden sm:inline-flex"
-                                onClick={() => setCreateDialogOpen(true)}
-                            >
-                                <Plus className="w-4 h-4 mr-2" />Add User
-                            </Button>
-                        )}
                     </div>
                 </div>
             </header>
 
             <main className="px-2 sm:px-6 lg:px-8 pt-2 pb-4 sm:pt-4 sm:pb-8">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-8">
-                    <div className="w-full sm:max-w-md">
-                        <div className="relative border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                            <Input placeholder="Search users by name or email..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 border-0 focus-visible:ring-0 focus-visible:border-transparent" />
-                        </div>
-                    </div>
-                    {hasPermission('create_user') && (
-                        <Button className="bg-indigo-600 text-white w-full sm:w-auto sm:hidden h-12 text-base font-semibold" onClick={() => setCreateDialogOpen(true)}>
-                            <Plus className="w-4 h-4 mr-2" />Add User
-                        </Button>
-                    )}
-                </div>
-
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Users</p><p className="text-2xl font-semibold text-gray-900">{stats.total}</p></div><Users className="h-8 w-8 text-blue-600" /></div></CardContent></Card>
                     <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Administrators</p><p className="text-2xl font-semibold text-gray-900">{stats.admins}</p></div><UserCog className="h-8 w-8 text-purple-600" /></div></CardContent></Card>
@@ -186,83 +170,194 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
 
                 {/* Modern Table Container */}
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div className="px-6 pt-6">
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="w-full max-w-sm">
+                                <div className="relative border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                                    <Input placeholder="Search users by name or email..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 border-0 focus-visible:ring-0 focus-visible:border-transparent" />
+                                </div>
+                            </div>
+                            {hasPermission('create_user') && (
+                                <>
+                                    <Button
+                                        className="bg-indigo-600 text-white h-12 w-12 p-0 sm:hidden"
+                                        onClick={() => setCreateDialogOpen(true)}
+                                        aria-label="Add User"
+                                    >
+                                        <Plus className="w-5 h-5" />
+                                    </Button>
+                                    <Button
+                                        className="bg-indigo-600 text-white hidden sm:inline-flex"
+                                        onClick={() => setCreateDialogOpen(true)}
+                                    >
+                                        <Plus className="w-4 h-4 mr-2" />Add User
+                                    </Button>
+                                </>
+                            )}
+                        </div>
+                    </div>
                     <div className="px-6 py-5 border-b border-gray-200">
                         <h3 className="text-lg font-semibold text-gray-900">Users ({filteredUsers.length})</h3>
                         <p className="text-sm text-gray-600 mt-1">Manage user accounts and permissions</p>
                     </div>
-                    <div className="overflow-x-auto">
-                        {loading ? (
-                            <div className="flex justify-center p-12">
-                                <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-                            </div>
-                        ) : error ? (
-                            <div className="text-center text-red-600 p-12">
-                                <AlertCircle className="mx-auto h-8 w-8 mb-2" />
-                                <p>{error}</p>
-                            </div>
-                        ) : (
-                            <Table>
-                                <TableHeader>
-                                    <TableRow className="bg-gray-50 border-b border-gray-200">
-                                        <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">User Details</TableHead>
-                                        <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Role</TableHead>
-                                        <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</TableHead>
-                                        <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Permissions</TableHead>
-                                        <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">Actions</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {filteredUsers.map((user) => (
-                                        <TableRow key={user.id} className="hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0">
-                                            <TableCell className="px-6 py-4">
-                                                <div className="text-sm font-medium text-gray-900">{user.username}</div>
-                                                <div className="text-sm text-gray-500">{user.email}</div>
-                                            </TableCell>
-                                            <TableCell className="px-6 py-4">
+                    {loading ? (
+                        <div className="flex justify-center p-12">
+                            <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+                        </div>
+                    ) : error ? (
+                        <div className="text-center text-red-600 p-12">
+                            <AlertCircle className="mx-auto h-8 w-8 mb-2" />
+                            <p>{error}</p>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="md:hidden px-6 py-6 space-y-4">
+                                {filteredUsers.length > 0 ? (
+                                    filteredUsers.map((user) => (
+                                        <div
+                                            key={user.id}
+                                            className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
+                                        >
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div>
+                                                    <div className="text-sm font-semibold text-gray-900">
+                                                        {user.username}
+                                                    </div>
+                                                    <div className="text-xs text-gray-500">
+                                                        {user.email}
+                                                    </div>
+                                                </div>
+                                                {(hasPermission('edit_user') ||
+                                                    (hasPermission('delete_user') && user.id !== userSession.user.id)) && (
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8 text-gray-500 hover:bg-gray-100"
+                                                                aria-label="User actions"
+                                                            >
+                                                                <MoreVertical className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            {hasPermission('edit_user') && (
+                                                                <DropdownMenuItem
+                                                                    onSelect={() => setEditingUser(user)}
+                                                                    className="flex items-center gap-2"
+                                                                >
+                                                                    <Pencil className="h-4 w-4" />
+                                                                    Edit
+                                                                </DropdownMenuItem>
+                                                            )}
+                                                            {hasPermission('delete_user') && user.id !== userSession.user.id && (
+                                                                <DropdownMenuItem
+                                                                    onSelect={() => handleDeleteUser(user)}
+                                                                    className="flex items-center gap-2 text-red-600 focus:text-red-600"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                    Delete
+                                                                </DropdownMenuItem>
+                                                            )}
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                )}
+                                            </div>
+
+                                            <div className="mt-4 flex flex-wrap items-center gap-2">
                                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 ring-1 ring-indigo-600/20 capitalize">
                                                     {user.role.replace('_', ' ')}
                                                 </span>
-                                            </TableCell>
-                                            <TableCell className="px-6 py-4">
                                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 ring-1 ring-green-600/20">
                                                     Active
                                                 </span>
-                                            </TableCell>
-                                            <TableCell className="px-6 py-4">
-                                                <div className="text-sm text-gray-500 truncate max-w-xs">
+                                            </div>
+
+                                            <div className="mt-4 border-t border-gray-100 pt-4 text-sm">
+                                                <div className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+                                                    Permissions
+                                                </div>
+                                                <div className="mt-1 text-sm text-gray-600">
                                                     {user.permissions?.length ? `${user.permissions.length} permissions` : 'None'}
                                                 </div>
-                                            </TableCell>
-                                            <TableCell className="px-6 py-4 text-right">
-                                                <div className="flex items-center justify-end gap-2">
-                                                    {hasPermission('edit_user') && (
-                                                        <Button 
-                                                            variant="ghost" 
-                                                            size="icon" 
-                                                            onClick={() => setEditingUser(user)}
-                                                            className="h-8 w-8 hover:bg-indigo-50 hover:text-indigo-600"
-                                                        >
-                                                            <Pencil className="h-4 w-4" />
-                                                        </Button>
-                                                    )}
-                                                    {hasPermission('delete_user') && user.id !== userSession.user.id && (
-                                                        <Button 
-                                                            variant="ghost" 
-                                                            size="icon" 
-                                                            onClick={() => handleDeleteUser(user)}
-                                                            className="h-8 w-8 hover:bg-red-50 hover:text-red-600"
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    )}
-                                                </div>
-                                            </TableCell>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-8 text-gray-500">
+                                        <Ghost className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                                        <p className="text-lg font-medium mb-2">No Users Found</p>
+                                        <p className="text-sm mb-4">
+                                            No users match your filters.
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="hidden md:block overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow className="bg-gray-50 border-b border-gray-200">
+                                            <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">User Details</TableHead>
+                                            <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Role</TableHead>
+                                            <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</TableHead>
+                                            <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Permissions</TableHead>
+                                            <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">Actions</TableHead>
                                         </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        )}
-                    </div>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {filteredUsers.map((user) => (
+                                            <TableRow key={user.id} className="hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0">
+                                                <TableCell className="px-6 py-4">
+                                                    <div className="text-sm font-medium text-gray-900">{user.username}</div>
+                                                    <div className="text-sm text-gray-500">{user.email}</div>
+                                                </TableCell>
+                                                <TableCell className="px-6 py-4">
+                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 ring-1 ring-indigo-600/20 capitalize">
+                                                        {user.role.replace('_', ' ')}
+                                                    </span>
+                                                </TableCell>
+                                                <TableCell className="px-6 py-4">
+                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 ring-1 ring-green-600/20">
+                                                        Active
+                                                    </span>
+                                                </TableCell>
+                                                <TableCell className="px-6 py-4">
+                                                    <div className="text-sm text-gray-500 truncate max-w-xs">
+                                                        {user.permissions?.length ? `${user.permissions.length} permissions` : 'None'}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="px-6 py-4 text-right">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        {hasPermission('edit_user') && (
+                                                            <Button 
+                                                                variant="ghost" 
+                                                                size="icon" 
+                                                                onClick={() => setEditingUser(user)}
+                                                                className="h-8 w-8 hover:bg-indigo-50 hover:text-indigo-600"
+                                                            >
+                                                                <Pencil className="h-4 w-4" />
+                                                            </Button>
+                                                        )}
+                                                        {hasPermission('delete_user') && user.id !== userSession.user.id && (
+                                                            <Button 
+                                                                variant="ghost" 
+                                                                size="icon" 
+                                                                onClick={() => handleDeleteUser(user)}
+                                                                className="h-8 w-8 hover:bg-red-50 hover:text-red-600"
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </>
+                    )}
                 </div>
             </main>
 
@@ -272,6 +367,12 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
             {/* Delete Confirmation Dialog */}
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                 <DialogContent className="sm:max-w-[400px] p-0 border-0 shadow-2xl">
+                    <DialogHeader className="sr-only">
+                        <DialogTitle>Delete user</DialogTitle>
+                        <DialogDescription>
+                            Confirm deletion of the selected user.
+                        </DialogDescription>
+                    </DialogHeader>
                     <div className="bg-white rounded-2xl p-8 text-center">
                         {/* Warning Icon */}
                         <div className="flex justify-center mb-6">
