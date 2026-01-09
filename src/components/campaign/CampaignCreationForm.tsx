@@ -321,10 +321,12 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
               <button
                 data-tab="basic-info"
                 onClick={() => setActiveTab('basic-info')}
+                style={{
+                  backgroundColor: activeTab === 'basic-info' ? '#03AC13' : 'transparent',
+                  color: activeTab === 'basic-info' ? 'white' : '#4B5563',
+                }}
                 className={`shrink-0 md:w-full text-left px-3 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-colors whitespace-nowrap md:whitespace-normal ${
-                  activeTab === 'basic-info'
-                    ? 'bg-emerald-500 text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
+                  activeTab !== 'basic-info' && 'hover:bg-gray-100'
                 }`}
               >
                 Basic Info
@@ -332,10 +334,12 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
               <button
                 data-tab="media-gallery"
                 onClick={() => setActiveTab('media-gallery')}
+                style={{
+                  backgroundColor: activeTab === 'media-gallery' ? '#03AC13' : 'transparent',
+                  color: activeTab === 'media-gallery' ? 'white' : '#4B5563',
+                }}
                 className={`shrink-0 md:w-full text-left px-3 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-colors whitespace-nowrap md:whitespace-normal ${
-                  activeTab === 'media-gallery'
-                    ? 'bg-emerald-500 text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
+                  activeTab !== 'media-gallery' && 'hover:bg-gray-100'
                 }`}
               >
                 Media & Gallery
@@ -343,10 +347,12 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
               <button
                 data-tab="funding-details"
                 onClick={() => setActiveTab('funding-details')}
+                style={{
+                  backgroundColor: activeTab === 'funding-details' ? '#03AC13' : 'transparent',
+                  color: activeTab === 'funding-details' ? 'white' : '#4B5563',
+                }}
                 className={`shrink-0 md:w-full text-left px-3 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-colors whitespace-nowrap md:whitespace-normal ${
-                  activeTab === 'funding-details'
-                    ? 'bg-emerald-500 text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
+                  activeTab !== 'funding-details' && 'hover:bg-gray-100'
                 }`}
               >
                 Funding Details
@@ -354,10 +360,12 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
               <button
                 data-tab="kiosk-distribution"
                 onClick={() => setActiveTab('kiosk-distribution')}
+                style={{
+                  backgroundColor: activeTab === 'kiosk-distribution' ? '#03AC13' : 'transparent',
+                  color: activeTab === 'kiosk-distribution' ? 'white' : '#4B5563',
+                }}
                 className={`shrink-0 md:w-full text-left px-3 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-colors whitespace-nowrap md:whitespace-normal ${
-                  activeTab === 'kiosk-distribution'
-                    ? 'bg-emerald-500 text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
+                  activeTab !== 'kiosk-distribution' && 'hover:bg-gray-100'
                 }`}
               >
                 Kiosk Dist.
