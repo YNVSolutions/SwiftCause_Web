@@ -86,8 +86,13 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
   const [activeSection, setActiveSection] = useState('basic-info');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   
-  // Refs for scroll container
+  // Refs for scroll container and sections
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const sectionRefs = {
+    'basic-info': useRef<HTMLElement>(null),
+    'campaigns': useRef<HTMLElement>(null),
+    'display': useRef<HTMLElement>(null)
+  };
   
   // Navigation items for dialog
   const navigationItems = [
@@ -108,25 +113,90 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
     refreshCampaigns();
   }, [refreshKiosks, refreshCampaigns]);
 
-  // Scroll to section function
-  const scrollToSection = (sectionId: string) => {
-    const container = scrollContainerRef.current;
-    const sectionElement = document.getElementById(sectionId);
-    
-    if (container && sectionElement) {
-      const containerRect = container.getBoundingClientRect();
-      const sectionRect = sectionElement.getBoundingClientRect();
-      const scrollTop = container.scrollTop;
-      
-      // Calculate target scroll position with 20px offset from top
-      const targetScrollTop = scrollTop + sectionRect.top - containerRect.top - 20;
-      
-      container.scrollTo({
-        top: Math.max(0, targetScrollTop), // Ensure we don't scroll to negative position
-        behavior: 'smooth'
+  // IntersectionObserver for scroll-synced sidebar highlighting
+  useEffect(() => {
+    if (!isCreateDialogOpen) return;
+
+    // Use a timeout to ensure DOM is ready
+    const timeoutId = setTimeout(() => {
+      const container = scrollContainerRef.current;
+      if (!container) return;
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          // Find the entry with the highest intersection ratio
+          let maxRatio = 0;
+          let activeId = '';
+          
+          entries.forEach((entry) => {
+            if (entry.intersectionRatio > maxRatio) {
+              maxRatio = entry.intersectionRatio;
+              activeId = entry.target.id;
+            }
+          });
+          
+          // Only update if we have a meaningful intersection
+          if (maxRatio > 0.1 && activeId) {
+            setActiveSection(activeId);
+          }
+        },
+        {
+          root: container,
+          rootMargin: '0px 0px -50% 0px',
+          threshold: [0, 0.1, 0.25, 0.5, 0.75, 1.0]
+        }
+      );
+
+      // Observe all sections
+      Object.values(sectionRefs).forEach((ref) => {
+        if (ref.current) {
+          observer.observe(ref.current);
+        }
       });
-      
-      // Set active section when clicking navigation
+
+      // Cleanup function
+      const cleanup = () => {
+        observer.disconnect();
+      };
+
+      return cleanup;
+    }, 200);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [isCreateDialogOpen]);
+
+  // Debug: Check refs when dialog state changes
+  useEffect(() => {
+    if (isCreateDialogOpen) {
+      console.log('🚪 Dialog opened - checking refs after render');
+      setTimeout(() => {
+        console.log('⏰ Delayed ref check:');
+        console.log('📦 Scroll container:', scrollContainerRef.current);
+        Object.entries(sectionRefs).forEach(([id, ref]) => {
+          console.log(`📍 Section ${id}:`, ref.current);
+          if (ref.current) {
+            const rect = ref.current.getBoundingClientRect();
+            console.log(`📏 Section ${id} dimensions:`, {
+              width: rect.width,
+              height: rect.height,
+              top: rect.top,
+              visible: rect.height > 0 && rect.width > 0
+            });
+          }
+        });
+      }, 100);
+    }
+  }, [isCreateDialogOpen]);
+
+  const scrollToSection = (sectionId: string) => {
+    const sectionRef = sectionRefs[sectionId as keyof typeof sectionRefs];
+    if (sectionRef?.current) {
+      sectionRef.current.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      });
       setActiveSection(sectionId);
     }
   };
@@ -619,7 +689,6 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                     <li key={item.id}>
                       <button
                         onClick={() => {
-                          setActiveSection(item.id);
                           scrollToSection(item.id);
                           setIsMobileSidebarOpen(false);
                         }}
@@ -659,6 +728,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                 {/* Basic Information Section */}
                 <section 
                   id="basic-info"
+                  ref={sectionRefs['basic-info']}
                   className="p-4 sm:p-6 lg:p-8 border-b border-gray-100"
                 >
                   <div className="max-w-4xl">
@@ -733,6 +803,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                 {/* Campaigns Section */}
                 <section 
                   id="campaigns"
+                  ref={sectionRefs['campaigns']}
                   className="p-4 sm:p-6 lg:p-8 border-b border-gray-100"
                 >
                   <div className="max-w-4xl">
@@ -756,7 +827,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                         {newKiosk.assignedCampaigns.length === 0 ? (
                           <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 sm:p-8 text-center">
                             <button
-                              onClick={() => scrollToSection('available-campaigns')}
+                              onClick={() => scrollToSection('campaigns')}
                               className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 hover:bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3 transition-colors cursor-pointer group"
                               aria-label="Scroll to available campaigns"
                             >
@@ -887,6 +958,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                 {/* Display Section */}
                 <section 
                   id="display"
+                  ref={sectionRefs['display']}
                   className="p-4 sm:p-6 lg:p-8"
                 >
                   <div className="max-w-4xl">
