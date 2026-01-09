@@ -288,7 +288,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                       placeholder="Search kiosks..."
                       value={searchTerm}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
-                      className="pl-10 w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
+                      className="pl-10 pr-3 w-full h-12 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
                     />
                   </div>
                 </div>

@@ -372,9 +372,12 @@ export function GiftAidManagement({
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""} sm:mr-2`} />
               <span className="hidden sm:inline">Refresh</span>
             </Button>
-            <Button onClick={handleExportData} className="bg-indigo-600 hover:bg-indigo-700">
-              <Download className="w-4 h-4 mr-2" />
-              Export Data
+            <Button
+              onClick={handleExportData}
+              className="bg-indigo-600 hover:bg-indigo-700"
+            >
+              <Download className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Export Data</span>
             </Button>
           </div>
         </div>
