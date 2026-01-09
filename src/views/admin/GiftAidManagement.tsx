@@ -357,7 +357,7 @@ export function GiftAidManagement({
         )}
 
         {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-start justify-between gap-3">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2">
               <Gift className="h-8 w-8 text-indigo-600" />
@@ -369,8 +369,8 @@ export function GiftAidManagement({
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={handleRefresh} disabled={loading}>
-              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-              Refresh
+              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""} sm:mr-2`} />
+              <span className="hidden sm:inline">Refresh</span>
             </Button>
             <Button onClick={handleExportData} className="bg-indigo-600 hover:bg-indigo-700">
               <Download className="w-4 h-4 mr-2" />
@@ -440,7 +440,7 @@ export function GiftAidManagement({
           </CardHeader>
           <CardContent>
             <div className="flex flex-col sm:flex-row gap-4 mb-6">
-              <div className="flex-1">
+              <div className="w-full max-w-sm">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                   <Input
