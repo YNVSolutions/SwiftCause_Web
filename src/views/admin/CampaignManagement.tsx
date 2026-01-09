@@ -40,7 +40,7 @@ import {
   FaTrashAlt, // Added FaTrashAlt
   FaPlus, // Import FaPlus
 } from "react-icons/fa";
-import { Plus, ArrowLeft, Settings, Download, RefreshCw } from "lucide-react";
+import { Plus, ChevronLeft, Settings, Download, RefreshCw } from "lucide-react";
 import { Calendar } from "../../shared/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "../../shared/ui/popover";
 import { AlertTriangle } from "lucide-react"; // Import AlertTriangle
@@ -1464,27 +1464,25 @@ const CampaignManagement = ({
       hasPermission={hasPermission}
       activeScreen="admin-campaigns"
     >
-      <div className="space-y-6">
-        <header className="bg-white shadow-sm border-b rounded-md">
-          <div className="px-2 sm:px-6 lg:px-8">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between h-auto sm:h-16 gap-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+      <div className="space-y-4">
+        <header className="bg-white shadow-sm border-b">
+          <div className="px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex flex-col gap-1">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => onNavigate("admin")}
-                  className="flex items-center space-x-2"
+                  className="-ml-3 w-fit px-0 text-xs font-semibold uppercase tracking-widest text-gray-500 hover:text-gray-800"
                 >
-                  <ArrowLeft className="w-4 h-4" />
-                  <span className="hidden sm:inline">Back to Dashboard</span>
-                  <span className="sm:hidden">Back</span>
+                  <ChevronLeft className="w-4 h-4 mr-0" />
+                  Back to Dashboard
                 </Button>
-                <div className="h-6 w-px bg-gray-300 hidden sm:block" />
                 <div>
-                  <h1 className="text-xl font-semibold text-gray-900">
+                  <h1 className="text-2xl font-semibold text-gray-900 sm:text-3xl">
                     Campaign Management
                   </h1>
-                  <p className="text-sm text-gray-600 hidden lg:block">
+                  <p className="text-sm text-gray-600">
                     Configure and monitor campaigns
                   </p>
                 </div>
@@ -1512,7 +1510,7 @@ const CampaignManagement = ({
             </div>
           </div>
         </header>
-        <main className="px-2 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <main className="px-2 sm:px-6 lg:px-8 pt-2 pb-4 sm:pt-4 sm:pb-8">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-8">
             <div className="w-full sm:max-w-md">
               <div className="relative">
