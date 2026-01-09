@@ -583,7 +583,7 @@ const CampaignDialog = ({
         {/* Main Content - Grid Layout */}
         <div className="flex flex-1 overflow-hidden">
           {/* Left Sidebar - Navigation */}
-          <div className="w-56 border-r border-gray-200 bg-gradient-to-b from-white to-gray-50 overflow-y-auto shadow-sm">
+          <div className="w-56 border-r border-gray-200 bg-linear-to-b from-white to-gray-50 overflow-y-auto shadow-sm">
             <div className="p-5 space-y-3">
               <div className="mb-6">
                 <h3 className="text-xs font-bold text-gray-700 uppercase tracking-widest">Configuration</h3>
@@ -665,7 +665,7 @@ const CampaignDialog = ({
 
                   {/* Brief Overview */}
                   <div>
-                    <Label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2 uppercase tracking-wide text-xs">
+                    <Label htmlFor="description" className="block text-xs font-medium text-gray-700 mb-2 uppercase tracking-wide">
                       Brief Overview
                     </Label>
                     <Textarea
@@ -681,7 +681,7 @@ const CampaignDialog = ({
 
                   {/* Detailed Campaign Story */}
                   <div>
-                    <Label htmlFor="longDescription" className="block text-sm font-medium text-gray-700 mb-2 uppercase tracking-wide text-xs">
+                    <Label htmlFor="longDescription" className="block text-xs font-medium text-gray-700 mb-2 uppercase tracking-wide">
                       Detailed Campaign Story
                     </Label>
                     <div className="border border-gray-300 rounded-lg overflow-hidden">
@@ -721,7 +721,7 @@ const CampaignDialog = ({
 
                   {/* Primary Cover Image */}
                   <div>
-                    <Label className="block text-sm font-medium text-gray-700 mb-2 uppercase tracking-wide text-xs">
+                    <Label className="block text-xs font-medium text-gray-700 mb-2 uppercase tracking-wide">
                       Primary Cover (16:9)
                     </Label>
                     {imagePreview || formData.coverImageUrl ? (
@@ -764,7 +764,7 @@ const CampaignDialog = ({
 
                   {/* Campaign Gallery */}
                   <div>
-                    <Label className="block text-sm font-medium text-gray-700 mb-2 uppercase tracking-wide text-xs">
+                    <Label className="block text-xs font-medium text-gray-700 mb-2 uppercase tracking-wide">
                       Campaign Gallery
                     </Label>
                     <div className="space-y-4">
@@ -812,7 +812,7 @@ const CampaignDialog = ({
 
                   {/* YouTube Presentation */}
                   <div>
-                    <Label htmlFor="videoUrl" className="block text-sm font-medium text-gray-700 mb-2 uppercase tracking-wide text-xs">
+                    <Label htmlFor="videoUrl" className="block text-xs font-medium text-gray-700 mb-2 uppercase tracking-wide">
                       YouTube Presentation
                     </Label>
                     <Input
@@ -1543,7 +1543,7 @@ const CampaignManagement = ({
                                 <ImageWithFallback
                                   src={campaign.coverImageUrl}
                                   alt={campaign.title}
-                                  className="w-16 h-16 object-cover rounded-lg border border-gray-200 flex-shrink-0 bg-gray-100"
+                                  className="w-16 h-16 object-cover rounded-lg border border-gray-200 shrink-0 bg-gray-100"
                                   fallbackSrc="/campaign-fallback.svg"
                                 />
                                 <div className="space-y-1 flex-1">
