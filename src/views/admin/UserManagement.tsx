@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../shared/ui/table';
 import {
-  Plus, Search, ArrowLeft, UserCog, Users, Shield, Activity,
+  Plus, Search, ChevronLeft, UserCog, Users, Shield, Activity,
   Loader2, AlertCircle, Pencil, Trash2, AlertTriangle
 } from 'lucide-react';
 import { Skeleton } from "../../shared/ui/skeleton";
@@ -112,23 +112,30 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
             hasPermission={hasPermission}
             activeScreen="admin-users"
         >
-        <div className="space-y-6">
-            <header className="bg-white shadow-sm border-b rounded-md">
-                <div className="px-2 sm:px-6 lg:px-8">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between h-auto sm:h-16 gap-4">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                            <Button variant="ghost" size="sm" onClick={() => onNavigate('admin')} className="flex items-center space-x-2">
-                                <ArrowLeft className="w-4 h-4" /><span className="hidden sm:inline">Back to Dashboard</span><span className="sm:hidden">Back</span>
+        <div className="space-y-4">
+            <header className="bg-white shadow-sm border-b">
+                <div className="px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="flex flex-col gap-1">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => onNavigate('admin')}
+                                className="-ml-3 w-fit px-0 text-xs font-semibold uppercase tracking-widest text-gray-500 hover:text-gray-800"
+                            >
+                                <ChevronLeft className="w-4 h-4 mr-0" />
+                                Back to Dashboard
                             </Button>
-                            <div className="h-6 w-px bg-gray-300 hidden sm:block" />
                             <div>
-                                <h1 className="text-xl font-semibold text-gray-900">User Management</h1>
-                                <p className="text-sm text-gray-600 hidden lg:block">Manage platform users and permissions</p>
-                                <p className="text-sm text-gray-600 hidden sm:block lg:hidden">Manage users and permissions</p>
+                                <h1 className="text-2xl font-semibold text-gray-900 sm:text-3xl">User Management</h1>
+                                <p className="text-sm text-gray-600">Manage platform users and permissions</p>
                             </div>
                         </div>
                         {hasPermission('create_user') && (
-                            <Button className="bg-indigo-600 text-white hidden sm:inline-flex" onClick={() => setCreateDialogOpen(true)}>
+                            <Button
+                                className="bg-indigo-600 text-white hidden sm:inline-flex"
+                                onClick={() => setCreateDialogOpen(true)}
+                            >
                                 <Plus className="w-4 h-4 mr-2" />Add User
                             </Button>
                         )}
@@ -136,7 +143,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                 </div>
             </header>
 
-            <main className="px-2 sm:px-6 lg:px-8 py-4 sm:py-8">
+            <main className="px-2 sm:px-6 lg:px-8 pt-2 pb-4 sm:pt-4 sm:pb-8">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-8">
                     <div className="w-full sm:max-w-md">
                         <div className="relative border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
