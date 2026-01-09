@@ -9,6 +9,6 @@ const VisuallyHidden = React.forwardRef<
 >(({ ...props }, ref) => (
   <VisuallyHiddenPrimitive.Root ref={ref} {...props} />
 ));
-VisuallyHidden.displayName = VisuallyHiddenPrimitive.Root.displayName;
+VisuallyHidden.displayName = 'VisuallyHidden';
 
 export { VisuallyHidden };
