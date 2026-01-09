@@ -1649,7 +1649,7 @@ export function AdminDashboard({
       ) : campaignCountChecked && !showOnboarding ? (
         <>
         <div className="px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+        <div className="flex items-center justify-between mb-6 gap-3">
           <div className="flex items-center gap-4 flex-1 min-w-0">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 flex-wrap">
@@ -1662,9 +1662,9 @@ export function AdminDashboard({
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-nowrap ml-auto">
             {userSession.user.role === 'super_admin' && hasPermission('system_admin') && (
-              <div className="w-full sm:w-auto">
+              <div className="w-auto">
                 <OrganizationSwitcher userSession={userSession} onOrganizationChange={onOrganizationSwitch} />
               </div>
             )}
