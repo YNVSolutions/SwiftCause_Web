@@ -285,19 +285,41 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
     formData.fundraisingTarget > 0 &&
     (previewImage || formData.coverImage);
 
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+
+  // Auto-scroll left sidebar based on active tab
+  React.useEffect(() => {
+    if (scrollContainerRef.current) {
+      const activeButton = scrollContainerRef.current.querySelector(
+        `button[data-tab="${activeTab}"]`
+      );
+      if (activeButton) {
+        activeButton.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+          inline: 'center',
+        });
+      }
+    }
+  }, [activeTab]);
+
   return (
-    <div className="w-full h-screen flex flex-col overflow-hidden">
-      <div className="flex flex-1 overflow-hidden">
+    <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
         {/* Left Sidebar - Navigation (hidden on mobile, visible on md and up) */}
-        <div className="hidden md:flex md:w-64 lg:w-72 flex-col bg-gray-50 border-r border-gray-200 overflow-y-auto">
-          <div className="sticky top-0 space-y-2 p-4 md:p-6">
+        <div className="md:col-span-1 order-2 md:order-1">
+          <div className="sticky top-4 md:top-6 space-y-2">
             <h3 className="text-xs sm:text-sm font-semibold text-gray-700 uppercase tracking-wider">
               Campaign
             </h3>
             <p className="text-xs text-gray-500 uppercase tracking-wider mb-4">Configuration</p>
 
-            <div className="space-y-1 md:space-y-2 flex md:flex-col overflow-x-auto md:overflow-visible -mx-4 md:mx-0 px-4 md:px-0 pb-2 md:pb-0">
+            <div 
+              ref={scrollContainerRef}
+              className="space-y-1 md:space-y-2 flex md:flex-col overflow-x-auto md:overflow-visible -mx-4 md:mx-0 px-4 md:px-0 pb-2 md:pb-0"
+            >
               <button
+                data-tab="basic-info"
                 onClick={() => setActiveTab('basic-info')}
                 className={`shrink-0 md:w-full text-left px-3 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-colors whitespace-nowrap md:whitespace-normal ${
                   activeTab === 'basic-info'
@@ -308,6 +330,7 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
                 Basic Info
               </button>
               <button
+                data-tab="media-gallery"
                 onClick={() => setActiveTab('media-gallery')}
                 className={`shrink-0 md:w-full text-left px-3 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-colors whitespace-nowrap md:whitespace-normal ${
                   activeTab === 'media-gallery'
@@ -318,6 +341,7 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
                 Media & Gallery
               </button>
               <button
+                data-tab="funding-details"
                 onClick={() => setActiveTab('funding-details')}
                 className={`shrink-0 md:w-full text-left px-3 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-colors whitespace-nowrap md:whitespace-normal ${
                   activeTab === 'funding-details'
@@ -328,6 +352,7 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
                 Funding Details
               </button>
               <button
+                data-tab="kiosk-distribution"
                 onClick={() => setActiveTab('kiosk-distribution')}
                 className={`shrink-0 md:w-full text-left px-3 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-colors whitespace-nowrap md:whitespace-normal ${
                   activeTab === 'kiosk-distribution'
@@ -341,10 +366,9 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
           </div>
         </div>
 
-        {/* Right Content - Form (scrollable) */}
-        <div className="flex-1 overflow-y-auto bg-white">
-          <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
-            <Card className="shadow-sm md:shadow-md">
+        {/* Right Content - Form (scrollable, order-1 on mobile, order-2 on md) */}
+        <div className="md:col-span-3 order-1 md:order-2 md:max-h-[calc(100vh-120px)] md:overflow-y-auto">
+          <Card className="shadow-sm md:shadow-md">
             <CardHeader className="border-b p-4 md:p-6">
               <div className="flex items-center justify-between gap-2">
                 <CardTitle className="text-lg md:text-2xl">New Initiative</CardTitle>
@@ -790,7 +814,6 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
               </form>
             </CardContent>
           </Card>
-          </div>
         </div>
       </div>
     </div>
