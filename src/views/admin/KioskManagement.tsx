@@ -251,7 +251,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                   variant="ghost"
                   size="sm"
                   onClick={() => onNavigate('admin')}
-                  className="w-fit px-0 text-xs font-semibold uppercase tracking-widest text-gray-500 hover:text-gray-800"
+                  className="-ml-3 w-fit px-0 text-xs font-semibold uppercase tracking-widest text-gray-500 hover:text-gray-800"
                 >
                   <ChevronLeft className="w-4 h-4 mr-0" />
                   Back to Dashboard
