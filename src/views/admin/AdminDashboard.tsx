@@ -1755,7 +1755,7 @@ export function AdminDashboard({
         ) : null}
         
         {/* Bento Grid Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {/* Total Raised Card */}
           <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
             <CardContent className="p-6">
@@ -1999,9 +1999,9 @@ export function AdminDashboard({
           </Collapsible>
         </div>
         {/* Bento Grid Charts Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
           {/* Campaign Goal Comparison - Spans 2 columns */}
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm md:col-span-2">
+          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm lg:col-span-2">
             <CardHeader className="p-6 border-b border-gray-100">
               <div className="flex items-center justify-between">
                 <div>
@@ -2077,7 +2077,7 @@ export function AdminDashboard({
           </Card>
 
           {/* Average Donation - Spans 2 columns */}
-          <Card className="flex flex-col bg-white rounded-xl border border-gray-200 shadow-sm md:col-span-2">
+          <Card className="flex flex-col bg-white rounded-xl border border-gray-200 shadow-sm lg:col-span-2">
             <CardHeader className="p-6 border-b border-gray-100">
               <div className="flex items-center justify-between">
                 <div>
@@ -2212,7 +2212,7 @@ export function AdminDashboard({
             </CardHeader>
             <CardContent className="p-6">
               {loading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   {Array.from({ length: 4 }).map((_, i) => (
                     <div key={i} className="space-y-3">
                       <Skeleton className="h-32 w-full rounded-lg" />
@@ -2223,7 +2223,7 @@ export function AdminDashboard({
                   ))}
                 </div>
               ) : topCampaigns.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   {topCampaigns.map((campaign: Campaign, index: number) => {
                     const collected = campaign.raised || 0;
                     const goal = campaign.goal || 1;
