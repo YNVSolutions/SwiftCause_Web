@@ -1473,7 +1473,7 @@ const CampaignManagement = ({
       <div className="space-y-4">
         <header className="bg-white shadow-sm border-b">
           <div className="px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start justify-between gap-3">
               <div className="flex flex-col gap-1">
                 <Button
                   variant="ghost"
@@ -1493,6 +1493,15 @@ const CampaignManagement = ({
                   </p>
                 </div>
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="hover:bg-gray-100 transition-colors shrink-0"
+                onClick={() => exportToCsv(filteredAndSortedCampaigns)}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export CSV
+              </Button>
             </div>
           </div>
         </header>
@@ -1621,23 +1630,6 @@ const CampaignManagement = ({
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    className="sm:hidden h-12 w-12 p-0"
-                    onClick={() => exportToCsv(filteredAndSortedCampaigns)}
-                    aria-label="Export CSV"
-                  >
-                    <Download className="w-5 h-5" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="hidden sm:inline-flex"
-                    onClick={() => exportToCsv(filteredAndSortedCampaigns)}
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Export CSV
-                  </Button>
                   <Button
                     className="bg-indigo-600 hover:bg-indigo-700 h-12 w-12 p-0 sm:hidden disabled:opacity-60 disabled:cursor-not-allowed"
                     onClick={() => {
