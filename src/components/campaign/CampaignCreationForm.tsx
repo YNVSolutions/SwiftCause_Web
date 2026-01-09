@@ -286,11 +286,11 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
     (previewImage || formData.coverImage);
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
+    <div className="w-full h-screen flex flex-col overflow-hidden">
+      <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar - Navigation (hidden on mobile, visible on md and up) */}
-        <div className="md:col-span-1 order-2 md:order-1">
-          <div className="sticky top-4 md:top-6 space-y-2">
+        <div className="hidden md:flex md:w-64 lg:w-72 flex-col bg-gray-50 border-r border-gray-200 overflow-y-auto">
+          <div className="sticky top-0 space-y-2 p-4 md:p-6">
             <h3 className="text-xs sm:text-sm font-semibold text-gray-700 uppercase tracking-wider">
               Campaign
             </h3>
@@ -301,7 +301,7 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
                 onClick={() => setActiveTab('basic-info')}
                 className={`shrink-0 md:w-full text-left px-3 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-colors whitespace-nowrap md:whitespace-normal ${
                   activeTab === 'basic-info'
-                    ? 'bg-green-500 text-white'
+                    ? 'bg-emerald-500 text-white'
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
@@ -311,7 +311,7 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
                 onClick={() => setActiveTab('media-gallery')}
                 className={`shrink-0 md:w-full text-left px-3 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-colors whitespace-nowrap md:whitespace-normal ${
                   activeTab === 'media-gallery'
-                    ? 'bg-green-500 text-white'
+                    ? 'bg-emerald-500 text-white'
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
@@ -321,7 +321,7 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
                 onClick={() => setActiveTab('funding-details')}
                 className={`shrink-0 md:w-full text-left px-3 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-colors whitespace-nowrap md:whitespace-normal ${
                   activeTab === 'funding-details'
-                    ? 'bg-green-500 text-white'
+                    ? 'bg-emerald-500 text-white'
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
@@ -331,7 +331,7 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
                 onClick={() => setActiveTab('kiosk-distribution')}
                 className={`shrink-0 md:w-full text-left px-3 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-colors whitespace-nowrap md:whitespace-normal ${
                   activeTab === 'kiosk-distribution'
-                    ? 'bg-green-500 text-white'
+                    ? 'bg-emerald-500 text-white'
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
@@ -341,9 +341,10 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
           </div>
         </div>
 
-        {/* Right Content - Form (order-1 on mobile, order-2 on md) */}
-        <div className="md:col-span-3 order-1 md:order-2">
-          <Card className="shadow-sm md:shadow-md">
+        {/* Right Content - Form (scrollable) */}
+        <div className="flex-1 overflow-y-auto bg-white">
+          <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+            <Card className="shadow-sm md:shadow-md">
             <CardHeader className="border-b p-4 md:p-6">
               <div className="flex items-center justify-between gap-2">
                 <CardTitle className="text-lg md:text-2xl">New Initiative</CardTitle>
@@ -789,6 +790,7 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
               </form>
             </CardContent>
           </Card>
+          </div>
         </div>
       </div>
     </div>
