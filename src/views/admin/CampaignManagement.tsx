@@ -1565,10 +1565,11 @@ const CampaignManagement = ({
                                             {progress.toFixed(0)}%
                                           </span>
                                           <div className="h-1.5 w-20 bg-gray-100 rounded-full overflow-hidden">
+                                            {/* eslint-disable-next-line */}
                                             <div
                                               className={`h-full ${getProgressColor(
                                                 progress
-                                              )}`}
+                                              )} transition-all duration-300`}
                                               style={{ width: `${progress}%` }}
                                             />
                                           </div>
