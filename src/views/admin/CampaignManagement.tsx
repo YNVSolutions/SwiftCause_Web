@@ -165,7 +165,6 @@ const CampaignDialog = ({
   const [formData, setFormData] = useState<DocumentData>(getInitialFormData());
   const [activeTab, setActiveTab] = useState<"basic" | "media-gallery" | "funding-details" | "kiosk-distribution">("basic");
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const formContainerRef = useRef<HTMLDivElement>(null);
   const isEditMode = !!campaign;
 
   const {
@@ -334,46 +333,6 @@ const CampaignDialog = ({
       setGalleryImagePreviews([]);
     }
   }, [campaign, isEditMode, setImagePreviewUrl]);
-
-  // Auto-update active tab as user scrolls through sections
-  useEffect(() => {
-    const formContainer = formContainerRef.current;
-    if (!formContainer) return;
-
-    const handleScroll = () => {
-      const scrollTop = formContainer.scrollTop;
-      const containerHeight = formContainer.clientHeight;
-      
-      // Get the center point of the visible area
-      const centerOfViewport = scrollTop + containerHeight / 2;
-      
-      const sections = formContainer.querySelectorAll('[data-section]');
-      let closestSection = 'basic';
-      let closestDistance = Infinity;
-      
-      sections.forEach((section: Element) => {
-        const element = section as HTMLElement;
-        const sectionTop = element.offsetTop;
-        const sectionHeight = element.clientHeight;
-        const sectionCenter = sectionTop + sectionHeight / 2;
-        
-        // Find section closest to the center of viewport
-        const distance = Math.abs(sectionCenter - centerOfViewport);
-        
-        if (distance < closestDistance) {
-          closestDistance = distance;
-          closestSection = element.getAttribute('data-section') || 'basic';
-        }
-      });
-
-      setActiveTab(closestSection as any);
-    };
-
-    formContainer.addEventListener('scroll', handleScroll, { passive: true });
-    return () => {
-      formContainer.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -694,14 +653,15 @@ const CampaignDialog = ({
           </div>
 
           {/* Right Content - Form */}
-          <div className="flex-1 overflow-y-auto bg-gray-50" ref={formContainerRef}>
+          <div className="flex-1 overflow-y-scroll bg-gray-50" style={{ scrollbarGutter: 'stable' }}>
             <form onSubmit={(e) => { e.preventDefault(); handleSaveChanges(); }} className="p-8 space-y-8">
               {/* Basic Info Tab */}
-              <div data-section="basic" className="space-y-8">
-                <div>
-                  <h2 className="text-3xl font-bold text-gray-900 mb-2">General Information</h2>
-                  <p className="text-sm text-gray-600">Add basic details about your campaign</p>
-                </div>
+              {activeTab === "basic" && (
+                <div className="space-y-8">
+                  <div>
+                    <h2 className="text-3xl font-bold text-gray-900 mb-2">General Information</h2>
+                    <p className="text-sm text-gray-600">Add basic details about your campaign</p>
+                  </div>
 
                   {/* Campaign Title */}
                   <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
@@ -768,13 +728,15 @@ const CampaignDialog = ({
                     </div>
                   </div>
                 </div>
+              )}
 
               {/* Media & Gallery Tab */}
-              <div data-section="media-gallery" className="space-y-6">
-                <h2 className="text-2xl font-bold text-gray-900">Visual Identity</h2>
+              {activeTab === "media-gallery" && (
+                <div className="space-y-6">
+                  <h2 className="text-2xl font-bold text-gray-900">Visual Identity</h2>
 
-                {/* Primary Cover Image */}
-                <div>
+                  {/* Primary Cover Image */}
+                  <div>
                     <Label className="block text-xs font-medium text-gray-700 mb-2 uppercase tracking-wide">
                       Primary Cover (16:9)
                     </Label>
@@ -882,19 +844,21 @@ const CampaignDialog = ({
                     />
                   </div>
                 </div>
+              )}
 
               {/* Funding Details Tab */}
-              <div data-section="funding-details" className="space-y-8">
-                <div>
-                  <h2 className="text-3xl font-bold text-gray-900 mb-2">Financial Goals</h2>
-                  <p className="text-sm text-gray-600">Set your fundraising target and donation tiers</p>
-                </div>
+              {activeTab === "funding-details" && (
+                <div className="space-y-8">
+                  <div>
+                    <h2 className="text-3xl font-bold text-gray-900 mb-2">Financial Goals</h2>
+                    <p className="text-sm text-gray-600">Set your fundraising target and donation tiers</p>
+                  </div>
 
-                {/* Fundraising Target & Donation Tiers */}
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-6">Donation Targets</h3>
-                  <div className="grid grid-cols-4 gap-4">
-                    <div>
+                  {/* Fundraising Target & Donation Tiers */}
+                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-6">Donation Targets</h3>
+                    <div className="grid grid-cols-4 gap-4">
+                      <div>
                         <Label htmlFor="goal" className="block text-sm font-semibold text-gray-900 mb-3">
                           Fundraising Target ($) <span className="text-red-500">*</span>
                         </Label>
@@ -970,20 +934,23 @@ const CampaignDialog = ({
                     </div>
                   </div>
                 </div>
-              {/* Kiosk Distribution Tab */}
-              <div data-section="kiosk-distribution" className="space-y-6">
-                <h2 className="text-2xl font-bold text-gray-900">Kiosk Distribution</h2>
+              )}
 
-                <label className="flex items-center p-4 rounded-lg cursor-pointer transition"
-                  style={{border: '2px solid #03AC13', backgroundColor: 'rgba(3, 172, 19, 0.05)'}}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(3, 172, 19, 0.1)'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(3, 172, 19, 0.05)'}>
-                  <input
-                    type="checkbox"
-                    checked={formData.isGlobal}
-                    onChange={handleChange}
-                    name="isGlobal"
-                    className="w-5 h-5"
+              {/* Kiosk Distribution Tab */}
+              {activeTab === "kiosk-distribution" && (
+                <div className="space-y-6">
+                  <h2 className="text-2xl font-bold text-gray-900">Kiosk Distribution</h2>
+
+                  <label className="flex items-center p-4 rounded-lg cursor-pointer transition"
+                    style={{border: '2px solid #03AC13', backgroundColor: 'rgba(3, 172, 19, 0.05)'}}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(3, 172, 19, 0.1)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(3, 172, 19, 0.05)'}>
+                    <input
+                      type="checkbox"
+                      checked={formData.isGlobal}
+                      onChange={handleChange}
+                      name="isGlobal"
+                      className="w-5 h-5"
                       style={{color: '#03AC13'}}
                     />
                     <div className="ml-4 flex-1">
@@ -997,6 +964,7 @@ const CampaignDialog = ({
                     )}
                   </label>
                 </div>
+              )}
             </form>
           </div>
         </div>
