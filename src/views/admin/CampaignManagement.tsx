@@ -574,12 +574,12 @@ const CampaignDialog = ({
           <DialogDescription>{dialogDescription}</DialogDescription>
         </DialogHeader>
         <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+          <nav className="-mb-px flex space-x-8 px-6" aria-label="Tabs">
             <button
               className={`${activeTab === "basic"
                 ? "border-indigo-500 text-indigo-600"
                 : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
+                } whitespace-nowrap border-b-2 py-4 px-0 text-sm font-medium`}
               onClick={() => setActiveTab("basic")}
             >
               Basic Info
@@ -588,7 +588,7 @@ const CampaignDialog = ({
               className={`${activeTab === "advanced"
                 ? "border-indigo-500 text-indigo-600"
                 : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
+                } whitespace-nowrap border-b-2 py-4 px-0 text-sm font-medium`}
               onClick={() => setActiveTab("advanced")}
             >
               Advanced Settings
@@ -596,205 +596,169 @@ const CampaignDialog = ({
           </nav>
         </div>
 
-        <div className="grid gap-6 py-4 px-1 flex-1 overflow-y-auto">
+        <div className="grid gap-6 py-6 px-6 flex-1 overflow-y-auto">
           {activeTab === "basic" && (
-            <>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="title" className="text-right">
-                  Title {isEditMode ? "" : "*"}
+            <div className="space-y-6">
+              {/* Title */}
+              <div className="space-y-2">
+                <Label htmlFor="title" className="text-sm font-medium text-gray-700">
+                  Title <span className="text-red-500">*</span>
                 </Label>
-                <div className="col-span-3">
-                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                    <Input
-                      id="title"
-                      name="title"
-                      value={formData.title}
-                      onChange={handleChange}
-                      className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
-                      placeholder="Enter campaign title"
-                    />
-                  </div>
-                </div>
+                <Input
+                  id="title"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  placeholder="Enter campaign title"
+                  className="w-full h-10 px-3 border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
+                />
               </div>
 
-              <div className="grid grid-cols-4 items-start gap-4">
-                <Label htmlFor="description" className="text-right pt-2">
-                  Description {isEditMode ? "" : "*"}
+              {/* Description */}
+              <div className="space-y-2">
+                <Label htmlFor="description" className="text-sm font-medium text-gray-700">
+                  Description <span className="text-red-500">*</span>
                 </Label>
-                <div className="col-span-3">
-                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                    <Textarea
-                      id="description"
-                      name="description"
-                      value={formData.description}
-                      onChange={handleChange}
-                      className="w-full px-3 py-2 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
-                      rows={3}
-                      placeholder="Enter campaign description"
-                    />
-                  </div>
-                </div>
+                <Textarea
+                  id="description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  placeholder="Enter campaign description"
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200 resize-none"
+                />
               </div>
 
-              <div className="grid grid-cols-4 items-start gap-4">
-                <Label className="text-right pt-2">Cover Image *</Label>
-                <div className="col-span-3 space-y-3">
-                  <p className="text-xs text-gray-500 mb-2">Upload a primary cover image for your campaign. For additional images, use the Gallery Images section in Advanced Settings.</p>
-                  {/* Large drag & drop area */}
+              {/* Cover Image */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-gray-700">
+                  Cover Image <span className="text-red-500">*</span>
+                </Label>
+                <p className="text-xs text-gray-600 mb-3">Upload a primary cover image for your campaign. For additional images, use the Gallery Images section in Advanced Settings.</p>
+                {imagePreview || formData.coverImageUrl ? (
+                  <div className="relative w-full h-40 bg-gray-100 rounded-lg overflow-hidden border border-gray-300">
+                    <img
+                      src={imagePreview || formData.coverImageUrl}
+                      alt="Campaign cover"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors flex items-center justify-center gap-3 opacity-0 hover:opacity-100">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="bg-white rounded-lg p-2 shadow-lg hover:bg-gray-50"
+                        title="Change cover image"
+                      >
+                        <FaImage className="w-5 h-5 text-gray-700" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleRemoveCoverImage}
+                        className="bg-white rounded-lg p-2 shadow-lg hover:bg-red-50"
+                        title="Remove cover image"
+                      >
+                        <Trash2 className="w-5 h-5 text-red-600" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
                   <div
                     role="button"
                     tabIndex={0}
                     onClick={() => fileInputRef.current?.click()}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        fileInputRef.current?.click();
-                      }
-                    }}
-                    className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 rounded-lg text-gray-400 hover:border-indigo-400 hover:text-indigo-500 hover:bg-gray-50 transition cursor-pointer bg-white"
-                    aria-label="Select cover image"
+                    className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition"
                   >
-                    {imagePreview || formData.coverImageUrl ? (
-                      <div className="relative w-full h-full group">
-                        <div className="absolute inset-0 p-4">
-                          <ImageWithFallback
-                            src={imagePreview || formData.coverImageUrl}
-                            alt="Campaign cover"
-                            className="w-full h-full object-cover rounded-lg"
-                            fallbackSrc="/campaign-fallback.svg"
-                          />
-                        </div>
-                        {/* Overlay with action buttons */}
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200 rounded-lg flex items-center justify-center gap-3">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              fileInputRef.current?.click();
-                            }}
-                            className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white rounded-lg p-3 shadow-lg hover:bg-gray-50 flex items-center gap-2"
-                            aria-label="Change cover image"
-                          >
-                            <FaImage className="w-5 h-5 text-gray-700" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRemoveCoverImage();
-                            }}
-                            className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white rounded-lg p-3 shadow-lg hover:bg-red-50 flex items-center gap-2"
-                            aria-label="Remove cover image"
-                          >
-                            <Trash2 className="w-5 h-5 text-red-600" />
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center gap-3">
-                        <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center">
-                          <FaImage className="w-6 h-6 text-gray-400" />
-                        </div>
-                        <div className="text-center">
-                          <p className="text-sm font-medium text-gray-600">Click to upload or drag & drop</p>
-                          <p className="text-xs text-gray-400 mt-1">PNG, JPG or WebP (max. 5MB)</p>
-                        </div>
-                      </div>
-                    )}
+                    <svg className="w-10 h-10 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <p className="text-sm text-gray-500 font-medium">Click to upload or drag & drop</p>
+                    <p className="text-xs text-gray-400 mt-1">PNG, JPG or WebP (max. 5MB)</p>
                   </div>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileSelect}
-                    className="hidden"
-                    name="coverImageUrl"
-                  />
-                  {selectedImage && (
-                    <div className="text-xs text-gray-500">
-                      <p>Selected: {selectedImage.name} ({(selectedImage.size / 1024 / 1024).toFixed(2)} MB)</p>
-                    </div>
-                  )}
-                </div>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  name="coverImageUrl"
+                />
               </div>
 
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="tags" className="text-right">
+              {/* Tags */}
+              <div className="space-y-2">
+                <Label htmlFor="tags" className="text-sm font-medium text-gray-700">
                   Tags
                 </Label>
-                <div className="col-span-3">
-                  <div className="space-y-2">
-                    {/* Tags input field */}
-                    <div className="border-2 border-indigo-200 rounded-lg p-3 focus-within:border-indigo-500 transition-colors min-h-[56px]">
-                      <div className="flex flex-wrap gap-2 items-center">
-                        {/* Display selected tags */}
-                        {selectedTags.map((tag) => (
-                          <Badge 
-                            key={tag} 
-                            variant="secondary" 
-                            className="bg-gray-100 text-gray-700 px-3 py-1 text-sm font-medium rounded-md flex items-center gap-1"
-                          >
-                            {tag}
-                            <button
-                              type="button"
-                              className="ml-1 hover:bg-gray-200 rounded-full p-0.5"
-                              onClick={() => {
-                                setSelectedTags(selectedTags.filter(t => t !== tag));
-                              }}
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </Badge>
-                        ))}
-                        {/* Input for new tags */}
-                        <input
-                          type="text"
-                          value={tagSearchValue}
-                          onChange={(e) => setTagSearchValue(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              const newTag = tagSearchValue.trim();
-                              if (newTag && !selectedTags.includes(newTag) && selectedTags.length < 5) {
-                                setSelectedTags([...selectedTags, newTag]);
-                                setTagSearchValue("");
-                              }
-                            } else if (e.key === 'Backspace' && tagSearchValue === '' && selectedTags.length > 0) {
-                              // Remove last tag when backspace is pressed on empty input
-                              e.preventDefault();
-                              setSelectedTags(selectedTags.slice(0, -1));
-                            }
+                <div className="border-2 border-gray-300 rounded-lg p-3 focus-within:border-indigo-500 transition-colors min-h-[40px]">
+                  <div className="flex flex-wrap gap-2 items-center">
+                    {selectedTags.map((tag) => (
+                      <Badge 
+                        key={tag} 
+                        variant="secondary" 
+                        className="bg-gray-200 text-gray-700 px-2 py-1 text-xs font-medium rounded flex items-center gap-1"
+                      >
+                        {tag}
+                        <button
+                          type="button"
+                          className="ml-1 hover:bg-gray-300 rounded-full p-0.5"
+                          onClick={() => {
+                            setSelectedTags(selectedTags.filter(t => t !== tag));
                           }}
-                          placeholder={selectedTags.length === 0 ? "Type and press Enter to add tags" : ""}
-                          className="flex-1 min-w-[120px] outline-none bg-transparent text-sm"
-                          disabled={selectedTags.length >= 5}
-                        />
-                      </div>
-                    </div>
-                    <p className="text-xs text-gray-500">
-                      Add up to 5 tags to categorize your campaign.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-x-4 gap-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="goal">Fundraising Goal ($)</Label>
-                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                    <Input
-                      id="goal"
-                      name="goal"
-                      type="number"
-                      value={formData.goal}
-                      onChange={handleChange}
-                      placeholder="0"
-                      className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                    <input
+                      type="text"
+                      value={tagSearchValue}
+                      onChange={(e) => setTagSearchValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          const newTag = tagSearchValue.trim();
+                          if (newTag && !selectedTags.includes(newTag) && selectedTags.length < 5) {
+                            setSelectedTags([...selectedTags, newTag]);
+                            setTagSearchValue("");
+                          }
+                        } else if (e.key === 'Backspace' && tagSearchValue === '' && selectedTags.length > 0) {
+                          e.preventDefault();
+                          setSelectedTags(selectedTags.slice(0, -1));
+                        }
+                      }}
+                      placeholder={selectedTags.length === 0 ? "Type and press Enter to add tags" : ""}
+                      className="flex-1 min-w-[120px] outline-none bg-transparent text-sm py-1"
+                      disabled={selectedTags.length >= 5}
                     />
                   </div>
                 </div>
-                <div className="space-y-2 h-15 ">
-                  <Label htmlFor="status">Status</Label>
+                <p className="text-xs text-gray-500">
+                  Add up to 5 tags to categorize your campaign.
+                </p>
+              </div>
+
+              {/* Fundraising Goal & Status */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="goal" className="text-sm font-medium text-gray-700">
+                    Fundraising Goal ($)
+                  </Label>
+                  <Input
+                    id="goal"
+                    name="goal"
+                    type="number"
+                    value={formData.goal}
+                    onChange={handleChange}
+                    placeholder="0"
+                    className="w-full h-10 px-3 border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="status" className="text-sm font-medium text-gray-700">
+                    Status
+                  </Label>
                   <Select
                     name="status"
                     value={formData.status}
@@ -804,11 +768,10 @@ const CampaignDialog = ({
                   >
                     <SelectTrigger
                       id="status"
-                      className="w-full h-12 bg-blue-500 border border-gray-300 rounded-lg px-3 flex items-center justify-start text-left focus-visible:ring-0 focus-visible:border-indigo-500 focus-visible:ring-indigo-100 transition-colors"
+                      className="w-full h-10 border border-gray-300 rounded-lg px-3 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
                     >
-                      <SelectValue placeholder="Select status" className="h-12" />
+                      <SelectValue placeholder="Select status" />
                     </SelectTrigger>
-
                     <SelectContent>
                       <SelectItem value="active">Active</SelectItem>
                       <SelectItem value="paused">Paused</SelectItem>
@@ -816,36 +779,38 @@ const CampaignDialog = ({
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
 
-
+              {/* Dates */}
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="startDate">Start Date</Label>
-                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                    <Input
-                      id="startDate"
-                      name="startDate"
-                      type="date"
-                      value={formData.startDate}
-                      onChange={handleChange}
-                      className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
-                    />
-                  </div>
+                  <Label htmlFor="startDate" className="text-sm font-medium text-gray-700">
+                    Start Date
+                  </Label>
+                  <Input
+                    id="startDate"
+                    name="startDate"
+                    type="date"
+                    value={formData.startDate}
+                    onChange={handleChange}
+                    className="w-full h-10 px-3 border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="endDate">End Date</Label>
-                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                    <Input
-                      id="endDate"
-                      name="endDate"
-                      type="date"
-                      value={formData.endDate}
-                      onChange={handleChange}
-                      className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
-                    />
-                  </div>
+                  <Label htmlFor="endDate" className="text-sm font-medium text-gray-700">
+                    End Date
+                  </Label>
+                  <Input
+                    id="endDate"
+                    name="endDate"
+                    type="date"
+                    value={formData.endDate}
+                    onChange={handleChange}
+                    className="w-full h-10 px-3 border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
+                  />
                 </div>
               </div>
-            </>
+            </div>
           )}
 
           {activeTab === "advanced" && (
@@ -1135,17 +1100,25 @@ const CampaignDialog = ({
             </div>
           )}
         </div>
-        <div className="flex justify-end space-x-2 pt-4 border-t flex-shrink-0">
-          <Button
-            variant="outline"
-            onClick={handleCancel}
-            disabled={uploadingImage || isSubmitting}
-          >
-            Cancel
-          </Button>
-          <Button onClick={handleSaveChanges} disabled={isSaveDisabled || isSubmitting}>
-            {isSubmitting ? (isEditMode ? "Saving..." : "Creating...") : saveButtonText}
-          </Button>
+        <div className="flex justify-between items-center pt-6 px-6 border-t flex-shrink-0 bg-gray-50">
+          <div></div>
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={handleCancel}
+              disabled={uploadingImage || isSubmitting}
+              className="px-6 h-11 border-gray-300 text-gray-700 hover:bg-gray-100"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSaveChanges} 
+              disabled={isSaveDisabled || isSubmitting}
+              className="px-6 h-11 bg-gray-700 text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting ? (isEditMode ? "Saving..." : "Creating...") : saveButtonText}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
