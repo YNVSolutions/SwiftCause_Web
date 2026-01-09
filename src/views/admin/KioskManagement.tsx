@@ -25,7 +25,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
 
 import {
-  Plus, Edit, Trash2, MapPin, Monitor, AlertTriangle, Save, Eye, EyeOff, Copy, Check, ArrowLeft, Search, DollarSign, Users, Wrench, Menu, X, Grid3X3, List, GalleryThumbnails, Image, Settings, Activity
+  Plus, Edit, Trash2, MapPin, AlertTriangle, Save, Eye, EyeOff, Copy, Check, ArrowLeft, Search, DollarSign, Users, Menu, X, Grid3X3, List, GalleryThumbnails, Image, Settings, Activity
 } from 'lucide-react';
 import { AdminLayout } from './AdminLayout';
 
@@ -44,7 +44,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
   const { organization, loading: orgLoading } = useOrganization(
     userSession.user.organizationId ?? null
   );
-  const { isStripeOnboarded, needsOnboarding } = useStripeOnboarding(organization);
+  const { needsOnboarding } = useStripeOnboarding(organization);
   const [showOnboardingDialog, setShowOnboardingDialog] = useState(false);
   
   // Search + status filter state
@@ -633,47 +633,60 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
           }
         }}
       >
-        <DialogContent className="sm:max-w-6xl p-0 border-0 shadow-2xl bg-white rounded-2xl overflow-hidden font-lexend max-h-[90vh] w-[95vw] sm:w-full">
+        <DialogContent className="sm:max-w-6xl p-0 border-0 shadow-2xl bg-white rounded-2xl overflow-hidden font-lexend h-[90vh] w-[95vw] sm:w-full flex flex-col [&>button]:hidden sm:[&>button]:flex">
           <VisuallyHidden>
             <DialogTitle>{editingKiosk ? 'Edit Kiosk Configuration' : 'Kiosk Setup Configuration'}</DialogTitle>
           </VisuallyHidden>
-          <div className="flex flex-col sm:flex-row h-[90vh] sm:h-[700px]">
-            {/* Mobile Header with Hamburger */}
-            <div className="sm:hidden flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">{editingKiosk ? 'Edit Kiosk' : 'Kiosk Setup'}</h3>
-                <p className="text-sm text-gray-500">Configuration</p>
-              </div>
+          
+          {/* Mobile Header - Fixed */}
+          <div className="sm:hidden flex flex-col border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 flex-shrink-0">
+            {/* Header with aligned controls and title */}
+            <div className="flex items-center justify-between px-4 pt-3 pb-4">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
-                className="p-2"
+                className="p-3 hover:bg-white/60 rounded-xl border border-gray-200/50 shadow-sm transition-all duration-200 hover:shadow-md"
               >
-                <Menu className="w-5 h-5" />
+                <Menu className="w-5 h-5 text-gray-700" />
+              </Button>
+              
+              {/* Centered Title Section */}
+              <div className="text-center flex-1 mx-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">{editingKiosk ? 'Edit Kiosk' : 'Kiosk Setup'}</h3>
+                <p className="text-sm text-gray-600">Configuration</p>
+              </div>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setIsCreateDialogOpen(false);
+                  setActiveSection('basic-info');
+                  setIsMobileSidebarOpen(false);
+                }}
+                className="p-3 hover:bg-white/60 rounded-xl border border-gray-200/50 shadow-sm transition-all duration-200 hover:shadow-md"
+              >
+                <X className="w-5 h-5 text-gray-700" />
               </Button>
             </div>
+          </div>
 
+          {/* Main Content Area - Flex container */}
+          <div className="flex flex-col sm:flex-row flex-1 min-h-0">
             {/* Sidebar Navigation */}
             <nav 
               className={`${
                 isMobileSidebarOpen ? 'block' : 'hidden'
-              } sm:block w-full sm:w-72 bg-gray-50 border-r border-gray-200 p-4 sm:p-8 absolute sm:relative z-10 sm:z-auto h-full sm:h-auto`} 
+              } sm:block w-full sm:w-72 bg-gradient-to-b from-gray-50 to-gray-100 sm:bg-gray-50 border-r border-gray-200 p-6 sm:p-8 absolute sm:relative z-10 sm:z-auto h-full sm:h-auto flex-shrink-0 shadow-xl sm:shadow-none`} 
               aria-label="Kiosk setup navigation"
             >
-              {/* Mobile Close Button */}
-              <div className="sm:hidden flex items-center justify-between mb-6">
+              {/* Mobile Navigation Header */}
+              <div className="sm:hidden mb-6 pb-4 border-b border-gray-200">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">Navigation</h3>
+                  <p className="text-sm text-gray-600 mt-1">Choose a section</p>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsMobileSidebarOpen(false)}
-                  className="p-2"
-                >
-                  <X className="w-5 h-5" />
-                </Button>
               </div>
 
               {/* Desktop Header */}
@@ -684,7 +697,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
               
               <div className="relative">
                 {/* Navigation Items */}
-                <ul className="space-y-2 relative" role="list">
+                <ul className="space-y-3 relative" role="list">
                   {navigationItems.map((item) => (
                     <li key={item.id}>
                       <button
@@ -693,15 +706,18 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                           setIsMobileSidebarOpen(false);
                         }}
                         onKeyDown={(e) => handleNavKeyDown(e, item.id)}
-                        className={`w-full flex items-center gap-3 px-4 sm:px-5 py-3 sm:py-4 rounded-lg cursor-pointer transition-colors text-left ${
+                        className={`w-full flex items-center gap-3 px-4 sm:px-5 py-4 rounded-xl cursor-pointer transition-all duration-200 text-left shadow-sm ${
                           activeSection === item.id 
-                            ? 'bg-green-600 text-white' 
-                            : 'text-gray-600 hover:bg-gray-100'
+                            ? 'bg-green-600 text-white shadow-lg shadow-green-600/25 border border-green-500' 
+                            : 'text-gray-700 hover:bg-white hover:shadow-md border border-gray-200/50 bg-gray-50/50'
                         }`}
                         aria-current={activeSection === item.id ? 'step' : undefined}
                         tabIndex={0}
                       >
                         <div className="text-sm font-medium">{item.label}</div>
+                        {activeSection === item.id && (
+                          <div className="ml-auto w-2 h-2 bg-white rounded-full"></div>
+                        )}
                       </button>
                     </li>
                   ))}
@@ -709,10 +725,10 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
               </div>
             </nav>
 
-            {/* Main Content */}
-            <div className="flex-1 flex flex-col min-w-0">
-              {/* Header */}
-              <header className="hidden sm:flex items-center justify-between p-6 lg:p-8 border-b border-gray-200">
+            {/* Main Content Column - Flex container */}
+            <div className="flex-1 flex flex-col min-h-0 min-w-0">
+              {/* Header - Fixed */}
+              <header className="hidden sm:flex items-center justify-between p-6 lg:p-8 border-b border-gray-200 flex-shrink-0">
                 <div className="flex items-center gap-4">
                   <div className="text-base text-gray-500 uppercase tracking-wide font-medium">
                     {editingKiosk ? 'EDIT • KIOSK' : 'SETUP • NEW KIOSK'}
@@ -720,10 +736,10 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                 </div>
               </header>
 
-              {/* Scrollable Content Container */}
+              {/* Scrollable Content Container - The only scroll area */}
               <div 
                 ref={scrollContainerRef}
-                className="flex-1 overflow-y-auto"
+                className="flex-1 overflow-y-auto min-h-0"
               >
                 {/* Basic Information Section */}
                 <section 
@@ -827,7 +843,15 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                         {newKiosk.assignedCampaigns.length === 0 ? (
                           <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 sm:p-8 text-center">
                             <button
-                              onClick={() => scrollToSection('campaigns')}
+                              onClick={() => {
+                                const availableCampaignsElement = document.getElementById('available-campaigns');
+                                if (availableCampaignsElement) {
+                                  availableCampaignsElement.scrollIntoView({ 
+                                    behavior: 'smooth', 
+                                    block: 'start' 
+                                  });
+                                }
+                              }}
                               className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 hover:bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3 transition-colors cursor-pointer group"
                               aria-label="Scroll to available campaigns"
                             >
@@ -1109,8 +1133,8 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                 </section>
               </div>
 
-              {/* Footer */}
-              <footer className="flex flex-col sm:flex-row items-center justify-between p-4 sm:p-6 lg:p-8 border-t border-gray-200 bg-gray-50 gap-4 sm:gap-0">
+              {/* Footer - Fixed */}
+              <footer className="flex flex-col sm:flex-row items-center justify-between p-4 sm:p-6 lg:p-8 border-t border-gray-200 bg-gray-50 gap-4 sm:gap-0 flex-shrink-0">
                 <Button
                   variant="ghost"
                   onClick={() => {
