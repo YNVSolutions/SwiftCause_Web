@@ -152,7 +152,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                         </div>
                     </div>
                     {hasPermission('create_user') && (
-                        <Button className="bg-indigo-600 text-white w-full sm:w-auto sm:hidden" onClick={() => setCreateDialogOpen(true)}>
+                        <Button className="bg-indigo-600 text-white w-full sm:w-auto sm:hidden h-12 text-base font-semibold" onClick={() => setCreateDialogOpen(true)}>
                             <Plus className="w-4 h-4 mr-2" />Add User
                         </Button>
                     )}
