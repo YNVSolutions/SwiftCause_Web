@@ -347,20 +347,32 @@ const CampaignDialog = ({
       cancelAnimationFrame(animationFrameId);
       
       animationFrameId = requestAnimationFrame(() => {
-        const scrollTop = formContainer.scrollTop;
-        const containerHeight = formContainer.clientHeight;
-        
-        // Get all sections
         const sections = formContainer.querySelectorAll('[data-section]');
+        const containerRect = formContainer.getBoundingClientRect();
         let currentSection = 'basic';
+        let maxVisibility = 0;
         
+        // Find which section has the most visible area in the container
         sections.forEach((section: Element) => {
           const element = section as HTMLElement;
           const rect = element.getBoundingClientRect();
-          const containerRect = formContainer.getBoundingClientRect();
           
-          // Check if section is in the upper half of viewport
-          if (rect.top < containerHeight / 2 && rect.bottom > 0) {
+          // Calculate position relative to container
+          const elementTopRelative = rect.top - containerRect.top;
+          const elementBottomRelative = rect.bottom - containerRect.top;
+          
+          // Container viewport
+          const containerTop = 0;
+          const containerBottom = containerRect.height;
+          
+          // Calculate how much of this section is visible in the container
+          const visibleTop = Math.max(containerTop, elementTopRelative);
+          const visibleBottom = Math.min(containerBottom, elementBottomRelative);
+          const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+          
+          // If this section has more visible area than previous, it's the current one
+          if (visibleHeight > maxVisibility) {
+            maxVisibility = visibleHeight;
             currentSection = element.getAttribute('data-section') || 'basic';
           }
         });
