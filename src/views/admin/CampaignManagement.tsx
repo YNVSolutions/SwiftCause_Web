@@ -340,35 +340,46 @@ const CampaignDialog = ({
     const formContainer = formContainerRef.current;
     if (!formContainer) return;
 
+    let scrollTimeout: NodeJS.Timeout;
+
     const handleScroll = () => {
-      const scrollTop = formContainer.scrollTop;
-      const containerHeight = formContainer.clientHeight;
+      // Debounce the scroll detection to avoid excessive updates
+      clearTimeout(scrollTimeout);
       
-      // Get all section headers by their data attributes
-      const sections = formContainer.querySelectorAll('[data-section]');
-      let closestSection = 'basic';
-      let closestDistance = Infinity;
-
-      sections.forEach((section: Element) => {
-        const element = section as HTMLElement;
-        const rect = element.getBoundingClientRect();
-        const containerRect = formContainer.getBoundingClientRect();
-        const relativeTop = rect.top - containerRect.top + scrollTop;
+      scrollTimeout = setTimeout(() => {
+        const scrollTop = formContainer.scrollTop;
         
-        // Calculate distance from top of visible area
-        const distance = Math.abs(relativeTop - scrollTop - 100);
-        
-        if (distance < closestDistance) {
-          closestDistance = distance;
-          closestSection = element.getAttribute('data-section') || 'basic';
-        }
-      });
+        // Get all section headers by their data attributes
+        const sections = formContainer.querySelectorAll('[data-section]');
+        let closestSection = 'basic';
+        let closestDistance = Infinity;
 
-      setActiveTab(closestSection as any);
+        sections.forEach((section: Element) => {
+          const element = section as HTMLElement;
+          const rect = element.getBoundingClientRect();
+          const containerRect = formContainer.getBoundingClientRect();
+          const relativeTop = rect.top - containerRect.top + scrollTop;
+          
+          // Calculate distance from top of visible area (only if section is above scroll position)
+          if (relativeTop < scrollTop + 150) {
+            const distance = scrollTop - relativeTop;
+            
+            if (distance >= 0 && distance < closestDistance) {
+              closestDistance = distance;
+              closestSection = element.getAttribute('data-section') || 'basic';
+            }
+          }
+        });
+
+        setActiveTab(closestSection as any);
+      }, 100); // Debounce for 100ms
     };
 
     formContainer.addEventListener('scroll', handleScroll);
-    return () => formContainer.removeEventListener('scroll', handleScroll);
+    return () => {
+      clearTimeout(scrollTimeout);
+      formContainer.removeEventListener('scroll', handleScroll);
+    };
   }, []);
 
   const handleChange = (
