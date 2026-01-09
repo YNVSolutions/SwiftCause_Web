@@ -19,7 +19,6 @@ import {
 
   SidebarInset,
   SidebarTrigger,
-  SidebarRail,
   useSidebar,
 } from "../../shared/ui/sidebar";
 import {
@@ -303,17 +302,7 @@ function SidebarUserFooter({
           >
             <LogOut className="h-4 w-4" />
           </Button>
-        ) : (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onLogout}
-            className="h-8 w-8 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors absolute bottom-3 left-1/2 -translate-x-1/2"
-            title="Log out"
-          >
-            <LogOut className="h-4 w-4" />
-          </Button>
-        )}
+        ) : null}
       </div>
     </div>
   );
@@ -323,9 +312,9 @@ function SidebarHeaderContent() {
   const { state } = useSidebar();
   const isExpanded = state === "expanded";
   return (
-    <div className="flex items-center gap-3 px-4 py-4">
-      <div className="relative">
-        <img src="/logo.png" alt="SwiftCause Logo" className="h-10 w-10 rounded-xl shadow-md" />
+    <div className="flex items-center gap-3 px-4 py-4 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:gap-0">
+      <div className="relative h-10 w-10 shrink-0 group-data-[collapsible=icon]:h-11 group-data-[collapsible=icon]:w-11">
+        <img src="/logo.png" alt="SwiftCause Logo" className="h-10 w-10 rounded-xl shadow-md group-data-[collapsible=icon]:h-11 group-data-[collapsible=icon]:w-11" />
         <div className="absolute -bottom-1 -right-1 h-3 w-3 bg-green-500 rounded-full border-2 border-white"></div>
       </div>
       {isExpanded && (
@@ -365,7 +354,7 @@ export function AdminLayout({
           <SidebarHeaderContent />
         </SidebarHeader>
         
-        <SidebarContent className="px-3 py-4 flex-1 overflow-y-auto">
+        <SidebarContent className="px-3 py-4 flex-1 overflow-y-auto group-data-[collapsible=icon]:px-1">
           <SidebarGroup>
             <SidebarGroupLabel className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-3">
               Main Menu
@@ -503,7 +492,6 @@ export function AdminLayout({
             onProfileClick={() => setIsProfileOpen(true)}
           />
         </SidebarFooter>
-        <SidebarRail />
       </Sidebar>
 
       <SidebarInset className="flex-1 flex flex-col overflow-hidden relative">
@@ -567,5 +555,3 @@ export function AdminLayout({
     </SidebarProvider>
   );
 }
-
-
