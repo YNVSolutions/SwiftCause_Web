@@ -34,7 +34,9 @@ export default function CreateCampaignPage() {
     setIsLoading(true);
     try {
       // TODO: Implement campaign creation API call
-      console.log('Campaign data:', data);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Campaign data:', data);
+      }
 
       // Simulated API call delay
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -54,12 +56,13 @@ export default function CreateCampaignPage() {
 
   const hasPermission = (permission: string) => {
     // TODO: Implement permission checking based on user role
-    return true;
+    // For now, return false until fully implemented to prevent unauthorized access
+    return false;
   };
 
   return (
     <AdminLayout
-      onNavigate={handleNavigate as any}
+      onNavigate={handleNavigate}
       onLogout={handleLogout}
       userSession={currentAdminSession}
       hasPermission={hasPermission}
