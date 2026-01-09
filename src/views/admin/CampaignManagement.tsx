@@ -340,50 +340,37 @@ const CampaignDialog = ({
     const formContainer = formContainerRef.current;
     if (!formContainer) return;
 
-    let animationFrameId: number;
-
     const handleScroll = () => {
-      // Use requestAnimationFrame for smooth updates
-      cancelAnimationFrame(animationFrameId);
+      const scrollTop = formContainer.scrollTop;
+      const containerHeight = formContainer.clientHeight;
       
-      animationFrameId = requestAnimationFrame(() => {
-        const sections = formContainer.querySelectorAll('[data-section]');
-        const containerRect = formContainer.getBoundingClientRect();
-        let currentSection = 'basic';
-        let maxVisibility = 0;
+      // Get the center point of the visible area
+      const centerOfViewport = scrollTop + containerHeight / 2;
+      
+      const sections = formContainer.querySelectorAll('[data-section]');
+      let closestSection = 'basic';
+      let closestDistance = Infinity;
+      
+      sections.forEach((section: Element) => {
+        const element = section as HTMLElement;
+        const sectionTop = element.offsetTop;
+        const sectionHeight = element.clientHeight;
+        const sectionCenter = sectionTop + sectionHeight / 2;
         
-        // Find which section has the most visible area in the container
-        sections.forEach((section: Element) => {
-          const element = section as HTMLElement;
-          const rect = element.getBoundingClientRect();
-          
-          // Calculate position relative to container
-          const elementTopRelative = rect.top - containerRect.top;
-          const elementBottomRelative = rect.bottom - containerRect.top;
-          
-          // Container viewport
-          const containerTop = 0;
-          const containerBottom = containerRect.height;
-          
-          // Calculate how much of this section is visible in the container
-          const visibleTop = Math.max(containerTop, elementTopRelative);
-          const visibleBottom = Math.min(containerBottom, elementBottomRelative);
-          const visibleHeight = Math.max(0, visibleBottom - visibleTop);
-          
-          // If this section has more visible area than previous, it's the current one
-          if (visibleHeight > maxVisibility) {
-            maxVisibility = visibleHeight;
-            currentSection = element.getAttribute('data-section') || 'basic';
-          }
-        });
-
-        setActiveTab(currentSection as any);
+        // Find section closest to the center of viewport
+        const distance = Math.abs(sectionCenter - centerOfViewport);
+        
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestSection = element.getAttribute('data-section') || 'basic';
+        }
       });
+
+      setActiveTab(closestSection as any);
     };
 
     formContainer.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
-      cancelAnimationFrame(animationFrameId);
       formContainer.removeEventListener('scroll', handleScroll);
     };
   }, []);
