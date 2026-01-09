@@ -27,14 +27,20 @@ import { KioskCredentialsCard } from './components/KioskCredentialsCard';
 
 
 import {
-  Plus, Edit, Trash2, Search, ArrowLeft, Settings, Activity, MapPin,
-  DollarSign, Users, WifiOff, CheckCircle, Monitor, Download, Target, Star, AlertTriangle
+  Plus, Edit, Trash2, Search, ChevronLeft, Settings, Activity, MapPin,
+  DollarSign, Users, WifiOff, CheckCircle, Monitor, Download, Target, Star, AlertTriangle, MoreVertical
 } from 'lucide-react';
 import { Skeleton } from "../../shared/ui/skeleton"; // Import Skeleton
 import { Ghost } from "lucide-react"; // Import Ghost
 import { AdminLayout } from './AdminLayout';
 import { useOrganization } from "../../shared/lib/hooks/useOrganization";
 import { useStripeOnboarding, StripeOnboardingDialog } from "../../features/stripe-onboarding";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../../shared/ui/dropdown-menu";
 
 
 export function KioskManagement({ onNavigate, onLogout, userSession, hasPermission }: {
@@ -242,54 +248,29 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
       hasPermission={hasPermission}
       activeScreen="admin-kiosks"
     >
-      <div className="space-y-6">
-        <header className="bg-white shadow-sm border-b rounded-md">
-          <div className="px-2 sm:px-6 lg:px-8">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between h-auto sm:h-16 gap-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                <Button variant="ghost" size="sm" onClick={() => onNavigate('admin')} className="flex items-center space-x-2">
-                  <ArrowLeft className="w-4 h-4" /><span>Back to Dashboard</span>
+      <div className="space-y-4">
+        <header className="bg-white shadow-sm border-b">
+          <div className="px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex flex-col gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onNavigate('admin')}
+                  className="-ml-3 w-fit px-0 text-xs font-semibold uppercase tracking-widest text-gray-500 hover:text-gray-800"
+                >
+                  <ChevronLeft className="w-4 h-4 mr-0" />
+                  Back to Dashboard
                 </Button>
-                <div className="h-6 w-px bg-gray-300 hidden sm:block" />
                 <div>
-                  <h1 className="text-xl font-semibold text-gray-900">Kiosk Management</h1>
+                  <h1 className="text-2xl font-semibold text-gray-900 sm:text-3xl">Kiosk Management</h1>
                   <p className="text-sm text-gray-600">Configure and monitor donation kiosks</p>
                 </div>
-              </div>
-              <div className="flex flex-col sm:flex-row items-stretch gap-2 mb-6 sm:mb-0 mt-2">
-                <div className="w-full sm:w-80">
-                  <div className="relative">
-                    <div className="h-10 items-center flex flex-row gap-5 border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                      <div>
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                      </div>
-                      <div>
-                        <Input
-                          placeholder="Search kiosks..."
-                          value={searchTerm}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
-                          className="pl-10 w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                {hasPermission('create_kiosk') && (
-                  <Button 
-                    onClick={() => {
-                      setIsCreateDialogOpen(true);
-                    }}
-                    className="bg-indigo-600 hover:bg-indigo-700"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Kiosk
-                  </Button>
-                )}
               </div>
             </div>
           </div>
         </header>
-        <main className="px-2 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <main className="px-2 sm:px-6 lg:px-8 pt-2 pb-4 sm:pt-4 sm:pb-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Kiosks</p><p className="text-2xl font-semibold text-gray-900">{kiosks.length}</p><div className="flex items-center space-x-4 text-xs text-gray-500 mt-1"><span className="text-green-600">{totalStats.online} online</span><span className="text-red-600">{totalStats.offline} offline</span></div></div><Settings className="h-8 w-8 text-blue-600" /></div></CardContent></Card>
             <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Raised</p><p className="text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.totalRaised)}</p></div><DollarSign className="h-8 w-8 text-green-600" /></div></CardContent></Card>
@@ -298,11 +279,178 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
           </div>
           {/* Modern Table Container */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div className="px-6 pt-6">
+              <div className="flex items-center justify-between gap-3">
+                <div className="w-full max-w-sm">
+                  <div className="relative border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Input
+                      placeholder="Search kiosks..."
+                      value={searchTerm}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+                      className="pl-10 pr-3 w-full h-12 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
+                    />
+                  </div>
+                </div>
+                {hasPermission('create_kiosk') && (
+                  <>
+                    <Button
+                      onClick={() => {
+                        setIsCreateDialogOpen(true);
+                      }}
+                      className="bg-indigo-600 hover:bg-indigo-700 h-10 w-10 p-0 text-white sm:hidden"
+                      aria-label="Add Kiosk"
+                    >
+                      <Plus className="w-5 h-5" />
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setIsCreateDialogOpen(true);
+                      }}
+                      className="bg-indigo-600 hover:bg-indigo-700 h-10 px-4 text-white hidden sm:inline-flex"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Kiosk
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
             <div className="px-6 py-5 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900">Kiosks ({filteredKiosks.length})</h3>
               <p className="text-sm text-gray-600 mt-1">Monitor and manage your kiosk network</p>
             </div>
-            <div className="overflow-x-auto">
+            <div className="md:hidden px-6 py-6 space-y-4">
+              {filteredKiosks.length > 0 ? (
+                filteredKiosks.map((kiosk) => {
+                  const assignedIds = Array.from(new Set(kiosk.assignedCampaigns || [])).filter(Boolean);
+                  const assignedCount = campaigns.filter((c) => assignedIds.includes(c.id)).length;
+                  const globalCount = kiosk.settings?.showAllCampaigns
+                    ? campaigns.filter((c) => c.isGlobal).length
+                    : 0;
+                  const defaultCampaign =
+                    campaigns.find((c) => c.id === kiosk.defaultCampaign)?.title || '';
+
+                  return (
+                    <div
+                      key={kiosk.id}
+                      className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100 text-gray-600">
+                            <Monitor className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <div className="text-sm font-semibold text-gray-900">{kiosk.name}</div>
+                            <div className="flex items-center gap-1 text-xs text-gray-500">
+                              <MapPin className="h-3 w-3" />
+                              {kiosk.location}
+                            </div>
+                          </div>
+                        </div>
+                        {(hasPermission('edit_kiosk') || hasPermission('delete_kiosk')) && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-gray-500 hover:bg-gray-100"
+                                aria-label="Kiosk actions"
+                              >
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              {hasPermission('edit_kiosk') && (
+                                <DropdownMenuItem
+                                  onSelect={() => {
+                                    setAssigningKiosk(kiosk);
+                                    setIsAssignmentDialogOpen(true);
+                                  }}
+                                  className="flex items-center gap-2"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                  Edit
+                                </DropdownMenuItem>
+                              )}
+                              {hasPermission('delete_kiosk') && (
+                                <DropdownMenuItem
+                                  onSelect={() => handleDeleteKiosk(kiosk)}
+                                  className="flex items-center gap-2 text-red-600 focus:text-red-600"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                      </div>
+
+                      <div className="mt-4">
+                        <KioskCredentialsCard
+                          kioskId={kiosk.id}
+                          accessCode={kiosk.accessCode}
+                          className="w-full"
+                        />
+                      </div>
+
+                      <div className="mt-4">
+                        {getStatusBadge(kiosk.status)}
+                      </div>
+
+                      <div className="mt-4 border-t border-gray-100 pt-4 text-sm">
+                        <div className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+                          Performance
+                        </div>
+                        <div className="mt-1 flex items-center gap-2 font-semibold text-gray-900">
+                          <DollarSign className="h-4 w-4 text-gray-400" />
+                          {formatCurrency(performanceData[kiosk.id]?.totalRaised || 0)}
+                        </div>
+                      </div>
+
+                      <div className="mt-4 border-t border-gray-100 pt-4 text-sm">
+                        <div className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+                          Campaign Assignment
+                        </div>
+                        <div className="mt-2 flex items-center gap-2 text-gray-600">
+                          <Target className="h-4 w-4 text-gray-400" />
+                          <span>
+                            {assignedCount} assigned
+                            {globalCount > 0 && (
+                              <span className="text-xs text-gray-400 ml-2">
+                                (+{globalCount} global showing)
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                        {defaultCampaign && (
+                          <div className="mt-2 flex items-center gap-2 text-gray-600">
+                            <Star className="h-4 w-4 text-yellow-500" />
+                            <span>{defaultCampaign}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Ghost className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                  <p className="text-lg font-medium mb-2">No Kiosks Found</p>
+                  <p className="text-sm mb-4">
+                    No kiosks have been registered yet.
+                  </p>
+                  {hasPermission("create_kiosk") && (
+                    <Button onClick={() => setIsCreateDialogOpen(true)}>
+                      <Plus className="w-4 h-4 mr-2" /> Register New Kiosk
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="hidden md:block overflow-x-auto">
               {filteredKiosks.length > 0 ? (
                 <Table className="min-w-full">
                   <TableHeader>
@@ -481,6 +629,12 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[400px] p-0 border-0 shadow-2xl">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Delete kiosk</DialogTitle>
+            <DialogDescription>
+              Confirm deletion of the selected kiosk.
+            </DialogDescription>
+          </DialogHeader>
           <div className="bg-white rounded-2xl p-8 text-center">
             {/* Warning Icon */}
             <div className="flex justify-center mb-6">
