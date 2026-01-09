@@ -30,7 +30,7 @@ import {
   CommandItem,
 } from "../../shared/ui/command";
 import { Badge } from "../../shared/ui/badge";
-import { X, Check, ChevronsUpDown, Trash2 } from "lucide-react";
+import { X, Check, ChevronsUpDown, Trash2, Save } from "lucide-react";
 import {
   FaEdit,
   FaSearch,
@@ -163,7 +163,7 @@ const CampaignDialog = ({
   onSave,
 }: CampaignDialogProps) => {
   const [formData, setFormData] = useState<DocumentData>(getInitialFormData());
-  const [activeTab, setActiveTab] = useState<"basic" | "advanced">("basic");
+  const [activeTab, setActiveTab] = useState<"basic" | "media-gallery" | "funding-details" | "kiosk-distribution">("basic");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isEditMode = !!campaign;
 
@@ -435,6 +435,14 @@ const CampaignDialog = ({
     }
   };
 
+  const handleDonationTierChange = (index: number, value: string) => {
+    setFormData((prev) => {
+      const newTiers = Array.isArray(prev.donationTiers) ? [...prev.donationTiers] : [];
+      newTiers[index] = value;
+      return { ...prev, donationTiers: newTiers };
+    });
+  };
+
   const handleSaveChanges = async () => {
     if (!formData.title || !formData.description) {
       alert("Title and Description are required.");
@@ -561,562 +569,414 @@ const CampaignDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="flex items-center">
-            {isEditMode ? (
-              <Settings className="mr-2 h-5 w-5" />
-            ) : (
-              <Plus className="mr-2 h-5 w-5" />
-            )}{" "}
+      <DialogContent className="sm:max-w-[900px] max-h-[95vh] flex flex-col p-0">
+        {/* Header */}
+        <div className="px-6 py-5 border-b border-gray-200 bg-white">
+          <DialogTitle className="text-2xl font-bold text-gray-900">
             {dialogTitle}
           </DialogTitle>
-          <DialogDescription>{dialogDescription}</DialogDescription>
-        </DialogHeader>
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8 px-6" aria-label="Tabs">
-            <button
-              className={`${activeTab === "basic"
-                ? "border-indigo-500 text-indigo-600"
-                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                } whitespace-nowrap border-b-2 py-4 px-0 text-sm font-medium`}
-              onClick={() => setActiveTab("basic")}
-            >
-              Basic Info
-            </button>
-            <button
-              className={`${activeTab === "advanced"
-                ? "border-indigo-500 text-indigo-600"
-                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                } whitespace-nowrap border-b-2 py-4 px-0 text-sm font-medium`}
-              onClick={() => setActiveTab("advanced")}
-            >
-              Advanced Settings
-            </button>
-          </nav>
+          <DialogDescription className="mt-2 text-gray-600 text-sm">
+            {dialogDescription}
+          </DialogDescription>
         </div>
 
-        <div className="grid gap-6 py-6 px-6 flex-1 overflow-y-auto">
-          {activeTab === "basic" && (
-            <div className="space-y-6">
-              {/* Title */}
-              <div className="space-y-2">
-                <Label htmlFor="title" className="text-sm font-medium text-gray-700">
-                  Title <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="title"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleChange}
-                  placeholder="Enter campaign title"
-                  className="w-full h-10 px-3 border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
-                />
+        {/* Main Content - Grid Layout */}
+        <div className="flex flex-1 overflow-hidden">
+          {/* Left Sidebar - Navigation */}
+          <div className="w-56 border-r border-gray-200 bg-gradient-to-b from-white to-gray-50 overflow-y-auto shadow-sm">
+            <div className="p-5 space-y-3">
+              <div className="mb-6">
+                <h3 className="text-xs font-bold text-gray-700 uppercase tracking-widest">Configuration</h3>
+                <div className="h-1 w-12 bg-teal-500 rounded mt-2"></div>
               </div>
+              
+              <button
+                onClick={() => setActiveTab("basic")}
+                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                  activeTab === "basic"
+                    ? "bg-teal-500 text-white shadow-md hover:shadow-lg hover:bg-teal-600"
+                    : "text-gray-700 hover:bg-gray-200 hover:text-gray-900"
+                }`}
+              >
+                Basic Info
+              </button>
+              
+              <button
+                onClick={() => setActiveTab("media-gallery")}
+                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                  activeTab === "media-gallery"
+                    ? "bg-teal-500 text-white shadow-md hover:shadow-lg hover:bg-teal-600"
+                    : "text-gray-700 hover:bg-gray-200 hover:text-gray-900"
+                }`}
+              >
+                Media & Gallery
+              </button>
+              
+              <button
+                onClick={() => setActiveTab("funding-details")}
+                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                  activeTab === "funding-details"
+                    ? "bg-teal-500 text-white shadow-md hover:shadow-lg hover:bg-teal-600"
+                    : "text-gray-700 hover:bg-gray-200 hover:text-gray-900"
+                }`}
+              >
+                Funding Details
+              </button>
+              
+              <button
+                onClick={() => setActiveTab("kiosk-distribution")}
+                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                  activeTab === "kiosk-distribution"
+                    ? "bg-teal-500 text-white shadow-md hover:shadow-lg hover:bg-teal-600"
+                    : "text-gray-700 hover:bg-gray-200 hover:text-gray-900"
+                }`}
+              >
+                Kiosk Distribution
+              </button>
+            </div>
+          </div>
 
-              {/* Description */}
-              <div className="space-y-2">
-                <Label htmlFor="description" className="text-sm font-medium text-gray-700">
-                  Description <span className="text-red-500">*</span>
-                </Label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  placeholder="Enter campaign description"
-                  rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200 resize-none"
-                />
-              </div>
+          {/* Right Content - Form */}
+          <div className="flex-1 overflow-y-auto bg-gray-50">
+            <form onSubmit={(e) => { e.preventDefault(); handleSaveChanges(); }} className="p-8 space-y-8">
+              {/* Basic Info Tab */}
+              {activeTab === "basic" && (
+                <div className="space-y-8">
+                  <div>
+                    <h2 className="text-3xl font-bold text-gray-900 mb-2">General Information</h2>
+                    <p className="text-sm text-gray-600">Add basic details about your campaign</p>
+                  </div>
 
-              {/* Cover Image */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-700">
-                  Cover Image <span className="text-red-500">*</span>
-                </Label>
-                <p className="text-xs text-gray-600 mb-3">Upload a primary cover image for your campaign. For additional images, use the Gallery Images section in Advanced Settings.</p>
-                {imagePreview || formData.coverImageUrl ? (
-                  <div className="relative w-full h-40 bg-gray-100 rounded-lg overflow-hidden border border-gray-300">
-                    <img
-                      src={imagePreview || formData.coverImageUrl}
-                      alt="Campaign cover"
-                      className="w-full h-full object-cover"
+                  {/* Campaign Title */}
+                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                    <Label htmlFor="title" className="block text-sm font-semibold text-gray-900 mb-3">
+                      Campaign Title <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="title"
+                      name="title"
+                      value={formData.title}
+                      onChange={handleChange}
+                      placeholder="e.g. Clean Water Initiative"
+                      className="w-full h-11 px-4 border border-gray-300 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-200 focus:outline-none transition-all text-gray-900"
                     />
-                    <div className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors flex items-center justify-center gap-3 opacity-0 hover:opacity-100">
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="bg-white rounded-lg p-2 shadow-lg hover:bg-gray-50"
-                        title="Change cover image"
-                      >
-                        <FaImage className="w-5 h-5 text-gray-700" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleRemoveCoverImage}
-                        className="bg-white rounded-lg p-2 shadow-lg hover:bg-red-50"
-                        title="Remove cover image"
-                      >
-                        <Trash2 className="w-5 h-5 text-red-600" />
-                      </button>
-                    </div>
+                    <p className="text-xs text-gray-500 mt-2">Create a clear, descriptive title for your campaign</p>
                   </div>
-                ) : (
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition"
-                  >
-                    <svg className="w-10 h-10 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <p className="text-sm text-gray-500 font-medium">Click to upload or drag & drop</p>
-                    <p className="text-xs text-gray-400 mt-1">PNG, JPG or WebP (max. 5MB)</p>
-                  </div>
-                )}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                  name="coverImageUrl"
-                />
-              </div>
 
-              {/* Tags */}
-              <div className="space-y-2">
-                <Label htmlFor="tags" className="text-sm font-medium text-gray-700">
-                  Tags
-                </Label>
-                <div className="border-2 border-gray-300 rounded-lg p-3 focus-within:border-indigo-500 transition-colors min-h-[40px]">
-                  <div className="flex flex-wrap gap-2 items-center">
-                    {selectedTags.map((tag) => (
-                      <Badge 
-                        key={tag} 
-                        variant="secondary" 
-                        className="bg-gray-200 text-gray-700 px-2 py-1 text-xs font-medium rounded flex items-center gap-1"
-                      >
-                        {tag}
+                  {/* Brief Overview */}
+                  <div>
+                    <Label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2 uppercase tracking-wide text-xs">
+                      Brief Overview
+                    </Label>
+                    <Textarea
+                      id="description"
+                      name="description"
+                      value={formData.description}
+                      onChange={handleChange}
+                      placeholder="Short summary for kiosk list cards..."
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200 resize-none"
+                    />
+                  </div>
+
+                  {/* Detailed Campaign Story */}
+                  <div>
+                    <Label htmlFor="longDescription" className="block text-sm font-medium text-gray-700 mb-2 uppercase tracking-wide text-xs">
+                      Detailed Campaign Story
+                    </Label>
+                    <div className="border border-gray-300 rounded-lg overflow-hidden">
+                      <div className="flex items-center gap-2 p-3 bg-gray-50 border-b border-gray-300">
                         <button
                           type="button"
-                          className="ml-1 hover:bg-gray-300 rounded-full p-0.5"
-                          onClick={() => {
-                            setSelectedTags(selectedTags.filter(t => t !== tag));
-                          }}
+                          className="font-bold text-gray-700 hover:bg-gray-200 px-2 py-1 rounded text-sm"
                         >
-                          <X className="h-3 w-3" />
+                          B
                         </button>
-                      </Badge>
-                    ))}
-                    <input
-                      type="text"
-                      value={tagSearchValue}
-                      onChange={(e) => setTagSearchValue(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          const newTag = tagSearchValue.trim();
-                          if (newTag && !selectedTags.includes(newTag) && selectedTags.length < 5) {
-                            setSelectedTags([...selectedTags, newTag]);
-                            setTagSearchValue("");
-                          }
-                        } else if (e.key === 'Backspace' && tagSearchValue === '' && selectedTags.length > 0) {
-                          e.preventDefault();
-                          setSelectedTags(selectedTags.slice(0, -1));
-                        }
-                      }}
-                      placeholder={selectedTags.length === 0 ? "Type and press Enter to add tags" : ""}
-                      className="flex-1 min-w-[120px] outline-none bg-transparent text-sm py-1"
-                      disabled={selectedTags.length >= 5}
-                    />
+                        <div className="w-px h-6 bg-gray-300" />
+                        <button
+                          type="button"
+                          className="text-gray-700 hover:bg-gray-200 px-2 py-1 rounded text-sm"
+                        >
+                          DIVIDER
+                        </button>
+                      </div>
+                      <Textarea
+                        id="longDescription"
+                        name="longDescription"
+                        value={formData.longDescription}
+                        onChange={handleChange}
+                        placeholder="Tell the story of your campaign..."
+                        rows={8}
+                        className="border-0 rounded-none focus:ring-0 resize-none"
+                      />
+                    </div>
                   </div>
                 </div>
-                <p className="text-xs text-gray-500">
-                  Add up to 5 tags to categorize your campaign.
-                </p>
-              </div>
+              )}
 
-              {/* Fundraising Goal & Status */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="goal" className="text-sm font-medium text-gray-700">
-                    Fundraising Goal ($)
-                  </Label>
-                  <Input
-                    id="goal"
-                    name="goal"
-                    type="number"
-                    value={formData.goal}
-                    onChange={handleChange}
-                    placeholder="0"
-                    className="w-full h-10 px-3 border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="status" className="text-sm font-medium text-gray-700">
-                    Status
-                  </Label>
-                  <Select
-                    name="status"
-                    value={formData.status}
-                    onValueChange={(value: string) =>
-                      setFormData((prev: any) => ({ ...prev, status: value }))
-                    }
-                  >
-                    <SelectTrigger
-                      id="status"
-                      className="w-full h-10 border border-gray-300 rounded-lg px-3 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
-                    >
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="paused">Paused</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+              {/* Media & Gallery Tab */}
+              {activeTab === "media-gallery" && (
+                <div className="space-y-6">
+                  <h2 className="text-2xl font-bold text-gray-900">Visual Identity</h2>
 
-              {/* Dates */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="startDate" className="text-sm font-medium text-gray-700">
-                    Start Date
-                  </Label>
-                  <Input
-                    id="startDate"
-                    name="startDate"
-                    type="date"
-                    value={formData.startDate}
-                    onChange={handleChange}
-                    className="w-full h-10 px-3 border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="endDate" className="text-sm font-medium text-gray-700">
-                    End Date
-                  </Label>
-                  <Input
-                    id="endDate"
-                    name="endDate"
-                    type="date"
-                    value={formData.endDate}
-                    onChange={handleChange}
-                    className="w-full h-10 px-3 border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === "advanced" && (
-            <div className="space-y-6 max-h-[500px] overflow-y-auto">
-              <h3 className="text-lg font-semibold text-gray-900">
-                General Advanced Settings
-              </h3>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="category" className="text-right">
-                  Category
-                </Label>
-                <div className="col-span-3">
-                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                    <Input
-                      id="category"
-                      name="category"
-                      value={formData.category}
-                      onChange={handleChange}
-                      className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
-                      placeholder="e.g., Environment, Education"
-                    />
+                  {/* Primary Cover Image */}
+                  <div>
+                    <Label className="block text-sm font-medium text-gray-700 mb-2 uppercase tracking-wide text-xs">
+                      Primary Cover (16:9)
+                    </Label>
+                    {imagePreview || formData.coverImageUrl ? (
+                      <div className="relative w-full h-48 bg-gray-100 rounded-lg overflow-hidden border border-gray-300 mb-4">
+                        <img
+                          src={imagePreview || formData.coverImageUrl}
+                          alt="Campaign cover preview"
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleRemoveCoverImage}
+                          className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ) : (
+                      <label
+                        htmlFor="coverImage"
+                        className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-teal-400 rounded-lg cursor-pointer bg-teal-50 hover:bg-teal-100 transition"
+                      >
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <svg className="w-12 h-12 text-teal-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <p className="text-sm text-teal-600 font-medium">CLICK TO UPLOAD COVER</p>
+                        </div>
+                        <input
+                          id="coverImage"
+                          type="file"
+                          className="hidden"
+                          accept="image/*"
+                          onChange={handleFileSelect}
+                          name="coverImageUrl"
+                        />
+                      </label>
+                    )}
                   </div>
-                </div>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="isGlobal" className="text-right">
-                  Show on all kiosks
-                </Label>
-                <input
-                  type="checkbox"
-                  id="isGlobal"
-                  name="isGlobal"
-                  checked={formData.isGlobal}
-                  onChange={handleChange}
-                  className="col-span-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-start gap-4">
-                <Label htmlFor="longDescription" className="text-right pt-2">
-                  Long Description
-                </Label>
-                <div className="col-span-3">
-                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                    <Textarea
-                      id="longDescription"
-                      name="longDescription"
-                      value={formData.longDescription}
-                      onChange={handleChange}
-                      className="w-full px-3 py-2 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
-                      rows={5}
-                      placeholder="Provide a more detailed description of the campaign."
-                    />
+
+                  {/* Campaign Gallery */}
+                  <div>
+                    <Label className="block text-sm font-medium text-gray-700 mb-2 uppercase tracking-wide text-xs">
+                      Campaign Gallery
+                    </Label>
+                    <div className="space-y-4">
+                      {galleryImagePreviews.length > 0 && (
+                        <div className="grid grid-cols-3 gap-4">
+                          {galleryImagePreviews.map((preview, index) => (
+                            <div key={index} className="relative group">
+                              <img
+                                src={preview}
+                                alt={`Gallery ${index + 1}`}
+                                className="w-full h-32 object-cover rounded-lg border border-gray-300"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteGalleryImage(preview, index)}
+                                className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded opacity-0 group-hover:opacity-100 transition"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <label
+                        htmlFor="galleryImagesInput"
+                        className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition"
+                      >
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <Plus className="w-6 h-6 text-gray-400 mb-1" />
+                          <p className="text-sm text-gray-500 font-medium">ADD</p>
+                        </div>
+                        <input
+                          id="galleryImagesInput"
+                          type="file"
+                          multiple
+                          className="hidden"
+                          accept="image/*"
+                          onChange={handleFileSelect}
+                          name="galleryImages"
+                        />
+                      </label>
+                    </div>
                   </div>
-                </div>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="videoUrl" className="text-right">
-                  Video URL
-                </Label>
-                <div className="col-span-3">
-                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+
+                  {/* YouTube Presentation */}
+                  <div>
+                    <Label htmlFor="videoUrl" className="block text-sm font-medium text-gray-700 mb-2 uppercase tracking-wide text-xs">
+                      YouTube Presentation
+                    </Label>
                     <Input
                       id="videoUrl"
                       name="videoUrl"
                       value={formData.videoUrl}
                       onChange={handleChange}
-                      className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
-                      placeholder="Optional YouTube URL"
+                      placeholder="https://youtube.com/..."
+                      className="w-full h-10 px-3 border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
                     />
                   </div>
                 </div>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="galleryImages" className="text-right">
-                  Gallery Images
-                </Label>
-                <div className="col-span-3 space-y-3">
-                  <p className="text-xs text-gray-500 mb-2">Upload up to 4 additional images for your campaign gallery.</p>
-                  <div className="flex items-start gap-3 flex-wrap">
-                    <div
-                      role="button"
-                      tabIndex={0}
-                      onClick={() =>
-                        galleryImagePreviews.length >= 4
-                          ? null
-                          : document.getElementById("galleryImagesInput")?.click()
-                      }
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          if (galleryImagePreviews.length < 4) {
-                            document.getElementById("galleryImagesInput")?.click();
-                          }
-                        }
-                      }}
-                      className={`flex flex-col items-center justify-center w-32 h-32 border-2 border-dashed rounded-lg transition cursor-pointer bg-white ${
-                        galleryImagePreviews.length >= 4
-                          ? "border-gray-200 text-gray-300 cursor-not-allowed"
-                          : "border-indigo-400 text-indigo-600 hover:border-indigo-500 hover:bg-indigo-50"
-                      }`}
-                      aria-label="Add gallery image"
-                    >
-                      <div className="flex flex-col items-center gap-2">
-                        <Plus className="w-8 h-8" />
-                        <p className="text-sm font-medium uppercase">Add Image</p>
+              )}
+
+              {/* Funding Details Tab */}
+              {activeTab === "funding-details" && (
+                <div className="space-y-8">
+                  <div>
+                    <h2 className="text-3xl font-bold text-gray-900 mb-2">Financial Goals</h2>
+                    <p className="text-sm text-gray-600">Set your fundraising target and donation tiers</p>
+                  </div>
+
+                  {/* Fundraising Target & Donation Tiers */}
+                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-6">Donation Targets</h3>
+                    <div className="grid grid-cols-4 gap-4">
+                      <div>
+                        <Label htmlFor="goal" className="block text-sm font-semibold text-gray-900 mb-3">
+                          Fundraising Target ($) <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="goal"
+                          name="goal"
+                          type="number"
+                          value={formData.goal}
+                          onChange={handleChange}
+                          placeholder="1000"
+                          className="w-full h-11 px-4 border border-gray-300 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-200 focus:outline-none transition-all text-gray-900"
+                        />
+                        <p className="text-xs text-gray-500 mt-2">Your campaign's fundraising goal</p>
                       </div>
-                    </div>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      name="galleryImages"
-                      onChange={handleFileSelect}
-                      className="hidden"
-                      id="galleryImagesInput"
-                      multiple
-                    />
-                    {galleryImagePreviews.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-3">
-                        {galleryImagePreviews.map((src, index) => (
-                          <div key={index} className="relative group w-32 h-32">
-                            <ImageWithFallback
-                              src={src}
-                              alt={`Gallery preview ${index + 1}`}
-                              className="w-full h-full object-cover rounded-lg border bg-gray-100"
-                              fallbackSrc="/campaign-fallback.svg"
+
+                      {[0, 1, 2].map(index => (
+                        <div key={index}>
+                          <Label htmlFor={`tier-${index}`} className="block text-sm font-semibold text-gray-900 mb-3">
+                            Tier {index + 1}
+                          </Label>
+                          <div className="flex items-center">
+                            <span className="text-gray-600 font-medium mr-2">$</span>
+                            <Input
+                              id={`tier-${index}`}
+                              type="number"
+                              placeholder="50"
+                              value={formData.donationTiers?.[index] || ''}
+                              onChange={(e) => handleDonationTierChange(index, e.target.value)}
+                              min="0"
+                              step="1"
+                              className="w-full h-11 px-4 border border-gray-300 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-200 focus:outline-none transition-all text-gray-900"
                             />
-                            {index === 0 && (
-                              <div className="absolute top-2 left-2">
-                                <Badge className="bg-indigo-600 text-white text-[10px] px-1.5 py-0.5 font-semibold uppercase">
-                                  Primary
-                                </Badge>
-                              </div>
-                            )}
-                            <button
-                              onClick={() => handleDeleteGalleryImage(src, index)}
-                              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:bg-red-50"
-                              title="Remove image"
-                            >
-                              <Trash2 className="h-5 w-5 text-red-600" />
-                            </button>
                           </div>
-                        ))}
+                          <p className="text-xs text-gray-500 mt-2">Suggested donation amount</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Campaign Duration */}
+                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-6">Campaign Duration</h3>
+                    <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <Label htmlFor="startDate" className="block text-sm font-semibold text-gray-900 mb-3">
+                          Start Date <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="startDate"
+                          name="startDate"
+                          type="date"
+                          value={formData.startDate}
+                          onChange={handleChange}
+                          className="w-full h-11 px-4 border border-gray-300 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-200 focus:outline-none transition-all text-gray-900"
+                        />
+                        <p className="text-xs text-gray-500 mt-2">When your campaign begins</p>
                       </div>
+
+                      <div>
+                        <Label htmlFor="endDate" className="block text-sm font-semibold text-gray-900 mb-3">
+                          End Date <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="endDate"
+                          name="endDate"
+                          type="date"
+                          value={formData.endDate}
+                          onChange={handleChange}
+                          className="w-full h-11 px-4 border border-gray-300 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-200 focus:outline-none transition-all text-gray-900"
+                        />
+                        <p className="text-xs text-gray-500 mt-2">When your campaign ends</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Kiosk Distribution Tab */}
+              {activeTab === "kiosk-distribution" && (
+                <div className="space-y-6">
+                  <h2 className="text-2xl font-bold text-gray-900">Kiosk Distribution</h2>
+
+                  <label className="flex items-center p-4 border-2 border-teal-500 rounded-lg cursor-pointer bg-teal-50 hover:bg-teal-100 transition">
+                    <input
+                      type="checkbox"
+                      checked={formData.isGlobal}
+                      onChange={handleChange}
+                      name="isGlobal"
+                      className="w-5 h-5 text-teal-600"
+                    />
+                    <div className="ml-4 flex-1">
+                      <p className="font-semibold text-teal-900">BROADCAST GLOBALLY</p>
+                      <p className="text-sm text-teal-700">DISPLAY ON EVERY ACTIVE TERMINAL</p>
+                    </div>
+                    {formData.isGlobal && (
+                      <svg className="w-6 h-6 text-teal-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
                     )}
-                  </div>
-                  {selectedGalleryImages.length > 0 && (
-                    <div className="text-sm text-gray-600">
-                      <p>
-                        Selected:{" "}
-                        {selectedGalleryImages
-                          .map((file) => file.name)
-                          .join(", ")}
-                      </p>
-                      <p>
-                        Total Size:{" "}
-                        {(
-                          selectedGalleryImages.reduce(
-                            (sum, file) => sum + file.size,
-                            0
-                          ) /
-                          1024 /
-                          1024
-                        ).toFixed(2)}{" "}
-                        MB
-                      </p>
-                    </div>
-                  )}
+                  </label>
                 </div>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mt-8">Pricing Options</h3>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="predefinedAmounts" className="text-right">Predefined Amounts</Label>
-                <div className="col-span-3">
-                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                    <Input id="predefinedAmounts" name="predefinedAmounts" value={formData.predefinedAmounts} onChange={handleChange} className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent" placeholder="Comma-separated numbers, e.g., 10,25,50" />
-                  </div>
-                </div>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="allowCustomAmount" className="text-right">Allow Custom Amount</Label>
-                <input type="checkbox" id="allowCustomAmount" name="allowCustomAmount" checked={formData.allowCustomAmount} onChange={handleChange} className="col-span-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="minCustomAmount" className="text-right">Min Custom Amount</Label>
-                <div className="col-span-3">
-                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                    <Input id="minCustomAmount" name="minCustomAmount" type="number" value={formData.minCustomAmount} onChange={handleChange} className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent" placeholder="1" />
-                  </div>
-                </div>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="maxCustomAmount" className="text-right">Max Custom Amount</Label>
-                <div className="col-span-3">
-                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                    <Input id="maxCustomAmount" name="maxCustomAmount" type="number" value={formData.maxCustomAmount} onChange={handleChange} className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent" placeholder="1000" />
-                  </div>
-                </div>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="suggestedAmounts" className="text-right">Suggested Amounts</Label>
-                <div className="col-span-3">
-                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                    <Input id="suggestedAmounts" name="suggestedAmounts" value={formData.suggestedAmounts} onChange={handleChange} className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent" placeholder="Comma-separated numbers, e.g., 100,250" />
-                  </div>
-                </div>
-              </div>
-
-              <h3 className="text-lg font-semibold text-gray-900 mt-8">Subscription Settings</h3>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="enableRecurring" className="text-right">Enable Recurring</Label>
-                <input type="checkbox" id="enableRecurring" name="enableRecurring" checked={formData.enableRecurring} onChange={handleChange} className="col-span-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="recurringIntervals" className="text-right">Recurring Intervals</Label>
-                <div className="col-span-3">
-                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                    <Input id="recurringIntervals" name="recurringIntervals" value={formData.recurringIntervals} onChange={handleChange} className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent" placeholder="Comma-separated: monthly, quarterly, yearly" />
-                  </div>
-                </div>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="defaultRecurringInterval" className="text-right">Default Recurring Interval</Label>
-                <Select name="defaultRecurringInterval" value={formData.defaultRecurringInterval} onValueChange={(value: string) => handleChange({ target: { name: 'defaultRecurringInterval', value } } as any)}>
-                  <div className="col-span-3">
-                    <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                      <SelectTrigger id="defaultRecurringInterval" className="w-full"><SelectValue /></SelectTrigger>
-                    </div>
-                  </div>
-                  <SelectContent>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                    <SelectItem value="quarterly">Quarterly</SelectItem>
-                    <SelectItem value="yearly">Yearly</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <h3 className="text-lg font-semibold text-gray-900 mt-8">Display Settings</h3>
-
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="showProgressBar" className="text-right">Show Progress Bar</Label>
-                <input type="checkbox" id="showProgressBar" name="showProgressBar" checked={formData.showProgressBar} onChange={handleChange} className="col-span-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="showDonorCount" className="text-right">Show Donor Count</Label>
-                <input type="checkbox" id="showDonorCount" name="showDonorCount" checked={formData.showDonorCount} onChange={handleChange} className="col-span-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="showRecentDonations" className="text-right">Show Recent Donations</Label>
-                <input type="checkbox" id="showRecentDonations" name="showRecentDonations" checked={formData.showRecentDonations} onChange={handleChange} className="col-span-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="maxRecentDonations" className="text-right">Max Recent Donations</Label>
-                <div className="col-span-3">
-                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                    <Input id="maxRecentDonations" name="maxRecentDonations" type="number" value={formData.maxRecentDonations} onChange={handleChange} className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent" placeholder="5" />
-                  </div>
-                </div>
-              </div>
-
-              <h3 className="text-lg font-semibold text-gray-900 mt-8">Call-to-Action</h3>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="primaryCTAText" className="text-right">Primary CTA Text</Label>
-                <div className="col-span-3">
-                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                    <Input id="primaryCTAText" name="primaryCTAText" value={formData.primaryCTAText} onChange={handleChange} className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent" placeholder="e.g., Donate Now" />
-                  </div>
-                </div>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="secondaryCTAText" className="text-right">Secondary CTA Text</Label>
-                <div className="col-span-3">
-                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                    <Input id="secondaryCTAText" name="secondaryCTAText" value={formData.secondaryCTAText} onChange={handleChange} className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent" placeholder="e.g., Learn More" />
-                  </div>
-                </div>
-              </div>
-              <div className="grid grid-cols-4 items-start gap-4">
-                <Label htmlFor="urgencyMessage" className="text-right pt-2">Urgency Message</Label>
-                <div className="col-span-3">
-                  <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                    <Textarea id="urgencyMessage" name="urgencyMessage" value={formData.urgencyMessage} onChange={handleChange} className="w-full px-3 py-2 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent" rows={2} placeholder="e.g., Only 10 days left to reach our goal!" />
-                  </div>
-                </div>
-              </div>
-
-
-            </div>
-          )}
+              )}
+            </form>
+          </div>
         </div>
-        <div className="flex justify-between items-center pt-6 px-6 border-t flex-shrink-0 bg-gray-50">
-          <div></div>
+
+        {/* Footer */}
+        <div className="flex justify-between items-center px-6 py-4 border-t border-gray-200 bg-white">
+          <Button 
+            variant="outline" 
+            type="button"
+            className="text-gray-700 flex items-center gap-2 hover:bg-gray-100 border-gray-300 font-medium"
+            onClick={() => {
+              // Save draft functionality
+            }}
+          >
+            <Save className="w-4 h-4" />
+            Save Draft
+          </Button>
+
           <div className="flex gap-3">
             <Button
               variant="outline"
+              type="button"
               onClick={handleCancel}
               disabled={uploadingImage || isSubmitting}
-              className="px-6 h-11 border-gray-300 text-gray-700 hover:bg-gray-100"
+              className="px-6 h-11 border-gray-300 text-gray-700 hover:bg-gray-100 font-medium"
             >
               Cancel
             </Button>
-            <Button 
-              onClick={handleSaveChanges} 
+            <Button
+              type="submit"
+              onClick={handleSaveChanges}
               disabled={isSaveDisabled || isSubmitting}
-              className="px-6 h-11 bg-gray-700 text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-7 h-11 bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-md hover:shadow-lg transition-all"
             >
-              {isSubmitting ? (isEditMode ? "Saving..." : "Creating...") : saveButtonText}
+              {isSubmitting ? (isEditMode ? "Saving..." : "Publishing...") : (isEditMode ? "Save Changes" : "Publish Campaign")}
             </Button>
           </div>
         </div>
