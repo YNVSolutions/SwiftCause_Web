@@ -444,7 +444,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                           />
                         </div>
                         {errors.email && (
-                          <p className="text-xs text-red-600 flex items-center">
+                          <p className="text-xs text-red-600 flex items-center mt-1">
                             <AlertCircle className="w-3 h-3 mr-1" />
                             {errors.email}
                           </p>
