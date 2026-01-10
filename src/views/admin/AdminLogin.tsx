@@ -36,7 +36,7 @@ export function AdminLogin({ email, password, error, loading, onEmailChange, onP
 						<UserCog className="w-4 h-4 text-gray-500 " />
 						<span>Email</span>
 					</Label>
-					<div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 transition-colors">
+					<div className={`border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 transition-colors ${error ? 'border-red-500' : ''}`}>
 						<Input
 							id="email"
 							type="text"
@@ -47,6 +47,12 @@ export function AdminLogin({ email, password, error, loading, onEmailChange, onP
 							required
 						/>
 					</div>
+					{error && (
+						<p className="text-xs text-red-600 flex items-center mt-1">
+							<AlertTriangle className="w-3 h-3 mr-1" />
+							{error}
+						</p>
+					)}
 				</div>
 
 				<div className="space-y-2">
@@ -66,15 +72,6 @@ export function AdminLogin({ email, password, error, loading, onEmailChange, onP
 						/>
 					</div>
 				</div>
-
-				{error && (
-					<div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-						<div className="flex items-center space-x-2">
-							<AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0" />
-							<p className="text-sm text-red-700">{error}</p>
-						</div>
-					</div>
-				)}
 
 				<Button type="submit" className="w-full h-12 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg" disabled={loading}>
 					<UserCog className="mr-2 h-4 w-4" />
