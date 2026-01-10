@@ -59,19 +59,16 @@ export function KioskLogin({ kioskId, accessCode, error, loading, onKioskIdChang
 						placeholder="Enter kiosk access code"
 						value={accessCode}
 						onChange={onAccessCodeChange}
-						className="h-12"
+						className={`h-12 ${error ? 'border-red-500' : ''}`}
 						required
 					/>
+					{error && (
+						<p className="text-xs text-red-600 flex items-center mt-1">
+							<AlertTriangle className="w-3 h-3 mr-1" />
+							{error}
+						</p>
+					)}
 				</div>
-
-				{error && (
-					<div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-						<div className="flex items-center space-x-2">
-							<AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0" />
-							<p className="text-sm text-red-700">{error}</p>
-						</div>
-					</div>
-				)}
 
 				<Button
 					type="submit"
