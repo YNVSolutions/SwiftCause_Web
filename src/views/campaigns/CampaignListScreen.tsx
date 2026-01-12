@@ -477,6 +477,7 @@ const CampaignCarousel = ({
                   onClick={() => onSelectCampaign(campaign)}
                   disabled={isLoadingPayment}
                   className="w-full h-10 sm:h-12 md:h-14 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg sm:rounded-xl transition-all duration-200 text-xs sm:text-base md:text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   {isLoadingPayment ? 'Loading...' : 'Custom Amount or Monthly'}
                 </Button>
               </div>
