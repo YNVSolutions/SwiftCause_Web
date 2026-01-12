@@ -123,7 +123,7 @@ function ProfileSidebar({
         }`}
       >
         {/* Header */}
-        <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-6 relative">
+        <div className="bg-linear-to-br from-blue-600 to-indigo-700 p-6 relative">
           <Button
             variant="ghost"
             size="icon"
@@ -160,7 +160,7 @@ function ProfileSidebar({
             <div className="space-y-3">
               {/* Email */}
               <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
                   <Mail className="h-5 w-5 text-blue-600" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -174,7 +174,7 @@ function ProfileSidebar({
               {/* Organization */}
               {userSession.user.organizationName && (
                 <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                  <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
+                  <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center shrink-0">
                     <Building2 className="h-5 w-5 text-purple-600" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -188,7 +188,7 @@ function ProfileSidebar({
               
               {/* Role */}
               <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                <div className="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+                <div className="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center shrink-0">
                   <Shield className="h-5 w-5 text-green-600" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -202,7 +202,7 @@ function ProfileSidebar({
               {/* Member Since */}
               {userSession.user.createdAt && (
                 <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                  <div className="h-10 w-10 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
+                  <div className="h-10 w-10 rounded-lg bg-orange-100 flex items-center justify-center shrink-0">
                     <Calendar className="h-5 w-5 text-orange-600" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -245,7 +245,7 @@ function ProfileSidebar({
         <div className="absolute bottom-0 left-0 right-0 p-6 bg-gray-50 border-t border-gray-200">
           <Button
             onClick={onLogout}
-            className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+            className="w-full bg-linear-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
           >
             <LogOut className="h-5 w-5 mr-2" />
             Sign Out
@@ -276,7 +276,7 @@ function SidebarUserFooter({
         >
           <Avatar className="h-9 w-9 ring-2 ring-indigo-100 shadow-sm">
             <AvatarImage src={userSession.user.photoURL || undefined} />
-            <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white text-xs font-semibold">
+            <AvatarFallback className="bg-linear-to-br from-indigo-500 to-indigo-600 text-white text-xs font-semibold">
               {getInitials(userSession.user.username || userSession.user.email || 'U')}
             </AvatarFallback>
           </Avatar>
@@ -533,7 +533,7 @@ export function AdminLayout({
               >
                 <Avatar className="h-8 w-8 ring-2 ring-gray-200 hover:ring-blue-300 transition-all">
                   <AvatarImage src={userSession.user.photoURL || undefined} />
-                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-xs font-semibold">
+                  <AvatarFallback className="bg-linear-to-br from-blue-500 to-indigo-600 text-white text-xs font-semibold">
                     {getInitials(userSession.user.username || userSession.user.email || 'U')}
                   </AvatarFallback>
                 </Avatar>
