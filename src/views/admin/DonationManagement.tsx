@@ -192,40 +192,28 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
       userSession={userSession}
       hasPermission={hasPermission}
       activeScreen="admin-donations"
+      headerTitle={(
+        <div className="flex flex-col">
+          <h1 className="text-3xl font-semibold text-gray-900">Donation Management</h1>
+          <p className="text-sm text-gray-500">Track and analyze donation transactions</p>
+        </div>
+      )}
+      headerActions={(
+        <Button
+          variant="outline"
+          size="sm"
+          className="hover:bg-gray-100 transition-colors"
+          onClick={handleExportDonations}
+          aria-label="Export CSV"
+        >
+          <Download className="w-4 h-4 sm:mr-2" />
+          <span className="hidden sm:inline">Export CSV</span>
+        </Button>
+      )}
+      hideSidebarTrigger
     >
       <div className="space-y-4">
-        <header className="bg-white shadow-sm border-b">
-          <div className="px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex flex-col gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onNavigate('admin')}
-                  className="-ml-3 w-fit px-0 text-xs font-semibold uppercase tracking-widest text-gray-500 hover:text-gray-800"
-                >
-                  <ChevronLeft className="w-4 h-4 mr-0" />
-                  Back to Dashboard
-                </Button>
-                <div>
-                  <h1 className="text-2xl font-semibold text-gray-900 sm:text-3xl">Donation Management</h1>
-                  <p className="text-sm text-gray-600">Track and analyze donation transactions</p>
-                </div>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="hover:bg-gray-100 transition-colors shrink-0"
-                onClick={handleExportDonations}
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Export CSV
-              </Button>
-            </div>
-          </div>
-        </header>
-
-        <main className="px-2 sm:px-6 lg:px-8 pt-2 pb-4 sm:pt-4 sm:pb-8">
+        <main className="px-2 sm:px-6 lg:px-8 pt-2 pb-4 sm:pt-3 sm:pb-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Raised</p><p className="text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.totalAmount, summaryCurrency)}</p></div><DollarSign className="w-8 h-8 text-green-500" /></div></CardContent></Card>
             <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Donations</p><p className="text-2xl font-semibold text-gray-900">{totalStats.totalDonations}</p></div><Users className="w-8 h-8 text-indigo-500" /></div></CardContent></Card>

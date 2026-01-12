@@ -57,6 +57,10 @@ interface AdminLayoutProps {
   children: React.ReactNode;
   activeScreen?: Screen;
   onStartTour?: () => void;
+  headerTitle?: React.ReactNode;
+  hideHeaderDivider?: boolean;
+  headerActions?: React.ReactNode;
+  hideSidebarTrigger?: boolean;
 }
 
 // Get user initials for avatar
@@ -123,7 +127,7 @@ function ProfileSidebar({
         }`}
       >
         {/* Header */}
-        <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-6 relative">
+        <div className="bg-linear-to-br from-blue-600 to-indigo-700 p-6 relative">
           <Button
             variant="ghost"
             size="icon"
@@ -245,7 +249,7 @@ function ProfileSidebar({
         <div className="absolute bottom-0 left-0 right-0 p-6 bg-gray-50 border-t border-gray-200">
           <Button
             onClick={onLogout}
-            className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+            className="w-full bg-linear-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
           >
             <LogOut className="h-5 w-5 mr-2" />
             Sign Out
@@ -276,11 +280,11 @@ function SidebarUserFooter({
         >
           <Avatar className="h-9 w-9 ring-2 ring-indigo-100 shadow-sm">
             <AvatarImage src={userSession.user.photoURL || undefined} />
-            <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white text-xs font-semibold">
+            <AvatarFallback className="bg-linear-to-br from-indigo-500 to-indigo-600 text-white text-xs font-semibold">
               {getInitials(userSession.user.username || userSession.user.email || 'U')}
             </AvatarFallback>
           </Avatar>
-          <div className="flex-1 min-w-0 text-left overflow-hidden transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] max-w-[12rem] opacity-100 translate-x-0 transform-gpu will-change-[opacity,transform] group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:ml-0 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:-translate-x-3">
+          <div className="flex-1 min-w-0 text-left overflow-hidden transition-[opacity,transform] duration-500 ease-in-out max-w-48 opacity-100 translate-x-0 transform-gpu will-change-[opacity,transform] group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:ml-0 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:-translate-x-3">
             <p className="text-sm font-semibold text-gray-900 truncate">
               {userSession.user.username || 'User'}
             </p>
@@ -310,7 +314,7 @@ function SidebarHeaderContent() {
         <img src="/logo.png" alt="SwiftCause Logo" className="h-10 w-10 rounded-xl shadow-md group-data-[collapsible=icon]:h-11 group-data-[collapsible=icon]:w-11" />
         <div className="absolute -bottom-1 -right-1 h-3 w-3 bg-green-500 rounded-full border-2 border-white"></div>
       </div>
-      <div className="flex flex-col overflow-hidden transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] max-w-[12rem] opacity-100 translate-x-0 transform-gpu will-change-[opacity,transform] group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:ml-0 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:-translate-x-3">
+      <div className="flex flex-col overflow-hidden transition-[opacity,transform] duration-500 ease-in-out max-w-48 opacity-100 translate-x-0 transform-gpu will-change-[opacity,transform] group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:ml-0 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:-translate-x-3">
         <span className="text-base font-bold text-gray-900 whitespace-nowrap">SwiftCause</span>
         <span className="text-xs font-medium text-gray-500 whitespace-nowrap">
           Admin Portal
@@ -328,10 +332,15 @@ export function AdminLayout({
   children,
   activeScreen = "admin-dashboard",
   onStartTour,
+  headerTitle,
+  hideHeaderDivider = false,
+  headerActions,
+  hideSidebarTrigger = false,
 }: AdminLayoutProps) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const isActive = (...screens: Screen[]) => screens.includes(activeScreen);
   const currentLabel = SCREEN_LABELS[activeScreen] ?? "Admin";
+  const resolvedHeaderTitle = headerTitle === undefined ? currentLabel : headerTitle;
 
   return (
     <SidebarProvider defaultOpen={true}>
@@ -363,7 +372,7 @@ export function AdminLayout({
                   }
                 >
                   <LayoutDashboard className="h-5 w-5" />
-                  <span className="whitespace-nowrap overflow-hidden transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] max-w-[12rem] opacity-100 translate-x-0 transform-gpu will-change-[opacity,transform] group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:ml-0 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:-translate-x-3">
+                  <span className="whitespace-nowrap overflow-hidden transition-[opacity,transform] duration-500 ease-in-out max-w-48 opacity-100 translate-x-0 transform-gpu will-change-[opacity,transform] group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:ml-0 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:-translate-x-3">
                     Dashboard
                   </span>
                 </SidebarMenuButton>
@@ -382,7 +391,7 @@ export function AdminLayout({
                     }
                   >
                     <Settings className="h-5 w-5" />
-                    <span className="whitespace-nowrap overflow-hidden transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] max-w-[12rem] opacity-100 translate-x-0 transform-gpu will-change-[opacity,transform] group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:ml-0 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:-translate-x-3">
+                    <span className="whitespace-nowrap overflow-hidden transition-[opacity,transform] duration-500 ease-in-out max-w-48 opacity-100 translate-x-0 transform-gpu will-change-[opacity,transform] group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:ml-0 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:-translate-x-3">
                       Campaigns
                     </span>
                   </SidebarMenuButton>
@@ -402,7 +411,7 @@ export function AdminLayout({
                     }
                   >
                     <Monitor className="h-5 w-5" />
-                    <span className="whitespace-nowrap overflow-hidden transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] max-w-[12rem] opacity-100 translate-x-0 transform-gpu will-change-[opacity,transform] group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:ml-0 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:-translate-x-3">
+                    <span className="whitespace-nowrap overflow-hidden transition-[opacity,transform] duration-500 ease-in-out max-w-48 opacity-100 translate-x-0 transform-gpu will-change-[opacity,transform] group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:ml-0 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:-translate-x-3">
                       Kiosks
                     </span>
                   </SidebarMenuButton>
@@ -422,7 +431,7 @@ export function AdminLayout({
                     }
                   >
                     <Database className="h-5 w-5" />
-                    <span className="whitespace-nowrap overflow-hidden transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] max-w-[12rem] opacity-100 translate-x-0 transform-gpu will-change-[opacity,transform] group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:ml-0 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:-translate-x-3">
+                    <span className="whitespace-nowrap overflow-hidden transition-[opacity,transform] duration-500 ease-in-out max-w-48 opacity-100 translate-x-0 transform-gpu will-change-[opacity,transform] group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:ml-0 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:-translate-x-3">
                       Donations
                     </span>
                   </SidebarMenuButton>
@@ -442,7 +451,7 @@ export function AdminLayout({
                     }
                   >
                     <Gift className="h-5 w-5" />
-                    <span className="whitespace-nowrap overflow-hidden transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] max-w-[12rem] opacity-100 translate-x-0 transform-gpu will-change-[opacity,transform] group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:ml-0 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:-translate-x-3">
+                    <span className="whitespace-nowrap overflow-hidden transition-[opacity,transform] duration-500 ease-in-out max-w-48 opacity-100 translate-x-0 transform-gpu will-change-[opacity,transform] group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:ml-0 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:-translate-x-3">
                       Gift Aid Donations
                     </span>
                   </SidebarMenuButton>
@@ -462,7 +471,7 @@ export function AdminLayout({
                     }
                   >
                     <Users className="h-5 w-5" />
-                    <span className="whitespace-nowrap overflow-hidden transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] max-w-[12rem] opacity-100 translate-x-0 transform-gpu will-change-[opacity,transform] group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:ml-0 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:-translate-x-3">
+                    <span className="whitespace-nowrap overflow-hidden transition-[opacity,transform] duration-500 ease-in-out max-w-48 opacity-100 translate-x-0 transform-gpu will-change-[opacity,transform] group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:ml-0 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:-translate-x-3">
                       Users
                     </span>
                   </SidebarMenuButton>
@@ -481,7 +490,7 @@ export function AdminLayout({
                   }
                 >
                   <Wallet className="h-5 w-5" />
-                  <span className="whitespace-nowrap overflow-hidden transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] max-w-[12rem] opacity-100 translate-x-0 transform-gpu will-change-[opacity,transform] group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:ml-0 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:-translate-x-3">
+                  <span className="whitespace-nowrap overflow-hidden transition-[opacity,transform] duration-500 ease-in-out max-w-48 opacity-100 translate-x-0 transform-gpu will-change-[opacity,transform] group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:ml-0 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:-translate-x-3">
                     Bank Details
                   </span>
                 </SidebarMenuButton>
@@ -500,16 +509,31 @@ export function AdminLayout({
       </Sidebar>
 
       <SidebarInset className="flex-1 flex flex-col overflow-hidden relative">
-        <header className="absolute top-0 left-0 right-0 z-20 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm">
+        <header
+          className={`absolute top-0 left-0 right-0 z-20 bg-white/95 backdrop-blur-sm ${
+            hideHeaderDivider ? "" : "border-b border-gray-200 shadow-sm"
+          }`}
+        >
           <div className="flex items-center justify-between px-4 sm:px-6 h-16">
             <div className="flex items-center gap-3">
-              <SidebarTrigger className="text-gray-600 hover:text-gray-900" />
-              <div className="h-6 w-px bg-gray-200 hidden sm:block" />
-              <h1 className="font-bold text-lg text-gray-900">{currentLabel}</h1>
+              {!hideSidebarTrigger && (
+                <>
+                  <SidebarTrigger className="text-gray-600 hover:text-gray-900" />
+                  <div className="h-6 w-px bg-gray-200 hidden sm:block" />
+                </>
+              )}
+              {resolvedHeaderTitle !== null && (
+                typeof resolvedHeaderTitle === "string" ? (
+                  <h1 className="font-bold text-lg text-gray-900">{resolvedHeaderTitle}</h1>
+                ) : (
+                  resolvedHeaderTitle
+                )
+              )}
             </div>
             
             {/* Right side buttons */}
             <div className="flex items-center gap-2">
+              {headerActions}
               {/* Get a Tour Button */}
               {onStartTour && (
                 <Button
@@ -533,7 +557,7 @@ export function AdminLayout({
               >
                 <Avatar className="h-8 w-8 ring-2 ring-gray-200 hover:ring-blue-300 transition-all">
                   <AvatarImage src={userSession.user.photoURL || undefined} />
-                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-xs font-semibold">
+                  <AvatarFallback className="bg-linear-to-br from-blue-500 to-indigo-600 text-white text-xs font-semibold">
                     {getInitials(userSession.user.username || userSession.user.email || 'U')}
                   </AvatarFallback>
                 </Avatar>

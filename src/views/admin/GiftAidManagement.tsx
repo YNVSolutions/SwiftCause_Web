@@ -342,8 +342,33 @@ export function GiftAidManagement({
       userSession={userSession} 
       hasPermission={hasPermission}
       activeScreen="admin-gift-aid"
+      headerTitle={(
+        <div className="flex flex-col">
+          <h1 className="text-3xl font-semibold text-gray-900">Gift Aid Donations</h1>
+          <p className="text-sm text-gray-500">
+            Manage and track Gift Aid eligible donations for tax reclaim
+          </p>
+        </div>
+      )}
+      headerActions={(
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={handleRefresh} disabled={loading} aria-label="Refresh">
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""} sm:mr-2`} />
+            <span className="hidden sm:inline">Refresh</span>
+          </Button>
+          <Button
+            onClick={handleExportData}
+            className="bg-indigo-600 hover:bg-indigo-700"
+            aria-label="Export Data"
+          >
+            <Download className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Export Data</span>
+          </Button>
+        </div>
+      )}
+      hideSidebarTrigger
     >
-      <div className="p-4 sm:p-6 space-y-6">
+      <div className="px-2 sm:px-6 lg:px-8 pt-2 pb-4 sm:pt-3 sm:pb-8 space-y-6">
         {/* Error Alert */}
         {error && (
           <Card className="border-red-200 bg-red-50">
@@ -355,32 +380,6 @@ export function GiftAidManagement({
             </CardContent>
           </Card>
         )}
-
-        {/* Header */}
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2">
-              <Gift className="h-8 w-8 text-indigo-600" />
-              Gift Aid Donations
-            </h1>
-            <p className="text-gray-600 mt-1">
-              Manage and track Gift Aid eligible donations for tax reclaim
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={handleRefresh} disabled={loading}>
-              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""} sm:mr-2`} />
-              <span className="hidden sm:inline">Refresh</span>
-            </Button>
-            <Button
-              onClick={handleExportData}
-              className="bg-indigo-600 hover:bg-indigo-700"
-            >
-              <Download className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Export Data</span>
-            </Button>
-          </div>
-        </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
