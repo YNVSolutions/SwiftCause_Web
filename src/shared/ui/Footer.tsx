@@ -1,6 +1,5 @@
 import React from 'react';
 import { Clock, Mail, MapPin, Phone, Heart, Github, Twitter, Linkedin, Shield, Award, TrendingUp } from 'lucide-react';
-import swiftCauseLogo from '../assets/logo.png';
 
 interface FooterProps {
   onNavigate?: (screen: string) => void;
@@ -22,7 +21,7 @@ export function Footer({ onNavigate }: FooterProps) {
             <div className="flex items-center space-x-3">
               <div className="h-10 w-10 bg-green-600 rounded-lg p-2">
                 <img 
-                  src={swiftCauseLogo} 
+                  src="/logo.png" 
                   alt="Swift Cause Logo" 
                   className="w-full h-full object-contain"
                 />

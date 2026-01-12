@@ -17,7 +17,6 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { Footer } from '../../shared/ui/Footer';
-import swiftCauseLogo from '../../shared/assets/logo.png';
 
 
 const userDocs = [
@@ -224,7 +223,7 @@ export function DocumentationPage({ onNavigate }: { onNavigate?: (screen: string
           <div className="flex items-center space-x-3">
             <div className="h-9 w-9">
               <img 
-                src={swiftCauseLogo} 
+                src="/logo.png" 
                 alt="Swift Cause Logo" 
                 className="w-full h-full object-contain"
               />

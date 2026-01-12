@@ -2,7 +2,6 @@
 import { Button } from '../../shared/ui/button';
 import { Card, CardContent } from '../../shared/ui/card';
 import { ArrowLeft, Smartphone, Shield, BarChart3, QrCode, Target, UserCog, Heart, Award, Globe, CheckCircle } from 'lucide-react';
-import swiftCauseLogo from '../../shared/assets/logo.png';
 import { Footer } from '../../shared/ui/Footer';
 
 
@@ -16,7 +15,7 @@ export function AboutPage({ onNavigate }: { onNavigate?: (screen: string) => voi
             <div className="flex items-center space-x-3">
               <div className="h-10 w-10">
                 <img 
-                  src={swiftCauseLogo} 
+                  src="/logo.png" 
                   alt="Swift Cause Logo" 
                   className="w-full h-full object-contain"
                 />

@@ -55,7 +55,6 @@ import {
 
 import { ImageWithFallback } from '../../shared/ui/figma/ImageWithFallback';
 import { Footer } from '../../shared/ui/Footer';
-import swiftCauseLogo from '../../shared/assets/logo.png';
 
 interface HomePageProps {
   onLogin: () => void;
@@ -603,7 +602,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
                 logoClicks > 0 ? 'animate-bounce' : ''
               } ${showEasterEgg ? 'animate-spin' : ''}`}>
                 <img 
-                  src={swiftCauseLogo} 
+                  src="/logo.png" 
                   alt="Swift Cause Logo" 
                   className="w-full h-full object-contain"
                 />

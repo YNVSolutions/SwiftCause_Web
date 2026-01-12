@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Button } from '../../shared/ui/button';
 import { ArrowLeft, Mail, Phone, Building, SendHorizontal, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { Footer } from '../../shared/ui/Footer';
-import swiftCauseLogo from '../../shared/assets/logo.png';
 import { submitFeedback } from '../../shared/api/firestoreService';
 
 const ContactInfoItem = ({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) => (
@@ -60,7 +59,7 @@ export function ContactPage({ onNavigate }: { onNavigate?: (screen: string) => v
           <div className="flex items-center space-x-3">
             <div className="h-8 w-8">
               <img 
-                src={swiftCauseLogo} 
+                src="/logo.png" 
                 alt="Swift Cause Logo" 
                 className="w-full h-full object-contain"
               />
