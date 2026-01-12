@@ -159,7 +159,7 @@ export function KioskForm({
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [open]);
+  }, [open, sectionRefs]);
 
   const scrollToSection = (sectionId: string) => {
     const sectionRef = sectionRefs[sectionId as keyof typeof sectionRefs];
