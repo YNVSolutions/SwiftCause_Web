@@ -25,8 +25,21 @@ export const authApi = {
         } as User;
       }
       return null;
-    } catch (error) {
-      console.error('Error signing in:', error);
+    } catch (error: any) {
+      // Don't log expected authentication errors to console
+      const expectedErrors = [
+        'auth/invalid-email',
+        'auth/invalid-credential',
+        'auth/user-not-found',
+        'auth/wrong-password',
+        'auth/user-disabled',
+        'auth/too-many-requests'
+      ];
+      
+      if (!expectedErrors.includes(error?.code)) {
+        console.error('Unexpected error signing in:', error);
+      }
+      
       throw error;
     }
   },
@@ -86,8 +99,19 @@ export const authApi = {
         id: userId,
         ...userData
       } as User;
-    } catch (error) {
-      console.error('Error signing up:', error);
+    } catch (error: any) {
+      // Don't log expected authentication errors to console
+      const expectedErrors = [
+        'auth/email-already-in-use',
+        'auth/invalid-email',
+        'auth/weak-password',
+        'auth/operation-not-allowed'
+      ];
+      
+      if (!expectedErrors.includes(error?.code)) {
+        console.error('Unexpected error signing up:', error);
+      }
+      
       throw error;
     }
   },
