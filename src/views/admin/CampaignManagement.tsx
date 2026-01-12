@@ -666,9 +666,9 @@ const CampaignDialog = ({
         </div>
 
         {/* Main Content - Grid Layout */}
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-1 overflow-hidden h-full">
           {/* Left Sidebar - Navigation */}
-          <div className="w-56 border-r border-gray-200 bg-gradient-to-b from-white to-gray-50 overflow-y-auto shadow-sm">
+          <div className="w-56 border-r border-gray-200 bg-gradient-to-b from-white to-gray-50 overflow-y-auto shadow-sm h-full">
             <div className="p-5 space-y-3">
               <div className="mb-6">
                 <h3 className="text-xs font-bold text-gray-700 uppercase tracking-widest">Configuration</h3>
@@ -760,16 +760,15 @@ const CampaignDialog = ({
           {/* Right Content - Form with Hidden Scrollbar */}
           <div 
             ref={contentRef} 
-            className="flex-1 overflow-y-scroll bg-gray-50"
+            className="flex-1 overflow-y-scroll bg-gray-50 h-full scroll-container"
             style={{
               scrollbarWidth: 'none',
               msOverflowStyle: 'none',
-              scrollBehavior: 'smooth',
-              maxHeight: 'calc(95vh - 80px)'
+              scrollBehavior: 'smooth'
             }}
           >
             <style>{`
-              div::-webkit-scrollbar {
+              div.scroll-container::-webkit-scrollbar {
                 display: none !important;
               }
             `}</style>
