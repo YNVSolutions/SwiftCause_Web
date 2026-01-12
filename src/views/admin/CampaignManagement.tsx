@@ -1078,24 +1078,30 @@ const CampaignDialog = ({
                         </div>
                       )}
 
-                      {/* Selected Kiosks Summary */}
-                      {(formData.selectedKiosks || []).length > 0 && (
-                        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                          <p className="text-sm font-semibold text-blue-900 mb-3">
-                            Selected Kiosks ({(formData.selectedKiosks || []).length})
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            {(formData.selectedKiosks || []).map((kioskId: string) => {
-                              const kiosk = kiosks.find(k => k.id === kioskId);
-                              return kiosk ? (
-                                <Badge key={kioskId} className="bg-blue-600 text-white">
-                                  {kiosk.name}
-                                </Badge>
-                              ) : null;
-                            })}
-                          </div>
-                        </div>
-                      )}
+                      {/* Selected Kiosks Summary - Always reserve space */}
+                      <div className={`mt-6 p-4 rounded-lg transition-all ${
+                        (formData.selectedKiosks || []).length > 0
+                          ? 'bg-blue-50 border border-blue-200'
+                          : 'bg-transparent border-0'
+                      }`}>
+                        {(formData.selectedKiosks || []).length > 0 && (
+                          <>
+                            <p className="text-sm font-semibold text-blue-900 mb-3">
+                              Selected Kiosks ({(formData.selectedKiosks || []).length})
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {(formData.selectedKiosks || []).map((kioskId: string) => {
+                                const kiosk = kiosks.find(k => k.id === kioskId);
+                                return kiosk ? (
+                                  <Badge key={kioskId} className="bg-blue-600 text-white">
+                                    {kiosk.name}
+                                  </Badge>
+                                ) : null;
+                              })}
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
