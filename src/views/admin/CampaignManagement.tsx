@@ -932,15 +932,18 @@ const CampaignDialog = ({
                         <Label htmlFor="goal" className="block text-sm font-semibold text-gray-900 mb-3">
                           Fundraising Target ($) <span className="text-red-500">*</span>
                         </Label>
-                        <Input
-                          id="goal"
-                          name="goal"
-                          type="number"
-                          value={formData.goal}
-                          onChange={handleChange}
-                          placeholder="1000"
-                          className="w-full h-11 px-4 border border-gray-300 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-200 focus:outline-none transition-all text-gray-900"
-                        />
+                        <div className="flex items-center">
+                          <span className="text-gray-600 font-medium mr-2">$</span>
+                          <Input
+                            id="goal"
+                            name="goal"
+                            type="number"
+                            value={formData.goal}
+                            onChange={handleChange}
+                            placeholder="1000"
+                            className="w-full h-11 px-4 border border-gray-300 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-200 focus:outline-none transition-all text-gray-900"
+                          />
+                        </div>
                         <p className="text-xs text-gray-500 mt-2">Your campaign's fundraising goal</p>
                       </div>
 
