@@ -702,9 +702,9 @@ const CampaignDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[900px] max-h-[95vh] flex flex-col p-0">
+      <DialogContent className="sm:max-w-[900px] h-[95vh] flex flex-col p-0">
         {/* Header */}
-        <div className="px-6 py-5 border-b border-gray-200 bg-white">
+        <div className="px-6 py-5 border-b border-gray-200 bg-white flex-shrink-0">
           <DialogTitle className="text-2xl font-bold text-gray-900">
             {dialogTitle}
           </DialogTitle>
@@ -1111,7 +1111,7 @@ const CampaignDialog = ({
         </div>
 
         {/* Footer */}
-        <div className="flex justify-between items-center px-6 py-4 border-t border-gray-200 bg-white">
+        <div className="flex justify-between items-center px-6 py-4 border-t border-gray-200 bg-white flex-shrink-0">
           {submissionError && (
             <div className="text-sm text-red-600 font-medium flex items-center gap-2">
               <AlertTriangle className="w-4 h-4" />
