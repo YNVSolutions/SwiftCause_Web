@@ -346,13 +346,19 @@ export function GiftAidManagement({
       headerSubtitle="Manage and track Gift Aid eligible donations for tax reclaim"
       headerActions={(
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={handleRefresh} disabled={loading} aria-label="Refresh">
+          <Button
+            variant="outline"
+            onClick={handleRefresh}
+            disabled={loading}
+            aria-label="Refresh"
+            className="border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800 hover:border-green-300"
+          >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""} sm:mr-2`} />
             <span className="hidden sm:inline">Refresh</span>
           </Button>
           <Button
             onClick={handleExportData}
-            className="bg-indigo-600 hover:bg-indigo-700"
+            className="bg-green-600 hover:bg-green-700 text-white shadow-sm"
             aria-label="Export Data"
           >
             <Download className="w-4 h-4 sm:mr-2" />

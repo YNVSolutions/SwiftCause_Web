@@ -512,11 +512,44 @@ export function AdminLayout({
 
       <SidebarInset className="flex-1 flex flex-col overflow-hidden relative">
         <header
-          className={`absolute top-0 left-0 right-0 z-20 bg-white/95 backdrop-blur-sm ${
-            hideHeaderDivider ? "" : "border-b border-gray-200 shadow-sm"
+          className={`absolute top-0 left-0 right-0 z-20 bg-white ${
+            hideHeaderDivider ? "" : "border-b border-gray-200/70 shadow-sm"
           }`}
         >
-          <div className="flex items-center justify-between px-4 sm:px-6 min-h-16 py-2">
+          <style>{`
+            @keyframes headerFloatUp {
+              0% { transform: translateY(8px); opacity: 0; }
+              20% { opacity: 0.5; }
+              100% { transform: translateY(-26px); opacity: 0; }
+            }
+            .header-heart {
+              animation: headerFloatUp 6s ease-in-out infinite;
+              filter: drop-shadow(0 6px 10px rgba(22, 163, 74, 0.25));
+            }
+            .header-heart:nth-child(1) { left: 8%; top: 55%; animation-delay: 0s; }
+            .header-heart:nth-child(2) { left: 28%; top: 35%; animation-delay: 1.2s; }
+            .header-heart:nth-child(3) { left: 52%; top: 60%; animation-delay: 2.4s; }
+            .header-heart:nth-child(4) { left: 72%; top: 40%; animation-delay: 3.6s; }
+            .header-heart:nth-child(5) { left: 90%; top: 58%; animation-delay: 4.8s; }
+          `}</style>
+          <div className="pointer-events-none absolute inset-0">
+            <div className="header-heart absolute text-green-400 fill-green-400 opacity-40" style={{ fontSize: "15px" }}>
+              ♥
+            </div>
+            <div className="header-heart absolute text-green-400 fill-green-400 opacity-35" style={{ fontSize: "22px" }}>
+              ♥
+            </div>
+            <div className="header-heart absolute text-green-400 fill-green-400 opacity-30" style={{ fontSize: "30px" }}>
+              ♥
+            </div>
+            <div className="header-heart absolute text-green-400 fill-green-400 opacity-30" style={{ fontSize: "18px" }}>
+              ♥
+            </div>
+            <div className="header-heart absolute text-green-400 fill-green-400 opacity-35" style={{ fontSize: "26px" }}>
+              ♥
+            </div>
+          </div>
+          <div className="flex items-center justify-between px-4 sm:px-6 h-27">
             <AdminPageHeader
               title={resolvedHeaderTitle}
               subtitle={headerSubtitle}
@@ -531,10 +564,10 @@ export function AdminLayout({
         </header>
         
         <main
-          className="flex-1 w-full bg-slate-50 overflow-y-auto overflow-x-hidden pt-16"
+          className="flex-1 w-full bg-slate-50 overflow-y-auto overflow-x-hidden pt-20"
           data-testid="main-content-area"
         >
-          <div className="pt-4 sm:pt-6">
+          <div className="pt-14">
             {children}
           </div>
         </main>

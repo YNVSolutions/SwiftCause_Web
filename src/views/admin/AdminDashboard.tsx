@@ -736,7 +736,9 @@ export function AdminDashboard({
       headerTitle={(
         <div className="flex flex-col">
           <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-3xl font-semibold text-gray-900">Dashboard</h1>
+            <h1 className="text-3xl font-semibold text-gray-900">
+              <span className="header-title-text">Dashboard</span>
+            </h1>
             <Badge className="px-3 py-1 text-xs font-semibold rounded-full bg-blue-50 text-blue-700 border border-blue-200">
               {userSession.user.role.replace('_', ' ').toUpperCase()}
             </Badge>
