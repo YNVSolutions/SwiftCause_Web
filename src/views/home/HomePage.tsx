@@ -89,6 +89,9 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
     amount: number;
     country: string;
   }>>([]);
+  const [logoClicks, setLogoClicks] = useState(0);
+  const [showEasterEgg, setShowEasterEgg] = useState(false);
+  const [navHoverEffect, setNavHoverEffect] = useState<string | null>(null);
   
   // Mock live statistics for demonstration
   const [stats, setStats] = useState({
@@ -128,6 +131,28 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
   const toggleFaq = (index: number) => {
     setOpenFaqIndex(openFaqIndex === index ? null : index);
   };
+
+  // Easter egg: Logo click counter
+  const handleLogoClick = () => {
+    const newCount = logoClicks + 1;
+    setLogoClicks(newCount);
+    
+    if (newCount === 5) {
+      setShowEasterEgg(true);
+      setTimeout(() => {
+        setShowEasterEgg(false);
+        setLogoClicks(0);
+      }, 3000);
+    }
+  };
+
+  // Reset logo clicks after 3 seconds of inactivity
+  useEffect(() => {
+    if (logoClicks > 0 && logoClicks < 5) {
+      const timer = setTimeout(() => setLogoClicks(0), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [logoClicks]);
 
   // Donation flow steps for carousel
   const donationFlowSteps = [
@@ -566,11 +591,17 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
   return (
     <div className="min-h-screen bg-white">
 
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-3">
-              <div className="h-10 w-10">
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
+        <div className="w-full max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-12">
+          <div className="flex items-center justify-between h-20">
+            {/* Logo Section - Left with Easter Egg */}
+            <div 
+              className="flex items-center space-x-4 min-w-[200px] cursor-pointer group"
+              onClick={handleLogoClick}
+            >
+              <div className={`h-12 w-12 bg-green-600 rounded-xl p-2 shadow-md group-hover:shadow-lg transition-all duration-300 ${
+                logoClicks > 0 ? 'animate-bounce' : ''
+              } ${showEasterEgg ? 'animate-spin' : ''}`}>
                 <img 
                   src={swiftCauseLogo.src} 
                   alt="Swift Cause Logo" 
@@ -578,28 +609,90 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
                 />
               </div>
               <div>
-                <h1 className="text-xl font-semibold text-gray-900">Swift Cause</h1>
-                <p className="text-xs text-gray-600">Donation Platform</p>
+                <h1 className="text-xl font-bold text-gray-900 group-hover:text-green-600 transition-colors">
+                  Swift Cause
+                </h1>
+                <p className="text-xs text-green-600 font-medium">
+                  {showEasterEgg ? '🎉 You found it!' : 'Donation Platform'}
+                </p>
               </div>
             </div>
             
-            <nav className="hidden md:flex items-center space-x-8">
-              <a href="#features" className="text-gray-600 hover:text-gray-900 transition-colors">Features</a>
-              <a href="#solutions" className="text-gray-600 hover:text-gray-900 transition-colors">Solutions</a>
-              <a href="#how-it-works" className="text-gray-600 hover:text-gray-900 transition-colors">How It Works</a>
-              <a href="#faq" className="text-gray-600 hover:text-gray-900 transition-colors">FAQ</a>
+            {/* Navigation Links - Center with Creative Hover Effects */}
+            <nav className="hidden lg:flex items-center space-x-1 flex-1 justify-center max-w-2xl">
+              <a 
+                href="#solutions" 
+                onMouseEnter={() => setNavHoverEffect('solutions')}
+                onMouseLeave={() => setNavHoverEffect(null)}
+                className="relative px-4 py-2 text-gray-700 hover:text-green-600 rounded-lg transition-all duration-200 font-medium group"
+              >
+                <span className="relative z-10">Solutions</span>
+                {navHoverEffect === 'solutions' && (
+                  <span className="absolute inset-0 bg-green-50 rounded-lg animate-pulse"></span>
+                )}
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-green-600 group-hover:w-full transition-all duration-300"></span>
+              </a>
+              <a 
+                href="#how-it-works" 
+                onMouseEnter={() => setNavHoverEffect('how')}
+                onMouseLeave={() => setNavHoverEffect(null)}
+                className="relative px-4 py-2 text-gray-700 hover:text-green-600 rounded-lg transition-all duration-200 font-medium group"
+              >
+                <span className="relative z-10">How It Works</span>
+                {navHoverEffect === 'how' && (
+                  <span className="absolute inset-0 bg-green-50 rounded-lg animate-pulse"></span>
+                )}
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-green-600 group-hover:w-full transition-all duration-300"></span>
+              </a>
+              <a 
+                href="#faq" 
+                onMouseEnter={() => setNavHoverEffect('faq')}
+                onMouseLeave={() => setNavHoverEffect(null)}
+                className="relative px-4 py-2 text-gray-700 hover:text-green-600 rounded-lg transition-all duration-200 font-medium group"
+              >
+                <span className="relative z-10">FAQ</span>
+                {navHoverEffect === 'faq' && (
+                  <span className="absolute inset-0 bg-green-50 rounded-lg animate-pulse"></span>
+                )}
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-green-600 group-hover:w-full transition-all duration-300"></span>
+              </a>
             </nav>
 
-            <div className="flex items-center space-x-3">
-              <Button variant="ghost" onClick={onLogin} className="text-gray-600 hover:text-gray-900">
-                Login
+            {/* CTA Buttons - Right with Micro-interactions */}
+            <div className="flex items-center space-x-3 min-w-[200px] justify-end">
+              <Button 
+                variant="ghost" 
+                onClick={onLogin} 
+                className="relative text-gray-700 hover:text-green-600 hover:bg-green-50 font-medium group overflow-hidden"
+              >
+                <span className="relative z-10">Login</span>
+                <span className="absolute inset-0 bg-green-100 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300"></span>
               </Button>
-              <Button onClick={onSignup} className="bg-green-600 hover:bg-green-700 text-white">
-                Get Started
+              <Button 
+                onClick={onSignup} 
+                className="relative bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg font-semibold overflow-hidden group"
+              >
+                <span className="relative z-10 flex items-center">
+                  Get Started
+                  <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                </span>
+                <span className="absolute inset-0 bg-gradient-to-r from-green-700 to-emerald-600 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
               </Button>
             </div>
           </div>
         </div>
+        
+        {/* Live Donation Counter Easter Egg */}
+        {showEasterEgg && (
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 bg-green-600 text-white px-6 py-3 rounded-full shadow-xl animate-bounce z-50">
+            <div className="flex items-center space-x-2">
+              <Heart className="w-4 h-4 fill-white animate-pulse" />
+              <span className="text-sm font-semibold">
+                {formatCurrency(stats.totalRaised)} raised globally! 🌍
+              </span>
+            </div>
+          </div>
+        )}
       </header>
 
 
