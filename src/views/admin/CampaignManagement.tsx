@@ -40,7 +40,7 @@ import {
   FaTrashAlt, // Added FaTrashAlt
   FaPlus, // Import FaPlus
 } from "react-icons/fa";
-import { Plus, ArrowLeft, Settings, Download, RefreshCw } from "lucide-react";
+import { Plus, ChevronLeft, Settings, Download, RefreshCw, MoreVertical } from "lucide-react";
 import { Calendar } from "../../shared/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "../../shared/ui/popover";
 import { AlertTriangle } from "lucide-react"; // Import AlertTriangle
@@ -78,6 +78,12 @@ import {
 } from "../../shared/ui/table";
 import { useOrganization } from "../../shared/lib/hooks/useOrganization";
 import { useStripeOnboarding, StripeOnboardingDialog } from "../../features/stripe-onboarding";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../../shared/ui/dropdown-menu";
 
 interface CampaignDialogProps {
   open: boolean;
@@ -1297,96 +1303,43 @@ const CampaignManagement = ({
       hasPermission={hasPermission}
       activeScreen="admin-campaigns"
     >
-      <div className="space-y-6">
-        <header className="bg-white shadow-sm border-b rounded-md">
-          <div className="px-2 sm:px-6 lg:px-8">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between h-auto sm:h-16 gap-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+      <div className="space-y-4">
+        <header className="bg-white shadow-sm border-b">
+          <div className="px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex flex-col gap-1">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => onNavigate("admin")}
-                  className="flex items-center space-x-2"
+                  className="-ml-3 w-fit px-0 text-xs font-semibold uppercase tracking-widest text-gray-500 hover:text-gray-800"
                 >
-                  <ArrowLeft className="w-4 h-4" />
-                  <span className="hidden sm:inline">Back to Dashboard</span>
-                  <span className="sm:hidden">Back</span>
+                  <ChevronLeft className="w-4 h-4 mr-0" />
+                  Back to Dashboard
                 </Button>
-                <div className="h-6 w-px bg-gray-300 hidden sm:block" />
                 <div>
-                  <h1 className="text-xl font-semibold text-gray-900">
+                  <h1 className="text-2xl font-semibold text-gray-900 sm:text-3xl">
                     Campaign Management
                   </h1>
-                  <p className="text-sm text-gray-600 hidden lg:block">
+                  <p className="text-sm text-gray-600">
                     Configure and monitor campaigns
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="hidden sm:inline-flex"
-                  onClick={() => exportToCsv(filteredAndSortedCampaigns)}
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Export CSV
-                </Button>
-                <Button
-                  className="bg-indigo-600 text-white hidden sm:inline-flex disabled:opacity-60 disabled:cursor-not-allowed"
-                  onClick={() => {
-                    setIsAddDialogOpen(true);
-                  }}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Campaign
-                </Button>
-              </div>
-            </div>
-          </div>
-        </header>
-        <main className="px-2 sm:px-6 lg:px-8 py-4 sm:py-8">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-8">
-            <div className="w-full sm:max-w-md">
-              <div className="relative">
-                <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 mr-2" />
-                <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                  <Input
-                    placeholder="Search campaigns..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="ml-5 pl-10 w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto sm:justify-end">
               <Button
                 variant="outline"
                 size="sm"
-                className="w-full sm:w-auto sm:hidden"
+                className="hover:bg-gray-100 transition-colors shrink-0"
                 onClick={() => exportToCsv(filteredAndSortedCampaigns)}
               >
                 <Download className="w-4 h-4 mr-2" />
                 Export CSV
               </Button>
-              <Button
-                className="bg-indigo-600 hover:bg-indigo-700 w-full sm:w-auto sm:hidden disabled:opacity-60 disabled:cursor-not-allowed"
-                onClick={() => {
-                  if (!isStripeOnboarded) {
-                    setShowOnboardingDialog(true);
-                  } else {
-                    setIsAddDialogOpen(true);
-                  }
-                }}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Campaign
-              </Button>
             </div>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        </header>
+        <main className="px-2 sm:px-6 lg:px-8 pt-2 pb-4 sm:pt-4 sm:pb-8">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <Card>
               <CardContent className="p-2">
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -1496,6 +1449,49 @@ const CampaignManagement = ({
           </div>
           {/* Campaigns Table/List – aligned with Donations layout */}
           <Card>
+            <div className="px-6 pt-6">
+              <div className="flex items-center justify-between gap-3">
+                <div className="w-full max-w-sm">
+                  <div className="relative border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                    <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Input
+                      placeholder="Search campaigns..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 pr-3 w-full h-12 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    className="bg-indigo-600 hover:bg-indigo-700 h-12 w-12 p-0 sm:hidden disabled:opacity-60 disabled:cursor-not-allowed"
+                    onClick={() => {
+                      if (!isStripeOnboarded) {
+                        setShowOnboardingDialog(true);
+                      } else {
+                        setIsAddDialogOpen(true);
+                      }
+                    }}
+                    aria-label="Add Campaign"
+                  >
+                    <Plus className="w-5 h-5" />
+                  </Button>
+                  <Button
+                    className="bg-indigo-600 text-white hidden sm:inline-flex disabled:opacity-60 disabled:cursor-not-allowed"
+                    onClick={() => {
+                      if (!isStripeOnboarded) {
+                        setShowOnboardingDialog(true);
+                      } else {
+                        setIsAddDialogOpen(true);
+                      }
+                    }}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Campaign
+                  </Button>
+                </div>
+              </div>
+            </div>
             <CardHeader>
               <CardTitle>Campaigns ({filteredAndSortedCampaigns.length})</CardTitle>
               <CardDescription>Manage your donation campaigns</CardDescription>
@@ -1514,7 +1510,137 @@ const CampaignManagement = ({
                   ))}
                 </div>
               ) : filteredAndSortedCampaigns.length > 0 ? (
-                <div className="overflow-x-auto">
+                <>
+                  <div className="md:hidden space-y-4">
+                  {filteredAndSortedCampaigns.map((campaign: any) => {
+                    const progress =
+                      campaign.goal && campaign.raised
+                        ? Math.min(
+                            (Number(campaign.raised) / Number(campaign.goal)) *
+                              100,
+                            100
+                          )
+                        : 0;
+
+                    return (
+                      <div
+                        key={campaign.id ?? campaign.title}
+                        className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <ImageWithFallback
+                              src={campaign.coverImageUrl}
+                              alt={campaign.title}
+                              className="h-12 w-12 rounded-xl border border-gray-200 object-cover bg-gray-100"
+                              fallbackSrc="/campaign-fallback.svg"
+                            />
+                            <div>
+                              <div className="text-sm font-semibold text-gray-900">
+                                {campaign.title}
+                              </div>
+                              {campaign.category && (
+                                <div className="text-xs text-gray-500">
+                                  {campaign.category}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-gray-500 hover:bg-gray-100"
+                                aria-label="Campaign actions"
+                              >
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onSelect={() => handleEditClick(campaign)}
+                                className="flex items-center gap-2"
+                              >
+                                <FaEdit className="h-4 w-4" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onSelect={() => handleDeleteClick(campaign)}
+                                className="flex items-center gap-2 text-red-600 focus:text-red-600"
+                              >
+                                <FaTrashAlt className="h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          <Badge
+                            className={`text-xs px-2 py-1 rounded-full ${getStatusColor(
+                              campaign.status ?? "unknown"
+                            )}`}
+                          >
+                            {campaign.status ?? "Unknown"}
+                          </Badge>
+                        </div>
+
+                        {typeof progress === "number" && progress > 0 && (
+                          <div className="mt-3">
+                            <div className="flex items-center justify-between text-xs text-gray-500">
+                              <span>Progress</span>
+                              <span>{progress.toFixed(0)}%</span>
+                            </div>
+                            <div className="mt-1 h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
+                              <div
+                                className={`h-full ${getProgressColor(progress)}`}
+                                style={{ width: `${progress}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="mt-4 border-t border-gray-100 pt-4 text-sm text-gray-600">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+                              Goal
+                            </span>
+                            <span className="font-medium text-gray-900">
+                              {typeof campaign.goal === "number"
+                                ? campaign.goal.toLocaleString()
+                                : "—"}
+                            </span>
+                          </div>
+                          <div className="mt-2 flex items-center justify-between">
+                            <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+                              End Date
+                            </span>
+                            <span className="font-medium text-gray-900">
+                              {formatDate(campaign.endDate)}
+                            </span>
+                          </div>
+                        </div>
+
+                        {Array.isArray(campaign.tags) &&
+                          campaign.tags.length > 0 && (
+                            <div className="mt-4 flex flex-wrap gap-1">
+                              {campaign.tags.map((tag: string) => (
+                                <Badge
+                                  key={tag}
+                                  variant="secondary"
+                                  className="text-xs"
+                                >
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="hidden md:block overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -1637,6 +1763,7 @@ const CampaignManagement = ({
                     </TableBody>
                   </Table>
                 </div>
+                </>
               ) : (
                 <div className="text-center py-8 text-gray-500">
                   <Ghost className="mx-auto h-12 w-12 text-gray-400 mb-3" />

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Kiosk } from '../../../shared/types';
 
 // UI Components
@@ -66,11 +66,17 @@ export function KioskForm({
   
   
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const sectionRefs = {
-    'basic-info': useRef<HTMLElement>(null),
-    'campaigns': useRef<HTMLElement>(null),
-    'display': useRef<HTMLElement>(null)
-  };
+  const basicInfoRef = useRef<HTMLElement>(null);
+  const campaignsRef = useRef<HTMLElement>(null);
+  const displayRef = useRef<HTMLElement>(null);
+  const sectionRefs = useMemo(
+    () => ({
+      'basic-info': basicInfoRef,
+      campaigns: campaignsRef,
+      display: displayRef,
+    }),
+    [],
+  );
   
   
   const navigationItems = [
@@ -159,7 +165,7 @@ export function KioskForm({
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [open]);
+  }, [open, sectionRefs]);
 
   const scrollToSection = (sectionId: string) => {
     const sectionRef = sectionRefs[sectionId as keyof typeof sectionRefs];

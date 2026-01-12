@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Button } from '../../shared/ui/button';
 import { Input } from '../../shared/ui/input';
 import { Label } from '../../shared/ui/label';
@@ -182,10 +182,13 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
 
   const config = campaign.configuration;
   const allowRecurring = config.enableRecurring ?? true;
-  const availableIntervals: ('monthly' | 'quarterly' | 'yearly')[] =
-    config.recurringIntervals && config.recurringIntervals.length > 0
-      ? config.recurringIntervals
-      : ['monthly', 'quarterly', 'yearly'];
+  const availableIntervals = useMemo<('monthly' | 'quarterly' | 'yearly')[]>(
+    () =>
+      config.recurringIntervals && config.recurringIntervals.length > 0
+        ? config.recurringIntervals
+        : ['monthly', 'quarterly', 'yearly'],
+    [config.recurringIntervals],
+  );
 
   const frequencyOptions: FrequencyOption[] = availableIntervals.map((interval) => ({
     value: interval,

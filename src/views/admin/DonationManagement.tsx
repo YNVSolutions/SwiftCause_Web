@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '../../shared/ui/popover
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../../shared/ui/dialog';
 import {
   Search,
-  ArrowLeft,
+  ChevronLeft,
   Download,
   Calendar as CalendarIcon,
   DollarSign,
@@ -193,30 +193,29 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
       hasPermission={hasPermission}
       activeScreen="admin-donations"
     >
-      <div className="space-y-6">
-        <header className="bg-white shadow-sm border-b rounded-md">
-          <div className="px-2 sm:px-6 lg:px-8">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between h-auto sm:h-16 gap-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+      <div className="space-y-4">
+        <header className="bg-white shadow-sm border-b">
+          <div className="px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex flex-col gap-1">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => onNavigate('admin')}
-                  className="flex items-center space-x-2"
+                  className="-ml-3 w-fit px-0 text-xs font-semibold uppercase tracking-widest text-gray-500 hover:text-gray-800"
                 >
-                  <ArrowLeft className="w-4 h-4" />
-                  <span>Back to Dashboard</span>
+                  <ChevronLeft className="w-4 h-4 mr-0" />
+                  Back to Dashboard
                 </Button>
-                <div className="h-6 w-px bg-gray-300 hidden sm:block" />
                 <div>
-                  <h1 className="text-xl font-semibold text-gray-900">Donation Management</h1>
+                  <h1 className="text-2xl font-semibold text-gray-900 sm:text-3xl">Donation Management</h1>
                   <p className="text-sm text-gray-600">Track and analyze donation transactions</p>
                 </div>
               </div>
               <Button
                 variant="outline"
                 size="sm"
-                className="hidden sm:inline-flex hover:bg-gray-100 transition-colors"
+                className="hover:bg-gray-100 transition-colors shrink-0"
                 onClick={handleExportDonations}
               >
                 <Download className="w-4 h-4 mr-2" />
@@ -226,30 +225,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
           </div>
         </header>
 
-        <main className="px-2 sm:px-6 lg:px-8 py-4 sm:py-8">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
-            <div className="w-full sm:max-w-md">
-              <div className="relative border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  placeholder="Search donations..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 border-0 focus-visible:ring-0 focus-visible:border-transparent"
-                />
-              </div>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="sm:hidden hover:bg-gray-100 transition-colors"
-              onClick={handleExportDonations}
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Export CSV
-            </Button>
-          </div>
-
+        <main className="px-2 sm:px-6 lg:px-8 pt-2 pb-4 sm:pt-4 sm:pb-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Raised</p><p className="text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.totalAmount, summaryCurrency)}</p></div><DollarSign className="w-8 h-8 text-green-500" /></div></CardContent></Card>
             <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Donations</p><p className="text-2xl font-semibold text-gray-900">{totalStats.totalDonations}</p></div><Users className="w-8 h-8 text-indigo-500" /></div></CardContent></Card>
@@ -297,6 +273,21 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
 
           {/* Modern Table Container */}
           <Card>
+            <div className="px-6 pt-6">
+              <div className="flex items-center justify-between gap-3">
+                <div className="w-full max-w-sm">
+                  <div className="relative border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Input
+                      placeholder="Search donations..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 border-0 focus-visible:ring-0 focus-visible:border-transparent"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
             <div className="px-6 py-5 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900">Donations ({filteredDonations.length})</h3>
               <p className="text-sm text-gray-600 mt-1">All donation transactions and their details</p>
