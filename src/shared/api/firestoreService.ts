@@ -239,3 +239,16 @@ export async function submitCurrencyRequest(data: CurrencyRequestData) {
   console.log('Currency request submitted with ID:', docRef.id);
   return { id: docRef.id, ...requestData };
 }
+
+export async function checkEmailExists(email: string): Promise<boolean> {
+  try {
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, where('email', '==', email.toLowerCase()));
+    const snapshot = await getDocs(q);
+    return !snapshot.empty;
+  } catch (error) {
+    console.error('Error checking email existence:', error);
+    throw error;
+  }
+}
+
