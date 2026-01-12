@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useKiosks } from '../../../shared/lib/hooks/useKiosks';
-import { KioskSession, UserRole, Kiosk, Organization } from '../../../shared/types';
+import { KioskSession, UserRole, Kiosk } from '../../../shared/types';
 import { getOrganizationById } from '../../../shared/api';
 
 type OnLogin = (role: UserRole, sessionData?: KioskSession) => void;
@@ -69,5 +69,4 @@ export function useKioskLogin(onLogin: OnLogin) {
 		handleSubmit
 	};
 }
-
 

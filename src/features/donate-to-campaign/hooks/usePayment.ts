@@ -5,7 +5,7 @@ import { PaymentResult } from '../../../shared/types';
 interface UsePaymentReturn {
   isProcessing: boolean;
   error: string | null;
-  handlePaymentSubmit: (amount: number, metadata: any, currency: string) => Promise<void>;
+  handlePaymentSubmit: (amount: number, metadata: Record<string, unknown>, currency: string) => Promise<void>;
 }
 
 export function usePayment(onPaymentComplete: (result: PaymentResult) => void): UsePaymentReturn {
@@ -14,7 +14,7 @@ export function usePayment(onPaymentComplete: (result: PaymentResult) => void): 
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handlePaymentSubmit = useCallback(async (amount: number, metadata: any, currency: string) => {
+  const handlePaymentSubmit = useCallback(async (amount: number, metadata: Record<string, unknown>, currency: string) => {
     setIsProcessing(true);
     setError(null);
 
@@ -72,10 +72,12 @@ export function usePayment(onPaymentComplete: (result: PaymentResult) => void): 
         setError('Payment not successful.');
         onPaymentComplete({ success: false, error: 'Payment not successful.' });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Fetch or Stripe error:', err);
-      setError(err.message || 'An unexpected error occurred.');
-      onPaymentComplete({ success: false, error: err.message || 'An unexpected error occurred.' });
+      const errorMessage =
+        err instanceof Error ? err.message : 'An unexpected error occurred.';
+      setError(errorMessage);
+      onPaymentComplete({ success: false, error: errorMessage });
     } finally {
       setIsProcessing(false);
     }

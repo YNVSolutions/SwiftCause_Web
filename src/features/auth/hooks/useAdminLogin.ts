@@ -47,8 +47,10 @@ export function useAdminLogin(onLogin: OnLogin) {
 			};
 
 			onLogin('admin', adminSession);
-		} catch (err: any) {
-			setLocalError(err?.message || 'Authentication failed. Please try again.');
+		} catch (err: unknown) {
+			const errorMessage =
+				err instanceof Error ? err.message : 'Authentication failed. Please try again.';
+			setLocalError(errorMessage);
 		}
 	}, [email, password, login, onLogin]);
 
@@ -64,5 +66,4 @@ export function useAdminLogin(onLogin: OnLogin) {
 		handleSubmit
 	};
 }
-
 
