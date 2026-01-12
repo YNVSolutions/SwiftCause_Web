@@ -25,7 +25,7 @@ export const authApi = {
         } as User;
       }
       return null;
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Don't log expected authentication errors to console
       const expectedErrors = [
         'auth/invalid-email',
@@ -36,7 +36,12 @@ export const authApi = {
         'auth/too-many-requests'
       ];
       
-      if (!expectedErrors.includes(error?.code)) {
+      // Type guard to check if error has a code property
+      const hasCode = (err: unknown): err is { code: string } => {
+        return typeof err === 'object' && err !== null && 'code' in err;
+      };
+      
+      if (!hasCode(error) || !expectedErrors.includes(error.code)) {
         console.error('Unexpected error signing in:', error);
       }
       
@@ -99,7 +104,7 @@ export const authApi = {
         id: userId,
         ...userData
       } as User;
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Don't log expected authentication errors to console
       const expectedErrors = [
         'auth/email-already-in-use',
@@ -108,7 +113,12 @@ export const authApi = {
         'auth/operation-not-allowed'
       ];
       
-      if (!expectedErrors.includes(error?.code)) {
+      // Type guard to check if error has a code property
+      const hasCode = (err: unknown): err is { code: string } => {
+        return typeof err === 'object' && err !== null && 'code' in err;
+      };
+      
+      if (!hasCode(error) || !expectedErrors.includes(error.code)) {
         console.error('Unexpected error signing up:', error);
       }
       
@@ -120,7 +130,7 @@ export const authApi = {
   async signOut(): Promise<void> {
     try {
       await signOut(auth);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error signing out:', error);
       throw error;
     }
@@ -142,7 +152,7 @@ export const authApi = {
         } as User;
       }
       return null;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error getting current user:', error);
       throw error;
     }
