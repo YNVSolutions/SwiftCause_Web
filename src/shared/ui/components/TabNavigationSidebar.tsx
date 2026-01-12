@@ -19,9 +19,9 @@ export const TabNavigationSidebar: React.FC<TabNavigationSidebarProps> = ({
   onTabChange,
 }) => {
   return (
-    <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
+    <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200">
+      <div className="px-6 py-4 border-b border-gray-200 flex-shrink-0">
         <h3 className="text-sm font-semibold text-gray-900">Campaign Sections</h3>
       </div>
 
@@ -61,7 +61,7 @@ export const TabNavigationSidebar: React.FC<TabNavigationSidebarProps> = ({
       </div>
 
       {/* Footer Info */}
-      <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+      <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex-shrink-0">
         <p className="text-xs text-gray-600">
           Complete all sections to publish your campaign.
         </p>
