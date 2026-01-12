@@ -4,24 +4,7 @@ import React, { useState } from "react";
 import { Screen, AdminSession, Permission } from "../../shared/types";
 import { Button } from "../../shared/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../../shared/ui/avatar";
-import { Badge } from "../../shared/ui/badge";
-import {
-  SidebarProvider,
-  Sidebar,
-  SidebarHeader,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-
-  SidebarInset,
-  SidebarTrigger,
-  SidebarRail,
-  useSidebar,
-} from "../../shared/ui/sidebar";
+import { SidebarProvider } from "../../shared/ui/sidebar";
 import {
   LayoutDashboard,
   Settings,
@@ -30,13 +13,9 @@ import {
   Users,
   Gift,
   LogOut,
-  X,
-  Mail,
-  Building2,
-  Shield,
-  Calendar,
   Compass,
   Wallet,
+  Menu,
 } from "lucide-react";
 
 const SCREEN_LABELS: Partial<Record<Screen, string>> = {
@@ -70,276 +49,6 @@ const getInitials = (name: string) => {
     .slice(0, 2);
 };
 
-// Format role display name
-const getRoleDisplayName = (role: string) => {
-  const roleMap: Record<string, string> = {
-    'super_admin': 'Super Admin',
-    'admin': 'Administrator',
-    'manager': 'Manager',
-    'operator': 'Operator',
-    'viewer': 'Viewer',
-    'kiosk': 'Kiosk User'
-  };
-  return roleMap[role] || role;
-};
-
-// Get role badge color
-const getRoleBadgeColor = (role: string) => {
-  const colorMap: Record<string, string> = {
-    'super_admin': 'bg-red-500/20 text-red-100 border-red-400/30',
-    'admin': 'bg-purple-500/20 text-purple-100 border-purple-400/30',
-    'manager': 'bg-blue-500/20 text-blue-100 border-blue-400/30',
-    'operator': 'bg-green-500/20 text-green-100 border-green-400/30',
-    'viewer': 'bg-gray-500/20 text-gray-100 border-gray-400/30',
-    'kiosk': 'bg-orange-500/20 text-orange-100 border-orange-400/30'
-  };
-  return colorMap[role] || 'bg-white/20 text-white border-white/30';
-};
-
-function ProfileSidebar({
-  isOpen,
-  onClose,
-  userSession,
-  onLogout
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  userSession: AdminSession;
-  onLogout: () => void;
-}) {
-  return (
-    <>
-      {/* Backdrop with blur */}
-      <div 
-        className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity duration-300 ${
-          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        }`}
-        onClick={onClose}
-      />
-      
-      {/* Profile Sidebar */}
-      <div 
-        className={`fixed top-0 right-0 h-full w-full sm:w-96 bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
-          isOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
-      >
-        {/* Header */}
-        <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-6 relative">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="absolute top-4 right-4 text-white hover:bg-white/20 rounded-lg"
-          >
-            <X className="h-5 w-5" />
-          </Button>
-          
-          <div className="flex flex-col items-center text-center mt-8">
-            <Avatar className="h-24 w-24 ring-4 ring-white/30 shadow-xl mb-4">
-              <AvatarImage src={userSession.user.photoURL || undefined} />
-              <AvatarFallback className="bg-white text-blue-600 text-2xl font-bold">
-                {getInitials(userSession.user.username || userSession.user.email || 'U')}
-              </AvatarFallback>
-            </Avatar>
-            <h2 className="text-2xl font-bold text-white mb-1">
-              {userSession.user.username || 'User'}
-            </h2>
-            <Badge className={`${getRoleBadgeColor(userSession.user.role)} hover:bg-white/30 font-semibold`}>
-              {getRoleDisplayName(userSession.user.role)}
-            </Badge>
-          </div>
-        </div>
-        
-        {/* Content */}
-        <div className="p-6 space-y-6 overflow-y-auto h-[calc(100%-280px)]">
-          {/* User Information Section */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
-              Account Information
-            </h3>
-            
-            <div className="space-y-3">
-              {/* Email */}
-              <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-                  <Mail className="h-5 w-5 text-blue-600" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-gray-500 mb-1">Email Address</p>
-                  <p className="text-sm font-semibold text-gray-900 truncate">
-                    {userSession.user.email}
-                  </p>
-                </div>
-              </div>
-              
-              {/* Organization */}
-              {userSession.user.organizationName && (
-                <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                  <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
-                    <Building2 className="h-5 w-5 text-purple-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-gray-500 mb-1">Organization</p>
-                    <p className="text-sm font-semibold text-gray-900 truncate">
-                      {userSession.user.organizationName}
-                    </p>
-                  </div>
-                </div>
-              )}
-              
-              {/* Role */}
-              <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                <div className="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
-                  <Shield className="h-5 w-5 text-green-600" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-gray-500 mb-1">Role</p>
-                  <p className="text-sm font-semibold text-gray-900">
-                    {getRoleDisplayName(userSession.user.role)}
-                  </p>
-                </div>
-              </div>
-              
-              {/* Member Since */}
-              {userSession.user.createdAt && (
-                <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                  <div className="h-10 w-10 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
-                    <Calendar className="h-5 w-5 text-orange-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-gray-500 mb-1">Member Since</p>
-                    <p className="text-sm font-semibold text-gray-900">
-                      {new Date(userSession.user.createdAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-          
-          {/* Permissions Section */}
-          {userSession.permissions && userSession.permissions.length > 0 && (
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
-                Permissions
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {userSession.permissions.map((permission) => (
-                  <Badge
-                    key={permission}
-                    variant="outline"
-                    className="text-xs bg-blue-50 text-blue-700 border-blue-200"
-                  >
-                    {permission.replace(/_/g, ' ')}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-        
-        {/* Footer with Logout Button */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 bg-gray-50 border-t border-gray-200">
-          <Button
-            onClick={onLogout}
-            className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
-          >
-            <LogOut className="h-5 w-5 mr-2" />
-            Sign Out
-          </Button>
-        </div>
-      </div>
-    </>
-  );
-}
-
-function SidebarUserFooter({
-  userSession,
-  onLogout,
-  onProfileClick
-}: {
-  userSession: AdminSession;
-  onLogout: () => void;
-  onProfileClick: () => void;
-}) {
-  const { state } = useSidebar();
-  const isExpanded = state === "expanded";
-  
-  return (
-    <div className="border-t border-gray-200 p-3 bg-gray-50/50">
-      <div className="flex items-center gap-3">
-        <button
-          onClick={onProfileClick}
-          className="flex items-center gap-3 flex-1 min-w-0 hover:bg-gray-100 rounded-lg p-1 transition-colors"
-        >
-          <Avatar className="h-9 w-9 ring-2 ring-indigo-100 shadow-sm">
-            <AvatarImage src={userSession.user.photoURL || undefined} />
-            <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white text-xs font-semibold">
-              {getInitials(userSession.user.username || userSession.user.email || 'U')}
-            </AvatarFallback>
-          </Avatar>
-          {isExpanded && (
-            <div className="flex-1 min-w-0 text-left">
-              <p className="text-sm font-semibold text-gray-900 truncate">
-                {userSession.user.username || 'User'}
-              </p>
-              <p className="text-xs text-gray-500 truncate">
-                {userSession.user.email}
-              </p>
-            </div>
-          )}
-        </button>
-        {isExpanded ? (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onLogout}
-            className="h-8 w-8 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
-            title="Log out"
-          >
-            <LogOut className="h-4 w-4" />
-          </Button>
-        ) : (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onLogout}
-            className="h-8 w-8 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors absolute bottom-3 left-1/2 -translate-x-1/2"
-            title="Log out"
-          >
-            <LogOut className="h-4 w-4" />
-          </Button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function SidebarHeaderContent() {
-  const { state } = useSidebar();
-  const isExpanded = state === "expanded";
-  return (
-    <div className="flex items-center gap-3 px-4 py-4">
-      <div className="relative">
-        <img src="/logo.png" alt="SwiftCause Logo" className="h-10 w-10 rounded-xl shadow-md" />
-        <div className="absolute -bottom-1 -right-1 h-3 w-3 bg-green-500 rounded-full border-2 border-white"></div>
-      </div>
-      {isExpanded && (
-        <div className="flex flex-col">
-          <span className="text-base font-bold text-gray-900">SwiftCause</span>
-          <span className="text-xs font-medium text-gray-500">
-            Admin Portal
-          </span>
-        </div>
-      )}
-    </div>
-  );
-}
-
 export function AdminLayout({
   onNavigate,
   onLogout,
@@ -349,221 +58,591 @@ export function AdminLayout({
   activeScreen = "admin-dashboard",
   onStartTour,
 }: AdminLayoutProps) {
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [logoAnimating, setLogoAnimating] = useState(false);
   const isActive = (...screens: Screen[]) => screens.includes(activeScreen);
   const currentLabel = SCREEN_LABELS[activeScreen] ?? "Admin";
 
+  const toggleSidebar = () => {
+    setIsCollapsed(!isCollapsed);
+  };
+
+  const handleLogoClick = () => {
+    setLogoAnimating(true);
+    setTimeout(() => setLogoAnimating(false), 500); // Animation duration
+  };
+
   return (
     <SidebarProvider defaultOpen={true}>
-      <Sidebar 
-        side="left" 
-        variant="sidebar" 
-        collapsible="icon" 
-        className="bg-white border-r border-gray-200"
-      >
-        <SidebarHeader className="border-b border-gray-100 shrink-0">
-          <SidebarHeaderContent />
-        </SidebarHeader>
-        
-        <SidebarContent className="px-3 py-4 flex-1 overflow-y-auto">
-          <SidebarGroup>
-            <SidebarGroupLabel className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-3">
-              Main Menu
-            </SidebarGroupLabel>
-            <SidebarMenu className="space-y-1">
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  onClick={() => onNavigate("admin")}
-                  isActive={isActive("admin", "admin-dashboard")}
-                  tooltip="Dashboard"
-                  className={
-                    isActive("admin", "admin-dashboard")
-                      ? "bg-indigo-50 text-indigo-700 font-semibold shadow-sm rounded-md hover:bg-indigo-100"
-                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md"
-                  }
-                >
-                  <LayoutDashboard className="h-5 w-5" />
-                  <span>Dashboard</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              
-              {hasPermission("view_campaigns") && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    onClick={() => onNavigate("admin-campaigns")}
-                    tooltip="Campaigns"
-                    isActive={isActive("admin-campaigns")}
-                    className={
-                      isActive("admin-campaigns")
-                        ? "bg-indigo-50 text-indigo-700 font-semibold shadow-sm rounded-md hover:bg-indigo-100"
-                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md"
-                    }
-                  >
-                    <Settings className="h-5 w-5" />
-                    <span>Campaigns</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
-              
-              {hasPermission("view_kiosks") && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    onClick={() => onNavigate("admin-kiosks")}
-                    tooltip="Kiosks"
-                    isActive={isActive("admin-kiosks")}
-                    className={
-                      isActive("admin-kiosks")
-                        ? "bg-indigo-50 text-indigo-700 font-semibold shadow-sm rounded-md hover:bg-indigo-100"
-                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md"
-                    }
-                  >
-                    <Monitor className="h-5 w-5" />
-                    <span>Kiosks</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
-              
-              {hasPermission("view_donations") && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    onClick={() => onNavigate("admin-donations")}
-                    tooltip="Donations"
-                    isActive={isActive("admin-donations")}
-                    className={
-                      isActive("admin-donations")
-                        ? "bg-indigo-50 text-indigo-700 font-semibold shadow-sm rounded-md hover:bg-indigo-100"
-                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md"
-                    }
-                  >
-                    <Database className="h-5 w-5" />
-                    <span>Donations</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
-              
-              {hasPermission("view_donations") && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    onClick={() => onNavigate("admin-gift-aid")}
-                    tooltip="Gift Aid Donations"
-                    isActive={isActive("admin-gift-aid")}
-                    className={
-                      isActive("admin-gift-aid")
-                        ? "bg-indigo-50 text-indigo-700 font-semibold shadow-sm rounded-md hover:bg-indigo-100"
-                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md"
-                    }
-                  >
-                    <Gift className="h-5 w-5" />
-                    <span>Gift Aid Donations</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
-              
-              {hasPermission("view_users") && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    onClick={() => onNavigate("admin-users")}
-                    tooltip="Users"
-                    isActive={isActive("admin-users")}
-                    className={
-                      isActive("admin-users")
-                        ? "bg-indigo-50 text-indigo-700 font-semibold shadow-sm rounded-md hover:bg-indigo-100"
-                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md"
-                    }
-                  >
-                    <Users className="h-5 w-5" />
-                    <span>Users</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
-              
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  onClick={() => onNavigate("admin-bank-details")}
-                  tooltip="Bank Details"
-                  isActive={isActive("admin-bank-details")}
-                  className={
-                    isActive("admin-bank-details")
-                      ? "bg-indigo-50 text-indigo-700 font-semibold shadow-sm rounded-md hover:bg-indigo-100"
-                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md"
-                  }
-                >
-                  <Wallet className="h-5 w-5" />
-                  <span>Bank Details</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroup>
-        </SidebarContent>
-        
-        <SidebarFooter className="mt-auto shrink-0">
-          <SidebarUserFooter 
-            userSession={userSession}
-            onLogout={onLogout}
-            onProfileClick={() => setIsProfileOpen(true)}
-          />
-        </SidebarFooter>
-        <SidebarRail />
-      </Sidebar>
-
-      <SidebarInset className="flex-1 flex flex-col overflow-hidden relative">
-        <header className="absolute top-0 left-0 right-0 z-20 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm">
-          <div className="flex items-center justify-between px-4 sm:px-6 h-16">
-            <div className="flex items-center gap-3">
-              <SidebarTrigger className="text-gray-600 hover:text-gray-900" />
-              <div className="h-6 w-px bg-gray-200 hidden sm:block" />
-              <h1 className="font-bold text-lg text-gray-900">{currentLabel}</h1>
-            </div>
-            
-            {/* Right side buttons */}
-            <div className="flex items-center gap-2">
-              {/* Get a Tour Button */}
-              {onStartTour && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onStartTour}
-                  className="hidden sm:flex items-center gap-2 border-blue-200 text-blue-600 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 transition-colors animate-pulse"
-                >
-                  <Compass className="h-4 w-4" />
-                  <span className="font-medium">Get a Tour</span>
-                </Button>
-              )}
-              
-              {/* Profile Icon in Header */}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsProfileOpen(true)}
-                className="h-10 w-10 rounded-full hover:bg-gray-100 transition-colors"
-                title="View Profile"
+      <style>{`
+        @keyframes wobble {
+          0% { transform: rotate(0deg) scale(1); }
+          25% { transform: rotate(-5deg) scale(0.9); }
+          50% { transform: rotate(5deg) scale(1.1); }
+          75% { transform: rotate(-5deg) scale(0.95); }
+          100% { transform: rotate(0deg) scale(1); }
+        }
+        .logo-wobble.animate {
+          animation: wobble 0.5s ease-in-out;
+        }
+        .signout-btn {
+          position: relative;
+          overflow: hidden;
+          transition: all 0.3s ease;
+        }
+        .signout-btn::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+          transition: left 0.5s ease;
+        }
+        .signout-btn:hover::before {
+          left: 100%;
+        }
+        .signout-btn:hover {
+          transform: scale(1.02);
+          box-shadow: 0 4px 15px rgba(185, 28, 28, 0.4);
+        }
+        .signout-btn:active {
+          transform: scale(0.98);
+        }
+        .signout-icon {
+          transition: transform 0.3s ease;
+        }
+        .signout-btn:hover .signout-icon {
+          transform: translateX(3px);
+        }
+      `}</style>
+      <div className="flex h-screen w-full">
+        {/* Custom Green Gradient Sidebar */}
+        <div 
+          className={`${isCollapsed ? 'w-24' : 'w-80'} flex flex-col shadow-2xl border-r border-green-700/30 flex-shrink-0 transition-[width] duration-700 ease-in-out p-4 overflow-hidden`}
+          style={{
+            background: 'linear-gradient(180deg, #16A34A 0%, #059669 100%)'
+          }}
+        >
+          {/* Header Card */}
+          <div 
+            className={`mb-4 transition-all duration-700 ease-in-out overflow-hidden`}
+            style={{
+              background: 'rgba(0,0,0,0.15)',
+              borderRadius: '12px',
+              backdropFilter: 'blur(10px)',
+              padding: isCollapsed ? '12px 8px' : '16px 16px'
+            }}
+          >
+            <div className="flex items-center justify-center relative">
+              {/* Logo Section */}
+              <div 
+                className={`flex items-center gap-3 transition-all duration-700 ease-in-out ${isCollapsed ? 'opacity-0 -translate-x-4 pointer-events-none absolute' : 'opacity-100 translate-x-0 flex-1'}`}
               >
-                <Avatar className="h-8 w-8 ring-2 ring-gray-200 hover:ring-blue-300 transition-all">
-                  <AvatarImage src={userSession.user.photoURL || undefined} />
-                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-xs font-semibold">
-                    {getInitials(userSession.user.username || userSession.user.email || 'U')}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
+                <img 
+                  src="/logo.png" 
+                  alt="SwiftCause Logo" 
+                  className={`w-10 h-10 rounded-lg logo-wobble cursor-pointer ${logoAnimating ? 'animate' : ''}`}
+                  onClick={handleLogoClick}
+                />
+                <div>
+                  <h1 className="text-white font-bold text-lg leading-tight">SwiftCause</h1>
+                  <p className="text-white/70 text-xs font-medium uppercase tracking-wide">ADMIN CONTROL</p>
+                </div>
+              </div>
+              
+              {/* Collapse Button */}
+              <button
+                onClick={toggleSidebar}
+                className={`p-2 text-white/60 hover:text-white/90 hover:bg-white/10 rounded-lg transition-all duration-700 ease-in-out ${isCollapsed ? 'relative' : 'absolute right-0'}`}
+              >
+                <Menu className="h-5 w-5" />
+              </button>
             </div>
           </div>
-        </header>
-        
-        <main
-          className="flex-1 w-full bg-slate-50 overflow-y-auto overflow-x-hidden pt-16"
-          data-testid="main-content-area"
-        >
-          {children}
-        </main>
-      </SidebarInset>
 
-      {/* Profile Sidebar */}
-      <ProfileSidebar
-        isOpen={isProfileOpen}
-        onClose={() => setIsProfileOpen(false)}
-        userSession={userSession}
-        onLogout={onLogout}
-      />
+          {/* User Profile Card */}
+          <div 
+            className={`mb-4 transition-all duration-700 ease-in-out overflow-hidden`}
+            style={{
+              background: isCollapsed ? 'transparent' : 'rgba(0,0,0,0.15)',
+              borderRadius: '12px',
+              backdropFilter: isCollapsed ? 'none' : 'blur(10px)',
+              maxHeight: isCollapsed ? '0px' : '200px',
+              padding: isCollapsed ? '0px' : '24px 16px',
+              marginBottom: isCollapsed ? '0px' : '16px'
+            }}
+          >
+            <div 
+              className={`flex flex-col items-center text-center transition-all duration-700 ease-in-out ${isCollapsed ? 'opacity-0 -translate-y-4' : 'opacity-100 translate-y-0'}`}
+            >
+              {/* User Profile Avatar */}
+              <div className="relative mb-4">
+                <div 
+                  className="w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-all duration-300"
+                  style={{
+                    background: 'linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%)',
+                    border: '3px solid rgba(255,255,255,0.3)'
+                  }}
+                >
+                  <Avatar className="w-12 h-12 transition-all duration-300">
+                    <AvatarImage src={userSession.user.photoURL || undefined} />
+                    <AvatarFallback className="bg-transparent text-green-700 text-lg font-bold transition-all duration-300">
+                      {getInitials(userSession.user.username || userSession.user.email || 'U')}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+                {/* Online indicator */}
+                <div className="absolute bottom-1 right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+              </div>
+              
+              {/* User Info */}
+              <h2 className="text-white font-semibold text-lg mb-1">
+                {userSession.user.username || 'Ayush Bhatia'}
+              </h2>
+              <p className="text-white/60 text-sm">System Administrator</p>
+            </div>
+          </div>
+
+          {/* Navigation Menu */}
+          <div className="flex-1 overflow-y-auto transition-all duration-700 ease-in-out">
+            <div className={`transition-all duration-700 ease-in-out ${isCollapsed ? 'space-y-3 px-2' : 'space-y-1'}`}>
+              {/* Dashboard */}
+              <button
+                onClick={() => onNavigate("admin")}
+                className={`
+                  flex items-center w-full transition-all duration-700 ease-in-out text-left group rounded-lg relative overflow-hidden
+                  ${isCollapsed 
+                    ? 'px-3 py-3.5 justify-center' 
+                    : 'px-4 py-3 justify-between'
+                  }
+                  ${isActive("admin", "admin-dashboard")
+                    ? "text-white"
+                    : isCollapsed 
+                      ? "text-white hover:text-white hover:bg-white/15"
+                      : "text-white/90 hover:text-white hover:bg-white/10"
+                  }
+                `}
+                style={isActive("admin", "admin-dashboard") ? {
+                  background: '#1E293B',
+                  boxShadow: isCollapsed ? '0 0 12px rgba(30,41,59,0.4), 0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(30,41,59,0.3)'
+                } : {}}
+                onMouseEnter={(e) => {
+                  if (!isActive("admin", "admin-dashboard")) {
+                    e.currentTarget.style.backgroundColor = isCollapsed ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.1)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive("admin", "admin-dashboard")) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }
+                }}
+                title={isCollapsed ? "Dashboard" : ""}
+              >
+                <div className="flex items-center relative">
+                  <LayoutDashboard 
+                    className={`flex-shrink-0 transition-all duration-700 ease-in-out ${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'}`}
+                    strokeWidth={isCollapsed ? 2.2 : 2}
+                  />
+                  <span 
+                    className={`font-medium transition-all duration-700 ease-in-out ${isCollapsed ? 'opacity-0 -translate-x-4 absolute left-8 pointer-events-none' : 'opacity-100 translate-x-0 ml-3'}`}
+                  >
+                    Dashboard
+                  </span>
+                </div>
+                {!isCollapsed && isActive("admin", "admin-dashboard") && (
+                  <svg className="h-4 w-4 text-white/70 transition-all duration-700 ease-in-out" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                )}
+              </button>
+              
+              {/* Campaigns */}
+              {hasPermission("view_campaigns") && (
+                <button
+                  onClick={() => onNavigate("admin-campaigns")}
+                  className={`
+                    flex items-center w-full transition-all duration-700 ease-in-out text-left group rounded-lg relative overflow-hidden
+                    ${isCollapsed 
+                      ? 'px-3 py-3.5 justify-center' 
+                      : 'px-4 py-3 justify-between'
+                    }
+                    ${isActive("admin-campaigns")
+                      ? "text-white"
+                      : isCollapsed 
+                        ? "text-white hover:text-white hover:bg-white/15"
+                        : "text-white/90 hover:text-white hover:bg-white/10"
+                    }
+                  `}
+                  style={isActive("admin-campaigns") ? {
+                    background: '#1E293B',
+                    boxShadow: isCollapsed ? '0 0 12px rgba(30,41,59,0.4), 0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(30,41,59,0.3)'
+                  } : {}}
+                  onMouseEnter={(e) => {
+                    if (!isActive("admin-campaigns")) {
+                      e.currentTarget.style.backgroundColor = isCollapsed ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.1)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive("admin-campaigns")) {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }
+                  }}
+                  title={isCollapsed ? "Campaigns" : ""}
+                >
+                  <div className="flex items-center relative">
+                    <Settings 
+                      className={`flex-shrink-0 transition-all duration-700 ease-in-out ${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'}`}
+                      strokeWidth={isCollapsed ? 2.2 : 2}
+                    />
+                    <span 
+                      className={`font-medium transition-all duration-700 ease-in-out ${isCollapsed ? 'opacity-0 -translate-x-4 absolute left-8 pointer-events-none' : 'opacity-100 translate-x-0 ml-3'}`}
+                    >
+                      Campaigns
+                    </span>
+                  </div>
+                  {!isCollapsed && isActive("admin-campaigns") && (
+                    <svg className="h-4 w-4 text-white/70 transition-all duration-700 ease-in-out" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  )}
+                </button>
+              )}
+              
+              {/* Kiosks */}
+              {hasPermission("view_kiosks") && (
+                <button
+                  onClick={() => onNavigate("admin-kiosks")}
+                  className={`
+                    flex items-center w-full transition-all duration-700 ease-in-out text-left group rounded-lg relative overflow-hidden
+                    ${isCollapsed 
+                      ? 'px-3 py-3.5 justify-center' 
+                      : 'px-4 py-3 justify-between'
+                    }
+                    ${isActive("admin-kiosks")
+                      ? "text-white"
+                      : isCollapsed 
+                        ? "text-white hover:text-white hover:bg-white/15"
+                        : "text-white/90 hover:text-white hover:bg-white/10"
+                    }
+                  `}
+                  style={isActive("admin-kiosks") ? {
+                    background: '#1E293B',
+                    boxShadow: isCollapsed ? '0 0 12px rgba(30,41,59,0.4), 0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(30,41,59,0.3)'
+                  } : {}}
+                  onMouseEnter={(e) => {
+                    if (!isActive("admin-kiosks")) {
+                      e.currentTarget.style.backgroundColor = isCollapsed ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.1)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive("admin-kiosks")) {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }
+                  }}
+                  title={isCollapsed ? "Kiosks" : ""}
+                >
+                  <div className="flex items-center relative">
+                    <Monitor 
+                      className={`flex-shrink-0 transition-all duration-700 ease-in-out ${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'}`}
+                      strokeWidth={isCollapsed ? 2.2 : 2}
+                    />
+                    <span 
+                      className={`font-medium transition-all duration-700 ease-in-out ${isCollapsed ? 'opacity-0 -translate-x-4 absolute left-8 pointer-events-none' : 'opacity-100 translate-x-0 ml-3'}`}
+                    >
+                      Kiosks
+                    </span>
+                  </div>
+                  {!isCollapsed && isActive("admin-kiosks") && (
+                    <svg className="h-4 w-4 text-white/70 transition-all duration-700 ease-in-out" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  )}
+                </button>
+              )}
+              
+              {/* Donations */}
+              {hasPermission("view_donations") && (
+                <button
+                  onClick={() => onNavigate("admin-donations")}
+                  className={`
+                    flex items-center w-full transition-all duration-700 ease-in-out text-left group rounded-lg relative overflow-hidden
+                    ${isCollapsed 
+                      ? 'px-3 py-3.5 justify-center' 
+                      : 'px-4 py-3 justify-between'
+                    }
+                    ${isActive("admin-donations")
+                      ? "text-white"
+                      : isCollapsed 
+                        ? "text-white hover:text-white hover:bg-white/15"
+                        : "text-white/90 hover:text-white hover:bg-white/10"
+                    }
+                  `}
+                  style={isActive("admin-donations") ? {
+                    background: '#1E293B',
+                    boxShadow: isCollapsed ? '0 0 12px rgba(30,41,59,0.4), 0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(30,41,59,0.3)'
+                  } : {}}
+                  onMouseEnter={(e) => {
+                    if (!isActive("admin-donations")) {
+                      e.currentTarget.style.backgroundColor = isCollapsed ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.1)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive("admin-donations")) {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }
+                  }}
+                  title={isCollapsed ? "Donations" : ""}
+                >
+                  <div className="flex items-center relative">
+                    <Database 
+                      className={`flex-shrink-0 transition-all duration-700 ease-in-out ${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'}`}
+                      strokeWidth={isCollapsed ? 2.2 : 2}
+                    />
+                    <span 
+                      className={`font-medium transition-all duration-700 ease-in-out ${isCollapsed ? 'opacity-0 -translate-x-4 absolute left-8 pointer-events-none' : 'opacity-100 translate-x-0 ml-3'}`}
+                    >
+                      Donations
+                    </span>
+                  </div>
+                  {!isCollapsed && isActive("admin-donations") && (
+                    <svg className="h-4 w-4 text-white/70 transition-all duration-700 ease-in-out" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  )}
+                </button>
+              )}
+              
+              {/* Gift Aid Donations */}
+              {hasPermission("view_donations") && (
+                <button
+                  onClick={() => onNavigate("admin-gift-aid")}
+                  className={`
+                    flex items-center w-full transition-all duration-700 ease-in-out text-left group rounded-lg relative overflow-hidden
+                    ${isCollapsed 
+                      ? 'px-3 py-3.5 justify-center' 
+                      : 'px-4 py-3 justify-between'
+                    }
+                    ${isActive("admin-gift-aid")
+                      ? "text-white"
+                      : isCollapsed 
+                        ? "text-white hover:text-white hover:bg-white/15"
+                        : "text-white/90 hover:text-white hover:bg-white/10"
+                    }
+                  `}
+                  style={isActive("admin-gift-aid") ? {
+                    background: '#1E293B',
+                    boxShadow: isCollapsed ? '0 0 12px rgba(30,41,59,0.4), 0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(30,41,59,0.3)'
+                  } : {}}
+                  onMouseEnter={(e) => {
+                    if (!isActive("admin-gift-aid")) {
+                      e.currentTarget.style.backgroundColor = isCollapsed ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.1)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive("admin-gift-aid")) {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }
+                  }}
+                  title={isCollapsed ? "Gift Aid Donations" : ""}
+                >
+                  <div className="flex items-center relative">
+                    <Gift 
+                      className={`flex-shrink-0 transition-all duration-700 ease-in-out ${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'}`}
+                      strokeWidth={isCollapsed ? 2.2 : 2}
+                    />
+                    <span 
+                      className={`font-medium transition-all duration-700 ease-in-out ${isCollapsed ? 'opacity-0 -translate-x-4 absolute left-8 pointer-events-none' : 'opacity-100 translate-x-0 ml-3'}`}
+                    >
+                      Gift Aid Donations
+                    </span>
+                  </div>
+                  {!isCollapsed && isActive("admin-gift-aid") && (
+                    <svg className="h-4 w-4 text-white/70 transition-all duration-700 ease-in-out" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  )}
+                </button>
+              )}
+              
+              {/* Users */}
+              {hasPermission("view_users") && (
+                <button
+                  onClick={() => onNavigate("admin-users")}
+                  className={`
+                    flex items-center w-full transition-all duration-700 ease-in-out text-left group rounded-lg relative overflow-hidden
+                    ${isCollapsed 
+                      ? 'px-3 py-3.5 justify-center' 
+                      : 'px-4 py-3 justify-between'
+                    }
+                    ${isActive("admin-users")
+                      ? "text-white"
+                      : isCollapsed 
+                        ? "text-white hover:text-white hover:bg-white/15"
+                        : "text-white/90 hover:text-white hover:bg-white/10"
+                    }
+                  `}
+                  style={isActive("admin-users") ? {
+                    background: '#1E293B',
+                    boxShadow: isCollapsed ? '0 0 12px rgba(30,41,59,0.4), 0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(30,41,59,0.3)'
+                  } : {}}
+                  onMouseEnter={(e) => {
+                    if (!isActive("admin-users")) {
+                      e.currentTarget.style.backgroundColor = isCollapsed ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.1)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive("admin-users")) {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }
+                  }}
+                  title={isCollapsed ? "Users" : ""}
+                >
+                  <div className="flex items-center relative">
+                    <Users 
+                      className={`flex-shrink-0 transition-all duration-700 ease-in-out ${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'}`}
+                      strokeWidth={isCollapsed ? 2.2 : 2}
+                    />
+                    <span 
+                      className={`font-medium transition-all duration-700 ease-in-out ${isCollapsed ? 'opacity-0 -translate-x-4 absolute left-8 pointer-events-none' : 'opacity-100 translate-x-0 ml-3'}`}
+                    >
+                      Users
+                    </span>
+                  </div>
+                  {!isCollapsed && isActive("admin-users") && (
+                    <svg className="h-4 w-4 text-white/70 transition-all duration-700 ease-in-out" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  )}
+                </button>
+              )}
+              
+              {/* Bank Details */}
+              <button
+                onClick={() => onNavigate("admin-bank-details")}
+                className={`
+                  flex items-center w-full transition-all duration-700 ease-in-out text-left group rounded-lg relative overflow-hidden
+                  ${isCollapsed 
+                    ? 'px-3 py-3.5 justify-center' 
+                    : 'px-4 py-3 justify-between'
+                  }
+                  ${isActive("admin-bank-details")
+                    ? "text-white"
+                    : isCollapsed 
+                      ? "text-white hover:text-white hover:bg-white/15"
+                      : "text-white/90 hover:text-white hover:bg-white/10"
+                  }
+                `}
+                style={isActive("admin-bank-details") ? {
+                  background: '#1E293B',
+                  boxShadow: isCollapsed ? '0 0 12px rgba(30,41,59,0.4), 0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(30,41,59,0.3)'
+                } : {}}
+                onMouseEnter={(e) => {
+                  if (!isActive("admin-bank-details")) {
+                    e.currentTarget.style.backgroundColor = isCollapsed ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.1)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive("admin-bank-details")) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }
+                }}
+                title={isCollapsed ? "Bank Details" : ""}
+              >
+                <div className="flex items-center relative">
+                  <Wallet 
+                    className={`flex-shrink-0 transition-all duration-700 ease-in-out ${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'}`}
+                    strokeWidth={isCollapsed ? 2.2 : 2}
+                  />
+                  <span 
+                    className={`font-medium transition-all duration-700 ease-in-out ${isCollapsed ? 'opacity-0 -translate-x-4 absolute left-8 pointer-events-none' : 'opacity-100 translate-x-0 ml-3'}`}
+                  >
+                    Bank Details
+                  </span>
+                </div>
+                {!isCollapsed && isActive("admin-bank-details") && (
+                  <svg className="h-4 w-4 text-white/70 transition-all duration-700 ease-in-out" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                )}
+              </button>
+            </div>
+          </div>
+          
+          {/* Footer */}
+          <div className={`mt-auto ${isCollapsed ? 'p-3' : 'p-4'} transition-all duration-700 ease-in-out`}>
+            {!isCollapsed ? (
+              <button
+                onClick={onLogout}
+                className="signout-btn w-full flex items-center justify-center px-4 py-4 rounded-xl text-white border border-red-900/30"
+                style={{
+                  background: '#7F1D1D'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#B91C1C';
+                  e.currentTarget.style.borderColor = '#B91C1C';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#7F1D1D';
+                  e.currentTarget.style.borderColor = 'rgba(127,29,29,0.3)';
+                }}
+              >
+                <LogOut className="signout-icon h-5 w-5 mr-3" />
+                <span className="font-medium text-base">Sign Out</span>
+              </button>
+            ) : (
+              <button
+                onClick={onLogout}
+                className="signout-btn w-full flex items-center justify-center p-3.5 rounded-xl text-white"
+                style={{
+                  background: '#7F1D1D'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#B91C1C';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#7F1D1D';
+                }}
+                title="Sign Out"
+              >
+                <LogOut className="signout-icon h-6 w-6" strokeWidth={2.2} />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <header className="bg-white border-b border-gray-200 shadow-sm">
+            <div className="flex items-center justify-between px-4 sm:px-6 h-16">
+              <div className="flex items-center gap-3">
+                <h1 className="font-bold text-lg text-gray-900">{currentLabel}</h1>
+              </div>
+              
+              {/* Right side buttons */}
+              <div className="flex items-center gap-2">
+                {/* Get a Tour Button */}
+                {onStartTour && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onStartTour}
+                    className="hidden sm:flex items-center gap-2 border-green-200 text-green-600 hover:bg-green-50 hover:text-green-700 hover:border-green-300 transition-colors animate-pulse"
+                  >
+                    <Compass className="h-4 w-4" />
+                    <span className="font-medium">Get a Tour</span>
+                  </Button>
+                )}
+              </div>
+            </div>
+          </header>
+          
+          <main className="flex-1 w-full bg-slate-50 overflow-y-auto overflow-x-hidden" data-testid="main-content-area">
+            {children}
+          </main>
+        </div>
+      </div>
     </SidebarProvider>
   );
 }
