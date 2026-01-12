@@ -6,8 +6,7 @@ import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 import { Textarea } from '@/shared/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
-import { AlertCircle, Upload, Plus, Trash2, Bold } from 'lucide-react';
-import { Alert, AlertDescription } from '@/shared/ui/alert';
+import { AlertCircle, Plus } from 'lucide-react';
 
 interface CampaignFormData {
   title: string;
