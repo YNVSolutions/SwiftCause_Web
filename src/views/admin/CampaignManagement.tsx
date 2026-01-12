@@ -1,10 +1,13 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { Screen, AdminSession, Permission, Kiosk } from "../../shared/types";
 import { DEFAULT_CAMPAIGN_CONFIG } from "../../shared/config";
 import { DocumentData, Timestamp } from "firebase/firestore";
 import { useCampaignManagement } from "../../shared/lib/hooks/useCampaignManagement";
 import { useOrganizationTags } from "../../shared/lib/hooks/useOrganizationTags";
 import { kioskApi } from "../../entities/kiosk/api";
+import { campaignApi } from "../../entities/campaign/api";
+import { Campaign } from "../../entities/campaign/model";
 import { Button } from "../../shared/ui/button";
 import { Input } from "../../shared/ui/input";
 import { Label } from "../../shared/ui/label";
@@ -165,10 +168,14 @@ const CampaignDialog = ({
   organizationId,
   onSave,
 }: CampaignDialogProps) => {
+  const router = useRouter();
   const [formData, setFormData] = useState<DocumentData>(getInitialFormData());
   const [activeTab, setActiveTab] = useState<"basic" | "media-gallery" | "funding-details" | "kiosk-distribution">("basic");
   const [kiosks, setKiosks] = useState<Kiosk[]>([]);
   const [loadingKiosks, setLoadingKiosks] = useState(false);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [createdCampaignId, setCreatedCampaignId] = useState<string | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
   // Track scroll to update active tab automatically
@@ -617,8 +624,48 @@ const CampaignDialog = ({
     }
 
     try {
-      await onSave(finalData, !isEditMode, campaign?.id);
-      handleDialogClose();
+      // Submit campaign data
+      let campaignId: string;
+      
+      if (isEditMode && campaign?.id) {
+        // Update existing campaign
+        campaignId = campaign.id;
+        await campaignApi.updateCampaign(campaignId, finalData);
+      } else {
+        // Create new campaign
+        campaignId = await campaignApi.createCampaign(finalData as Omit<Campaign, "id">);
+        setCreatedCampaignId(campaignId);
+      }
+
+      // Save kiosk assignments if selected
+      if ((finalData.selectedKiosks || []).length > 0 && !finalData.isGlobal) {
+        try {
+          await campaignApi.updateCampaign(campaignId, {
+            assignedKiosks: finalData.selectedKiosks.join(","),
+          });
+        } catch (error) {
+          console.error("Error saving kiosk assignments:", error);
+          setSubmissionError("Campaign created but failed to assign kiosks. Please update manually.");
+        }
+      }
+
+      // Show success dialog
+      setShowSuccessDialog(true);
+      await onSave(finalData, !isEditMode, campaignId);
+      
+      // Auto-redirect after 2 seconds
+      setTimeout(() => {
+        handleDialogClose();
+        onOpenChange(false);
+        setShowSuccessDialog(false);
+        // Redirect to campaigns list
+        router.push("/admin/campaigns");
+      }, 2000);
+    } catch (error) {
+      console.error("Error saving campaign:", error);
+      setSubmissionError(error instanceof Error ? error.message : "Failed to save campaign. Please try again.");
+      setIsSubmitting(false);
+      return;
     } finally {
       setIsSubmitting(false);
     }
@@ -1059,17 +1106,25 @@ const CampaignDialog = ({
 
         {/* Footer */}
         <div className="flex justify-between items-center px-6 py-4 border-t border-gray-200 bg-white">
-          <Button 
-            variant="outline" 
-            type="button"
-            className="text-gray-700 flex items-center gap-2 hover:bg-gray-100 border-gray-300 font-medium"
-            onClick={() => {
-              // Save draft functionality
-            }}
-          >
-            <Save className="w-4 h-4" />
-            Save Draft
-          </Button>
+          {submissionError && (
+            <div className="text-sm text-red-600 font-medium flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" />
+              {submissionError}
+            </div>
+          )}
+          {!submissionError && (
+            <Button 
+              variant="outline" 
+              type="button"
+              className="text-gray-700 flex items-center gap-2 hover:bg-gray-100 border-gray-300 font-medium"
+              onClick={() => {
+                // Save draft functionality
+              }}
+            >
+              <Save className="w-4 h-4" />
+              Save Draft
+            </Button>
+          )}
 
           <div className="flex gap-3">
             <Button
@@ -1093,6 +1148,29 @@ const CampaignDialog = ({
           </div>
         </div>
       </DialogContent>
+      
+      {/* Success Dialog */}
+      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <DialogContent className="sm:max-w-[400px] p-0 border-0 shadow-2xl">
+          <div className="p-8 text-center space-y-4">
+            <div className="flex justify-center">
+              <svg className="w-16 h-16 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900">Success!</h2>
+            <p className="text-gray-600">
+              {isEditMode ? "Campaign updated successfully." : "Campaign created successfully."}
+            </p>
+            {createdCampaignId && !isEditMode && (
+              <p className="text-sm text-gray-500">
+                Campaign ID: {createdCampaignId}
+              </p>
+            )}
+            <p className="text-sm text-gray-500">Redirecting...</p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };
