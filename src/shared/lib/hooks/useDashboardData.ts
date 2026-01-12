@@ -70,11 +70,13 @@ export function useDashboardData(organizationId?: string) {
   const fetchDashboardData = useCallback(async () => {
     // Validate organizationId
     if (!organizationId || typeof organizationId !== 'string' || organizationId.trim() === '') {
+      console.error('useDashboardData: Invalid organizationId:', organizationId);
       setLoading(false);
       setError("Invalid organization ID.");
       return;
     }
 
+    console.log('useDashboardData: Starting fetch for organization:', organizationId);
     setLoading(true);
     setError(null);
 
@@ -278,9 +280,10 @@ export function useDashboardData(organizationId?: string) {
       setAlerts(offlineKioskAlerts);
 
     } catch (e) {
-      console.error("Failed to fetch dashboard data:", e);
+      console.error("useDashboardData: Failed to fetch dashboard data:", e);
       setError('Could not load dashboard data. Please try refreshing.');
     } finally {
+      console.log('useDashboardData: Fetch complete, setting loading to false');
       setLoading(false);
     }
   }, [organizationId]);

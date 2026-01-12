@@ -117,38 +117,48 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     // Set a timeout to prevent infinite loading if Firebase is not configured
     const timeout = setTimeout(() => {
+      console.warn('AuthProvider: Auth initialization timeout - setting isLoadingAuth to false')
       setIsLoadingAuth(false)
-    }, 1000) // Reduced timeout for faster loading
+    }, 3000) // Increased timeout for slower connections
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       clearTimeout(timeout) // Clear timeout when auth state changes
+      console.log('AuthProvider: Auth state changed, user:', firebaseUser?.uid || 'none')
       
-      if (firebaseUser) {
-        const userDocRef = doc(db, 'users', firebaseUser.uid)
-        const userDocSnap = await getDoc(userDocRef)
+      try {
+        if (firebaseUser) {
+          const userDocRef = doc(db, 'users', firebaseUser.uid)
+          const userDocSnap = await getDoc(userDocRef)
 
-        if (userDocSnap.exists()) {
-          const userData = userDocSnap.data() as User
-          setUserRole(userData.role)
-          setCurrentAdminSession({
-            user: userData,
-            loginTime: new Date().toISOString(),
-            permissions: userData.permissions || []
-          })
+          if (userDocSnap.exists()) {
+            const userData = userDocSnap.data() as User
+            console.log('AuthProvider: User data loaded, role:', userData.role)
+            setUserRole(userData.role)
+            setCurrentAdminSession({
+              user: userData,
+              loginTime: new Date().toISOString(),
+              permissions: userData.permissions || []
+            })
+          } else {
+            console.warn('AuthProvider: User document not found for UID:', firebaseUser.uid)
+            // Only logout if we don't have a kiosk session
+            if (userRole !== 'kiosk') {
+              handleLogout()
+            }
+          }
         } else {
-          console.warn('AuthProvider: User document not found for UID:', firebaseUser.uid)
+          console.log('AuthProvider: No Firebase user, checking for kiosk session')
           // Only logout if we don't have a kiosk session
-          if (userRole !== 'kiosk') {
+          if (userRole !== 'kiosk' && !currentKioskSession) {
             handleLogout()
           }
         }
-      } else {
-        // Only logout if we don't have a kiosk session
-        if (userRole !== 'kiosk' && !currentKioskSession) {
-          handleLogout()
-        }
+      } catch (error) {
+        console.error('AuthProvider: Error in auth state change handler:', error)
+      } finally {
+        console.log('AuthProvider: Setting isLoadingAuth to false')
+        setIsLoadingAuth(false)
       }
-      setIsLoadingAuth(false)
     })
 
     return () => {

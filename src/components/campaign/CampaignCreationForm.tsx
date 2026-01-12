@@ -6,7 +6,9 @@ import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 import { Textarea } from '@/shared/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
-import { AlertCircle, Plus } from 'lucide-react';
+import { Badge } from '@/shared/ui/badge';
+import { Progress } from '@/shared/ui/progress';
+import { AlertCircle, Plus, CheckCircle, Clock, Target, Image as ImageIcon, DollarSign, Settings } from 'lucide-react';
 
 interface CampaignFormData {
   title: string;
@@ -60,6 +62,41 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<FormTab>('basic-info');
 
+  // Tab configuration with icons and completion status
+  const tabs = [
+    {
+      id: 'basic-info' as FormTab,
+      label: 'Basic Info',
+      icon: Target,
+      description: 'Campaign details',
+      isComplete: formData.title && formData.briefOverview && formData.detailedStory,
+    },
+    {
+      id: 'media-gallery' as FormTab,
+      label: 'Media',
+      icon: ImageIcon,
+      description: 'Images & videos',
+      isComplete: previewImage || formData.coverImage,
+    },
+    {
+      id: 'funding-details' as FormTab,
+      label: 'Funding',
+      icon: DollarSign,
+      description: 'Goals & dates',
+      isComplete: formData.fundraisingTarget > 0 && formData.startDate && formData.endDate,
+    },
+    {
+      id: 'kiosk-distribution' as FormTab,
+      label: 'Distribution',
+      icon: Settings,
+      description: 'Kiosk settings',
+      isComplete: true, // Optional section
+    },
+  ];
+
+  // Calculate overall progress
+  const completedTabs = tabs.filter(tab => tab.isComplete).length;
+  const progressPercentage = (completedTabs / tabs.length) * 100;
   // Validation utilities
   const isValidUrl = (url: string): boolean => {
     if (!url) return true; // Optional field
@@ -175,7 +212,6 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     field: keyof CampaignFormData
@@ -301,106 +337,135 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
       }
     }
   }, [activeTab]);
-
   return (
-    <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
-        {/* Left Sidebar - Navigation (hidden on mobile, visible on md and up) */}
-        <div className="md:col-span-1 order-2 md:order-1">
-          <div className="sticky top-4 md:top-6 space-y-2">
-            <h3 className="text-xs sm:text-sm font-semibold text-gray-700 uppercase tracking-wider">
-              Campaign
-            </h3>
-            <p className="text-xs text-gray-500 uppercase tracking-wider mb-4">Configuration</p>
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* Progress Header */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Create New Campaign</h1>
+            <p className="text-gray-600 mt-1">Set up your fundraising campaign with all the details</p>
+          </div>
+          <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200">
+            {completedTabs}/{tabs.length} Complete
+          </Badge>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <Progress value={progressPercentage} className="h-2" />
+        </div>
+      </div>
 
-            <div 
-              ref={scrollContainerRef}
-              className="space-y-1 md:space-y-2 flex md:flex-col overflow-x-auto md:overflow-visible -mx-4 md:mx-0 px-4 md:px-0 pb-2 md:pb-0"
-            >
-              <button
-                data-tab="basic-info"
-                onClick={() => setActiveTab('basic-info')}
-                style={{
-                  backgroundColor: activeTab === 'basic-info' ? '#03AC13' : 'transparent',
-                  color: activeTab === 'basic-info' ? 'white' : '#4B5563',
-                }}
-                className={`shrink-0 md:w-full text-left px-3 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-colors whitespace-nowrap md:whitespace-normal ${
-                  activeTab !== 'basic-info' && 'hover:bg-gray-100'
-                }`}
-              >
-                Basic Info
-              </button>
-              <button
-                data-tab="media-gallery"
-                onClick={() => setActiveTab('media-gallery')}
-                style={{
-                  backgroundColor: activeTab === 'media-gallery' ? '#03AC13' : 'transparent',
-                  color: activeTab === 'media-gallery' ? 'white' : '#4B5563',
-                }}
-                className={`shrink-0 md:w-full text-left px-3 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-colors whitespace-nowrap md:whitespace-normal ${
-                  activeTab !== 'media-gallery' && 'hover:bg-gray-100'
-                }`}
-              >
-                Media & Gallery
-              </button>
-              <button
-                data-tab="funding-details"
-                onClick={() => setActiveTab('funding-details')}
-                style={{
-                  backgroundColor: activeTab === 'funding-details' ? '#03AC13' : 'transparent',
-                  color: activeTab === 'funding-details' ? 'white' : '#4B5563',
-                }}
-                className={`shrink-0 md:w-full text-left px-3 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-colors whitespace-nowrap md:whitespace-normal ${
-                  activeTab !== 'funding-details' && 'hover:bg-gray-100'
-                }`}
-              >
-                Funding Details
-              </button>
-              <button
-                data-tab="kiosk-distribution"
-                onClick={() => setActiveTab('kiosk-distribution')}
-                style={{
-                  backgroundColor: activeTab === 'kiosk-distribution' ? '#03AC13' : 'transparent',
-                  color: activeTab === 'kiosk-distribution' ? 'white' : '#4B5563',
-                }}
-                className={`shrink-0 md:w-full text-left px-3 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-colors whitespace-nowrap md:whitespace-normal ${
-                  activeTab !== 'kiosk-distribution' && 'hover:bg-gray-100'
-                }`}
-              >
-                Kiosk Dist.
-              </button>
-            </div>
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8">
+        {/* Enhanced Left Sidebar - Navigation */}
+        <div className="lg:col-span-1 order-2 lg:order-1">
+          <div className="sticky top-6">
+            <Card className="shadow-sm border-gray-200">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg font-semibold text-gray-900">Campaign Setup</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-2">
+                  {tabs.map((tab) => {
+                    const Icon = tab.icon;
+                    const isActive = activeTab === tab.id;
+                    const isComplete = tab.isComplete;
+                    
+                    return (
+                      <button
+                        key={tab.id}
+                        data-tab={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`w-full text-left p-3 rounded-lg transition-all duration-200 group ${
+                          isActive
+                            ? 'bg-blue-600 text-white shadow-md'
+                            : 'hover:bg-gray-50 text-gray-700'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`flex items-center justify-center w-8 h-8 rounded-lg ${
+                            isActive 
+                              ? 'bg-blue-500' 
+                              : isComplete 
+                                ? 'bg-green-100' 
+                                : 'bg-gray-100'
+                          }`}>
+                            {isComplete && !isActive ? (
+                              <CheckCircle className="w-4 h-4 text-green-600" />
+                            ) : (
+                              <Icon className={`w-4 h-4 ${
+                                isActive 
+                                  ? 'text-white' 
+                                  : isComplete 
+                                    ? 'text-green-600' 
+                                    : 'text-gray-500'
+                              }`} />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className={`font-medium text-sm ${
+                              isActive ? 'text-white' : 'text-gray-900'
+                            }`}>
+                              {tab.label}
+                            </div>
+                            <div className={`text-xs ${
+                              isActive ? 'text-blue-100' : 'text-gray-500'
+                            }`}>
+                              {tab.description}
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
-
-        {/* Right Content - Form (scrollable, order-1 on mobile, order-2 on md) */}
-        <div className="md:col-span-3 order-1 md:order-2 md:max-h-[calc(100vh-120px)] md:overflow-y-auto">
-          <Card className="shadow-sm md:shadow-md">
-            <CardHeader className="border-b p-4 md:p-6">
-              <div className="flex items-center justify-between gap-2">
-                <CardTitle className="text-lg md:text-2xl">New Initiative</CardTitle>
-                <button
-                  type="button"
-                  className="text-gray-400 hover:text-gray-600 text-lg md:text-xl shrink-0"
-                  onClick={() => {
-                    /* Handle close */
-                  }}
-                >
-                  ✕
-                </button>
+        {/* Enhanced Right Content - Form */}
+        <div className="lg:col-span-4 order-1 lg:order-2">
+          <Card className="shadow-sm border-gray-200">
+            <CardHeader className="border-b border-gray-100 bg-gray-50/50">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-xl font-semibold text-gray-900">
+                    {tabs.find(tab => tab.id === activeTab)?.label}
+                  </CardTitle>
+                  <p className="text-gray-600 text-sm mt-1">
+                    {tabs.find(tab => tab.id === activeTab)?.description}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {tabs.find(tab => tab.id === activeTab)?.isComplete ? (
+                    <Badge className="bg-green-100 text-green-700 border-green-200">
+                      <CheckCircle className="w-3 h-3 mr-1" />
+                      Complete
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary" className="bg-yellow-100 text-yellow-700 border-yellow-200">
+                      <Clock className="w-3 h-3 mr-1" />
+                      In Progress
+                    </Badge>
+                  )}
+                </div>
               </div>
             </CardHeader>
 
-            <CardContent className="p-4 md:p-6">
-              <form onSubmit={handleSubmit} className="space-y-6">
+            <CardContent className="p-6 lg:p-8">
+              <form onSubmit={handleSubmit} className="space-y-8">
                 {/* Basic Info Tab */}
                 {activeTab === 'basic-info' && (
                   <div className="space-y-6">
-                    <h3 className="text-base md:text-lg font-semibold text-gray-900">General Information</h3>
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h3 className="text-lg font-semibold text-blue-900 mb-2">Campaign Information</h3>
+                      <p className="text-sm text-blue-700">
+                        Provide the essential details about your campaign that will be displayed to potential donors.
+                      </p>
+                    </div>
 
                     {/* Campaign Title */}
-                    <div>
-                      <Label htmlFor="title" className="text-xs md:text-sm font-medium text-gray-700 mb-2 block">
+                    <div className="space-y-2">
+                      <Label htmlFor="title" className="text-sm font-medium text-gray-900">
                         Campaign Title <span className="text-red-500">*</span>
                       </Label>
                       <Input
@@ -409,24 +474,23 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
                         value={formData.title}
                         maxLength={100}
                         onChange={e => handleInputChange(e, 'title')}
-                        className={`w-full text-sm md:text-base ${errors.title ? 'border-red-500 focus:border-red-500' : ''}`}
+                        className={`h-12 text-base ${errors.title ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'}`}
                         aria-invalid={!!errors.title}
                         aria-describedby={errors.title ? 'title-error' : undefined}
                       />
                       <div className="flex justify-between items-start">
                         {errors.title && (
-                          <p id="title-error" className="text-xs md:text-sm text-red-500 mt-1 flex items-center gap-1">
-                            <AlertCircle className="w-3 md:w-4 h-3 md:h-4" />
+                          <p id="title-error" className="text-sm text-red-600 flex items-center gap-1">
+                            <AlertCircle className="w-4 h-4" />
                             {errors.title}
                           </p>
                         )}
-                        <p className="text-xs text-gray-400 mt-1">{formData.title.length}/100</p>
+                        <p className="text-xs text-gray-500 ml-auto">{formData.title.length}/100</p>
                       </div>
                     </div>
-
                     {/* Brief Overview */}
-                    <div>
-                      <Label htmlFor="briefOverview" className="text-xs md:text-sm font-medium text-gray-700 mb-2 block">
+                    <div className="space-y-2">
+                      <Label htmlFor="briefOverview" className="text-sm font-medium text-gray-900">
                         Brief Overview <span className="text-red-500">*</span>
                       </Label>
                       <Textarea
@@ -436,39 +500,39 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
                         maxLength={500}
                         onChange={e => handleInputChange(e, 'briefOverview')}
                         rows={3}
-                        className={`w-full text-sm md:text-base ${errors.briefOverview ? 'border-red-500 focus:border-red-500' : ''}`}
+                        className={`text-base resize-none ${errors.briefOverview ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'}`}
                         aria-invalid={!!errors.briefOverview}
                         aria-describedby={errors.briefOverview ? 'overview-error' : undefined}
                       />
                       <div className="flex justify-between items-start">
                         {errors.briefOverview && (
-                          <p id="overview-error" className="text-xs md:text-sm text-red-500 mt-1 flex items-center gap-1">
-                            <AlertCircle className="w-3 md:w-4 h-3 md:h-4" />
+                          <p id="overview-error" className="text-sm text-red-600 flex items-center gap-1">
+                            <AlertCircle className="w-4 h-4" />
                             {errors.briefOverview}
                           </p>
                         )}
-                        <p className="text-xs text-gray-400 mt-1">{formData.briefOverview.length}/500</p>
+                        <p className="text-xs text-gray-500 ml-auto">{formData.briefOverview.length}/500</p>
                       </div>
                     </div>
 
                     {/* Detailed Campaign Story */}
-                    <div>
-                      <Label htmlFor="detailedStory" className="text-xs md:text-sm font-medium text-gray-700 mb-2 block">
+                    <div className="space-y-2">
+                      <Label htmlFor="detailedStory" className="text-sm font-medium text-gray-900">
                         Detailed Campaign Story <span className="text-red-500">*</span>
                       </Label>
-                      <div className="border border-gray-300 rounded-md overflow-hidden">
-                        <div className="flex items-center gap-2 p-2 md:p-3 bg-gray-50 border-b border-gray-300">
+                      <div className="border border-gray-300 rounded-lg overflow-hidden focus-within:border-blue-500">
+                        <div className="flex items-center gap-2 p-3 bg-gray-50 border-b border-gray-200">
                           <button
                             type="button"
-                            className="font-bold text-gray-700 hover:bg-gray-200 px-2 py-1 rounded text-xs md:text-sm"
+                            className="font-bold text-gray-700 hover:bg-gray-200 px-2 py-1 rounded text-sm"
                             title="Bold text"
                           >
                             B
                           </button>
-                          <div className="w-px h-4 md:h-6 bg-gray-300" />
+                          <div className="w-px h-6 bg-gray-300" />
                           <button
                             type="button"
-                            className="text-gray-700 hover:bg-gray-200 px-2 py-1 rounded text-xs md:text-sm"
+                            className="text-gray-700 hover:bg-gray-200 px-2 py-1 rounded text-sm"
                             title="Divider"
                           >
                             ━━
@@ -481,7 +545,7 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
                           maxLength={5000}
                           onChange={e => handleInputChange(e, 'detailedStory')}
                           rows={6}
-                          className={`border-0 rounded-none focus:ring-0 text-sm md:text-base ${
+                          className={`border-0 rounded-none focus:ring-0 text-base resize-none ${
                             errors.detailedStory ? 'border-red-500 focus:border-red-500' : ''
                           }`}
                           aria-invalid={!!errors.detailedStory}
@@ -490,30 +554,34 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
                       </div>
                       <div className="flex justify-between items-start">
                         {errors.detailedStory && (
-                          <p id="story-error" className="text-xs md:text-sm text-red-500 mt-1 flex items-center gap-1">
-                            <AlertCircle className="w-3 md:w-4 h-3 md:h-4" />
+                          <p id="story-error" className="text-sm text-red-600 flex items-center gap-1">
+                            <AlertCircle className="w-4 h-4" />
                             {errors.detailedStory}
                           </p>
                         )}
-                        <p className="text-xs text-gray-400 mt-1">{formData.detailedStory.length}/5000</p>
+                        <p className="text-xs text-gray-500 ml-auto">{formData.detailedStory.length}/5000</p>
                       </div>
                     </div>
                   </div>
                 )}
-
                 {/* Media & Gallery Tab */}
                 {activeTab === 'media-gallery' && (
                   <div className="space-y-6">
-                    <h3 className="text-base md:text-lg font-semibold text-gray-900">Visual Identity</h3>
+                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                      <h3 className="text-lg font-semibold text-purple-900 mb-2">Visual Identity</h3>
+                      <p className="text-sm text-purple-700">
+                        Add compelling visuals to make your campaign stand out and engage donors effectively.
+                      </p>
+                    </div>
 
                     {/* Primary Cover Image */}
-                    <div>
-                      <Label htmlFor="coverImage" className="text-xs md:text-sm font-medium text-gray-700 mb-2 block">
-                        Primary Cover (16:9) <span className="text-red-500">*</span>
+                    <div className="space-y-3">
+                      <Label htmlFor="coverImage" className="text-sm font-medium text-gray-900">
+                        Primary Cover Image (16:9) <span className="text-red-500">*</span>
                       </Label>
 
                       {previewImage ? (
-                        <div className="relative w-full h-48 md:h-64 bg-gray-100 rounded-lg overflow-hidden mb-4">
+                        <div className="relative w-full h-64 bg-gray-100 rounded-lg overflow-hidden">
                           <img
                             src={previewImage}
                             alt="Campaign cover preview"
@@ -522,7 +590,7 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
                           <button
                             type="button"
                             onClick={removeCoverImage}
-                            className="absolute top-2 right-2 bg-red-500 text-white p-1.5 md:p-2 rounded-full hover:bg-red-600 transition"
+                            className="absolute top-3 right-3 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors"
                             aria-label="Remove cover image"
                           >
                             ✕
@@ -531,13 +599,14 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
                       ) : (
                         <label
                           htmlFor="coverImage"
-                          className="flex flex-col items-center justify-center w-full h-48 md:h-64 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition"
+                          className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors"
                         >
-                          <div className="flex flex-col items-center justify-center pt-4 md:pt-5 pb-4 md:pb-6">
-                            <svg className="w-10 md:w-12 h-10 md:h-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                            <svg className="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
-                            <p className="text-xs md:text-sm text-gray-500">CLICK TO UPLOAD COVER</p>
+                            <p className="text-sm font-medium text-gray-700 mb-1">CLICK TO UPLOAD COVER</p>
+                            <p className="text-xs text-gray-500">PNG, JPG up to 10MB</p>
                           </div>
                           <input
                             id="coverImage"
@@ -551,21 +620,20 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
                       )}
 
                       {errors.coverImage && (
-                        <p className="text-xs md:text-sm text-red-500 mt-1 flex items-center gap-1">
-                          <AlertCircle className="w-3 md:w-4 h-3 md:h-4" />
+                        <p className="text-sm text-red-600 flex items-center gap-1">
+                          <AlertCircle className="w-4 h-4" />
                           {errors.coverImage}
                         </p>
                       )}
                     </div>
-
                     {/* Campaign Gallery */}
-                    <div>
-                      <Label htmlFor="gallery" className="text-xs md:text-sm font-medium text-gray-700 mb-2 block">
-                        Campaign Gallery
+                    <div className="space-y-3">
+                      <Label htmlFor="gallery" className="text-sm font-medium text-gray-900">
+                        Campaign Gallery (Optional)
                       </Label>
                       <div className="space-y-4">
                         {galleryPreviews.length > 0 && (
-                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                             {galleryPreviews.map((preview, index) => (
                               <div key={index} className="relative group aspect-square">
                                 <img
@@ -576,7 +644,7 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
                                 <button
                                   type="button"
                                   onClick={() => removeGalleryImage(index)}
-                                  className="absolute top-1 right-1 bg-red-500 text-white p-0.5 md:p-1 rounded opacity-0 group-hover:opacity-100 transition"
+                                  className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                                   aria-label={`Remove gallery image ${index + 1}`}
                                 >
                                   ✕
@@ -588,11 +656,12 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
 
                         <label
                           htmlFor="gallery"
-                          className="flex flex-col items-center justify-center w-full h-32 md:h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition"
+                          className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors"
                         >
                           <div className="flex flex-col items-center justify-center pt-4 pb-4">
-                            <Plus className="w-6 md:w-8 h-6 md:h-8 text-gray-400 mb-1" />
-                            <p className="text-xs md:text-sm text-gray-500 font-medium">ADD IMAGES</p>
+                            <Plus className="w-8 h-8 text-gray-400 mb-2" />
+                            <p className="text-sm font-medium text-gray-700">ADD IMAGES</p>
+                            <p className="text-xs text-gray-500">Multiple files supported</p>
                           </div>
                           <input
                             id="gallery"
@@ -608,8 +677,8 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
                     </div>
 
                     {/* YouTube Presentation */}
-                    <div>
-                      <Label htmlFor="youtube" className="text-xs md:text-sm font-medium text-gray-700 mb-2 block">
+                    <div className="space-y-2">
+                      <Label htmlFor="youtube" className="text-sm font-medium text-gray-900">
                         YouTube Presentation (Optional)
                       </Label>
                       <Input
@@ -618,30 +687,34 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
                         placeholder="https://youtube.com/watch?v=..."
                         value={formData.youtubePresentation}
                         onChange={e => handleInputChange(e, 'youtubePresentation')}
-                        className={`w-full text-sm md:text-base ${errors.youtubePresentation ? 'border-red-500 focus:border-red-500' : ''}`}
+                        className={`h-12 text-base ${errors.youtubePresentation ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'}`}
                         aria-invalid={!!errors.youtubePresentation}
                         aria-describedby={errors.youtubePresentation ? 'youtube-error' : undefined}
                       />
                       {errors.youtubePresentation && (
-                        <p id="youtube-error" className="text-xs md:text-sm text-red-500 mt-1 flex items-center gap-1">
-                          <AlertCircle className="w-3 md:w-4 h-3 md:h-4" />
+                        <p id="youtube-error" className="text-sm text-red-600 flex items-center gap-1">
+                          <AlertCircle className="w-4 h-4" />
                           {errors.youtubePresentation}
                         </p>
                       )}
-                      <p className="text-xs text-gray-500 mt-1">Accepted format: youtube.com/watch?v=VIDEO_ID or youtu.be/VIDEO_ID</p>
+                      <p className="text-xs text-gray-500">Accepted format: youtube.com/watch?v=VIDEO_ID or youtu.be/VIDEO_ID</p>
                     </div>
                   </div>
                 )}
-
                 {/* Funding Details Tab */}
                 {activeTab === 'funding-details' && (
                   <div className="space-y-6">
-                    <h3 className="text-base md:text-lg font-semibold text-gray-900">Financial Goals</h3>
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <h3 className="text-lg font-semibold text-green-900 mb-2">Financial Goals</h3>
+                      <p className="text-sm text-green-700">
+                        Set your fundraising target and campaign duration to help donors understand your goals.
+                      </p>
+                    </div>
 
-                    {/* Fundraising Target */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                      <div>
-                        <Label htmlFor="target" className="text-xs md:text-sm font-medium text-gray-700 mb-2 block">
+                    {/* Fundraising Target and Donation Tiers */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                      <div className="sm:col-span-2 lg:col-span-1">
+                        <Label htmlFor="target" className="text-sm font-medium text-gray-900 mb-2 block">
                           Fundraising Target ($) <span className="text-red-500">*</span>
                         </Label>
                         <Input
@@ -652,13 +725,13 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
                           onChange={e => handleInputChange(e, 'fundraisingTarget')}
                           min="1"
                           step="100"
-                          className={`w-full text-sm md:text-base ${errors.fundraisingTarget ? 'border-red-500 focus:border-red-500' : ''}`}
+                          className={`h-12 text-base ${errors.fundraisingTarget ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'}`}
                           aria-invalid={!!errors.fundraisingTarget}
                           aria-describedby={errors.fundraisingTarget ? 'target-error' : undefined}
                         />
                         {errors.fundraisingTarget && (
-                          <p id="target-error" className="text-xs md:text-sm text-red-500 mt-1 flex items-center gap-1">
-                            <AlertCircle className="w-3 md:w-4 h-3 md:h-4" />
+                          <p id="target-error" className="text-sm text-red-600 mt-1 flex items-center gap-1">
+                            <AlertCircle className="w-4 h-4" />
                             {errors.fundraisingTarget}
                           </p>
                         )}
@@ -667,11 +740,11 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
                       {/* Donation Tiers */}
                       {[0, 1, 2].map(index => (
                         <div key={index}>
-                          <Label htmlFor={`tier-${index}`} className="text-xs md:text-sm font-medium text-gray-700 mb-2 block">
+                          <Label htmlFor={`tier-${index}`} className="text-sm font-medium text-gray-900 mb-2 block">
                             Tier {index + 1} (Optional)
                           </Label>
                           <div className="flex items-center">
-                            <span className="text-gray-500 mr-2 text-sm md:text-base">$</span>
+                            <span className="text-gray-500 mr-2 text-base">$</span>
                             <Input
                               id={`tier-${index}`}
                               type="number"
@@ -680,29 +753,30 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
                               onChange={e => handleDonationTierChange(index, e.target.value)}
                               min="0"
                               step="1"
-                              className={`w-full text-sm md:text-base ${
-                                errors[`tier-${index}`] ? 'border-red-500 focus:border-red-500' : ''
+                              className={`h-12 text-base ${
+                                errors[`tier-${index}`] ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
                               }`}
                               aria-invalid={!!errors[`tier-${index}`]}
                             />
                           </div>
                           {errors[`tier-${index}`] && (
-                            <p className="text-xs md:text-sm text-red-500 mt-1 flex items-center gap-1">
-                              <AlertCircle className="w-3 md:w-4 h-3 md:h-4" />
+                            <p className="text-sm text-red-600 mt-1 flex items-center gap-1">
+                              <AlertCircle className="w-4 h-4" />
                               {errors[`tier-${index}`]}
                             </p>
                           )}
                         </div>
                       ))}
                     </div>
-
-                    {/* Dates Section */}
-                    <div className="space-y-4 border-t pt-6">
-                      <h4 className="text-xs md:text-sm font-medium text-gray-700">Campaign Duration <span className="text-red-500">*</span></h4>
-                      <p className="text-xs text-gray-600">Campaign must run for at least 7 days and maximum 365 days</p>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-                        <div>
-                          <Label htmlFor="startDate" className="text-xs md:text-sm font-medium text-gray-700 mb-2 block">
+                    {/* Campaign Duration */}
+                    <div className="space-y-4 border-t border-gray-200 pt-6">
+                      <div>
+                        <h4 className="text-base font-semibold text-gray-900 mb-1">Campaign Duration <span className="text-red-500">*</span></h4>
+                        <p className="text-sm text-gray-600">Campaign must run for at least 7 days and maximum 365 days</p>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label htmlFor="startDate" className="text-sm font-medium text-gray-900">
                             Start Date
                           </Label>
                           <Input
@@ -710,20 +784,20 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
                             type="date"
                             value={formData.startDate}
                             onChange={e => handleInputChange(e, 'startDate')}
-                            className={`w-full text-sm md:text-base ${errors.startDate ? 'border-red-500 focus:border-red-500' : ''}`}
+                            className={`h-12 text-base ${errors.startDate ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'}`}
                             aria-invalid={!!errors.startDate}
                             aria-describedby={errors.startDate ? 'startdate-error' : undefined}
                           />
                           {errors.startDate && (
-                            <p id="startdate-error" className="text-xs md:text-sm text-red-500 mt-1 flex items-center gap-1">
-                              <AlertCircle className="w-3 md:w-4 h-3 md:h-4" />
+                            <p id="startdate-error" className="text-sm text-red-600 flex items-center gap-1">
+                              <AlertCircle className="w-4 h-4" />
                               {errors.startDate}
                             </p>
                           )}
                         </div>
 
-                        <div>
-                          <Label htmlFor="endDate" className="text-xs md:text-sm font-medium text-gray-700 mb-2 block">
+                        <div className="space-y-2">
+                          <Label htmlFor="endDate" className="text-sm font-medium text-gray-900">
                             End Date
                           </Label>
                           <Input
@@ -731,13 +805,13 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
                             type="date"
                             value={formData.endDate}
                             onChange={e => handleInputChange(e, 'endDate')}
-                            className={`w-full text-sm md:text-base ${errors.endDate ? 'border-red-500 focus:border-red-500' : ''}`}
+                            className={`h-12 text-base ${errors.endDate ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'}`}
                             aria-invalid={!!errors.endDate}
                             aria-describedby={errors.endDate ? 'enddate-error' : undefined}
                           />
                           {errors.endDate && (
-                            <p id="enddate-error" className="text-xs md:text-sm text-red-500 mt-1 flex items-center gap-1">
-                              <AlertCircle className="w-3 md:w-4 h-3 md:h-4" />
+                            <p id="enddate-error" className="text-sm text-red-600 flex items-center gap-1">
+                              <AlertCircle className="w-4 h-4" />
                               {errors.endDate}
                             </p>
                           )}
@@ -746,14 +820,18 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
                     </div>
                   </div>
                 )}
-
                 {/* Kiosk Distribution Tab */}
                 {activeTab === 'kiosk-distribution' && (
                   <div className="space-y-6">
-                    <h3 className="text-base md:text-lg font-semibold text-gray-900">Kiosk Distribution</h3>
+                    <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
+                      <h3 className="text-lg font-semibold text-teal-900 mb-2">Kiosk Distribution</h3>
+                      <p className="text-sm text-teal-700">
+                        Choose how your campaign will be distributed across kiosks in your network.
+                      </p>
+                    </div>
                     
-                    <div className="space-y-3">
-                      <label className="flex items-start md:items-center p-3 md:p-4 border-2 border-teal-500 rounded-lg cursor-pointer bg-teal-50 hover:bg-teal-100 transition">
+                    <div className="space-y-4">
+                      <label className="flex items-start p-4 border-2 border-teal-500 rounded-lg cursor-pointer bg-teal-50 hover:bg-teal-100 transition-colors">
                         <input
                           type="checkbox"
                           checked={formData.kioskDistribution.includes('broadcast-globally')}
@@ -770,15 +848,15 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
                               }));
                             }
                           }}
-                          className="w-4 md:w-5 h-4 md:h-5 text-teal-600 mt-0.5 md:mt-0 shrink-0"
+                          className="w-5 h-5 text-teal-600 mt-0.5 shrink-0"
                           aria-label="Broadcast globally"
                         />
-                        <div className="ml-3 md:ml-4 flex-1">
-                          <p className="font-medium text-teal-900 text-sm md:text-base">BROADCAST GLOBALLY</p>
-                          <p className="text-xs md:text-sm text-teal-700 mt-0.5">Display on every active terminal worldwide</p>
+                        <div className="ml-4 flex-1">
+                          <p className="font-semibold text-teal-900 text-base">BROADCAST GLOBALLY</p>
+                          <p className="text-sm text-teal-700 mt-1">Display on every active terminal worldwide</p>
                         </div>
                         {formData.kioskDistribution.includes('broadcast-globally') && (
-                          <svg className="w-5 md:w-6 h-5 md:h-6 text-teal-600 shrink-0 ml-2" fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-6 h-6 text-teal-600 shrink-0 ml-2" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
                         )}
@@ -787,34 +865,34 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
                   </div>
                 )}
 
-                {/* Form Actions */}
-                <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-3 md:gap-4 pt-6 border-t">
+                {/* Enhanced Form Actions */}
+                <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-4 pt-8 border-t border-gray-200">
                   <Button 
                     variant="ghost" 
                     type="button" 
-                    className="text-gray-600 hover:bg-gray-100 w-full sm:w-auto text-xs md:text-sm"
+                    className="text-gray-600 hover:bg-gray-100 w-full sm:w-auto"
                     title="Save this campaign as draft for later"
                   >
                     <span className="flex items-center gap-2 justify-center sm:justify-start">
-                      💾 <span className="hidden sm:inline">Save Draft</span>
+                      💾 <span>Save Draft</span>
                     </span>
                   </Button>
 
-                  <div className="flex items-center gap-2 md:gap-3 w-full sm:w-auto">
+                  <div className="flex items-center gap-3 w-full sm:w-auto">
                     <Button
                       variant="outline"
                       type="button"
                       disabled={isLoading}
-                      className="flex-1 sm:flex-none text-gray-700 text-xs md:text-sm h-10 md:h-11"
+                      className="flex-1 sm:flex-none text-gray-700 h-12 px-6 border-gray-300 hover:bg-gray-50"
                     >
                       Cancel
                     </Button>
                     <Button
                       type="submit"
                       disabled={!isFormValid || isLoading}
-                      className="flex-1 sm:flex-none bg-black text-white hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed text-xs md:text-sm h-10 md:h-11 font-medium"
+                      className="flex-1 sm:flex-none bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed h-12 px-8 font-semibold"
                     >
-                      {isLoading ? '...Publishing' : 'Publish'}
+                      {isLoading ? 'Publishing...' : 'Publish Campaign'}
                     </Button>
                   </div>
                 </div>

@@ -111,6 +111,7 @@ import { SystemAlertsWidget } from "./components/SystemAlertsWidget";
 import { useSystemAlerts } from "../../shared/lib/hooks/useSystemAlerts";
 import { useStripeOnboarding, StripeOnboardingDialog } from "../../features/stripe-onboarding";
 import { useToast } from "../../shared/ui/ToastProvider";
+import { CampaignCreationForm } from "../../components/campaign/CampaignCreationForm";
 
 interface AdminDashboardProps {
   onNavigate: (screen: Screen) => void;
@@ -167,8 +168,12 @@ export function AdminDashboard({
   hasPermission,
   onOrganizationSwitch,
 }: AdminDashboardProps) {
+  console.log('[AdminDashboard] Component rendering');
+  
   const { stats, recentActivities, alerts, loading, error, refreshDashboard } =
     useDashboardData(userSession.user.organizationId);
+  
+  console.log('[AdminDashboard] useDashboardData loading:', loading);
   
   const { deviceDistribution } = stats;
 
@@ -188,6 +193,9 @@ export function AdminDashboard({
   const [allCampaigns, setAllCampaigns] = useState<Campaign[]>([]);
   const [assignedCampaignIds, setAssignedCampaignIds] = useState<string[]>([]);
   const [newKiosk, setNewKiosk] = useState({ name: '', location: '', accessCode: '' });
+  const [allKiosks, setAllKiosks] = useState<any[]>([]);
+  const [assignedKioskIds, setAssignedKioskIds] = useState<string[]>([]);
+  const [isGlobalCampaign, setIsGlobalCampaign] = useState(false);
   const [isCreatingCampaign, setIsCreatingCampaign] = useState(false);
   const [isCreatingKiosk, setIsCreatingKiosk] = useState(false);
   const [linkingCampaignId, setLinkingCampaignId] = useState<string | null>(null);
@@ -213,11 +221,15 @@ export function AdminDashboard({
   const { organization, loading: orgLoading, error: orgError } = useOrganization(
     userSession.user.organizationId ?? null
   );
+  
+  console.log('[AdminDashboard] useOrganization loading:', orgLoading);
 
   const { alerts: systemAlerts, loading: systemAlertsLoading } = useSystemAlerts({
     organization,
     organizationId: userSession.user.organizationId,
   });
+  
+  console.log('[AdminDashboard] useSystemAlerts loading:', systemAlertsLoading);
 
 
   const { isStripeOnboarded, needsOnboarding } = useStripeOnboarding(organization);
@@ -256,7 +268,10 @@ export function AdminDashboard({
 
   // Auto-open Stripe onboarding popup on mount if not onboarded
   useEffect(() => {
+    console.log('[AdminDashboard] Stripe onboarding check - orgLoading:', orgLoading, 'needsOnboarding:', needsOnboarding);
+    
     if (!orgLoading && organization && needsOnboarding) {
+      console.log('[AdminDashboard] Setting up Stripe onboarding popup timer');
       // Show small popup after a short delay for better UX
       const timer = setTimeout(() => {
         setShowSmallPopup(true);
@@ -345,8 +360,16 @@ export function AdminDashboard({
   ];
 
   useEffect(() => {
+    console.log('[AdminDashboard] fetchChartData useEffect triggered');
+    
     const fetchChartData = async () => {
-      if (!userSession.user.organizationId) return;
+      console.log('[AdminDashboard] fetchChartData started, organizationId:', userSession.user.organizationId);
+      
+      if (!userSession.user.organizationId) {
+        console.log('[AdminDashboard] No organizationId, returning early');
+        return;
+      }
+      
       try {
         const campaignsRef = collection(db, "campaigns");
         const orgQuery = where("organizationId", "==", userSession.user.organizationId);
@@ -355,15 +378,22 @@ export function AdminDashboard({
           campaignsRef,
           orgQuery
         );
+        
+        console.log('[AdminDashboard] Fetching campaigns from Firestore...');
         const topListSnapshot = await getDocs(topListQuery);
         const allCampaigns = topListSnapshot.docs.map(
           (doc) => ({ id: doc.id, ...doc.data() } as Campaign)
         );
         
-        // Check if there are no campaigns and show onboarding
-        if (allCampaigns.length === 0 && !showOnboarding) {
+        console.log('[AdminDashboard] Campaigns fetched:', allCampaigns.length, 'campaigns');
+        
+        // Check if there are no campaigns and show onboarding (but not if tour is already active)
+        if (allCampaigns.length === 0 && !showOnboarding && !isTourActive) {
+          console.log('[AdminDashboard] No campaigns found, showing onboarding');
           setShowOnboarding(true);
         }
+        
+        console.log('[AdminDashboard] Setting campaignCountChecked to true');
         setCampaignCountChecked(true);
         
         // Sort by percentage of goal completion
@@ -440,34 +470,36 @@ export function AdminDashboard({
         } else {
           setCategoryData([]);
         }
+        
+        console.log('[AdminDashboard] fetchChartData completed successfully');
       } catch (error) {
-        console.error("Error fetching chart data: ", error);
+        console.error("[AdminDashboard] Error fetching chart data:", error);
       }
     };
 
     fetchChartData();
-  }, [userSession.user.organizationId, showOnboarding]);
+  }, [userSession.user.organizationId]);
 
   const handleRefresh = () => {
     refreshDashboard();
   };
 
-  const handleCreateCampaign = async () => {
+  const handleCreateCampaign = async (campaignFormData: any) => {
     // Validate all required fields
-    if (!newCampaign.title || !newCampaign.description || !newCampaign.category || !newCampaign.status || !newCampaign.startDate || !newCampaign.endDate || !userSession) {
+    if (!campaignFormData.title || !campaignFormData.briefOverview || !campaignFormData.fundraisingTarget || !campaignFormData.startDate || !campaignFormData.endDate || !userSession) {
       alert("Please fill in all required fields");
       return;
     }
     
     // Validate goal is a positive number
-    if (!newCampaign.goal || newCampaign.goal <= 0) {
+    if (!campaignFormData.fundraisingTarget || campaignFormData.fundraisingTarget <= 0) {
       alert("Fundraising goal must be greater than 0");
       return;
     }
     
     // Validate dates
-    const startDate = new Date(newCampaign.startDate);
-    const endDate = new Date(newCampaign.endDate);
+    const startDate = new Date(campaignFormData.startDate);
+    const endDate = new Date(campaignFormData.endDate);
     
     if (endDate <= startDate) {
       alert("End date must be after start date");
@@ -478,10 +510,11 @@ export function AdminDashboard({
     try {
       // Save the campaign to database
       const campaignData = {
-        title: newCampaign.title,
-        description: newCampaign.description,
-        goal: Number(newCampaign.goal),
-        status: newCampaign.status,
+        title: campaignFormData.title,
+        description: campaignFormData.briefOverview,
+        detailedStory: campaignFormData.detailedStory,
+        goal: Number(campaignFormData.fundraisingTarget),
+        status: 'active',
         startDate: startDate,
         endDate: endDate,
         organizationId: userSession.user.organizationId,
@@ -489,10 +522,12 @@ export function AdminDashboard({
         donationCount: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
-        isGlobal: newCampaign.isGlobal || false,
-        tags: newCampaign.tags || [],
-        coverImageUrl: newCampaign.coverImageUrl || '',
-        category: newCampaign.category,
+        isGlobal: false,
+        tags: [],
+        coverImageUrl: campaignFormData.coverImageUrl || '',
+        category: 'General',
+        youtubePresentation: campaignFormData.youtubePresentation || '',
+        donationTiers: campaignFormData.donationTiers || ['', '', ''],
       };
       const docRef = await addDoc(collection(db, 'campaigns'), campaignData);
       
@@ -616,6 +651,30 @@ export function AdminDashboard({
     fetchAllCampaigns();
   }, [showLinkingForm, userSession.user.organizationId]);
 
+  // Fetch all kiosks when kiosk form is shown
+  useEffect(() => {
+    const fetchAllKiosks = async () => {
+      if (!showKioskForm || !userSession.user.organizationId) return;
+      
+      try {
+        const kiosksRef = collection(db, "kiosks");
+        const q = query(
+          kiosksRef,
+          where("organizationId", "==", userSession.user.organizationId)
+        );
+        const snapshot = await getDocs(q);
+        const kiosks = snapshot.docs.map(
+          (doc) => ({ id: doc.id, ...doc.data() })
+        );
+        setAllKiosks(kiosks);
+      } catch (error) {
+        console.error("Error fetching kiosks: ", error);
+      }
+    };
+
+    fetchAllKiosks();
+  }, [showKioskForm, userSession.user.organizationId]);
+
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat("en-GB", {
       style: "currency",
@@ -691,7 +750,14 @@ export function AdminDashboard({
     : categoryData.slice(0, 6);
 
   const handleStartTour = () => {
-    // Reset all form states
+    // Reset all form states first
+    setShowCampaignForm(false);
+    setShowKioskForm(false);
+    setShowLinkingForm(false);
+    setShowStripeStep(false);
+    setIsTourActive(false);
+    
+    // Reset form data
     setNewCampaign({ 
       title: '', 
       description: '', 
@@ -708,16 +774,17 @@ export function AdminDashboard({
     setCreatedCampaignId('');
     setCreatedKioskId('');
     
-    // Start the tour by showing onboarding
-    setIsTourActive(true);
-    setShowOnboarding(true);
-    setShowCampaignForm(false);
-    setShowKioskForm(false);
-    setShowLinkingForm(false);
-    setShowStripeStep(false);
+    // Use setTimeout to ensure state updates are processed
+    setTimeout(() => {
+      setIsTourActive(true);
+      setShowOnboarding(true);
+    }, 0);
   };
 
+  console.log('[AdminDashboard] Render decision - loading:', loading, 'campaignCountChecked:', campaignCountChecked, 'showOnboarding:', showOnboarding, 'error:', error);
+
   if (error) {
+    console.log('[AdminDashboard] Rendering error state');
     return (
       <div className="flex items-center justify-center h-screen bg-red-50 text-red-700">
         <AlertCircle className="w-6 h-6 mr-2" />
@@ -879,12 +946,12 @@ export function AdminDashboard({
               </div>
 
               {/* Form Content */}
-              <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8">
-                <div className="w-full max-w-2xl mx-auto">
-                  <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
-                    <CardContent className="p-8">
+              <div className="flex-1 overflow-y-auto">
+                <div className="w-full">
+                  <div className="bg-white">
+                    <div className="px-4 sm:px-6 lg:px-8 py-8">
                       {/* Header with Title and Skip Button */}
-                      <div className="flex items-start justify-between mb-6">
+                      <div className="max-w-6xl mx-auto flex items-start justify-between mb-6">
                         <div className="flex-1">
                           <h2 className="text-3xl font-bold text-gray-900 mb-2">Create New Campaign</h2>
                           <p className="text-base text-gray-500">Configure a new fundraising campaign for your organization.</p>
@@ -892,7 +959,7 @@ export function AdminDashboard({
                         <Button
                           onClick={() => {
                             setShowCampaignForm(false);
-                            setShowOnboarding(false);
+                            setShowKioskForm(true);
                           }}
                           className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium ml-4"
                         >
@@ -901,215 +968,46 @@ export function AdminDashboard({
                       </div>
 
                     {/* What is a Campaign Info */}
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                      <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-                          <Target className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-sm text-blue-900 mb-1">What is a Campaign?</h4>
-                          <p className="text-xs text-blue-700 leading-relaxed">
-                            A campaign is a fundraising initiative with a specific goal. Donors can contribute to campaigns through your kiosks.
-                          </p>
+                    <div className="max-w-6xl mx-auto mb-6">
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                            <Target className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-sm text-blue-900 mb-1">What is a Campaign?</h4>
+                            <p className="text-xs text-blue-700 leading-relaxed">
+                              A campaign is a fundraising initiative with a specific goal. Donors can contribute to campaigns through your kiosks.
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Form Fields */}
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="campaignTitle" className="text-sm font-medium text-gray-700 mb-1.5 block">
-                          Campaign Title *
-                        </Label>
-                        <Input
-                          id="campaignTitle"
-                          value={newCampaign.title}
-                          onChange={(e) => setNewCampaign(p => ({ ...p, title: e.target.value }))}
-                          placeholder="Name your campaign"
- className="
-    w-full h-10 px-4 rounded-lg
-    border border-gray-300
-    focus-visible:outline-none
-    focus-visible:border-blue-700
-    focus-visible:ring-1
-    focus-visible:ring-blue-700
-  "                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="campaignDescription" className="text-sm font-medium text-gray-700 mb-1.5 block">
-                          Description *
-                        </Label>
-                        <textarea
-                          id="campaignDescription"
-                          value={newCampaign.description}
-                          onChange={(e) => setNewCampaign(p => ({ ...p, description: e.target.value }))}
-                          placeholder="Describe your campaign and its impact..."
-                          className="w-full h-20 px-4 py-2 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-1 focus:ring-blue-800 focus:border-blue-800"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="campaignGoal" className="text-sm font-medium text-gray-700 mb-1.5 block">
-                            Fundraising Goal ($) *
-                          </Label>
-                          <Input
-                            id="campaignGoal"
-                            type="number"
-                            value={newCampaign.goal || ''}
-                            onChange={(e) => setNewCampaign(p => ({ ...p, goal: e.target.value === '' ? 0 : Number(e.target.value) }))}
-                            placeholder="10000"
-                            min="0"
-                           className="
-    w-full h-10 px-4 rounded-lg
-    border border-gray-300
-    focus-visible:outline-none
-    focus-visible:border-blue-700
-    focus-visible:ring-1
-    focus-visible:ring-blue-700
-  "                        
-                          />
-                        </div>
-
-                        <div>
-                          <Label htmlFor="campaignStatus" className="text-sm font-medium text-gray-700 mb-1.5 block">
-                            Status *
-                          </Label>
-                          <select
-                            id="campaignStatus"
-                            value={newCampaign.status}
-                            onChange={(e) => setNewCampaign(p => ({ ...p, status: e.target.value }))}
-                           className="
-    w-full h-10 px-4 rounded-lg
-    border border-gray-300
-    focus-visible:outline-none
-    focus-visible:border-blue-700
-    focus-visible:ring-1
-    focus-visible:ring-blue-700
-  "                        
-                          >
-                            <option value="active">Active</option>
-                            <option value="paused">Paused</option>
-                            <option value="completed">Completed</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="campaignCategory" className="text-sm font-medium text-gray-700 mb-1.5 block">
-                          Category *
-                        </Label>
-                        <Input
-                          id="campaignCategory"
-                          value={newCampaign.category}
-                          onChange={(e) => setNewCampaign(p => ({ ...p, category: e.target.value }))}
-                          placeholder="e.g., Education, Health, Environment"
-                          className="
-    w-full h-10 px-4 rounded-lg
-    border border-gray-300
-    focus-visible:outline-none
-    focus-visible:border-blue-700
-    focus-visible:ring-1
-    focus-visible:ring-blue-700
-  "                        
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="startDate" className="text-sm font-medium text-gray-700 mb-1.5 block">
-                            Start Date *
-                          </Label>
-                          <Input
-                            id="startDate"
-                            type="date"
-                            value={newCampaign.startDate}
-                            onChange={(e) => setNewCampaign(p => ({ ...p, startDate: e.target.value }))}
-                            className="
-    w-full h-10 px-4 rounded-lg
-    border border-gray-300
-    focus-visible:outline-none
-    focus-visible:border-blue-700
-    focus-visible:ring-1
-    focus-visible:ring-blue-700
-  "                        
-                          />
-                        </div>
-
-                        <div>
-                          <Label htmlFor="endDate" className="text-sm font-medium text-gray-700 mb-1.5 block">
-                            End Date *
-                          </Label>
-                          <Input
-                            id="endDate"
-                            type="date"
-                            value={newCampaign.endDate}
-                            onChange={(e) => setNewCampaign(p => ({ ...p, endDate: e.target.value }))}
-                            className="
-    w-full h-10 px-4 rounded-lg
-    border border-gray-300
-    focus-visible:outline-none
-    focus-visible:border-blue-700
-    focus-visible:ring-1
-    focus-visible:ring-blue-700
-  "                        
-                          />
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          id="isGlobal"
-                          checked={newCampaign.isGlobal}
-                          onChange={(e) => setNewCampaign(p => ({ ...p, isGlobal: e.target.checked }))}
-                          className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                        />
-                        <Label htmlFor="isGlobal" className="text-sm font-medium text-gray-700 cursor-pointer">
-                          Make this campaign global (visible on all kiosks)
-                        </Label>
-                      </div>
+                    {/* Campaign Creation Form */}
+                    <CampaignCreationForm
+                      onSubmit={handleCreateCampaign}
+                      initialData={{
+                        title: newCampaign.title,
+                        briefOverview: newCampaign.description,
+                        detailedStory: newCampaign.description,
+                        coverImageUrl: newCampaign.coverImageUrl,
+                        youtubePresentation: '',
+                        fundraisingTarget: newCampaign.goal,
+                        donationTiers: ['', '', ''],
+                        startDate: newCampaign.startDate,
+                        endDate: newCampaign.endDate,
+                        kioskDistribution: []
+                      }}
+                      isLoading={isCreatingCampaign}
+                    />
                     </div>
-
-                    {/* Form Actions */}
-                    <div className="flex justify-end gap-3 mt-6">
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setShowCampaignForm(false);
-                        }}
-                        className="px-6"
-                        disabled={isCreatingCampaign}
-                      >
-                        <ChevronRight className="w-4 h-4 mr-2 rotate-180" />
-                        Back
-                      </Button>
-                      <Button
-                        onClick={handleCreateCampaign}
-                        disabled={!newCampaign.title || !newCampaign.description || !newCampaign.goal || !newCampaign.status || !newCampaign.category || !newCampaign.startDate || !newCampaign.endDate || isCreatingCampaign}
-                        className="bg-gray-900 hover:bg-gray-800 px-6"
-                      >
-                        {isCreatingCampaign ? (
-                          <>
-                            <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                            Creating Campaign...
-                          </>
-                        ) : (
-                          <>
-                            Create Campaign & Continue
-                            <ChevronRight className="w-4 h-4 ml-2" />
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               </div>
             </div>
-            </div>
 
-            {/* Step 3: Kiosk Form */}
+            {/* Step 3: Kiosk Assignment Form */}
             <div className="min-w-full h-full flex flex-col bg-white">
               {/* Progress Stepper - Outside form, at top */}
               <div className="w-full bg-white border-b border-gray-200 py-4 px-4 sm:px-6 lg:px-8 pt-20 mb-8">
@@ -1131,7 +1029,7 @@ export function AdminDashboard({
                       <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center mb-2">
                         <Monitor className="w-5 h-5 text-white" />
                       </div>
-                      <span className="text-xs font-semibold text-green-600">Add Kiosk</span>
+                      <span className="text-xs font-semibold text-green-600">Assign Kiosks</span>
                     </div>
                     
                     {/* Connector Line - Inactive */}
@@ -1150,120 +1048,135 @@ export function AdminDashboard({
 
               {/* Form Content */}
               <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8">
-                <div className="w-full max-w-2xl mx-auto">
-                  <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
-                    <CardContent className="p-8">
-                      {/* Header with Title and Skip Button */}
-                      <div className="flex items-start justify-between mb-6">
-                        <div className="flex-1">
-                          <h2 className="text-3xl font-bold text-gray-900 mb-2">Add New Kiosk</h2>
-                          <p className="text-base text-gray-500">Configure a new donation kiosk for deployment.</p>
-                        </div>
-                        <Button
-                        onClick={() => {
-                          setShowKioskForm(false);
-                          setShowOnboarding(false);
-                        }}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium ml-4"
-                      >
-                        Skip
-                      </Button>
+                <div className="w-full max-w-4xl mx-auto bg-gray-50 min-h-screen p-8">
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-6">
+                    <div className="flex-1">
+                      <h1 className="text-4xl font-bold text-gray-900 mb-2">Assign Campaign to Kiosks</h1>
+                      <p className="text-lg text-gray-500">Choose which kiosks will display your campaign content.</p>
+                    </div>
+                    <Button
+                      onClick={() => {
+                        setShowKioskForm(false);
+                        setShowLinkingForm(true);
+                      }}
+                      variant="ghost"
+                      className="text-gray-500 hover:text-gray-700 px-4 py-2 text-sm font-medium"
+                    >
+                      Go Back
+                    </Button>
+                  </div>
+
+                  {/* Make Campaign Global Button */}
+                  <div className="mb-8">
+                    <Button
+                      onClick={() => setIsGlobalCampaign(!isGlobalCampaign)}
+                      className="w-full h-14 text-base font-semibold rounded-xl transition-all duration-200 bg-emerald-500 hover:bg-emerald-600 text-white"
+                    >
+                      <Globe className="w-5 h-5 mr-2" />
+                      {isGlobalCampaign ? 'Your Campaign is Now Global' : 'Make Your Campaign Global'}
+                    </Button>
+                    <p className="text-sm text-gray-400 mt-3 text-center">
+                      This will automatically assign your campaign to all {allKiosks.length} active kiosks in your organization.
+                    </p>
+                  </div>
+
+                  {/* Available Kiosks Section */}
+                  <div className="mb-8">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Available Kiosks</h2>
+                      <span className="text-blue-600 font-medium text-sm">
+                        {assignedKioskIds.length} Selected
+                      </span>
                     </div>
 
-                    {/* What is a Kiosk Info */}
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                      <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-                          <Monitor className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-sm text-blue-900 mb-1">What is a Kiosk?</h4>
-                          <p className="text-xs text-blue-700 leading-relaxed">
-                            A kiosk is a physical or digital donation point. It has hardware device who donates tap their cards to donate.
-                          </p>
-                        </div>
+                    {allKiosks.length === 0 ? (
+                      <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
+                        <Monitor className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                        <p className="text-gray-600 text-lg">No kiosks found in your organization</p>
+                        <p className="text-sm text-gray-500 mt-2">Create kiosks first to assign campaigns</p>
                       </div>
-                    </div>
-
-                    {/* Form Fields */}
-                    <div className="space-y-5">
-                      <div>
-                        <Label htmlFor="kioskName" className="text-sm font-medium text-gray-700 mb-1.5 block">
-                          Kiosk Name *
-                        </Label>
-                        <Input
-                          id="kioskName"
-                          value={newKiosk.name}
-                          onChange={(e) => setNewKiosk(p => ({ ...p, name: e.target.value }))}
-                          placeholder="Times Square Kiosk"
-                          className="w-full h-12 px-4 border-gray-300 rounded-lg focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">A friendly name to identify this kiosk</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {allKiosks.map((kiosk) => (
+                          <div key={kiosk.id} className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-sm transition-shadow">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center">
+                                  <Monitor className="w-6 h-6 text-blue-500" />
+                                </div>
+                                <div>
+                                  <div className="flex items-center gap-2 mb-0.5">
+                                    <h3 className="text-base font-semibold text-gray-900">{kiosk.name}</h3>
+                                    <div className={`w-2.5 h-2.5 rounded-full ${
+                                      kiosk.status === 'online' ? 'bg-emerald-500' : 'bg-gray-400'
+                                    }`}></div>
+                                  </div>
+                                  <p className="text-sm text-gray-500">{kiosk.location}</p>
+                                </div>
+                              </div>
+                              <Button
+                                onClick={() => {
+                                  if (assignedKioskIds.includes(kiosk.id)) {
+                                    setAssignedKioskIds(prev => prev.filter(id => id !== kiosk.id));
+                                  } else {
+                                    setAssignedKioskIds(prev => [...prev, kiosk.id]);
+                                  }
+                                }}
+                                className={`px-6 py-2 rounded-lg font-medium text-sm transition-colors ${
+                                  assignedKioskIds.includes(kiosk.id)
+                                    ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                                    : 'bg-gray-900 hover:bg-gray-800 text-white'
+                                }`}
+                              >
+                                {assignedKioskIds.includes(kiosk.id) ? 'Assigned' : 'Assign'}
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
                       </div>
+                    )}
+                  </div>
 
-                      <div>
-                        <Label htmlFor="kioskLocation" className="text-sm font-medium text-gray-700 mb-1.5 block">
-                          Location *
-                        </Label>
-                        <Input
-                          id="kioskLocation"
-                          value={newKiosk.location}
-                          onChange={(e) => setNewKiosk(p => ({ ...p, location: e.target.value }))}
-                          placeholder="Times Square, New York, NY"
-                          className="w-full h-12 px-4 border-gray-300 rounded-lg focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">Physical location where this kiosk is deployed</p>
-                      </div>
+                  {/* Create New Kiosk Button */}
+                  <div className="mb-8">
+                    <Button
+                      onClick={() => {
+                        // Navigate to create new kiosk
+                        onNavigate('admin-kiosks');
+                      }}
+                      variant="ghost"
+                      className="w-full h-14 text-gray-600 hover:text-gray-700 text-base font-medium border-2 border-dashed border-gray-300 hover:border-gray-400 rounded-xl transition-all duration-200 bg-transparent hover:bg-gray-50"
+                    >
+                      <Plus className="w-5 h-5 mr-2" />
+                      Create New Kiosk
+                    </Button>
+                  </div>
 
-                      <div>
-                        <Label htmlFor="accessCode" className="text-sm font-medium text-gray-700 mb-1.5 block">
-                          Access Code *
-                        </Label>
-                        <Input
-                          id="accessCode"
-                          value={newKiosk.accessCode}
-                          onChange={(e) => setNewKiosk(p => ({ ...p, accessCode: e.target.value }))}
-                          placeholder="TS2024"
-                          minLength={4}
-                          className="w-full h-12 px-4 border-gray-300 rounded-lg focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">Unique code for kiosk access (minimum 4 characters)</p>
-                      </div>
-                    </div>
-
-                    {/* Form Actions */}
-                    <div className="flex justify-end gap-3 mt-8">
-                      <Button
-                        variant="outline"
-                        onClick={() => setShowKioskForm(false)}
-                        className="px-6"
-                        disabled={isCreatingKiosk}
-                      >
-                        <ChevronRight className="w-4 h-4 mr-2 rotate-180" />
-                        Back
-                      </Button>
-                      <Button
-                        onClick={handleCreateKiosk}
-                        disabled={!newKiosk.name || !newKiosk.location || !newKiosk.accessCode || newKiosk.accessCode.length < 4 || isCreatingKiosk}
-                        className="bg-gray-900 hover:bg-gray-800 px-6"
-                      >
-                        {isCreatingKiosk ? (
-                          <>
-                            <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                            Creating Kiosk...
-                          </>
-                        ) : (
-                          <>
-                            Add Kiosk & Continue
-                            <ChevronRight className="w-4 h-4 ml-2" />
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                  {/* Bottom Actions */}
+                  <div className="flex items-center justify-between pt-6">
+                    <Button
+                      variant="ghost"
+                      onClick={() => setShowKioskForm(false)}
+                      className="text-gray-600 hover:text-gray-700 px-4 py-2 text-sm font-medium"
+                    >
+                      <ChevronRight className="w-4 h-4 mr-1 rotate-180" />
+                      Back
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        // Save assignments and continue
+                        setShowKioskForm(false);
+                        setShowLinkingForm(true);
+                      }}
+                      className="bg-gray-900 hover:bg-gray-800 text-white px-6 py-2.5 rounded-lg text-sm font-medium"
+                    >
+                      Continue
+                      <ChevronRight className="w-4 h-4 ml-1" />
+                    </Button>
+                  </div>
+                </div>
               </div>
-            </div>
             </div>
 
             {/* Step 4: Link Campaign to Kiosk */}
@@ -1643,11 +1556,16 @@ export function AdminDashboard({
                 </Card>
               </div>
             </div>
-            </div>
           </div>
         </div>
-      ) : campaignCountChecked && !showOnboarding ? (
-        <>
+      ) : !campaignCountChecked ? (
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <RefreshCw className="w-8 h-8 mx-auto animate-spin text-gray-400 mb-3" />
+            <p className="text-sm text-gray-600">Loading dashboard...</p>
+          </div>
+        </div>
+      ) : campaignCountChecked ? (
         <div className="px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex items-center justify-between mb-6 gap-3">
           <div className="flex items-center gap-4 flex-1 min-w-0">
@@ -2606,6 +2524,7 @@ export function AdminDashboard({
             </CardContent>
           </Card>
         </div>
+        </div>
 
         {/* Donation Details Dialog */}
       <Dialog open={showActivityDialog} onOpenChange={setShowActivityDialog}>
@@ -2758,7 +2677,6 @@ export function AdminDashboard({
         loading={orgLoading}
       />
       </div>
-      </>
       ) : (
         <div className="flex items-center justify-center h-screen">
           <div className="text-center">
