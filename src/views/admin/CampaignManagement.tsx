@@ -1,9 +1,13 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import { Screen, AdminSession, Permission } from "../../shared/types";
+import { useRouter } from "next/navigation";
+import { Screen, AdminSession, Permission, Kiosk } from "../../shared/types";
 import { DEFAULT_CAMPAIGN_CONFIG } from "../../shared/config";
 import { DocumentData, Timestamp } from "firebase/firestore";
 import { useCampaignManagement } from "../../shared/lib/hooks/useCampaignManagement";
 import { useOrganizationTags } from "../../shared/lib/hooks/useOrganizationTags";
+import { kioskApi } from "../../entities/kiosk/api";
+import { campaignApi } from "../../entities/campaign/api";
+import { Campaign } from "../../entities/campaign/model";
 import { Button } from "../../shared/ui/button";
 import { Input } from "../../shared/ui/input";
 import { Label } from "../../shared/ui/label";
@@ -47,6 +51,7 @@ import { AlertTriangle } from "lucide-react"; // Import AlertTriangle
 import { Skeleton } from "../../shared/ui/skeleton";
 import { Ghost } from "lucide-react";
 import { ImageWithFallback } from "../../shared/ui/figma/ImageWithFallback";
+import { TabNavigationSidebar, getCampaignTabs } from "../../shared/ui/components/TabNavigationSidebar";
 
 import {
   AlertDialog,
@@ -107,6 +112,7 @@ const getInitialFormData = () => ({
   videoUrl: "",
   // Adding more fields for advanced settings
   assignedKiosks: "", // Stored as comma-separated string
+  selectedKiosks: [] as string[], // Array of kiosk IDs
   isGlobal: false,
   galleryImages: "", // Stored as comma-separated string
   organizationInfoName: "",
@@ -162,8 +168,14 @@ const CampaignDialog = ({
   organizationId,
   onSave,
 }: CampaignDialogProps) => {
+  const router = useRouter();
   const [formData, setFormData] = useState<DocumentData>(getInitialFormData());
   const [activeTab, setActiveTab] = useState<"basic" | "media-gallery" | "funding-details" | "kiosk-distribution">("basic");
+  const [kiosks, setKiosks] = useState<Kiosk[]>([]);
+  const [loadingKiosks, setLoadingKiosks] = useState(false);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [createdCampaignId, setCreatedCampaignId] = useState<string | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
   // Track scroll to update active tab automatically
@@ -211,6 +223,27 @@ const CampaignDialog = ({
     container.addEventListener('scroll', handleScroll, { passive: true });
     return () => container.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Fetch kiosks when dialog opens
+  useEffect(() => {
+    if (!open) return;
+
+    const fetchKiosks = async () => {
+      try {
+        setLoadingKiosks(true);
+        const kiosksList = await kioskApi.getKiosks(organizationId);
+        setKiosks(kiosksList);
+      } catch (error) {
+        console.error('Failed to fetch kiosks:', error);
+        setKiosks([]);
+      } finally {
+        setLoadingKiosks(false);
+      }
+    };
+
+    fetchKiosks();
+  }, [open, organizationId]);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isEditMode = !!campaign;
 
@@ -391,6 +424,19 @@ const CampaignDialog = ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
+  };
+
+  const handleKioskToggle = (kioskId: string) => {
+    setFormData((prev) => {
+      const selected = prev.selectedKiosks || [];
+      const isSelected = selected.includes(kioskId);
+      return {
+        ...prev,
+        selectedKiosks: isSelected
+          ? selected.filter((id: string) => id !== kioskId)
+          : [...selected, kioskId],
+      };
+    });
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -578,8 +624,48 @@ const CampaignDialog = ({
     }
 
     try {
-      await onSave(finalData, !isEditMode, campaign?.id);
-      handleDialogClose();
+      // Submit campaign data
+      let campaignId: string;
+      
+      if (isEditMode && campaign?.id) {
+        // Update existing campaign
+        campaignId = campaign.id;
+        await campaignApi.updateCampaign(campaignId, finalData);
+      } else {
+        // Create new campaign
+        campaignId = await campaignApi.createCampaign(finalData as Omit<Campaign, "id">);
+        setCreatedCampaignId(campaignId);
+      }
+
+      // Save kiosk assignments if selected
+      if ((finalData.selectedKiosks || []).length > 0 && !finalData.isGlobal) {
+        try {
+          await campaignApi.updateCampaign(campaignId, {
+            assignedKiosks: finalData.selectedKiosks.join(","),
+          });
+        } catch (error) {
+          console.error("Error saving kiosk assignments:", error);
+          setSubmissionError("Campaign created but failed to assign kiosks. Please update manually.");
+        }
+      }
+
+      // Show success dialog
+      setShowSuccessDialog(true);
+      await onSave(finalData, !isEditMode, campaignId);
+      
+      // Auto-redirect after 2 seconds
+      setTimeout(() => {
+        handleDialogClose();
+        onOpenChange(false);
+        setShowSuccessDialog(false);
+        // Redirect to campaigns list
+        router.push("/admin/campaigns");
+      }, 2000);
+    } catch (error) {
+      console.error("Error saving campaign:", error);
+      setSubmissionError(error instanceof Error ? error.message : "Failed to save campaign. Please try again.");
+      setIsSubmitting(false);
+      return;
     } finally {
       setIsSubmitting(false);
     }
@@ -616,9 +702,9 @@ const CampaignDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[900px] max-h-[95vh] flex flex-col p-0">
+      <DialogContent className="sm:max-w-[900px] h-[95vh] flex flex-col p-0">
         {/* Header */}
-        <div className="px-6 py-5 border-b border-gray-200 bg-white">
+        <div className="px-6 py-5 border-b border-gray-200 bg-white flex-shrink-0">
           <DialogTitle className="text-2xl font-bold text-gray-900">
             {dialogTitle}
           </DialogTitle>
@@ -629,78 +715,38 @@ const CampaignDialog = ({
 
         {/* Main Content - Grid Layout */}
         <div className="flex flex-1 overflow-hidden">
-          {/* Left Sidebar - Navigation */}
-          <div className="w-56 border-r border-gray-200 bg-gradient-to-b from-white to-gray-50 overflow-y-auto shadow-sm">
-            <div className="p-5 space-y-3">
-              <div className="mb-6">
-                <h3 className="text-xs font-bold text-gray-700 uppercase tracking-widest">Configuration</h3>
-                <div className="h-1 w-12 rounded mt-2" style={{backgroundColor: '#03AC13'}}></div>
-              </div>
-              
-              <button
-                onClick={() => setActiveTab("basic")}
-                style={{
-                  backgroundColor: activeTab === "basic" ? '#03AC13' : 'transparent',
-                  color: activeTab === "basic" ? 'white' : '#374151'
-                }}
-                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                  activeTab === "basic"
-                    ? "shadow-md hover:shadow-lg"
-                    : "hover:bg-gray-200 hover:text-gray-900"
-                }`}
-              >
-                Basic Info
-              </button>
-              
-              <button
-                onClick={() => setActiveTab("media-gallery")}
-                style={{
-                  backgroundColor: activeTab === "media-gallery" ? '#03AC13' : 'transparent',
-                  color: activeTab === "media-gallery" ? 'white' : '#374151'
-                }}
-                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                  activeTab === "media-gallery"
-                    ? "shadow-md hover:shadow-lg"
-                    : "hover:bg-gray-200 hover:text-gray-900"
-                }`}
-              >
-                Media & Gallery
-              </button>
-              
-              <button
-                onClick={() => setActiveTab("funding-details")}
-                style={{
-                  backgroundColor: activeTab === "funding-details" ? '#03AC13' : 'transparent',
-                  color: activeTab === "funding-details" ? 'white' : '#374151'
-                }}
-                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                  activeTab === "funding-details"
-                    ? "shadow-md hover:shadow-lg"
-                    : "hover:bg-gray-200 hover:text-gray-900"
-                }`}
-              >
-                Funding Details
-              </button>
-              
-              <button
-                onClick={() => setActiveTab("kiosk-distribution")}
-                style={{
-                  backgroundColor: activeTab === "kiosk-distribution" ? '#03AC13' : 'transparent',
-                  color: activeTab === "kiosk-distribution" ? 'white' : '#374151'
-                }}
-                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                  activeTab === "kiosk-distribution"
-                    ? "shadow-md hover:shadow-lg"
-                    : "hover:bg-gray-200 hover:text-gray-900"
-                }`}
-              >
-                Kiosk Distribution
-              </button>
-            </div>
-          </div>
+          {/* Left Sidebar - Navigation using Reusable Component */}
+          <TabNavigationSidebar 
+            tabs={getCampaignTabs()}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          />
 
           {/* Right Content - Form */}
-          <div ref={contentRef} className="flex-1 overflow-y-scroll bg-gray-50" style={{ scrollbarGutter: 'stable' }}>
+          <div 
+            ref={contentRef} 
+            className="flex-1 overflow-y-scroll bg-gray-50" 
+            style={{ 
+              scrollbarGutter: 'stable',
+              scrollbarWidth: 'thin',
+              scrollbarColor: '#03AC13 #f3f4f6'
+            }}
+          >
+            <style>{`
+              div::-webkit-scrollbar {
+                width: 8px;
+              }
+              div::-webkit-scrollbar-track {
+                background: #f3f4f6;
+              }
+              div::-webkit-scrollbar-thumb {
+                background: #03AC13;
+                border-radius: 4px;
+              }
+              div::-webkit-scrollbar-thumb:hover {
+                background: #02892f;
+              }
+            `}</style>
             <form onSubmit={(e) => { e.preventDefault(); handleSaveChanges(); }} className="p-8 space-y-8">
               {/* Basic Info Tab */}
               {activeTab === "basic" && (
@@ -909,15 +955,18 @@ const CampaignDialog = ({
                         <Label htmlFor="goal" className="block text-sm font-semibold text-gray-900 mb-3">
                           Fundraising Target ($) <span className="text-red-500">*</span>
                         </Label>
-                        <Input
-                          id="goal"
-                          name="goal"
-                          type="number"
-                          value={formData.goal}
-                          onChange={handleChange}
-                          placeholder="1000"
-                          className="w-full h-11 px-4 border border-gray-300 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-200 focus:outline-none transition-all text-gray-900"
-                        />
+                        <div className="flex items-center">
+                          <span className="text-gray-600 font-medium mr-2">$</span>
+                          <Input
+                            id="goal"
+                            name="goal"
+                            type="number"
+                            value={formData.goal}
+                            onChange={handleChange}
+                            placeholder="1000"
+                            className="w-full h-11 px-4 border border-gray-300 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-200 focus:outline-none transition-all text-gray-900"
+                          />
+                        </div>
                         <p className="text-xs text-gray-500 mt-2">Your campaign's fundraising goal</p>
                       </div>
 
@@ -988,6 +1037,7 @@ const CampaignDialog = ({
                 <div data-section="kiosk-distribution" className="space-y-6">
                   <h2 className="text-2xl font-bold text-gray-900">Kiosk Distribution</h2>
 
+                  {/* Global Broadcast Option */}
                   <label className="flex items-center p-4 rounded-lg cursor-pointer transition"
                     style={{border: '2px solid #03AC13', backgroundColor: 'rgba(3, 172, 19, 0.05)'}}
                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(3, 172, 19, 0.1)'}
@@ -1010,6 +1060,76 @@ const CampaignDialog = ({
                       </svg>
                     )}
                   </label>
+
+                  {/* Individual Kiosk Selection */}
+                  {!formData.isGlobal && (
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Select Kiosks</h3>
+                      
+                      {loadingKiosks ? (
+                        <div className="flex items-center justify-center py-8">
+                          <Skeleton className="h-12 w-full" />
+                        </div>
+                      ) : kiosks.length === 0 ? (
+                        <div className="p-6 text-center border border-gray-200 rounded-lg bg-gray-50">
+                          <p className="text-gray-500">No kiosks available</p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {kiosks.map((kiosk) => (
+                            <label
+                              key={kiosk.id}
+                              className="flex items-center p-4 rounded-lg border border-gray-200 cursor-pointer hover:border-gray-300 hover:bg-gray-50 transition"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={(formData.selectedKiosks || []).includes(kiosk.id)}
+                                onChange={() => handleKioskToggle(kiosk.id)}
+                                className="w-5 h-5 rounded"
+                                style={{accentColor: '#03AC13'}}
+                              />
+                              <div className="ml-3 flex-1">
+                                <p className="font-semibold text-gray-900">{kiosk.name}</p>
+                                <p className="text-sm text-gray-500">{kiosk.location}</p>
+                                <span className={`text-xs px-2 py-1 rounded-full mt-2 inline-block ${
+                                  kiosk.status === 'online' ? 'bg-green-100 text-green-800' :
+                                  kiosk.status === 'offline' ? 'bg-gray-100 text-gray-800' :
+                                  'bg-yellow-100 text-yellow-800'
+                                }`}>
+                                  {kiosk.status}
+                                </span>
+                              </div>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Selected Kiosks Summary - Always reserve space */}
+                      <div className={`mt-6 p-4 rounded-lg transition-all ${
+                        (formData.selectedKiosks || []).length > 0
+                          ? 'bg-blue-50 border border-blue-200'
+                          : 'bg-transparent border-0'
+                      }`}>
+                        {(formData.selectedKiosks || []).length > 0 && (
+                          <>
+                            <p className="text-sm font-semibold text-blue-900 mb-3">
+                              Selected Kiosks ({(formData.selectedKiosks || []).length})
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {(formData.selectedKiosks || []).map((kioskId: string) => {
+                                const kiosk = kiosks.find(k => k.id === kioskId);
+                                return kiosk ? (
+                                  <Badge key={kioskId} className="bg-blue-600 text-white">
+                                    {kiosk.name}
+                                  </Badge>
+                                ) : null;
+                              })}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </form>
@@ -1017,18 +1137,26 @@ const CampaignDialog = ({
         </div>
 
         {/* Footer */}
-        <div className="flex justify-between items-center px-6 py-4 border-t border-gray-200 bg-white">
-          <Button 
-            variant="outline" 
-            type="button"
-            className="text-gray-700 flex items-center gap-2 hover:bg-gray-100 border-gray-300 font-medium"
-            onClick={() => {
-              // Save draft functionality
-            }}
-          >
-            <Save className="w-4 h-4" />
-            Save Draft
-          </Button>
+        <div className="flex justify-between items-center px-6 py-4 border-t border-gray-200 bg-white flex-shrink-0">
+          {submissionError && (
+            <div className="text-sm text-red-600 font-medium flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" />
+              {submissionError}
+            </div>
+          )}
+          {!submissionError && (
+            <Button 
+              variant="outline" 
+              type="button"
+              className="text-gray-700 flex items-center gap-2 hover:bg-gray-100 border-gray-300 font-medium"
+              onClick={() => {
+                // Save draft functionality
+              }}
+            >
+              <Save className="w-4 h-4" />
+              Save Draft
+            </Button>
+          )}
 
           <div className="flex gap-3">
             <Button
@@ -1052,6 +1180,29 @@ const CampaignDialog = ({
           </div>
         </div>
       </DialogContent>
+      
+      {/* Success Dialog */}
+      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <DialogContent className="sm:max-w-[400px] p-0 border-0 shadow-2xl">
+          <div className="p-8 text-center space-y-4">
+            <div className="flex justify-center">
+              <svg className="w-16 h-16 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900">Success!</h2>
+            <p className="text-gray-600">
+              {isEditMode ? "Campaign updated successfully." : "Campaign created successfully."}
+            </p>
+            {createdCampaignId && !isEditMode && (
+              <p className="text-sm text-gray-500">
+                Campaign ID: {createdCampaignId}
+              </p>
+            )}
+            <p className="text-sm text-gray-500">Redirecting...</p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };
