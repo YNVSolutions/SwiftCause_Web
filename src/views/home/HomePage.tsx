@@ -67,6 +67,28 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
   const [showDemoModal, setShowDemoModal] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   const [activeFlowStep, setActiveFlowStep] = useState(0);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [cardTilt, setCardTilt] = useState({ rotateX: 0, rotateY: 0 });
+  const [globalDonations, setGlobalDonations] = useState<Array<{
+    id: number;
+    lat: number;
+    lng: number;
+    amount: number;
+  }>>([]);
+  const [floatingParticles, setFloatingParticles] = useState<Array<{
+    id: number;
+    left: number;
+    size: number;
+    duration: number;
+    delay: number;
+  }>>([]);
+  const [mapDonations, setMapDonations] = useState<Array<{
+    id: number;
+    x: number;
+    y: number;
+    amount: number;
+    country: string;
+  }>>([]);
   
   // Mock live statistics for demonstration
   const [stats, setStats] = useState({
@@ -338,6 +360,144 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
     return () => clearInterval(interval);
   }, [activeFlowStep]);
 
+  // Mouse move handler for 3D tilt effect
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const card = e.currentTarget;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    
+    const rotateX = ((y - centerY) / centerY) * -10; // Max 10deg tilt
+    const rotateY = ((x - centerX) / centerX) * 10;
+    
+    setCardTilt({ rotateX, rotateY });
+    setMousePosition({ x: (x / rect.width) * 100, y: (y / rect.height) * 100 });
+  };
+
+  const handleMouseLeave = () => {
+    setCardTilt({ rotateX: 0, rotateY: 0 });
+  };
+
+  // Generate global donation pulses
+  useEffect(() => {
+    const locations = [
+      { lat: 51.5, lng: -0.1, city: 'London' },
+      { lat: 40.7, lng: -74, city: 'New York' },
+      { lat: 35.7, lng: 139.7, city: 'Tokyo' },
+      { lat: -33.9, lng: 151.2, city: 'Sydney' },
+      { lat: 48.9, lng: 2.3, city: 'Paris' },
+      { lat: 55.8, lng: 37.6, city: 'Moscow' },
+      { lat: 19.4, lng: -99.1, city: 'Mexico City' },
+      { lat: -23.5, lng: -46.6, city: 'São Paulo' }
+    ];
+    
+    const generatePulse = () => {
+      const location = locations[Math.floor(Math.random() * locations.length)];
+      const newPulse = {
+        id: Date.now() + Math.random(),
+        lat: location.lat,
+        lng: location.lng,
+        amount: [10, 25, 50, 100][Math.floor(Math.random() * 4)]
+      };
+      
+      setGlobalDonations(prev => [...prev, newPulse]);
+      
+      setTimeout(() => {
+        setGlobalDonations(prev => prev.filter(p => p.id !== newPulse.id));
+      }, 3000);
+    };
+    
+    // Initial pulses
+    for (let i = 0; i < 3; i++) {
+      setTimeout(() => generatePulse(), i * 800);
+    }
+    
+    const interval = setInterval(() => {
+      generatePulse();
+    }, 2000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  // Generate floating heart particles
+  useEffect(() => {
+    const generateParticle = () => {
+      const newParticle = {
+        id: Date.now() + Math.random(),
+        left: Math.random() * 100,
+        size: Math.random() * 20 + 15, // 15-35px
+        duration: Math.random() * 5 + 8, // 8-13 seconds
+        delay: 0
+      };
+      
+      setFloatingParticles(prev => [...prev, newParticle]);
+      
+      setTimeout(() => {
+        setFloatingParticles(prev => prev.filter(p => p.id !== newParticle.id));
+      }, newParticle.duration * 1000);
+    };
+    
+    // Generate initial particles
+    for (let i = 0; i < 8; i++) {
+      setTimeout(() => generateParticle(), i * 600);
+    }
+    
+    // Continue generating particles
+    const interval = setInterval(() => {
+      generateParticle();
+    }, 1500);
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  // Generate donation cards from map locations
+  useEffect(() => {
+    const mapLocations = [
+      { x: 15, y: 35, country: 'USA', amounts: [10, 25, 50] },
+      { x: 48, y: 30, country: 'UK', amounts: [15, 30, 75] },
+      { x: 52, y: 28, country: 'France', amounts: [20, 40, 100] },
+      { x: 58, y: 25, country: 'Russia', amounts: [10, 50, 150] },
+      { x: 75, y: 32, country: 'Japan', amounts: [25, 60, 200] },
+      { x: 80, y: 55, country: 'Australia', amounts: [15, 35, 80] },
+      { x: 20, y: 50, country: 'Brazil', amounts: [10, 20, 45] },
+      { x: 50, y: 45, country: 'South Africa', amounts: [15, 30, 60] }
+    ];
+    
+    const generateMapDonation = () => {
+      const location = mapLocations[Math.floor(Math.random() * mapLocations.length)];
+      const amount = location.amounts[Math.floor(Math.random() * location.amounts.length)];
+      
+      const newDonation = {
+        id: Date.now() + Math.random(),
+        x: location.x,
+        y: location.y,
+        amount: amount,
+        country: location.country
+      };
+      
+      setMapDonations(prev => [...prev, newDonation]);
+      
+      setTimeout(() => {
+        setMapDonations(prev => prev.filter(d => d.id !== newDonation.id));
+      }, 6000);
+    };
+    
+    // Initial donations
+    for (let i = 0; i < 3; i++) {
+      setTimeout(() => generateMapDonation(), i * 1000);
+    }
+    
+    // Continue generating
+    const interval = setInterval(() => {
+      generateMapDonation();
+    }, 2500);
+    
+    return () => clearInterval(interval);
+  }, []);
+
   const useCases = [
     {
       title: 'Non-Profit Organizations',
@@ -443,22 +603,269 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
       </header>
 
 
-      <section className="relative overflow-hidden bg-gradient-to-br from-green-50 via-white to-emerald-50">
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8">
-              <div className="inline-flex items-center px-4 py-2 rounded-full bg-green-100 text-green-800 text-sm font-medium">
-                <TrendingUp className="w-4 h-4 mr-2" />
-                Trusted by organizations worldwide
+      <section className="relative overflow-hidden bg-gradient-to-br from-green-50 via-white to-emerald-50 min-h-screen flex items-center">
+        {/* Animated Background Patterns with Parallax */}
+        <div 
+          className="absolute inset-0 overflow-hidden transition-transform duration-300 ease-out"
+          style={{
+            transform: `translate(${mousePosition.x * 0.02}px, ${mousePosition.y * 0.02}px)`
+          }}
+        >
+          <div className="absolute top-20 left-10 w-72 h-72 bg-green-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
+          <div className="absolute top-40 right-10 w-96 h-96 bg-emerald-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{ animationDelay: '2s' }}></div>
+          <div className="absolute -bottom-32 left-1/2 w-96 h-96 bg-green-300 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse" style={{ animationDelay: '4s' }}></div>
+        </div>
+
+        {/* Network World Map Visualization */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-20">
+          <svg className="w-full h-full" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice">
+            {/* World map network - continents represented by connected nodes */}
+            
+            {/* North America - More detailed */}
+            <g>
+              {/* West Coast */}
+              <circle cx="150" cy="180" r="3" fill="#16a34a" />
+              <circle cx="160" cy="200" r="3" fill="#16a34a" />
+              <circle cx="155" cy="220" r="3" fill="#16a34a" />
+              {/* Central */}
+              <circle cx="180" cy="190" r="4" fill="#16a34a" />
+              <circle cx="200" cy="200" r="4" fill="#16a34a" />
+              <circle cx="220" cy="195" r="3" fill="#16a34a" />
+              <circle cx="190" cy="220" r="3" fill="#16a34a" />
+              <circle cx="210" cy="230" r="3" fill="#16a34a" />
+              {/* East Coast */}
+              <circle cx="240" cy="200" r="3" fill="#16a34a" />
+              <circle cx="250" cy="220" r="3" fill="#16a34a" />
+              <circle cx="245" cy="240" r="3" fill="#16a34a" />
+              {/* Canada */}
+              <circle cx="170" cy="160" r="3" fill="#16a34a" />
+              <circle cx="200" cy="170" r="3" fill="#16a34a" />
+              <circle cx="230" cy="165" r="3" fill="#16a34a" />
+              {/* Mexico */}
+              <circle cx="180" cy="260" r="3" fill="#16a34a" />
+              <circle cx="200" cy="270" r="3" fill="#16a34a" />
+              
+              {/* Connections */}
+              <line x1="150" y1="180" x2="160" y2="200" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="160" y1="200" x2="155" y2="220" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="180" y1="190" x2="200" y2="200" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="200" y1="200" x2="220" y2="195" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="200" y1="200" x2="190" y2="220" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="190" y1="220" x2="210" y2="230" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="220" y1="195" x2="240" y2="200" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="240" y1="200" x2="250" y2="220" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="250" y1="220" x2="245" y2="240" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="170" y1="160" x2="200" y2="170" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="200" y1="170" x2="230" y2="165" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="200" y1="170" x2="180" y2="190" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="210" y1="230" x2="180" y2="260" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="180" y1="260" x2="200" y2="270" stroke="#16a34a" strokeWidth="1.5" />
+            </g>
+            
+            {/* South America - More detailed */}
+            <g>
+              <circle cx="240" cy="320" r="3" fill="#16a34a" />
+              <circle cx="250" cy="340" r="3" fill="#16a34a" />
+              <circle cx="260" cy="360" r="4" fill="#16a34a" />
+              <circle cx="270" cy="380" r="3" fill="#16a34a" />
+              <circle cx="280" cy="400" r="3" fill="#16a34a" />
+              <circle cx="285" cy="420" r="3" fill="#16a34a" />
+              <circle cx="280" cy="440" r="3" fill="#16a34a" />
+              <circle cx="270" cy="460" r="3" fill="#16a34a" />
+              <circle cx="255" cy="380" r="3" fill="#16a34a" />
+              <circle cx="245" cy="400" r="3" fill="#16a34a" />
+              
+              <line x1="240" y1="320" x2="250" y2="340" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="250" y1="340" x2="260" y2="360" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="260" y1="360" x2="270" y2="380" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="270" y1="380" x2="280" y2="400" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="280" y1="400" x2="285" y2="420" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="285" y1="420" x2="280" y2="440" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="280" y1="440" x2="270" y2="460" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="270" y1="380" x2="255" y2="380" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="255" y1="380" x2="245" y2="400" stroke="#16a34a" strokeWidth="1.5" />
+            </g>
+            
+            {/* Europe - More detailed */}
+            <g>
+              <circle cx="560" cy="170" r="3" fill="#16a34a" />
+              <circle cx="580" cy="165" r="3" fill="#16a34a" />
+              <circle cx="600" cy="175" r="4" fill="#16a34a" />
+              <circle cx="620" cy="170" r="3" fill="#16a34a" />
+              <circle cx="640" cy="180" r="3" fill="#16a34a" />
+              <circle cx="590" cy="190" r="3" fill="#16a34a" />
+              <circle cx="610" cy="200" r="3" fill="#16a34a" />
+              <circle cx="630" cy="205" r="3" fill="#16a34a" />
+              <circle cx="570" cy="210" r="3" fill="#16a34a" />
+              <circle cx="590" cy="220" r="3" fill="#16a34a" />
+              
+              <line x1="560" y1="170" x2="580" y2="165" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="580" y1="165" x2="600" y2="175" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="600" y1="175" x2="620" y2="170" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="620" y1="170" x2="640" y2="180" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="600" y1="175" x2="590" y2="190" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="590" y1="190" x2="610" y2="200" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="610" y1="200" x2="630" y2="205" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="590" y1="190" x2="570" y2="210" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="570" y1="210" x2="590" y2="220" stroke="#16a34a" strokeWidth="1.5" />
+            </g>
+            
+            {/* Africa - More detailed */}
+            <g>
+              <circle cx="590" cy="280" r="3" fill="#16a34a" />
+              <circle cx="610" cy="290" r="3" fill="#16a34a" />
+              <circle cx="620" cy="310" r="4" fill="#16a34a" />
+              <circle cx="630" cy="330" r="3" fill="#16a34a" />
+              <circle cx="625" cy="350" r="3" fill="#16a34a" />
+              <circle cx="620" cy="370" r="3" fill="#16a34a" />
+              <circle cx="610" cy="390" r="3" fill="#16a34a" />
+              <circle cx="600" cy="410" r="3" fill="#16a34a" />
+              <circle cx="605" cy="320" r="3" fill="#16a34a" />
+              <circle cx="595" cy="340" r="3" fill="#16a34a" />
+              <circle cx="590" cy="360" r="3" fill="#16a34a" />
+              
+              <line x1="590" y1="280" x2="610" y2="290" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="610" y1="290" x2="620" y2="310" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="620" y1="310" x2="630" y2="330" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="630" y1="330" x2="625" y2="350" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="625" y1="350" x2="620" y2="370" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="620" y1="370" x2="610" y2="390" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="610" y1="390" x2="600" y2="410" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="620" y1="310" x2="605" y2="320" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="605" y1="320" x2="595" y2="340" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="595" y1="340" x2="590" y2="360" stroke="#16a34a" strokeWidth="1.5" />
+            </g>
+            
+            {/* Asia - More detailed */}
+            <g>
+              {/* Middle East */}
+              <circle cx="660" cy="240" r="3" fill="#16a34a" />
+              <circle cx="680" cy="250" r="3" fill="#16a34a" />
+              {/* Central Asia */}
+              <circle cx="700" cy="200" r="3" fill="#16a34a" />
+              <circle cx="720" cy="190" r="3" fill="#16a34a" />
+              <circle cx="740" cy="195" r="4" fill="#16a34a" />
+              <circle cx="760" cy="200" r="3" fill="#16a34a" />
+              {/* South Asia */}
+              <circle cx="730" cy="260" r="3" fill="#16a34a" />
+              <circle cx="750" cy="270" r="3" fill="#16a34a" />
+              <circle cx="760" cy="285" r="3" fill="#16a34a" />
+              {/* East Asia */}
+              <circle cx="780" cy="210" r="3" fill="#16a34a" />
+              <circle cx="800" cy="220" r="4" fill="#16a34a" />
+              <circle cx="820" cy="230" r="3" fill="#16a34a" />
+              <circle cx="840" cy="240" r="3" fill="#16a34a" />
+              {/* Southeast Asia */}
+              <circle cx="810" cy="280" r="3" fill="#16a34a" />
+              <circle cx="830" cy="290" r="3" fill="#16a34a" />
+              <circle cx="850" cy="300" r="3" fill="#16a34a" />
+              
+              <line x1="660" y1="240" x2="680" y2="250" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="680" y1="250" x2="700" y2="200" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="700" y1="200" x2="720" y2="190" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="720" y1="190" x2="740" y2="195" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="740" y1="195" x2="760" y2="200" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="680" y1="250" x2="730" y2="260" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="730" y1="260" x2="750" y2="270" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="750" y1="270" x2="760" y2="285" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="760" y1="200" x2="780" y2="210" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="780" y1="210" x2="800" y2="220" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="800" y1="220" x2="820" y2="230" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="820" y1="230" x2="840" y2="240" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="760" y1="285" x2="810" y2="280" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="810" y1="280" x2="830" y2="290" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="830" y1="290" x2="850" y2="300" stroke="#16a34a" strokeWidth="1.5" />
+            </g>
+            
+            {/* Australia - More detailed */}
+            <g>
+              <circle cx="940" cy="380" r="3" fill="#16a34a" />
+              <circle cx="960" cy="375" r="3" fill="#16a34a" />
+              <circle cx="980" cy="380" r="4" fill="#16a34a" />
+              <circle cx="1000" cy="390" r="3" fill="#16a34a" />
+              <circle cx="990" cy="410" r="3" fill="#16a34a" />
+              <circle cx="970" cy="420" r="3" fill="#16a34a" />
+              <circle cx="950" cy="415" r="3" fill="#16a34a" />
+              <circle cx="935" cy="400" r="3" fill="#16a34a" />
+              
+              <line x1="940" y1="380" x2="960" y2="375" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="960" y1="375" x2="980" y2="380" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="980" y1="380" x2="1000" y2="390" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="1000" y1="390" x2="990" y2="410" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="990" y1="410" x2="970" y2="420" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="970" y1="420" x2="950" y2="415" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="950" y1="415" x2="935" y2="400" stroke="#16a34a" strokeWidth="1.5" />
+              <line x1="935" y1="400" x2="940" y2="380" stroke="#16a34a" strokeWidth="1.5" />
+            </g>
+            
+            {/* Inter-continental connections - More visible */}
+            <line x1="240" y1="200" x2="560" y2="170" stroke="#16a34a" strokeWidth="1" opacity="0.4" strokeDasharray="5,5" />
+            <line x1="640" y1="180" x2="700" y2="200" stroke="#16a34a" strokeWidth="1" opacity="0.4" strokeDasharray="5,5" />
+            <line x1="840" y1="240" x2="940" y2="380" stroke="#16a34a" strokeWidth="1" opacity="0.4" strokeDasharray="5,5" />
+            <line x1="590" y1="220" x2="590" y2="280" stroke="#16a34a" strokeWidth="1" opacity="0.4" strokeDasharray="5,5" />
+            <line x1="200" y1="270" x2="240" y2="320" stroke="#16a34a" strokeWidth="1" opacity="0.4" strokeDasharray="5,5" />
+          </svg>
+        </div>
+
+        {/* Donation Cards Floating from Map */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {mapDonations.map((donation) => (
+            <div
+              key={donation.id}
+              className="absolute animate-float-from-map"
+              style={{
+                left: `${donation.x}%`,
+                bottom: `${donation.y}%`,
+              }}
+            >
+              <div className="bg-white/95 backdrop-blur-sm border-2 border-green-400 rounded-lg px-3 py-2 shadow-xl flex items-center space-x-2">
+                <div className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Heart className="w-3 h-3 text-white fill-white" />
+                </div>
+                <div>
+                  <div className="text-sm font-bold text-green-700">£{donation.amount}</div>
+                  <div className="text-xs text-gray-600">{donation.country}</div>
+                </div>
               </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Floating Heart Particles */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {floatingParticles.map((particle) => (
+            <div
+              key={particle.id}
+              className="absolute bottom-0 animate-float-particle"
+              style={{
+                left: `${particle.left}%`,
+                animationDuration: `${particle.duration}s`,
+                animationDelay: `${particle.delay}s`
+              }}
+            >
+              <Heart 
+                className="text-green-400 fill-green-400 opacity-60"
+                style={{ 
+                  width: `${particle.size}px`, 
+                  height: `${particle.size}px`,
+                  filter: 'drop-shadow(0 0 8px rgba(16, 185, 129, 0.3))'
+                }}
+              />
+            </div>
+          ))}
+        </div>
+
+        <div className="relative w-full max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-12 py-16 sm:py-24 lg:py-32">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 xl:gap-32 items-center">
+            <div className="space-y-8">
               
               <div className="space-y-6">
-                <h1 className="text-4xl lg:text-6xl font-bold text-gray-900 leading-tight">
+                <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-gray-900 leading-tight">
                   Transform Your
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-600"> Fundraising</span>
+                  <span className="block text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-600 mt-2"> Fundraising</span>
                 </h1>
                 
-                <p className="text-xl text-gray-600 leading-relaxed">
+                <p className="text-xl sm:text-2xl text-gray-600 leading-relaxed">
                   Empower your organization with intelligent donation kiosks, 
                   comprehensive campaign management, and real-time analytics. 
                   Make giving easy, secure, and impactful.
@@ -469,49 +876,51 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
                 <Button 
                   onClick={onSignup}
                   size="lg" 
-                  className="h-14 px-8 bg-green-600 hover:bg-green-700 text-white shadow-lg"
+                  className="h-16 px-10 text-lg bg-green-600 hover:bg-green-700 text-white shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
                 >
                   Start Free Trial
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  <ArrowRight className="ml-2 h-6 w-6" />
                 </Button>
                 
                 <Button 
                   variant="outline" 
                   size="lg" 
-                  className="h-14 px-8 border-green-300 text-green-700 hover:bg-green-50"
+                  className="h-16 px-10 text-lg border-2 border-green-300 text-green-700 hover:bg-green-50 hover:border-green-400 shadow-lg transition-all duration-200"
                   onClick={() => setShowDemoModal(true)}
                 >
-                  <PlayCircle className="mr-2 h-5 w-5" />
+                  <PlayCircle className="mr-2 h-6 w-6" />
                   Watch Demo
                 </Button>
               </div>
-
-
-              <div className="flex items-center space-x-6 pt-8 border-t">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-900">{formatCurrency(stats.totalRaised)}</div>
-                  <div className="text-sm text-gray-600">Total Raised</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-900">{formatNumber(stats.totalDonors)}</div>
-                  <div className="text-sm text-gray-600">Happy Donors</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-900">{stats.organizationsServed}</div>
-                  <div className="text-sm text-gray-600">Organizations</div>
-                </div>
-              </div>
             </div>
 
-            <div className="relative h-[600px] flex items-center justify-center">
-              {/* Interactive Donation Flow Carousel */}
-              <div className="relative w-full max-w-md">
+            <div 
+              className="relative h-[500px] sm:h-[600px] flex items-center justify-center perspective-1000"
+              onMouseMove={handleMouseMove}
+              onMouseLeave={handleMouseLeave}
+            >
+              {/* Interactive Donation Flow Carousel with 3D Tilt */}
+              <div 
+                className="relative w-full max-w-md mx-auto transition-transform duration-300 ease-out"
+                style={{
+                  transform: `perspective(1000px) rotateX(${cardTilt.rotateX}deg) rotateY(${cardTilt.rotateY}deg)`,
+                  transformStyle: 'preserve-3d'
+                }}
+              >
                 
                 {/* Main Card Display */}
-                <div className="relative bg-white rounded-2xl shadow-2xl p-8 border-2 border-green-100 min-h-[480px]">
+                <div className="relative bg-white rounded-2xl shadow-2xl p-6 sm:p-8 border-2 border-green-100 min-h-[450px] sm:min-h-[480px]">
+                  
+                  {/* Spotlight effect following mouse */}
+                  <div 
+                    className="absolute inset-0 rounded-2xl opacity-0 hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                    style={{
+                      background: `radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, rgba(16, 185, 129, 0.1) 0%, transparent 50%)`
+                    }}
+                  />
                   
                   {/* Step Indicator */}
-                  <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center justify-between mb-6 relative z-10">
                     <div className="flex items-center space-x-2">
                       <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
                         {donationFlowSteps[activeFlowStep].step}
@@ -528,12 +937,12 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
                   </div>
 
                   {/* Card Content with Transition */}
-                  <div className="transition-all duration-500 ease-in-out">
+                  <div className="transition-all duration-500 ease-in-out relative z-10">
                     {donationFlowSteps[activeFlowStep].content}
                   </div>
 
                   {/* Navigation Arrows */}
-                  <div className="absolute top-1/2 -left-4 -translate-y-1/2">
+                  <div className="absolute top-1/2 -left-4 -translate-y-1/2 hidden sm:block z-20">
                     <button
                       onClick={prevStep}
                       className="w-10 h-10 bg-white rounded-full shadow-lg border-2 border-green-200 flex items-center justify-center hover:bg-green-50 hover:border-green-400 transition-all group"
@@ -542,7 +951,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
                       <ChevronRight className="w-5 h-5 text-green-600 rotate-180 group-hover:scale-110 transition-transform" />
                     </button>
                   </div>
-                  <div className="absolute top-1/2 -right-4 -translate-y-1/2">
+                  <div className="absolute top-1/2 -right-4 -translate-y-1/2 hidden sm:block z-20">
                     <button
                       onClick={nextStep}
                       className="w-10 h-10 bg-white rounded-full shadow-lg border-2 border-green-200 flex items-center justify-center hover:bg-green-50 hover:border-green-400 transition-all group"
@@ -577,9 +986,20 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
                   />
                 </div>
 
-                {/* Floating decorative elements */}
-                <div className="absolute -top-6 -right-6 w-24 h-24 bg-green-100 rounded-full opacity-40 blur-2xl animate-pulse" />
-                <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-emerald-100 rounded-full opacity-30 blur-2xl animate-pulse" style={{ animationDelay: '1s' }} />
+                {/* Floating decorative elements with parallax */}
+                <div 
+                  className="absolute -top-6 -right-6 w-24 h-24 bg-green-100 rounded-full opacity-40 blur-2xl animate-pulse transition-transform duration-300"
+                  style={{
+                    transform: `translate(${mousePosition.x * 0.05}px, ${mousePosition.y * 0.05}px)`
+                  }}
+                />
+                <div 
+                  className="absolute -bottom-6 -left-6 w-32 h-32 bg-emerald-100 rounded-full opacity-30 blur-2xl animate-pulse transition-transform duration-300" 
+                  style={{ 
+                    animationDelay: '1s',
+                    transform: `translate(${mousePosition.x * -0.03}px, ${mousePosition.y * -0.03}px)`
+                  }}
+                />
               </div>
             </div>
           </div>
@@ -587,35 +1007,44 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
       </section>
 
   
-      <section id="solutions" className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="solutions" className="py-20 sm:py-24 lg:py-32 bg-white relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-green-50 rounded-full filter blur-3xl opacity-30"></div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-green-100 text-green-800 text-sm font-medium mb-4">
+              <Building className="w-4 h-4 mr-2" />
+              Trusted Solutions
+            </div>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
               Built for Every Organization
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto">
               Flexible solutions that adapt to your unique fundraising needs
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
             {useCases.map((useCase, index) => (
-              <Card key={index} className="hover:shadow-lg transition-shadow group border-gray-200">
-                <CardContent className="p-8">
+              <Card key={index} className="group hover:shadow-2xl transition-all duration-300 border-gray-200 hover:border-green-300 cursor-pointer transform hover:-translate-y-2">
+                <CardContent className="p-6 sm:p-8">
                   <div className="flex items-start space-x-4 mb-6">
-                    <div className="flex-shrink-0 p-3 rounded-xl bg-green-50 group-hover:bg-green-100 transition-colors">
+                    <div className="flex-shrink-0 p-3 sm:p-4 rounded-xl bg-green-50 group-hover:bg-green-100 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6">
                       {useCase.icon}
                     </div>
-                    <div>
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2">{useCase.title}</h3>
-                      <p className="text-gray-600">{useCase.description}</p>
+                    <div className="flex-1">
+                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 group-hover:text-green-700 transition-colors">
+                        {useCase.title}
+                      </h3>
+                      <p className="text-sm sm:text-base text-gray-600">{useCase.description}</p>
                     </div>
                   </div>
-                  <div className="space-y-3">
+                  <div className="space-y-3 pl-16 sm:pl-20">
                     {useCase.benefits.map((benefit, idx) => (
-                      <div key={idx} className="flex items-center text-gray-700">
-                        <CheckCircle className="w-4 h-4 text-green-600 mr-3" />
-                        {benefit}
+                      <div key={idx} className="flex items-center text-gray-700 group/item hover:text-green-700 transition-colors">
+                        <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mr-3 flex-shrink-0 group-hover/item:scale-125 transition-transform" />
+                        <span className="text-sm sm:text-base">{benefit}</span>
                       </div>
                     ))}
                   </div>
@@ -627,64 +1056,56 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
       </section>
 
 
-      <section id="how-it-works" className="py-20 bg-green-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="how-it-works" className="py-20 sm:py-24 lg:py-32 bg-green-50 relative overflow-hidden">
+        {/* Decorative elements */}
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-emerald-100 rounded-full filter blur-3xl opacity-20"></div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-white text-green-800 text-sm font-medium mb-4 shadow-sm">
+              <Zap className="w-4 h-4 mr-2 text-green-600" />
+              Simple Process
+            </div>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
               How It Works
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto">
               Getting started with Swift Cause is fast, easy, and intuitive.
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {howItWorks.map((step, index) => (
-              <Card key={index} className="text-center p-6 bg-white border-green-100">
-                <CardContent className="space-y-4">
-                  <div className="p-4 rounded-full inline-block bg-green-100 text-green-600">
-                    {step.icon}
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900">
-                    {step.title}
-                  </h3>
-                  <p className="text-gray-600">
-                    {step.description}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-
-      <section id="faq" className="py-20 bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-              Frequently Asked Questions
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Find answers to the most common questions about our platform and services.
-            </p>
-          </div>
           
-          <div className="space-y-6">
-            {faqs.map((faq, index) => (
-              <div key={index} className="border-b border-gray-200 pb-6">
-                <button
-                  className="flex items-center justify-between w-full text-left focus:outline-none group"
-                  onClick={() => toggleFaq(index)}
-                >
-                  <h3 className="text-lg font-semibold text-gray-900">{faq.question}</h3>
-                  <ChevronRight
-                    className={`w-5 h-5 text-green-600 transform transition-transform duration-300 ${
-                      openFaqIndex === index ? 'rotate-90' : ''
-                    }`}
-                  />
-                </button>
-                {openFaqIndex === index && (
-                  <p className="text-gray-600 mt-2 transition-all duration-300 ease-in-out">{faq.answer}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 relative">
+            {/* Connecting lines for desktop */}
+            <div className="hidden lg:block absolute top-20 left-0 right-0 h-0.5 bg-gradient-to-r from-green-200 via-green-400 to-green-200"></div>
+            
+            {howItWorks.map((step, index) => (
+              <div key={index} className="relative">
+                <Card className="text-center p-6 sm:p-8 bg-white border-green-100 hover:border-green-400 transition-all duration-300 hover:shadow-xl group cursor-pointer transform hover:-translate-y-2">
+                  <CardContent className="space-y-4">
+                    {/* Animated step number */}
+                    <div className="relative inline-block">
+                      <div className="absolute inset-0 bg-green-600 rounded-full animate-ping opacity-20"></div>
+                      <div className="relative p-4 rounded-full inline-block bg-green-100 text-green-600 group-hover:bg-green-600 group-hover:text-white transition-all duration-300 group-hover:scale-110">
+                        {step.icon}
+                      </div>
+                      <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
+                        {index + 1}
+                      </div>
+                    </div>
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900 group-hover:text-green-700 transition-colors">
+                      {step.title}
+                    </h3>
+                    <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+                      {step.description}
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                {/* Arrow for mobile/tablet */}
+                {index < howItWorks.length - 1 && (
+                  <div className="flex justify-center my-4 lg:hidden">
+                    <ArrowDown className="w-6 h-6 text-green-400 animate-bounce" />
+                  </div>
                 )}
               </div>
             ))}
@@ -693,31 +1114,124 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
       </section>
 
 
-      <section className="py-20 bg-gradient-to-r from-green-600 to-emerald-600">
-        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6">
+      <section id="faq" className="py-20 sm:py-24 lg:py-32 bg-white relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute top-0 left-0 w-96 h-96 bg-green-50 rounded-full filter blur-3xl opacity-40"></div>
+        
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-green-100 text-green-800 text-sm font-medium mb-4">
+              <Quote className="w-4 h-4 mr-2" />
+              Got Questions?
+            </div>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
+              Find answers to the most common questions about our platform and services.
+            </p>
+          </div>
+          
+          <div className="space-y-4">
+            {faqs.map((faq, index) => (
+              <div 
+                key={index} 
+                className="bg-white border-2 border-gray-200 rounded-xl overflow-hidden hover:border-green-300 transition-all duration-300 hover:shadow-lg"
+              >
+                <button
+                  className="flex items-center justify-between w-full text-left p-6 focus:outline-none group"
+                  onClick={() => toggleFaq(index)}
+                >
+                  <div className="flex items-center space-x-4 flex-1">
+                    <div className={`p-2 rounded-lg transition-all duration-300 ${
+                      openFaqIndex === index ? 'bg-green-100' : 'bg-gray-100 group-hover:bg-green-50'
+                    }`}>
+                      <CheckCircle className={`w-5 h-5 transition-colors ${
+                        openFaqIndex === index ? 'text-green-600' : 'text-gray-400 group-hover:text-green-500'
+                      }`} />
+                    </div>
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 group-hover:text-green-700 transition-colors">
+                      {faq.question}
+                    </h3>
+                  </div>
+                  <ChevronRight
+                    className={`w-5 h-5 sm:w-6 sm:h-6 text-green-600 transform transition-all duration-300 flex-shrink-0 ml-4 ${
+                      openFaqIndex === index ? 'rotate-90 scale-110' : 'group-hover:scale-110'
+                    }`}
+                  />
+                </button>
+                <div 
+                  className={`overflow-hidden transition-all duration-300 ${
+                    openFaqIndex === index ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+                  }`}
+                >
+                  <p className="px-6 pb-6 text-sm sm:text-base text-gray-600 leading-relaxed pl-20">
+                    {faq.answer}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+
+      <section className="py-20 sm:py-24 lg:py-32 bg-gradient-to-r from-green-600 to-emerald-600 relative overflow-hidden">
+        {/* Animated background elements */}
+        <div className="absolute inset-0">
+          <div className="absolute top-10 left-10 w-64 h-64 bg-white rounded-full opacity-5 animate-pulse"></div>
+          <div className="absolute bottom-10 right-10 w-96 h-96 bg-white rounded-full opacity-5 animate-pulse" style={{ animationDelay: '1s' }}></div>
+        </div>
+        
+        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8 relative">
+          <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm text-white text-sm font-medium mb-6">
+            <Star className="w-4 h-4 mr-2" />
+            Join {stats.organizationsServed}+ Organizations
+          </div>
+          
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
             Ready to Transform Your Fundraising?
           </h2>
-          <p className="text-xl text-green-100 mb-8">
-            Join hundreds of organizations already using Swift Cause to maximize their impact
+          <p className="text-lg sm:text-xl text-green-100 mb-10 max-w-2xl mx-auto">
+            Join hundreds of organizations already using Swift Cause to maximize their impact and streamline donations
           </p>
+          
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               onClick={onSignup}
               size="lg" 
-              className="h-14 px-8 bg-white text-green-700 hover:bg-green-50 shadow-lg font-semibold"
+              className="h-14 sm:h-16 px-8 sm:px-10 text-base sm:text-lg bg-white text-green-700 hover:bg-green-50 shadow-2xl font-semibold transform hover:scale-105 transition-all duration-200"
             >
               Start Your Free Trial
-              <ArrowRight className="ml-2 h-5 w-5" />
+              <ArrowRight className="ml-2 h-5 w-5 sm:h-6 sm:w-6" />
             </Button>
             <Button 
-              variant="outline" 
               size="lg" 
-              className="h-14 px-8 border-white text-white hover:bg-white hover:text-green-700 shadow-lg"
+              className="h-14 sm:h-16 px-8 sm:px-10 text-base sm:text-lg bg-transparent border-2 border-white text-white hover:bg-white hover:text-green-700 shadow-xl font-semibold transition-all duration-200"
               onClick={() => setShowDemoModal(true)}
             >
+              <PlayCircle className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
               Watch Demo
             </Button>
+          </div>
+          
+          {/* Trust indicators */}
+          <div className="mt-12 pt-8 border-t border-white/20">
+            <p className="text-green-100 text-sm mb-4">Trusted by leading organizations</p>
+            <div className="flex flex-wrap justify-center items-center gap-6 sm:gap-8 text-white/80">
+              <div className="flex items-center space-x-2">
+                <Shield className="w-5 h-5" />
+                <span className="text-sm">Bank-Level Security</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <CheckCircle className="w-5 h-5" />
+                <span className="text-sm">PCI Compliant</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Lock className="w-5 h-5" />
+                <span className="text-sm">Encrypted Data</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
