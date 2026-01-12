@@ -13,13 +13,17 @@ interface AdminLoginProps {
 	email: string;
 	password: string;
 	error?: string | null;
+	emailError?: string | null;
+	passwordError?: string | null;
 	loading: boolean;
 	onEmailChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 	onPasswordChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+	onEmailBlur?: () => void;
+	onPasswordBlur?: () => void;
 	onSubmit: (e: React.FormEvent) => void;
 }
 
-export function AdminLogin({ email, password, error, loading, onEmailChange, onPasswordChange, onSubmit }: AdminLoginProps) {
+export function AdminLogin({ email, password, error, emailError, passwordError, loading, onEmailChange, onPasswordChange, onEmailBlur, onPasswordBlur, onSubmit }: AdminLoginProps) {
 	return (
 		<>
 			<div className="text-center mb-3 animate-fade-in">
@@ -36,17 +40,30 @@ export function AdminLogin({ email, password, error, loading, onEmailChange, onP
 						<UserCog className="w-3.5 h-3.5 text-gray-500" />
 						<span>Email</span>
 					</Label>
-					<div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-200 transition-all duration-300 hover:border-indigo-400">
+					<div className={`border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-200 transition-all duration-300 hover:border-indigo-400 ${emailError || error ? 'border-red-500 focus-within:border-red-500' : ''}`}>
 						<Input
 							id="email"
 							type="text"
 							placeholder="Enter admin email"
 							value={email}
 							onChange={onEmailChange}
+							onBlur={onEmailBlur}
 							className="h-11 w-full px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent text-sm"
 							required
 						/>
 					</div>
+					{emailError && (
+						<p className="text-xs text-red-600 flex items-center mt-1">
+							<AlertTriangle className="w-3 h-3 mr-1" />
+							{emailError}
+						</p>
+					)}
+					{!emailError && error && (
+						<p className="text-xs text-red-600 flex items-center mt-1">
+							<AlertTriangle className="w-3 h-3 mr-1" />
+							{error}
+						</p>
+					)}
 				</div>
 
 				<div className="space-y-1.5">
@@ -54,27 +71,25 @@ export function AdminLogin({ email, password, error, loading, onEmailChange, onP
 						<Shield className="w-3.5 h-3.5 text-gray-500" />
 						<span>Password</span>
 					</Label>
-					<div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-200 transition-all duration-300 hover:border-indigo-400">
+					<div className={`border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-200 transition-all duration-300 hover:border-indigo-400 ${passwordError ? 'border-red-500 focus-within:border-red-500' : ''}`}>
 						<Input
 							id="password"
 							type="password"
 							placeholder="Enter admin password"
 							value={password}
 							onChange={onPasswordChange}
+							onBlur={onPasswordBlur}
 							className="h-11 w-full px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent text-sm"
 							required
 						/>
 					</div>
+					{passwordError && (
+						<p className="text-xs text-red-600 flex items-center mt-1">
+							<AlertTriangle className="w-3 h-3 mr-1" />
+							{passwordError}
+						</p>
+					)}
 				</div>
-
-				{error && (
-					<div className="p-2.5 bg-red-50 border border-red-200 rounded-lg animate-shake">
-						<div className="flex items-center space-x-2">
-							<AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 animate-pulse" />
-							<p className="text-xs text-red-700">{error}</p>
-						</div>
-					</div>
-				)}
 
 				<Button 
 					type="submit" 

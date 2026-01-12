@@ -7,7 +7,7 @@ import { Badge } from '../../shared/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
 import { Checkbox } from '../../shared/ui/checkbox';
 import { Progress } from '../../shared/ui/progress';
-import { submitCurrencyRequest } from '../../shared/api/firestoreService';
+import { submitCurrencyRequest, checkEmailExists } from '../../shared/api/firestoreService';
 import { 
   Heart,
   Shield,
@@ -100,6 +100,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
   const [currencyRequestSubmitted, setCurrencyRequestSubmitted] = useState(false);
   const [requestedCurrency, setRequestedCurrency] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   
   const [formData, setFormData] = useState<SignupFormData>({
     firstName: '',
@@ -153,13 +154,65 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
     }
   };
 
-  const validateStep = (step: number): boolean => {
+  const handleEmailBlur = async () => {
+    // First validate email format
+    if (!formData.email.trim()) {
+      return; // Don't check if empty
+    }
+    
+    if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      setErrors(prev => ({
+        ...prev,
+        email: 'Please enter a valid email address'
+      }));
+      return;
+    }
+
+    // Check if email already exists
+    setIsCheckingEmail(true);
+    try {
+      const exists = await checkEmailExists(formData.email);
+      if (exists) {
+        setErrors(prev => ({
+          ...prev,
+          email: 'This email is already registered. Please use a different email or sign in.'
+        }));
+      } else {
+        // Clear email error if it was set
+        setErrors(prev => ({
+          ...prev,
+          email: undefined
+        }));
+      }
+    } catch (error) {
+      console.error('Error checking email:', error);
+      // Don't block user if check fails
+    } finally {
+      setIsCheckingEmail(false);
+    }
+  };
+
+  const validateStep = async (step: number): Promise<boolean> => {
     const newErrors: SignupFormErrors = {};
 
     if (step === 1) {
       if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
-      if (!formData.email.trim()) newErrors.email = 'Email is required';
-      else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
+      if (!formData.email.trim()) {
+        newErrors.email = 'Email is required';
+      } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+        newErrors.email = 'Email is invalid';
+      } else {
+        // Check if email already exists
+        try {
+          const exists = await checkEmailExists(formData.email);
+          if (exists) {
+            newErrors.email = 'This email is already registered. Please use a different email or sign in.';
+          }
+        } catch (error) {
+          console.error('Error checking email:', error);
+          // Don't block if check fails
+        }
+      }
     } else if (step === 2) {
       if (!formData.organizationName.trim()) newErrors.organizationName = 'Organization name is required';
       if (!formData.organizationType) newErrors.organizationType = 'Organization type is required';
@@ -188,7 +241,8 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
     }
     
     // Normal flow - validate and move to next step
-    if (validateStep(currentStep)) {
+    const isValid = await validateStep(currentStep);
+    if (isValid) {
       setCurrentStep(prev => Math.min(prev + 1, 4));
     }
   };
@@ -199,7 +253,8 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
 
   // Updated handleSignup to include initial data for permissions and isActive
   const handleSubmit = async () => {
-    if (validateStep(currentStep) && !isSubmitting) {
+    const isValid = await validateStep(currentStep);
+    if (isValid && !isSubmitting) {
       setIsSubmitting(true)
       try {
         await onSignup({
@@ -494,14 +549,26 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                             type="email"
                             value={formData.email}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData('email', e.target.value)}
-                            className={`pl-10 ${errors.email ? 'border-red-500' : ''}`}
+                            onBlur={handleEmailBlur}
+                            className={`pl-10 ${errors.email ? 'border-red-500' : ''} ${isCheckingEmail ? 'opacity-50' : ''}`}
                             placeholder="you@organization.com"
+                            disabled={isCheckingEmail}
                           />
+                          {isCheckingEmail && (
+                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                              <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                            </div>
+                          )}
                         </div>
                         {errors.email && (
-                          <p className="text-xs text-red-600 flex items-center">
+                          <p className="text-xs text-red-600 flex items-center mt-1">
                             <AlertCircle className="w-3 h-3 mr-1" />
                             {errors.email}
+                          </p>
+                        )}
+                        {isCheckingEmail && (
+                          <p className="text-xs text-gray-500 flex items-center mt-1">
+                            Checking email availability...
                           </p>
                         )}
                       </div>
