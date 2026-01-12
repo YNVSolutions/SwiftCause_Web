@@ -764,11 +764,12 @@ const CampaignDialog = ({
             style={{
               scrollbarWidth: 'none',
               msOverflowStyle: 'none',
-              scrollBehavior: 'smooth'
+              scrollBehavior: 'smooth',
+              maxHeight: 'calc(95vh - 80px)'
             }}
           >
             <style>{`
-              div[data-scroll-container]::-webkit-scrollbar {
+              div::-webkit-scrollbar {
                 display: none !important;
               }
             `}</style>
