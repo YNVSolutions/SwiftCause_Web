@@ -26,7 +26,29 @@ export const TabNavigationSidebar: React.FC<TabNavigationSidebarProps> = ({
       </div>
 
       {/* Scrollable Navigation */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden" style={{ scrollbarGutter: "stable" }}>
+      <div 
+        className="flex-1 overflow-y-auto overflow-x-hidden" 
+        style={{ 
+          scrollbarGutter: "stable",
+          scrollbarWidth: 'thin',
+          scrollbarColor: '#03AC13 #f3f4f6'
+        }}
+      >
+        <style>{`
+          div[class*="overflow-y-auto"]::-webkit-scrollbar {
+            width: 6px;
+          }
+          div[class*="overflow-y-auto"]::-webkit-scrollbar-track {
+            background: #f3f4f6;
+          }
+          div[class*="overflow-y-auto"]::-webkit-scrollbar-thumb {
+            background: #03AC13;
+            border-radius: 3px;
+          }
+          div[class*="overflow-y-auto"]::-webkit-scrollbar-thumb:hover {
+            background: #02892f;
+          }
+        `}</style>
         <nav className="p-3 space-y-2">
           {tabs.map((tab) => (
             <button
