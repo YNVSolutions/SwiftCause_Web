@@ -78,7 +78,7 @@ export const getCampaignTabs = (): Tab[] => [
   },
   {
     id: "media-gallery",
-    label: "Visual Identity",
+    label: "Media & Gallery",
     icon: <Image className="w-5 h-5" />,
   },
   {
