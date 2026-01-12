@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import { Screen, AdminSession, Permission } from "../../shared/types";
+import { Screen, AdminSession, Permission, Kiosk } from "../../shared/types";
 import { DEFAULT_CAMPAIGN_CONFIG } from "../../shared/config";
 import { DocumentData, Timestamp } from "firebase/firestore";
 import { useCampaignManagement } from "../../shared/lib/hooks/useCampaignManagement";
 import { useOrganizationTags } from "../../shared/lib/hooks/useOrganizationTags";
+import { kioskApi } from "../../entities/kiosk/api";
 import { Button } from "../../shared/ui/button";
 import { Input } from "../../shared/ui/input";
 import { Label } from "../../shared/ui/label";
@@ -113,6 +114,7 @@ const getInitialFormData = () => ({
   videoUrl: "",
   // Adding more fields for advanced settings
   assignedKiosks: "", // Stored as comma-separated string
+  selectedKiosks: [] as string[], // Array of kiosk IDs
   isGlobal: false,
   galleryImages: "", // Stored as comma-separated string
   organizationInfoName: "",
@@ -170,6 +172,8 @@ const CampaignDialog = ({
 }: CampaignDialogProps) => {
   const [formData, setFormData] = useState<DocumentData>(getInitialFormData());
   const [activeTab, setActiveTab] = useState<"basic" | "media-gallery" | "funding-details" | "kiosk-distribution">("basic");
+  const [kiosks, setKiosks] = useState<Kiosk[]>([]);
+  const [loadingKiosks, setLoadingKiosks] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
   // Track scroll to update active tab automatically
@@ -217,6 +221,27 @@ const CampaignDialog = ({
     container.addEventListener('scroll', handleScroll, { passive: true });
     return () => container.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Fetch kiosks when dialog opens
+  useEffect(() => {
+    if (!open) return;
+
+    const fetchKiosks = async () => {
+      try {
+        setLoadingKiosks(true);
+        const kiosksList = await kioskApi.getKiosks(organizationId);
+        setKiosks(kiosksList);
+      } catch (error) {
+        console.error('Failed to fetch kiosks:', error);
+        setKiosks([]);
+      } finally {
+        setLoadingKiosks(false);
+      }
+    };
+
+    fetchKiosks();
+  }, [open, organizationId]);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isEditMode = !!campaign;
 
@@ -397,6 +422,19 @@ const CampaignDialog = ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
+  };
+
+  const handleKioskToggle = (kioskId: string) => {
+    setFormData((prev) => {
+      const selected = prev.selectedKiosks || [];
+      const isSelected = selected.includes(kioskId);
+      return {
+        ...prev,
+        selectedKiosks: isSelected
+          ? selected.filter((id: string) => id !== kioskId)
+          : [...selected, kioskId],
+      };
+    });
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -633,10 +671,25 @@ const CampaignDialog = ({
           </DialogDescription>
         </div>
 
-        {/* Main Content - Grid Layout */}
-        <div className="flex flex-1 overflow-hidden">
-          {/* Left Sidebar - Navigation */}
-          <div className="w-56 border-r border-gray-200 bg-gradient-to-b from-white to-gray-50 overflow-y-auto shadow-sm">
+        {/* Single Scroll Container - Unified scrolling for left + right */}
+        <div 
+          ref={contentRef}
+          className="flex flex-1 overflow-y-scroll bg-gray-50"
+          style={{
+            scrollbarGutter: 'stable',
+            scrollBehavior: 'smooth',
+            scrollbarWidth: 'none'
+          }}
+        >
+          {/* Hide scrollbar for webkit browsers (Chrome, Safari) */}
+          <style>{`
+            div::-webkit-scrollbar {
+              display: none;
+            }
+          `}</style>
+
+          {/* Left Sidebar - Sticky Navigation */}
+          <div className="w-56 border-r border-gray-200 bg-gradient-to-b from-white to-gray-50 shadow-sm sticky top-0 h-fit">
             <div className="p-5 space-y-3">
               <div className="mb-6">
                 <h3 className="text-xs font-bold text-gray-700 uppercase tracking-widest">Configuration</h3>
@@ -706,7 +759,7 @@ const CampaignDialog = ({
           </div>
 
           {/* Right Content - Form */}
-          <div ref={contentRef} className="flex-1 overflow-y-scroll bg-gray-50" style={{ scrollbarGutter: 'stable' }}>
+          <div className="flex-1 bg-gray-50">
             <form onSubmit={(e) => { e.preventDefault(); handleSaveChanges(); }} className="p-8 space-y-8">
               {/* Basic Info Tab */}
               {activeTab === "basic" && (
@@ -994,6 +1047,7 @@ const CampaignDialog = ({
                 <div data-section="kiosk-distribution" className="space-y-6">
                   <h2 className="text-2xl font-bold text-gray-900">Kiosk Distribution</h2>
 
+                  {/* Global Broadcast Option */}
                   <label className="flex items-center p-4 rounded-lg cursor-pointer transition"
                     style={{border: '2px solid #03AC13', backgroundColor: 'rgba(3, 172, 19, 0.05)'}}
                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(3, 172, 19, 0.1)'}
@@ -1016,13 +1070,77 @@ const CampaignDialog = ({
                       </svg>
                     )}
                   </label>
+
+                  {/* Individual Kiosk Selection */}
+                  {!formData.isGlobal && (
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Select Kiosks</h3>
+                      
+                      {loadingKiosks ? (
+                        <div className="flex items-center justify-center py-8">
+                          <Skeleton className="h-12 w-full" />
+                        </div>
+                      ) : kiosks.length === 0 ? (
+                        <div className="p-6 text-center border border-gray-200 rounded-lg bg-gray-50">
+                          <p className="text-gray-500">No kiosks available</p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {kiosks.map((kiosk) => (
+                            <label
+                              key={kiosk.id}
+                              className="flex items-center p-4 rounded-lg border border-gray-200 cursor-pointer hover:border-gray-300 hover:bg-gray-50 transition"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={(formData.selectedKiosks || []).includes(kiosk.id)}
+                                onChange={() => handleKioskToggle(kiosk.id)}
+                                className="w-5 h-5 rounded"
+                                style={{accentColor: '#03AC13'}}
+                              />
+                              <div className="ml-3 flex-1">
+                                <p className="font-semibold text-gray-900">{kiosk.name}</p>
+                                <p className="text-sm text-gray-500">{kiosk.location}</p>
+                                <span className={`text-xs px-2 py-1 rounded-full mt-2 inline-block ${
+                                  kiosk.status === 'online' ? 'bg-green-100 text-green-800' :
+                                  kiosk.status === 'offline' ? 'bg-gray-100 text-gray-800' :
+                                  'bg-yellow-100 text-yellow-800'
+                                }`}>
+                                  {kiosk.status}
+                                </span>
+                              </div>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Selected Kiosks Summary */}
+                      {(formData.selectedKiosks || []).length > 0 && (
+                        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                          <p className="text-sm font-semibold text-blue-900 mb-3">
+                            Selected Kiosks ({(formData.selectedKiosks || []).length})
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {(formData.selectedKiosks || []).map((kioskId: string) => {
+                              const kiosk = kiosks.find(k => k.id === kioskId);
+                              return kiosk ? (
+                                <Badge key={kioskId} className="bg-blue-600 text-white">
+                                  {kiosk.name}
+                                </Badge>
+                              ) : null;
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </form>
           </div>
         </div>
 
-        {/* Footer */}
+        {/* Footer - Fixed at bottom */}
         <div className="flex justify-between items-center px-6 py-4 border-t border-gray-200 bg-white">
           <Button 
             variant="outline" 
