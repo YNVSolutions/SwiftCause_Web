@@ -36,7 +36,6 @@ export function DonationForm({
   allowCustomAmount = true,
   minCustomAmount = 1,
   maxCustomAmount = 10000,
-  suggestedAmounts = [5, 15, 30, 75],
   enableRecurring = false,
   recurringIntervals = ["monthly", "quarterly", "yearly"],
   defaultRecurringInterval = "monthly",
@@ -74,8 +73,9 @@ export function DonationForm({
     onSubmit(formData);
   };
 
-  const isFieldRequired = (field: string) => requiredFields.includes(field as any);
-  const isFieldOptional = (field: string) => optionalFields.includes(field as any);
+  type DonorField = "email" | "name" | "phone" | "address" | "message";
+  const isFieldRequired = (field: DonorField) => requiredFields.includes(field);
+  const isFieldOptional = (field: DonorField) => optionalFields.includes(field);
 
   return (
     <Card>
