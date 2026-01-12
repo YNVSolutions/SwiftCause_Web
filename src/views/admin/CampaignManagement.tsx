@@ -665,10 +665,25 @@ const CampaignDialog = ({
           </DialogDescription>
         </div>
 
-        {/* Main Content - Grid Layout */}
-        <div className="flex flex-1 overflow-hidden h-full">
-          {/* Left Sidebar - Navigation */}
-          <div className="w-56 border-r border-gray-200 bg-gradient-to-b from-white to-gray-50 overflow-y-auto shadow-sm h-full">
+        {/* Single Scroll Container - Unified scrolling for left + right */}
+        <div 
+          ref={contentRef}
+          className="flex flex-1 overflow-y-scroll bg-gray-50"
+          style={{
+            scrollbarGutter: 'stable',
+            scrollBehavior: 'smooth',
+            scrollbarWidth: 'none'
+          }}
+        >
+          {/* Hide scrollbar for webkit browsers (Chrome, Safari) */}
+          <style>{`
+            div::-webkit-scrollbar {
+              display: none;
+            }
+          `}</style>
+
+          {/* Left Sidebar - Sticky Navigation */}
+          <div className="w-56 border-r border-gray-200 bg-gradient-to-b from-white to-gray-50 shadow-sm sticky top-0 h-fit">
             <div className="p-5 space-y-3">
               <div className="mb-6">
                 <h3 className="text-xs font-bold text-gray-700 uppercase tracking-widest">Configuration</h3>
@@ -676,12 +691,7 @@ const CampaignDialog = ({
               </div>
               
               <button
-                onClick={() => {
-                  setActiveTab("basic");
-                  setTimeout(() => {
-                    document.querySelector('[data-section="basic"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                  }, 0);
-                }}
+                onClick={() => setActiveTab("basic")}
                 style={{
                   backgroundColor: activeTab === "basic" ? '#03AC13' : 'transparent',
                   color: activeTab === "basic" ? 'white' : '#374151'
@@ -696,12 +706,7 @@ const CampaignDialog = ({
               </button>
               
               <button
-                onClick={() => {
-                  setActiveTab("media-gallery");
-                  setTimeout(() => {
-                    document.querySelector('[data-section="media-gallery"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                  }, 0);
-                }}
+                onClick={() => setActiveTab("media-gallery")}
                 style={{
                   backgroundColor: activeTab === "media-gallery" ? '#03AC13' : 'transparent',
                   color: activeTab === "media-gallery" ? 'white' : '#374151'
@@ -716,12 +721,7 @@ const CampaignDialog = ({
               </button>
               
               <button
-                onClick={() => {
-                  setActiveTab("funding-details");
-                  setTimeout(() => {
-                    document.querySelector('[data-section="funding-details"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                  }, 0);
-                }}
+                onClick={() => setActiveTab("funding-details")}
                 style={{
                   backgroundColor: activeTab === "funding-details" ? '#03AC13' : 'transparent',
                   color: activeTab === "funding-details" ? 'white' : '#374151'
@@ -736,12 +736,7 @@ const CampaignDialog = ({
               </button>
               
               <button
-                onClick={() => {
-                  setActiveTab("kiosk-distribution");
-                  setTimeout(() => {
-                    document.querySelector('[data-section="kiosk-distribution"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                  }, 0);
-                }}
+                onClick={() => setActiveTab("kiosk-distribution")}
                 style={{
                   backgroundColor: activeTab === "kiosk-distribution" ? '#03AC13' : 'transparent',
                   color: activeTab === "kiosk-distribution" ? 'white' : '#374151'
@@ -757,21 +752,8 @@ const CampaignDialog = ({
             </div>
           </div>
 
-          {/* Right Content - Form with Hidden Scrollbar */}
-          <div 
-            ref={contentRef} 
-            className="flex-1 overflow-y-scroll bg-gray-50 h-full scroll-container"
-            style={{
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none',
-              scrollBehavior: 'smooth'
-            }}
-          >
-            <style>{`
-              div.scroll-container::-webkit-scrollbar {
-                display: none !important;
-              }
-            `}</style>
+          {/* Right Content - Form */}
+          <div className="flex-1 bg-gray-50">
             <form onSubmit={(e) => { e.preventDefault(); handleSaveChanges(); }} className="p-8 space-y-8">
               {/* Basic Info Tab */}
               {activeTab === "basic" && (
@@ -1152,7 +1134,7 @@ const CampaignDialog = ({
           </div>
         </div>
 
-        {/* Footer */}
+        {/* Footer - Fixed at bottom */}
         <div className="flex justify-between items-center px-6 py-4 border-t border-gray-200 bg-white">
           <Button 
             variant="outline" 
