@@ -48,6 +48,7 @@ import { AlertTriangle } from "lucide-react"; // Import AlertTriangle
 import { Skeleton } from "../../shared/ui/skeleton";
 import { Ghost } from "lucide-react";
 import { ImageWithFallback } from "../../shared/ui/figma/ImageWithFallback";
+import { TabNavigationSidebar, getCampaignTabs } from "../../shared/ui/components/TabNavigationSidebar";
 
 import {
   AlertDialog,
@@ -665,95 +666,17 @@ const CampaignDialog = ({
           </DialogDescription>
         </div>
 
-        {/* Single Scroll Container - Unified scrolling for left + right */}
-        <div 
-          ref={contentRef}
-          className="flex flex-1 overflow-y-scroll bg-gray-50"
-          style={{
-            scrollbarGutter: 'stable',
-            scrollBehavior: 'smooth',
-            scrollbarWidth: 'none'
-          }}
-        >
-          {/* Hide scrollbar for webkit browsers (Chrome, Safari) */}
-          <style>{`
-            div::-webkit-scrollbar {
-              display: none;
-            }
-          `}</style>
-
-          {/* Left Sidebar - Sticky Navigation */}
-          <div className="w-56 border-r border-gray-200 bg-gradient-to-b from-white to-gray-50 shadow-sm sticky top-0 h-fit">
-            <div className="p-5 space-y-3">
-              <div className="mb-6">
-                <h3 className="text-xs font-bold text-gray-700 uppercase tracking-widest">Configuration</h3>
-                <div className="h-1 w-12 rounded mt-2" style={{backgroundColor: '#03AC13'}}></div>
-              </div>
-              
-              <button
-                onClick={() => setActiveTab("basic")}
-                style={{
-                  backgroundColor: activeTab === "basic" ? '#03AC13' : 'transparent',
-                  color: activeTab === "basic" ? 'white' : '#374151'
-                }}
-                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                  activeTab === "basic"
-                    ? "shadow-md hover:shadow-lg"
-                    : "hover:bg-gray-200 hover:text-gray-900"
-                }`}
-              >
-                Basic Info
-              </button>
-              
-              <button
-                onClick={() => setActiveTab("media-gallery")}
-                style={{
-                  backgroundColor: activeTab === "media-gallery" ? '#03AC13' : 'transparent',
-                  color: activeTab === "media-gallery" ? 'white' : '#374151'
-                }}
-                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                  activeTab === "media-gallery"
-                    ? "shadow-md hover:shadow-lg"
-                    : "hover:bg-gray-200 hover:text-gray-900"
-                }`}
-              >
-                Media & Gallery
-              </button>
-              
-              <button
-                onClick={() => setActiveTab("funding-details")}
-                style={{
-                  backgroundColor: activeTab === "funding-details" ? '#03AC13' : 'transparent',
-                  color: activeTab === "funding-details" ? 'white' : '#374151'
-                }}
-                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                  activeTab === "funding-details"
-                    ? "shadow-md hover:shadow-lg"
-                    : "hover:bg-gray-200 hover:text-gray-900"
-                }`}
-              >
-                Funding Details
-              </button>
-              
-              <button
-                onClick={() => setActiveTab("kiosk-distribution")}
-                style={{
-                  backgroundColor: activeTab === "kiosk-distribution" ? '#03AC13' : 'transparent',
-                  color: activeTab === "kiosk-distribution" ? 'white' : '#374151'
-                }}
-                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                  activeTab === "kiosk-distribution"
-                    ? "shadow-md hover:shadow-lg"
-                    : "hover:bg-gray-200 hover:text-gray-900"
-                }`}
-              >
-                Kiosk Distribution
-              </button>
-            </div>
-          </div>
+        {/* Main Content - Grid Layout */}
+        <div className="flex flex-1 overflow-hidden">
+          {/* Left Sidebar - Navigation using Reusable Component */}
+          <TabNavigationSidebar 
+            tabs={getCampaignTabs()}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          />
 
           {/* Right Content - Form */}
-          <div className="flex-1 bg-gray-50">
+          <div ref={contentRef} className="flex-1 overflow-y-scroll bg-gray-50" style={{ scrollbarGutter: 'stable' }}>
             <form onSubmit={(e) => { e.preventDefault(); handleSaveChanges(); }} className="p-8 space-y-8">
               {/* Basic Info Tab */}
               {activeTab === "basic" && (
@@ -1134,7 +1057,7 @@ const CampaignDialog = ({
           </div>
         </div>
 
-        {/* Footer - Fixed at bottom */}
+        {/* Footer */}
         <div className="flex justify-between items-center px-6 py-4 border-t border-gray-200 bg-white">
           <Button 
             variant="outline" 
