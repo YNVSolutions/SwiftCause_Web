@@ -19,36 +19,38 @@ export const TabNavigationSidebar: React.FC<TabNavigationSidebarProps> = ({
   onTabChange,
 }) => {
   return (
-    <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
-      {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200 flex-shrink-0">
-        <h3 className="text-sm font-semibold text-gray-900">Campaign Sections</h3>
-      </div>
+    <>
+      <style>{`
+        [data-sidebar-scroll]::-webkit-scrollbar {
+          width: 6px;
+        }
+        [data-sidebar-scroll]::-webkit-scrollbar-track {
+          background: #f3f4f6;
+        }
+        [data-sidebar-scroll]::-webkit-scrollbar-thumb {
+          background: #03AC13;
+          border-radius: 3px;
+        }
+        [data-sidebar-scroll]::-webkit-scrollbar-thumb:hover {
+          background: #02892f;
+        }
+      `}</style>
+      <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-gray-200 flex-shrink-0">
+          <h3 className="text-sm font-semibold text-gray-900">Campaign Sections</h3>
+        </div>
 
-      {/* Scrollable Navigation */}
-      <div 
-        className="flex-1 overflow-y-auto overflow-x-hidden" 
-        style={{ 
-          scrollbarGutter: "stable",
-          scrollbarWidth: 'thin',
-          scrollbarColor: '#03AC13 #f3f4f6'
-        }}
-      >
-        <style>{`
-          div[class*="overflow-y-auto"]::-webkit-scrollbar {
-            width: 6px;
-          }
-          div[class*="overflow-y-auto"]::-webkit-scrollbar-track {
-            background: #f3f4f6;
-          }
-          div[class*="overflow-y-auto"]::-webkit-scrollbar-thumb {
-            background: #03AC13;
-            border-radius: 3px;
-          }
-          div[class*="overflow-y-auto"]::-webkit-scrollbar-thumb:hover {
-            background: #02892f;
-          }
-        `}</style>
+        {/* Scrollable Navigation */}
+        <div 
+          data-sidebar-scroll="true"
+          className="flex-1 overflow-y-auto overflow-x-hidden" 
+          style={{ 
+            scrollbarGutter: "stable",
+            scrollbarWidth: 'thin',
+            scrollbarColor: '#03AC13 #f3f4f6'
+          }}
+        >
         <nav className="p-3 space-y-2">
           {tabs.map((tab) => (
             <button
@@ -88,7 +90,8 @@ export const TabNavigationSidebar: React.FC<TabNavigationSidebarProps> = ({
           Complete all sections to publish your campaign.
         </p>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 
