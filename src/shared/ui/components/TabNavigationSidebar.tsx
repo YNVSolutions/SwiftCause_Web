@@ -73,7 +73,7 @@ export const TabNavigationSidebar: React.FC<TabNavigationSidebarProps> = ({
 export const getCampaignTabs = (): Tab[] => [
   {
     id: "basic",
-    label: "General Information",
+    label: "Basic Info",
     icon: <FileText className="w-5 h-5" />,
   },
   {
