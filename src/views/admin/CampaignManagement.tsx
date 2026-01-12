@@ -723,7 +723,30 @@ const CampaignDialog = ({
           />
 
           {/* Right Content - Form */}
-          <div ref={contentRef} className="flex-1 overflow-y-scroll bg-gray-50" style={{ scrollbarGutter: 'stable' }}>
+          <div 
+            ref={contentRef} 
+            className="flex-1 overflow-y-scroll bg-gray-50" 
+            style={{ 
+              scrollbarGutter: 'stable',
+              scrollbarWidth: 'thin',
+              scrollbarColor: '#03AC13 #f3f4f6'
+            }}
+          >
+            <style>{`
+              div::-webkit-scrollbar {
+                width: 8px;
+              }
+              div::-webkit-scrollbar-track {
+                background: #f3f4f6;
+              }
+              div::-webkit-scrollbar-thumb {
+                background: #03AC13;
+                border-radius: 4px;
+              }
+              div::-webkit-scrollbar-thumb:hover {
+                background: #02892f;
+              }
+            `}</style>
             <form onSubmit={(e) => { e.preventDefault(); handleSaveChanges(); }} className="p-8 space-y-8">
               {/* Basic Info Tab */}
               {activeTab === "basic" && (
