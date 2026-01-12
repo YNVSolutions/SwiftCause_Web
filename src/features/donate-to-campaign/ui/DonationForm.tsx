@@ -22,7 +22,7 @@ interface DonationFormProps {
   enableRecurring?: boolean;
   recurringIntervals?: ("monthly" | "quarterly" | "yearly")[];
   defaultRecurringInterval?: "monthly" | "quarterly" | "yearly";
-  requiredFields?: ("email" | "name" | "phone" | "address")[];
+  requiredFields?: ("email" | "name" | "phone" | "address" | "message")[];
   optionalFields?: ("email" | "name" | "phone" | "address" | "message")[];
   enableAnonymousDonations?: boolean;
   enableGiftAid?: boolean;
