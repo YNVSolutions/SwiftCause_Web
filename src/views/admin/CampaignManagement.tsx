@@ -209,7 +209,7 @@ const CampaignDialog = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Custom alert dialog state
-  const { alertState, showAlert, closeAlert } = useAlertDialog();
+  const { alertState, showAlert: displayAlert, closeAlert } = useAlertDialog();
 
   useEffect(() => {
     if (isEditMode && campaign) {
@@ -371,7 +371,7 @@ const CampaignDialog = ({
 
         // Limit to a maximum of 4 images including existing ones
         if (selectedGalleryImages.length + newFiles.length > 4) {
-          showAlert("You can only upload a maximum of 4 gallery images.", "warning");
+          displayAlert("You can only upload a maximum of 4 gallery images.", "warning");
           return;
         }
 
@@ -399,7 +399,7 @@ const CampaignDialog = ({
         }
       } catch (error) {
         console.error("Error uploading cover image:", error);
-        showAlert("Failed to upload cover image. Please try again.", "error");
+        displayAlert("Failed to upload cover image. Please try again.", "error");
       }
     }
   };
@@ -419,7 +419,7 @@ const CampaignDialog = ({
         }
       } catch (error) {
         console.error("Error uploading organization logo:", error);
-        showAlert("Failed to upload organization logo. Please try again.", "error");
+        displayAlert("Failed to upload organization logo. Please try again.", "error");
       } finally {
         setIsUploadingOrganizationLogo(false); // Reset loading state
       }
@@ -460,7 +460,7 @@ const CampaignDialog = ({
             }
           } catch (error) {
             console.error(`Error uploading gallery image ${file.name}:`, error);
-            showAlert(
+            displayAlert(
               `Failed to upload gallery image ${file.name}. Please try again.`,
               "error"
             );
@@ -478,7 +478,7 @@ const CampaignDialog = ({
         }
       } catch (error) {
         console.error("Error uploading gallery images:", error);
-        showAlert("Failed to upload gallery images. Please try again.", "error");
+        displayAlert("Failed to upload gallery images. Please try again.", "error");
       } finally {
         setIsUploadingGalleryImages(false); // Reset loading state
       }
@@ -518,16 +518,16 @@ const CampaignDialog = ({
       setSelectedGalleryImages((prev) =>
         prev.filter((file) => URL.createObjectURL(file) !== imageToDelete)
       );
-      showAlert("Image deleted successfully.", "success");
+      displayAlert("Image deleted successfully.", "success");
     } catch (error) {
       console.error("Error deleting gallery image:", error);
-      showAlert("Failed to delete image. Please try again.", "error");
+      displayAlert("Failed to delete image. Please try again.", "error");
     }
   };
 
   const handleSaveChanges = async () => {
     if (!formData.title || !formData.description) {
-      showAlert("Title and Description are required.", "warning");
+      displayAlert("Title and Description are required.", "warning");
       return;
     }
 
@@ -561,7 +561,7 @@ const CampaignDialog = ({
         }
       } catch (error) {
         console.error("Error uploading organization logo:", error);
-        showAlert("Failed to upload organization logo. Please try again.", "error");
+        displayAlert("Failed to upload organization logo. Please try again.", "error");
         setIsSubmitting(false);
         return;
       }
@@ -581,7 +581,7 @@ const CampaignDialog = ({
           }
         } catch (error) {
           console.error(`Error uploading gallery image ${file.name}:`, error);
-          showAlert(
+          displayAlert(
             `Failed to upload gallery image ${file.name}. Please try again.`,
             "error"
           );
@@ -1442,9 +1442,9 @@ const CampaignManagement = ({
         isNew ? "Error creating campaign: " : "Error updating document: ",
         error
       );
-      showAlert(
-        `Failed to ${isNew ? "create" : "update"} campaign. Please try again.`,
-        "error"
+      // Show error notification
+      console.log(
+        `Failed to ${isNew ? "create" : "update"} campaign. Please try again.`
       );
     } finally {
       setIsEditDialogOpen(false);
@@ -1518,7 +1518,7 @@ const CampaignManagement = ({
 
   const exportToCsv = (data: DocumentData[]) => {
     if (data.length === 0) {
-      showAlert("No campaign data to export.", "warning");
+      console.warn("No campaign data to export.");
       return;
     }
 
