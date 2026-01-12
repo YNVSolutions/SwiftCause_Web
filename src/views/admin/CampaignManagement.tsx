@@ -170,6 +170,53 @@ const CampaignDialog = ({
 }: CampaignDialogProps) => {
   const [formData, setFormData] = useState<DocumentData>(getInitialFormData());
   const [activeTab, setActiveTab] = useState<"basic" | "media-gallery" | "funding-details" | "kiosk-distribution">("basic");
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  // Track scroll to update active tab automatically
+  useEffect(() => {
+    const container = contentRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const scrollTop = container.scrollTop;
+      const containerHeight = container.clientHeight;
+      const centerPoint = scrollTop + containerHeight / 3;
+
+      // Find the section closest to center of view
+      const basicInfoSection = container.querySelector('[data-section="basic"]') as HTMLElement;
+      const mediaSection = container.querySelector('[data-section="media-gallery"]') as HTMLElement;
+      const fundingSection = container.querySelector('[data-section="funding-details"]') as HTMLElement;
+      const kioskSection = container.querySelector('[data-section="kiosk-distribution"]') as HTMLElement;
+
+      const sections = [
+        { element: basicInfoSection, id: 'basic' },
+        { element: mediaSection, id: 'media-gallery' },
+        { element: fundingSection, id: 'funding-details' },
+        { element: kioskSection, id: 'kiosk-distribution' }
+      ];
+
+      let closestSection = 'basic';
+      let closestDistance = Infinity;
+
+      sections.forEach(({ element, id }) => {
+        if (!element) return;
+        const sectionTop = element.offsetTop;
+        const sectionHeight = element.offsetHeight;
+        const sectionCenter = sectionTop + sectionHeight / 2;
+        const distance = Math.abs(sectionCenter - centerPoint);
+
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestSection = id;
+        }
+      });
+
+      setActiveTab(closestSection as any);
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isEditMode = !!campaign;
 
@@ -589,19 +636,23 @@ const CampaignDialog = ({
         {/* Main Content - Grid Layout */}
         <div className="flex flex-1 overflow-hidden">
           {/* Left Sidebar - Navigation */}
-          <div className="w-56 border-r border-gray-200 bg-linear-to-b from-white to-gray-50 overflow-y-auto shadow-sm">
+          <div className="w-56 border-r border-gray-200 bg-gradient-to-b from-white to-gray-50 overflow-y-auto shadow-sm">
             <div className="p-5 space-y-3">
               <div className="mb-6">
                 <h3 className="text-xs font-bold text-gray-700 uppercase tracking-widest">Configuration</h3>
-                <div className="h-1 w-12 bg-teal-500 rounded mt-2"></div>
+                <div className="h-1 w-12 rounded mt-2" style={{backgroundColor: '#03AC13'}}></div>
               </div>
               
               <button
                 onClick={() => setActiveTab("basic")}
+                style={{
+                  backgroundColor: activeTab === "basic" ? '#03AC13' : 'transparent',
+                  color: activeTab === "basic" ? 'white' : '#374151'
+                }}
                 className={`w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
                   activeTab === "basic"
-                    ? "bg-teal-500 text-white shadow-md hover:shadow-lg hover:bg-teal-600"
-                    : "text-gray-700 hover:bg-gray-200 hover:text-gray-900"
+                    ? "shadow-md hover:shadow-lg"
+                    : "hover:bg-gray-200 hover:text-gray-900"
                 }`}
               >
                 Basic Info
@@ -609,10 +660,14 @@ const CampaignDialog = ({
               
               <button
                 onClick={() => setActiveTab("media-gallery")}
+                style={{
+                  backgroundColor: activeTab === "media-gallery" ? '#03AC13' : 'transparent',
+                  color: activeTab === "media-gallery" ? 'white' : '#374151'
+                }}
                 className={`w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
                   activeTab === "media-gallery"
-                    ? "bg-teal-500 text-white shadow-md hover:shadow-lg hover:bg-teal-600"
-                    : "text-gray-700 hover:bg-gray-200 hover:text-gray-900"
+                    ? "shadow-md hover:shadow-lg"
+                    : "hover:bg-gray-200 hover:text-gray-900"
                 }`}
               >
                 Media & Gallery
@@ -620,10 +675,14 @@ const CampaignDialog = ({
               
               <button
                 onClick={() => setActiveTab("funding-details")}
+                style={{
+                  backgroundColor: activeTab === "funding-details" ? '#03AC13' : 'transparent',
+                  color: activeTab === "funding-details" ? 'white' : '#374151'
+                }}
                 className={`w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
                   activeTab === "funding-details"
-                    ? "bg-teal-500 text-white shadow-md hover:shadow-lg hover:bg-teal-600"
-                    : "text-gray-700 hover:bg-gray-200 hover:text-gray-900"
+                    ? "shadow-md hover:shadow-lg"
+                    : "hover:bg-gray-200 hover:text-gray-900"
                 }`}
               >
                 Funding Details
@@ -631,10 +690,14 @@ const CampaignDialog = ({
               
               <button
                 onClick={() => setActiveTab("kiosk-distribution")}
+                style={{
+                  backgroundColor: activeTab === "kiosk-distribution" ? '#03AC13' : 'transparent',
+                  color: activeTab === "kiosk-distribution" ? 'white' : '#374151'
+                }}
                 className={`w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
                   activeTab === "kiosk-distribution"
-                    ? "bg-teal-500 text-white shadow-md hover:shadow-lg hover:bg-teal-600"
-                    : "text-gray-700 hover:bg-gray-200 hover:text-gray-900"
+                    ? "shadow-md hover:shadow-lg"
+                    : "hover:bg-gray-200 hover:text-gray-900"
                 }`}
               >
                 Kiosk Distribution
@@ -643,11 +706,11 @@ const CampaignDialog = ({
           </div>
 
           {/* Right Content - Form */}
-          <div className="flex-1 overflow-y-auto bg-gray-50">
+          <div ref={contentRef} className="flex-1 overflow-y-scroll bg-gray-50" style={{ scrollbarGutter: 'stable' }}>
             <form onSubmit={(e) => { e.preventDefault(); handleSaveChanges(); }} className="p-8 space-y-8">
               {/* Basic Info Tab */}
               {activeTab === "basic" && (
-                <div className="space-y-8">
+                <div data-section="basic" className="space-y-8">
                   <div>
                     <h2 className="text-3xl font-bold text-gray-900 mb-2">General Information</h2>
                     <p className="text-sm text-gray-600">Add basic details about your campaign</p>
@@ -722,7 +785,7 @@ const CampaignDialog = ({
 
               {/* Media & Gallery Tab */}
               {activeTab === "media-gallery" && (
-                <div className="space-y-6">
+                <div data-section="media-gallery" className="space-y-6">
                   <h2 className="text-2xl font-bold text-gray-900">Visual Identity</h2>
 
                   {/* Primary Cover Image */}
@@ -748,13 +811,16 @@ const CampaignDialog = ({
                     ) : (
                       <label
                         htmlFor="coverImage"
-                        className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-teal-400 rounded-lg cursor-pointer bg-teal-50 hover:bg-teal-100 transition"
+                        className="flex flex-col items-center justify-center w-full h-48 border-2 rounded-lg cursor-pointer transition"
+                        style={{borderColor: '#03AC13', borderStyle: 'dashed', backgroundColor: 'rgba(3, 172, 19, 0.05)'}}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(3, 172, 19, 0.1)'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(3, 172, 19, 0.05)'}
                       >
                         <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                          <svg className="w-12 h-12 text-teal-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{color: '#03AC13'}}>
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                           </svg>
-                          <p className="text-sm text-teal-600 font-medium">CLICK TO UPLOAD COVER</p>
+                          <p className="text-sm font-medium" style={{color: '#03AC13'}}>CLICK TO UPLOAD COVER</p>
                         </div>
                         <input
                           id="coverImage"
@@ -835,7 +901,7 @@ const CampaignDialog = ({
 
               {/* Funding Details Tab */}
               {activeTab === "funding-details" && (
-                <div className="space-y-8">
+                <div data-section="funding-details" className="space-y-8">
                   <div>
                     <h2 className="text-3xl font-bold text-gray-900 mb-2">Financial Goals</h2>
                     <p className="text-sm text-gray-600">Set your fundraising target and donation tiers</p>
@@ -925,23 +991,27 @@ const CampaignDialog = ({
 
               {/* Kiosk Distribution Tab */}
               {activeTab === "kiosk-distribution" && (
-                <div className="space-y-6">
+                <div data-section="kiosk-distribution" className="space-y-6">
                   <h2 className="text-2xl font-bold text-gray-900">Kiosk Distribution</h2>
 
-                  <label className="flex items-center p-4 border-2 border-teal-500 rounded-lg cursor-pointer bg-teal-50 hover:bg-teal-100 transition">
+                  <label className="flex items-center p-4 rounded-lg cursor-pointer transition"
+                    style={{border: '2px solid #03AC13', backgroundColor: 'rgba(3, 172, 19, 0.05)'}}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(3, 172, 19, 0.1)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(3, 172, 19, 0.05)'}>
                     <input
                       type="checkbox"
                       checked={formData.isGlobal}
                       onChange={handleChange}
                       name="isGlobal"
-                      className="w-5 h-5 text-teal-600"
+                      className="w-5 h-5"
+                      style={{color: '#03AC13'}}
                     />
                     <div className="ml-4 flex-1">
                       <p className="font-semibold text-teal-900">BROADCAST GLOBALLY</p>
                       <p className="text-sm text-teal-700">DISPLAY ON EVERY ACTIVE TERMINAL</p>
                     </div>
                     {formData.isGlobal && (
-                      <svg className="w-6 h-6 text-teal-600" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" style={{color: '#03AC13'}}>
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                     )}
@@ -980,7 +1050,8 @@ const CampaignDialog = ({
               type="submit"
               onClick={handleSaveChanges}
               disabled={isSaveDisabled || isSubmitting}
-              className="px-7 h-11 bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-md hover:shadow-lg transition-all"
+                      className="px-7 h-11 text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-md hover:shadow-lg transition-all"
+                      style={{backgroundColor: '#03AC13'}}
             >
               {isSubmitting ? (isEditMode ? "Saving..." : "Publishing...") : (isEditMode ? "Save Changes" : "Publish Campaign")}
             </Button>

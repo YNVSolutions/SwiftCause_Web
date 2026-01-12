@@ -35,6 +35,7 @@ export default function CreateCampaignPage() {
     try {
       // TODO: Implement campaign creation API call
       if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
         console.log('Campaign data:', data);
       }
 
@@ -54,18 +55,12 @@ export default function CreateCampaignPage() {
     router.push(path);
   };
 
-  const hasPermission = (permission: string) => {
-    // TODO: Implement permission checking based on user role
-    // For now, return false until fully implemented to prevent unauthorized access
-    return false;
-  };
-
   return (
     <AdminLayout
       onNavigate={handleNavigate}
       onLogout={handleLogout}
       userSession={currentAdminSession}
-      hasPermission={hasPermission}
+      hasPermission={() => false}
     >
       <div className="p-6">
         <div className="mb-6">
