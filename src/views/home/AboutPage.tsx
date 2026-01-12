@@ -16,7 +16,7 @@ export function AboutPage({ onNavigate }: { onNavigate?: (screen: string) => voi
             <div className="flex items-center space-x-3">
               <div className="h-10 w-10">
                 <img 
-                  src={swiftCauseLogo.src} 
+                  src={swiftCauseLogo} 
                   alt="Swift Cause Logo" 
                   className="w-full h-full object-contain"
                 />

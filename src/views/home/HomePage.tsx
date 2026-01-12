@@ -603,7 +603,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
                 logoClicks > 0 ? 'animate-bounce' : ''
               } ${showEasterEgg ? 'animate-spin' : ''}`}>
                 <img 
-                  src={swiftCauseLogo.src} 
+                  src={swiftCauseLogo} 
                   alt="Swift Cause Logo" 
                   className="w-full h-full object-contain"
                 />
