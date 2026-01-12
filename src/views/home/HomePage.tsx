@@ -106,51 +106,6 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
     setOpenFaqIndex(openFaqIndex === index ? null : index);
   };
 
-  const keyFeatures = [
-    {
-      icon: <Smartphone className="w-8 h-8" />,
-      title: 'Touch-Friendly Kiosks',
-      description: 'Intuitive donation interfaces optimized for mobile and touch screens',
-      highlights: ['Mobile-first design', 'iOS/Android compatible', 'Gesture-friendly'],
-      color: 'bg-blue-50 text-blue-600 border-blue-200'
-    },
-    {
-      icon: <Shield className="w-8 h-8" />,
-      title: 'Bank-Level Security',
-      description: 'PCI DSS compliant payment processing with enterprise-grade security',
-      highlights: ['Encrypted transactions', 'Fraud protection', 'Secure processing'],
-      color: 'bg-green-50 text-green-600 border-green-200'
-    },
-    {
-      icon: <BarChart3 className="w-8 h-8" />,
-      title: 'Advanced Analytics',
-      description: 'Real-time insights and comprehensive reporting for data-driven decisions',
-      highlights: ['Live dashboards', 'Custom reports', 'Performance tracking'],
-      color: 'bg-purple-50 text-purple-600 border-purple-200'
-    },
-    {
-      icon: <QrCode className="w-8 h-8" />,
-      title: 'QR Code Access',
-      description: 'Instant kiosk access via QR codes for seamless user experience',
-      highlights: ['Quick setup', 'Contactless access', 'Easy deployment'],
-      color: 'bg-orange-50 text-orange-600 border-orange-200'
-    },
-    {
-      icon: <Target className="w-8 h-8" />,
-      title: 'Campaign Management',
-      description: 'Flexible campaign configuration with custom goals and branding',
-      highlights: ['Custom pricing', 'Visual themes', 'Multi-location'],
-      color: 'bg-indigo-50 text-indigo-600 border-indigo-200'
-    },
-    {
-      icon: <UserCog className="w-8 h-8" />,
-      title: 'User Permissions',
-      description: 'Granular access control with role-based permission system',
-      highlights: ['Role management', 'Access control', 'Audit trails'],
-      color: 'bg-red-50 text-red-600 border-red-200'
-    }
-  ];
-
   const useCases = [
     {
       title: 'Non-Profit Organizations',
@@ -343,42 +298,6 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-    
-      <section id="features" className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-              Everything You Need to Succeed
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Comprehensive donation management platform designed for modern organizations
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {keyFeatures.map((feature, index) => (
-              <Card key={index} className="hover:shadow-lg transition-all duration-300 group">
-                <CardContent className="p-8">
-                  <div className={`inline-flex p-4 rounded-2xl ${feature.color} mb-6 group-hover:scale-110 transition-transform`}>
-                    {feature.icon}
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-4">{feature.title}</h3>
-                  <p className="text-gray-600 mb-6">{feature.description}</p>
-                  <ul className="space-y-2">
-                    {feature.highlights.map((highlight, idx) => (
-                      <li key={idx} className="flex items-center text-sm text-gray-600">
-                        <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                        {highlight}
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            ))}
           </div>
         </div>
       </section>
