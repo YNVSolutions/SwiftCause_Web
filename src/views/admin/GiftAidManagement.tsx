@@ -342,14 +342,8 @@ export function GiftAidManagement({
       userSession={userSession} 
       hasPermission={hasPermission}
       activeScreen="admin-gift-aid"
-      headerTitle={(
-        <div className="flex flex-col">
-          <h1 className="text-3xl font-semibold text-gray-900">Gift Aid Donations</h1>
-          <p className="text-sm text-gray-500">
-            Manage and track Gift Aid eligible donations for tax reclaim
-          </p>
-        </div>
-      )}
+      headerTitle="Gift Aid Donations"
+      headerSubtitle="Manage and track Gift Aid eligible donations for tax reclaim"
       headerActions={(
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={handleRefresh} disabled={loading} aria-label="Refresh">

@@ -18,9 +18,9 @@ import {
   SidebarMenuButton,
 
   SidebarInset,
-  SidebarTrigger,
   useSidebar,
 } from "../../shared/ui/sidebar";
+import { AdminPageHeader } from "./components/AdminPageHeader";
 import {
   LayoutDashboard,
   Settings,
@@ -34,7 +34,6 @@ import {
   Building2,
   Shield,
   Calendar,
-  Compass,
   Wallet,
 } from "lucide-react";
 
@@ -58,6 +57,7 @@ interface AdminLayoutProps {
   activeScreen?: Screen;
   onStartTour?: () => void;
   headerTitle?: React.ReactNode;
+  headerSubtitle?: React.ReactNode;
   hideHeaderDivider?: boolean;
   headerActions?: React.ReactNode;
   hideSidebarTrigger?: boolean;
@@ -333,6 +333,7 @@ export function AdminLayout({
   activeScreen = "admin-dashboard",
   onStartTour,
   headerTitle,
+  headerSubtitle,
   hideHeaderDivider = false,
   headerActions,
   hideSidebarTrigger = false,
@@ -341,6 +342,7 @@ export function AdminLayout({
   const isActive = (...screens: Screen[]) => screens.includes(activeScreen);
   const currentLabel = SCREEN_LABELS[activeScreen] ?? "Admin";
   const resolvedHeaderTitle = headerTitle === undefined ? currentLabel : headerTitle;
+  const userInitials = getInitials(userSession.user.username || userSession.user.email || 'U');
 
   return (
     <SidebarProvider defaultOpen={true}>
@@ -514,55 +516,17 @@ export function AdminLayout({
             hideHeaderDivider ? "" : "border-b border-gray-200 shadow-sm"
           }`}
         >
-          <div className="flex items-center justify-between px-4 sm:px-6 h-16">
-            <div className="flex items-center gap-3">
-              {!hideSidebarTrigger && (
-                <>
-                  <SidebarTrigger className="text-gray-600 hover:text-gray-900" />
-                  <div className="h-6 w-px bg-gray-200 hidden sm:block" />
-                </>
-              )}
-              {resolvedHeaderTitle !== null && (
-                typeof resolvedHeaderTitle === "string" ? (
-                  <h1 className="font-bold text-lg text-gray-900">{resolvedHeaderTitle}</h1>
-                ) : (
-                  resolvedHeaderTitle
-                )
-              )}
-            </div>
-            
-            {/* Right side buttons */}
-            <div className="flex items-center gap-2">
-              {headerActions}
-              {/* Get a Tour Button */}
-              {onStartTour && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onStartTour}
-                  className="hidden sm:flex items-center gap-2 border-blue-200 text-blue-600 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 transition-colors animate-pulse"
-                >
-                  <Compass className="h-4 w-4" />
-                  <span className="font-medium">Get a Tour</span>
-                </Button>
-              )}
-              
-              {/* Profile Icon in Header */}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsProfileOpen(true)}
-                className="h-10 w-10 rounded-full hover:bg-gray-100 transition-colors"
-                title="View Profile"
-              >
-                <Avatar className="h-8 w-8 ring-2 ring-gray-200 hover:ring-blue-300 transition-all">
-                  <AvatarImage src={userSession.user.photoURL || undefined} />
-                  <AvatarFallback className="bg-linear-to-br from-blue-500 to-indigo-600 text-white text-xs font-semibold">
-                    {getInitials(userSession.user.username || userSession.user.email || 'U')}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </div>
+          <div className="flex items-center justify-between px-4 sm:px-6 min-h-16 py-2">
+            <AdminPageHeader
+              title={resolvedHeaderTitle}
+              subtitle={headerSubtitle}
+              actions={headerActions}
+              showSidebarTrigger={!hideSidebarTrigger}
+              onStartTour={onStartTour}
+              onProfileClick={() => setIsProfileOpen(true)}
+              userPhotoUrl={userSession.user.photoURL || undefined}
+              userInitials={userInitials}
+            />
           </div>
         </header>
         

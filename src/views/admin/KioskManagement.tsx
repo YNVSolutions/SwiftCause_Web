@@ -331,12 +331,8 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
       userSession={userSession}
       hasPermission={hasPermission}
       activeScreen="admin-kiosks"
-      headerTitle={(
-        <div className="flex flex-col">
-          <h1 className="text-3xl font-semibold text-gray-900">Kiosk Management</h1>
-          <p className="text-sm text-gray-500">Configure and monitor donation kiosks</p>
-        </div>
-      )}
+      headerTitle="Kiosk Management"
+      headerSubtitle="Configure and monitor donation kiosks"
       headerActions={(
         <Button
           variant="outline"

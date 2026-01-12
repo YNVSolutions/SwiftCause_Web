@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../shared/ui/table';
 import {
-  Plus, Search, ChevronLeft, UserCog, Users, Shield, Activity,
+  Plus, Search, UserCog, Users, Shield, Activity,
   Loader2, AlertCircle, Pencil, Trash2, AlertTriangle, MoreVertical
 } from 'lucide-react';
 import { Skeleton } from "../../shared/ui/skeleton";
@@ -117,12 +117,8 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
             userSession={userSession}
             hasPermission={hasPermission}
             activeScreen="admin-users"
-            headerTitle={(
-                <div className="flex flex-col">
-                    <h1 className="text-3xl font-semibold text-gray-900">User Management</h1>
-                    <p className="text-sm text-gray-500">Manage platform users and permissions</p>
-                </div>
-            )}
+            headerTitle="User Management"
+            headerSubtitle="Manage platform users and permissions"
             hideSidebarTrigger
         >
         <div className="space-y-4">

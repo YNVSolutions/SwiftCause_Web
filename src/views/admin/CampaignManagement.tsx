@@ -40,7 +40,7 @@ import {
   FaTrashAlt, // Added FaTrashAlt
   FaPlus, // Import FaPlus
 } from "react-icons/fa";
-import { Plus, ChevronLeft, Settings, Download, RefreshCw, MoreVertical } from "lucide-react";
+import { Plus, Settings, Download, RefreshCw, MoreVertical } from "lucide-react";
 import { Calendar } from "../../shared/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "../../shared/ui/popover";
 import { AlertTriangle } from "lucide-react"; // Import AlertTriangle
@@ -1373,12 +1373,8 @@ const CampaignManagement = ({
       userSession={userSession}
       hasPermission={hasPermission}
       activeScreen="admin-campaigns"
-      headerTitle={(
-        <div className="flex flex-col">
-          <h1 className="text-3xl font-semibold text-gray-900">Campaign Management</h1>
-          <p className="text-sm text-gray-500">Configure and monitor campaigns</p>
-        </div>
-      )}
+      headerTitle="Campaign Management"
+      headerSubtitle="Configure and monitor campaigns"
       headerActions={(
         <Button
           variant="outline"

@@ -10,7 +10,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '../../shared/ui/popover
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../../shared/ui/dialog';
 import {
   Search,
-  ChevronLeft,
   Download,
   Calendar as CalendarIcon,
   DollarSign,
@@ -192,12 +191,8 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
       userSession={userSession}
       hasPermission={hasPermission}
       activeScreen="admin-donations"
-      headerTitle={(
-        <div className="flex flex-col">
-          <h1 className="text-3xl font-semibold text-gray-900">Donation Management</h1>
-          <p className="text-sm text-gray-500">Track and analyze donation transactions</p>
-        </div>
-      )}
+      headerTitle="Donation Management"
+      headerSubtitle="Track and analyze donation transactions"
       headerActions={(
         <Button
           variant="outline"
