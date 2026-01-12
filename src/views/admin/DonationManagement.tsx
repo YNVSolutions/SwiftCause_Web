@@ -208,7 +208,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
       hideSidebarTrigger
     >
       <div className="space-y-4">
-        <main className="px-2 sm:px-6 lg:px-8 pt-2 pb-4 sm:pt-3 sm:pb-8">
+        <main className="px-2 sm:px-6 lg:px-8 pb-4 sm:pb-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Raised</p><p className="text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.totalAmount, summaryCurrency)}</p></div><DollarSign className="w-8 h-8 text-green-500" /></div></CardContent></Card>
             <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Donations</p><p className="text-2xl font-semibold text-gray-900">{totalStats.totalDonations}</p></div><Users className="w-8 h-8 text-indigo-500" /></div></CardContent></Card>

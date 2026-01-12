@@ -1735,7 +1735,7 @@ export function AdminDashboard({
         </div>
       ) : campaignCountChecked && !showOnboarding ? (
         <>
-        <div className="px-2 sm:px-6 lg:px-8 pt-2 pb-4 sm:pt-3 sm:pb-8">
+        <div className="px-2 sm:px-6 lg:px-8 pb-4 sm:pb-8">
 
         {stripeStatusMessage && (
           <Card className={`mb-6 ${stripeStatusMessage.type === 'success' ? 'border-green-400 bg-green-50 text-green-800' : stripeStatusMessage.type === 'warning' ? 'border-yellow-400 bg-yellow-50 text-yellow-800' : 'border-red-400 bg-red-50 text-red-800'}`}>

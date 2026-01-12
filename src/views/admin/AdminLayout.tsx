@@ -534,7 +534,9 @@ export function AdminLayout({
           className="flex-1 w-full bg-slate-50 overflow-y-auto overflow-x-hidden pt-16"
           data-testid="main-content-area"
         >
-          {children}
+          <div className="pt-4 sm:pt-6">
+            {children}
+          </div>
         </main>
       </SidebarInset>
 

@@ -85,7 +85,7 @@ export function BankDetails({ onNavigate, onLogout, userSession, hasPermission }
       headerSubtitle="Manage your payment settings and Stripe integration"
       hideSidebarTrigger
     >
-      <div className="px-2 sm:px-6 lg:px-8 pt-2 pb-4 sm:pt-3 sm:pb-8 max-w-6xl mx-auto space-y-6">
+      <div className="px-2 sm:px-6 lg:px-8 pb-4 sm:pb-8 max-w-6xl mx-auto space-y-6">
 
         {/* Stripe Account Status Card */}
         <Card className="border-2">

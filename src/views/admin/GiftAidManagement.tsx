@@ -362,7 +362,7 @@ export function GiftAidManagement({
       )}
       hideSidebarTrigger
     >
-      <div className="px-2 sm:px-6 lg:px-8 pt-2 pb-4 sm:pt-3 sm:pb-8 space-y-6">
+      <div className="px-2 sm:px-6 lg:px-8 pb-4 sm:pb-8 space-y-6">
         {/* Error Alert */}
         {error && (
           <Card className="border-red-200 bg-red-50">

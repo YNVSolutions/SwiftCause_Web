@@ -1390,7 +1390,7 @@ const CampaignManagement = ({
       hideSidebarTrigger
     >
       <div className="space-y-4">
-        <main className="px-2 sm:px-6 lg:px-8 pt-2 pb-4 sm:pt-3 sm:pb-8">
+        <main className="px-2 sm:px-6 lg:px-8 pb-4 sm:pb-8">
           <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <Card>
               <CardContent className="p-2">

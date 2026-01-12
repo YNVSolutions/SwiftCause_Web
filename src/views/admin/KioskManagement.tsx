@@ -348,7 +348,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
       hideSidebarTrigger
     >
       <div className="min-h-screen bg-gray-50">
-        <main className="px-2 sm:px-6 lg:px-8 pt-2 pb-4 sm:pt-3 sm:pb-8">
+        <main className="px-2 sm:px-6 lg:px-8 pb-4 sm:pb-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Kiosks</p><p className="text-2xl font-semibold text-gray-900">{filteredKiosks.length}</p><div className="flex items-center space-x-4 text-xs text-gray-500 mt-1"><span className="text-green-600">{totalStats.online} online</span><span className="text-red-600">{totalStats.offline} offline</span></div></div><Settings className="h-8 w-8 text-blue-600" /></div></CardContent></Card>
             <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Raised</p><p className="text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.totalRaised)}</p></div><DollarSign className="h-8 w-8 text-green-600" /></div></CardContent></Card>
