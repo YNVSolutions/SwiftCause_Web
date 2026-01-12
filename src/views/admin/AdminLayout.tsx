@@ -124,7 +124,7 @@ function ProfileSidebar({
         }`}
       >
         {/* Header */}
-        <div className="bg-linear-to-br from-blue-600 to-indigo-700 p-6 relative">
+        <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-6 relative">
           <Button
             variant="ghost"
             size="icon"
@@ -246,7 +246,7 @@ function ProfileSidebar({
         <div className="absolute bottom-0 left-0 right-0 p-6 bg-gray-50 border-t border-gray-200">
           <Button
             onClick={onLogout}
-            className="w-full bg-linear-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+            className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
           >
             <LogOut className="h-5 w-5 mr-2" />
             Sign Out
@@ -278,7 +278,7 @@ function SidebarUserFooter({
         >
           <Avatar className="h-9 w-9 ring-2 ring-indigo-100 shadow-sm">
             <AvatarImage src={userSession.user.photoURL || undefined} />
-            <AvatarFallback className="bg-linear-to-br from-indigo-500 to-indigo-600 text-white text-xs font-semibold">
+            <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white text-xs font-semibold">
               {getInitials(userSession.user.username || userSession.user.email || 'U')}
             </AvatarFallback>
           </Avatar>
@@ -540,7 +540,7 @@ export function AdminLayout({
               >
                 <Avatar className="h-8 w-8 ring-2 ring-gray-200 hover:ring-blue-300 transition-all">
                   <AvatarImage src={userSession.user.photoURL || undefined} />
-                  <AvatarFallback className="bg-linear-to-br from-blue-500 to-indigo-600 text-white text-xs font-semibold">
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-xs font-semibold">
                     {getInitials(userSession.user.username || userSession.user.email || 'U')}
                   </AvatarFallback>
                 </Avatar>

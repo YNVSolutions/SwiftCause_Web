@@ -630,7 +630,7 @@ const CampaignDialog = ({
         {/* Main Content - Grid Layout */}
         <div className="flex flex-1 overflow-hidden">
           {/* Left Sidebar - Navigation */}
-          <div className="w-56 border-r border-gray-200 bg-linear-to-b from-white to-gray-50 overflow-y-auto shadow-sm">
+          <div className="w-56 border-r border-gray-200 bg-gradient-to-b from-white to-gray-50 overflow-y-auto shadow-sm">
             <div className="p-5 space-y-3">
               <div className="mb-6">
                 <h3 className="text-xs font-bold text-gray-700 uppercase tracking-widest">Configuration</h3>
