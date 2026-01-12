@@ -676,7 +676,12 @@ const CampaignDialog = ({
               </div>
               
               <button
-                onClick={() => setActiveTab("basic")}
+                onClick={() => {
+                  setActiveTab("basic");
+                  setTimeout(() => {
+                    document.querySelector('[data-section="basic"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }, 0);
+                }}
                 style={{
                   backgroundColor: activeTab === "basic" ? '#03AC13' : 'transparent',
                   color: activeTab === "basic" ? 'white' : '#374151'
@@ -691,7 +696,12 @@ const CampaignDialog = ({
               </button>
               
               <button
-                onClick={() => setActiveTab("media-gallery")}
+                onClick={() => {
+                  setActiveTab("media-gallery");
+                  setTimeout(() => {
+                    document.querySelector('[data-section="media-gallery"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }, 0);
+                }}
                 style={{
                   backgroundColor: activeTab === "media-gallery" ? '#03AC13' : 'transparent',
                   color: activeTab === "media-gallery" ? 'white' : '#374151'
@@ -706,7 +716,12 @@ const CampaignDialog = ({
               </button>
               
               <button
-                onClick={() => setActiveTab("funding-details")}
+                onClick={() => {
+                  setActiveTab("funding-details");
+                  setTimeout(() => {
+                    document.querySelector('[data-section="funding-details"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }, 0);
+                }}
                 style={{
                   backgroundColor: activeTab === "funding-details" ? '#03AC13' : 'transparent',
                   color: activeTab === "funding-details" ? 'white' : '#374151'
@@ -721,7 +736,12 @@ const CampaignDialog = ({
               </button>
               
               <button
-                onClick={() => setActiveTab("kiosk-distribution")}
+                onClick={() => {
+                  setActiveTab("kiosk-distribution");
+                  setTimeout(() => {
+                    document.querySelector('[data-section="kiosk-distribution"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }, 0);
+                }}
                 style={{
                   backgroundColor: activeTab === "kiosk-distribution" ? '#03AC13' : 'transparent',
                   color: activeTab === "kiosk-distribution" ? 'white' : '#374151'
@@ -737,8 +757,21 @@ const CampaignDialog = ({
             </div>
           </div>
 
-          {/* Right Content - Form */}
-          <div ref={contentRef} className="flex-1 overflow-y-scroll bg-gray-50" style={{ scrollbarGutter: 'stable' }}>
+          {/* Right Content - Form with Hidden Scrollbar */}
+          <div 
+            ref={contentRef} 
+            className="flex-1 overflow-y-scroll bg-gray-50"
+            style={{
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              scrollBehavior: 'smooth'
+            }}
+          >
+            <style>{`
+              div[data-scroll-container]::-webkit-scrollbar {
+                display: none !important;
+              }
+            `}</style>
             <form onSubmit={(e) => { e.preventDefault(); handleSaveChanges(); }} className="p-8 space-y-8">
               {/* Basic Info Tab */}
               {activeTab === "basic" && (
