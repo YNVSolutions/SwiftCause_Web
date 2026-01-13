@@ -338,78 +338,58 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
     }
   }, [activeTab]);
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      {/* Progress Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Create New Campaign</h1>
-            <p className="text-gray-600 mt-1">Set up your fundraising campaign with all the details</p>
-          </div>
-          <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200">
-            {completedTabs}/{tabs.length} Complete
-          </Badge>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <Progress value={progressPercentage} className="h-2" />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8">
+    <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-6">
         {/* Enhanced Left Sidebar - Navigation */}
         <div className="lg:col-span-1 order-2 lg:order-1">
           <div className="sticky top-6">
             <Card className="shadow-sm border-gray-200">
               <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-semibold text-gray-900">Campaign Setup</CardTitle>
+                <CardTitle className="text-base font-semibold text-gray-900">Campaign Setup</CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="space-y-2">
-                  {tabs.map((tab) => {
+                  {tabs.map(tab => {
                     const Icon = tab.icon;
                     const isActive = activeTab === tab.id;
                     const isComplete = tab.isComplete;
-                    
+
                     return (
                       <button
                         key={tab.id}
                         data-tab={tab.id}
                         onClick={() => setActiveTab(tab.id)}
                         className={`w-full text-left p-3 rounded-lg transition-all duration-200 group ${
-                          isActive
-                            ? 'bg-blue-600 text-white shadow-md'
-                            : 'hover:bg-gray-50 text-gray-700'
+                          isActive ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-50 text-gray-700'
                         }`}
                       >
-                        <div className="flex items-center gap-3">
-                          <div className={`flex items-center justify-center w-8 h-8 rounded-lg ${
-                            isActive 
-                              ? 'bg-blue-500' 
-                              : isComplete 
-                                ? 'bg-green-100' 
-                                : 'bg-gray-100'
-                          }`}>
+                        <div className="flex items-center gap-2">
+                          <div
+                            className={`flex items-center justify-center w-7 h-7 rounded-lg flex-shrink-0 ${
+                              isActive ? 'bg-blue-500' : isComplete ? 'bg-green-100' : 'bg-gray-100'
+                            }`}
+                          >
                             {isComplete && !isActive ? (
-                              <CheckCircle className="w-4 h-4 text-green-600" />
+                              <CheckCircle className="w-3.5 h-3.5 text-green-600" />
                             ) : (
-                              <Icon className={`w-4 h-4 ${
-                                isActive 
-                                  ? 'text-white' 
-                                  : isComplete 
-                                    ? 'text-green-600' 
-                                    : 'text-gray-500'
-                              }`} />
+                              <Icon
+                                className={`w-3.5 h-3.5 ${
+                                  isActive 
+                                    ? 'text-white'
+                                    : isComplete
+                                      ? 'text-green-600'
+                                      : 'text-gray-500'
+                                }`}
+                              />
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className={`font-medium text-sm ${
-                              isActive ? 'text-white' : 'text-gray-900'
-                            }`}>
+                            <div
+                              className={`font-medium text-xs ${isActive ? 'text-white' : 'text-gray-900'}`}
+                            >
                               {tab.label}
                             </div>
-                            <div className={`text-xs ${
-                              isActive ? 'text-blue-100' : 'text-gray-500'
-                            }`}>
+                            <div className={`text-[10px] ${isActive ? 'text-blue-100' : 'text-gray-500'}`}>
                               {tab.description}
                             </div>
                           </div>
@@ -423,7 +403,7 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
           </div>
         </div>
         {/* Enhanced Right Content - Form */}
-        <div className="lg:col-span-4 order-1 lg:order-2">
+        <div className="lg:col-span-3 order-1 lg:order-2">
           <Card className="shadow-sm border-gray-200">
             <CardHeader className="border-b border-gray-100 bg-gray-50/50">
               <div className="flex items-center justify-between">
