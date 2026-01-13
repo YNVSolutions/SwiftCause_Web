@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, Mail, MapPin, Phone, Heart, Github, Twitter, Linkedin, Shield, Award, TrendingUp } from 'lucide-react';
+import { Clock, Mail, Phone, Heart, Github, Linkedin, Shield, Award, TrendingUp } from 'lucide-react';
 
 interface FooterProps {
   onNavigate?: (screen: string) => void;
@@ -115,16 +115,11 @@ export function Footer({ onNavigate }: FooterProps) {
                 <Phone className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
                 <span>+44 20 1234 5678</span>
               </li>
-              <li className="flex items-start space-x-3 text-gray-400 text-sm">
-                <MapPin className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                <span>London, United Kingdom</span>
-              </li>
             </ul>
             
             {/* Social Links */}
             <div className="flex space-x-3">
               {[
-                { icon: Twitter, label: 'Twitter' },
                 { icon: Linkedin, label: 'LinkedIn' },
                 { icon: Github, label: 'GitHub' }
               ].map((social) => (
