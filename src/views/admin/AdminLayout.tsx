@@ -162,6 +162,7 @@ export function AdminLayout({
           ? 'inset 3px 0 0 rgba(255,255,255,0.7), 0 0 12px rgba(34,197,94,0.45), 0 2px 8px rgba(0,0,0,0.2)'
           : 'inset 3px 0 0 rgba(255,255,255,0.7), 0 2px 10px rgba(34,197,94,0.35)'
       } : {},
+      
       onMouseEnter: (e: React.MouseEvent<HTMLButtonElement>) => {
         if (!isActiveButton) {
           e.currentTarget.style.backgroundColor = isCollapsed
