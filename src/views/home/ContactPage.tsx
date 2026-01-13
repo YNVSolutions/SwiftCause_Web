@@ -2,12 +2,11 @@ import React, { useState } from 'react';
 import { Button } from '../../shared/ui/button';
 import { ArrowLeft, Mail, Phone, Building, SendHorizontal, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { Footer } from '../../shared/ui/Footer';
-import swiftCauseLogo from '../../shared/assets/logo.png';
 import { submitFeedback } from '../../shared/api/firestoreService';
 
 const ContactInfoItem = ({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) => (
   <div className="flex items-start">
-    <div className="flex-shrink-0 h-12 w-12 flex items-center justify-center bg-indigo-50 rounded-lg text-indigo-600">
+    <div className="flex-shrink-0 h-12 w-12 flex items-center justify-center bg-green-50 rounded-lg text-green-600">
       {icon}
     </div>
     <div className="ml-4">
@@ -60,7 +59,7 @@ export function ContactPage({ onNavigate }: { onNavigate?: (screen: string) => v
           <div className="flex items-center space-x-3">
             <div className="h-8 w-8">
               <img 
-                src={swiftCauseLogo.src} 
+                src="/logo.png" 
                 alt="Swift Cause Logo" 
                 className="w-full h-full object-contain"
               />
@@ -87,7 +86,7 @@ export function ContactPage({ onNavigate }: { onNavigate?: (screen: string) => v
               </p>
               <div className="mt-12 space-y-8 not-prose">
                 <ContactInfoItem icon={<Mail size={24} />} title="Email Us">
-                  <a href="mailto:swiftcauseweb@gmail.com" className="hover:text-indigo-600 transition">swiftcauseweb@gmail.com</a>
+                  <a href="mailto:swiftcauseweb@gmail.com" className="hover:text-green-600 transition">swiftcauseweb@gmail.com</a>
                   <p className="text-sm">General & Support Inquiries</p>
                 </ContactInfoItem>
                 <ContactInfoItem icon={<Building size={24} />} title="Our Office">
@@ -120,7 +119,7 @@ export function ContactPage({ onNavigate }: { onNavigate?: (screen: string) => v
                         required 
                         value={formData.firstName}
                         onChange={handleChange('firstName')}
-                        className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition" 
+                        className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 transition" 
                       />
                     </div>
                     <div>
@@ -131,7 +130,7 @@ export function ContactPage({ onNavigate }: { onNavigate?: (screen: string) => v
                         required 
                         value={formData.lastName}
                         onChange={handleChange('lastName')}
-                        className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition" 
+                        className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 transition" 
                       />
                     </div>
                   </div>
@@ -143,7 +142,7 @@ export function ContactPage({ onNavigate }: { onNavigate?: (screen: string) => v
                       required 
                       value={formData.email}
                       onChange={handleChange('email')}
-                      className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition" 
+                      className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 transition" 
                     />
                   </div>
                   <div>
@@ -154,7 +153,7 @@ export function ContactPage({ onNavigate }: { onNavigate?: (screen: string) => v
                       required 
                       value={formData.message}
                       onChange={handleChange('message')}
-                      className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition" 
+                      className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 transition" 
                     />
                   </div>
                   <div>

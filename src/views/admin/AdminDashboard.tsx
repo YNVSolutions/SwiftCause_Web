@@ -733,6 +733,95 @@ export function AdminDashboard({
       userSession={userSession} 
       hasPermission={hasPermission}
       onStartTour={handleStartTour}
+      headerTitle={(
+        <div className="flex flex-col">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-3xl font-semibold text-gray-900">
+              <span className="header-title-text">Dashboard</span>
+            </h1>
+            <Badge className="px-3 py-1 text-xs font-semibold rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+              {userSession.user.role.replace('_', ' ').toUpperCase()}
+            </Badge>
+          </div>
+        </div>
+      )}
+      headerActions={(
+        <div className="flex items-center gap-2 flex-nowrap ml-auto">
+          {userSession.user.role === 'super_admin' && hasPermission('system_admin') && (
+            <div className="w-auto">
+              <OrganizationSwitcher userSession={userSession} onOrganizationChange={onOrganizationSwitch} />
+            </div>
+          )}
+          {organization && organization.stripe && (
+            <div className="relative">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowStripeStatusDialog(true)}
+                className={`relative rounded-lg
+                  ${!organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled
+                    ? 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100 animate-pulse'
+                    : 'border-green-200 bg-green-50 text-green-700 hover:bg-green-100'
+                  }`}
+                aria-label="Stripe Status"
+              >
+                <CreditCard className="h-4 w-4" />
+              </Button>
+              {needsOnboarding && (
+                <div className="absolute -bottom-2 -right-2 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse" />
+              )}
+
+              {showSmallPopup && needsOnboarding && (
+                <div className="fixed sm:absolute top-16 sm:top-full right-2 sm:right-0 mt-2 w-[calc(100vw-1rem)] sm:w-80 max-w-sm bg-white rounded-lg shadow-xl border-2 border-yellow-400 p-3 sm:p-4 z-50 animate-in slide-in-from-top-2">
+                  <button
+                    onClick={() => setShowSmallPopup(false)}
+                    className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 z-10"
+                    aria-label="Close notification"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                  <div className="flex items-start space-x-2 sm:space-x-3">
+                    <div className="flex-shrink-0">
+                      <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600" />
+                    </div>
+                    <div className="flex-1 min-w-0 pr-6">
+                      <h4 className="text-xs sm:text-sm font-semibold text-gray-900 mb-1">
+                        Complete Stripe Onboarding
+                      </h4>
+                      <p className="text-[10px] sm:text-xs text-gray-600 mb-2 sm:mb-3">
+                        You need to onboard with Stripe to accept donations and create campaigns.
+                      </p>
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          setShowSmallPopup(false);
+                          setShowStripeStatusDialog(true);
+                        }}
+                        className="bg-yellow-600 hover:bg-yellow-700 text-xs h-7 sm:h-8 w-full sm:w-auto"
+                      >
+                        <CreditCard className="w-3 h-3 mr-1" />
+                        Onboard Now
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleRefresh} 
+            disabled={loading} 
+            className="rounded-lg border-gray-300 hover:bg-gray-50"
+            aria-label="Refresh Dashboard"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+            <span className="hidden sm:inline ml-2">Refresh</span>
+          </Button>
+        </div>
+      )}
+      hideSidebarTrigger
     >
       {/* Onboarding Flow with Sliding Animation */}
       {showOnboarding && !loading && campaignCountChecked ? (
@@ -1648,95 +1737,7 @@ export function AdminDashboard({
         </div>
       ) : campaignCountChecked && !showOnboarding ? (
         <>
-        <div className="px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex items-center justify-between mb-6 gap-3">
-          <div className="flex items-center gap-4 flex-1 min-w-0">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                  Dashboard
-                </h1>
-                <Badge className="px-3 py-1 text-xs font-semibold rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                  {userSession.user.role.replace('_', ' ').toUpperCase()}
-                </Badge>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 flex-nowrap ml-auto">
-            {userSession.user.role === 'super_admin' && hasPermission('system_admin') && (
-              <div className="w-auto">
-                <OrganizationSwitcher userSession={userSession} onOrganizationChange={onOrganizationSwitch} />
-              </div>
-            )}
-            {organization && organization.stripe && (
-              <div className="relative">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowStripeStatusDialog(true)}
-                  className={`relative rounded-lg
-                    ${!organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled
-                      ? 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100 animate-pulse'
-                      : 'border-green-200 bg-green-50 text-green-700 hover:bg-green-100'
-                    }`}
-                  aria-label="Stripe Status"
-                >
-                  <CreditCard className="h-4 w-4" />
-                </Button>
-                {needsOnboarding && (
-                  <div className="absolute -bottom-2 -right-2 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse" />
-                )}
-
-                {/* Small popup notification */}
-                {showSmallPopup && needsOnboarding && (
-                  <div className="fixed sm:absolute top-16 sm:top-full right-2 sm:right-0 mt-2 w-[calc(100vw-1rem)] sm:w-80 max-w-sm bg-white rounded-lg shadow-xl border-2 border-yellow-400 p-3 sm:p-4 z-50 animate-in slide-in-from-top-2">
-                    <button
-                      onClick={() => setShowSmallPopup(false)}
-                      className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 z-10"
-                      aria-label="Close notification"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                    <div className="flex items-start space-x-2 sm:space-x-3">
-                      <div className="flex-shrink-0">
-                        <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600" />
-                      </div>
-                      <div className="flex-1 min-w-0 pr-6">
-                        <h4 className="text-xs sm:text-sm font-semibold text-gray-900 mb-1">
-                          Complete Stripe Onboarding
-                        </h4>
-                        <p className="text-[10px] sm:text-xs text-gray-600 mb-2 sm:mb-3">
-                          You need to onboard with Stripe to accept donations and create campaigns.
-                        </p>
-                        <Button
-                          size="sm"
-                          onClick={() => {
-                            setShowSmallPopup(false);
-                            setShowStripeStatusDialog(true);
-                          }}
-                          className="bg-yellow-600 hover:bg-yellow-700 text-xs h-7 sm:h-8 w-full sm:w-auto"
-                        >
-                          <CreditCard className="w-3 h-3 mr-1" />
-                          Onboard Now
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleRefresh} 
-              disabled={loading} 
-              className="rounded-lg border-gray-300 hover:bg-gray-50"
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-              <span className="hidden sm:inline ml-2">Refresh</span>
-            </Button>
-          </div>
-        </div>
+        <div className="px-2 sm:px-6 lg:px-8 pb-4 sm:pb-8">
 
         {stripeStatusMessage && (
           <Card className={`mb-6 ${stripeStatusMessage.type === 'success' ? 'border-green-400 bg-green-50 text-green-800' : stripeStatusMessage.type === 'warning' ? 'border-yellow-400 bg-yellow-50 text-yellow-800' : 'border-red-400 bg-red-50 text-red-800'}`}>

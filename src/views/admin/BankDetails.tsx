@@ -81,13 +81,11 @@ export function BankDetails({ onNavigate, onLogout, userSession, hasPermission }
       userSession={userSession} 
       hasPermission={hasPermission}
       activeScreen="admin-bank-details"
+      headerTitle="Bank Details"
+      headerSubtitle="Manage your payment settings and Stripe integration"
+      hideSidebarTrigger
     >
-      <div className="p-6 max-w-6xl mx-auto space-y-6">
-        {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Bank Details</h1>
-          <p className="text-gray-600">Manage your payment settings and Stripe integration</p>
-        </div>
+      <div className="px-2 sm:px-6 lg:px-8 pb-4 sm:pb-8 max-w-6xl mx-auto space-y-6">
 
         {/* Stripe Account Status Card */}
         <Card className="border-2">

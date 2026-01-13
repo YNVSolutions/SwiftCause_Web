@@ -4,7 +4,23 @@ import React, { useState } from "react";
 import { Screen, AdminSession, Permission } from "../../shared/types";
 import { Button } from "../../shared/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../../shared/ui/avatar";
-import { SidebarProvider } from "../../shared/ui/sidebar";
+import { Badge } from "../../shared/ui/badge";
+import {
+  SidebarProvider,
+  Sidebar,
+  SidebarHeader,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+
+  SidebarInset,
+  useSidebar,
+} from "../../shared/ui/sidebar";
+import { AdminPageHeader } from "./components/AdminPageHeader";
 import {
   LayoutDashboard,
   Settings,
@@ -14,6 +30,11 @@ import {
   Gift,
   LogOut,
   Compass,
+  X,
+  Mail,
+  Building2,
+  Shield,
+  Calendar,
   Wallet,
   ChevronLeft,
   ChevronRight,
@@ -38,6 +59,11 @@ interface AdminLayoutProps {
   children: React.ReactNode;
   activeScreen?: Screen;
   onStartTour?: () => void;
+  headerTitle?: React.ReactNode;
+  headerSubtitle?: React.ReactNode;
+  hideHeaderDivider?: boolean;
+  headerActions?: React.ReactNode;
+  hideSidebarTrigger?: boolean;
 }
 
 // Get user initials for avatar

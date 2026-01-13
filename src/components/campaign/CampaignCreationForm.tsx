@@ -5,7 +5,7 @@ import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 import { Textarea } from '@/shared/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Card, CardContent } from '@/shared/ui/card';
 import { AlertCircle, Plus } from 'lucide-react';
 
 interface CampaignFormData {
@@ -376,21 +376,6 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
         {/* Right Content - Form (scrollable, order-1 on mobile, order-2 on md) */}
         <div className="md:col-span-3 order-1 md:order-2 md:max-h-[calc(100vh-120px)] md:overflow-y-auto">
           <Card className="shadow-sm md:shadow-md">
-            <CardHeader className="border-b p-4 md:p-6">
-              <div className="flex items-center justify-between gap-2">
-                <CardTitle className="text-lg md:text-2xl">New Initiative</CardTitle>
-                <button
-                  type="button"
-                  className="text-gray-400 hover:text-gray-600 text-lg md:text-xl shrink-0"
-                  onClick={() => {
-                    /* Handle close */
-                  }}
-                >
-                  ✕
-                </button>
-              </div>
-            </CardHeader>
-
             <CardContent className="p-4 md:p-6">
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Basic Info Tab */}
