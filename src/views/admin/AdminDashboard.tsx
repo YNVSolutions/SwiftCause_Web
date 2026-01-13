@@ -177,7 +177,6 @@ export function AdminDashboard({
   const [goalComparisonData, setGoalComparisonData] = useState<any[]>([]);
   const [categoryData, setCategoryData] = useState<any[]>([]);
   const [showFeatures, setShowFeatures] = useState(false);
-  const [showGettingStarted, setShowGettingStarted] = useState(false);
   const [isLegendExpanded, setIsLegendExpanded] = useState(false);
   const [stripeStatusMessage, setStripeStatusMessage] = useState<{ type: 'success' | 'error' | 'warning', message: string } | null>(null);
   const [showStripeStatusDialog, setShowStripeStatusDialog] = useState(false);
@@ -267,83 +266,6 @@ export function AdminDashboard({
   }, [orgLoading, organization, needsOnboarding]);
 
 
-
-  const gettingStartedSteps = [
-    {
-      step: 1,
-      title: "Create Your First Campaign",
-      description:
-        "Set up a donation campaign with custom goals, pricing, and branding",
-      action: "Create Campaign",
-      actionFunction: () => {
-        onNavigate("admin-campaigns");
-      },
-      icon: <Target className="w-5 h-5" />,
-      estimated: "5 minutes",
-      canAccess: hasPermission("create_campaign"),
-      requiresStripe: false,
-    },
-    {
-      step: 2,
-      title: "Configure Donation Kiosks",
-      description:
-        "Set up kiosks in your locations with QR codes and access controls",
-      action: "Setup Kiosks",
-      actionFunction: () => {
-        onNavigate("admin-kiosks");
-      },
-      icon: <Monitor className="w-5 h-5" />,
-      estimated: "10 minutes",
-      canAccess: hasPermission("create_kiosk"),
-      requiresStripe: false,
-    },
-    {
-      step: 3,
-      title: "Assign Campaigns to Kiosks",
-      description:
-        "Connect your campaigns to specific kiosk locations for targeted fundraising",
-      action: "Assign Campaigns",
-      actionFunction: () => onNavigate("admin-kiosks"),
-      icon: <Workflow className="w-5 h-5" />,
-      estimated: "3 minutes",
-      canAccess: hasPermission("assign_campaigns"),
-      requiresStripe: false,
-    },
-    {
-      step: 4,
-      title: "Invite Team Members",
-      description:
-        "Add users with appropriate permissions to help manage your platform",
-      action: "Manage Users",
-      actionFunction: () => onNavigate("admin-users"),
-      icon: <Users className="w-5 h-5" />,
-      estimated: "5 minutes",
-      canAccess: hasPermission("create_user"),
-      requiresStripe: false,
-    },
-  ];
-
-
-  const quickTips = [
-    {
-      icon: <Lightbulb className="w-5 h-5 text-yellow-600" />,
-      title: "Pro Tip: Use Global Campaigns",
-      description:
-        'Mark campaigns as "Global" to display them across all kiosks automatically.',
-    },
-    {
-      icon: <Star className="w-5 h-5 text-blue-600" />,
-      title: "Feature Campaigns",
-      description:
-        "Set default campaigns for each kiosk to highlight your most important causes.",
-    },
-    {
-      icon: <Bell className="w-5 h-5 text-green-600" />,
-      title: "Monitor Performance",
-      description:
-        "Check the analytics regularly to optimize campaign performance and kiosk placement.",
-    },
-  ];
 
   useEffect(() => {
     const fetchChartData = async () => {
@@ -1912,113 +1834,6 @@ export function AdminDashboard({
           </Card>
         )}
 
-        <div className="mb-8">
-          
-
-          <Collapsible
-            open={showGettingStarted}
-            onOpenChange={setShowGettingStarted}
-          >
-            <CollapsibleTrigger asChild>
-              <Button
-                variant="ghost"
-                className="w-full justify-between p-2 sm:p-3 h-auto mb-2 text-left"
-              >
-                <div className="flex items-center space-x-2">
-                  <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 flex-shrink-0" />
-                  <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900">
-                    Getting Started
-                  </h3>
-                </div>
-                {showGettingStarted ? (
-                  <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                ) : (
-                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                )}
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-4 mb-6 sm:mb-8">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                {gettingStartedSteps.map((step, index) => (
-                  <Card
-                    key={index}
-                    className={`${
-                      step.canAccess
-                        ? "hover:shadow-md transition-shadow"
-                        : "opacity-60"
-                    }`}
-                  >
-                    <CardContent className="p-4 sm:p-6">
-                      <div className="flex items-start space-x-3 sm:space-x-4">
-                        <div className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-indigo-100 text-indigo-600 rounded-full text-xs sm:text-sm font-semibold flex-shrink-0">
-                          {step.step}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center space-x-2 mb-2 flex-wrap">
-                            <div className="text-indigo-600 flex-shrink-0">{step.icon}</div>
-                            <h4 className="font-semibold text-sm sm:text-base text-gray-900">
-                              {step.title}
-                            </h4>
-                          </div>
-                          <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
-                            {step.description}
-                          </p>
-                          <div className="flex items-center justify-between gap-2 flex-wrap">
-                            {step.canAccess ? (
-                              <Button
-                                onClick={step.actionFunction}
-                                size="sm"
-                                className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm"
-                              >
-                                <Play className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                                <span className="hidden sm:inline">{step.action}</span>
-                                <span className="sm:hidden">Go</span>
-                              </Button>
-                            ) : (
-                              <Badge variant="secondary" className="text-xs">
-                                <HelpCircle className="w-3 h-3 mr-1" />
-                                Requires permission
-                              </Badge>
-                            )}
-                            <span className="text-xs text-gray-500 whitespace-nowrap">
-                              ~{step.estimated}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-                <CardHeader className="p-4 sm:p-6">
-                  <CardTitle className="flex items-center space-x-2 text-blue-900 text-base sm:text-lg">
-                    <Lightbulb className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                    <span>Quick Tips</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 sm:p-6 pt-0">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {quickTips.map((tip, index) => (
-                      <div key={index} className="flex items-start space-x-2 sm:space-x-3">
-                        <div className="flex-shrink-0">{tip.icon}</div>
-                        <div className="min-w-0">
-                          <h5 className="font-medium text-sm sm:text-base text-gray-900 mb-1">
-                            {tip.title}
-                          </h5>
-                          <p className="text-xs sm:text-sm text-gray-600">
-                            {tip.description}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </CollapsibleContent>
-          </Collapsible>
-        </div>
         {/* Bento Grid Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
           {/* Campaign Goal Comparison - Spans 2 columns */}
