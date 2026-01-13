@@ -90,7 +90,9 @@ export function AdminPageHeader({
   };
 
   const renderSubtitle = () => {
-    if (!subtitle) return null;
+    if (!subtitle) {
+      return <p className="header-subtitle header-subtitle-placeholder">Placeholder</p>;
+    }
     if (typeof subtitle === "string") {
       return <p className="header-subtitle text-gray-600">{subtitle}</p>;
     }
@@ -171,6 +173,9 @@ export function AdminPageHeader({
           border-left: 3px solid rgba(34, 197, 94, 0.5);
           padding-left: 12px;
           margin-top: 4px;
+        }
+        .header-subtitle-placeholder {
+          visibility: hidden;
         }
         @keyframes pulseGreen {
           0%, 100% { background-color: #F0FDF4; }
