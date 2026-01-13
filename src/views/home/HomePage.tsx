@@ -366,7 +366,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
 
   const nextStep = useCallback(() => {
     setActiveFlowStep((prev) => (prev + 1) % donationFlowSteps.length);
-  }, []);
+  }, [donationFlowSteps.length]);
 
   const prevStep = () => {
     setActiveFlowStep((prev) => (prev - 1 + donationFlowSteps.length) % donationFlowSteps.length);
