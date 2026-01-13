@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../shared/ui/table';
 import {
-  Plus, Search, ChevronLeft, UserCog, Users, Shield, Activity,
+  Plus, Search, UserCog, Users, Shield, Activity,
   Loader2, AlertCircle, Pencil, Trash2, AlertTriangle, MoreVertical
 } from 'lucide-react';
 import { Skeleton } from "../../shared/ui/skeleton";
@@ -117,31 +117,12 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
             userSession={userSession}
             hasPermission={hasPermission}
             activeScreen="admin-users"
+            headerTitle="User Management"
+            headerSubtitle="Manage platform users and permissions"
+            hideSidebarTrigger
         >
         <div className="space-y-4">
-            <header className="bg-white shadow-sm border-b">
-                <div className="px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                        <div className="flex flex-col gap-1">
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => onNavigate('admin')}
-                                className="-ml-3 w-fit px-0 text-xs font-semibold uppercase tracking-widest text-gray-500 hover:text-gray-800"
-                            >
-                                <ChevronLeft className="w-4 h-4 mr-0" />
-                                Back to Dashboard
-                            </Button>
-                            <div>
-                                <h1 className="text-2xl font-semibold text-gray-900 sm:text-3xl">User Management</h1>
-                                <p className="text-sm text-gray-600">Manage platform users and permissions</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            <main className="px-2 sm:px-6 lg:px-8 pt-2 pb-4 sm:pt-4 sm:pb-8">
+            <main className="px-2 sm:px-6 lg:px-8 pb-4 sm:pb-8">
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Users</p><p className="text-2xl font-semibold text-gray-900">{stats.total}</p></div><Users className="h-8 w-8 text-blue-600" /></div></CardContent></Card>
                     <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Administrators</p><p className="text-2xl font-semibold text-gray-900">{stats.admins}</p></div><UserCog className="h-8 w-8 text-purple-600" /></div></CardContent></Card>

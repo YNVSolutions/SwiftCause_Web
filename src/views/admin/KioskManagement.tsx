@@ -33,7 +33,6 @@ import {
   EyeOff,
   Copy,
   Check,
-  ChevronLeft,
   MoreVertical,
   Search,
   DollarSign,
@@ -41,9 +40,11 @@ import {
   Settings,
   Activity,
   AlertTriangle,
+  Download,
 } from 'lucide-react';
 import { AdminLayout } from './AdminLayout';
 import { KioskForm, KioskFormData } from './components/KioskForm';
+import { exportToCsv } from '../../shared/utils/csvExport';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -252,6 +253,23 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
   };
 
   const formatCurrency = (amount: number) => new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', minimumFractionDigits: 0 }).format(amount);
+  const handleExportKiosks = () => {
+    const exportData = filteredKiosks.map((kiosk) => {
+      const performance = performanceData[kiosk.id];
+      return {
+        name: kiosk.name,
+        location: kiosk.location,
+        status: kiosk.status,
+        kioskId: kiosk.id,
+        totalRaised: performance?.totalRaised ?? 0,
+        totalDonations: performance?.donorCount ?? 0,
+        assignedCampaigns: kiosk.assignedCampaigns?.length ?? 0,
+        lastActive: kiosk.lastActive || '',
+      };
+    });
+
+    exportToCsv(exportData, 'kiosks');
+  };
   
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -290,6 +308,8 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
         userSession={userSession}
         hasPermission={hasPermission}
         activeScreen="admin-kiosks"
+        hideHeaderDivider
+        hideSidebarTrigger
       >
         <div className="min-h-screen bg-gray-50">
           <div className="text-center py-12">
@@ -311,31 +331,24 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
       userSession={userSession}
       hasPermission={hasPermission}
       activeScreen="admin-kiosks"
+      headerTitle="Kiosk Management"
+      headerSubtitle="Configure and monitor donation kiosks"
+      headerActions={(
+        <Button
+          variant="outline"
+          size="sm"
+          className="hover:bg-gray-100 transition-colors"
+          onClick={handleExportKiosks}
+          aria-label="Export CSV"
+        >
+          <Download className="w-4 h-4 sm:mr-2" />
+          <span className="hidden sm:inline">Export CSV</span>
+        </Button>
+      )}
+      hideSidebarTrigger
     >
       <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <header className="bg-white shadow-sm border-b">
-          <div className="px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-              <div className="flex flex-col gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onNavigate('admin-dashboard')}
-                  className="-ml-3 w-fit px-0 text-xs font-semibold uppercase tracking-widest text-gray-500 hover:text-gray-800"
-                >
-                  <ChevronLeft className="w-4 h-4 mr-0" />
-                  Back to Dashboard
-                </Button>
-                <div>
-                  <h1 className="text-2xl font-semibold text-gray-900 sm:text-3xl">Kiosk Management</h1>
-                  <p className="text-sm text-gray-600">Configure and monitor donation kiosks</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </header>
-        <main className="px-2 sm:px-6 lg:px-8 pt-2 pb-4 sm:pt-4 sm:pb-8">
+        <main className="px-2 sm:px-6 lg:px-8 pb-4 sm:pb-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Kiosks</p><p className="text-2xl font-semibold text-gray-900">{filteredKiosks.length}</p><div className="flex items-center space-x-4 text-xs text-gray-500 mt-1"><span className="text-green-600">{totalStats.online} online</span><span className="text-red-600">{totalStats.offline} offline</span></div></div><Settings className="h-8 w-8 text-blue-600" /></div></CardContent></Card>
             <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Raised</p><p className="text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.totalRaised)}</p></div><DollarSign className="h-8 w-8 text-green-600" /></div></CardContent></Card>

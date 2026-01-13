@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { CampaignCreationForm } from '@/components/campaign/CampaignCreationForm';
 import { AdminLayout } from '@/views/admin/AdminLayout';
 import { useAuth } from '@/shared/lib/auth-provider';
+import { Button } from '@/shared/ui/button';
+import { ChevronLeft } from 'lucide-react';
 
 interface CampaignFormData {
   title: string;
@@ -61,18 +63,35 @@ export default function CreateCampaignPage() {
       onLogout={handleLogout}
       userSession={currentAdminSession}
       hasPermission={() => false}
+      headerTitle={(
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => router.push('/admin')}
+          className="px-0 text-xs font-semibold uppercase tracking-widest text-gray-500 hover:text-gray-800"
+        >
+          <ChevronLeft className="w-4 h-4 mr-0" />
+          Back to Dashboard
+        </Button>
+      )}
     >
-      <div className="p-6">
-        <div className="mb-6">
-          <button
-            onClick={() => router.back()}
-            className="text-blue-600 hover:text-blue-700 mb-4 flex items-center gap-2"
-          >
-            ← Back
-          </button>
-        </div>
+      <div className="space-y-4">
+        <header className="bg-white shadow-sm border-b">
+          <div className="px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex flex-col gap-1">
+                <div>
+                  <h1 className="text-2xl font-semibold text-gray-900 sm:text-3xl">Campaign Management</h1>
+                  <p className="text-sm text-gray-600">Create a new campaign and configure its details</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
 
-        <CampaignCreationForm onSubmit={handleSubmit} isLoading={isLoading} />
+        <main className="px-2 sm:px-6 lg:px-8 pt-2 pb-4 sm:pt-4 sm:pb-8">
+          <CampaignCreationForm onSubmit={handleSubmit} isLoading={isLoading} />
+        </main>
       </div>
     </AdminLayout>
   );
