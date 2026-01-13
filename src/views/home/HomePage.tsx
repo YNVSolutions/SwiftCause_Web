@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '../../shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../shared/ui/card';
 import { Badge } from '../../shared/ui/badge';
@@ -364,9 +364,9 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
     }
   ];
 
-  const nextStep = () => {
+  const nextStep = useCallback(() => {
     setActiveFlowStep((prev) => (prev + 1) % donationFlowSteps.length);
-  };
+  }, [donationFlowSteps.length]);
 
   const prevStep = () => {
     setActiveFlowStep((prev) => (prev - 1 + donationFlowSteps.length) % donationFlowSteps.length);
@@ -382,7 +382,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
       nextStep();
     }, 5000);
     return () => clearInterval(interval);
-  }, [activeFlowStep]);
+  }, [nextStep]);
 
   // Mouse move handler for 3D tilt effect
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
