@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import Cookies from "js-cookie";
 import { Button } from "../../shared/ui/button";
 import { Input } from "../../shared/ui/input";
 import { Label } from "../../shared/ui/label";
@@ -211,6 +212,8 @@ export function AdminDashboard({
   const [showCampaignForm, setShowCampaignForm] = useState(false);
   const [showStripeStep, setShowStripeStep] = useState(false);
   const [isTourActive, setIsTourActive] = useState(false);
+  const [campaignFormKey, setCampaignFormKey] = useState(0); // Key to force form remount when needed
+  const previousStepRef = useRef<string>(''); // Track previous step to avoid duplicate history entries
   const [newCampaign, setNewCampaign] = useState({ 
     title: '', 
     description: '', 
@@ -221,7 +224,8 @@ export function AdminDashboard({
     tags: [] as string[],
     coverImageUrl: '',
     category: '',
-    isGlobal: false
+    isGlobal: false,
+    donationTiers: ['', '', ''] as [string, string, string],
   });
 
   const { organization, loading: orgLoading, error: orgError } = useOrganization(
@@ -238,6 +242,104 @@ export function AdminDashboard({
   const { showToast } = useToast();
   const [showOnboardingPopup, setShowOnboardingPopup] = useState(false);
   const [showSmallPopup, setShowSmallPopup] = useState(false);
+  const [hasSavedTour, setHasSavedTour] = useState(false);
+
+  // Cookie key for tour state
+  const TOUR_STATE_COOKIE = 'swiftcause_tour_state';
+
+  // Save tour state to cookies
+  const saveTourState = () => {
+    if (!showOnboarding) return;
+    
+    const tourState = {
+      showCampaignForm,
+      showKioskForm,
+      showLinkingForm,
+      showStripeStep,
+      newCampaign,
+      newKiosk,
+      createdCampaignId,
+      createdKioskId,
+      assignedKioskIds,
+      isGlobalCampaign,
+      kioskFormData,
+      timestamp: Date.now(),
+    };
+    
+    console.log('=== SAVING TOUR STATE TO COOKIES ===');
+    console.log('Tour state being saved:', tourState);
+    console.log('Campaign data:', newCampaign);
+    console.log('====================================');
+    
+    Cookies.set(TOUR_STATE_COOKIE, JSON.stringify(tourState), { expires: 7 }); // Expires in 7 days
+  };
+
+  // Load tour state from cookies
+  const loadTourState = () => {
+    const savedState = Cookies.get(TOUR_STATE_COOKIE);
+    if (!savedState) return null;
+    
+    try {
+      return JSON.parse(savedState);
+    } catch (error) {
+      console.error('Error parsing saved tour state:', error);
+      Cookies.remove(TOUR_STATE_COOKIE);
+      return null;
+    }
+  };
+
+  // Clear tour state from cookies
+  const clearTourState = () => {
+    Cookies.remove(TOUR_STATE_COOKIE);
+    setHasSavedTour(false);
+  };
+
+  // Check for saved tour state on mount
+  useEffect(() => {
+    const savedState = loadTourState();
+    if (savedState) {
+      setHasSavedTour(true);
+      // Automatically show onboarding if there's saved state
+      setShowOnboarding(true);
+    }
+  }, []);
+
+  // Check for saved tour state when returning to welcome screen
+  useEffect(() => {
+    if (showOnboarding && !showCampaignForm && !showKioskForm && !showLinkingForm && !showStripeStep) {
+      // We're on the welcome screen, check if there's saved data
+      const savedState = loadTourState();
+      if (savedState) {
+        setHasSavedTour(true);
+      } else {
+        setHasSavedTour(false);
+      }
+    }
+  }, [showOnboarding, showCampaignForm, showKioskForm, showLinkingForm, showStripeStep]);
+
+  // Save tour state whenever relevant state changes (with debounce to prevent infinite loops)
+  useEffect(() => {
+    if (showOnboarding && (showCampaignForm || showKioskForm || showLinkingForm || showStripeStep)) {
+      const timeoutId = setTimeout(() => {
+        saveTourState();
+      }, 300); // Debounce for 300ms
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [
+    showOnboarding, 
+    showCampaignForm, 
+    showKioskForm, 
+    showLinkingForm, 
+    showStripeStep, 
+    JSON.stringify(newCampaign), 
+    JSON.stringify(newKiosk), 
+    createdCampaignId, 
+    createdKioskId, 
+    JSON.stringify(assignedKioskIds), 
+    isGlobalCampaign, 
+    JSON.stringify(kioskFormData)
+  ]);
 
   // Handle return from Stripe onboarding
 
@@ -279,6 +381,70 @@ export function AdminDashboard({
     }
   }, [orgLoading, organization, needsOnboarding]);
 
+  // Handle browser back button during tour
+  useEffect(() => {
+    if (!showOnboarding) return;
+
+    const handlePopState = (event: PopStateEvent) => {
+      // Check if this is a tour navigation
+      if (event.state?.tourStep) {
+        console.log('Back button pressed. Current states:', {
+          showStripeStep,
+          showLinkingForm,
+          showKioskForm,
+          showCampaignForm,
+        });
+        
+        // Navigate within the tour based on current step
+        if (showStripeStep) {
+          console.log('Going back from Stripe to Linking');
+          setShowStripeStep(false);
+          setShowLinkingForm(true);
+          previousStepRef.current = 'linking';
+        } else if (showLinkingForm) {
+          console.log('Going back from Linking to Kiosk');
+          setShowLinkingForm(false);
+          setShowKioskForm(true);
+          previousStepRef.current = 'kiosk';
+        } else if (showKioskForm) {
+          console.log('Going back from Kiosk to Campaign');
+          setShowKioskForm(false);
+          setShowCampaignForm(true);
+          previousStepRef.current = 'campaign';
+        } else if (showCampaignForm) {
+          console.log('Going back from Campaign to Welcome');
+          setShowCampaignForm(false);
+          previousStepRef.current = 'welcome';
+          // Back to welcome screen
+        } else {
+          console.log('Exiting tour from Welcome');
+          // On welcome screen, exit tour
+          setShowOnboarding(false);
+          previousStepRef.current = '';
+        }
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [showOnboarding, showCampaignForm, showKioskForm, showLinkingForm, showStripeStep]);
+
+  // Push history state when moving forward in the tour
+  useEffect(() => {
+    if (!showOnboarding) return;
+    
+    // Determine current step
+    const currentStep = showStripeStep ? 'stripe' : showLinkingForm ? 'linking' : showKioskForm ? 'kiosk' : showCampaignForm ? 'campaign' : 'welcome';
+    
+    // Only push state if we've moved to a different step
+    if (currentStep !== previousStepRef.current && currentStep !== 'welcome') {
+      window.history.pushState({ tourStep: true, step: currentStep }, '');
+      previousStepRef.current = currentStep;
+    }
+  }, [showOnboarding, showCampaignForm, showKioskForm, showLinkingForm, showStripeStep]);
 
 
   const gettingStartedSteps = [
@@ -374,8 +540,8 @@ export function AdminDashboard({
           (doc) => ({ id: doc.id, ...doc.data() } as Campaign)
         );
         
-        // Check if there are no campaigns and show onboarding (but not if tour is already active)
-        if (allCampaigns.length === 0 && !showOnboarding && !isTourActive) {
+        // Check if there are no campaigns and show onboarding (but not if tour is already active or has saved state)
+        if (allCampaigns.length === 0 && !showOnboarding && !isTourActive && !hasSavedTour) {
           setShowOnboarding(true);
         }
         setCampaignCountChecked(true);
@@ -519,6 +685,7 @@ export function AdminDashboard({
       console.log("Campaign created successfully with ID:", docRef.id);
       
       // Move to kiosk form
+      setShowCampaignForm(false);
       setShowKioskForm(true);
     } catch (error) {
       console.error("Error creating campaign: ", error);
@@ -807,12 +974,18 @@ export function AdminDashboard({
     : categoryData.slice(0, 6);
 
   const handleStartTour = () => {
+    // Clear any saved tour state - this will set hasSavedTour to false
+    clearTourState();
+    
     // Reset all form states first
     setShowCampaignForm(false);
     setShowKioskForm(false);
     setShowLinkingForm(false);
     setShowStripeStep(false);
     setIsTourActive(false);
+    
+    // Reset form key to force fresh mount
+    setCampaignFormKey(prev => prev + 1);
     
     // Reset form data
     setNewCampaign({ 
@@ -825,17 +998,106 @@ export function AdminDashboard({
       tags: [],
       coverImageUrl: '',
       category: '',
-      isGlobal: false
+      isGlobal: false,
+      donationTiers: ['', '', ''],
     });
     setNewKiosk({ name: '', location: '', accessCode: '' });
     setCreatedCampaignId('');
     setCreatedKioskId('');
+    setAssignedKioskIds([]);
+    setIsGlobalCampaign(false);
+    setKioskFormData({
+      name: '',
+      location: '',
+      accessCode: '',
+      status: 'offline',
+      assignedCampaigns: [],
+      displayLayout: 'grid',
+    });
     
     // Use setTimeout to ensure state updates are processed
     setTimeout(() => {
       setIsTourActive(true);
       setShowOnboarding(true);
+      // Don't set showCampaignForm - stay on welcome screen
     }, 0);
+  };
+
+  const handleResumeTour = () => {
+    const savedState = loadTourState();
+    
+    // Log the fetched data from cookies
+    console.log('=== RESUME TOUR - Data from Cookies ===');
+    console.log('Full saved state:', savedState);
+    
+    if (!savedState) {
+      console.log('No saved state found in cookies');
+      showToast("No saved tour found. Starting fresh.", "info", 3000);
+      handleStartTour();
+      return;
+    }
+    
+    console.log('Campaign Form State:', savedState.showCampaignForm);
+    console.log('Kiosk Form State:', savedState.showKioskForm);
+    console.log('Linking Form State:', savedState.showLinkingForm);
+    console.log('Stripe Step State:', savedState.showStripeStep);
+    console.log('New Campaign Data:', savedState.newCampaign);
+    console.log('New Kiosk Data:', savedState.newKiosk);
+    console.log('Created Campaign ID:', savedState.createdCampaignId);
+    console.log('Created Kiosk ID:', savedState.createdKioskId);
+    console.log('Assigned Kiosk IDs:', savedState.assignedKioskIds);
+    console.log('Is Global Campaign:', savedState.isGlobalCampaign);
+    console.log('Kiosk Form Data:', savedState.kioskFormData);
+    console.log('Timestamp:', savedState.timestamp);
+    console.log('========================================');
+    
+    // First, restore all saved state without showing forms
+    setShowCampaignForm(false);
+    setShowKioskForm(false);
+    setShowLinkingForm(false);
+    setShowStripeStep(false);
+    
+    setNewCampaign(savedState.newCampaign || { 
+      title: '', 
+      description: '', 
+      goal: 0, 
+      status: 'active',
+      startDate: '',
+      endDate: '',
+      tags: [],
+      coverImageUrl: '',
+      category: '',
+      isGlobal: false,
+      donationTiers: ['', '', ''],
+    });
+    setNewKiosk(savedState.newKiosk || { name: '', location: '', accessCode: '' });
+    setCreatedCampaignId(savedState.createdCampaignId || '');
+    setCreatedKioskId(savedState.createdKioskId || '');
+    setAssignedKioskIds(savedState.assignedKioskIds || []);
+    setIsGlobalCampaign(savedState.isGlobalCampaign || false);
+    setKioskFormData(savedState.kioskFormData || {
+      name: '',
+      location: '',
+      accessCode: '',
+      status: 'offline',
+      assignedCampaigns: [],
+      displayLayout: 'grid',
+    });
+    
+    setIsTourActive(true);
+    setShowOnboarding(true);
+    
+    // Increment form key to force remount with restored data
+    setCampaignFormKey(prev => prev + 1);
+    
+    // Use setTimeout to ensure state is updated before showing the forms
+    setTimeout(() => {
+      setShowCampaignForm(savedState.showCampaignForm || false);
+      setShowKioskForm(savedState.showKioskForm || false);
+      setShowLinkingForm(savedState.showLinkingForm || false);
+      setShowStripeStep(savedState.showStripeStep || false);
+      showToast("Tour resumed from where you left off!", "success", 3000);
+    }, 100);
   };
 
   if (error) {
@@ -887,8 +1149,22 @@ export function AdminDashboard({
 
                     {/* Action Buttons */}
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
+                      {hasSavedTour ? (
+                        <Button
+                          onClick={handleResumeTour}
+                          size="lg"
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all w-full sm:w-auto"
+                        >
+                          <Play className="w-5 h-5 mr-2" />
+                          Resume Tour
+                        </Button>
+                      ) : null}
                       <Button
-                        onClick={() => setShowCampaignForm(true)}
+                        onClick={() => {
+                          // Clear saved tour state when starting fresh
+                          clearTourState();
+                          setShowCampaignForm(true);
+                        }}
                         size="lg"
                         className="bg-gray-900 hover:bg-gray-800 text-white px-8 py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all w-full sm:w-auto"
                       >
@@ -896,7 +1172,10 @@ export function AdminDashboard({
                         <ChevronRight className="w-5 h-5 ml-2" />
                       </Button>
                       <Button
-                        onClick={() => setShowOnboarding(false)}
+                        onClick={() => {
+                          clearTourState();
+                          setShowOnboarding(false);
+                        }}
                         variant="ghost"
                         size="lg"
                         className="text-gray-600 hover:text-gray-900 px-8 py-6 text-base font-medium w-full sm:w-auto"
@@ -1040,7 +1319,28 @@ export function AdminDashboard({
 
                     {/* Campaign Creation Form */}
                     <CampaignCreationForm
+                      key={`campaign-form-${campaignFormKey}`}
                       onSubmit={handleCreateCampaign}
+                      onCancel={() => {
+                        // Go back to welcome screen
+                        setShowCampaignForm(false);
+                      }}
+                      onChange={(formData) => {
+                        // Update newCampaign state whenever form data changes
+                        setNewCampaign({
+                          title: formData.title,
+                          description: formData.briefOverview,
+                          goal: formData.fundraisingTarget,
+                          status: 'active',
+                          startDate: formData.startDate,
+                          endDate: formData.endDate,
+                          tags: [],
+                          coverImageUrl: formData.coverImageUrl || '',
+                          category: 'General',
+                          isGlobal: false,
+                          donationTiers: formData.donationTiers,
+                        });
+                      }}
                       initialData={{
                         title: newCampaign.title,
                         briefOverview: newCampaign.description,
@@ -1048,7 +1348,7 @@ export function AdminDashboard({
                         coverImageUrl: newCampaign.coverImageUrl,
                         youtubePresentation: '',
                         fundraisingTarget: newCampaign.goal,
-                        donationTiers: ['', '', ''],
+                        donationTiers: newCampaign.donationTiers,
                         startDate: newCampaign.startDate,
                         endDate: newCampaign.endDate,
                         kioskDistribution: []
@@ -1181,7 +1481,10 @@ export function AdminDashboard({
                   {/* Form Actions */}
                   <div className="flex items-center justify-between pt-6 border-t border-gray-100">
                     <button
-                      onClick={() => setShowKioskForm(false)}
+                      onClick={() => {
+                        setShowKioskForm(false);
+                        setShowCampaignForm(true);
+                      }}
                       className="flex items-center gap-2 text-gray-600 hover:text-gray-900 font-medium transition-colors"
                     >
                       <ChevronRight className="w-4 h-4 rotate-180" />
@@ -1480,12 +1783,14 @@ export function AdminDashboard({
                         <Button
                           onClick={() => {
                           setNewKiosk({ name: '', location: '', accessCode: '' });
-                          setNewCampaign({ title: '', description: '', goal: 0, status: 'active', startDate: '', endDate: '', tags: [], coverImageUrl: '', category: '', isGlobal: false });
+                          setNewCampaign({ title: '', description: '', goal: 0, status: 'active', startDate: '', endDate: '', tags: [], coverImageUrl: '', category: '', isGlobal: false, donationTiers: ['', '', ''] });
                           setShowStripeStep(false);
                           setShowCampaignForm(false);
                           setShowKioskForm(false);
                           setShowLinkingForm(false);
                           setShowOnboarding(false);
+                          // Clear saved tour state
+                          clearTourState();
                           // Refresh dashboard data
                           refreshDashboard();
                           // Navigate to dashboard to see the new data
@@ -1561,11 +1866,13 @@ export function AdminDashboard({
                       <Button
                         onClick={() => {
                           setNewKiosk({ name: '', location: '', accessCode: '' });
-                          setNewCampaign({ title: '', description: '', goal: 0, status: 'active', startDate: '', endDate: '', tags: [], coverImageUrl: '', category: '', isGlobal: false });
+                          setNewCampaign({ title: '', description: '', goal: 0, status: 'active', startDate: '', endDate: '', tags: [], coverImageUrl: '', category: '', isGlobal: false, donationTiers: ['', '', ''] });
                           setShowStripeStep(false);
                           setShowCampaignForm(false);
                           setShowKioskForm(false);
                           setShowOnboarding(false);
+                          // Clear saved tour state
+                          clearTourState();
                           // Refresh dashboard data
                           refreshDashboard();
                           // Navigate to dashboard to see the new data

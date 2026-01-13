@@ -35,12 +35,16 @@ interface CampaignCreationFormProps {
   onSubmit: (data: CampaignFormData) => Promise<void>;
   isLoading?: boolean;
   initialData?: Partial<CampaignFormData>;
+  onChange?: (data: CampaignFormData) => void;
+  onCancel?: () => void;
 }
 
 export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
   onSubmit,
   isLoading = false,
   initialData = {},
+  onChange,
+  onCancel,
 }) => {
   const [formData, setFormData] = useState<CampaignFormData>({
     title: initialData.title || '',
@@ -61,6 +65,17 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
   const [previewImage, setPreviewImage] = useState<string>(initialData.coverImageUrl || '');
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<FormTab>('basic-info');
+
+  // Call onChange whenever formData changes (with debounce)
+  React.useEffect(() => {
+    if (onChange) {
+      const timeoutId = setTimeout(() => {
+        onChange(formData);
+      }, 300); // Debounce for 300ms
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [formData, onChange]);
 
   // Tab configuration with icons and completion status
   const tabs = [
@@ -300,12 +315,20 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    console.log('=== FORM SUBMIT TRIGGERED ===');
+    console.log('Form data:', formData);
+    console.log('Is form valid:', isFormValid);
+
     if (!validateForm()) {
+      console.log('Form validation failed');
+      console.log('Validation errors:', errors);
       return;
     }
 
+    console.log('Form validation passed, calling onSubmit...');
     try {
       await onSubmit(formData);
+      console.log('onSubmit completed successfully');
     } catch (error) {
       console.error('Failed to submit campaign:', error);
     }
@@ -862,6 +885,7 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
                     <Button
                       variant="outline"
                       type="button"
+                      onClick={onCancel}
                       disabled={isLoading}
                       className="flex-1 sm:flex-none text-gray-700 h-12 px-6 border-gray-300 hover:bg-gray-50"
                     >
@@ -870,6 +894,12 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
                     <Button
                       type="submit"
                       disabled={!isFormValid || isLoading}
+                      onClick={() => {
+                        console.log('=== PUBLISH CAMPAIGN BUTTON CLICKED ===');
+                        console.log('Is form valid:', isFormValid);
+                        console.log('Is loading:', isLoading);
+                        console.log('Button disabled:', !isFormValid || isLoading);
+                      }}
                       className="flex-1 sm:flex-none bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed h-12 px-8 font-semibold"
                     >
                       {isLoading ? 'Publishing...' : 'Publish Campaign'}
