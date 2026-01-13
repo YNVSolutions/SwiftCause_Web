@@ -160,8 +160,14 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="!max-w-[95vw] !w-[95vw] max-h-[95vh] flex flex-col p-0 sm:!max-w-[95vw] sm:!w-[95vw]">
         {/* Header */}
-        <div className="p-8 pb-6 border-b bg-gradient-to-r from-green-50 to-emerald-50">
-          <DialogHeader>
+        <div className="p-8 pb-6 border-b bg-gradient-to-r from-green-50 to-emerald-50 backdrop-blur-sm relative overflow-hidden">
+          {/* Subtle animated background pattern */}
+          <div className="absolute inset-0 opacity-30">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-green-200 rounded-full mix-blend-multiply filter blur-3xl animate-pulse"></div>
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-200 rounded-full mix-blend-multiply filter blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+          </div>
+          
+          <DialogHeader className="relative z-10">
             <DialogTitle className="flex items-center space-x-3 text-3xl">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-green-600 to-emerald-600 shadow-lg">
                 <Heart className="h-6 w-6 text-white" />
@@ -182,7 +188,7 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
         <div className="flex-1 overflow-auto">
           <div className="p-8 space-y-8">
             {/* Demo Controls */}
-            <div className="flex items-center justify-between p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
+            <div className="flex items-center justify-between p-6 bg-white/80 backdrop-blur-md border border-gray-200/50 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
               <div className="flex items-center space-x-4">
                 <Button
                   onClick={isPlaying ? pauseDemo : startDemo}
@@ -193,7 +199,7 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
                   {isPlaying ? 'Pause Demo' : 'Start Demo'}
                 </Button>
                 
-                <Button variant="outline" onClick={resetDemo} size="lg" className="h-12 px-6 text-base">
+                <Button variant="outline" onClick={resetDemo} size="lg" className="h-12 px-6 text-base backdrop-blur-sm">
                   <RotateCcw className="w-5 h-5 mr-2" />
                   Reset
                 </Button>
@@ -226,9 +232,9 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
                 <div className="relative">
                   {/* Device Frame */}
                   <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-4 rounded-3xl shadow-2xl">
-                    <div className="bg-white rounded-2xl overflow-hidden">
+                    <div className="bg-white rounded-2xl overflow-hidden backdrop-blur-sm">
                       {/* Device Header */}
-                      <div className="bg-gray-50 px-6 py-4 border-b flex items-center justify-between">
+                      <div className="bg-gray-50/90 backdrop-blur-md px-6 py-4 border-b flex items-center justify-between">
                         <div className="flex items-center space-x-3">
                           <div className="w-4 h-4 bg-red-400 rounded-full"></div>
                           <div className="w-4 h-4 bg-yellow-400 rounded-full"></div>
@@ -250,10 +256,10 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
                               </Badge>
                             </div>
                             
-                            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+                            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm bg-white/95">
                               <CardContent className="p-6">
                                 <div className="flex items-start space-x-5">
-                                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                                  <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
                                     <Heart className="w-8 h-8 text-white" />
                                   </div>
                                   <div className="flex-1 space-y-4">
@@ -318,7 +324,7 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
                             </div>
                             
                             <div className="space-y-4">
-                              <div className="flex items-center space-x-4 p-4 bg-green-50 border border-green-200 rounded-xl">
+                              <div className="flex items-center space-x-4 p-4 bg-green-50/80 backdrop-blur-sm border border-green-200 rounded-xl">
                                 <CheckCircle className="w-6 h-6 text-green-600" />
                                 <div className="flex-1">
                                   <span className="text-base font-medium text-green-900">
@@ -345,7 +351,7 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
                             </div>
                             
                             <div className="space-y-4">
-                              <div className="p-5 bg-green-50 border border-green-200 rounded-xl">
+                              <div className="p-5 bg-green-50/80 backdrop-blur-sm rounded-xl border border-green-200 mb-4">
                                 <div className="flex items-center justify-between mb-3">
                                   <div className="flex items-center space-x-3">
                                     <CreditCard className="w-6 h-6 text-green-600" />
@@ -365,14 +371,14 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
                               <div className="grid grid-cols-3 gap-3">
                                 
                                 {currentStepData.mockData.providers?.map((provider, idx) => (
-                                  <div key={idx} className="p-3 bg-gray-50 border rounded-xl text-center">
+                                  <div key={idx} className="p-3 bg-gray-50/80 backdrop-blur-sm border rounded-xl text-center">
                                     <span className="text-sm font-medium text-gray-700">{provider}</span>
                                   </div>
                                 ))}
                               </div>
                               
                               {isPlaying && (
-                                <div className="flex items-center justify-center space-x-4 p-5 bg-green-50 border border-green-200 rounded-xl">
+                                <div className="flex items-center justify-center space-x-4 p-5 bg-green-50/80 backdrop-blur-sm border border-green-200 rounded-xl">
                                   <div className="animate-spin rounded-full h-6 w-6 border-3 border-green-600 border-t-transparent"></div>
                                   <span className="text-base font-medium text-green-900">Processing secure payment...</span>
                                 </div>
@@ -389,7 +395,7 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
                             </div>
                             
                             <div className="grid grid-cols-2 gap-4">
-                              <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-xl">
+                              <div className="p-4 bg-gradient-to-br from-green-50/90 to-emerald-50/90 backdrop-blur-sm border border-green-200 rounded-xl">
                                 <div className="flex items-center space-x-3 mb-3">
                                   <DollarSign className="w-5 h-5 text-green-600" />
                                   <span className="text-sm font-medium text-green-700">Total Raised</span>
@@ -398,7 +404,7 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
                                 <div className="text-sm text-green-600">{currentStepData.mockData.growth as string} this month</div>
                               </div>
                               
-                              <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-xl">
+                              <div className="p-4 bg-gradient-to-br from-green-50/90 to-emerald-50/90 backdrop-blur-sm border border-green-200 rounded-xl">
                                 <div className="flex items-center space-x-3 mb-3">
                                   <BarChart3 className="w-5 h-5 text-green-600" />
                                   <span className="text-sm font-medium text-green-700">Conversion</span>
@@ -409,14 +415,14 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
                             </div>
                             
                             <div className="space-y-3">
-                              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                              <div className="flex items-center justify-between p-3 bg-gray-50/80 backdrop-blur-sm rounded-xl">
                                 <div className="flex items-center space-x-3">
                                   <Users className="w-5 h-5 text-gray-600" />
                                   <span className="text-base">Active Campaigns</span>
                                 </div>
                                 <span className="text-base font-semibold">{currentStepData.mockData.campaigns as number}</span>
                               </div>
-                              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                              <div className="flex items-center justify-between p-3 bg-gray-50/80 backdrop-blur-sm rounded-xl">
                                 <div className="flex items-center space-x-3">
                                   <Smartphone className="w-5 h-5 text-gray-600" />
                                   <span className="text-base">Active Kiosks</span>
@@ -474,7 +480,7 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
                   </div>
 
                   {/* Platform Benefits */}
-                  <Card className="border-0 shadow-lg bg-gradient-to-br from-gray-50 to-white">
+                  <Card className="border-0 shadow-lg bg-gradient-to-br from-gray-50/90 to-white/90 backdrop-blur-sm">
                     <CardContent className="p-6">
                       <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
                         <Star className="w-5 h-5 text-yellow-500" />
@@ -510,18 +516,26 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
                   </Card>
 
                   {/* Call to Action */}
-                  <div className="p-6 bg-gradient-to-br from-green-600 to-emerald-600 rounded-xl text-white shadow-lg">
-                    <h4 className="text-lg font-semibold mb-3">Ready to get started?</h4>
-                    <p className="text-green-100 text-base mb-5">
-                      Join hundreds of organizations already using Swift Cause to maximize their fundraising impact.
-                    </p>
-                    <Button 
-                      className="w-full h-12 bg-white text-green-600 hover:bg-gray-50 shadow-md text-base"
-                      onClick={() => onOpenChange(false)}
-                    >
-                      Start Your Free Trial
-                      <ChevronRight className="w-5 h-5 ml-2" />
-                    </Button>
+                  <div className="p-6 bg-gradient-to-br from-green-600 to-emerald-600 rounded-xl text-white shadow-lg backdrop-blur-sm relative overflow-hidden">
+                    {/* Subtle pattern overlay */}
+                    <div className="absolute inset-0 opacity-10">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full blur-2xl"></div>
+                      <div className="absolute bottom-0 left-0 w-32 h-32 bg-white rounded-full blur-2xl"></div>
+                    </div>
+                    
+                    <div className="relative z-10">
+                      <h4 className="text-lg font-semibold mb-3">Ready to get started?</h4>
+                      <p className="text-green-100 text-base mb-5">
+                        Join hundreds of organizations already using Swift Cause to maximize their fundraising impact.
+                      </p>
+                      <Button 
+                        className="w-full h-12 bg-white text-green-600 hover:bg-gray-50 shadow-md text-base"
+                        onClick={() => onOpenChange(false)}
+                      >
+                        Start Your Free Trial
+                        <ChevronRight className="w-5 h-5 ml-2" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
