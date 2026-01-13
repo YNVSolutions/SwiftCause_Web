@@ -1166,15 +1166,12 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 relative">
-            {/* Connecting lines for desktop */}
-            <div className="hidden lg:block absolute top-20 left-0 right-0 h-0.5 bg-gradient-to-r from-green-200 via-green-400 to-green-200"></div>
-            
+          {/* Mobile: Single Column */}
+          <div className="block sm:hidden space-y-6">
             {howItWorks.map((step, index) => (
-              <div key={index} className="relative">
-                <Card className="text-center p-6 sm:p-8 bg-white border-green-100 hover:border-green-400 transition-all duration-300 hover:shadow-xl group cursor-pointer transform hover:-translate-y-2">
+              <div key={index}>
+                <Card className="text-center p-6 bg-white border-green-100 hover:border-green-400 transition-all duration-300 hover:shadow-xl group cursor-pointer transform hover:-translate-y-2">
                   <CardContent className="space-y-4">
-                    {/* Animated step number */}
                     <div className="relative inline-block">
                       <div className="absolute inset-0 bg-green-600 rounded-full animate-ping opacity-20"></div>
                       <div className="relative p-4 rounded-full inline-block bg-green-100 text-green-600 group-hover:bg-green-600 group-hover:text-white transition-all duration-300 group-hover:scale-110">
@@ -1184,23 +1181,145 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
                         {index + 1}
                       </div>
                     </div>
-                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900 group-hover:text-green-700 transition-colors">
+                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-green-700 transition-colors">
                       {step.title}
                     </h3>
-                    <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+                    <p className="text-sm text-gray-600 leading-relaxed">
                       {step.description}
                     </p>
                   </CardContent>
                 </Card>
-                
-                {/* Arrow for mobile/tablet */}
                 {index < howItWorks.length - 1 && (
-                  <div className="flex justify-center my-4 lg:hidden">
+                  <div className="flex justify-center my-4">
                     <ArrowDown className="w-6 h-6 text-green-400 animate-bounce" />
                   </div>
                 )}
               </div>
             ))}
+          </div>
+          
+          {/* Tablet: 2x2 Grid */}
+          <div className="hidden sm:block lg:hidden">
+            <div className="grid grid-cols-2 gap-8">
+              {howItWorks.map((step, index) => (
+                <div key={index}>
+                  <Card className="text-center p-8 bg-white border-green-100 hover:border-green-400 transition-all duration-300 hover:shadow-xl group cursor-pointer transform hover:-translate-y-2">
+                    <CardContent className="space-y-4">
+                      <div className="relative inline-block">
+                        <div className="absolute inset-0 bg-green-600 rounded-full animate-ping opacity-20"></div>
+                        <div className="relative p-4 rounded-full inline-block bg-green-100 text-green-600 group-hover:bg-green-600 group-hover:text-white transition-all duration-300 group-hover:scale-110">
+                          {step.icon}
+                        </div>
+                        <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
+                          {index + 1}
+                        </div>
+                      </div>
+                      <h3 className="text-xl font-semibold text-gray-900 group-hover:text-green-700 transition-colors">
+                        {step.title}
+                      </h3>
+                      <p className="text-base text-gray-600 leading-relaxed">
+                        {step.description}
+                      </p>
+                    </CardContent>
+                  </Card>
+                  {index === 1 && (
+                    <div className="flex justify-center my-8 col-span-2">
+                      <ArrowDown className="w-6 h-6 text-green-400 animate-bounce" />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Desktop: S-Shape Flow */}
+          <div className="hidden lg:block space-y-16">
+            {/* Row 1: Steps 1 & 2 */}
+            <div className="relative">
+              <div className="grid grid-cols-2 gap-12">
+                {howItWorks.slice(0, 2).map((step, index) => (
+                  <Card key={index} className="text-center p-8 bg-white border-green-100 hover:border-green-400 transition-all duration-300 hover:shadow-xl group cursor-pointer transform hover:-translate-y-2">
+                    <CardContent className="space-y-4">
+                      <div className="relative inline-block">
+                        <div className="absolute inset-0 bg-green-600 rounded-full animate-ping opacity-20"></div>
+                        <div className="relative p-4 rounded-full inline-block bg-green-100 text-green-600 group-hover:bg-green-600 group-hover:text-white transition-all duration-300 group-hover:scale-110">
+                          {step.icon}
+                        </div>
+                        <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
+                          {index + 1}
+                        </div>
+                      </div>
+                      <h3 className="text-xl font-semibold text-gray-900 group-hover:text-green-700 transition-colors">
+                        {step.title}
+                      </h3>
+                      <p className="text-base text-gray-600 leading-relaxed">
+                        {step.description}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              {/* Arrow connecting 1 to 2 */}
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                <ArrowRight className="w-8 h-8 text-green-400" />
+              </div>
+            </div>
+            
+            {/* Connecting arrow down from step 2 */}
+            <div className="flex justify-end pr-24">
+              <ArrowDown className="w-8 h-8 text-green-400 animate-bounce" />
+            </div>
+            
+            {/* Row 2: Steps 3 & 4 (Reversed positions for S-shape, but correct order) */}
+            <div className="relative">
+              <div className="grid grid-cols-2 gap-12">
+                {/* Step 4 on the left */}
+                <Card className="text-center p-8 bg-white border-green-100 hover:border-green-400 transition-all duration-300 hover:shadow-xl group cursor-pointer transform hover:-translate-y-2">
+                  <CardContent className="space-y-4">
+                    <div className="relative inline-block">
+                      <div className="absolute inset-0 bg-green-600 rounded-full animate-ping opacity-20"></div>
+                      <div className="relative p-4 rounded-full inline-block bg-green-100 text-green-600 group-hover:bg-green-600 group-hover:text-white transition-all duration-300 group-hover:scale-110">
+                        {howItWorks[3].icon}
+                      </div>
+                      <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
+                        4
+                      </div>
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900 group-hover:text-green-700 transition-colors">
+                      {howItWorks[3].title}
+                    </h3>
+                    <p className="text-base text-gray-600 leading-relaxed">
+                      {howItWorks[3].description}
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                {/* Step 3 on the right */}
+                <Card className="text-center p-8 bg-white border-green-100 hover:border-green-400 transition-all duration-300 hover:shadow-xl group cursor-pointer transform hover:-translate-y-2">
+                  <CardContent className="space-y-4">
+                    <div className="relative inline-block">
+                      <div className="absolute inset-0 bg-green-600 rounded-full animate-ping opacity-20"></div>
+                      <div className="relative p-4 rounded-full inline-block bg-green-100 text-green-600 group-hover:bg-green-600 group-hover:text-white transition-all duration-300 group-hover:scale-110">
+                        {howItWorks[2].icon}
+                      </div>
+                      <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
+                        3
+                      </div>
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900 group-hover:text-green-700 transition-colors">
+                      {howItWorks[2].title}
+                    </h3>
+                    <p className="text-base text-gray-600 leading-relaxed">
+                      {howItWorks[2].description}
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+              {/* Arrow connecting 3 to 4 (right to left) */}
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rotate-180">
+                <ArrowRight className="w-8 h-8 text-green-400" />
+              </div>
+            </div>
           </div>
         </div>
       </section>
