@@ -68,6 +68,7 @@ import {
   Rocket,
   Play,
   TriangleAlert,
+  Building2,
   ArrowUpRight,
   ArrowDownRight,
   Trophy,
@@ -747,11 +748,6 @@ export function AdminDashboard({
       )}
       headerActions={(
         <div className="flex items-center gap-2 flex-nowrap ml-auto">
-          {userSession.user.role === 'super_admin' && hasPermission('system_admin') && (
-            <div className="w-auto">
-              <OrganizationSwitcher userSession={userSession} onOrganizationChange={onOrganizationSwitch} />
-            </div>
-          )}
           {organization && organization.stripe && (
             <div className="relative">
               <Button
@@ -1755,6 +1751,30 @@ export function AdminDashboard({
           <p className="text-red-500">Error: {orgError}</p>
         ) : null}
         
+        {/* Organization Switcher for Super Admin */}
+        {userSession.user.role === 'super_admin' && (
+          <div className="mb-8">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100 p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                      <Building2 className="w-4 h-4 text-white" />
+                    </div>
+                    <h2 className="text-lg font-semibold text-gray-900">Organization View</h2>
+                  </div>
+                  <p className="text-sm text-gray-600 ml-10">
+                    Switch between organizations to manage their campaigns, kiosks, and view analytics
+                  </p>
+                </div>
+                <div className="sm:flex-shrink-0">
+                  <OrganizationSwitcher userSession={userSession} onOrganizationChange={onOrganizationSwitch} />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
         {/* Bento Grid Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {/* Total Raised Card */}
@@ -2171,157 +2191,6 @@ export function AdminDashboard({
                   </Button>
                 )}
               </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        
-        {/* Top Performing Campaigns - Gamified Leaderboard */}
-        <div className="mb-8">
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm h-full">
-            <CardHeader className="p-6 border-b border-gray-100 bg-gradient-to-r from-yellow-50/50 to-orange-50/30">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="flex items-start gap-4 flex-1 min-w-0">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-md flex-shrink-0">
-                    <Trophy className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <CardTitle className="text-xl font-bold text-gray-900 mb-1">
-                      Top Performing Campaigns
-                    </CardTitle>
-                    <CardDescription className="text-sm text-gray-600 flex items-center gap-2">
-                      <span>Ranked by fundraising progress</span>
-                      <span className="hidden sm:inline text-gray-400">•</span>
-                      <span className="hidden sm:inline text-indigo-600 font-medium">
-                        {topCampaigns.length} {topCampaigns.length === 1 ? 'Campaign' : 'Campaigns'}
-                      </span>
-                    </CardDescription>
-                  </div>
-                </div>
-                {hasPermission("view_campaigns") && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onNavigate("admin-campaigns")}
-                    className="w-full sm:w-auto bg-white hover:bg-gray-50 border-gray-300 shadow-sm font-medium"
-                  >
-                    View All Campaigns
-                    <ChevronRight className="w-4 h-4 ml-1" />
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className="p-6">
-              {loading ? (
-                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="space-y-3">
-                      <Skeleton className="h-32 w-full rounded-lg" />
-                      <Skeleton className="h-5 w-3/4" />
-                      <Skeleton className="h-4 w-1/2" />
-                      <Skeleton className="h-1.5 w-full" />
-                    </div>
-                  ))}
-                </div>
-              ) : topCampaigns.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {topCampaigns.map((campaign: Campaign, index: number) => {
-                    const collected = campaign.raised || 0;
-                    const goal = campaign.goal || 1;
-                    const progressRaw = (collected / goal) * 100;
-                    const progressValue = Math.min(progressRaw, 100);
-                    const rank = index + 1;
-                    
-                    // Rank overlay styling
-                    const getRankOverlay = () => {
-                      if (rank === 1) {
-                        return (
-                          <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-yellow-500 border-2 border-white flex items-center justify-center shadow-lg">
-                            <Trophy className="w-4 h-4 text-white" />
-                          </div>
-                        );
-                      } else if (rank === 2) {
-                        return (
-                          <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-400 border-2 border-white flex items-center justify-center shadow-lg">
-                            <Medal className="w-4 h-4 text-white" />
-                          </div>
-                        );
-                      } else if (rank === 3) {
-                        return (
-                          <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-orange-500 border-2 border-white flex items-center justify-center shadow-lg">
-                            <Medal className="w-4 h-4 text-white" />
-                          </div>
-                        );
-                      } else {
-                        return (
-                          <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-gray-600 border-2 border-white flex items-center justify-center shadow-lg">
-                            <span className="text-sm font-bold text-white">{rank}</span>
-                          </div>
-                        );
-                      }
-                    };
-
-                    return (
-                      <div 
-                        key={campaign.id} 
-                        className="group bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg hover:border-gray-300 transition-all cursor-pointer"
-                        onClick={() => onNavigate("admin-campaigns")}
-                      >
-                        {/* Campaign Image */}
-                        <div className="relative h-32 bg-gradient-to-br from-gray-100 to-gray-200">
-                          <ImageWithFallback
-                            src={campaign.coverImageUrl}
-                            alt={campaign.title}
-                            className="w-full h-full object-cover"
-                          />
-                          {getRankOverlay()}
-                        </div>
-
-                        {/* Campaign Info */}
-                        <div className="p-4 space-y-3">
-                          <div>
-                            <h4 className="font-semibold text-sm text-gray-900 truncate mb-1">
-                              {campaign.title}
-                            </h4>
-                            <p className="text-lg font-bold text-gray-900">
-                              {formatCurrency(collected)}
-                            </p>
-                          </div>
-
-                          <Progress 
-                            value={progressValue} 
-                            className={`h-1.5 rounded-full ${progressRaw >= 100 ? '[&>div]:bg-green-500' : '[&>div]:bg-indigo-500'}`}
-                          />
-
-                          <div className="flex items-center justify-between text-xs text-gray-500">
-                            <span className="flex items-center gap-1">
-                              <BarChart3 className="w-3 h-3" />
-                              {formatShortCurrency(goal)}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Users className="w-3 h-3" />
-                              {campaign.donationCount || 0}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-12 text-gray-500">
-                  <Trophy className="mx-auto h-12 w-12 text-gray-300 mb-3" />
-                  <p className="text-lg font-medium mb-2 text-gray-900">No Campaigns Yet</p>
-                  <p className="text-sm mb-4 text-gray-600">
-                    Start by creating your first fundraising campaign to track progress.
-                  </p>
-                  {hasPermission("create_campaign") && (
-                    <Button onClick={() => onNavigate("admin-campaigns")} size="sm">
-                      <Plus className="w-4 h-4 mr-2" /> Create New Campaign
-                    </Button>
-                  )}
-                </div>
-              )}
             </CardContent>
           </Card>
         </div>
