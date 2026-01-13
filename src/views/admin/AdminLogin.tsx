@@ -27,10 +27,10 @@ export function AdminLogin({ email, password, error, emailError, passwordError, 
 	return (
 		<>
 			<div className="text-center mb-3 animate-fade-in">
-				<div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-purple-100 to-indigo-100 shadow-sm">
+				<div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-lg bg-linear-to-br from-purple-100 to-indigo-100 shadow-sm">
 					<UserCog className="h-6 w-6 text-purple-600" />
 				</div>
-				<h3 className="text-base font-semibold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">User Access</h3>
+				<h3 className="text-base font-semibold bg-linear-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">User Access</h3>
 				<p className="text-xs text-gray-600">For platform management and analytics</p>
 			</div>
 
@@ -93,7 +93,7 @@ export function AdminLogin({ email, password, error, emailError, passwordError, 
 
 				<Button 
 					type="submit" 
-					className="w-full h-11 bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-700 hover:via-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl text-sm font-medium transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] bg-[length:200%_100%] hover:bg-right animate-gradient-x" 
+					className="w-full h-11 bg-linear-to-r from-purple-300 via-indigo-300 to-purple-300 hover:from-purple-400 hover:via-indigo-400 hover:to-purple-400 text-white shadow-lg hover:shadow-xl text-sm font-medium transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] bg-size-[200%_100%] hover:bg-right animate-gradient-x" 
 					disabled={loading}
 				>
 					{loading ? (
@@ -113,5 +113,3 @@ export function AdminLogin({ email, password, error, emailError, passwordError, 
 		</>
 	);
 }
-
-
