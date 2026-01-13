@@ -108,8 +108,6 @@ import { useOrganization } from "../../shared/lib/hooks/useOrganization";
 import { auth } from "../../shared/lib/firebase";
 
 import { AdminLayout } from "./AdminLayout";
-import { SystemAlertsWidget } from "./components/SystemAlertsWidget";
-import { useSystemAlerts } from "../../shared/lib/hooks/useSystemAlerts";
 import { useStripeOnboarding, StripeOnboardingDialog } from "../../features/stripe-onboarding";
 import { useToast } from "../../shared/ui/ToastProvider";
 
@@ -213,11 +211,6 @@ export function AdminDashboard({
   const { organization, loading: orgLoading, error: orgError } = useOrganization(
     userSession.user.organizationId ?? null
   );
-
-  const { alerts: systemAlerts, loading: systemAlertsLoading } = useSystemAlerts({
-    organization,
-    organizationId: userSession.user.organizationId,
-  });
 
 
   const { isStripeOnboarded, needsOnboarding } = useStripeOnboarding(organization);
@@ -1712,9 +1705,15 @@ export function AdminDashboard({
                 <p className="text-2xl font-bold text-gray-900">
                   {loading ? "..." : formatLargeCurrency(stats.totalRaised)}
                 </p>
-                <div className="flex items-center text-sm text-emerald-600">
-                  <ArrowUpRight className="h-4 w-4 mr-1" />
-                  <span className="font-medium">12% vs last month</span>
+                <div className={`flex items-center text-sm ${
+                  loading ? "text-gray-500" : 
+                  stats.totalDonations > 0 ? "text-emerald-600" : "text-gray-400"
+                }`}>
+                  <span className="font-medium">
+                    {loading ? "..." : stats.totalDonations > 0 
+                      ? `Avg ${formatCurrency(stats.totalRaised / stats.totalDonations)} per donation`
+                      : "No donations yet"}
+                  </span>
                 </div>
               </div>
             </CardContent>
@@ -1737,9 +1736,15 @@ export function AdminDashboard({
                 <p className="text-2xl font-bold text-gray-900">
                   {loading ? "..." : formatNumber(stats.totalDonations)}
                 </p>
-                <div className="flex items-center text-sm text-emerald-600">
-                  <ArrowUpRight className="h-4 w-4 mr-1" />
-                  <span className="font-medium">8% vs last month</span>
+                <div className={`flex items-center text-sm ${
+                  loading ? "text-gray-500" : 
+                  recentActivities.length > 0 ? "text-emerald-600" : "text-gray-400"
+                }`}>
+                  <span className="font-medium">
+                    {loading ? "..." : recentActivities.length > 0 
+                      ? `Latest: ${recentActivities[0].timeAgo}`
+                      : "No recent activity"}
+                  </span>
                 </div>
               </div>
             </CardContent>
@@ -1762,8 +1767,21 @@ export function AdminDashboard({
                 <p className="text-2xl font-bold text-gray-900">
                   {loading ? "..." : stats.activeCampaigns}
                 </p>
-                <div className="flex items-center text-sm text-gray-500">
-                  <span className="font-medium">Running now</span>
+                <div className={`flex items-center text-sm ${
+                  loading ? "text-gray-500" : 
+                  topCampaigns.length > 0 
+                    ? (topCampaigns[0].raised || 0) / (topCampaigns[0].goal || 1) >= 0.75 
+                      ? "text-emerald-600" 
+                      : (topCampaigns[0].raised || 0) / (topCampaigns[0].goal || 1) >= 0.5
+                        ? "text-yellow-600"
+                        : "text-red-600"
+                    : "text-gray-400"
+                }`}>
+                  <span className="font-medium">
+                    {loading ? "..." : topCampaigns.length > 0 
+                      ? `Top: ${Math.round((topCampaigns[0].raised || 0) / (topCampaigns[0].goal || 1) * 100)}% funded`
+                      : "No campaigns yet"}
+                  </span>
                 </div>
               </div>
             </CardContent>
@@ -1786,9 +1804,17 @@ export function AdminDashboard({
                 <p className="text-2xl font-bold text-gray-900">
                   {loading ? "..." : stats.activeKiosks}
                 </p>
-                <div className="flex items-center text-sm text-red-600">
-                  <ArrowDownRight className="h-4 w-4 mr-1" />
-                  <span className="font-medium">3% vs last month</span>
+                <div className={`flex items-center text-sm ${
+                  loading ? "text-gray-500" : 
+                  stats.activeKiosks > 0 ? "text-emerald-600" : "text-red-600"
+                }`}>
+                  <span className="font-medium">
+                    {loading ? "..." : stats.topLocations.length > 0 
+                      ? `Top: ${stats.topLocations[0].name}`
+                      : stats.activeKiosks === 0 
+                        ? "No active kiosks"
+                        : "No locations yet"}
+                  </span>
                 </div>
               </div>
             </CardContent>
@@ -2195,113 +2221,6 @@ export function AdminDashboard({
                       )}
                     </div>
                   </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* System Alerts and Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* System Alerts - Spans 2 columns */}
-          <div className="md:col-span-2">
-            <SystemAlertsWidget
-              alerts={systemAlerts}
-              loading={systemAlertsLoading}
-              onNavigate={onNavigate}
-            />
-          </div>
-          
-          {/* Quick Actions - Spans 2 columns */}
-          <Card className="bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 shadow-sm md:col-span-2">
-            <CardHeader className="p-6 border-b border-gray-100 bg-white rounded-t-xl">
-              <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
-                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-600 text-white flex items-center justify-center mr-3 shadow-sm">
-                  <Rocket className="w-5 h-5" />
-                </div>
-                Quick Actions
-              </CardTitle>
-              <CardDescription className="text-sm text-gray-600 mt-1 ml-12">
-                Navigate to key management areas
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {hasPermission("view_campaigns") && (
-                  <Button
-                    variant="outline"
-                    className="justify-start h-auto py-4 px-4 text-left hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all duration-200 group border-gray-200 bg-white"
-                    onClick={() => {
-                      onNavigate("admin-campaigns");
-                    }}
-                  >
-                    <div className="flex items-start w-full">
-                      <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform shadow-sm flex-shrink-0">
-                        <Database className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex flex-col items-start">
-                        <span className="font-semibold text-gray-900 text-sm">Manage Campaigns</span>
-                        <span className="text-xs text-gray-500 mt-0.5">
-                          Create and edit campaigns
-                        </span>
-                      </div>
-                    </div>
-                  </Button>
-                )}
-                {hasPermission("view_kiosks") && (
-                  <Button
-                    variant="outline"
-                    className="justify-start h-auto py-4 px-4 text-left hover:bg-purple-50 hover:border-purple-300 hover:shadow-md transition-all duration-200 group border-gray-200 bg-white"
-                    onClick={() => {
-                      onNavigate("admin-kiosks");
-                    }}
-                  >
-                    <div className="flex items-start w-full">
-                      <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform shadow-sm flex-shrink-0">
-                        <Monitor className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex flex-col items-start">
-                        <span className="font-semibold text-gray-900 text-sm">Configure Kiosks</span>
-                        <span className="text-xs text-gray-500 mt-0.5">
-                          Manage kiosk settings
-                        </span>
-                      </div>
-                    </div>
-                  </Button>
-                )}
-                {hasPermission("view_donations") && (
-                  <Button
-                    variant="outline"
-                    className="justify-start h-auto py-4 px-4 text-left hover:bg-green-50 hover:border-green-300 hover:shadow-md transition-all duration-200 group border-gray-200 bg-white"
-                    onClick={() => onNavigate("admin-donations")}
-                  >
-                    <div className="flex items-start w-full">
-                      <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform shadow-sm flex-shrink-0">
-                        <TrendingUp className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex flex-col items-start">
-                        <span className="font-semibold text-gray-900 text-sm">View Donations</span>
-                        <span className="text-xs text-gray-500 mt-0.5">Track donation history</span>
-                      </div>
-                    </div>
-                  </Button>
-                )}
-                {hasPermission("view_users") && (
-                  <Button
-                    variant="outline"
-                    className="justify-start h-auto py-4 px-4 text-left hover:bg-orange-50 hover:border-orange-300 hover:shadow-md transition-all duration-200 group border-gray-200 bg-white"
-                    onClick={() => onNavigate("admin-users")}
-                  >
-                    <div className="flex items-start w-full">
-                      <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform shadow-sm flex-shrink-0">
-                        <UserCog className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex flex-col items-start">
-                        <span className="font-semibold text-gray-900 text-sm">User Management</span>
-                        <span className="text-xs text-gray-500 mt-0.5">Manage user accounts</span>
-                      </div>
-                    </div>
-                  </Button>
                 )}
               </div>
             </CardContent>
