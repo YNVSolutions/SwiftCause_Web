@@ -92,6 +92,26 @@ export function AdminLayout({
   const [logoAnimating, setLogoAnimating] = useState(false);
   const [showUserProfile, setShowUserProfile] = useState(false);
 
+  React.useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 1023px)");
+    const handleChange = () => setIsCollapsed(mediaQuery.matches);
+
+    handleChange();
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener("change", handleChange);
+    } else {
+      mediaQuery.addListener(handleChange);
+    }
+
+    return () => {
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener("change", handleChange);
+      } else {
+        mediaQuery.removeListener(handleChange);
+      }
+    };
+  }, []);
+
   // Handle ESC key to close profile panel
   React.useEffect(() => {
     const handleEscKey = (event: KeyboardEvent) => {
@@ -126,30 +146,34 @@ export function AdminLayout({
     
     return {
       className: `
-        flex items-center w-full transition-all duration-300 ease-in-out text-left group rounded-lg
+        sidebar-item flex items-center w-full text-left group rounded-lg transition-all duration-300 ease-in-out hover:translate-x-1 hover:shadow-md
         ${isCollapsed 
           ? 'px-2 py-3 justify-center' 
           : 'px-4 py-3 justify-between'
         }
         ${isActiveButton
-          ? "text-white"
-          : isCollapsed 
-            ? "text-white hover:text-white hover:bg-white/15"
-            : "text-white/90 hover:text-white hover:bg-white/10"
+          ? "text-white sidebar-item-active"
+          : "text-white/90 hover:text-white"
         }
       `,
       style: isActiveButton ? {
-        background: '#1E293B',
-        boxShadow: isCollapsed ? '0 0 12px rgba(30,41,59,0.4), 0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(30,41,59,0.3)'
+        background: '#22C55E',
+        boxShadow: isCollapsed
+          ? 'inset 3px 0 0 rgba(255,255,255,0.7), 0 0 12px rgba(34,197,94,0.45), 0 2px 8px rgba(0,0,0,0.2)'
+          : 'inset 3px 0 0 rgba(255,255,255,0.7), 0 2px 10px rgba(34,197,94,0.35)'
       } : {},
       onMouseEnter: (e: React.MouseEvent<HTMLButtonElement>) => {
         if (!isActiveButton) {
-          e.currentTarget.style.backgroundColor = isCollapsed ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.1)';
+          e.currentTarget.style.backgroundColor = isCollapsed
+            ? 'rgba(74, 222, 128, 0.28)'
+            : 'rgba(74, 222, 128, 0.22)';
+          e.currentTarget.style.boxShadow = '0 10px 24px rgba(22,163,74,0.2)';
         }
       },
       onMouseLeave: (e: React.MouseEvent<HTMLButtonElement>) => {
         if (!isActiveButton) {
           e.currentTarget.style.backgroundColor = 'transparent';
+          e.currentTarget.style.boxShadow = 'none';
         }
       },
       title: isCollapsed ? title : ""
@@ -158,13 +182,13 @@ export function AdminLayout({
 
   // Centralized icon props
   const getIconProps = () => ({
-    className: `flex-shrink-0 ${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'}`,
+    className: `flex-shrink-0 transition-transform duration-200 group-hover:scale-105 ${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'}`,
     strokeWidth: isCollapsed ? 2.2 : 2
   });
 
   // Centralized text span props
   const getTextSpanProps = () => ({
-    className: `font-medium ml-3 ${isCollapsed ? 'hidden' : 'block'}`
+    className: `font-medium ml-3 transition-colors duration-200 group-hover:text-white group-hover:font-semibold ${isCollapsed ? 'hidden' : 'block'}`
   });
 
   // Centralized arrow icon for active states
@@ -221,20 +245,52 @@ export function AdminLayout({
         .signout-btn:hover .signout-icon {
           transform: translateX(3px);
         }
+        .sidebar-item {
+          position: relative;
+          overflow: hidden;
+        }
+        .sidebar-item::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(120deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));
+          opacity: 0;
+          transform: translateX(-12%);
+          transition: opacity 0.3s ease, transform 0.3s ease;
+          pointer-events: none;
+        }
+        .sidebar-item:hover::before {
+          opacity: 1;
+          transform: translateX(0);
+        }
+        .sidebar-item-active::after {
+          content: "";
+          position: absolute;
+          left: 0;
+          top: 12%;
+          bottom: 12%;
+          width: 4px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.9);
+          box-shadow: 0 0 12px rgba(255, 255, 255, 0.7);
+        }
       `}</style>
       <div className="flex h-screen w-full">
         {/* Custom Green Gradient Sidebar */}
         <div 
-          className={`${isCollapsed ? 'w-16' : 'w-80'} flex flex-col shadow-2xl border-r border-green-700/30 shrink-0 transition-all duration-300 ease-in-out overflow-hidden`}
+          className={`${isCollapsed ? 'w-16' : 'w-80'} relative flex flex-col shadow-2xl border-r border-green-400/40 shrink-0 transition-all duration-300 ease-in-out overflow-hidden`}
           style={{
-            background: 'linear-gradient(180deg, #16A34A 0%, #059669 100%)'
+            background: 'linear-gradient(180deg, #1FBF55 0%, #3FD77B 100%)'
           }}
         >
+          <div className="pointer-events-none absolute -top-24 -right-20 h-72 w-72 rounded-full bg-white/15 blur-3xl"></div>
+          <div className="pointer-events-none absolute bottom-20 -left-24 h-64 w-64 rounded-full bg-emerald-200/20 blur-3xl"></div>
+          <div className="pointer-events-none absolute bottom-6 left-8 h-28 w-28 rounded-full bg-white/10 blur-2xl"></div>
           {/* Header Card */}
           <div 
             className={`mb-4 overflow-hidden transition-all duration-300 ease-in-out ${isCollapsed ? 'p-2' : 'p-4'}`}
             style={{
-              background: 'rgba(0,0,0,0.15)',
+              background: 'rgba(34, 197, 94, 0.18)',
               borderRadius: '12px',
               backdropFilter: 'blur(10px)'
             }}
@@ -259,7 +315,7 @@ export function AdminLayout({
               {/* Collapse/Expand Arrow Button */}
               <button
                 onClick={toggleSidebar}
-                className="p-3 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors duration-200 shrink-0 ml-auto"
+                className="p-3 text-white/80 hover:text-white hover:bg-green-400/20 rounded-lg transition-colors duration-200 shrink-0 ml-auto"
               >
                 {isCollapsed ? (
                   <ChevronRight className="h-6 w-6" />
@@ -273,10 +329,8 @@ export function AdminLayout({
           {/* User Profile Card */}
           {!isCollapsed && (
             <div 
-              className="mb-4 overflow-hidden transition-all duration-300 ease-in-out p-6"
+              className="mb-4 rounded-2xl p-5 transition-all duration-300 ease-in-out shadow-[0_12px_26px_rgba(22,163,74,0.35)] border border-white/15 bg-[#16A34A]"
               style={{
-                background: 'rgba(0,0,0,0.15)',
-                borderRadius: '12px',
                 backdropFilter: 'blur(10px)'
               }}
             >
@@ -292,7 +346,7 @@ export function AdminLayout({
                   >
                     <Avatar className="w-12 h-12 transition-all duration-300">
                       <AvatarImage src={userSession.user.photoURL || undefined} />
-                      <AvatarFallback className="bg-transparent text-green-700 text-lg font-bold transition-all duration-300">
+                      <AvatarFallback className="bg-transparent text-green-500 text-lg font-bold transition-all duration-300">
                         {getInitials(userSession.user.username || userSession.user.email || 'U')}
                       </AvatarFallback>
                     </Avatar>
@@ -410,7 +464,7 @@ export function AdminLayout({
           </div>
           
           {/* Footer */}
-          <div className={`mt-auto ${isCollapsed ? 'p-3' : 'p-4'}`}>
+          <div className={`mt-auto ${isCollapsed ? 'p-4 flex justify-center' : 'p-4'}`}>
             {!isCollapsed ? (
               <button
                 onClick={onLogout}
@@ -428,12 +482,12 @@ export function AdminLayout({
                 }}
               >
                 <LogOut className="signout-icon h-5 w-5 mr-3" />
-                <span className="font-medium text-base">Sign Out</span>
+                <span className="font-medium text-base">Log Out</span>
               </button>
             ) : (
               <button
                 onClick={onLogout}
-                className="signout-btn w-full flex items-center justify-center p-3.5 rounded-xl text-white"
+                className="signout-btn mx-auto flex h-12 w-12 items-center justify-center rounded-2xl text-white"
                 style={{
                   background: '#7F1D1D'
                 }}
@@ -443,9 +497,9 @@ export function AdminLayout({
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = '#7F1D1D';
                 }}
-                title="Sign Out"
+                title="Log Out"
               >
-                <LogOut className="signout-icon h-6 w-6" strokeWidth={2.2} />
+                <LogOut className="signout-icon h-6 w-6 text-white" strokeWidth={2.2} />
               </button>
             )}
           </div>
@@ -678,7 +732,7 @@ export function AdminLayout({
                               className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors font-medium text-sm border border-red-200"
                             >
                               <LogOut className="w-4 h-4" />
-                              Sign Out
+                              Log Out
                             </button>
                           </div>
                         </div>
