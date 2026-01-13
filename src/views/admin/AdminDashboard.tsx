@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "../../shared/ui/button";
 import { Input } from "../../shared/ui/input";
 import { Label } from "../../shared/ui/label";
@@ -110,6 +110,9 @@ import { auth } from "../../shared/lib/firebase";
 import { AdminLayout } from "./AdminLayout";
 import { useStripeOnboarding, StripeOnboardingDialog } from "../../features/stripe-onboarding";
 import { useToast } from "../../shared/ui/ToastProvider";
+import { FundraisingEfficiencyGauge, PerformanceDetailDialog } from "../../widgets/campaign-performance";
+import { CampaignProgressBars, CampaignProgressDialog, transformCampaignsToProgress } from "../../widgets/campaign-progress";
+import { DonationDistributionChart, DonationDistributionDialog } from "../../widgets/donation-distribution";
 
 interface AdminDashboardProps {
   onNavigate: (screen: Screen) => void;
@@ -172,6 +175,7 @@ export function AdminDashboard({
   const { deviceDistribution } = stats;
 
   const [topCampaigns, setTopCampaigns] = useState<Campaign[]>([]);
+  const [allCampaignsForPerformance, setAllCampaignsForPerformance] = useState<Campaign[]>([]);
   const [goalComparisonData, setGoalComparisonData] = useState<any[]>([]);
   const [categoryData, setCategoryData] = useState<any[]>([]);
   const [showFeatures, setShowFeatures] = useState(false);
@@ -180,6 +184,9 @@ export function AdminDashboard({
   const [showStripeStatusDialog, setShowStripeStatusDialog] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [showActivityDialog, setShowActivityDialog] = useState(false);
+  const [showPerformanceDialog, setShowPerformanceDialog] = useState(false);
+  const [showDonationDistributionDialog, setShowDonationDistributionDialog] = useState(false);
+  const [showCampaignProgressDialog, setShowCampaignProgressDialog] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showKioskForm, setShowKioskForm] = useState(false);
   const [showLinkingForm, setShowLinkingForm] = useState(false);
@@ -260,21 +267,23 @@ export function AdminDashboard({
 
 
 
-  useEffect(() => {
-    const fetchChartData = async () => {
-      if (!userSession.user.organizationId) return;
-      try {
-        const campaignsRef = collection(db, "campaigns");
-        const orgQuery = where("organizationId", "==", userSession.user.organizationId);
+  const fetchChartData = useCallback(async () => {
+    if (!userSession.user.organizationId) return;
+    try {
+      const campaignsRef = collection(db, "campaigns");
+      const orgQuery = where("organizationId", "==", userSession.user.organizationId);
 
-        const topListQuery = query(
-          campaignsRef,
-          orgQuery
-        );
-        const topListSnapshot = await getDocs(topListQuery);
-        const allCampaigns = topListSnapshot.docs.map(
-          (doc) => ({ id: doc.id, ...doc.data() } as Campaign)
-        );
+      const topListQuery = query(
+        campaignsRef,
+        orgQuery
+      );
+      const topListSnapshot = await getDocs(topListQuery);
+      const allCampaigns = topListSnapshot.docs.map(
+        (doc) => ({ id: doc.id, ...doc.data() } as Campaign)
+      );
+      
+      // Store all campaigns for performance widget
+      setAllCampaignsForPerformance(allCampaigns);
         
         // Check if there are no campaigns and show onboarding
         if (allCampaigns.length === 0 && !showOnboarding) {
@@ -359,13 +368,15 @@ export function AdminDashboard({
       } catch (error) {
         console.error("Error fetching chart data: ", error);
       }
-    };
+    }, [userSession.user.organizationId, showOnboarding]);
 
+  useEffect(() => {
     fetchChartData();
-  }, [userSession.user.organizationId, showOnboarding]);
+  }, [fetchChartData]);
 
   const handleRefresh = () => {
     refreshDashboard();
+    fetchChartData();
   };
 
   const handleCreateCampaign = async () => {
@@ -1878,79 +1889,47 @@ export function AdminDashboard({
 
         {/* Bento Grid Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-          {/* Campaign Goal Comparison - Spans 2 columns */}
+          {/* Fundraising Efficiency Rating - Spans 2 columns */}
           <Card className="bg-white rounded-xl border border-gray-200 shadow-sm lg:col-span-2">
             <CardHeader className="p-6 border-b border-gray-100">
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
-                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mr-3">
-                      <BarChart3 className="w-4 h-4" />
+                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mr-3">
+                      <Target className="w-4 h-4" />
                     </div>
-                    Campaign Goal Comparison
+                    Fundraising Efficiency Rating
                   </CardTitle>
                   <CardDescription className="text-sm text-gray-600 mt-1 ml-11">
-                    Track progress towards fundraising goals
+                    Overall performance across all campaigns
                   </CardDescription>
                 </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowPerformanceDialog(true)}
+                  className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+                >
+                  <ArrowUpRight className="w-4 h-4 mr-1" />
+                  View Details
+                </Button>
               </div>
             </CardHeader>
-            <CardContent className="p-6">
-              {loading ? (
-                <div className="space-y-4">
-                  <Skeleton className="h-[250px] sm:h-[300px] w-full" />
-                </div>
-              ) : goalComparisonData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
-                  <BarChart data={goalComparisonData}>
-                    <CartesianGrid 
-                      vertical={false} 
-                      strokeDasharray="3 3" 
-                      stroke="#E5E7EB" 
-                    />
-                    <XAxis 
-                      dataKey="name" 
-                      tick={false}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      tickFormatter={(value) => formatShortCurrency(value as number)}
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: '#6B7280', fontSize: 12 }}
-                    />
-                    <Tooltip content={<CustomChartTooltip />} />
-                    <Legend 
-                      wrapperStyle={{ fontSize: '12px' }}
-                      iconType="circle"
-                    />
-                    <Bar 
-                      dataKey="Collected" 
-                      fill="#10B981" 
-                      radius={[4, 4, 0, 0]}
-                    />
-                    <Bar 
-                      dataKey="Goal" 
-                      fill="#94A3B8" 
-                      radius={[4, 4, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="text-center py-6 sm:py-8 text-gray-500">
-                  <Target className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3" />
-                  <p className="text-base sm:text-lg font-medium mb-2">No Campaigns Yet</p>
-                  <p className="text-xs sm:text-sm mb-4 px-4">
-                    Start by creating your first fundraising campaign to track progress.
-                  </p>
-                  {hasPermission("create_campaign") && (
-                    <Button onClick={() => onNavigate("admin-campaigns")} size="sm" className="text-xs sm:text-sm">
-                      <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-2" /> Create New Campaign
-                    </Button>
-                  )}
-                </div>
-              )}
+            <CardContent className="p-6 cursor-pointer" onClick={() => setShowPerformanceDialog(true)}>
+              <FundraisingEfficiencyGauge 
+                value={
+                  loading ? 0 : 
+                  allCampaignsForPerformance.length > 0 
+                    ? (() => {
+                        const totalRaised = allCampaignsForPerformance.reduce((sum, c) => sum + (c.raised || 0), 0);
+                        const totalGoals = allCampaignsForPerformance.reduce((sum, c) => sum + (c.goal || 0), 0);
+                        return totalGoals > 0 ? Math.min(100, Math.round((totalRaised / totalGoals) * 100)) : 0;
+                      })()
+                    : 0
+                }
+                onDetailsClick={() => setShowPerformanceDialog(true)}
+                onRefresh={handleRefresh}
+              />
             </CardContent>
           </Card>
 
@@ -2028,26 +2007,6 @@ export function AdminDashboard({
                     )}
                 </div>
               )}
-              <div className="mt-2 border-t pt-2">                 
-                {categoryData.length > 6 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full mt-3 text-indigo-600 hover:text-indigo-700 text-xs sm:text-sm"
-                    onClick={() => setIsLegendExpanded(!isLegendExpanded)}
-                  >
-                    {isLegendExpanded ? (
-                      <span className="flex items-center justify-center">
-                        Show Less <ChevronUp className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
-                      </span>
-                    ) : (
-                      <span className="flex items-center justify-center">
-                        Show More <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
-                      </span>
-                    )}
-                  </Button>
-                )}
-              </div>
             </CardContent>
           </Card>
         </div>
@@ -2056,19 +2015,42 @@ export function AdminDashboard({
         {/* Donation Distribution and Recent Activity */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {/* Donation Distribution - Spans 2 columns */}
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm md:col-span-2">
+          <Card 
+            className="bg-white rounded-xl border border-gray-200 shadow-sm md:col-span-2"
+          >
             <CardHeader className="p-6 border-b border-gray-100">
-              <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
-                <div className="w-8 h-8 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center mr-3">
-                  <DollarSign className="w-4 h-4" />
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
+                    <div className="w-8 h-8 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center mr-3">
+                      <DollarSign className="w-4 h-4" />
+                    </div>
+                    Donation Distribution by Amount
+                  </CardTitle>
+                  <CardDescription className="text-sm text-gray-600 mt-1 ml-11">
+                    Number of donations in different amount ranges
+                  </CardDescription>
                 </div>
-                Donation Distribution by Amount
-              </CardTitle>
-              <CardDescription className="text-sm text-gray-600 mt-1 ml-11">
-                Number of donations in different amount ranges
-              </CardDescription>
+                {!loading && !stats.donationDistributionError && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowDonationDistributionDialog(true);
+                    }}
+                    className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                  >
+                    <ArrowUpRight className="w-4 h-4 mr-1" />
+                    View Details
+                  </Button>
+                )}
+              </div>
             </CardHeader>
-            <CardContent className="p-6">
+            <CardContent 
+              className="p-6 cursor-pointer hover:bg-gray-50 transition-colors"
+              onClick={() => !loading && !stats.donationDistributionError && setShowDonationDistributionDialog(true)}
+            >
               {loading ? (
                 <div className="space-y-4">
                   <Skeleton className="h-[250px] sm:h-[300px] w-full" />
@@ -2081,69 +2063,96 @@ export function AdminDashboard({
                     Unable to load donation distribution. Please try refreshing the page.
                   </p>
                 </div>
-              ) : stats.donationDistribution.length > 0 ? (
-                <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
-                  <LineChart data={stats.donationDistribution}>
-                    <CartesianGrid 
-                      vertical={false} 
-                      strokeDasharray="3 3" 
-                      stroke="#E5E7EB" 
-                    />
-                    <XAxis 
-                      dataKey="range" 
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: '#6B7280', fontSize: 12 }}
-                      angle={-45}
-                      textAnchor="end"
-                      height={80}
-                    />
-                    <YAxis
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: '#6B7280', fontSize: 12 }}
-                      label={{ 
-                        value: 'Number of Donations', 
-                        angle: -90, 
-                        position: 'insideLeft',
-                        offset: 10,
-                        style: { 
-                          fontSize: 12, 
-                          fill: '#6B7280',
-                          textAnchor: 'middle'
-                        } 
-                      }}
-                    />
-                    <Tooltip content={<CustomChartTooltip />} />
-                    <Legend 
-                      wrapperStyle={{ fontSize: '12px' }}
-                      iconType="circle"
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="count" 
-                      stroke="#4F46E5" 
-                      strokeWidth={2} 
-                      dot={false}
-                      activeDot={{ r: 6, fill: '#4F46E5' }}
-                      name="Donations"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
               ) : (
-                <div className="text-center py-6 sm:py-8 text-gray-500">
-                  <TrendingUp className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3" />
-                  <p className="text-base sm:text-lg font-medium mb-2">No Donation Data</p>
-                  <p className="text-xs sm:text-sm mb-4 px-4">
-                    Start receiving donations to see distribution trends.
-                  </p>
-                </div>
+                <DonationDistributionChart
+                  data={stats.donationDistribution}
+                  totalRaised={stats.totalRaised}
+                  formatCurrency={(amount) => `£${amount.toLocaleString()}`}
+                />
               )}
             </CardContent>
           </Card>
 
-          {/* Recent Activity - Spans 2 columns */}
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm md:col-span-2">
+          {/* Campaign Goal Comparison - Spans 2 columns */}
+          <Card 
+            className="bg-white rounded-xl border border-gray-200 shadow-sm md:col-span-2"
+          >
+            <CardHeader className="p-6 border-b border-gray-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
+                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mr-3">
+                      <BarChart3 className="w-4 h-4" />
+                    </div>
+                    Campaign Goal Comparison
+                  </CardTitle>
+                  <CardDescription className="text-sm text-gray-600 mt-1 ml-11">
+                    Track progress towards fundraising goals
+                  </CardDescription>
+                </div>
+                {!loading && goalComparisonData.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowCampaignProgressDialog(true);
+                    }}
+                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                  >
+                    <ArrowUpRight className="w-4 h-4 mr-1" />
+                    View Details
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent 
+              className="p-6 cursor-pointer hover:bg-gray-50 transition-colors"
+              onClick={() => !loading && goalComparisonData.length > 0 && setShowCampaignProgressDialog(true)}
+            >
+              {loading ? (
+                <div className="space-y-3">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="space-y-2">
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-2 w-full" />
+                      <Skeleton className="h-3 w-1/2" />
+                    </div>
+                  ))}
+                </div>
+              ) : goalComparisonData.length > 0 ? (
+                <CampaignProgressBars
+                  campaigns={transformCampaignsToProgress(
+                    goalComparisonData.map((d, index) => ({
+                      id: `${d.name}-${index}`,
+                      title: d.name,
+                      raised: d.Collected,
+                      goal: d.Goal,
+                    } as any))
+                  )}
+                  formatCurrency={formatCurrency}
+                />
+              ) : (
+                <div className="text-center py-6 sm:py-8 text-gray-500">
+                  <Target className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3" />
+                  <p className="text-base sm:text-lg font-medium mb-2">No Campaigns Yet</p>
+                  <p className="text-xs sm:text-sm mb-4 px-4">
+                    Start by creating your first fundraising campaign to track progress.
+                  </p>
+                  {hasPermission("create_campaign") && (
+                    <Button onClick={() => onNavigate("admin-campaigns")} size="sm" className="text-xs sm:text-sm">
+                      <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-2" /> Create New Campaign
+                    </Button>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Recent Activity */}
+        <div className="mb-8">
+          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm">
             <CardHeader className="p-6 border-b border-gray-100">
               <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
                 <div className="w-8 h-8 rounded-lg bg-cyan-50 text-cyan-600 flex items-center justify-center mr-3">
@@ -2376,6 +2385,42 @@ export function AdminDashboard({
         onOpenChange={setShowOnboardingPopup}
         organization={organization}
         loading={orgLoading}
+      />
+
+      {/* Performance Detail Dialog */}
+      <PerformanceDetailDialog
+        isOpen={showPerformanceDialog}
+        onClose={() => setShowPerformanceDialog(false)}
+        campaigns={allCampaignsForPerformance}
+        stats={stats}
+      />
+
+      {/* Donation Distribution Dialog */}
+      <DonationDistributionDialog
+        isOpen={showDonationDistributionDialog}
+        onClose={() => setShowDonationDistributionDialog(false)}
+        data={stats.donationDistribution}
+        totalRaised={stats.totalRaised}
+        formatCurrency={formatCurrency}
+      />
+
+      {/* Campaign Progress Dialog */}
+      <CampaignProgressDialog
+        isOpen={showCampaignProgressDialog}
+        onClose={() => setShowCampaignProgressDialog(false)}
+        campaigns={transformCampaignsToProgress(
+          goalComparisonData.map((d, index) => ({
+            id: `${d.name}-${index}`,
+            title: d.name,
+            raised: d.Collected,
+            goal: d.Goal,
+          } as any))
+        )}
+        onCampaignClick={(id) => {
+          setShowCampaignProgressDialog(false);
+          onNavigate("admin-campaigns");
+        }}
+        formatCurrency={formatCurrency}
       />
       </div>
       </>
