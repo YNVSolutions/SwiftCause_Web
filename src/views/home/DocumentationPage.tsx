@@ -17,7 +17,6 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { Footer } from '../../shared/ui/Footer';
-import swiftCauseLogo from '../../shared/assets/logo.png';
 
 
 const userDocs = [
@@ -125,13 +124,13 @@ const UserDocCard = ({ icon, title, description, details }: {
 }) => (
   <Dialog>
     <DialogTrigger asChild>
-      <div className="group block p-6 bg-white rounded-xl border border-gray-200 shadow-sm transition-all duration-300 ease-in-out hover:shadow-2xl hover:border-indigo-300 transform hover:-translate-y-2 cursor-pointer hover:bg-gradient-to-br hover:from-white hover:to-indigo-50/30">
-        <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-gradient-to-br from-indigo-50 to-indigo-100 text-indigo-600 mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+      <div className="group block p-6 bg-white rounded-xl border border-gray-200 shadow-sm transition-all duration-300 ease-in-out hover:shadow-2xl hover:border-green-300 transform hover:-translate-y-2 cursor-pointer hover:bg-gradient-to-br hover:from-white hover:to-green-50/30">
+        <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-gradient-to-br from-green-50 to-green-100 text-green-600 mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
           {icon}
         </div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-indigo-700 transition-colors duration-300">{title}</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-green-700 transition-colors duration-300">{title}</h3>
         <p className="text-gray-600 text-sm mb-4 leading-relaxed">{description}</p>
-        <div className="flex items-center text-sm font-semibold text-indigo-600 group-hover:text-indigo-700 transition-all duration-300">
+        <div className="flex items-center text-sm font-semibold text-green-600 group-hover:text-green-700 transition-all duration-300">
           Read More <ArrowRight className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
         </div>
       </div>
@@ -139,7 +138,7 @@ const UserDocCard = ({ icon, title, description, details }: {
     <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-white to-gray-50/50 border-0 shadow-2xl">
       <DialogHeader className="space-y-4 pb-6 border-b border-gray-100">
         <DialogTitle className="flex items-center gap-4 text-2xl font-bold text-gray-900">
-          <div className="flex items-center justify-center h-14 w-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-600 text-white shadow-lg">
+          <div className="flex items-center justify-center h-14 w-14 rounded-2xl bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg">
             {icon}
           </div>
           <span className="bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
@@ -149,13 +148,13 @@ const UserDocCard = ({ icon, title, description, details }: {
       </DialogHeader>
       
       <div className="mt-6 space-y-6">
-        <div className="p-4 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-xl border border-indigo-100">
+        <div className="p-4 bg-gradient-to-r from-green-50 to-green-50 rounded-xl border border-green-100">
           <p className="text-gray-700 text-base leading-relaxed font-medium">{description}</p>
         </div>
         
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <div className="h-1 w-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"></div>
+            <div className="h-1 w-8 bg-gradient-to-r from-green-500 to-green-500 rounded-full"></div>
             <h4 className="text-lg font-bold text-gray-900">Key Features</h4>
           </div>
           
@@ -224,7 +223,7 @@ export function DocumentationPage({ onNavigate }: { onNavigate?: (screen: string
           <div className="flex items-center space-x-3">
             <div className="h-9 w-9">
               <img 
-                src={swiftCauseLogo.src} 
+                src="/logo.png" 
                 alt="Swift Cause Logo" 
                 className="w-full h-full object-contain"
               />
@@ -242,7 +241,7 @@ export function DocumentationPage({ onNavigate }: { onNavigate?: (screen: string
 
       <main>
      
-        <section className="relative py-20 sm:py-24 bg-gradient-to-b from-indigo-50 to-gray-50 text-center">
+        <section className="relative py-20 sm:py-24 bg-gradient-to-b from-green-50 to-gray-50 text-center">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 tracking-tight">
               Help Center & Documentation
@@ -258,7 +257,7 @@ export function DocumentationPage({ onNavigate }: { onNavigate?: (screen: string
            
             <div>
               <div className="flex items-center mb-8">
-                <BookUser className="h-8 w-8 text-indigo-600 mr-3" />
+                <BookUser className="h-8 w-8 text-green-600 mr-3" />
                 <h2 className="text-3xl font-bold text-gray-900">User Documentation (For Nonprofits)</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -271,7 +270,7 @@ export function DocumentationPage({ onNavigate }: { onNavigate?: (screen: string
         
             <div>
               <div className="flex items-center mb-8">
-                <FileText className="h-8 w-8 text-indigo-600 mr-3" />
+                <FileText className="h-8 w-8 text-green-600 mr-3" />
                 <h2 className="text-3xl font-bold text-gray-900">General & Legal Documentation</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
