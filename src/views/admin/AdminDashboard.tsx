@@ -1698,10 +1698,10 @@ export function AdminDashboard({
         )}
         
         {/* Bento Grid Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
           {/* Total Raised Card */}
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
+          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+            <CardContent className="p-6 relative z-10">
               <div className="flex items-start justify-between mb-4">
                 <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
                   <DollarSign className="h-5 w-5" />
@@ -1718,11 +1718,15 @@ export function AdminDashboard({
                 </div>
               </div>
             </CardContent>
+            {/* Floating Background Icon */}
+            <div className="absolute -right-4 -bottom-4 opacity-[0.08] pointer-events-none">
+              <DollarSign className="h-32 w-32 text-emerald-600" />
+            </div>
           </Card>
 
           {/* Total Donations Card */}
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
+          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+            <CardContent className="p-6 relative z-10">
               <div className="flex items-start justify-between mb-4">
                 <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
                   <Heart className="h-5 w-5" />
@@ -1739,11 +1743,15 @@ export function AdminDashboard({
                 </div>
               </div>
             </CardContent>
+            {/* Floating Background Icon */}
+            <div className="absolute -right-4 -bottom-4 opacity-[0.08] pointer-events-none">
+              <Heart className="h-32 w-32 text-blue-600" />
+            </div>
           </Card>
 
           {/* Active Campaigns Card */}
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
+          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+            <CardContent className="p-6 relative z-10">
               <div className="flex items-start justify-between mb-4">
                 <div className="w-10 h-10 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
                   <Globe className="h-5 w-5" />
@@ -1759,11 +1767,15 @@ export function AdminDashboard({
                 </div>
               </div>
             </CardContent>
+            {/* Floating Background Icon */}
+            <div className="absolute -right-4 -bottom-4 opacity-[0.08] pointer-events-none">
+              <Globe className="h-32 w-32 text-purple-600" />
+            </div>
           </Card>
 
           {/* Active Kiosks Card */}
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
+          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+            <CardContent className="p-6 relative z-10">
               <div className="flex items-start justify-between mb-4">
                 <div className="w-10 h-10 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center">
                   <Monitor className="h-5 w-5" />
@@ -1780,6 +1792,10 @@ export function AdminDashboard({
                 </div>
               </div>
             </CardContent>
+            {/* Floating Background Icon */}
+            <div className="absolute -right-4 -bottom-4 opacity-[0.08] pointer-events-none">
+              <Monitor className="h-32 w-32 text-orange-600" />
+            </div>
           </Card>
         </div>
 
