@@ -25,16 +25,16 @@ export function KioskLogin({ kioskId, accessCode, error, loading, onKioskIdChang
 	return (
 		<>
 			<div className="text-center mb-4">
-				<div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-indigo-100">
-					<Heart className="h-6 w-6 text-indigo-600" />
+				<div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 shadow-sm">
+					<Heart className="h-6 w-6 text-green-700" />
 				</div>
-				<h3 className="font-medium">Kiosk Access</h3>
-				<p className="text-sm text-gray-600">Enter kiosk credentials</p>
+				<h3 className="text-base font-semibold text-green-900">Kiosk Access</h3>
+				<p className="text-sm text-gray-600">Enter kiosk credentials to continue</p>
 			</div>
 			<form onSubmit={onSubmit} className="space-y-4">
 				<div className="space-y-2">
 					<Label htmlFor="kioskId" className="flex items-center space-x-2">
-						<Monitor className="w-4 h-4 text-gray-500" />
+						<Monitor className="w-4 h-4 text-green-700" />
 						<span>Kiosk ID</span>
 					</Label>
 					<Input
@@ -50,7 +50,7 @@ export function KioskLogin({ kioskId, accessCode, error, loading, onKioskIdChang
 
 				<div className="space-y-2">
 					<Label htmlFor="accessCode" className="flex items-center space-x-2">
-						<KeyRound className="w-4 h-4 text-gray-500" />
+						<KeyRound className="w-4 h-4 text-green-700" />
 						<span>Access Code</span>
 					</Label>
 					<Input
@@ -75,7 +75,7 @@ export function KioskLogin({ kioskId, accessCode, error, loading, onKioskIdChang
 
 				<Button
 					type="submit"
-					className="w-full h-12 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white shadow-lg"
+					className="w-full h-12 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg"
 					disabled={!kioskId || !accessCode}
 				>
 					<Heart className="mr-2 h-4 w-4" />
@@ -86,5 +86,4 @@ export function KioskLogin({ kioskId, accessCode, error, loading, onKioskIdChang
 		</>
 	);
 }
-
 

@@ -35,7 +35,7 @@ export const CampaignListLayout: React.FC<CampaignListLayoutProps> = ({
           <div
             key={campaign.id}
             onClick={() => onViewDetails(campaign)}
-            className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition-shadow duration-200"
+            className="group bg-white rounded-2xl overflow-hidden shadow-sm border border-green-100 cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
           >
             {/* Campaign Image */}
             <div className="relative h-52 overflow-hidden">
@@ -44,6 +44,7 @@ export const CampaignListLayout: React.FC<CampaignListLayoutProps> = ({
                 alt={campaign.title}
                 className="w-full h-full object-cover"
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </div>
 
             {/* Campaign Info */}
@@ -60,24 +61,24 @@ export const CampaignListLayout: React.FC<CampaignListLayoutProps> = ({
                 <span className="text-sm text-[#0A0A0A]">
                   {formatAmount(campaign.raised || 0)} / {formatAmount(campaign.goal)}
                 </span>
-                <span className="text-sm text-gray-500">{Math.round(progress)}%</span>
+                <span className="text-sm text-green-700 font-medium">{Math.round(progress)}%</span>
               </div>
 
-              {/* Progress Bar - Black */}
-              <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
+              {/* Progress Bar */}
+              <div className="w-full bg-green-100 rounded-full h-2 mb-6">
                 <div
-                  className="bg-[#0A0A0A] h-2 rounded-full transition-all duration-300"
+                  className="bg-gradient-to-r from-green-600 to-emerald-600 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${progress}%` }}
                 />
               </div>
 
-              {/* Amount Buttons - Soft green background */}
+              {/* Amount Buttons */}
               <div className="grid grid-cols-3 gap-3 mb-4">
                 {top3Amounts.map((amount, index) => (
                   <button
                     key={index}
                     onClick={(e) => handleAmountClick(e, amount)}
-                    className="h-12 rounded-xl bg-[#E6FBF2] text-[#159A6F] font-medium text-base hover:bg-[#d0f5e6] transition-colors duration-200"
+                    className="h-12 rounded-xl bg-green-50 text-green-700 border border-green-200 font-medium text-base hover:bg-green-100 hover:border-green-300 transition-colors duration-200"
                   >
                     {formatAmount(amount)}
                   </button>
@@ -87,10 +88,7 @@ export const CampaignListLayout: React.FC<CampaignListLayoutProps> = ({
               {/* Donate Button */}
               <button
                 onClick={handleDonateClick}
-                className="w-full h-12 rounded-xl font-medium text-white transition-colors duration-200"
-                style={{ backgroundColor: '#159A6F' }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#128A62')}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#159A6F')}
+                className="w-full h-12 rounded-xl font-medium text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-200/60 transition-all duration-200"
               >
                 Donate
               </button>
