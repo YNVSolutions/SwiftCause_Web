@@ -8,6 +8,8 @@ export interface CampaignDetailsState {
   selectedAmount: number | null;
   customAmount: string;
   currentImageIndex: number;
+  isRecurring: boolean;
+  recurringInterval: 'monthly' | 'quarterly' | 'yearly';
 }
 
 // Props for the main campaign details page
@@ -17,6 +19,8 @@ export interface CampaignDetailsPageProps {
   onBack: () => void;
   onSelectAmount: (amount: number) => void;
   onCustomAmountChange: (value: string) => void;
+  onRecurringToggle: (value: boolean) => void;
+  onRecurringIntervalChange: (value: 'monthly' | 'quarterly' | 'yearly') => void;
   onDonate: () => void;
   onImageChange: (index: number) => void;
 }
@@ -40,8 +44,14 @@ export interface AmountSelectorProps {
   selectedAmount: number | null;
   customAmount: string;
   currency: string;
+  enableRecurring: boolean;
+  recurringIntervals?: ('monthly' | 'quarterly' | 'yearly')[];
+  recurringInterval: 'monthly' | 'quarterly' | 'yearly';
+  isRecurring: boolean;
   onSelectAmount: (amount: number) => void;
   onCustomAmountChange: (value: string) => void;
+  onRecurringToggle: (value: boolean) => void;
+  onRecurringIntervalChange: (value: 'monthly' | 'quarterly' | 'yearly') => void;
 }
 
 // Props for donate button

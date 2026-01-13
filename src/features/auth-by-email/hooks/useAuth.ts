@@ -13,14 +13,21 @@ function getFriendlyAuthMessage(error: unknown) {
     case 'auth/invalid-credential':
     case 'auth/wrong-password':
     case 'auth/user-not-found':
+      return 'Invalid email or password. Please check your credentials and try again.';
     case 'auth/invalid-email':
-      return 'Invalid username or password.';
+      return 'Invalid email format. Please enter a valid email address.';
     case 'auth/user-disabled':
       return 'This account has been disabled. Please contact support.';
     case 'auth/too-many-requests':
-      return 'Too many attempts. Please try again later.';
+      return 'Too many failed login attempts. Please try again later or reset your password.';
     case 'auth/network-request-failed':
-      return 'Network error. Check your connection and try again.';
+      return 'Network error. Please check your internet connection and try again.';
+    case 'auth/email-already-in-use':
+      return 'This email is already registered. Please sign in or use a different email.';
+    case 'auth/weak-password':
+      return 'Password is too weak. Please use at least 8 characters.';
+    case 'auth/operation-not-allowed':
+      return 'Email/password authentication is not enabled. Please contact support.';
     default:
       return 'Authentication failed. Please try again.';
   }

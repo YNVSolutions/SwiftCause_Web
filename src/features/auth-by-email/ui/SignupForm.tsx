@@ -86,7 +86,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
   const organizationTypes = ORGANIZATION_TYPES;
   const organizationSizes = ORGANIZATION_SIZES;
 
-  const updateFormData = (field: keyof SignupFormData, value: any) => {
+  const updateFormData = (field: keyof SignupFormData, value: SignupFormData[keyof SignupFormData]) => {
     setFormData(prev => ({
       ...prev,
       [field]: value

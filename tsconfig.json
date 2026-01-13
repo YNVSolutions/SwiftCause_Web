@@ -17,6 +17,7 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
+    "forceConsistentCasingInFileNames": true,
     "plugins": [
       {
         "name": "next"
@@ -40,6 +41,12 @@
       ],
       "@/views/*": [
         "./src/views/*"
+      ],
+      "@/components/*": [
+        "./src/components/*"
+      ],
+      "@/services/*": [
+        "./src/services/*"
       ]
     }
   },

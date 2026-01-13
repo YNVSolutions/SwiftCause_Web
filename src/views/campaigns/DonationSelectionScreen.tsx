@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Button } from '../../shared/ui/button';
 import { Input } from '../../shared/ui/input';
 import { Label } from '../../shared/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../shared/ui/card';
 import { Badge } from '../../shared/ui/badge';
 import { Switch } from '../../shared/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
 import { Checkbox } from '../../shared/ui/checkbox';
 import { Progress } from '../../shared/ui/progress';
 import { ImageWithFallback } from '../../shared/ui/figma/ImageWithFallback';
@@ -17,9 +16,136 @@ import {
   Clock, 
   Share2,
   Gift,
-  Percent
+  Percent,
+  Calendar,
+  CalendarRange,
+  CalendarClock,
+  ShieldCheck
 } from 'lucide-react';
 import { Campaign, Donation } from '../../shared/types';
+
+interface FrequencyOption {
+  value: 'monthly' | 'quarterly' | 'yearly';
+  label: string;
+  savings?: number;
+  icon: React.ReactNode;
+  description: string;
+}
+
+const intervalLabelMap: Record<FrequencyOption['value'], string> = {
+  monthly: 'month',
+  quarterly: 'quarter',
+  yearly: 'year'
+};
+
+const formatDisplayDate = (date: Date) =>
+  new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  }).format(date);
+
+function RecurringToggle({
+  isRecurring,
+  onChange,
+  discount
+}: {
+  isRecurring: boolean;
+  onChange: (value: boolean) => void;
+  discount?: number;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 p-4 border rounded-xl bg-white/70">
+      <div className="space-y-1">
+        <p className="font-semibold">Make this recurring</p>
+        <p className="text-sm text-gray-600">Support this cause regularly</p>
+        {discount ? (
+          <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-100">
+            Save {discount}% with recurring
+          </Badge>
+        ) : null}
+      </div>
+      <Switch
+        aria-label="Toggle recurring donation"
+        checked={isRecurring}
+        onCheckedChange={onChange}
+        className="shrink-0"
+      />
+    </div>
+  );
+}
+
+function FrequencyCard({
+  option,
+  isActive,
+  onSelect
+}: {
+  option: FrequencyOption;
+  isActive: boolean;
+  onSelect: (value: FrequencyOption['value']) => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={isActive}
+      onClick={() => onSelect(option.value)}
+      className={`flex flex-col items-start gap-2 p-4 rounded-xl border transition focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+        isActive
+          ? 'border-indigo-500 bg-indigo-50 shadow-sm'
+          : 'border-gray-200 bg-white hover:border-indigo-300'
+      }`}
+    >
+      <div className="flex items-center gap-2">
+        {option.icon}
+        <span className="font-semibold">{option.label}</span>
+        {option.savings ? (
+          <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-100">
+            Save {option.savings}%
+          </Badge>
+        ) : null}
+      </div>
+      <p className="text-sm text-gray-600 text-left">{option.description}</p>
+      <span
+        className={`text-xs font-medium px-2 py-1 rounded-full ${
+          isActive ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-700'
+        }`}
+      >
+        Renews every {intervalLabelMap[option.value]}
+      </span>
+    </button>
+  );
+}
+
+function ImpactPreview({
+  amount,
+  interval,
+  formatCurrency
+}: {
+  amount: number;
+  interval: string;
+  formatCurrency: (value: number) => string;
+}) {
+  const annualImpact =
+    interval === 'monthly' ? amount * 12 : interval === 'quarterly' ? amount * 4 : amount;
+
+  return (
+    <Card aria-live="polite" className="w-full">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base">Your Impact</CardTitle>
+        <CardDescription>Preview your yearly contribution</CardDescription>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <p className="text-3xl font-bold">{formatCurrency(annualImpact)}</p>
+        <p className="text-gray-600">Annual impact</p>
+        <p className="text-sm mt-2 text-gray-700">
+          Your {formatCurrency(amount)}/{intervalLabelMap[interval as keyof typeof intervalLabelMap]} donation
+          helps us plan long-term
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
 
 interface DonationSelectionScreenProps {
   campaign: Campaign;
@@ -41,7 +167,7 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
   const [customAmount, setCustomAmount] = useState('');
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurringInterval, setRecurringInterval] = useState<'monthly' | 'quarterly' | 'yearly'>(
-    campaign.configuration.defaultRecurringInterval
+    campaign.configuration.defaultRecurringInterval || 'monthly'
   );
   const [donorInfo, setDonorInfo] = useState<DonorInfo>({
     email: '',
@@ -55,6 +181,34 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
   const [isGiftAid, setIsGiftAid] = useState(false);
 
   const config = campaign.configuration;
+  const allowRecurring = config.enableRecurring ?? true;
+  const availableIntervals = useMemo<('monthly' | 'quarterly' | 'yearly')[]>(
+    () =>
+      config.recurringIntervals && config.recurringIntervals.length > 0
+        ? config.recurringIntervals
+        : ['monthly', 'quarterly', 'yearly'],
+    [config.recurringIntervals],
+  );
+
+  const frequencyOptions: FrequencyOption[] = availableIntervals.map((interval) => ({
+    value: interval,
+    label: interval === 'monthly' ? 'Monthly' : interval === 'quarterly' ? 'Quarterly' : 'Annual',
+    savings: interval === 'yearly' ? config.recurringDiscount : undefined,
+    icon:
+      interval === 'monthly' ? (
+        <Calendar className="w-4 h-4" aria-hidden="true" />
+      ) : interval === 'quarterly' ? (
+        <CalendarRange className="w-4 h-4" aria-hidden="true" />
+      ) : (
+        <CalendarClock className="w-4 h-4" aria-hidden="true" />
+      ),
+    description:
+      interval === 'monthly'
+        ? 'Steady monthly support for ongoing needs'
+        : interval === 'quarterly'
+          ? 'Great for seasonal campaigns and milestone goals'
+          : 'Best annual value with predictable funding'
+  }));
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-GB', {
@@ -62,6 +216,17 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
       currency: 'GBP',
       minimumFractionDigits: 0
     }).format(amount);
+  };
+
+  const getAnnualAmount = (amount: number, interval: 'monthly' | 'quarterly' | 'yearly') => {
+    switch (interval) {
+      case 'monthly':
+        return amount * 12;
+      case 'quarterly':
+        return amount * 4;
+      default:
+        return amount;
+    }
   };
 
   const getCurrentAmount = () => {
@@ -83,6 +248,18 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
       return amount * (1 - (config.recurringDiscount / 100));
     }
     return amount;
+  };
+
+  const getNextChargeDate = () => {
+    const nextDate = new Date();
+    if (recurringInterval === 'monthly') {
+      nextDate.setMonth(nextDate.getMonth() + 1);
+    } else if (recurringInterval === 'quarterly') {
+      nextDate.setMonth(nextDate.getMonth() + 3);
+    } else {
+      nextDate.setFullYear(nextDate.getFullYear() + 1);
+    }
+    return nextDate;
   };
 
   const getThemeClasses = () => {
@@ -116,6 +293,12 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
 
   const themeClasses = getThemeClasses();
 
+  React.useEffect(() => {
+    if (!availableIntervals.includes(recurringInterval)) {
+      setRecurringInterval(availableIntervals[0]);
+    }
+  }, [availableIntervals, recurringInterval]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!isValidAmount()) return;
@@ -148,6 +331,13 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
   };
 
   const progress = (campaign.raised / campaign.goal) * 100;
+  const intervalLabel = intervalLabelMap[recurringInterval];
+  const discountedAmount = getDiscountedAmount();
+  const annualizedAmount = getAnnualAmount(discountedAmount, recurringInterval);
+  const undiscountedAnnual = getAnnualAmount(getCurrentAmount(), recurringInterval);
+  const firstChargeDate = formatDisplayDate(new Date());
+  const nextChargeDate = formatDisplayDate(getNextChargeDate());
+  const hasRecurringDiscount = isRecurring && !!config.recurringDiscount && getCurrentAmount() !== discountedAmount;
 
   // Mock recent donations for display
   const recentDonations = [
@@ -283,7 +473,7 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
                         }`}
                       >
                         <span className="text-lg font-semibold">{formatCurrency(amount)}</span>
-                        {config.enableRecurring && isRecurring && config.recurringDiscount && (
+                        {allowRecurring && isRecurring && config.recurringDiscount && (
                           <span className="text-xs opacity-75">
                             {formatCurrency(amount * (1 - config.recurringDiscount / 100))} after discount
                           </span>
@@ -319,46 +509,95 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
                 </div>
 
                 {/* Recurring Donation */}
-                {config.enableRecurring && (
-                  <div className="space-y-4 p-4 border rounded-lg bg-blue-50/50">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <Label htmlFor="recurring" className="text-base font-medium flex items-center">
-                          <Clock className="w-4 h-4 mr-2" />
-                          Make this a recurring donation
-                        </Label>
-                        <p className="text-sm text-gray-600 mt-1">
-                          Create lasting impact with ongoing support
-                          {config.recurringDiscount && (
-                            <span className="text-green-600 font-medium ml-1">
-                              (Save {config.recurringDiscount}%!)
-                            </span>
-                          )}
-                        </p>
-                      </div>
-                      <Switch
-                        id="recurring"
-                        checked={isRecurring}
-                        onCheckedChange={setIsRecurring}
-                      />
-                    </div>
+                {allowRecurring && (
+                  <div className="space-y-4 p-4 border rounded-xl bg-white/70 shadow-sm">
+                    <RecurringToggle
+                      isRecurring={isRecurring}
+                      onChange={setIsRecurring}
+                      discount={config.recurringDiscount}
+                    />
 
-                    {isRecurring && config.recurringIntervals.length > 1 && (
-                      <div>
-                        <Label>Recurring Frequency</Label>
-                        <Select value={recurringInterval} onValueChange={(value: any) => setRecurringInterval(value)}>
-                          <SelectTrigger className="mt-2">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {config.recurringIntervals.map((interval: string) => (
-                              <SelectItem key={interval} value={interval} className="capitalize">
-                                {interval}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                    {isRecurring ? (
+                      <div className="space-y-4">
+                        {frequencyOptions.length > 1 ? (
+                          <div>
+                            <Label className="text-sm font-semibold">Recurring frequency</Label>
+                            <div
+                              role="radiogroup"
+                              aria-label="Recurring frequency"
+                              className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+                            >
+                              {frequencyOptions.map((option) => (
+                                <FrequencyCard
+                                  key={option.value}
+                                  option={option}
+                                  isActive={recurringInterval === option.value}
+                                  onSelect={setRecurringInterval}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-600" aria-live="polite">
+                            Renews every {intervalLabel}
+                          </p>
+                        )}
+
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                          <ImpactPreview
+                            amount={discountedAmount}
+                            interval={recurringInterval}
+                            formatCurrency={formatCurrency}
+                          />
+                          <div className="p-4 rounded-xl border bg-gradient-to-br from-blue-50 to-indigo-50">
+                            <div className="flex items-center justify-between mb-2">
+                              <p className="text-sm font-semibold text-gray-700">Cost preview</p>
+                              {hasRecurringDiscount ? (
+                                <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-100">
+                                  Recurring savings
+                                </Badge>
+                              ) : null}
+                            </div>
+                            <p className="text-2xl font-bold" aria-live="polite">
+                              {formatCurrency(discountedAmount)}/{intervalLabel}
+                            </p>
+                            <p className="text-sm text-gray-700">
+                              Equals {formatCurrency(annualizedAmount)} per year
+                            </p>
+                            {hasRecurringDiscount && (
+                              <p className="text-xs text-green-700 flex items-center gap-2 mt-2">
+                                <Percent className="w-4 h-4" aria-hidden="true" />
+                                Saving {config.recurringDiscount}% vs one-time ({formatCurrency(undiscountedAnnual)} yearly)
+                              </p>
+                            )}
+                            <div className="mt-3 space-y-1 text-sm text-gray-700">
+                              <div className="flex items-center gap-2">
+                                <CalendarClock className="w-4 h-4" aria-hidden="true" />
+                                <span>First charge: Today ({firstChargeDate})</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Clock className="w-4 h-4" aria-hidden="true" />
+                                <span>Renews every {intervalLabel} on {nextChargeDate}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start gap-2 text-xs text-gray-600">
+                          <ShieldCheck className="w-4 h-4 mt-0.5" aria-hidden="true" />
+                          <span>
+                            By enabling recurring donations, you agree to our
+                            <a className="underline ml-1" href="/terms" aria-label="Read subscription terms">
+                              subscription terms
+                            </a>
+                            and understand you can cancel anytime.
+                          </span>
+                        </div>
                       </div>
+                    ) : (
+                      <p className="text-sm text-gray-600" aria-live="polite">
+                        Keep this off for a one-time gift. Turn it on to schedule ongoing impact.
+                      </p>
                     )}
                   </div>
                 )}

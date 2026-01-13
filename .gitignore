@@ -5,6 +5,7 @@ node_modules/
 
 # Next.js build output
 .next/
+.kiro/
 .next-dev/
 out/
 dist/

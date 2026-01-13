@@ -15,6 +15,8 @@ interface UseCampaignDetailsStateReturn {
     setSelectedAmount: (amount: number | null) => void;
     setCustomAmount: (value: string) => void;
     setCurrentImageIndex: (index: number) => void;
+    setIsRecurring: (value: boolean) => void;
+    setRecurringInterval: (value: 'monthly' | 'quarterly' | 'yearly') => void;
     getEffectiveAmount: () => number;
   };
 }
@@ -28,6 +30,8 @@ export function useCampaignDetailsState({
   const [selectedAmount, setSelectedAmount] = useState<number | null>(initialAmount);
   const [customAmount, setCustomAmount] = useState('');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurringInterval, setRecurringInterval] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
 
   // Auto-select middle predefined amount when campaign loads
   useEffect(() => {
@@ -40,6 +44,9 @@ export function useCampaignDetailsState({
       } else if (predefinedAmounts.length === 1) {
         setSelectedAmount(predefinedAmounts[0]);
       }
+    }
+    if (campaign) {
+      setRecurringInterval(campaign.configuration?.defaultRecurringInterval || 'monthly');
     }
   }, [campaign, initialAmount]);
 
@@ -56,6 +63,15 @@ export function useCampaignDetailsState({
 
   const handleSetCurrentImageIndex = useCallback((index: number) => {
     setCurrentImageIndex(index);
+  }, []);
+
+  const handleRecurringToggle = useCallback((value: boolean) => {
+    setIsRecurring(value);
+  }, []);
+
+  const handleRecurringIntervalChange = useCallback((value: 'monthly' | 'quarterly' | 'yearly') => {
+    setRecurringInterval(value);
+    setIsRecurring(true);
   }, []);
 
   const getEffectiveAmount = useCallback(() => {
@@ -76,12 +92,16 @@ export function useCampaignDetailsState({
     selectedAmount,
     customAmount,
     currentImageIndex,
+    isRecurring,
+    recurringInterval,
   };
 
   const actions = {
     setSelectedAmount: handleSetSelectedAmount,
     setCustomAmount: handleSetCustomAmount,
     setCurrentImageIndex: handleSetCurrentImageIndex,
+    setIsRecurring: handleRecurringToggle,
+    setRecurringInterval: handleRecurringIntervalChange,
     getEffectiveAmount,
   };
 
