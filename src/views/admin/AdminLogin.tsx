@@ -93,7 +93,7 @@ export function AdminLogin({ email, password, error, emailError, passwordError, 
 
 				<Button 
 					type="submit" 
-					className="w-full h-11 bg-linear-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-700 hover:via-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl text-sm font-medium transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] bg-size-[200%_100%] hover:bg-right animate-gradient-x" 
+					className="w-full h-11 bg-linear-to-r from-purple-300 via-indigo-300 to-purple-300 hover:from-purple-400 hover:via-indigo-400 hover:to-purple-400 text-white shadow-lg hover:shadow-xl text-sm font-medium transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] bg-size-[200%_100%] hover:bg-right animate-gradient-x" 
 					disabled={loading}
 				>
 					{loading ? (
@@ -113,5 +113,3 @@ export function AdminLogin({ email, password, error, emailError, passwordError, 
 		</>
 	);
 }
-
-

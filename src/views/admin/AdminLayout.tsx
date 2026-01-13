@@ -473,12 +473,12 @@ export function AdminLayout({
                   background: '#7F1D1D'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#B91C1C';
-                  e.currentTarget.style.borderColor = '#B91C1C';
+                  e.currentTarget.style.background = '#7F1D1D';
+                  e.currentTarget.style.borderColor = '#7F1D1D';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#7F1D1D';
-                  e.currentTarget.style.borderColor = 'rgba(127,29,29,0.3)';
+                  e.currentTarget.style.background = '#B91C1C';
+                  e.currentTarget.style.borderColor = '#B91C1C';
                 }}
               >
                 <LogOut className="signout-icon h-5 w-5 mr-3" />
@@ -492,10 +492,10 @@ export function AdminLayout({
                   background: '#7F1D1D'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#B91C1C';
+                  e.currentTarget.style.background = '#7F1D1D';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#7F1D1D';
+                  e.currentTarget.style.background = '#B91C1C';
                 }}
                 title="Log Out"
               >
