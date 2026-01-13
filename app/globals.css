@@ -463,3 +463,17 @@ input:-webkit-autofill:focus {
 .animate-float-from-map {
   animation: float-from-map 6s ease-out forwards;
 }
+
+/* Campaign Progress Shimmer Animation */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}

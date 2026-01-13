@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "../../shared/ui/button";
 import { Input } from "../../shared/ui/input";
 import { Label } from "../../shared/ui/label";
@@ -68,6 +68,7 @@ import {
   Rocket,
   Play,
   TriangleAlert,
+  Building2,
   ArrowUpRight,
   ArrowDownRight,
   Trophy,
@@ -107,10 +108,11 @@ import { useOrganization } from "../../shared/lib/hooks/useOrganization";
 import { auth } from "../../shared/lib/firebase";
 
 import { AdminLayout } from "./AdminLayout";
-import { SystemAlertsWidget } from "./components/SystemAlertsWidget";
-import { useSystemAlerts } from "../../shared/lib/hooks/useSystemAlerts";
 import { useStripeOnboarding, StripeOnboardingDialog } from "../../features/stripe-onboarding";
 import { useToast } from "../../shared/ui/ToastProvider";
+import { FundraisingEfficiencyGauge, PerformanceDetailDialog } from "../../widgets/campaign-performance";
+import { CampaignProgressBars, CampaignProgressDialog, transformCampaignsToProgress } from "../../widgets/campaign-progress";
+import { DonationDistributionChart, DonationDistributionDialog } from "../../widgets/donation-distribution";
 
 interface AdminDashboardProps {
   onNavigate: (screen: Screen) => void;
@@ -173,15 +175,18 @@ export function AdminDashboard({
   const { deviceDistribution } = stats;
 
   const [topCampaigns, setTopCampaigns] = useState<Campaign[]>([]);
+  const [allCampaignsForPerformance, setAllCampaignsForPerformance] = useState<Campaign[]>([]);
   const [goalComparisonData, setGoalComparisonData] = useState<any[]>([]);
   const [categoryData, setCategoryData] = useState<any[]>([]);
   const [showFeatures, setShowFeatures] = useState(false);
-  const [showGettingStarted, setShowGettingStarted] = useState(false);
   const [isLegendExpanded, setIsLegendExpanded] = useState(false);
   const [stripeStatusMessage, setStripeStatusMessage] = useState<{ type: 'success' | 'error' | 'warning', message: string } | null>(null);
   const [showStripeStatusDialog, setShowStripeStatusDialog] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [showActivityDialog, setShowActivityDialog] = useState(false);
+  const [showPerformanceDialog, setShowPerformanceDialog] = useState(false);
+  const [showDonationDistributionDialog, setShowDonationDistributionDialog] = useState(false);
+  const [showCampaignProgressDialog, setShowCampaignProgressDialog] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showKioskForm, setShowKioskForm] = useState(false);
   const [showLinkingForm, setShowLinkingForm] = useState(false);
@@ -213,11 +218,6 @@ export function AdminDashboard({
   const { organization, loading: orgLoading, error: orgError } = useOrganization(
     userSession.user.organizationId ?? null
   );
-
-  const { alerts: systemAlerts, loading: systemAlertsLoading } = useSystemAlerts({
-    organization,
-    organizationId: userSession.user.organizationId,
-  });
 
 
   const { isStripeOnboarded, needsOnboarding } = useStripeOnboarding(organization);
@@ -267,98 +267,23 @@ export function AdminDashboard({
 
 
 
-  const gettingStartedSteps = [
-    {
-      step: 1,
-      title: "Create Your First Campaign",
-      description:
-        "Set up a donation campaign with custom goals, pricing, and branding",
-      action: "Create Campaign",
-      actionFunction: () => {
-        onNavigate("admin-campaigns");
-      },
-      icon: <Target className="w-5 h-5" />,
-      estimated: "5 minutes",
-      canAccess: hasPermission("create_campaign"),
-      requiresStripe: false,
-    },
-    {
-      step: 2,
-      title: "Configure Donation Kiosks",
-      description:
-        "Set up kiosks in your locations with QR codes and access controls",
-      action: "Setup Kiosks",
-      actionFunction: () => {
-        onNavigate("admin-kiosks");
-      },
-      icon: <Monitor className="w-5 h-5" />,
-      estimated: "10 minutes",
-      canAccess: hasPermission("create_kiosk"),
-      requiresStripe: false,
-    },
-    {
-      step: 3,
-      title: "Assign Campaigns to Kiosks",
-      description:
-        "Connect your campaigns to specific kiosk locations for targeted fundraising",
-      action: "Assign Campaigns",
-      actionFunction: () => onNavigate("admin-kiosks"),
-      icon: <Workflow className="w-5 h-5" />,
-      estimated: "3 minutes",
-      canAccess: hasPermission("assign_campaigns"),
-      requiresStripe: false,
-    },
-    {
-      step: 4,
-      title: "Invite Team Members",
-      description:
-        "Add users with appropriate permissions to help manage your platform",
-      action: "Manage Users",
-      actionFunction: () => onNavigate("admin-users"),
-      icon: <Users className="w-5 h-5" />,
-      estimated: "5 minutes",
-      canAccess: hasPermission("create_user"),
-      requiresStripe: false,
-    },
-  ];
+  const fetchChartData = useCallback(async () => {
+    if (!userSession.user.organizationId) return;
+    try {
+      const campaignsRef = collection(db, "campaigns");
+      const orgQuery = where("organizationId", "==", userSession.user.organizationId);
 
-
-  const quickTips = [
-    {
-      icon: <Lightbulb className="w-5 h-5 text-yellow-600" />,
-      title: "Pro Tip: Use Global Campaigns",
-      description:
-        'Mark campaigns as "Global" to display them across all kiosks automatically.',
-    },
-    {
-      icon: <Star className="w-5 h-5 text-blue-600" />,
-      title: "Feature Campaigns",
-      description:
-        "Set default campaigns for each kiosk to highlight your most important causes.",
-    },
-    {
-      icon: <Bell className="w-5 h-5 text-green-600" />,
-      title: "Monitor Performance",
-      description:
-        "Check the analytics regularly to optimize campaign performance and kiosk placement.",
-    },
-  ];
-
-  useEffect(() => {
-    const fetchChartData = async () => {
-      if (!userSession.user.organizationId) return;
-      try {
-        const campaignsRef = collection(db, "campaigns");
-        const orgQuery = where("organizationId", "==", userSession.user.organizationId);
-
-        const topListQuery = query(
-          campaignsRef,
-          orgQuery
-        );
-        const topListSnapshot = await getDocs(topListQuery);
-        const allCampaigns = topListSnapshot.docs.map(
-          (doc) => ({ id: doc.id, ...doc.data() } as Campaign)
-        );
+      const topListQuery = query(
+        campaignsRef,
+        orgQuery
+      );
+      const topListSnapshot = await getDocs(topListQuery);
+      const allCampaigns = topListSnapshot.docs.map(
+        (doc) => ({ id: doc.id, ...doc.data() } as Campaign)
+      );
+      
+      // Store all campaigns for performance widget
+      setAllCampaignsForPerformance(allCampaigns);
         
         // Check if there are no campaigns and show onboarding
         if (allCampaigns.length === 0 && !showOnboarding) {
@@ -443,13 +368,15 @@ export function AdminDashboard({
       } catch (error) {
         console.error("Error fetching chart data: ", error);
       }
-    };
+    }, [userSession.user.organizationId, showOnboarding]);
 
+  useEffect(() => {
     fetchChartData();
-  }, [userSession.user.organizationId, showOnboarding]);
+  }, [fetchChartData]);
 
   const handleRefresh = () => {
     refreshDashboard();
+    fetchChartData();
   };
 
   const handleCreateCampaign = async () => {
@@ -747,11 +674,6 @@ export function AdminDashboard({
       )}
       headerActions={(
         <div className="flex items-center gap-2 flex-nowrap ml-auto">
-          {userSession.user.role === 'super_admin' && hasPermission('system_admin') && (
-            <div className="w-auto">
-              <OrganizationSwitcher userSession={userSession} onOrganizationChange={onOrganizationSwitch} />
-            </div>
-          )}
           {organization && organization.stripe && (
             <div className="relative">
               <Button
@@ -1755,11 +1677,35 @@ export function AdminDashboard({
           <p className="text-red-500">Error: {orgError}</p>
         ) : null}
         
+        {/* Organization Switcher for Super Admin */}
+        {userSession.user.role === 'super_admin' && (
+          <div className="mb-8">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100 p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                      <Building2 className="w-4 h-4 text-white" />
+                    </div>
+                    <h2 className="text-lg font-semibold text-gray-900">Organization View</h2>
+                  </div>
+                  <p className="text-sm text-gray-600 ml-10">
+                    Switch between organizations to manage their campaigns, kiosks, and view analytics
+                  </p>
+                </div>
+                <div className="sm:flex-shrink-0">
+                  <OrganizationSwitcher userSession={userSession} onOrganizationChange={onOrganizationSwitch} />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
         {/* Bento Grid Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
           {/* Total Raised Card */}
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
+          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+            <CardContent className="p-6 relative z-10">
               <div className="flex items-start justify-between mb-4">
                 <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
                   <DollarSign className="h-5 w-5" />
@@ -1770,17 +1716,27 @@ export function AdminDashboard({
                 <p className="text-2xl font-bold text-gray-900">
                   {loading ? "..." : formatLargeCurrency(stats.totalRaised)}
                 </p>
-                <div className="flex items-center text-sm text-emerald-600">
-                  <ArrowUpRight className="h-4 w-4 mr-1" />
-                  <span className="font-medium">12% vs last month</span>
+                <div className={`flex items-center text-sm ${
+                  loading ? "text-gray-500" : 
+                  stats.totalDonations > 0 ? "text-emerald-600" : "text-gray-400"
+                }`}>
+                  <span className="font-medium">
+                    {loading ? "..." : stats.totalDonations > 0 
+                      ? `Avg ${formatCurrency(stats.totalRaised / stats.totalDonations)} per donation`
+                      : "No donations yet"}
+                  </span>
                 </div>
               </div>
             </CardContent>
+            {/* Floating Background Icon */}
+            <div className="absolute -right-4 -bottom-4 opacity-[0.08] pointer-events-none">
+              <DollarSign className="h-32 w-32 text-emerald-600" />
+            </div>
           </Card>
 
           {/* Total Donations Card */}
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
+          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+            <CardContent className="p-6 relative z-10">
               <div className="flex items-start justify-between mb-4">
                 <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
                   <Heart className="h-5 w-5" />
@@ -1791,17 +1747,27 @@ export function AdminDashboard({
                 <p className="text-2xl font-bold text-gray-900">
                   {loading ? "..." : formatNumber(stats.totalDonations)}
                 </p>
-                <div className="flex items-center text-sm text-emerald-600">
-                  <ArrowUpRight className="h-4 w-4 mr-1" />
-                  <span className="font-medium">8% vs last month</span>
+                <div className={`flex items-center text-sm ${
+                  loading ? "text-gray-500" : 
+                  recentActivities.length > 0 ? "text-emerald-600" : "text-gray-400"
+                }`}>
+                  <span className="font-medium">
+                    {loading ? "..." : recentActivities.length > 0 
+                      ? `Latest: ${recentActivities[0].timeAgo}`
+                      : "No recent activity"}
+                  </span>
                 </div>
               </div>
             </CardContent>
+            {/* Floating Background Icon */}
+            <div className="absolute -right-4 -bottom-4 opacity-[0.08] pointer-events-none">
+              <Heart className="h-32 w-32 text-blue-600" />
+            </div>
           </Card>
 
           {/* Active Campaigns Card */}
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
+          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+            <CardContent className="p-6 relative z-10">
               <div className="flex items-start justify-between mb-4">
                 <div className="w-10 h-10 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
                   <Globe className="h-5 w-5" />
@@ -1812,16 +1778,33 @@ export function AdminDashboard({
                 <p className="text-2xl font-bold text-gray-900">
                   {loading ? "..." : stats.activeCampaigns}
                 </p>
-                <div className="flex items-center text-sm text-gray-500">
-                  <span className="font-medium">Running now</span>
+                <div className={`flex items-center text-sm ${
+                  loading ? "text-gray-500" : 
+                  topCampaigns.length > 0 
+                    ? (topCampaigns[0].raised || 0) / (topCampaigns[0].goal || 1) >= 0.75 
+                      ? "text-emerald-600" 
+                      : (topCampaigns[0].raised || 0) / (topCampaigns[0].goal || 1) >= 0.5
+                        ? "text-yellow-600"
+                        : "text-red-600"
+                    : "text-gray-400"
+                }`}>
+                  <span className="font-medium">
+                    {loading ? "..." : topCampaigns.length > 0 
+                      ? `Top: ${Math.round((topCampaigns[0].raised || 0) / (topCampaigns[0].goal || 1) * 100)}% funded`
+                      : "No campaigns yet"}
+                  </span>
                 </div>
               </div>
             </CardContent>
+            {/* Floating Background Icon */}
+            <div className="absolute -right-4 -bottom-4 opacity-[0.08] pointer-events-none">
+              <Globe className="h-32 w-32 text-purple-600" />
+            </div>
           </Card>
 
           {/* Active Kiosks Card */}
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
+          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+            <CardContent className="p-6 relative z-10">
               <div className="flex items-start justify-between mb-4">
                 <div className="w-10 h-10 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center">
                   <Monitor className="h-5 w-5" />
@@ -1832,12 +1815,24 @@ export function AdminDashboard({
                 <p className="text-2xl font-bold text-gray-900">
                   {loading ? "..." : stats.activeKiosks}
                 </p>
-                <div className="flex items-center text-sm text-red-600">
-                  <ArrowDownRight className="h-4 w-4 mr-1" />
-                  <span className="font-medium">3% vs last month</span>
+                <div className={`flex items-center text-sm ${
+                  loading ? "text-gray-500" : 
+                  stats.activeKiosks > 0 ? "text-emerald-600" : "text-red-600"
+                }`}>
+                  <span className="font-medium">
+                    {loading ? "..." : stats.topLocations.length > 0 
+                      ? `Top: ${stats.topLocations[0].name}`
+                      : stats.activeKiosks === 0 
+                        ? "No active kiosks"
+                        : "No locations yet"}
+                  </span>
                 </div>
               </div>
             </CardContent>
+            {/* Floating Background Icon */}
+            <div className="absolute -right-4 -bottom-4 opacity-[0.08] pointer-events-none">
+              <Monitor className="h-32 w-32 text-orange-600" />
+            </div>
           </Card>
         </div>
 
@@ -1892,188 +1887,49 @@ export function AdminDashboard({
           </Card>
         )}
 
-        <div className="mb-8">
-          
-
-          <Collapsible
-            open={showGettingStarted}
-            onOpenChange={setShowGettingStarted}
-          >
-            <CollapsibleTrigger asChild>
-              <Button
-                variant="ghost"
-                className="w-full justify-between p-2 sm:p-3 h-auto mb-2 text-left"
-              >
-                <div className="flex items-center space-x-2">
-                  <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 flex-shrink-0" />
-                  <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900">
-                    Getting Started
-                  </h3>
-                </div>
-                {showGettingStarted ? (
-                  <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                ) : (
-                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                )}
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-4 mb-6 sm:mb-8">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                {gettingStartedSteps.map((step, index) => (
-                  <Card
-                    key={index}
-                    className={`${
-                      step.canAccess
-                        ? "hover:shadow-md transition-shadow"
-                        : "opacity-60"
-                    }`}
-                  >
-                    <CardContent className="p-4 sm:p-6">
-                      <div className="flex items-start space-x-3 sm:space-x-4">
-                        <div className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-indigo-100 text-indigo-600 rounded-full text-xs sm:text-sm font-semibold flex-shrink-0">
-                          {step.step}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center space-x-2 mb-2 flex-wrap">
-                            <div className="text-indigo-600 flex-shrink-0">{step.icon}</div>
-                            <h4 className="font-semibold text-sm sm:text-base text-gray-900">
-                              {step.title}
-                            </h4>
-                          </div>
-                          <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
-                            {step.description}
-                          </p>
-                          <div className="flex items-center justify-between gap-2 flex-wrap">
-                            {step.canAccess ? (
-                              <Button
-                                onClick={step.actionFunction}
-                                size="sm"
-                                className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm"
-                              >
-                                <Play className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                                <span className="hidden sm:inline">{step.action}</span>
-                                <span className="sm:hidden">Go</span>
-                              </Button>
-                            ) : (
-                              <Badge variant="secondary" className="text-xs">
-                                <HelpCircle className="w-3 h-3 mr-1" />
-                                Requires permission
-                              </Badge>
-                            )}
-                            <span className="text-xs text-gray-500 whitespace-nowrap">
-                              ~{step.estimated}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-                <CardHeader className="p-4 sm:p-6">
-                  <CardTitle className="flex items-center space-x-2 text-blue-900 text-base sm:text-lg">
-                    <Lightbulb className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                    <span>Quick Tips</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 sm:p-6 pt-0">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {quickTips.map((tip, index) => (
-                      <div key={index} className="flex items-start space-x-2 sm:space-x-3">
-                        <div className="flex-shrink-0">{tip.icon}</div>
-                        <div className="min-w-0">
-                          <h5 className="font-medium text-sm sm:text-base text-gray-900 mb-1">
-                            {tip.title}
-                          </h5>
-                          <p className="text-xs sm:text-sm text-gray-600">
-                            {tip.description}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </CollapsibleContent>
-          </Collapsible>
-        </div>
         {/* Bento Grid Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-          {/* Campaign Goal Comparison - Spans 2 columns */}
+          {/* Fundraising Efficiency Rating - Spans 2 columns */}
           <Card className="bg-white rounded-xl border border-gray-200 shadow-sm lg:col-span-2">
             <CardHeader className="p-6 border-b border-gray-100">
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
-                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mr-3">
-                      <BarChart3 className="w-4 h-4" />
+                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mr-3">
+                      <Target className="w-4 h-4" />
                     </div>
-                    Campaign Goal Comparison
+                    Fundraising Efficiency Rating
                   </CardTitle>
                   <CardDescription className="text-sm text-gray-600 mt-1 ml-11">
-                    Track progress towards fundraising goals
+                    Overall performance across all campaigns
                   </CardDescription>
                 </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowPerformanceDialog(true)}
+                  className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+                >
+                  <ArrowUpRight className="w-4 h-4 mr-1" />
+                  View Details
+                </Button>
               </div>
             </CardHeader>
-            <CardContent className="p-6">
-              {loading ? (
-                <div className="space-y-4">
-                  <Skeleton className="h-[250px] sm:h-[300px] w-full" />
-                </div>
-              ) : goalComparisonData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
-                  <BarChart data={goalComparisonData}>
-                    <CartesianGrid 
-                      vertical={false} 
-                      strokeDasharray="3 3" 
-                      stroke="#E5E7EB" 
-                    />
-                    <XAxis 
-                      dataKey="name" 
-                      tick={false}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      tickFormatter={(value) => formatShortCurrency(value as number)}
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: '#6B7280', fontSize: 12 }}
-                    />
-                    <Tooltip content={<CustomChartTooltip />} />
-                    <Legend 
-                      wrapperStyle={{ fontSize: '12px' }}
-                      iconType="circle"
-                    />
-                    <Bar 
-                      dataKey="Collected" 
-                      fill="#10B981" 
-                      radius={[4, 4, 0, 0]}
-                    />
-                    <Bar 
-                      dataKey="Goal" 
-                      fill="#94A3B8" 
-                      radius={[4, 4, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="text-center py-6 sm:py-8 text-gray-500">
-                  <Target className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3" />
-                  <p className="text-base sm:text-lg font-medium mb-2">No Campaigns Yet</p>
-                  <p className="text-xs sm:text-sm mb-4 px-4">
-                    Start by creating your first fundraising campaign to track progress.
-                  </p>
-                  {hasPermission("create_campaign") && (
-                    <Button onClick={() => onNavigate("admin-campaigns")} size="sm" className="text-xs sm:text-sm">
-                      <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-2" /> Create New Campaign
-                    </Button>
-                  )}
-                </div>
-              )}
+            <CardContent className="p-6 cursor-pointer" onClick={() => setShowPerformanceDialog(true)}>
+              <FundraisingEfficiencyGauge 
+                value={
+                  loading ? 0 : 
+                  allCampaignsForPerformance.length > 0 
+                    ? (() => {
+                        const totalRaised = allCampaignsForPerformance.reduce((sum, c) => sum + (c.raised || 0), 0);
+                        const totalGoals = allCampaignsForPerformance.reduce((sum, c) => sum + (c.goal || 0), 0);
+                        return totalGoals > 0 ? Math.min(100, Math.round((totalRaised / totalGoals) * 100)) : 0;
+                      })()
+                    : 0
+                }
+                onDetailsClick={() => setShowPerformanceDialog(true)}
+                onRefresh={handleRefresh}
+              />
             </CardContent>
           </Card>
 
@@ -2151,177 +2007,6 @@ export function AdminDashboard({
                     )}
                 </div>
               )}
-              <div className="mt-2 border-t pt-2">                 
-                {categoryData.length > 6 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full mt-3 text-indigo-600 hover:text-indigo-700 text-xs sm:text-sm"
-                    onClick={() => setIsLegendExpanded(!isLegendExpanded)}
-                  >
-                    {isLegendExpanded ? (
-                      <span className="flex items-center justify-center">
-                        Show Less <ChevronUp className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
-                      </span>
-                    ) : (
-                      <span className="flex items-center justify-center">
-                        Show More <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
-                      </span>
-                    )}
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        
-        {/* Top Performing Campaigns - Gamified Leaderboard */}
-        <div className="mb-8">
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm h-full">
-            <CardHeader className="p-6 border-b border-gray-100 bg-gradient-to-r from-yellow-50/50 to-orange-50/30">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="flex items-start gap-4 flex-1 min-w-0">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-md flex-shrink-0">
-                    <Trophy className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <CardTitle className="text-xl font-bold text-gray-900 mb-1">
-                      Top Performing Campaigns
-                    </CardTitle>
-                    <CardDescription className="text-sm text-gray-600 flex items-center gap-2">
-                      <span>Ranked by fundraising progress</span>
-                      <span className="hidden sm:inline text-gray-400">•</span>
-                      <span className="hidden sm:inline text-indigo-600 font-medium">
-                        {topCampaigns.length} {topCampaigns.length === 1 ? 'Campaign' : 'Campaigns'}
-                      </span>
-                    </CardDescription>
-                  </div>
-                </div>
-                {hasPermission("view_campaigns") && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onNavigate("admin-campaigns")}
-                    className="w-full sm:w-auto bg-white hover:bg-gray-50 border-gray-300 shadow-sm font-medium"
-                  >
-                    View All Campaigns
-                    <ChevronRight className="w-4 h-4 ml-1" />
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className="p-6">
-              {loading ? (
-                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="space-y-3">
-                      <Skeleton className="h-32 w-full rounded-lg" />
-                      <Skeleton className="h-5 w-3/4" />
-                      <Skeleton className="h-4 w-1/2" />
-                      <Skeleton className="h-1.5 w-full" />
-                    </div>
-                  ))}
-                </div>
-              ) : topCampaigns.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {topCampaigns.map((campaign: Campaign, index: number) => {
-                    const collected = campaign.raised || 0;
-                    const goal = campaign.goal || 1;
-                    const progressRaw = (collected / goal) * 100;
-                    const progressValue = Math.min(progressRaw, 100);
-                    const rank = index + 1;
-                    
-                    // Rank overlay styling
-                    const getRankOverlay = () => {
-                      if (rank === 1) {
-                        return (
-                          <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-yellow-500 border-2 border-white flex items-center justify-center shadow-lg">
-                            <Trophy className="w-4 h-4 text-white" />
-                          </div>
-                        );
-                      } else if (rank === 2) {
-                        return (
-                          <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-400 border-2 border-white flex items-center justify-center shadow-lg">
-                            <Medal className="w-4 h-4 text-white" />
-                          </div>
-                        );
-                      } else if (rank === 3) {
-                        return (
-                          <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-orange-500 border-2 border-white flex items-center justify-center shadow-lg">
-                            <Medal className="w-4 h-4 text-white" />
-                          </div>
-                        );
-                      } else {
-                        return (
-                          <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-gray-600 border-2 border-white flex items-center justify-center shadow-lg">
-                            <span className="text-sm font-bold text-white">{rank}</span>
-                          </div>
-                        );
-                      }
-                    };
-
-                    return (
-                      <div 
-                        key={campaign.id} 
-                        className="group bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg hover:border-gray-300 transition-all cursor-pointer"
-                        onClick={() => onNavigate("admin-campaigns")}
-                      >
-                        {/* Campaign Image */}
-                        <div className="relative h-32 bg-gradient-to-br from-gray-100 to-gray-200">
-                          <ImageWithFallback
-                            src={campaign.coverImageUrl}
-                            alt={campaign.title}
-                            className="w-full h-full object-cover"
-                          />
-                          {getRankOverlay()}
-                        </div>
-
-                        {/* Campaign Info */}
-                        <div className="p-4 space-y-3">
-                          <div>
-                            <h4 className="font-semibold text-sm text-gray-900 truncate mb-1">
-                              {campaign.title}
-                            </h4>
-                            <p className="text-lg font-bold text-gray-900">
-                              {formatCurrency(collected)}
-                            </p>
-                          </div>
-
-                          <Progress 
-                            value={progressValue} 
-                            className={`h-1.5 rounded-full ${progressRaw >= 100 ? '[&>div]:bg-green-500' : '[&>div]:bg-indigo-500'}`}
-                          />
-
-                          <div className="flex items-center justify-between text-xs text-gray-500">
-                            <span className="flex items-center gap-1">
-                              <BarChart3 className="w-3 h-3" />
-                              {formatShortCurrency(goal)}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Users className="w-3 h-3" />
-                              {campaign.donationCount || 0}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-12 text-gray-500">
-                  <Trophy className="mx-auto h-12 w-12 text-gray-300 mb-3" />
-                  <p className="text-lg font-medium mb-2 text-gray-900">No Campaigns Yet</p>
-                  <p className="text-sm mb-4 text-gray-600">
-                    Start by creating your first fundraising campaign to track progress.
-                  </p>
-                  {hasPermission("create_campaign") && (
-                    <Button onClick={() => onNavigate("admin-campaigns")} size="sm">
-                      <Plus className="w-4 h-4 mr-2" /> Create New Campaign
-                    </Button>
-                  )}
-                </div>
-              )}
             </CardContent>
           </Card>
         </div>
@@ -2330,19 +2015,42 @@ export function AdminDashboard({
         {/* Donation Distribution and Recent Activity */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {/* Donation Distribution - Spans 2 columns */}
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm md:col-span-2">
+          <Card 
+            className="bg-white rounded-xl border border-gray-200 shadow-sm md:col-span-2"
+          >
             <CardHeader className="p-6 border-b border-gray-100">
-              <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
-                <div className="w-8 h-8 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center mr-3">
-                  <DollarSign className="w-4 h-4" />
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
+                    <div className="w-8 h-8 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center mr-3">
+                      <DollarSign className="w-4 h-4" />
+                    </div>
+                    Donation Distribution by Amount
+                  </CardTitle>
+                  <CardDescription className="text-sm text-gray-600 mt-1 ml-11">
+                    Number of donations in different amount ranges
+                  </CardDescription>
                 </div>
-                Donation Distribution by Amount
-              </CardTitle>
-              <CardDescription className="text-sm text-gray-600 mt-1 ml-11">
-                Number of donations in different amount ranges
-              </CardDescription>
+                {!loading && !stats.donationDistributionError && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowDonationDistributionDialog(true);
+                    }}
+                    className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                  >
+                    <ArrowUpRight className="w-4 h-4 mr-1" />
+                    View Details
+                  </Button>
+                )}
+              </div>
             </CardHeader>
-            <CardContent className="p-6">
+            <CardContent 
+              className="p-6 cursor-pointer hover:bg-gray-50 transition-colors"
+              onClick={() => !loading && !stats.donationDistributionError && setShowDonationDistributionDialog(true)}
+            >
               {loading ? (
                 <div className="space-y-4">
                   <Skeleton className="h-[250px] sm:h-[300px] w-full" />
@@ -2355,69 +2063,96 @@ export function AdminDashboard({
                     Unable to load donation distribution. Please try refreshing the page.
                   </p>
                 </div>
-              ) : stats.donationDistribution.length > 0 ? (
-                <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
-                  <LineChart data={stats.donationDistribution}>
-                    <CartesianGrid 
-                      vertical={false} 
-                      strokeDasharray="3 3" 
-                      stroke="#E5E7EB" 
-                    />
-                    <XAxis 
-                      dataKey="range" 
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: '#6B7280', fontSize: 12 }}
-                      angle={-45}
-                      textAnchor="end"
-                      height={80}
-                    />
-                    <YAxis
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: '#6B7280', fontSize: 12 }}
-                      label={{ 
-                        value: 'Number of Donations', 
-                        angle: -90, 
-                        position: 'insideLeft',
-                        offset: 10,
-                        style: { 
-                          fontSize: 12, 
-                          fill: '#6B7280',
-                          textAnchor: 'middle'
-                        } 
-                      }}
-                    />
-                    <Tooltip content={<CustomChartTooltip />} />
-                    <Legend 
-                      wrapperStyle={{ fontSize: '12px' }}
-                      iconType="circle"
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="count" 
-                      stroke="#4F46E5" 
-                      strokeWidth={2} 
-                      dot={false}
-                      activeDot={{ r: 6, fill: '#4F46E5' }}
-                      name="Donations"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
               ) : (
-                <div className="text-center py-6 sm:py-8 text-gray-500">
-                  <TrendingUp className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3" />
-                  <p className="text-base sm:text-lg font-medium mb-2">No Donation Data</p>
-                  <p className="text-xs sm:text-sm mb-4 px-4">
-                    Start receiving donations to see distribution trends.
-                  </p>
-                </div>
+                <DonationDistributionChart
+                  data={stats.donationDistribution}
+                  totalRaised={stats.totalRaised}
+                  formatCurrency={(amount) => `£${amount.toLocaleString()}`}
+                />
               )}
             </CardContent>
           </Card>
 
-          {/* Recent Activity - Spans 2 columns */}
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm md:col-span-2">
+          {/* Campaign Goal Comparison - Spans 2 columns */}
+          <Card 
+            className="bg-white rounded-xl border border-gray-200 shadow-sm md:col-span-2"
+          >
+            <CardHeader className="p-6 border-b border-gray-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
+                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mr-3">
+                      <BarChart3 className="w-4 h-4" />
+                    </div>
+                    Campaign Goal Comparison
+                  </CardTitle>
+                  <CardDescription className="text-sm text-gray-600 mt-1 ml-11">
+                    Track progress towards fundraising goals
+                  </CardDescription>
+                </div>
+                {!loading && goalComparisonData.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowCampaignProgressDialog(true);
+                    }}
+                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                  >
+                    <ArrowUpRight className="w-4 h-4 mr-1" />
+                    View Details
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent 
+              className="p-6 cursor-pointer hover:bg-gray-50 transition-colors"
+              onClick={() => !loading && goalComparisonData.length > 0 && setShowCampaignProgressDialog(true)}
+            >
+              {loading ? (
+                <div className="space-y-3">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="space-y-2">
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-2 w-full" />
+                      <Skeleton className="h-3 w-1/2" />
+                    </div>
+                  ))}
+                </div>
+              ) : goalComparisonData.length > 0 ? (
+                <CampaignProgressBars
+                  campaigns={transformCampaignsToProgress(
+                    goalComparisonData.map((d, index) => ({
+                      id: `${d.name}-${index}`,
+                      title: d.name,
+                      raised: d.Collected,
+                      goal: d.Goal,
+                    } as any))
+                  )}
+                  formatCurrency={formatCurrency}
+                />
+              ) : (
+                <div className="text-center py-6 sm:py-8 text-gray-500">
+                  <Target className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3" />
+                  <p className="text-base sm:text-lg font-medium mb-2">No Campaigns Yet</p>
+                  <p className="text-xs sm:text-sm mb-4 px-4">
+                    Start by creating your first fundraising campaign to track progress.
+                  </p>
+                  {hasPermission("create_campaign") && (
+                    <Button onClick={() => onNavigate("admin-campaigns")} size="sm" className="text-xs sm:text-sm">
+                      <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-2" /> Create New Campaign
+                    </Button>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Recent Activity */}
+        <div className="mb-8">
+          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm">
             <CardHeader className="p-6 border-b border-gray-100">
               <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
                 <div className="w-8 h-8 rounded-lg bg-cyan-50 text-cyan-600 flex items-center justify-center mr-3">
@@ -2495,113 +2230,6 @@ export function AdminDashboard({
                       )}
                     </div>
                   </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* System Alerts and Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* System Alerts - Spans 2 columns */}
-          <div className="md:col-span-2">
-            <SystemAlertsWidget
-              alerts={systemAlerts}
-              loading={systemAlertsLoading}
-              onNavigate={onNavigate}
-            />
-          </div>
-          
-          {/* Quick Actions - Spans 2 columns */}
-          <Card className="bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 shadow-sm md:col-span-2">
-            <CardHeader className="p-6 border-b border-gray-100 bg-white rounded-t-xl">
-              <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
-                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-600 text-white flex items-center justify-center mr-3 shadow-sm">
-                  <Rocket className="w-5 h-5" />
-                </div>
-                Quick Actions
-              </CardTitle>
-              <CardDescription className="text-sm text-gray-600 mt-1 ml-12">
-                Navigate to key management areas
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {hasPermission("view_campaigns") && (
-                  <Button
-                    variant="outline"
-                    className="justify-start h-auto py-4 px-4 text-left hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all duration-200 group border-gray-200 bg-white"
-                    onClick={() => {
-                      onNavigate("admin-campaigns");
-                    }}
-                  >
-                    <div className="flex items-start w-full">
-                      <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform shadow-sm flex-shrink-0">
-                        <Database className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex flex-col items-start">
-                        <span className="font-semibold text-gray-900 text-sm">Manage Campaigns</span>
-                        <span className="text-xs text-gray-500 mt-0.5">
-                          Create and edit campaigns
-                        </span>
-                      </div>
-                    </div>
-                  </Button>
-                )}
-                {hasPermission("view_kiosks") && (
-                  <Button
-                    variant="outline"
-                    className="justify-start h-auto py-4 px-4 text-left hover:bg-purple-50 hover:border-purple-300 hover:shadow-md transition-all duration-200 group border-gray-200 bg-white"
-                    onClick={() => {
-                      onNavigate("admin-kiosks");
-                    }}
-                  >
-                    <div className="flex items-start w-full">
-                      <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform shadow-sm flex-shrink-0">
-                        <Monitor className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex flex-col items-start">
-                        <span className="font-semibold text-gray-900 text-sm">Configure Kiosks</span>
-                        <span className="text-xs text-gray-500 mt-0.5">
-                          Manage kiosk settings
-                        </span>
-                      </div>
-                    </div>
-                  </Button>
-                )}
-                {hasPermission("view_donations") && (
-                  <Button
-                    variant="outline"
-                    className="justify-start h-auto py-4 px-4 text-left hover:bg-green-50 hover:border-green-300 hover:shadow-md transition-all duration-200 group border-gray-200 bg-white"
-                    onClick={() => onNavigate("admin-donations")}
-                  >
-                    <div className="flex items-start w-full">
-                      <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform shadow-sm flex-shrink-0">
-                        <TrendingUp className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex flex-col items-start">
-                        <span className="font-semibold text-gray-900 text-sm">View Donations</span>
-                        <span className="text-xs text-gray-500 mt-0.5">Track donation history</span>
-                      </div>
-                    </div>
-                  </Button>
-                )}
-                {hasPermission("view_users") && (
-                  <Button
-                    variant="outline"
-                    className="justify-start h-auto py-4 px-4 text-left hover:bg-orange-50 hover:border-orange-300 hover:shadow-md transition-all duration-200 group border-gray-200 bg-white"
-                    onClick={() => onNavigate("admin-users")}
-                  >
-                    <div className="flex items-start w-full">
-                      <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform shadow-sm flex-shrink-0">
-                        <UserCog className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex flex-col items-start">
-                        <span className="font-semibold text-gray-900 text-sm">User Management</span>
-                        <span className="text-xs text-gray-500 mt-0.5">Manage user accounts</span>
-                      </div>
-                    </div>
-                  </Button>
                 )}
               </div>
             </CardContent>
@@ -2757,6 +2385,42 @@ export function AdminDashboard({
         onOpenChange={setShowOnboardingPopup}
         organization={organization}
         loading={orgLoading}
+      />
+
+      {/* Performance Detail Dialog */}
+      <PerformanceDetailDialog
+        isOpen={showPerformanceDialog}
+        onClose={() => setShowPerformanceDialog(false)}
+        campaigns={allCampaignsForPerformance}
+        stats={stats}
+      />
+
+      {/* Donation Distribution Dialog */}
+      <DonationDistributionDialog
+        isOpen={showDonationDistributionDialog}
+        onClose={() => setShowDonationDistributionDialog(false)}
+        data={stats.donationDistribution}
+        totalRaised={stats.totalRaised}
+        formatCurrency={formatCurrency}
+      />
+
+      {/* Campaign Progress Dialog */}
+      <CampaignProgressDialog
+        isOpen={showCampaignProgressDialog}
+        onClose={() => setShowCampaignProgressDialog(false)}
+        campaigns={transformCampaignsToProgress(
+          goalComparisonData.map((d, index) => ({
+            id: `${d.name}-${index}`,
+            title: d.name,
+            raised: d.Collected,
+            goal: d.Goal,
+          } as any))
+        )}
+        onCampaignClick={(id) => {
+          setShowCampaignProgressDialog(false);
+          onNavigate("admin-campaigns");
+        }}
+        formatCurrency={formatCurrency}
       />
       </div>
       </>
