@@ -160,14 +160,14 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="!max-w-[95vw] !w-[95vw] max-h-[95vh] flex flex-col p-0 sm:!max-w-[95vw] sm:!w-[95vw]">
         {/* Header */}
-        <div className="p-8 pb-6 border-b bg-gradient-to-r from-indigo-50 to-blue-50">
+        <div className="p-8 pb-6 border-b bg-gradient-to-r from-green-50 to-emerald-50">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-3 text-3xl">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 shadow-lg">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-green-600 to-emerald-600 shadow-lg">
                 <Heart className="h-6 w-6 text-white" />
               </div>
               <div>
-                <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
                   Swift Cause Platform Demo
                 </span>
                 <Badge className="ml-3 bg-green-100 text-green-800 border-green-200 text-sm px-3 py-1">Interactive</Badge>
@@ -187,7 +187,7 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
                 <Button
                   onClick={isPlaying ? pauseDemo : startDemo}
                   size="lg"
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-md h-12 px-6 text-base"
+                  className="bg-green-600 hover:bg-green-700 text-white shadow-md h-12 px-6 text-base"
                 >
                   {isPlaying ? <Pause className="w-5 h-5 mr-2" /> : <Play className="w-5 h-5 mr-2" />}
                   {isPlaying ? 'Pause Demo' : 'Start Demo'}
@@ -209,7 +209,7 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
                       key={index}
                       onClick={() => goToStep(index)}
                       className={`w-4 h-4 rounded-full transition-all duration-300 ${
-                        index === currentStep ? 'bg-indigo-600 scale-125' : 
+                        index === currentStep ? 'bg-green-600 scale-125' : 
                         index < currentStep ? 'bg-green-500' : 'bg-gray-300 hover:bg-gray-400'
                       }`}
                       title={step.title}
@@ -267,7 +267,7 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
                                         <span className="text-base text-gray-600">
                                           {currentStepData.mockData.raised as string} raised
                                         </span>
-                                        <span className="text-base font-semibold text-indigo-600">
+                                        <span className="text-base font-semibold text-green-600">
                                           {currentStepData.mockData.progress as number}% complete
                                         </span>
                                       </div>
@@ -285,7 +285,7 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
                               </CardContent>
                             </Card>
                             
-                            <Button className="w-full h-14 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white shadow-lg text-lg">
+                            <Button className="w-full h-14 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg text-lg">
                               <Heart className="w-5 h-5 mr-3" />
                               Support This Campaign
                               <ArrowRight className="w-5 h-5 ml-3" />
@@ -307,7 +307,7 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
                                   variant={amount === currentStepData.mockData.selected ? "default" : "outline"}
                                   className={`h-16 text-lg ${
                                     amount === currentStepData.mockData.selected 
-                                      ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg transform scale-105' 
+                                      ? 'bg-green-600 hover:bg-green-700 text-white shadow-lg transform scale-105' 
                                       : 'hover:bg-gray-50'
                                   }`}
                                 >
@@ -318,13 +318,13 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
                             </div>
                             
                             <div className="space-y-4">
-                              <div className="flex items-center space-x-4 p-4 bg-indigo-50 border border-indigo-200 rounded-xl">
-                                <CheckCircle className="w-6 h-6 text-indigo-600" />
+                              <div className="flex items-center space-x-4 p-4 bg-green-50 border border-green-200 rounded-xl">
+                                <CheckCircle className="w-6 h-6 text-green-600" />
                                 <div className="flex-1">
-                                  <span className="text-base font-medium text-indigo-900">
+                                  <span className="text-base font-medium text-green-900">
                                     Make this {currentStepData.mockData.recurring as string}
                                   </span>
-                                  <p className="text-sm text-indigo-700">Maximize your impact with recurring donations</p>
+                                  <p className="text-sm text-green-700">Maximize your impact with recurring donations</p>
                                 </div>
                               </div>
                               
@@ -372,9 +372,9 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
                               </div>
                               
                               {isPlaying && (
-                                <div className="flex items-center justify-center space-x-4 p-5 bg-blue-50 border border-blue-200 rounded-xl">
-                                  <div className="animate-spin rounded-full h-6 w-6 border-3 border-blue-600 border-t-transparent"></div>
-                                  <span className="text-base font-medium text-blue-900">Processing secure payment...</span>
+                                <div className="flex items-center justify-center space-x-4 p-5 bg-green-50 border border-green-200 rounded-xl">
+                                  <div className="animate-spin rounded-full h-6 w-6 border-3 border-green-600 border-t-transparent"></div>
+                                  <span className="text-base font-medium text-green-900">Processing secure payment...</span>
                                 </div>
                               )}
                             </div>
@@ -398,13 +398,13 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
                                 <div className="text-sm text-green-600">{currentStepData.mockData.growth as string} this month</div>
                               </div>
                               
-                              <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl">
+                              <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-xl">
                                 <div className="flex items-center space-x-3 mb-3">
-                                  <BarChart3 className="w-5 h-5 text-blue-600" />
-                                  <span className="text-sm font-medium text-blue-700">Conversion</span>
+                                  <BarChart3 className="w-5 h-5 text-green-600" />
+                                  <span className="text-sm font-medium text-green-700">Conversion</span>
                                 </div>
-                                <div className="text-2xl font-bold text-blue-900">{currentStepData.mockData.conversion as string}</div>
-                                <div className="text-sm text-blue-600">Above average</div>
+                                <div className="text-2xl font-bold text-green-900">{currentStepData.mockData.conversion as string}</div>
+                                <div className="text-sm text-green-600">Above average</div>
                               </div>
                             </div>
                             
@@ -435,7 +435,7 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
                     <div className="mt-6">
                       <div className="flex items-center justify-between mb-3">
                         <span className="text-base text-gray-600">Demo Progress</span>
-                        <span className="text-base text-indigo-600 font-medium">{Math.round(progress)}%</span>
+                        <span className="text-base text-green-600 font-medium">{Math.round(progress)}%</span>
                       </div>
                       <Progress value={progress} className="h-3 bg-gray-200" />
                     </div>
@@ -448,8 +448,8 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
                 <div className="sticky top-0 space-y-8">
                   <div>
                     <div className="flex items-center space-x-3 mb-4">
-                      <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
-                        <span className="text-lg font-bold text-indigo-600">{currentStep + 1}</span>
+                      <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
+                        <span className="text-lg font-bold text-green-600">{currentStep + 1}</span>
                       </div>
                       <h3 className="text-2xl font-semibold text-gray-900">{currentStepData.title}</h3>
                     </div>
@@ -494,14 +494,14 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
                           <span className="text-gray-700">Bank-level security standards</span>
                         </div>
                         <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                            <BarChart3 className="w-4 h-4 text-blue-600" />
+                          <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
+                            <BarChart3 className="w-4 h-4 text-emerald-600" />
                           </div>
                           <span className="text-gray-700">Real-time analytics & insights</span>
                         </div>
                         <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
-                            <Globe className="w-4 h-4 text-purple-600" />
+                          <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                            <Globe className="w-4 h-4 text-green-600" />
                           </div>
                           <span className="text-gray-700">Multi-platform compatibility</span>
                         </div>
@@ -510,13 +510,13 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
                   </Card>
 
                   {/* Call to Action */}
-                  <div className="p-6 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl text-white shadow-lg">
+                  <div className="p-6 bg-gradient-to-br from-green-600 to-emerald-600 rounded-xl text-white shadow-lg">
                     <h4 className="text-lg font-semibold mb-3">Ready to get started?</h4>
-                    <p className="text-indigo-100 text-base mb-5">
+                    <p className="text-green-100 text-base mb-5">
                       Join hundreds of organizations already using Swift Cause to maximize their fundraising impact.
                     </p>
                     <Button 
-                      className="w-full h-12 bg-white text-indigo-600 hover:bg-gray-50 shadow-md text-base"
+                      className="w-full h-12 bg-white text-green-600 hover:bg-gray-50 shadow-md text-base"
                       onClick={() => onOpenChange(false)}
                     >
                       Start Your Free Trial
