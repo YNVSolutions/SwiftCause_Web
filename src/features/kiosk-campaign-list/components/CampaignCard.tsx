@@ -38,7 +38,7 @@ export const CampaignCard: React.FC<CampaignCardProps> = ({
       className="group bg-white rounded-2xl overflow-hidden shadow-sm border border-green-100 cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
     >
       {/* Campaign Image */}
-      <div className="relative h-64 overflow-hidden">
+      <div className="relative h-52 overflow-hidden">
         <img
           src={campaign.coverImageUrl || '/campaign-fallback.svg'}
           alt={campaign.title}
@@ -48,22 +48,25 @@ export const CampaignCard: React.FC<CampaignCardProps> = ({
       </div>
 
       {/* Campaign Info */}
-      <div className="p-8">
+      <div className="p-6">
         {/* Title */}
-        <h2 className="text-xl font-semibold text-[#0A0A0A] mb-5 line-clamp-2 min-h-[56px]">
+        <h2 className="text-lg font-semibold text-[#0A0A0A] mb-3 line-clamp-1">
           {campaign.title}
         </h2>
 
         {/* Progress Info */}
-        <div className="flex justify-between items-center mb-3">
-          <span className="text-sm text-[#0A0A0A]">
-            {formatAmount(campaign.raised || 0)} / {formatAmount(campaign.goal)}
+        <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
+          <span className="font-medium text-gray-900">
+            {formatAmount(campaign.raised || 0)}
           </span>
-          <span className="text-sm text-green-700 font-medium">{Math.round(progress)}%</span>
+          <span className="text-xs text-gray-500">
+            Goal {formatAmount(campaign.goal)}
+          </span>
+          <span className="text-green-700 font-medium">{Math.round(progress)}%</span>
         </div>
 
         {/* Progress Bar */}
-        <div className="w-full bg-green-100 rounded-full h-2 mb-8">
+        <div className="w-full bg-green-100 rounded-full h-2 mb-5">
           <div
             className="bg-gradient-to-r from-green-600 to-emerald-600 h-2 rounded-full transition-all duration-300"
             style={{ width: `${progress}%` }}
@@ -71,12 +74,12 @@ export const CampaignCard: React.FC<CampaignCardProps> = ({
         </div>
 
         {/* Amount Buttons */}
-        <div className="grid grid-cols-3 gap-3 mb-5">
+        <div className="grid grid-cols-3 gap-2 mb-5">
           {top3Amounts.map((amount, index) => (
             <button
               key={index}
               onClick={(e) => handleAmountClick(e, amount)}
-              className="h-14 rounded-xl bg-green-50 text-green-700 border border-green-200 font-medium text-base hover:bg-green-100 hover:border-green-300 transition-colors duration-200"
+              className="h-11 rounded-lg bg-green-50 text-green-700 border border-green-200 font-medium text-sm hover:bg-green-100 hover:border-green-300 transition-colors duration-200"
             >
               {formatAmount(amount)}
             </button>
@@ -86,7 +89,7 @@ export const CampaignCard: React.FC<CampaignCardProps> = ({
         {/* Donate Button */}
         <button
           onClick={handleDonateClick}
-          className="w-full h-14 rounded-xl font-medium text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-200/60 transition-all duration-200"
+          className="w-full h-12 rounded-lg font-medium text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-200/60 transition-all duration-200"
         >
           Donate
         </button>
