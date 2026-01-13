@@ -60,6 +60,21 @@ export function AdminLayout({
 }: AdminLayoutProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [logoAnimating, setLogoAnimating] = useState(false);
+  const [showUserProfile, setShowUserProfile] = useState(false);
+
+  // Handle ESC key to close profile panel
+  React.useEffect(() => {
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && showUserProfile) {
+        setShowUserProfile(false);
+      }
+    };
+
+    if (showUserProfile) {
+      document.addEventListener('keydown', handleEscKey);
+      return () => document.removeEventListener('keydown', handleEscKey);
+    }
+  }, [showUserProfile]);
   const isActive = (...screens: Screen[]) => screens.includes(activeScreen);
   const currentLabel = SCREEN_LABELS[activeScreen] ?? "Admin";
 
@@ -634,6 +649,242 @@ export function AdminLayout({
                     <span className="font-medium">Get a Tour</span>
                   </Button>
                 )}
+                
+                {/* User Profile Avatar */}
+                <div className="flex items-center gap-3 ml-4 relative">
+                  <div className="relative">
+                    <div 
+                      className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 cursor-pointer hover:shadow-xl"
+                      style={{
+                        background: '#1E293B',
+                        border: '2px solid rgba(255,255,255,0.2)'
+                      }}
+                      onClick={() => setShowUserProfile(!showUserProfile)}
+                    >
+                      <Avatar className="w-8 h-8 transition-all duration-300">
+                        <AvatarImage src={userSession.user.photoURL || undefined} />
+                        <AvatarFallback className="bg-transparent text-white text-sm font-bold transition-all duration-300">
+                          {getInitials(userSession.user.username || userSession.user.email || 'U')}
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
+                    {/* Online indicator */}
+                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                  </div>
+                  
+                  {/* User Info - Hidden on small screens */}
+                  <div 
+                    className="hidden md:block cursor-pointer"
+                    onClick={() => setShowUserProfile(!showUserProfile)}
+                  >
+                    <p className="text-gray-900 font-semibold text-sm leading-tight">
+                      {userSession.user.username || 'Ayush Bhatia'}
+                    </p>
+                    <p className="text-gray-500 text-xs">System Administrator</p>
+                  </div>
+
+                  {/* User Profile Quick View Panel */}
+                  {showUserProfile && (
+                    <>
+                      {/* Backdrop with blur */}
+                      <div 
+                        className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 transition-all duration-300"
+                        onClick={() => setShowUserProfile(false)}
+                      ></div>
+                      
+                      {/* Quick View Panel */}
+                      <div className="fixed top-20 right-6 w-80 bg-white rounded-xl shadow-2xl z-50 transform transition-all duration-300 ease-out border border-gray-100">
+                        {/* Header */}
+                        <div className="relative px-6 py-5 bg-gradient-to-r from-green-600 to-emerald-600 rounded-t-xl">
+                          <button
+                            onClick={() => setShowUserProfile(false)}
+                            className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                          
+                          <div className="flex items-center gap-4">
+                            <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-2 border-white/30">
+                              <Avatar className="w-12 h-12">
+                                <AvatarImage src={userSession.user.photoURL || undefined} />
+                                <AvatarFallback className="bg-white text-green-600 text-lg font-bold">
+                                  {getInitials(userSession.user.username || userSession.user.email || 'U')}
+                                </AvatarFallback>
+                              </Avatar>
+                            </div>
+                            
+                            <div className="text-white">
+                              <h3 className="font-semibold text-lg leading-tight">
+                                {userSession.user.username || 'Ayush Bhatia'}
+                              </h3>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="px-2 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-medium border border-white/30">
+                                  Administrator
+                                </span>
+                                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-6 max-h-96 overflow-y-auto">
+                          {/* Account Information */}
+                          <div className="space-y-3 mb-6">
+                            <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Account Information</h4>
+                            
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-3 text-sm">
+                                <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                                  <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                                  </svg>
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-gray-500 text-xs">Email Address</p>
+                                  <p className="text-gray-900 font-medium truncate">{userSession.user.email || 'ayushbhatia590@gmail.com'}</p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-3 text-sm">
+                                <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                                  <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                </div>
+                                <div>
+                                  <p className="text-gray-500 text-xs">Role</p>
+                                  <p className="text-gray-900 font-medium">Administrator</p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-3 text-sm">
+                                <div className="w-8 h-8 bg-orange-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                                  <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a4 4 0 118 0v4m-4 8a2 2 0 100-4 2 2 0 000 4zm6 0a2 2 0 100-4 2 2 0 000 4z" />
+                                  </svg>
+                                </div>
+                                <div>
+                                  <p className="text-gray-500 text-xs">Member Since</p>
+                                  <p className="text-gray-900 font-medium">November 16, 2025</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Permissions */}
+                          <div className="mb-4">
+                            <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Permissions</h4>
+                            
+                            <div className="flex flex-wrap gap-1.5">
+                              {hasPermission("view_dashboard") && (
+                                <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-md">
+                                  view dashboard
+                                </span>
+                              )}
+                              {hasPermission("view_campaigns") && (
+                                <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-md">
+                                  view campaigns
+                                </span>
+                              )}
+                              {hasPermission("create_campaign") && (
+                                <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-md">
+                                  create campaign
+                                </span>
+                              )}
+                              {hasPermission("edit_campaign") && (
+                                <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-md">
+                                  edit campaign
+                                </span>
+                              )}
+                              {hasPermission("delete_campaign") && (
+                                <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-md">
+                                  delete campaign
+                                </span>
+                              )}
+                              {hasPermission("view_kiosks") && (
+                                <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-md">
+                                  view kiosks
+                                </span>
+                              )}
+                              {hasPermission("create_kiosk") && (
+                                <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-md">
+                                  create kiosk
+                                </span>
+                              )}
+                              {hasPermission("edit_kiosk") && (
+                                <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-md">
+                                  edit kiosk
+                                </span>
+                              )}
+                              {hasPermission("delete_kiosk") && (
+                                <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-md">
+                                  delete kiosk
+                                </span>
+                              )}
+                              {hasPermission("assign_campaigns") && (
+                                <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-md">
+                                  assign campaigns
+                                </span>
+                              )}
+                              {hasPermission("view_donations") && (
+                                <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-md">
+                                  view donations
+                                </span>
+                              )}
+                              {hasPermission("export_donations") && (
+                                <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-xs font-medium rounded-md">
+                                  export donations
+                                </span>
+                              )}
+                              {hasPermission("view_users") && (
+                                <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-md">
+                                  view users
+                                </span>
+                              )}
+                              {hasPermission("create_user") && (
+                                <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-md">
+                                  create user
+                                </span>
+                              )}
+                              {hasPermission("edit_user") && (
+                                <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-md">
+                                  edit user
+                                </span>
+                              )}
+                              {hasPermission("delete_user") && (
+                                <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-md">
+                                  delete user
+                                </span>
+                              )}
+                              {hasPermission("manage_permissions") && (
+                                <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-md">
+                                  manage permissions
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Quick Actions */}
+                          <div className="pt-4 border-t border-gray-100">
+                            <button
+                              onClick={() => {
+                                setShowUserProfile(false);
+                                onLogout();
+                              }}
+                              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors font-medium text-sm border border-red-200"
+                            >
+                              <LogOut className="w-4 h-4" />
+                              Sign Out
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </header>
