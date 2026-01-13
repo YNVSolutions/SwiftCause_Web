@@ -15,7 +15,8 @@ import {
   LogOut,
   Compass,
   Wallet,
-  Menu,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 const SCREEN_LABELS: Partial<Record<Screen, string>> = {
@@ -87,6 +88,63 @@ export function AdminLayout({
     setTimeout(() => setLogoAnimating(false), 500); // Animation duration
   };
 
+  // Centralized navigation button attributes
+  const getNavButtonProps = (screen: Screen | Screen[], title: string) => {
+    const isActiveButton = Array.isArray(screen) ? isActive(...screen) : isActive(screen);
+    
+    return {
+      className: `
+        flex items-center w-full transition-all duration-300 ease-in-out text-left group rounded-lg
+        ${isCollapsed 
+          ? 'px-2 py-3 justify-center' 
+          : 'px-4 py-3 justify-between'
+        }
+        ${isActiveButton
+          ? "text-white"
+          : isCollapsed 
+            ? "text-white hover:text-white hover:bg-white/15"
+            : "text-white/90 hover:text-white hover:bg-white/10"
+        }
+      `,
+      style: isActiveButton ? {
+        background: '#1E293B',
+        boxShadow: isCollapsed ? '0 0 12px rgba(30,41,59,0.4), 0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(30,41,59,0.3)'
+      } : {},
+      onMouseEnter: (e: React.MouseEvent<HTMLButtonElement>) => {
+        if (!isActiveButton) {
+          e.currentTarget.style.backgroundColor = isCollapsed ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.1)';
+        }
+      },
+      onMouseLeave: (e: React.MouseEvent<HTMLButtonElement>) => {
+        if (!isActiveButton) {
+          e.currentTarget.style.backgroundColor = 'transparent';
+        }
+      },
+      title: isCollapsed ? title : ""
+    };
+  };
+
+  // Centralized icon props
+  const getIconProps = () => ({
+    className: `flex-shrink-0 ${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'}`,
+    strokeWidth: isCollapsed ? 2.2 : 2
+  });
+
+  // Centralized text span props
+  const getTextSpanProps = () => ({
+    className: `font-medium ml-3 ${isCollapsed ? 'hidden' : 'block'}`
+  });
+
+  // Centralized arrow icon for active states
+  const renderActiveArrow = (screenToCheck: Screen | Screen[]) => {
+    const isActiveButton = Array.isArray(screenToCheck) ? isActive(...screenToCheck) : isActive(screenToCheck);
+    return !isCollapsed && isActiveButton && (
+      <svg className="h-4 w-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+      </svg>
+    );
+  };
+
   return (
     <SidebarProvider defaultOpen={true}>
       <style>{`
@@ -135,193 +193,117 @@ export function AdminLayout({
       <div className="flex h-screen w-full">
         {/* Custom Green Gradient Sidebar */}
         <div 
-          className={`${isCollapsed ? 'w-24' : 'w-80'} flex flex-col shadow-2xl border-r border-green-700/30 flex-shrink-0 transition-[width] duration-700 ease-in-out p-4 overflow-hidden`}
+          className={`${isCollapsed ? 'w-16' : 'w-80'} flex flex-col shadow-2xl border-r border-green-700/30 flex-shrink-0 transition-all duration-300 ease-in-out overflow-hidden`}
           style={{
             background: 'linear-gradient(180deg, #16A34A 0%, #059669 100%)'
           }}
         >
           {/* Header Card */}
           <div 
-            className={`mb-4 transition-all duration-700 ease-in-out overflow-hidden`}
+            className={`mb-4 overflow-hidden transition-all duration-300 ease-in-out ${isCollapsed ? 'p-2' : 'p-4'}`}
             style={{
               background: 'rgba(0,0,0,0.15)',
               borderRadius: '12px',
-              backdropFilter: 'blur(10px)',
-              padding: isCollapsed ? '12px 8px' : '16px 16px'
+              backdropFilter: 'blur(10px)'
             }}
           >
-            <div className="flex items-center justify-center relative">
+            <div className="flex items-center justify-between">
               {/* Logo Section */}
-              <div 
-                className={`flex items-center gap-3 transition-all duration-700 ease-in-out ${isCollapsed ? 'opacity-0 -translate-x-4 pointer-events-none absolute' : 'opacity-100 translate-x-0 flex-1'}`}
-              >
-                <img 
-                  src="/logo.png" 
-                  alt="SwiftCause Logo" 
-                  className={`w-10 h-10 rounded-lg logo-wobble cursor-pointer ${logoAnimating ? 'animate' : ''}`}
-                  onClick={handleLogoClick}
-                />
-                <div>
-                  <h1 className="text-white font-bold text-lg leading-tight">SwiftCause</h1>
-                  <p className="text-white/70 text-xs font-medium uppercase tracking-wide">ADMIN CONTROL</p>
+              {!isCollapsed && (
+                <div className="flex items-center gap-3 flex-1">
+                  <img 
+                    src="/logo.png" 
+                    alt="SwiftCause Logo" 
+                    className={`w-10 h-10 rounded-lg logo-wobble cursor-pointer ${logoAnimating ? 'animate' : ''}`}
+                    onClick={handleLogoClick}
+                  />
+                  <div>
+                    <h1 className="text-white font-bold text-lg leading-tight">SwiftCause</h1>
+                    <p className="text-white/70 text-xs font-medium uppercase tracking-wide">ADMIN CONTROL</p>
+                  </div>
                 </div>
-              </div>
+              )}
               
-              {/* Collapse Button */}
+              {/* Collapse/Expand Arrow Button */}
               <button
                 onClick={toggleSidebar}
-                className={`p-2 text-white/60 hover:text-white/90 hover:bg-white/10 rounded-lg transition-all duration-700 ease-in-out ${isCollapsed ? 'relative' : 'absolute right-0'}`}
+                className="p-3 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors duration-200 flex-shrink-0 ml-auto"
               >
-                <Menu className="h-5 w-5" />
+                {isCollapsed ? (
+                  <ChevronRight className="h-6 w-6" />
+                ) : (
+                  <ChevronLeft className="h-6 w-6" />
+                )}
               </button>
             </div>
           </div>
 
           {/* User Profile Card */}
-          <div 
-            className={`mb-4 transition-all duration-700 ease-in-out overflow-hidden`}
-            style={{
-              background: isCollapsed ? 'transparent' : 'rgba(0,0,0,0.15)',
-              borderRadius: '12px',
-              backdropFilter: isCollapsed ? 'none' : 'blur(10px)',
-              maxHeight: isCollapsed ? '0px' : '200px',
-              padding: isCollapsed ? '0px' : '24px 16px',
-              marginBottom: isCollapsed ? '0px' : '16px'
-            }}
-          >
+          {!isCollapsed && (
             <div 
-              className={`flex flex-col items-center text-center transition-all duration-700 ease-in-out ${isCollapsed ? 'opacity-0 -translate-y-4' : 'opacity-100 translate-y-0'}`}
+              className="mb-4 overflow-hidden transition-all duration-300 ease-in-out p-6"
+              style={{
+                background: 'rgba(0,0,0,0.15)',
+                borderRadius: '12px',
+                backdropFilter: 'blur(10px)'
+              }}
             >
-              {/* User Profile Avatar */}
-              <div className="relative mb-4">
-                <div 
-                  className="w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-all duration-300"
-                  style={{
-                    background: 'linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%)',
-                    border: '3px solid rgba(255,255,255,0.3)'
-                  }}
-                >
-                  <Avatar className="w-12 h-12 transition-all duration-300">
-                    <AvatarImage src={userSession.user.photoURL || undefined} />
-                    <AvatarFallback className="bg-transparent text-green-700 text-lg font-bold transition-all duration-300">
-                      {getInitials(userSession.user.username || userSession.user.email || 'U')}
-                    </AvatarFallback>
-                  </Avatar>
+              <div className="flex flex-col items-center text-center">
+                {/* User Profile Avatar */}
+                <div className="relative mb-4">
+                  <div 
+                    className="w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-all duration-300"
+                    style={{
+                      background: 'linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%)',
+                      border: '3px solid rgba(255,255,255,0.3)'
+                    }}
+                  >
+                    <Avatar className="w-12 h-12 transition-all duration-300">
+                      <AvatarImage src={userSession.user.photoURL || undefined} />
+                      <AvatarFallback className="bg-transparent text-green-700 text-lg font-bold transition-all duration-300">
+                        {getInitials(userSession.user.username || userSession.user.email || 'U')}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+                  {/* Online indicator */}
+                  <div className="absolute bottom-1 right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
                 </div>
-                {/* Online indicator */}
-                <div className="absolute bottom-1 right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+                
+                {/* User Info */}
+                <h2 className="text-white font-semibold text-lg mb-1">
+                  {userSession.user.username || 'Ayush Bhatia'}
+                </h2>
+                <p className="text-white/60 text-sm">System Administrator</p>
               </div>
-              
-              {/* User Info */}
-              <h2 className="text-white font-semibold text-lg mb-1">
-                {userSession.user.username || 'Ayush Bhatia'}
-              </h2>
-              <p className="text-white/60 text-sm">System Administrator</p>
             </div>
-          </div>
+          )}
 
           {/* Navigation Menu */}
-          <div className="flex-1 overflow-y-auto transition-all duration-700 ease-in-out">
-            <div className={`transition-all duration-700 ease-in-out ${isCollapsed ? 'space-y-3 px-2' : 'space-y-1'}`}>
+          <div className="flex-1 overflow-y-auto">
+            <div className={`${isCollapsed ? 'space-y-2 px-1' : 'space-y-1 px-4'} transition-all duration-300 ease-in-out`}>
               {/* Dashboard */}
               <button
                 onClick={() => onNavigate("admin")}
-                className={`
-                  flex items-center w-full transition-all duration-700 ease-in-out text-left group rounded-lg relative overflow-hidden
-                  ${isCollapsed 
-                    ? 'px-3 py-3.5 justify-center' 
-                    : 'px-4 py-3 justify-between'
-                  }
-                  ${isActive("admin", "admin-dashboard")
-                    ? "text-white"
-                    : isCollapsed 
-                      ? "text-white hover:text-white hover:bg-white/15"
-                      : "text-white/90 hover:text-white hover:bg-white/10"
-                  }
-                `}
-                style={isActive("admin", "admin-dashboard") ? {
-                  background: '#1E293B',
-                  boxShadow: isCollapsed ? '0 0 12px rgba(30,41,59,0.4), 0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(30,41,59,0.3)'
-                } : {}}
-                onMouseEnter={(e) => {
-                  if (!isActive("admin", "admin-dashboard")) {
-                    e.currentTarget.style.backgroundColor = isCollapsed ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.1)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive("admin", "admin-dashboard")) {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }
-                }}
-                title={isCollapsed ? "Dashboard" : ""}
+                {...getNavButtonProps(["admin", "admin-dashboard"], "Dashboard")}
               >
-                <div className="flex items-center relative">
-                  <LayoutDashboard 
-                    className={`flex-shrink-0 transition-all duration-700 ease-in-out ${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'}`}
-                    strokeWidth={isCollapsed ? 2.2 : 2}
-                  />
-                  <span 
-                    className={`font-medium transition-all duration-700 ease-in-out ${isCollapsed ? 'opacity-0 -translate-x-4 absolute left-8 pointer-events-none' : 'opacity-100 translate-x-0 ml-3'}`}
-                  >
-                    Dashboard
-                  </span>
+                <div className="flex items-center">
+                  <LayoutDashboard {...getIconProps()} />
+                  <span {...getTextSpanProps()}>Dashboard</span>
                 </div>
-                {!isCollapsed && isActive("admin", "admin-dashboard") && (
-                  <svg className="h-4 w-4 text-white/70 transition-all duration-700 ease-in-out" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                )}
+                {renderActiveArrow(["admin", "admin-dashboard"])}
               </button>
               
               {/* Campaigns */}
               {hasPermission("view_campaigns") && (
                 <button
                   onClick={() => onNavigate("admin-campaigns")}
-                  className={`
-                    flex items-center w-full transition-all duration-700 ease-in-out text-left group rounded-lg relative overflow-hidden
-                    ${isCollapsed 
-                      ? 'px-3 py-3.5 justify-center' 
-                      : 'px-4 py-3 justify-between'
-                    }
-                    ${isActive("admin-campaigns")
-                      ? "text-white"
-                      : isCollapsed 
-                        ? "text-white hover:text-white hover:bg-white/15"
-                        : "text-white/90 hover:text-white hover:bg-white/10"
-                    }
-                  `}
-                  style={isActive("admin-campaigns") ? {
-                    background: '#1E293B',
-                    boxShadow: isCollapsed ? '0 0 12px rgba(30,41,59,0.4), 0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(30,41,59,0.3)'
-                  } : {}}
-                  onMouseEnter={(e) => {
-                    if (!isActive("admin-campaigns")) {
-                      e.currentTarget.style.backgroundColor = isCollapsed ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.1)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive("admin-campaigns")) {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                    }
-                  }}
-                  title={isCollapsed ? "Campaigns" : ""}
+                  {...getNavButtonProps("admin-campaigns", "Campaigns")}
                 >
-                  <div className="flex items-center relative">
-                    <Settings 
-                      className={`flex-shrink-0 transition-all duration-700 ease-in-out ${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'}`}
-                      strokeWidth={isCollapsed ? 2.2 : 2}
-                    />
-                    <span 
-                      className={`font-medium transition-all duration-700 ease-in-out ${isCollapsed ? 'opacity-0 -translate-x-4 absolute left-8 pointer-events-none' : 'opacity-100 translate-x-0 ml-3'}`}
-                    >
-                      Campaigns
-                    </span>
+                  <div className="flex items-center">
+                    <Settings {...getIconProps()} />
+                    <span {...getTextSpanProps()}>Campaigns</span>
                   </div>
-                  {!isCollapsed && isActive("admin-campaigns") && (
-                    <svg className="h-4 w-4 text-white/70 transition-all duration-700 ease-in-out" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  )}
+                  {renderActiveArrow("admin-campaigns")}
                 </button>
               )}
               
@@ -329,51 +311,13 @@ export function AdminLayout({
               {hasPermission("view_kiosks") && (
                 <button
                   onClick={() => onNavigate("admin-kiosks")}
-                  className={`
-                    flex items-center w-full transition-all duration-700 ease-in-out text-left group rounded-lg relative overflow-hidden
-                    ${isCollapsed 
-                      ? 'px-3 py-3.5 justify-center' 
-                      : 'px-4 py-3 justify-between'
-                    }
-                    ${isActive("admin-kiosks")
-                      ? "text-white"
-                      : isCollapsed 
-                        ? "text-white hover:text-white hover:bg-white/15"
-                        : "text-white/90 hover:text-white hover:bg-white/10"
-                    }
-                  `}
-                  style={isActive("admin-kiosks") ? {
-                    background: '#1E293B',
-                    boxShadow: isCollapsed ? '0 0 12px rgba(30,41,59,0.4), 0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(30,41,59,0.3)'
-                  } : {}}
-                  onMouseEnter={(e) => {
-                    if (!isActive("admin-kiosks")) {
-                      e.currentTarget.style.backgroundColor = isCollapsed ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.1)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive("admin-kiosks")) {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                    }
-                  }}
-                  title={isCollapsed ? "Kiosks" : ""}
+                  {...getNavButtonProps("admin-kiosks", "Kiosks")}
                 >
-                  <div className="flex items-center relative">
-                    <Monitor 
-                      className={`flex-shrink-0 transition-all duration-700 ease-in-out ${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'}`}
-                      strokeWidth={isCollapsed ? 2.2 : 2}
-                    />
-                    <span 
-                      className={`font-medium transition-all duration-700 ease-in-out ${isCollapsed ? 'opacity-0 -translate-x-4 absolute left-8 pointer-events-none' : 'opacity-100 translate-x-0 ml-3'}`}
-                    >
-                      Kiosks
-                    </span>
+                  <div className="flex items-center">
+                    <Monitor {...getIconProps()} />
+                    <span {...getTextSpanProps()}>Kiosks</span>
                   </div>
-                  {!isCollapsed && isActive("admin-kiosks") && (
-                    <svg className="h-4 w-4 text-white/70 transition-all duration-700 ease-in-out" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  )}
+                  {renderActiveArrow("admin-kiosks")}
                 </button>
               )}
               
@@ -381,51 +325,13 @@ export function AdminLayout({
               {hasPermission("view_donations") && (
                 <button
                   onClick={() => onNavigate("admin-donations")}
-                  className={`
-                    flex items-center w-full transition-all duration-700 ease-in-out text-left group rounded-lg relative overflow-hidden
-                    ${isCollapsed 
-                      ? 'px-3 py-3.5 justify-center' 
-                      : 'px-4 py-3 justify-between'
-                    }
-                    ${isActive("admin-donations")
-                      ? "text-white"
-                      : isCollapsed 
-                        ? "text-white hover:text-white hover:bg-white/15"
-                        : "text-white/90 hover:text-white hover:bg-white/10"
-                    }
-                  `}
-                  style={isActive("admin-donations") ? {
-                    background: '#1E293B',
-                    boxShadow: isCollapsed ? '0 0 12px rgba(30,41,59,0.4), 0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(30,41,59,0.3)'
-                  } : {}}
-                  onMouseEnter={(e) => {
-                    if (!isActive("admin-donations")) {
-                      e.currentTarget.style.backgroundColor = isCollapsed ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.1)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive("admin-donations")) {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                    }
-                  }}
-                  title={isCollapsed ? "Donations" : ""}
+                  {...getNavButtonProps("admin-donations", "Donations")}
                 >
-                  <div className="flex items-center relative">
-                    <Database 
-                      className={`flex-shrink-0 transition-all duration-700 ease-in-out ${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'}`}
-                      strokeWidth={isCollapsed ? 2.2 : 2}
-                    />
-                    <span 
-                      className={`font-medium transition-all duration-700 ease-in-out ${isCollapsed ? 'opacity-0 -translate-x-4 absolute left-8 pointer-events-none' : 'opacity-100 translate-x-0 ml-3'}`}
-                    >
-                      Donations
-                    </span>
+                  <div className="flex items-center">
+                    <Database {...getIconProps()} />
+                    <span {...getTextSpanProps()}>Donations</span>
                   </div>
-                  {!isCollapsed && isActive("admin-donations") && (
-                    <svg className="h-4 w-4 text-white/70 transition-all duration-700 ease-in-out" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  )}
+                  {renderActiveArrow("admin-donations")}
                 </button>
               )}
               
@@ -433,51 +339,13 @@ export function AdminLayout({
               {hasPermission("view_donations") && (
                 <button
                   onClick={() => onNavigate("admin-gift-aid")}
-                  className={`
-                    flex items-center w-full transition-all duration-700 ease-in-out text-left group rounded-lg relative overflow-hidden
-                    ${isCollapsed 
-                      ? 'px-3 py-3.5 justify-center' 
-                      : 'px-4 py-3 justify-between'
-                    }
-                    ${isActive("admin-gift-aid")
-                      ? "text-white"
-                      : isCollapsed 
-                        ? "text-white hover:text-white hover:bg-white/15"
-                        : "text-white/90 hover:text-white hover:bg-white/10"
-                    }
-                  `}
-                  style={isActive("admin-gift-aid") ? {
-                    background: '#1E293B',
-                    boxShadow: isCollapsed ? '0 0 12px rgba(30,41,59,0.4), 0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(30,41,59,0.3)'
-                  } : {}}
-                  onMouseEnter={(e) => {
-                    if (!isActive("admin-gift-aid")) {
-                      e.currentTarget.style.backgroundColor = isCollapsed ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.1)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive("admin-gift-aid")) {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                    }
-                  }}
-                  title={isCollapsed ? "Gift Aid Donations" : ""}
+                  {...getNavButtonProps("admin-gift-aid", "Gift Aid Donations")}
                 >
-                  <div className="flex items-center relative">
-                    <Gift 
-                      className={`flex-shrink-0 transition-all duration-700 ease-in-out ${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'}`}
-                      strokeWidth={isCollapsed ? 2.2 : 2}
-                    />
-                    <span 
-                      className={`font-medium transition-all duration-700 ease-in-out ${isCollapsed ? 'opacity-0 -translate-x-4 absolute left-8 pointer-events-none' : 'opacity-100 translate-x-0 ml-3'}`}
-                    >
-                      Gift Aid Donations
-                    </span>
+                  <div className="flex items-center">
+                    <Gift {...getIconProps()} />
+                    <span {...getTextSpanProps()}>Gift Aid Donations</span>
                   </div>
-                  {!isCollapsed && isActive("admin-gift-aid") && (
-                    <svg className="h-4 w-4 text-white/70 transition-all duration-700 ease-in-out" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  )}
+                  {renderActiveArrow("admin-gift-aid")}
                 </button>
               )}
               
@@ -485,108 +353,32 @@ export function AdminLayout({
               {hasPermission("view_users") && (
                 <button
                   onClick={() => onNavigate("admin-users")}
-                  className={`
-                    flex items-center w-full transition-all duration-700 ease-in-out text-left group rounded-lg relative overflow-hidden
-                    ${isCollapsed 
-                      ? 'px-3 py-3.5 justify-center' 
-                      : 'px-4 py-3 justify-between'
-                    }
-                    ${isActive("admin-users")
-                      ? "text-white"
-                      : isCollapsed 
-                        ? "text-white hover:text-white hover:bg-white/15"
-                        : "text-white/90 hover:text-white hover:bg-white/10"
-                    }
-                  `}
-                  style={isActive("admin-users") ? {
-                    background: '#1E293B',
-                    boxShadow: isCollapsed ? '0 0 12px rgba(30,41,59,0.4), 0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(30,41,59,0.3)'
-                  } : {}}
-                  onMouseEnter={(e) => {
-                    if (!isActive("admin-users")) {
-                      e.currentTarget.style.backgroundColor = isCollapsed ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.1)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive("admin-users")) {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                    }
-                  }}
-                  title={isCollapsed ? "Users" : ""}
+                  {...getNavButtonProps("admin-users", "Users")}
                 >
-                  <div className="flex items-center relative">
-                    <Users 
-                      className={`flex-shrink-0 transition-all duration-700 ease-in-out ${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'}`}
-                      strokeWidth={isCollapsed ? 2.2 : 2}
-                    />
-                    <span 
-                      className={`font-medium transition-all duration-700 ease-in-out ${isCollapsed ? 'opacity-0 -translate-x-4 absolute left-8 pointer-events-none' : 'opacity-100 translate-x-0 ml-3'}`}
-                    >
-                      Users
-                    </span>
+                  <div className="flex items-center">
+                    <Users {...getIconProps()} />
+                    <span {...getTextSpanProps()}>Users</span>
                   </div>
-                  {!isCollapsed && isActive("admin-users") && (
-                    <svg className="h-4 w-4 text-white/70 transition-all duration-700 ease-in-out" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  )}
+                  {renderActiveArrow("admin-users")}
                 </button>
               )}
               
               {/* Bank Details */}
               <button
                 onClick={() => onNavigate("admin-bank-details")}
-                className={`
-                  flex items-center w-full transition-all duration-700 ease-in-out text-left group rounded-lg relative overflow-hidden
-                  ${isCollapsed 
-                    ? 'px-3 py-3.5 justify-center' 
-                    : 'px-4 py-3 justify-between'
-                  }
-                  ${isActive("admin-bank-details")
-                    ? "text-white"
-                    : isCollapsed 
-                      ? "text-white hover:text-white hover:bg-white/15"
-                      : "text-white/90 hover:text-white hover:bg-white/10"
-                  }
-                `}
-                style={isActive("admin-bank-details") ? {
-                  background: '#1E293B',
-                  boxShadow: isCollapsed ? '0 0 12px rgba(30,41,59,0.4), 0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(30,41,59,0.3)'
-                } : {}}
-                onMouseEnter={(e) => {
-                  if (!isActive("admin-bank-details")) {
-                    e.currentTarget.style.backgroundColor = isCollapsed ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.1)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive("admin-bank-details")) {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }
-                }}
-                title={isCollapsed ? "Bank Details" : ""}
+                {...getNavButtonProps("admin-bank-details", "Bank Details")}
               >
-                <div className="flex items-center relative">
-                  <Wallet 
-                    className={`flex-shrink-0 transition-all duration-700 ease-in-out ${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'}`}
-                    strokeWidth={isCollapsed ? 2.2 : 2}
-                  />
-                  <span 
-                    className={`font-medium transition-all duration-700 ease-in-out ${isCollapsed ? 'opacity-0 -translate-x-4 absolute left-8 pointer-events-none' : 'opacity-100 translate-x-0 ml-3'}`}
-                  >
-                    Bank Details
-                  </span>
+                <div className="flex items-center">
+                  <Wallet {...getIconProps()} />
+                  <span {...getTextSpanProps()}>Bank Details</span>
                 </div>
-                {!isCollapsed && isActive("admin-bank-details") && (
-                  <svg className="h-4 w-4 text-white/70 transition-all duration-700 ease-in-out" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                )}
+                {renderActiveArrow("admin-bank-details")}
               </button>
             </div>
           </div>
           
           {/* Footer */}
-          <div className={`mt-auto ${isCollapsed ? 'p-3' : 'p-4'} transition-all duration-700 ease-in-out`}>
+          <div className={`mt-auto ${isCollapsed ? 'p-3' : 'p-4'}`}>
             {!isCollapsed ? (
               <button
                 onClick={onLogout}
