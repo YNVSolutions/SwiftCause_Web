@@ -2,9 +2,7 @@
 
 import React, { useState } from "react";
 import { Screen, AdminSession, Permission } from "../../shared/types";
-import { Button } from "../../shared/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../../shared/ui/avatar";
-import { Badge } from "../../shared/ui/badge";
 import {
   SidebarProvider,
   Sidebar,
@@ -29,7 +27,6 @@ import {
   Users,
   Gift,
   LogOut,
-  Compass,
   X,
   Mail,
   Building2,
@@ -84,6 +81,11 @@ export function AdminLayout({
   children,
   activeScreen = "admin-dashboard",
   onStartTour,
+  headerTitle,
+  headerSubtitle,
+  headerActions,
+  hideHeaderDivider,
+  hideSidebarTrigger,
 }: AdminLayoutProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [logoAnimating, setLogoAnimating] = useState(false);
@@ -104,6 +106,9 @@ export function AdminLayout({
   }, [showUserProfile]);
   const isActive = (...screens: Screen[]) => screens.includes(activeScreen);
   const currentLabel = SCREEN_LABELS[activeScreen] ?? "Admin";
+  const resolvedTitle = headerTitle ?? currentLabel;
+  const resolvedSubtitle = headerSubtitle ?? undefined;
+  const userInitials = getInitials(userSession.user.username || userSession.user.email || "U");
 
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
@@ -219,7 +224,7 @@ export function AdminLayout({
       <div className="flex h-screen w-full">
         {/* Custom Green Gradient Sidebar */}
         <div 
-          className={`${isCollapsed ? 'w-16' : 'w-80'} flex flex-col shadow-2xl border-r border-green-700/30 flex-shrink-0 transition-all duration-300 ease-in-out overflow-hidden`}
+          className={`${isCollapsed ? 'w-16' : 'w-80'} flex flex-col shadow-2xl border-r border-green-700/30 shrink-0 transition-all duration-300 ease-in-out overflow-hidden`}
           style={{
             background: 'linear-gradient(180deg, #16A34A 0%, #059669 100%)'
           }}
@@ -253,7 +258,7 @@ export function AdminLayout({
               {/* Collapse/Expand Arrow Button */}
               <button
                 onClick={toggleSidebar}
-                className="p-3 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors duration-200 flex-shrink-0 ml-auto"
+                className="p-3 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors duration-200 shrink-0 ml-auto"
               >
                 {isCollapsed ? (
                   <ChevronRight className="h-6 w-6" />
@@ -447,28 +452,17 @@ export function AdminLayout({
 
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          <header className="bg-white border-b border-gray-200 shadow-sm">
-            <div className="flex items-center justify-between px-4 sm:px-6 h-16">
-              <div className="flex items-center gap-3">
-                <h1 className="font-bold text-lg text-gray-900">{currentLabel}</h1>
-              </div>
-              
-              {/* Right side buttons */}
-              <div className="flex items-center gap-2">
-                {/* Get a Tour Button */}
-                {onStartTour && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onStartTour}
-                    className="hidden sm:flex items-center gap-2 border-green-200 text-green-600 hover:bg-green-50 hover:text-green-700 hover:border-green-300 transition-colors animate-pulse"
-                  >
-                    <Compass className="h-4 w-4" />
-                    <span className="font-medium">Get a Tour</span>
-                  </Button>
-                )}
-                
-                {/* User Profile Avatar */}
+          <header className={`px-4 sm:px-6 py-4 ${hideHeaderDivider ? "" : "border-b border-gray-200"} bg-slate-50`}>
+            <AdminPageHeader
+              title={resolvedTitle}
+              subtitle={resolvedSubtitle}
+              actions={headerActions}
+              showSidebarTrigger={!hideSidebarTrigger}
+              onStartTour={onStartTour}
+              onProfileClick={() => setShowUserProfile(!showUserProfile)}
+              userPhotoUrl={userSession.user.photoURL || undefined}
+              userInitials={userInitials}
+              profileSlot={(
                 <div className="flex items-center gap-3 ml-4 relative">
                   <div className="relative">
                     <div 
@@ -482,7 +476,7 @@ export function AdminLayout({
                       <Avatar className="w-8 h-8 transition-all duration-300">
                         <AvatarImage src={userSession.user.photoURL || undefined} />
                         <AvatarFallback className="bg-transparent text-white text-sm font-bold transition-all duration-300">
-                          {getInitials(userSession.user.username || userSession.user.email || 'U')}
+                          {userInitials}
                         </AvatarFallback>
                       </Avatar>
                     </div>
@@ -513,7 +507,7 @@ export function AdminLayout({
                       {/* Quick View Panel */}
                       <div className="fixed top-20 right-6 w-80 bg-white rounded-xl shadow-2xl z-50 transform transition-all duration-300 ease-out border border-gray-100">
                         {/* Header */}
-                        <div className="relative px-6 py-5 bg-gradient-to-r from-green-600 to-emerald-600 rounded-t-xl">
+                        <div className="relative px-6 py-5 bg-linear-to-r from-green-600 to-emerald-600 rounded-t-xl">
                           <button
                             onClick={() => setShowUserProfile(false)}
                             className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10"
@@ -528,7 +522,7 @@ export function AdminLayout({
                               <Avatar className="w-12 h-12">
                                 <AvatarImage src={userSession.user.photoURL || undefined} />
                                 <AvatarFallback className="bg-white text-green-600 text-lg font-bold">
-                                  {getInitials(userSession.user.username || userSession.user.email || 'U')}
+                                  {userInitials}
                                 </AvatarFallback>
                               </Avatar>
                             </div>
@@ -555,7 +549,7 @@ export function AdminLayout({
                             
                             <div className="space-y-2">
                               <div className="flex items-center gap-3 text-sm">
-                                <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center shrink-0">
                                   <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                                   </svg>
@@ -567,7 +561,7 @@ export function AdminLayout({
                               </div>
 
                               <div className="flex items-center gap-3 text-sm">
-                                <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center shrink-0">
                                   <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                   </svg>
@@ -579,7 +573,7 @@ export function AdminLayout({
                               </div>
 
                               <div className="flex items-center gap-3 text-sm">
-                                <div className="w-8 h-8 bg-orange-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <div className="w-8 h-8 bg-orange-50 rounded-lg flex items-center justify-center shrink-0">
                                   <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a4 4 0 118 0v4m-4 8a2 2 0 100-4 2 2 0 000 4zm6 0a2 2 0 100-4 2 2 0 000 4z" />
                                   </svg>
@@ -703,8 +697,8 @@ export function AdminLayout({
                     </>
                   )}
                 </div>
-              </div>
-            </div>
+              )}
+            />
           </header>
           
           <main className="flex-1 w-full bg-slate-50 overflow-y-auto overflow-x-hidden" data-testid="main-content-area">
