@@ -29,12 +29,15 @@ import {
   Users,
   Gift,
   LogOut,
+  Compass,
   X,
   Mail,
   Building2,
   Shield,
   Calendar,
   Wallet,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 const SCREEN_LABELS: Partial<Record<Screen, string>> = {
@@ -73,257 +76,6 @@ const getInitials = (name: string) => {
     .slice(0, 2);
 };
 
-// Format role display name
-const getRoleDisplayName = (role: string) => {
-  const roleMap: Record<string, string> = {
-    'super_admin': 'Super Admin',
-    'admin': 'Administrator',
-    'manager': 'Manager',
-    'operator': 'Operator',
-    'viewer': 'Viewer',
-    'kiosk': 'Kiosk User'
-  };
-  return roleMap[role] || role;
-};
-
-// Get role badge color
-const getRoleBadgeColor = (role: string) => {
-  const colorMap: Record<string, string> = {
-    'super_admin': 'bg-red-500/20 text-red-100 border-red-400/30',
-    'admin': 'bg-purple-500/20 text-purple-100 border-purple-400/30',
-    'manager': 'bg-blue-500/20 text-blue-100 border-blue-400/30',
-    'operator': 'bg-green-500/20 text-green-100 border-green-400/30',
-    'viewer': 'bg-gray-500/20 text-gray-100 border-gray-400/30',
-    'kiosk': 'bg-orange-500/20 text-orange-100 border-orange-400/30'
-  };
-  return colorMap[role] || 'bg-white/20 text-white border-white/30';
-};
-
-function ProfileSidebar({
-  isOpen,
-  onClose,
-  userSession,
-  onLogout
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  userSession: AdminSession;
-  onLogout: () => void;
-}) {
-  return (
-    <>
-      {/* Backdrop with blur */}
-      <div 
-        className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity duration-300 ${
-          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        }`}
-        onClick={onClose}
-      />
-      
-      {/* Profile Sidebar */}
-      <div 
-        className={`fixed top-0 right-0 h-full w-full sm:w-96 bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
-          isOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
-      >
-        {/* Header */}
-        <div className="bg-linear-to-br from-blue-600 to-indigo-700 p-6 relative">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="absolute top-4 right-4 text-white hover:bg-white/20 rounded-lg"
-          >
-            <X className="h-5 w-5" />
-          </Button>
-          
-          <div className="flex flex-col items-center text-center mt-8">
-            <Avatar className="h-24 w-24 ring-4 ring-white/30 shadow-xl mb-4">
-              <AvatarImage src={userSession.user.photoURL || undefined} />
-              <AvatarFallback className="bg-white text-blue-600 text-2xl font-bold">
-                {getInitials(userSession.user.username || userSession.user.email || 'U')}
-              </AvatarFallback>
-            </Avatar>
-            <h2 className="text-2xl font-bold text-white mb-1">
-              {userSession.user.username || 'User'}
-            </h2>
-            <Badge className={`${getRoleBadgeColor(userSession.user.role)} hover:bg-white/30 font-semibold`}>
-              {getRoleDisplayName(userSession.user.role)}
-            </Badge>
-          </div>
-        </div>
-        
-        {/* Content */}
-        <div className="p-6 space-y-6 overflow-y-auto h-[calc(100%-280px)]">
-          {/* User Information Section */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
-              Account Information
-            </h3>
-            
-            <div className="space-y-3">
-              {/* Email */}
-              <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
-                  <Mail className="h-5 w-5 text-blue-600" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-gray-500 mb-1">Email Address</p>
-                  <p className="text-sm font-semibold text-gray-900 truncate">
-                    {userSession.user.email}
-                  </p>
-                </div>
-              </div>
-              
-              {/* Organization */}
-              {userSession.user.organizationName && (
-                <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                  <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center shrink-0">
-                    <Building2 className="h-5 w-5 text-purple-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-gray-500 mb-1">Organization</p>
-                    <p className="text-sm font-semibold text-gray-900 truncate">
-                      {userSession.user.organizationName}
-                    </p>
-                  </div>
-                </div>
-              )}
-              
-              {/* Role */}
-              <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                <div className="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center shrink-0">
-                  <Shield className="h-5 w-5 text-green-600" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-gray-500 mb-1">Role</p>
-                  <p className="text-sm font-semibold text-gray-900">
-                    {getRoleDisplayName(userSession.user.role)}
-                  </p>
-                </div>
-              </div>
-              
-              {/* Member Since */}
-              {userSession.user.createdAt && (
-                <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                  <div className="h-10 w-10 rounded-lg bg-orange-100 flex items-center justify-center shrink-0">
-                    <Calendar className="h-5 w-5 text-orange-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-gray-500 mb-1">Member Since</p>
-                    <p className="text-sm font-semibold text-gray-900">
-                      {new Date(userSession.user.createdAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-          
-          {/* Permissions Section */}
-          {userSession.permissions && userSession.permissions.length > 0 && (
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
-                Permissions
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {userSession.permissions.map((permission) => (
-                  <Badge
-                    key={permission}
-                    variant="outline"
-                    className="text-xs bg-blue-50 text-blue-700 border-blue-200"
-                  >
-                    {permission.replace(/_/g, ' ')}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-        
-        {/* Footer with Logout Button */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 bg-gray-50 border-t border-gray-200">
-          <Button
-            onClick={onLogout}
-            className="w-full bg-linear-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
-          >
-            <LogOut className="h-5 w-5 mr-2" />
-            Sign Out
-          </Button>
-        </div>
-      </div>
-    </>
-  );
-}
-
-function SidebarUserFooter({
-  userSession,
-  onLogout,
-  onProfileClick
-}: {
-  userSession: AdminSession;
-  onLogout: () => void;
-  onProfileClick: () => void;
-}) {
-  const { state } = useSidebar();
-  
-  return (
-    <div className="border-t border-gray-200 p-3 bg-gray-50/50">
-      <div className="flex items-center gap-3">
-        <button
-          onClick={onProfileClick}
-          className="flex items-center gap-3 flex-1 min-w-0 hover:bg-gray-100 rounded-lg p-1 transition-colors"
-        >
-          <Avatar className="h-9 w-9 ring-2 ring-indigo-100 shadow-sm">
-            <AvatarImage src={userSession.user.photoURL || undefined} />
-            <AvatarFallback className="bg-linear-to-br from-indigo-500 to-indigo-600 text-white text-xs font-semibold">
-              {getInitials(userSession.user.username || userSession.user.email || 'U')}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1 min-w-0 text-left overflow-hidden transition-[opacity,transform] duration-500 ease-in-out max-w-48 opacity-100 translate-x-0 transform-gpu will-change-[opacity,transform] group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:ml-0 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:-translate-x-3">
-            <p className="text-sm font-semibold text-gray-900 truncate">
-              {userSession.user.username || 'User'}
-            </p>
-            <p className="text-xs text-gray-500 truncate">
-              {userSession.user.email}
-            </p>
-          </div>
-        </button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onLogout}
-          className="h-8 w-8 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors group-data-[collapsible=icon]:hidden"
-          title="Log out"
-        >
-          <LogOut className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-function SidebarHeaderContent() {
-  return (
-    <div className="flex items-center gap-3 px-4 py-4 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:gap-0">
-      <div className="relative h-10 w-10 shrink-0 group-data-[collapsible=icon]:h-11 group-data-[collapsible=icon]:w-11">
-        <img src="/logo.png" alt="SwiftCause Logo" className="h-10 w-10 rounded-xl shadow-md group-data-[collapsible=icon]:h-11 group-data-[collapsible=icon]:w-11" />
-        <div className="absolute -bottom-1 -right-1 h-3 w-3 bg-green-500 rounded-full border-2 border-white"></div>
-      </div>
-      <div className="flex flex-col overflow-hidden transition-[opacity,transform] duration-500 ease-in-out max-w-48 opacity-100 translate-x-0 transform-gpu will-change-[opacity,transform] group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:ml-0 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:-translate-x-3">
-        <span className="text-base font-bold text-gray-900 whitespace-nowrap">SwiftCause</span>
-        <span className="text-xs font-medium text-gray-500 whitespace-nowrap">
-          Admin Portal
-        </span>
-      </div>
-    </div>
-  );
-}
-
 export function AdminLayout({
   onNavigate,
   onLogout,
@@ -332,254 +84,634 @@ export function AdminLayout({
   children,
   activeScreen = "admin-dashboard",
   onStartTour,
-  headerTitle,
-  headerSubtitle,
-  hideHeaderDivider = false,
-  headerActions,
-  hideSidebarTrigger = false,
 }: AdminLayoutProps) {
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [logoAnimating, setLogoAnimating] = useState(false);
+  const [showUserProfile, setShowUserProfile] = useState(false);
+
+  // Handle ESC key to close profile panel
+  React.useEffect(() => {
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && showUserProfile) {
+        setShowUserProfile(false);
+      }
+    };
+
+    if (showUserProfile) {
+      document.addEventListener('keydown', handleEscKey);
+      return () => document.removeEventListener('keydown', handleEscKey);
+    }
+  }, [showUserProfile]);
   const isActive = (...screens: Screen[]) => screens.includes(activeScreen);
   const currentLabel = SCREEN_LABELS[activeScreen] ?? "Admin";
-  const resolvedHeaderTitle = headerTitle === undefined ? currentLabel : headerTitle;
-  const userInitials = getInitials(userSession.user.username || userSession.user.email || 'U');
+
+  const toggleSidebar = () => {
+    setIsCollapsed(!isCollapsed);
+  };
+
+  const handleLogoClick = () => {
+    setLogoAnimating(true);
+    setTimeout(() => setLogoAnimating(false), 500); // Animation duration
+  };
+
+  // Centralized navigation button attributes
+  const getNavButtonProps = (screen: Screen | Screen[], title: string) => {
+    const isActiveButton = Array.isArray(screen) ? isActive(...screen) : isActive(screen);
+    
+    return {
+      className: `
+        flex items-center w-full transition-all duration-300 ease-in-out text-left group rounded-lg
+        ${isCollapsed 
+          ? 'px-2 py-3 justify-center' 
+          : 'px-4 py-3 justify-between'
+        }
+        ${isActiveButton
+          ? "text-white"
+          : isCollapsed 
+            ? "text-white hover:text-white hover:bg-white/15"
+            : "text-white/90 hover:text-white hover:bg-white/10"
+        }
+      `,
+      style: isActiveButton ? {
+        background: '#1E293B',
+        boxShadow: isCollapsed ? '0 0 12px rgba(30,41,59,0.4), 0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(30,41,59,0.3)'
+      } : {},
+      onMouseEnter: (e: React.MouseEvent<HTMLButtonElement>) => {
+        if (!isActiveButton) {
+          e.currentTarget.style.backgroundColor = isCollapsed ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.1)';
+        }
+      },
+      onMouseLeave: (e: React.MouseEvent<HTMLButtonElement>) => {
+        if (!isActiveButton) {
+          e.currentTarget.style.backgroundColor = 'transparent';
+        }
+      },
+      title: isCollapsed ? title : ""
+    };
+  };
+
+  // Centralized icon props
+  const getIconProps = () => ({
+    className: `flex-shrink-0 ${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'}`,
+    strokeWidth: isCollapsed ? 2.2 : 2
+  });
+
+  // Centralized text span props
+  const getTextSpanProps = () => ({
+    className: `font-medium ml-3 ${isCollapsed ? 'hidden' : 'block'}`
+  });
+
+  // Centralized arrow icon for active states
+  const renderActiveArrow = (screenToCheck: Screen | Screen[]) => {
+    const isActiveButton = Array.isArray(screenToCheck) ? isActive(...screenToCheck) : isActive(screenToCheck);
+    return !isCollapsed && isActiveButton && (
+      <svg className="h-4 w-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+      </svg>
+    );
+  };
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <Sidebar 
-        side="left" 
-        variant="sidebar" 
-        collapsible="icon" 
-        className="bg-white border-r border-gray-200"
-      >
-        <SidebarHeader className="border-b border-gray-100 shrink-0">
-          <SidebarHeaderContent />
-        </SidebarHeader>
-        
-        <SidebarContent className="px-3 py-4 flex-1 overflow-y-auto group-data-[collapsible=icon]:px-0">
-          <SidebarGroup>
-            <SidebarGroupLabel className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-3">
-              Main Menu
-            </SidebarGroupLabel>
-            <SidebarMenu className="space-y-1">
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  onClick={() => onNavigate("admin")}
-                  isActive={isActive("admin", "admin-dashboard")}
-                  tooltip="Dashboard"
-                  className={
-                    isActive("admin", "admin-dashboard")
-                      ? "bg-indigo-50 text-indigo-700 font-semibold shadow-sm rounded-md hover:bg-indigo-100"
-                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md"
-                  }
-                >
-                  <LayoutDashboard className="h-5 w-5" />
-                  <span className="whitespace-nowrap overflow-hidden transition-[opacity,transform] duration-500 ease-in-out max-w-48 opacity-100 translate-x-0 transform-gpu will-change-[opacity,transform] group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:ml-0 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:-translate-x-3">
-                    Dashboard
-                  </span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+      <style>{`
+        @keyframes wobble {
+          0% { transform: rotate(0deg) scale(1); }
+          25% { transform: rotate(-5deg) scale(0.9); }
+          50% { transform: rotate(5deg) scale(1.1); }
+          75% { transform: rotate(-5deg) scale(0.95); }
+          100% { transform: rotate(0deg) scale(1); }
+        }
+        .logo-wobble.animate {
+          animation: wobble 0.5s ease-in-out;
+        }
+        .signout-btn {
+          position: relative;
+          overflow: hidden;
+          transition: all 0.3s ease;
+        }
+        .signout-btn::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+          transition: left 0.5s ease;
+        }
+        .signout-btn:hover::before {
+          left: 100%;
+        }
+        .signout-btn:hover {
+          transform: scale(1.02);
+          box-shadow: 0 4px 15px rgba(185, 28, 28, 0.4);
+        }
+        .signout-btn:active {
+          transform: scale(0.98);
+        }
+        .signout-icon {
+          transition: transform 0.3s ease;
+        }
+        .signout-btn:hover .signout-icon {
+          transform: translateX(3px);
+        }
+      `}</style>
+      <div className="flex h-screen w-full">
+        {/* Custom Green Gradient Sidebar */}
+        <div 
+          className={`${isCollapsed ? 'w-16' : 'w-80'} flex flex-col shadow-2xl border-r border-green-700/30 flex-shrink-0 transition-all duration-300 ease-in-out overflow-hidden`}
+          style={{
+            background: 'linear-gradient(180deg, #16A34A 0%, #059669 100%)'
+          }}
+        >
+          {/* Header Card */}
+          <div 
+            className={`mb-4 overflow-hidden transition-all duration-300 ease-in-out ${isCollapsed ? 'p-2' : 'p-4'}`}
+            style={{
+              background: 'rgba(0,0,0,0.15)',
+              borderRadius: '12px',
+              backdropFilter: 'blur(10px)'
+            }}
+          >
+            <div className="flex items-center justify-between">
+              {/* Logo Section */}
+              {!isCollapsed && (
+                <div className="flex items-center gap-3 flex-1">
+                  <img 
+                    src="/logo.png" 
+                    alt="SwiftCause Logo" 
+                    className={`w-10 h-10 rounded-lg logo-wobble cursor-pointer ${logoAnimating ? 'animate' : ''}`}
+                    onClick={handleLogoClick}
+                  />
+                  <div>
+                    <h1 className="text-white font-bold text-lg leading-tight">SwiftCause</h1>
+                    <p className="text-white/70 text-xs font-medium uppercase tracking-wide">ADMIN CONTROL</p>
+                  </div>
+                </div>
+              )}
               
+              {/* Collapse/Expand Arrow Button */}
+              <button
+                onClick={toggleSidebar}
+                className="p-3 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors duration-200 flex-shrink-0 ml-auto"
+              >
+                {isCollapsed ? (
+                  <ChevronRight className="h-6 w-6" />
+                ) : (
+                  <ChevronLeft className="h-6 w-6" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* User Profile Card */}
+          {!isCollapsed && (
+            <div 
+              className="mb-4 overflow-hidden transition-all duration-300 ease-in-out p-6"
+              style={{
+                background: 'rgba(0,0,0,0.15)',
+                borderRadius: '12px',
+                backdropFilter: 'blur(10px)'
+              }}
+            >
+              <div className="flex flex-col items-center text-center">
+                {/* User Profile Avatar */}
+                <div className="relative mb-4">
+                  <div 
+                    className="w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-all duration-300"
+                    style={{
+                      background: 'linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%)',
+                      border: '3px solid rgba(255,255,255,0.3)'
+                    }}
+                  >
+                    <Avatar className="w-12 h-12 transition-all duration-300">
+                      <AvatarImage src={userSession.user.photoURL || undefined} />
+                      <AvatarFallback className="bg-transparent text-green-700 text-lg font-bold transition-all duration-300">
+                        {getInitials(userSession.user.username || userSession.user.email || 'U')}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+                  {/* Online indicator */}
+                  <div className="absolute bottom-1 right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+                </div>
+                
+                {/* User Info */}
+                <h2 className="text-white font-semibold text-lg mb-1">
+                  {userSession.user.username || 'Ayush Bhatia'}
+                </h2>
+                <p className="text-white/60 text-sm">System Administrator</p>
+              </div>
+            </div>
+          )}
+
+          {/* Navigation Menu */}
+          <div className="flex-1 overflow-y-auto">
+            <div className={`${isCollapsed ? 'space-y-2 px-1' : 'space-y-1 px-4'} transition-all duration-300 ease-in-out`}>
+              {/* Dashboard */}
+              <button
+                onClick={() => onNavigate("admin")}
+                {...getNavButtonProps(["admin", "admin-dashboard"], "Dashboard")}
+              >
+                <div className="flex items-center">
+                  <LayoutDashboard {...getIconProps()} />
+                  <span {...getTextSpanProps()}>Dashboard</span>
+                </div>
+                {renderActiveArrow(["admin", "admin-dashboard"])}
+              </button>
+              
+              {/* Campaigns */}
               {hasPermission("view_campaigns") && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    onClick={() => onNavigate("admin-campaigns")}
-                    tooltip="Campaigns"
-                    isActive={isActive("admin-campaigns")}
-                    className={
-                      isActive("admin-campaigns")
-                        ? "bg-indigo-50 text-indigo-700 font-semibold shadow-sm rounded-md hover:bg-indigo-100"
-                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md"
-                    }
-                  >
-                    <Settings className="h-5 w-5" />
-                    <span className="whitespace-nowrap overflow-hidden transition-[opacity,transform] duration-500 ease-in-out max-w-48 opacity-100 translate-x-0 transform-gpu will-change-[opacity,transform] group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:ml-0 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:-translate-x-3">
-                      Campaigns
-                    </span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
-              
-              {hasPermission("view_kiosks") && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    onClick={() => onNavigate("admin-kiosks")}
-                    tooltip="Kiosks"
-                    isActive={isActive("admin-kiosks")}
-                    className={
-                      isActive("admin-kiosks")
-                        ? "bg-indigo-50 text-indigo-700 font-semibold shadow-sm rounded-md hover:bg-indigo-100"
-                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md"
-                    }
-                  >
-                    <Monitor className="h-5 w-5" />
-                    <span className="whitespace-nowrap overflow-hidden transition-[opacity,transform] duration-500 ease-in-out max-w-48 opacity-100 translate-x-0 transform-gpu will-change-[opacity,transform] group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:ml-0 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:-translate-x-3">
-                      Kiosks
-                    </span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
-              
-              {hasPermission("view_donations") && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    onClick={() => onNavigate("admin-donations")}
-                    tooltip="Donations"
-                    isActive={isActive("admin-donations")}
-                    className={
-                      isActive("admin-donations")
-                        ? "bg-indigo-50 text-indigo-700 font-semibold shadow-sm rounded-md hover:bg-indigo-100"
-                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md"
-                    }
-                  >
-                    <Database className="h-5 w-5" />
-                    <span className="whitespace-nowrap overflow-hidden transition-[opacity,transform] duration-500 ease-in-out max-w-48 opacity-100 translate-x-0 transform-gpu will-change-[opacity,transform] group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:ml-0 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:-translate-x-3">
-                      Donations
-                    </span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
-              
-              {hasPermission("view_donations") && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    onClick={() => onNavigate("admin-gift-aid")}
-                    tooltip="Gift Aid Donations"
-                    isActive={isActive("admin-gift-aid")}
-                    className={
-                      isActive("admin-gift-aid")
-                        ? "bg-indigo-50 text-indigo-700 font-semibold shadow-sm rounded-md hover:bg-indigo-100"
-                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md"
-                    }
-                  >
-                    <Gift className="h-5 w-5" />
-                    <span className="whitespace-nowrap overflow-hidden transition-[opacity,transform] duration-500 ease-in-out max-w-48 opacity-100 translate-x-0 transform-gpu will-change-[opacity,transform] group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:ml-0 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:-translate-x-3">
-                      Gift Aid Donations
-                    </span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
-              
-              {hasPermission("view_users") && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    onClick={() => onNavigate("admin-users")}
-                    tooltip="Users"
-                    isActive={isActive("admin-users")}
-                    className={
-                      isActive("admin-users")
-                        ? "bg-indigo-50 text-indigo-700 font-semibold shadow-sm rounded-md hover:bg-indigo-100"
-                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md"
-                    }
-                  >
-                    <Users className="h-5 w-5" />
-                    <span className="whitespace-nowrap overflow-hidden transition-[opacity,transform] duration-500 ease-in-out max-w-48 opacity-100 translate-x-0 transform-gpu will-change-[opacity,transform] group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:ml-0 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:-translate-x-3">
-                      Users
-                    </span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
-              
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  onClick={() => onNavigate("admin-bank-details")}
-                  tooltip="Bank Details"
-                  isActive={isActive("admin-bank-details")}
-                  className={
-                    isActive("admin-bank-details")
-                      ? "bg-indigo-50 text-indigo-700 font-semibold shadow-sm rounded-md hover:bg-indigo-100"
-                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md"
-                  }
+                <button
+                  onClick={() => onNavigate("admin-campaigns")}
+                  {...getNavButtonProps("admin-campaigns", "Campaigns")}
                 >
-                  <Wallet className="h-5 w-5" />
-                  <span className="whitespace-nowrap overflow-hidden transition-[opacity,transform] duration-500 ease-in-out max-w-48 opacity-100 translate-x-0 transform-gpu will-change-[opacity,transform] group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:ml-0 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:-translate-x-3">
-                    Bank Details
-                  </span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroup>
-        </SidebarContent>
-        
-        <SidebarFooter className="mt-auto shrink-0">
-          <SidebarUserFooter 
-            userSession={userSession}
-            onLogout={onLogout}
-            onProfileClick={() => setIsProfileOpen(true)}
-          />
-        </SidebarFooter>
-      </Sidebar>
+                  <div className="flex items-center">
+                    <Settings {...getIconProps()} />
+                    <span {...getTextSpanProps()}>Campaigns</span>
+                  </div>
+                  {renderActiveArrow("admin-campaigns")}
+                </button>
+              )}
+              
+              {/* Kiosks */}
+              {hasPermission("view_kiosks") && (
+                <button
+                  onClick={() => onNavigate("admin-kiosks")}
+                  {...getNavButtonProps("admin-kiosks", "Kiosks")}
+                >
+                  <div className="flex items-center">
+                    <Monitor {...getIconProps()} />
+                    <span {...getTextSpanProps()}>Kiosks</span>
+                  </div>
+                  {renderActiveArrow("admin-kiosks")}
+                </button>
+              )}
+              
+              {/* Donations */}
+              {hasPermission("view_donations") && (
+                <button
+                  onClick={() => onNavigate("admin-donations")}
+                  {...getNavButtonProps("admin-donations", "Donations")}
+                >
+                  <div className="flex items-center">
+                    <Database {...getIconProps()} />
+                    <span {...getTextSpanProps()}>Donations</span>
+                  </div>
+                  {renderActiveArrow("admin-donations")}
+                </button>
+              )}
+              
+              {/* Gift Aid Donations */}
+              {hasPermission("view_donations") && (
+                <button
+                  onClick={() => onNavigate("admin-gift-aid")}
+                  {...getNavButtonProps("admin-gift-aid", "Gift Aid Donations")}
+                >
+                  <div className="flex items-center">
+                    <Gift {...getIconProps()} />
+                    <span {...getTextSpanProps()}>Gift Aid Donations</span>
+                  </div>
+                  {renderActiveArrow("admin-gift-aid")}
+                </button>
+              )}
+              
+              {/* Users */}
+              {hasPermission("view_users") && (
+                <button
+                  onClick={() => onNavigate("admin-users")}
+                  {...getNavButtonProps("admin-users", "Users")}
+                >
+                  <div className="flex items-center">
+                    <Users {...getIconProps()} />
+                    <span {...getTextSpanProps()}>Users</span>
+                  </div>
+                  {renderActiveArrow("admin-users")}
+                </button>
+              )}
+              
+              {/* Bank Details */}
+              <button
+                onClick={() => onNavigate("admin-bank-details")}
+                {...getNavButtonProps("admin-bank-details", "Bank Details")}
+              >
+                <div className="flex items-center">
+                  <Wallet {...getIconProps()} />
+                  <span {...getTextSpanProps()}>Bank Details</span>
+                </div>
+                {renderActiveArrow("admin-bank-details")}
+              </button>
+            </div>
+          </div>
+          
+          {/* Footer */}
+          <div className={`mt-auto ${isCollapsed ? 'p-3' : 'p-4'}`}>
+            {!isCollapsed ? (
+              <button
+                onClick={onLogout}
+                className="signout-btn w-full flex items-center justify-center px-4 py-4 rounded-xl text-white border border-red-900/30"
+                style={{
+                  background: '#7F1D1D'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#B91C1C';
+                  e.currentTarget.style.borderColor = '#B91C1C';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#7F1D1D';
+                  e.currentTarget.style.borderColor = 'rgba(127,29,29,0.3)';
+                }}
+              >
+                <LogOut className="signout-icon h-5 w-5 mr-3" />
+                <span className="font-medium text-base">Sign Out</span>
+              </button>
+            ) : (
+              <button
+                onClick={onLogout}
+                className="signout-btn w-full flex items-center justify-center p-3.5 rounded-xl text-white"
+                style={{
+                  background: '#7F1D1D'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#B91C1C';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#7F1D1D';
+                }}
+                title="Sign Out"
+              >
+                <LogOut className="signout-icon h-6 w-6" strokeWidth={2.2} />
+              </button>
+            )}
+          </div>
+        </div>
 
-      <SidebarInset className="flex-1 flex flex-col overflow-hidden relative">
-        <header
-          className={`absolute top-0 left-0 right-0 z-20 bg-white ${
-            hideHeaderDivider ? "" : "border-b border-gray-200/70 shadow-sm"
-          }`}
-        >
-          <style>{`
-            @keyframes headerFloatUp {
-              0% { transform: translateY(8px); opacity: 0; }
-              20% { opacity: 0.5; }
-              100% { transform: translateY(-26px); opacity: 0; }
-            }
-            .header-heart {
-              animation: headerFloatUp 6s ease-in-out infinite;
-              filter: drop-shadow(0 6px 10px rgba(22, 163, 74, 0.25));
-            }
-            .header-heart:nth-child(1) { left: 8%; top: 55%; animation-delay: 0s; }
-            .header-heart:nth-child(2) { left: 28%; top: 35%; animation-delay: 1.2s; }
-            .header-heart:nth-child(3) { left: 52%; top: 60%; animation-delay: 2.4s; }
-            .header-heart:nth-child(4) { left: 72%; top: 40%; animation-delay: 3.6s; }
-            .header-heart:nth-child(5) { left: 90%; top: 58%; animation-delay: 4.8s; }
-          `}</style>
-          <div className="pointer-events-none absolute inset-0">
-            <div className="header-heart absolute text-green-400 fill-green-400 opacity-40" style={{ fontSize: "15px" }}>
-              ♥
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <header className="bg-white border-b border-gray-200 shadow-sm">
+            <div className="flex items-center justify-between px-4 sm:px-6 h-16">
+              <div className="flex items-center gap-3">
+                <h1 className="font-bold text-lg text-gray-900">{currentLabel}</h1>
+              </div>
+              
+              {/* Right side buttons */}
+              <div className="flex items-center gap-2">
+                {/* Get a Tour Button */}
+                {onStartTour && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onStartTour}
+                    className="hidden sm:flex items-center gap-2 border-green-200 text-green-600 hover:bg-green-50 hover:text-green-700 hover:border-green-300 transition-colors animate-pulse"
+                  >
+                    <Compass className="h-4 w-4" />
+                    <span className="font-medium">Get a Tour</span>
+                  </Button>
+                )}
+                
+                {/* User Profile Avatar */}
+                <div className="flex items-center gap-3 ml-4 relative">
+                  <div className="relative">
+                    <div 
+                      className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 cursor-pointer hover:shadow-xl"
+                      style={{
+                        background: '#1E293B',
+                        border: '2px solid rgba(255,255,255,0.2)'
+                      }}
+                      onClick={() => setShowUserProfile(!showUserProfile)}
+                    >
+                      <Avatar className="w-8 h-8 transition-all duration-300">
+                        <AvatarImage src={userSession.user.photoURL || undefined} />
+                        <AvatarFallback className="bg-transparent text-white text-sm font-bold transition-all duration-300">
+                          {getInitials(userSession.user.username || userSession.user.email || 'U')}
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
+                    {/* Online indicator */}
+                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                  </div>
+                  
+                  {/* User Info - Hidden on small screens */}
+                  <div 
+                    className="hidden md:block cursor-pointer"
+                    onClick={() => setShowUserProfile(!showUserProfile)}
+                  >
+                    <p className="text-gray-900 font-semibold text-sm leading-tight">
+                      {userSession.user.username || 'Ayush Bhatia'}
+                    </p>
+                    <p className="text-gray-500 text-xs">System Administrator</p>
+                  </div>
+
+                  {/* User Profile Quick View Panel */}
+                  {showUserProfile && (
+                    <>
+                      {/* Backdrop with blur */}
+                      <div 
+                        className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 transition-all duration-300"
+                        onClick={() => setShowUserProfile(false)}
+                      ></div>
+                      
+                      {/* Quick View Panel */}
+                      <div className="fixed top-20 right-6 w-80 bg-white rounded-xl shadow-2xl z-50 transform transition-all duration-300 ease-out border border-gray-100">
+                        {/* Header */}
+                        <div className="relative px-6 py-5 bg-gradient-to-r from-green-600 to-emerald-600 rounded-t-xl">
+                          <button
+                            onClick={() => setShowUserProfile(false)}
+                            className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                          
+                          <div className="flex items-center gap-4">
+                            <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-2 border-white/30">
+                              <Avatar className="w-12 h-12">
+                                <AvatarImage src={userSession.user.photoURL || undefined} />
+                                <AvatarFallback className="bg-white text-green-600 text-lg font-bold">
+                                  {getInitials(userSession.user.username || userSession.user.email || 'U')}
+                                </AvatarFallback>
+                              </Avatar>
+                            </div>
+                            
+                            <div className="text-white">
+                              <h3 className="font-semibold text-lg leading-tight">
+                                {userSession.user.username || 'Ayush Bhatia'}
+                              </h3>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="px-2 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-medium border border-white/30">
+                                  Administrator
+                                </span>
+                                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-6 max-h-96 overflow-y-auto">
+                          {/* Account Information */}
+                          <div className="space-y-3 mb-6">
+                            <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Account Information</h4>
+                            
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-3 text-sm">
+                                <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                                  <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                                  </svg>
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-gray-500 text-xs">Email Address</p>
+                                  <p className="text-gray-900 font-medium truncate">{userSession.user.email || 'ayushbhatia590@gmail.com'}</p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-3 text-sm">
+                                <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                                  <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                </div>
+                                <div>
+                                  <p className="text-gray-500 text-xs">Role</p>
+                                  <p className="text-gray-900 font-medium">Administrator</p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-3 text-sm">
+                                <div className="w-8 h-8 bg-orange-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                                  <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a4 4 0 118 0v4m-4 8a2 2 0 100-4 2 2 0 000 4zm6 0a2 2 0 100-4 2 2 0 000 4z" />
+                                  </svg>
+                                </div>
+                                <div>
+                                  <p className="text-gray-500 text-xs">Member Since</p>
+                                  <p className="text-gray-900 font-medium">November 16, 2025</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Permissions */}
+                          <div className="mb-4">
+                            <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Permissions</h4>
+                            
+                            <div className="flex flex-wrap gap-1.5">
+                              {hasPermission("view_dashboard") && (
+                                <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-md">
+                                  view dashboard
+                                </span>
+                              )}
+                              {hasPermission("view_campaigns") && (
+                                <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-md">
+                                  view campaigns
+                                </span>
+                              )}
+                              {hasPermission("create_campaign") && (
+                                <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-md">
+                                  create campaign
+                                </span>
+                              )}
+                              {hasPermission("edit_campaign") && (
+                                <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-md">
+                                  edit campaign
+                                </span>
+                              )}
+                              {hasPermission("delete_campaign") && (
+                                <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-md">
+                                  delete campaign
+                                </span>
+                              )}
+                              {hasPermission("view_kiosks") && (
+                                <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-md">
+                                  view kiosks
+                                </span>
+                              )}
+                              {hasPermission("create_kiosk") && (
+                                <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-md">
+                                  create kiosk
+                                </span>
+                              )}
+                              {hasPermission("edit_kiosk") && (
+                                <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-md">
+                                  edit kiosk
+                                </span>
+                              )}
+                              {hasPermission("delete_kiosk") && (
+                                <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-md">
+                                  delete kiosk
+                                </span>
+                              )}
+                              {hasPermission("assign_campaigns") && (
+                                <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-md">
+                                  assign campaigns
+                                </span>
+                              )}
+                              {hasPermission("view_donations") && (
+                                <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-md">
+                                  view donations
+                                </span>
+                              )}
+                              {hasPermission("export_donations") && (
+                                <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-xs font-medium rounded-md">
+                                  export donations
+                                </span>
+                              )}
+                              {hasPermission("view_users") && (
+                                <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-md">
+                                  view users
+                                </span>
+                              )}
+                              {hasPermission("create_user") && (
+                                <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-md">
+                                  create user
+                                </span>
+                              )}
+                              {hasPermission("edit_user") && (
+                                <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-md">
+                                  edit user
+                                </span>
+                              )}
+                              {hasPermission("delete_user") && (
+                                <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-md">
+                                  delete user
+                                </span>
+                              )}
+                              {hasPermission("manage_permissions") && (
+                                <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-md">
+                                  manage permissions
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Quick Actions */}
+                          <div className="pt-4 border-t border-gray-100">
+                            <button
+                              onClick={() => {
+                                setShowUserProfile(false);
+                                onLogout();
+                              }}
+                              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors font-medium text-sm border border-red-200"
+                            >
+                              <LogOut className="w-4 h-4" />
+                              Sign Out
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="header-heart absolute text-green-400 fill-green-400 opacity-35" style={{ fontSize: "22px" }}>
-              ♥
-            </div>
-            <div className="header-heart absolute text-green-400 fill-green-400 opacity-30" style={{ fontSize: "30px" }}>
-              ♥
-            </div>
-            <div className="header-heart absolute text-green-400 fill-green-400 opacity-30" style={{ fontSize: "18px" }}>
-              ♥
-            </div>
-            <div className="header-heart absolute text-green-400 fill-green-400 opacity-35" style={{ fontSize: "26px" }}>
-              ♥
-            </div>
-          </div>
-          <div className="flex items-center justify-between px-4 sm:px-6 h-27">
-            <AdminPageHeader
-              title={resolvedHeaderTitle}
-              subtitle={headerSubtitle}
-              actions={headerActions}
-              showSidebarTrigger={!hideSidebarTrigger}
-              onStartTour={onStartTour}
-              onProfileClick={() => setIsProfileOpen(true)}
-              userPhotoUrl={userSession.user.photoURL || undefined}
-              userInitials={userInitials}
-            />
-          </div>
-        </header>
-        
-        <main
-          className="flex-1 w-full bg-slate-50 overflow-y-auto overflow-x-hidden pt-20"
-          data-testid="main-content-area"
-        >
-          <div className="pt-14">
+          </header>
+          
+          <main className="flex-1 w-full bg-slate-50 overflow-y-auto overflow-x-hidden" data-testid="main-content-area">
             {children}
-          </div>
-        </main>
-      </SidebarInset>
-
-      {/* Profile Sidebar */}
-      <ProfileSidebar
-        isOpen={isProfileOpen}
-        onClose={() => setIsProfileOpen(false)}
-        userSession={userSession}
-        onLogout={onLogout}
-      />
+          </main>
+        </div>
+      </div>
     </SidebarProvider>
   );
 }
