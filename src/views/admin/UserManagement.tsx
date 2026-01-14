@@ -175,21 +175,12 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                     onFilterChange={handleFilterChange}
                     actions={
                         hasPermission('create_user') ? (
-                            <>
-                                <Button
-                                    className="bg-indigo-600 text-white h-12 w-12 p-0 sm:hidden"
-                                    onClick={() => setCreateDialogOpen(true)}
-                                    aria-label="Add User"
-                                >
-                                    <Plus className="w-5 h-5" />
-                                </Button>
-                                <Button
-                                    className="bg-indigo-600 text-white hidden sm:inline-flex"
-                                    onClick={() => setCreateDialogOpen(true)}
-                                >
-                                    <Plus className="w-4 h-4 mr-2" />Add User
-                                </Button>
-                            </>
+                            <Button
+                                className="bg-indigo-600 text-white"
+                                onClick={() => setCreateDialogOpen(true)}
+                            >
+                                <Plus className="w-4 h-4 mr-2" />Add User
+                            </Button>
                         ) : undefined
                     }
                 />
