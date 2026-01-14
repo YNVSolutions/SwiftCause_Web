@@ -55,7 +55,7 @@ export const GiftAidPage: React.FC<GiftAidPageProps> = ({
         <header className="w-full max-w-6xl mx-auto px-6 lg:px-12 xl:px-16 py-4">
           <div className="flex items-start gap-4">
             <button
-              onClick={onBack}
+              onClick={showDetails ? handleBackFromDetails : onBack}
               title="Back"
               aria-label="Back"
               className="flex items-center justify-center h-9 w-9 rounded-lg border border-green-200 bg-white/90 text-green-700 shadow-sm hover:bg-green-50 hover:border-green-300 transition-colors"
