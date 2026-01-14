@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useMemo, useState, useEffect, useRef } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { Campaign } from '../../../shared/types';
+import { useScrollSpy } from '../../../shared/lib/hooks/useScrollSpy';
 
 // UI Components
 import { Button } from '../../../shared/ui/button';
@@ -53,12 +54,10 @@ export function CampaignForm({
   onImageFileSelect
 }: CampaignFormProps) {
   
-  const [activeSection, setActiveSection] = useState('basic-info');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const lastUpdateTimeRef = useRef<number>(0);
   
   
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -81,99 +80,19 @@ export function CampaignForm({
     { id: 'media', label: 'MEDIA' }
   ];
 
-  // IntersectionObserver for scroll-synced sidebar highlighting
-  useEffect(() => {
-    if (!open) return;
+  // Use ScrollSpy hook
+  const { activeSection, scrollToSection, setActiveSection } = useScrollSpy({
+    containerRef: scrollContainerRef,
+    sectionRefs,
+    enabled: open
+  });
 
-    const timeoutId = setTimeout(() => {
-      const container = scrollContainerRef.current;
-      if (!container) return;
-
-      const observer = new IntersectionObserver(
-        (entries) => {
-          const now = Date.now();
-          if (now - lastUpdateTimeRef.current < 100) {
-            return;
-          }
-          
-          const visibleSections = new Map<string, number>();
-          
-          entries.forEach((entry) => {
-            if (entry.intersectionRatio > 0) {
-              visibleSections.set(entry.target.id, entry.intersectionRatio);
-            }
-          });
-          
-          if (visibleSections.size === 0) return;
-          
-          let maxRatio = 0;
-          let mostVisibleId = '';
-          
-          visibleSections.forEach((ratio, id) => {
-            if (ratio > maxRatio) {
-              maxRatio = ratio;
-              mostVisibleId = id;
-            }
-          });
-          
-          setActiveSection(currentActive => {
-            const currentRatio = visibleSections.get(currentActive) || 0;
-            
-            if (visibleSections.size === 1 && mostVisibleId) {
-              lastUpdateTimeRef.current = now;
-              return mostVisibleId;
-            }
-            
-            if (currentRatio >= 0.4) {
-              return currentActive;
-            }
-            
-            if (maxRatio >= 0.5 && mostVisibleId !== currentActive && maxRatio > currentRatio + 0.15) {
-              lastUpdateTimeRef.current = now;
-              return mostVisibleId;
-            }
-            
-            if (currentRatio < 0.1 && maxRatio >= 0.3) {
-              lastUpdateTimeRef.current = now;
-              return mostVisibleId;
-            }
-            
-            return currentActive;
-          });
-        },
-        {
-          root: container,
-          rootMargin: '-10% 0px -40% 0px',
-          threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-        }
-      );
-
-      Object.values(sectionRefs).forEach((ref) => {
-        if (ref.current) {
-          observer.observe(ref.current);
-        }
-      });
-
-      return () => {
-        observer.disconnect();
-      };
-    }, 200);
-
-    return () => {
-      clearTimeout(timeoutId);
-    };
-  }, [open, sectionRefs]);
-
-  const scrollToSection = (sectionId: string) => {
-    const sectionRef = sectionRefs[sectionId as keyof typeof sectionRefs];
-    if (sectionRef?.current) {
-      sectionRef.current.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'start' 
-      });
-      setActiveSection(sectionId);
+  // Reset to first section when dialog opens
+  React.useEffect(() => {
+    if (open) {
+      setActiveSection('basic-info');
     }
-  };
+  }, [open, setActiveSection]);
 
   // Handle keyboard navigation
   const handleNavKeyDown = (event: React.KeyboardEvent, sectionId: string) => {
@@ -339,12 +258,14 @@ export function CampaignForm({
             <div 
               ref={scrollContainerRef}
               className="flex-1 overflow-y-auto min-h-0"
+              style={{ scrollSnapType: 'y proximity' }}
             >
               {/* Basic Information Section */}
               <section 
                 id="basic-info"
                 ref={sectionRefs['basic-info']}
                 className="p-4 sm:p-6 lg:p-8 border-b border-gray-100"
+                style={{ scrollSnapAlign: 'start' }}
               >
                 <div className="max-w-4xl">
                   <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-6 sm:mb-8">
@@ -447,6 +368,7 @@ export function CampaignForm({
                 id="details"
                 ref={sectionRefs['details']}
                 className="p-4 sm:p-6 lg:p-8 border-b border-gray-100"
+                style={{ scrollSnapAlign: 'start' }}
               >
                 <div className="max-w-4xl">
                   <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-6 sm:mb-8">
@@ -501,6 +423,7 @@ export function CampaignForm({
                 id="media"
                 ref={sectionRefs['media']}
                 className="p-4 sm:p-6 lg:p-8"
+                style={{ scrollSnapAlign: 'start' }}
               >
                 <div className="max-w-4xl">
                   <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-6 sm:mb-8">
