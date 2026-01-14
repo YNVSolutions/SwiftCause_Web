@@ -1,14 +1,10 @@
 import { useState } from 'react';
-import { Badge } from '../../shared/ui/badge';
 import { CardContent, CardDescription, CardHeader, CardTitle } from '../../shared/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shared/ui/tabs';
 import { Button } from '../../shared/ui/button';
 
 import {
   Heart,
-  Users,
-  Globe,
-  Monitor,
   ArrowLeft,
   UserCog,
 } from 'lucide-react';
@@ -22,6 +18,7 @@ import { ParticleField } from './backgrounds/ParticleField';
 import { GlassMorphCard } from './cards/GlassMorphCard';
 import { LiquidFillProgress } from './cards/LiquidFillProgress';
 import { FeaturedCampaign } from './components/FeaturedCampaign';
+import { useFeaturedCampaigns } from './hooks/useFeaturedCampaigns';
 
 interface LoginScreenProps {
   onLogin: (role: UserRole, sessionData?: KioskSession | AdminSession) => void;
@@ -33,15 +30,8 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
   const [formState, setFormState] = useState<'idle' | 'typing' | 'error' | 'success'>('idle');
   const [formProgress, setFormProgress] = useState(0);
 
-  // Mock real-time statistics
-  const [stats] = useState({
-    activeCampaigns: 42,
-    activeKiosks: 28,
-  });
-
-  const formatNumber = (num: number) => {
-    return new Intl.NumberFormat('en-GB').format(num);
-  };
+  // Fetch real campaign data from Firestore
+  const { campaigns, loading, error } = useFeaturedCampaigns(3);
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -92,8 +82,24 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
               Comprehensive donation management platform trusted by organizations worldwide.
             </p>
 
-            {/* Featured Campaign */}
-            <FeaturedCampaign />
+            {/* Featured Campaign - Real data from Firestore */}
+            {loading ? (
+              <div className="w-full max-w-lg mx-auto mb-8 p-8 text-center">
+                <div className="animate-pulse">
+                  <div className="h-64 bg-white/60 rounded-3xl" />
+                </div>
+              </div>
+            ) : error ? (
+              <div className="w-full max-w-lg mx-auto mb-8 p-8 text-center text-gray-500">
+                <p className="text-sm">Unable to load campaigns</p>
+              </div>
+            ) : (
+              <FeaturedCampaign 
+                campaigns={campaigns}
+                autoRotateInterval={6000}
+                showNavigation={true}
+              />
+            )}
 
             {/* Testimonial - Matching login form style */}
             <div className="mt-8 animate-fade-in-delay-3">
