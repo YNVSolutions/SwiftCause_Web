@@ -32,8 +32,6 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
   const [activeTab, setActiveTab] = useState<'kiosk' | 'admin'>('admin');
   const [formState, setFormState] = useState<'idle' | 'typing' | 'error' | 'success'>('idle');
   const [formProgress, setFormProgress] = useState(0);
-  const [logoClicks, setLogoClicks] = useState(0);
-  const [showEasterEgg, setShowEasterEgg] = useState(false);
 
   // Mock real-time statistics
   const [stats, setStats] = useState({
@@ -54,36 +52,6 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
 
     return () => clearInterval(interval);
   }, []);
-
-  // Logo easter egg - click 5 times
-  const handleLogoClick = () => {
-    const newCount = logoClicks + 1;
-    setLogoClicks(newCount);
-    
-    if (newCount === 5) {
-      setShowEasterEgg(true);
-      setTimeout(() => {
-        setShowEasterEgg(false);
-        setLogoClicks(0);
-      }, 3000);
-    }
-  };
-
-  // Reset logo clicks after inactivity
-  useEffect(() => {
-    if (logoClicks > 0 && logoClicks < 5) {
-      const timer = setTimeout(() => setLogoClicks(0), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [logoClicks]);
-
-  // Get time-based greeting
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Good morning";
-    if (hour < 18) return "Good afternoon";
-    return "Good evening";
-  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-GB', {
@@ -119,17 +87,12 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
               <span className="sr-only">Back to Home</span>
             </Button>
 
-            {/* Logo with easter egg */}
+            {/* Logo */}
             <button 
-              onClick={handleLogoClick} 
-              className={`
-                flex items-center space-x-3 mb-4 text-left hover:opacity-80 
-                transition-all duration-300 hover:scale-105 group
-                ${logoClicks > 0 ? 'animate-bounce' : ''}
-                ${showEasterEgg ? 'animate-spin' : ''}
-              `}
+              onClick={onGoBackToHome} 
+              className="flex items-center space-x-3 mb-4 text-left hover:opacity-90 transition-all duration-300 hover:scale-105 group"
             >
-              <div className="flex h-14 w-14 items-center justify-center transform transition-transform group-hover:rotate-12">
+              <div className="flex h-14 w-14 items-center justify-center transform transition-transform group-hover:scale-110">
                 <img src="/logo.png" className="h-14 w-14 rounded-xl shadow-lg" alt="Swift Cause Logo" />
               </div>
               <div>
@@ -137,14 +100,14 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
                   Swift Cause
                 </h1>
                 <p className="text-sm text-green-600 font-medium">
-                  {showEasterEgg ? '🎉 You found it!' : 'Modern Donation Platform'}
+                  Modern Donation Platform
                 </p>
               </div>
             </button>
 
-            {/* Time-based greeting */}
+            {/* Professional greeting */}
             <h2 className="text-3xl xl:text-4xl font-bold text-gray-900 mb-4 leading-tight animate-fade-in">
-              {getGreeting()}! <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 animate-gradient">Welcome back</span>
+              Welcome back to <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600">Swift Cause</span>
             </h2>
 
             <p className="text-base xl:text-lg text-gray-600 mb-8 animate-fade-in-delay">
@@ -226,13 +189,13 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
           <div className="w-full max-w-md animate-slide-in-right">
             {/* Mobile header */}
             <div className="lg:hidden text-center mb-6">
-              <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-green-600 to-emerald-600 shadow-lg animate-bounce-slow">
+              <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-green-600 to-emerald-600 shadow-lg">
                 <Heart className="h-8 w-8 text-white" />
               </div>
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
-                {getGreeting()}!
+                Welcome Back
               </h2>
-              <p className="text-sm text-gray-600">Welcome to Swift Cause</p>
+              <p className="text-sm text-gray-600">Swift Cause Platform</p>
             </div>
 
             {/* Phase 2: Glass morph card with liquid fill */}
@@ -306,18 +269,6 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
                 </div>
               </CardContent>
             </GlassMorphCard>
-
-            {/* Easter egg display */}
-            {showEasterEgg && (
-              <div className="mt-4 bg-green-600 text-white px-6 py-3 rounded-full shadow-xl animate-bounce text-center">
-                <div className="flex items-center justify-center space-x-2">
-                  <Heart className="w-4 h-4 fill-white animate-pulse" />
-                  <span className="text-sm font-semibold">
-                    {formatCurrency(stats.totalRaised)} raised globally! 🌍
-                  </span>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
