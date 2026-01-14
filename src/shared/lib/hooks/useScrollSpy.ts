@@ -16,47 +16,51 @@ export function useScrollSpy({
   useEffect(() => {
     if (!enabled) return;
 
-    const container = containerRef.current;
-    if (!container) return;
+    const setupTimeoutId = setTimeout(() => {
+      const container = containerRef.current;
+      if (!container) return;
 
-    const handleScroll = () => {
-      const containerRect = container.getBoundingClientRect();
-      const containerTop = containerRect.top;
-      const scrollTop = container.scrollTop;
-      
-      let closestId: string | null = null;
-      let minDistance = Infinity;
-
-      Object.entries(sectionRefs).forEach(([id, ref]) => {
-        if (!ref.current) return;
-
-        const sectionRect = ref.current.getBoundingClientRect();
-        const sectionTop = sectionRect.top;
+      const handleScroll = () => {
+        const containerRect = container.getBoundingClientRect();
+        const containerTop = containerRect.top;
         
-        // Calculate distance from section top to container top
-        const distance = Math.abs(sectionTop - containerTop);
+        let closestId: string | null = null;
+        let minDistance = Infinity;
 
-        if (distance < minDistance) {
-          minDistance = distance;
-          closestId = id;
+        Object.entries(sectionRefs).forEach(([id, ref]) => {
+          if (!ref.current) return;
+
+          const sectionRect = ref.current.getBoundingClientRect();
+          const sectionTop = sectionRect.top;
+          
+          const distance = Math.abs(sectionTop - containerTop);
+
+          if (distance < minDistance) {
+            minDistance = distance;
+            closestId = id;
+          }
+        });
+
+        if (closestId) {
+          setActiveSection(closestId);
         }
-      });
+      };
 
-      if (closestId && closestId !== activeSection) {
-        setActiveSection(closestId);
-      }
-    };
+      container.addEventListener('scroll', handleScroll, { passive: true });
+      
+      handleScroll();
+      const delayedCheckId = setTimeout(handleScroll, 200);
 
-    container.addEventListener('scroll', handleScroll, { passive: true });
-    
-    // Initial check
-    const timeoutId = setTimeout(handleScroll, 150);
+      return () => {
+        container.removeEventListener('scroll', handleScroll);
+        clearTimeout(delayedCheckId);
+      };
+    }, 100);
 
     return () => {
-      container.removeEventListener('scroll', handleScroll);
-      clearTimeout(timeoutId);
+      clearTimeout(setupTimeoutId);
     };
-  }, [enabled, containerRef, sectionRefs, activeSection]);
+  }, [enabled, containerRef, sectionRefs]);
 
   const scrollToSection = (sectionId: string, offset = 20) => {
     const container = containerRef.current;

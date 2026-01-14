@@ -1213,11 +1213,15 @@ const CampaignManagement = ({
   // Separate state for create and edit
   const [newCampaignFormData, setNewCampaignFormData] = useState<CampaignFormData>({
     title: '',
+    briefOverview: '',
     description: '',
     goal: 0,
     category: '',
     status: 'active',
     coverImageUrl: '',
+    videoUrl: '',
+    galleryImages: [],
+    predefinedAmounts: [25, 50, 100],
     startDate: '',
     endDate: '',
     tags: []
@@ -1225,11 +1229,15 @@ const CampaignManagement = ({
   
   const [editCampaignFormData, setEditCampaignFormData] = useState<CampaignFormData>({
     title: '',
+    briefOverview: '',
     description: '',
     goal: 0,
     category: '',
     status: 'active',
     coverImageUrl: '',
+    videoUrl: '',
+    galleryImages: [],
+    predefinedAmounts: [25, 50, 100],
     startDate: '',
     endDate: '',
     tags: []
@@ -1237,6 +1245,8 @@ const CampaignManagement = ({
   
   const [selectedNewCampaignImageFile, setSelectedNewCampaignImageFile] = useState<File | null>(null);
   const [selectedEditCampaignImageFile, setSelectedEditCampaignImageFile] = useState<File | null>(null);
+  const [selectedNewCampaignGalleryFiles, setSelectedNewCampaignGalleryFiles] = useState<File[]>([]);
+  const [selectedEditCampaignGalleryFiles, setSelectedEditCampaignGalleryFiles] = useState<File[]>([]);
 
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -1311,11 +1321,17 @@ const CampaignManagement = ({
     // Populate form data from campaign
     setEditCampaignFormData({
       title: campaign.title || '',
+      briefOverview: campaign.briefOverview || '',
       description: campaign.description || '',
       goal: campaign.goal || 0,
       category: campaign.category || '',
       status: campaign.status || 'active',
       coverImageUrl: campaign.coverImageUrl || '',
+      videoUrl: campaign.videoUrl || '',
+      galleryImages: Array.isArray(campaign.galleryImages) ? campaign.galleryImages : [],
+      predefinedAmounts: Array.isArray(campaign.configuration?.predefinedAmounts) 
+        ? campaign.configuration.predefinedAmounts.slice(0, 3)
+        : [25, 50, 100],
       startDate: campaign.startDate?.seconds
         ? new Date(campaign.startDate.seconds * 1000).toISOString().split('T')[0]
         : '',
@@ -1455,7 +1471,7 @@ const CampaignManagement = ({
     try {
       let coverImageUrl = newCampaignFormData.coverImageUrl;
       
-      // Upload image file if one was selected
+      // Upload cover image file if one was selected
       if (selectedNewCampaignImageFile) {
         const uploadedUrl = await uploadFile(
           selectedNewCampaignImageFile,
@@ -1466,18 +1482,38 @@ const CampaignManagement = ({
         }
       }
       
+      // Upload gallery images if any were selected
+      let galleryImageUrls = [...newCampaignFormData.galleryImages];
+      if (selectedNewCampaignGalleryFiles.length > 0) {
+        for (const file of selectedNewCampaignGalleryFiles) {
+          const uploadedUrl = await uploadFile(
+            file,
+            `campaigns/new/gallery/${Date.now()}_${file.name}`
+          );
+          if (uploadedUrl) {
+            galleryImageUrls.push(uploadedUrl);
+          }
+        }
+      }
+      
       const dataToSave: { [key: string]: any } = {
         title: newCampaignFormData.title,
+        briefOverview: newCampaignFormData.briefOverview,
         description: newCampaignFormData.description,
         status: newCampaignFormData.status,
         goal: Number(newCampaignFormData.goal),
-        tags: Array.isArray(newCampaignFormData.tags) ? newCampaignFormData.tags : [],
+        tags: Array.isArray(newCampaignFormData.tags) ? newCampaignFormData.tags.filter(t => t.trim().length > 0) : [],
         coverImageUrl: coverImageUrl || "",
+        videoUrl: newCampaignFormData.videoUrl || "",
+        galleryImages: galleryImageUrls,
         category: newCampaignFormData.category || "",
         organizationId: userSession.user.organizationId || "",
         assignedKiosks: [],
         isGlobal: false,
-        configuration: DEFAULT_CAMPAIGN_CONFIG,
+        configuration: {
+          ...DEFAULT_CAMPAIGN_CONFIG,
+          predefinedAmounts: newCampaignFormData.predefinedAmounts.filter(a => a > 0),
+        },
       };
 
       if (newCampaignFormData.startDate) {
@@ -1493,13 +1529,18 @@ const CampaignManagement = ({
       // Reset form and close
       setIsNewCampaignFormOpen(false);
       setSelectedNewCampaignImageFile(null);
+      setSelectedNewCampaignGalleryFiles([]);
       setNewCampaignFormData({
         title: '',
+        briefOverview: '',
         description: '',
         goal: 0,
         category: '',
         status: 'active',
         coverImageUrl: '',
+        videoUrl: '',
+        galleryImages: [],
+        predefinedAmounts: [25, 50, 100],
         startDate: '',
         endDate: '',
         tags: []
@@ -1513,26 +1554,115 @@ const CampaignManagement = ({
   const handleNewCampaignFormCancel = () => {
     setIsNewCampaignFormOpen(false);
     setSelectedNewCampaignImageFile(null);
+    setSelectedNewCampaignGalleryFiles([]);
     setNewCampaignFormData({
       title: '',
+      briefOverview: '',
       description: '',
       goal: 0,
       category: '',
       status: 'active',
       coverImageUrl: '',
+      videoUrl: '',
+      galleryImages: [],
+      predefinedAmounts: [25, 50, 100],
       startDate: '',
       endDate: '',
       tags: []
     });
   };
 
-  const handleEditCampaignFormSubmit = async () => {
+  const handleNewCampaignFormSaveDraft = async () => {
+    try {
+      let coverImageUrl = newCampaignFormData.coverImageUrl;
+      
+      // Upload cover image file if one was selected
+      if (selectedNewCampaignImageFile) {
+        const uploadedUrl = await uploadFile(
+          selectedNewCampaignImageFile,
+          `campaigns/new/${Date.now()}_${selectedNewCampaignImageFile.name}`
+        );
+        if (uploadedUrl) {
+          coverImageUrl = uploadedUrl;
+        }
+      }
+      
+      // Upload gallery images if any were selected
+      let galleryImageUrls = [...newCampaignFormData.galleryImages];
+      if (selectedNewCampaignGalleryFiles.length > 0) {
+        for (const file of selectedNewCampaignGalleryFiles) {
+          const uploadedUrl = await uploadFile(
+            file,
+            `campaigns/new/gallery/${Date.now()}_${file.name}`
+          );
+          if (uploadedUrl) {
+            galleryImageUrls.push(uploadedUrl);
+          }
+        }
+      }
+      
+      const dataToSave: { [key: string]: any } = {
+        title: newCampaignFormData.title,
+        briefOverview: newCampaignFormData.briefOverview,
+        description: newCampaignFormData.description,
+        status: 'paused', // Force paused status for draft
+        goal: Number(newCampaignFormData.goal),
+        tags: Array.isArray(newCampaignFormData.tags) ? newCampaignFormData.tags.filter(t => t.trim().length > 0) : [],
+        coverImageUrl: coverImageUrl || "",
+        videoUrl: newCampaignFormData.videoUrl || "",
+        galleryImages: galleryImageUrls,
+        category: newCampaignFormData.category || "",
+        organizationId: userSession.user.organizationId || "",
+        assignedKiosks: [],
+        isGlobal: false,
+        configuration: {
+          ...DEFAULT_CAMPAIGN_CONFIG,
+          predefinedAmounts: newCampaignFormData.predefinedAmounts.filter(a => a > 0),
+        },
+      };
+
+      if (newCampaignFormData.startDate) {
+        dataToSave.startDate = Timestamp.fromDate(new Date(newCampaignFormData.startDate));
+      }
+      if (newCampaignFormData.endDate) {
+        dataToSave.endDate = Timestamp.fromDate(new Date(newCampaignFormData.endDate));
+      }
+
+      const finalDataToSave = removeUndefined(dataToSave);
+      await createWithImage(finalDataToSave);
+      
+      // Reset form and close
+      setIsNewCampaignFormOpen(false);
+      setSelectedNewCampaignImageFile(null);
+      setSelectedNewCampaignGalleryFiles([]);
+      setNewCampaignFormData({
+        title: '',
+        briefOverview: '',
+        description: '',
+        goal: 0,
+        category: '',
+        status: 'active',
+        coverImageUrl: '',
+        videoUrl: '',
+        galleryImages: [],
+        predefinedAmounts: [25, 50, 100],
+        startDate: '',
+        endDate: '',
+        tags: []
+      });
+    } catch (error) {
+      console.error("Error saving campaign draft:", error);
+      alert("Failed to save campaign draft. Please try again.");
+    }
+  };
+
+  const handleEditCampaignFormSaveDraft = async () => {
     if (!editingCampaignForNewForm) return;
     
     try {
       let coverImageUrl = editCampaignFormData.coverImageUrl;
       
-      // Upload image file if one was selected
+      // Upload cover image file if one was selected
       if (selectedEditCampaignImageFile) {
         const uploadedUrl = await uploadFile(
           selectedEditCampaignImageFile,
@@ -1543,14 +1673,36 @@ const CampaignManagement = ({
         }
       }
       
+      // Upload gallery images if any were selected
+      let galleryImageUrls = [...editCampaignFormData.galleryImages];
+      if (selectedEditCampaignGalleryFiles.length > 0) {
+        for (const file of selectedEditCampaignGalleryFiles) {
+          const uploadedUrl = await uploadFile(
+            file,
+            `campaigns/${editingCampaignForNewForm.id}/gallery/${Date.now()}_${file.name}`
+          );
+          if (uploadedUrl) {
+            galleryImageUrls.push(uploadedUrl);
+          }
+        }
+      }
+      
       const dataToSave: { [key: string]: any } = {
         title: editCampaignFormData.title,
+        briefOverview: editCampaignFormData.briefOverview,
         description: editCampaignFormData.description,
-        status: editCampaignFormData.status,
+        status: 'paused', // Force paused status for draft
         goal: Number(editCampaignFormData.goal),
-        tags: Array.isArray(editCampaignFormData.tags) ? editCampaignFormData.tags : [],
+        tags: Array.isArray(editCampaignFormData.tags) ? editCampaignFormData.tags.filter(t => t.trim().length > 0) : [],
         coverImageUrl: coverImageUrl || "",
+        videoUrl: editCampaignFormData.videoUrl || "",
+        galleryImages: galleryImageUrls,
         category: editCampaignFormData.category || "",
+        configuration: {
+          ...DEFAULT_CAMPAIGN_CONFIG,
+          ...(editingCampaignForNewForm.configuration || {}),
+          predefinedAmounts: editCampaignFormData.predefinedAmounts.filter(a => a > 0),
+        },
       };
 
       if (editCampaignFormData.startDate) {
@@ -1567,13 +1719,103 @@ const CampaignManagement = ({
       setIsEditCampaignFormOpen(false);
       setEditingCampaignForNewForm(null);
       setSelectedEditCampaignImageFile(null);
+      setSelectedEditCampaignGalleryFiles([]);
       setEditCampaignFormData({
         title: '',
+        briefOverview: '',
         description: '',
         goal: 0,
         category: '',
         status: 'active',
         coverImageUrl: '',
+        videoUrl: '',
+        galleryImages: [],
+        predefinedAmounts: [25, 50, 100],
+        startDate: '',
+        endDate: '',
+        tags: []
+      });
+    } catch (error) {
+      console.error("Error saving campaign draft:", error);
+      alert("Failed to save campaign draft. Please try again.");
+    }
+  };
+
+  const handleEditCampaignFormSubmit = async () => {
+    if (!editingCampaignForNewForm) return;
+    
+    try {
+      let coverImageUrl = editCampaignFormData.coverImageUrl;
+      
+      // Upload cover image file if one was selected
+      if (selectedEditCampaignImageFile) {
+        const uploadedUrl = await uploadFile(
+          selectedEditCampaignImageFile,
+          `campaigns/${editingCampaignForNewForm.id}/${Date.now()}_${selectedEditCampaignImageFile.name}`
+        );
+        if (uploadedUrl) {
+          coverImageUrl = uploadedUrl;
+        }
+      }
+      
+      // Upload gallery images if any were selected
+      let galleryImageUrls = [...editCampaignFormData.galleryImages];
+      if (selectedEditCampaignGalleryFiles.length > 0) {
+        for (const file of selectedEditCampaignGalleryFiles) {
+          const uploadedUrl = await uploadFile(
+            file,
+            `campaigns/${editingCampaignForNewForm.id}/gallery/${Date.now()}_${file.name}`
+          );
+          if (uploadedUrl) {
+            galleryImageUrls.push(uploadedUrl);
+          }
+        }
+      }
+      
+      const dataToSave: { [key: string]: any } = {
+        title: editCampaignFormData.title,
+        briefOverview: editCampaignFormData.briefOverview,
+        description: editCampaignFormData.description,
+        status: editCampaignFormData.status,
+        goal: Number(editCampaignFormData.goal),
+        tags: Array.isArray(editCampaignFormData.tags) ? editCampaignFormData.tags.filter(t => t.trim().length > 0) : [],
+        coverImageUrl: coverImageUrl || "",
+        videoUrl: editCampaignFormData.videoUrl || "",
+        galleryImages: galleryImageUrls,
+        category: editCampaignFormData.category || "",
+        configuration: {
+          ...DEFAULT_CAMPAIGN_CONFIG,
+          ...(editingCampaignForNewForm.configuration || {}),
+          predefinedAmounts: editCampaignFormData.predefinedAmounts.filter(a => a > 0),
+        },
+      };
+
+      if (editCampaignFormData.startDate) {
+        dataToSave.startDate = Timestamp.fromDate(new Date(editCampaignFormData.startDate));
+      }
+      if (editCampaignFormData.endDate) {
+        dataToSave.endDate = Timestamp.fromDate(new Date(editCampaignFormData.endDate));
+      }
+
+      const finalDataToSave = removeUndefined(dataToSave);
+      await updateWithImage(editingCampaignForNewForm.id, finalDataToSave);
+      
+      // Reset form and close
+      setIsEditCampaignFormOpen(false);
+      setEditingCampaignForNewForm(null);
+      setSelectedEditCampaignImageFile(null);
+      setSelectedEditCampaignGalleryFiles([]);
+      setEditCampaignFormData({
+        title: '',
+        briefOverview: '',
+        description: '',
+        goal: 0,
+        category: '',
+        status: 'active',
+        coverImageUrl: '',
+        videoUrl: '',
+        galleryImages: [],
+        predefinedAmounts: [25, 50, 100],
         startDate: '',
         endDate: '',
         tags: []
@@ -1588,13 +1830,18 @@ const CampaignManagement = ({
     setIsEditCampaignFormOpen(false);
     setEditingCampaignForNewForm(null);
     setSelectedEditCampaignImageFile(null);
+    setSelectedEditCampaignGalleryFiles([]);
     setEditCampaignFormData({
       title: '',
+      briefOverview: '',
       description: '',
       goal: 0,
       category: '',
       status: 'active',
       coverImageUrl: '',
+      videoUrl: '',
+      galleryImages: [],
+      predefinedAmounts: [25, 50, 100],
       startDate: '',
       endDate: '',
       tags: []
@@ -2123,9 +2370,11 @@ const CampaignManagement = ({
         campaignData={newCampaignFormData}
         setCampaignData={setNewCampaignFormData}
         onSubmit={handleNewCampaignFormSubmit}
+        onSaveDraft={handleNewCampaignFormSaveDraft}
         onCancel={handleNewCampaignFormCancel}
         formatCurrency={formatCurrency}
         onImageFileSelect={setSelectedNewCampaignImageFile}
+        onGalleryImagesSelect={setSelectedNewCampaignGalleryFiles}
       />
 
       {/* Edit CampaignForm Component */}
@@ -2136,9 +2385,11 @@ const CampaignManagement = ({
         campaignData={editCampaignFormData}
         setCampaignData={setEditCampaignFormData}
         onSubmit={handleEditCampaignFormSubmit}
+        onSaveDraft={handleEditCampaignFormSaveDraft}
         onCancel={handleEditCampaignFormCancel}
         formatCurrency={formatCurrency}
         onImageFileSelect={setSelectedEditCampaignImageFile}
+        onGalleryImagesSelect={setSelectedEditCampaignGalleryFiles}
       />
       
       {/* Delete Confirmation Dialog */}
