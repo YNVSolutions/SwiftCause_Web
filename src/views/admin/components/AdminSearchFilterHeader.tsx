@@ -85,11 +85,7 @@ export function AdminPageHeader({
 
       case 'date':
         return (
-          <Popover 
-            key={filter.key}
-            open={showCalendar[filter.key] || false} 
-            onOpenChange={(open) => onCalendarToggle?.(filter.key, open)}
-          >
+          <Popover key={filter.key}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
@@ -109,7 +105,6 @@ export function AdminPageHeader({
                 selected={value}
                 onSelect={(date) => {
                   onFilterChange(filter.key, date);
-                  onCalendarToggle?.(filter.key, false);
                 }}
               />
               <div className="p-3 border-t">
@@ -118,7 +113,6 @@ export function AdminPageHeader({
                   size="sm"
                   onClick={() => {
                     onFilterChange(filter.key, undefined);
-                    onCalendarToggle?.(filter.key, false);
                   }}
                   className="w-full"
                 >
