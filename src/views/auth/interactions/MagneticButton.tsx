@@ -86,7 +86,8 @@ export function MagneticButton({
         text-white shadow-lg hover:shadow-2xl
         transition-all duration-300
         bg-[length:200%_100%]
-        ${isHovered ? 'bg-right scale-105' : 'bg-left'}
+        disabled:opacity-100 disabled:from-green-600 disabled:via-emerald-600 disabled:to-green-600
+        ${isHovered && !disabled ? 'bg-right scale-105' : 'bg-left'}
         ${className}
       `}
       style={{
