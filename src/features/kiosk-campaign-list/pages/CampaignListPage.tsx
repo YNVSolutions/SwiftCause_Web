@@ -43,12 +43,12 @@ export const CampaignListPage: React.FC<CampaignListPageProps> = ({
     <div className="min-h-screen">
       <KioskHeader
         variant="hero"
-        title="Choose a cause"
+        title=""
         subtitle="Browse our verified campaigns and help make a difference today."
         logoSrc="/logo.png"
         logoAlt="SwiftCause"
-        brandPrimary="Swift"
-        brandAccent="Cause"
+        brandPrimary="Choose a "
+        brandAccent="cause"
         accentColor="#16A34A"
         actionButton={
           <button

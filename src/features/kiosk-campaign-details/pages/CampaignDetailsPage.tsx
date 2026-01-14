@@ -165,6 +165,7 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
           hideBrand
           title="Campaign Details"
           subtitle="Review the story and choose an amount to support this cause."
+          heroTitlePosition="inline"
           actionPosition="left"
           actionButton={
             <button
@@ -204,10 +205,15 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
 
           {/* Right Column (2/5): Fixed - Title + Description + Progress + Amounts + Video */}
           <div className="kiosk-sidecard col-span-2 space-y-6 rounded-3xl border border-green-100 bg-white/85 shadow-xl px-6 py-6 lg:sticky lg:top-0 h-fit">
-            {/* Title */}
-            <h1 className="text-3xl lg:text-4xl font-semibold text-[#0A0A0A] leading-tight">
-              {campaign.title}
-            </h1>
+          {/* Title */}
+          <h1 className="text-3xl lg:text-4xl font-semibold text-[#0A0A0A] leading-tight">
+            {campaign.title}
+          </h1>
+          {campaign.description && (
+            <p className="text-base text-gray-600 leading-relaxed">
+              {campaign.description}
+            </p>
+          )}
 
             {/* Progress Section */}
             <div className="space-y-2 rounded-2xl border border-green-100 bg-green-50/60 px-4 py-3">
@@ -276,6 +282,11 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
           <h1 className="text-2xl sm:text-3xl font-semibold text-[#0A0A0A] leading-tight mb-3">
             {campaign.title}
           </h1>
+          {campaign.description && (
+            <p className="text-base text-gray-600 leading-relaxed mb-4">
+              {campaign.description}
+            </p>
+          )}
 
           {/* Progress Section */}
           <div className="space-y-2 mb-6 rounded-2xl border border-green-100 bg-green-50/60 px-4 py-3">

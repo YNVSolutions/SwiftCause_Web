@@ -27,6 +27,8 @@ interface KioskHeaderProps {
   actionPosition?: 'left' | 'right';
   /** Hide logo + brand in hero variant */
   hideBrand?: boolean;
+  /** Title layout in hero variant */
+  heroTitlePosition?: 'stacked' | 'inline';
 }
 
 export const KioskHeader: React.FC<KioskHeaderProps> = ({
@@ -46,8 +48,12 @@ export const KioskHeader: React.FC<KioskHeaderProps> = ({
   actionButton,
   actionPosition = 'right',
   hideBrand = false,
+  heroTitlePosition = 'stacked',
 }) => {
   if (variant === 'hero') {
+    const isInlineTitle = heroTitlePosition === 'inline';
+    const hasTitle = Boolean(title);
+    const hasSubtitle = Boolean(subtitle);
     return (
       <header className="bg-transparent">
         <style>{`
@@ -61,28 +67,34 @@ export const KioskHeader: React.FC<KioskHeaderProps> = ({
             animation: kioskHeroFloat 7s ease-in-out infinite;
           }
           .kiosk-hero-shell.compact .kiosk-hero-content {
-            padding: 18px 20px;
+            padding: 12px 16px;
           }
           .kiosk-hero-shell.compact .kiosk-hero-title {
             font-size: 2rem;
           }
           .kiosk-hero-shell.compact .kiosk-hero-subtitle {
-            margin-top: 4px;
+            margin-top: 2px;
           }
           .kiosk-hero-shell.compact .kiosk-brand-title {
             font-size: 1.5rem;
           }
           .kiosk-hero-shell.compact .kiosk-logo-wrap {
-            height: 44px;
-            width: 44px;
-            border-radius: 14px;
+            height: 40px;
+            width: 40px;
+            border-radius: 12px;
           }
           .kiosk-hero-shell.compact .kiosk-hero-story {
-            margin-top: 10px;
-            height: 22px;
+            margin-top: 6px;
+            height: 16px;
           }
           .kiosk-hero-shell.tall .kiosk-hero-content {
-            padding: 26px 24px;
+            padding: 20px 20px;
+          }
+          .kiosk-hero-shell.inline-title .kiosk-hero-title {
+            font-size: 2rem;
+          }
+          .kiosk-hero-shell.inline-title .kiosk-hero-subtitle {
+            margin-top: 2px;
           }
           .kiosk-hero-border {
             position: absolute;
@@ -130,9 +142,9 @@ export const KioskHeader: React.FC<KioskHeaderProps> = ({
           }
           .kiosk-logo-wrap {
             position: relative;
-            height: 52px;
-            width: 52px;
-            border-radius: 16px;
+            height: 48px;
+            width: 48px;
+            border-radius: 14px;
             background: #FFFFFF;
             box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
             border: 1px solid #DCFCE7;
@@ -196,14 +208,14 @@ export const KioskHeader: React.FC<KioskHeaderProps> = ({
           .kiosk-hero-subtitle {
             font-size: 1rem;
             line-height: 1.5;
-            margin-top: 8px;
+            margin-top: 4px;
             color: #394150;
             max-width: 640px;
           }
           .kiosk-hero-story {
             position: relative;
-            margin-top: 14px;
-            height: 26px;
+            margin-top: 8px;
+            height: 18px;
             max-width: 360px;
           }
           .kiosk-story-spark {
@@ -261,61 +273,98 @@ export const KioskHeader: React.FC<KioskHeaderProps> = ({
             }
           }
         `}</style>
-        <div className={`${heroWidth === 'wide' ? 'max-w-[92%]' : 'max-w-5/6'} mx-auto px-6 lg:px-12 xl:px-16 py-6`}>
-          <div className={`kiosk-hero-shell${compact ? ' compact' : ''}${heroSize === 'tall' ? ' tall' : ''}`}>
+        <div className={`${heroWidth === 'wide' ? 'max-w-[92%]' : 'max-w-5/6'} mx-auto px-6 lg:px-12 xl:px-16 py-3`}>
+          <div className={`kiosk-hero-shell${compact ? ' compact' : ''}${heroSize === 'tall' ? ' tall' : ''}${isInlineTitle ? ' inline-title' : ''}`}>
             <div className="kiosk-hero-border" />
-            <div className={`kiosk-hero-content ${compact ? '' : 'px-6 py-6 sm:px-8 sm:py-7'}`}>
-              <div className="flex items-center justify-between gap-4">
-                {actionPosition === 'left' && actionButton ? (
-                  <div className="shrink-0 self-start sm:self-center">
-                    {actionButton}
+            <div className={`kiosk-hero-content ${compact ? '' : 'px-5 py-3 sm:px-6 sm:py-4'}`}>
+              {isInlineTitle ? (
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-4">
+                    {actionPosition === 'left' && actionButton ? (
+                      <div className="shrink-0">
+                        {actionButton}
+                      </div>
+                    ) : null}
+                    <div>
+                      {hasTitle ? (
+                        <h1 className="kiosk-hero-title text-transparent bg-clip-text bg-linear-to-r from-green-700 via-emerald-600 to-green-500">
+                          <span className="kiosk-hero-title-text">{title}</span>
+                        </h1>
+                      ) : null}
+                      {hasSubtitle ? <p className="kiosk-hero-subtitle">{subtitle}</p> : null}
+                    </div>
                   </div>
-                ) : null}
-                {!hideBrand ? (
-                  <div className="kiosk-brand">
-                    <div className="kiosk-logo-wrap">
-                      <img src={logoSrc} alt={logoAlt} className="h-10 w-10" />
-                    </div>
-                    <div className="kiosk-brand-title text-2xl sm:text-3xl">
-                      <span className="kiosk-brand-gradient">
-                        {brandPrimary}
-                        {brandAccent}
-                      </span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex-1" />
-                )}
-                {actionPosition === 'right' ? (
-                  actionButton ? (
-                    <div className="shrink-0 self-start sm:self-center">
-                      {actionButton}
-                    </div>
+                  {actionPosition === 'right' ? (
+                    actionButton ? (
+                      <div className="shrink-0">
+                        {actionButton}
+                      </div>
+                    ) : (
+                      <div className="w-11 h-11" />
+                    )
                   ) : (
                     <div className="w-11 h-11" />
-                  )
-                ) : (
-                  <div className="w-11 h-11" />
-                )}
-              </div>
-              <div className="mt-5">
-                <h1 className="kiosk-hero-title text-transparent bg-clip-text bg-linear-to-r from-green-700 via-emerald-600 to-green-500">
-                  <span className="kiosk-hero-title-text">{title}</span>
-                </h1>
-                {subtitle && <p className="kiosk-hero-subtitle">{subtitle}</p>}
-                <div className="kiosk-hero-story" aria-hidden="true">
-                  <div className="kiosk-story-spark" />
-                  <svg className="kiosk-story-heart" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 21s-6.7-4.1-9.2-7.6C.7 10.8 2 7.2 5.5 6.2c2-.6 3.7.2 4.9 1.6 1.2-1.4 2.9-2.2 4.9-1.6 3.5 1 4.8 4.6 2.7 7.2C18.7 16.9 12 21 12 21z" />
-                  </svg>
-                  <svg className="kiosk-story-heart second" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 21s-6.7-4.1-9.2-7.6C.7 10.8 2 7.2 5.5 6.2c2-.6 3.7.2 4.9 1.6 1.2-1.4 2.9-2.2 4.9-1.6 3.5 1 4.8 4.6 2.7 7.2C18.7 16.9 12 21 12 21z" />
-                  </svg>
-                  <svg className="kiosk-story-heart third" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 21s-6.7-4.1-9.2-7.6C.7 10.8 2 7.2 5.5 6.2c2-.6 3.7.2 4.9 1.6 1.2-1.4 2.9-2.2 4.9-1.6 3.5 1 4.8 4.6 2.7 7.2C18.7 16.9 12 21 12 21z" />
-                  </svg>
+                  )}
                 </div>
-              </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between gap-4">
+                    {actionPosition === 'left' && actionButton ? (
+                      <div className="shrink-0 self-start sm:self-center">
+                        {actionButton}
+                      </div>
+                    ) : null}
+                    {!hideBrand ? (
+                      <div className="kiosk-brand">
+                        <div className="kiosk-logo-wrap">
+                          <img src={logoSrc} alt={logoAlt} className="h-10 w-10" />
+                        </div>
+                        <div className="kiosk-brand-title text-2xl sm:text-3xl">
+                          <span className="kiosk-brand-gradient">
+                            {brandPrimary}
+                            {brandAccent}
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex-1" />
+                    )}
+                    {actionPosition === 'right' ? (
+                      actionButton ? (
+                        <div className="shrink-0 self-start sm:self-center">
+                          {actionButton}
+                        </div>
+                      ) : (
+                        <div className="w-11 h-11" />
+                      )
+                    ) : (
+                      <div className="w-11 h-11" />
+                    )}
+                  </div>
+                  {(hasTitle || hasSubtitle) ? (
+                    <div className={hasTitle ? 'mt-3' : 'mt-2'}>
+                      {hasTitle ? (
+                        <h1 className="kiosk-hero-title text-transparent bg-clip-text bg-linear-to-r from-green-700 via-emerald-600 to-green-500">
+                          <span className="kiosk-hero-title-text">{title}</span>
+                        </h1>
+                      ) : null}
+                      {hasSubtitle ? <p className="kiosk-hero-subtitle">{subtitle}</p> : null}
+                    </div>
+                  ) : null}
+                  <div className="kiosk-hero-story" aria-hidden="true">
+                    <div className="kiosk-story-spark" />
+                    <svg className="kiosk-story-heart" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 21s-6.7-4.1-9.2-7.6C.7 10.8 2 7.2 5.5 6.2c2-.6 3.7.2 4.9 1.6 1.2-1.4 2.9-2.2 4.9-1.6 3.5 1 4.8 4.6 2.7 7.2C18.7 16.9 12 21 12 21z" />
+                    </svg>
+                    <svg className="kiosk-story-heart second" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 21s-6.7-4.1-9.2-7.6C.7 10.8 2 7.2 5.5 6.2c2-.6 3.7.2 4.9 1.6 1.2-1.4 2.9-2.2 4.9-1.6 3.5 1 4.8 4.6 2.7 7.2C18.7 16.9 12 21 12 21z" />
+                    </svg>
+                    <svg className="kiosk-story-heart third" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 21s-6.7-4.1-9.2-7.6C.7 10.8 2 7.2 5.5 6.2c2-.6 3.7.2 4.9 1.6 1.2-1.4 2.9-2.2 4.9-1.6 3.5 1 4.8 4.6 2.7 7.2C18.7 16.9 12 21 12 21z" />
+                    </svg>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -324,14 +373,14 @@ export const KioskHeader: React.FC<KioskHeaderProps> = ({
   }
 
   return (
-    <div className="bg-white border-b border-gray-100 px-2 sm:px-4 py-3 sm:py-4 shrink-0">
+    <div className="bg-white border-b border-gray-100 px-2 sm:px-4 py-2 sm:py-2 shrink-0">
       <div className="w-full sm:w-5/6 mx-auto flex items-center justify-between relative">
         {/* Left: Back button with text */}
         <div className="flex items-center z-10">
           {onBack ? (
             <button
               onClick={onBack}
-              className="flex items-center gap-1 sm:gap-2 p-1 sm:p-2 rounded-lg hover:bg-gray-100 transition-colors text-[#0A0A0A]"
+              className="flex items-center gap-1 sm:gap-2 p-1 sm:p-1.5 rounded-lg hover:bg-gray-100 transition-colors text-[#0A0A0A]"
             >
               <ArrowLeft className="w-5 h-5" />
               <span className="text-xs sm:text-sm font-medium hidden sm:inline">{backText}</span>
