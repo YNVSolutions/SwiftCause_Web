@@ -88,6 +88,8 @@ import {
 import { AdminSearchFilterHeader, AdminSearchFilterConfig } from "./components/AdminSearchFilterHeader";
 import { SortableTableHeader } from "./components/SortableTableHeader";
 import { useTableSort } from "../../shared/lib/hooks/useTableSort";
+import { CampaignForm, CampaignFormData } from "./components/CampaignForm";
+import { Campaign } from "../../shared/types";
 
 interface CampaignDialogProps {
   open: boolean;
@@ -1203,6 +1205,39 @@ const CampaignManagement = ({
     null
   );
 
+  // New CampaignForm state
+  const [isNewCampaignFormOpen, setIsNewCampaignFormOpen] = useState(false);
+  const [isEditCampaignFormOpen, setIsEditCampaignFormOpen] = useState(false);
+  const [editingCampaignForNewForm, setEditingCampaignForNewForm] = useState<Campaign | null>(null);
+  
+  // Separate state for create and edit
+  const [newCampaignFormData, setNewCampaignFormData] = useState<CampaignFormData>({
+    title: '',
+    description: '',
+    goal: 0,
+    category: '',
+    status: 'active',
+    coverImageUrl: '',
+    startDate: '',
+    endDate: '',
+    tags: []
+  });
+  
+  const [editCampaignFormData, setEditCampaignFormData] = useState<CampaignFormData>({
+    title: '',
+    description: '',
+    goal: 0,
+    category: '',
+    status: 'active',
+    coverImageUrl: '',
+    startDate: '',
+    endDate: '',
+    tags: []
+  });
+  
+  const [selectedNewCampaignImageFile, setSelectedNewCampaignImageFile] = useState<File | null>(null);
+  const [selectedEditCampaignImageFile, setSelectedEditCampaignImageFile] = useState<File | null>(null);
+
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
@@ -1212,7 +1247,7 @@ const CampaignManagement = ({
   const [confirmDeleteInput, setConfirmDeleteInput] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const { campaigns, updateWithImage, createWithImage, remove, loading } =
+  const { campaigns, updateWithImage, createWithImage, remove, loading, uploadFile } =
     useCampaignManagement(userSession.user.organizationId || "");
 
   const { organization, loading: orgLoading } = useOrganization(
@@ -1273,8 +1308,25 @@ const CampaignManagement = ({
   };
 
   const handleEditClick = (campaign: DocumentData) => {
-    setEditingCampaign(campaign);
-    setIsEditDialogOpen(true);
+    // Populate form data from campaign
+    setEditCampaignFormData({
+      title: campaign.title || '',
+      description: campaign.description || '',
+      goal: campaign.goal || 0,
+      category: campaign.category || '',
+      status: campaign.status || 'active',
+      coverImageUrl: campaign.coverImageUrl || '',
+      startDate: campaign.startDate?.seconds
+        ? new Date(campaign.startDate.seconds * 1000).toISOString().split('T')[0]
+        : '',
+      endDate: campaign.endDate?.seconds
+        ? new Date(campaign.endDate.seconds * 1000).toISOString().split('T')[0]
+        : '',
+      tags: Array.isArray(campaign.tags) ? campaign.tags : []
+    });
+    
+    setEditingCampaignForNewForm(campaign as Campaign);
+    setIsEditCampaignFormOpen(true);
   };
 
   const handleSave = async (
@@ -1396,6 +1448,166 @@ const CampaignManagement = ({
       setIsAddDialogOpen(false);
       setEditingCampaign(null);
     }
+  };
+
+  // New handlers for CampaignForm
+  const handleNewCampaignFormSubmit = async () => {
+    try {
+      let coverImageUrl = newCampaignFormData.coverImageUrl;
+      
+      // Upload image file if one was selected
+      if (selectedNewCampaignImageFile) {
+        const uploadedUrl = await uploadFile(
+          selectedNewCampaignImageFile,
+          `campaigns/new/${Date.now()}_${selectedNewCampaignImageFile.name}`
+        );
+        if (uploadedUrl) {
+          coverImageUrl = uploadedUrl;
+        }
+      }
+      
+      const dataToSave: { [key: string]: any } = {
+        title: newCampaignFormData.title,
+        description: newCampaignFormData.description,
+        status: newCampaignFormData.status,
+        goal: Number(newCampaignFormData.goal),
+        tags: Array.isArray(newCampaignFormData.tags) ? newCampaignFormData.tags : [],
+        coverImageUrl: coverImageUrl || "",
+        category: newCampaignFormData.category || "",
+        organizationId: userSession.user.organizationId || "",
+        assignedKiosks: [],
+        isGlobal: false,
+        configuration: DEFAULT_CAMPAIGN_CONFIG,
+      };
+
+      if (newCampaignFormData.startDate) {
+        dataToSave.startDate = Timestamp.fromDate(new Date(newCampaignFormData.startDate));
+      }
+      if (newCampaignFormData.endDate) {
+        dataToSave.endDate = Timestamp.fromDate(new Date(newCampaignFormData.endDate));
+      }
+
+      const finalDataToSave = removeUndefined(dataToSave);
+      await createWithImage(finalDataToSave);
+      
+      // Reset form and close
+      setIsNewCampaignFormOpen(false);
+      setSelectedNewCampaignImageFile(null);
+      setNewCampaignFormData({
+        title: '',
+        description: '',
+        goal: 0,
+        category: '',
+        status: 'active',
+        coverImageUrl: '',
+        startDate: '',
+        endDate: '',
+        tags: []
+      });
+    } catch (error) {
+      console.error("Error creating campaign:", error);
+      alert("Failed to create campaign. Please try again.");
+    }
+  };
+
+  const handleNewCampaignFormCancel = () => {
+    setIsNewCampaignFormOpen(false);
+    setSelectedNewCampaignImageFile(null);
+    setNewCampaignFormData({
+      title: '',
+      description: '',
+      goal: 0,
+      category: '',
+      status: 'active',
+      coverImageUrl: '',
+      startDate: '',
+      endDate: '',
+      tags: []
+    });
+  };
+
+  const handleEditCampaignFormSubmit = async () => {
+    if (!editingCampaignForNewForm) return;
+    
+    try {
+      let coverImageUrl = editCampaignFormData.coverImageUrl;
+      
+      // Upload image file if one was selected
+      if (selectedEditCampaignImageFile) {
+        const uploadedUrl = await uploadFile(
+          selectedEditCampaignImageFile,
+          `campaigns/${editingCampaignForNewForm.id}/${Date.now()}_${selectedEditCampaignImageFile.name}`
+        );
+        if (uploadedUrl) {
+          coverImageUrl = uploadedUrl;
+        }
+      }
+      
+      const dataToSave: { [key: string]: any } = {
+        title: editCampaignFormData.title,
+        description: editCampaignFormData.description,
+        status: editCampaignFormData.status,
+        goal: Number(editCampaignFormData.goal),
+        tags: Array.isArray(editCampaignFormData.tags) ? editCampaignFormData.tags : [],
+        coverImageUrl: coverImageUrl || "",
+        category: editCampaignFormData.category || "",
+      };
+
+      if (editCampaignFormData.startDate) {
+        dataToSave.startDate = Timestamp.fromDate(new Date(editCampaignFormData.startDate));
+      }
+      if (editCampaignFormData.endDate) {
+        dataToSave.endDate = Timestamp.fromDate(new Date(editCampaignFormData.endDate));
+      }
+
+      const finalDataToSave = removeUndefined(dataToSave);
+      await updateWithImage(editingCampaignForNewForm.id, finalDataToSave);
+      
+      // Reset form and close
+      setIsEditCampaignFormOpen(false);
+      setEditingCampaignForNewForm(null);
+      setSelectedEditCampaignImageFile(null);
+      setEditCampaignFormData({
+        title: '',
+        description: '',
+        goal: 0,
+        category: '',
+        status: 'active',
+        coverImageUrl: '',
+        startDate: '',
+        endDate: '',
+        tags: []
+      });
+    } catch (error) {
+      console.error("Error updating campaign:", error);
+      alert("Failed to update campaign. Please try again.");
+    }
+  };
+
+  const handleEditCampaignFormCancel = () => {
+    setIsEditCampaignFormOpen(false);
+    setEditingCampaignForNewForm(null);
+    setSelectedEditCampaignImageFile(null);
+    setEditCampaignFormData({
+      title: '',
+      description: '',
+      goal: 0,
+      category: '',
+      status: 'active',
+      coverImageUrl: '',
+      startDate: '',
+      endDate: '',
+      tags: []
+    });
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
   };
 
   const getStatusColor = (status: string) => {
@@ -1552,7 +1764,7 @@ const CampaignManagement = ({
                   if (!isStripeOnboarded) {
                     setShowOnboardingDialog(true);
                   } else {
-                    setIsAddDialogOpen(true);
+                    setIsNewCampaignFormOpen(true);
                   }
                 }}
               >
@@ -1902,6 +2114,33 @@ const CampaignManagement = ({
       {/* Dialogs remain after main content */}
       <CampaignDialog open={isEditDialogOpen} onOpenChange={open => { setIsEditDialogOpen(open); if(!open) setEditingCampaign(null); }} campaign={editingCampaign} organizationId={userSession.user.organizationId || ""} onSave={handleSave} />
       <CampaignDialog open={isAddDialogOpen} onOpenChange={open => { setIsAddDialogOpen(open); }} organizationId={userSession.user.organizationId || ""} onSave={(data, isNew) => handleSave(data, isNew, undefined)} />
+      
+      {/* New CampaignForm Component */}
+      <CampaignForm
+        open={isNewCampaignFormOpen}
+        onOpenChange={setIsNewCampaignFormOpen}
+        editingCampaign={null}
+        campaignData={newCampaignFormData}
+        setCampaignData={setNewCampaignFormData}
+        onSubmit={handleNewCampaignFormSubmit}
+        onCancel={handleNewCampaignFormCancel}
+        formatCurrency={formatCurrency}
+        onImageFileSelect={setSelectedNewCampaignImageFile}
+      />
+
+      {/* Edit CampaignForm Component */}
+      <CampaignForm
+        open={isEditCampaignFormOpen}
+        onOpenChange={setIsEditCampaignFormOpen}
+        editingCampaign={editingCampaignForNewForm}
+        campaignData={editCampaignFormData}
+        setCampaignData={setEditCampaignFormData}
+        onSubmit={handleEditCampaignFormSubmit}
+        onCancel={handleEditCampaignFormCancel}
+        formatCurrency={formatCurrency}
+        onImageFileSelect={setSelectedEditCampaignImageFile}
+      />
+      
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[400px] p-0 border-0 shadow-2xl">
