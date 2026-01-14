@@ -24,7 +24,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ loading, error, onSubmit }) =
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="border p-3 rounded-md bg-white shadow-sm">
+      <div className="border border-green-200 p-3 rounded-xl bg-white shadow-sm">
         <CardElement options={{
           style: {
             base: {
@@ -41,7 +41,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ loading, error, onSubmit }) =
           },
         }} />
       </div>
-      <Button type="submit" disabled={!stripe || loading} className="w-full">
+      <Button type="submit" disabled={!stripe || loading} className="w-full min-w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white">
         {loading ? (
           <span className="flex items-center justify-center">
             <svg className="animate-spin h-5 w-5 mr-3 text-white" viewBox="0 0 24 24">

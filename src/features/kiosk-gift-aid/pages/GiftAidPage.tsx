@@ -52,7 +52,7 @@ export const GiftAidPage: React.FC<GiftAidPageProps> = ({
       <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full bg-green-50 blur-3xl opacity-90" />
 
       <div className="relative z-10">
-        <header className="max-w-5/6 mx-auto px-6 lg:px-12 xl:px-16 py-4">
+        <header className="w-full max-w-6xl mx-auto px-6 lg:px-12 xl:px-16 py-4">
           <div className="flex items-start gap-4">
             <button
               onClick={onBack}
