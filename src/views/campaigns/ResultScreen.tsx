@@ -5,9 +5,10 @@ interface ResultScreenProps {
   result: PaymentResult;
   onEmailConfirmation?: () => void;
   onReturnToStart: () => void;
+  onRetry?: () => void;
 }
 
-export function ResultScreen({ result, onEmailConfirmation, onReturnToStart }: ResultScreenProps) {
+export function ResultScreen({ result, onEmailConfirmation, onReturnToStart, onRetry }: ResultScreenProps) {
   if (result.success) {
     return (
       <div className="min-h-screen flex flex-col bg-linear-to-b from-green-50 via-white to-emerald-50/70 relative overflow-hidden">
@@ -170,7 +171,7 @@ export function ResultScreen({ result, onEmailConfirmation, onReturnToStart }: R
               {/* Action Buttons */}
               <div className="space-y-4">
                 <button
-                  onClick={onReturnToStart}
+                  onClick={onRetry || onReturnToStart}
                   className="w-full max-w-md mx-auto h-14 rounded-xl font-medium text-white flex items-center justify-center gap-2 transition-all bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-200/70"
                 >
                   <RefreshCw className="w-5 h-5" />

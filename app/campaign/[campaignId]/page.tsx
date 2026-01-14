@@ -7,6 +7,7 @@ import { Campaign, GiftAidDetails } from '@/shared/types';
 import { getCampaignById } from '@/shared/api/firestoreService';
 import { CampaignDetailsContainer } from '@/features/kiosk-campaign-details';
 import { GiftAidPage } from '@/features/kiosk-gift-aid';
+import { KioskLoading } from '@/shared/ui/KioskLoading';
 
 export default function CampaignPage({
   params,
@@ -101,6 +102,7 @@ export default function CampaignPage({
     };
     sessionStorage.setItem('donation', JSON.stringify(donation));
     sessionStorage.setItem('giftAidData', JSON.stringify(details));
+    sessionStorage.setItem('paymentBackPath', `${window.location.pathname}${window.location.search}`);
     router.push(`/payment/${campaignId}`);
   };
 
@@ -116,8 +118,18 @@ export default function CampaignPage({
       donorName: '',
     };
     sessionStorage.setItem('donation', JSON.stringify(donation));
+    sessionStorage.setItem('paymentBackPath', `${window.location.pathname}${window.location.search}`);
     router.push(`/payment/${campaignId}`);
   };
+
+  if (showGiftAid && loading) {
+    return (
+      <KioskLoading
+        message="Loading Gift Aid details..."
+        submessage="Preparing your Gift Aid options."
+      />
+    );
+  }
 
   // Show Gift Aid page (with sliding panels)
   if (showGiftAid && campaign) {

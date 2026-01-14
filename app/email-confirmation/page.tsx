@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { EmailConfirmationScreen } from '@/views/campaigns/EmailConfirmationScreen'
 import { useAuth } from '@/shared/lib/auth-provider'
 import { useState, useEffect, Suspense } from 'react'
+import { KioskLoading } from '@/shared/ui/KioskLoading'
 
 function EmailConfirmationContent() {
   const router = useRouter()
@@ -43,12 +44,7 @@ function EmailConfirmationContent() {
 
   if (!transactionId) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-green-50 via-white to-emerald-50/70 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto" />
-          <p className="text-gray-900 text-lg font-medium">Loading...</p>
-        </div>
-      </div>
+      <KioskLoading />
     );
   }
 
@@ -64,12 +60,7 @@ export default function EmailConfirmationPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-gradient-to-b from-green-50 via-white to-emerald-50/70 flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto" />
-            <p className="text-gray-900 text-lg font-medium">Loading...</p>
-          </div>
-        </div>
+        <KioskLoading />
       }
     >
       <EmailConfirmationContent />

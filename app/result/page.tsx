@@ -5,6 +5,7 @@ import { ResultScreen } from '@/views/campaigns/ResultScreen'
 import { useAuth } from '@/shared/lib/auth-provider'
 import { useState, useEffect, Suspense } from 'react'
 import { PaymentResult } from '@/shared/types'
+import { KioskLoading } from '@/shared/ui/KioskLoading'
 
 function ResultContent() {
   const router = useRouter()
@@ -46,14 +47,26 @@ function ResultContent() {
     }
   }
 
+  const handleRetry = () => {
+    try {
+      const storedDonation = sessionStorage.getItem('donation')
+      if (storedDonation) {
+        const donation = JSON.parse(storedDonation) as { campaignId?: string }
+        if (donation?.campaignId) {
+          router.push(`/payment/${donation.campaignId}`)
+          return
+        }
+      }
+    } catch {
+      // Fall through to campaign list
+    }
+
+    router.push('/campaigns')
+  }
+
   if (!paymentResult) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-green-50 via-white to-emerald-50/70 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto" />
-          <p className="text-gray-900 text-lg font-medium">Loading result...</p>
-        </div>
-      </div>
+      <KioskLoading message="Loading result..." />
     );
   }
 
@@ -62,6 +75,7 @@ function ResultContent() {
       result={paymentResult}
       onEmailConfirmation={paymentResult.success ? handleEmailConfirmation : undefined}
       onReturnToStart={handleReturnToStart}
+      onRetry={paymentResult.success ? undefined : handleRetry}
     />
   )
 }
@@ -69,12 +83,7 @@ function ResultContent() {
 export default function ResultPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-b from-green-50 via-white to-emerald-50/70 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto" />
-          <p className="text-gray-900 text-lg font-medium">Loading...</p>
-        </div>
-      </div>
+      <KioskLoading />
     }>
       <ResultContent />
     </Suspense>

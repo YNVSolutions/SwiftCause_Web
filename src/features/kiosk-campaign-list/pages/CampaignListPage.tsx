@@ -28,7 +28,6 @@ export const CampaignListPage: React.FC<CampaignListPageProps> = ({
 }) => {
   const { campaigns, loading, error, layoutMode } = state;
   const currency = kioskSession?.organizationCurrency || 'GBP';
-
   // Loading state
   if (loading) {
     return <LoadingState />;
