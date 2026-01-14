@@ -91,13 +91,6 @@ export function EmailConfirmationScreen({ transactionId, onComplete }: EmailConf
       <div className="absolute top-1/3 -left-24 h-72 w-72 rounded-full bg-emerald-100 blur-3xl opacity-60" />
       <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full bg-green-50 blur-3xl opacity-90" />
 
-      <header className="relative z-10 max-w-6xl mx-auto px-6 lg:px-12 xl:px-16 py-4">
-        <div className="text-center">
-          <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">Send Receipt</h1>
-          <p className="text-sm text-gray-600">Email confirmation for your donation.</p>
-        </div>
-      </header>
-
       <main className="relative z-10 flex-1 flex items-center justify-center px-4 pb-8">
         <div className="w-full max-w-xl">
           <div className="bg-white/90 rounded-3xl border border-green-100 shadow-xl overflow-hidden">

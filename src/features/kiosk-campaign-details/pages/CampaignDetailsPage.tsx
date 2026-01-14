@@ -1,6 +1,5 @@
 import React from 'react';
 import { formatCurrency } from '@/shared/lib/currencyFormatter';
-import { KioskHeader } from '@/shared/components/KioskHeader';
 import { ArrowLeft } from 'lucide-react';
 import { CampaignDetailsPageProps } from '../types';
 import {
@@ -158,26 +157,31 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
       <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full bg-green-50 blur-3xl opacity-90" />
 
       <div className="relative z-10 flex flex-col min-h-screen">
-        <KioskHeader
-          variant="hero"
-          compact
-          heroWidth="wide"
-          hideBrand
-          title="Campaign Details"
-          subtitle="Review the story and choose an amount to support this cause."
-          heroTitlePosition="inline"
-          actionPosition="left"
-          actionButton={
-            <button
-              onClick={onBack}
-              title="Back"
-              aria-label="Back"
-              className="flex items-center justify-center h-10 w-10 rounded-lg border border-green-200 bg-white/90 text-green-700 shadow-sm hover:bg-green-50 hover:border-green-300 transition-colors"
-            >
-              <ArrowLeft className="h-4.5 w-4.5" strokeWidth={2.4} />
-            </button>
-          }
-        />
+        <header className="w-full pt-5">
+          <div className="w-5/6 mx-auto px-4 lg:px-0">
+            <div className="rounded-3xl px-6 py-4">
+              <div className="flex items-start gap-4">
+                <button
+                  onClick={onBack}
+                  title="Back"
+                  aria-label="Back"
+                  className="flex items-center justify-center h-10 w-10 rounded-lg border border-green-200 bg-white/90 text-green-700 shadow-sm hover:bg-green-50 hover:border-green-300 transition-colors"
+                >
+                  <ArrowLeft className="h-4.5 w-4.5" strokeWidth={2.4} />
+                </button>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.2em] text-green-600 font-semibold">
+                    Campaign Details
+                  </p>
+                  <h1 className="text-2xl sm:text-3xl font-semibold text-[#0A0A0A] leading-tight mt-1">
+                    Review the story and choose an amount to support this cause.
+                  </h1>
+                </div>
+              </div>
+              <div className="h-px bg-green-100 mt-4" />
+            </div>
+          </div>
+        </header>
 
       {/* Large screens: Two-column layout */}
       <main className="hidden lg:flex w-5/6 mx-auto py-8 flex-1 overflow-y-auto">
