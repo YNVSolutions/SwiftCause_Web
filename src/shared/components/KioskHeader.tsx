@@ -9,6 +9,12 @@ interface KioskHeaderProps {
   subtitle?: string;
   /** Visual style for the header */
   variant?: 'standard' | 'hero';
+  /** Reduce hero header height */
+  compact?: boolean;
+  /** Increase hero header height */
+  heroSize?: 'normal' | 'tall';
+  /** Width for hero container */
+  heroWidth?: 'normal' | 'wide';
   /** Logo options for hero */
   logoSrc?: string;
   logoAlt?: string;
@@ -17,6 +23,10 @@ interface KioskHeaderProps {
   accentColor?: string;
   /** Optional right-side action (e.g., logout icon button) */
   actionButton?: React.ReactNode;
+  /** Position for action button in hero variant */
+  actionPosition?: 'left' | 'right';
+  /** Hide logo + brand in hero variant */
+  hideBrand?: boolean;
 }
 
 export const KioskHeader: React.FC<KioskHeaderProps> = ({
@@ -25,12 +35,17 @@ export const KioskHeader: React.FC<KioskHeaderProps> = ({
   onBack,
   subtitle,
   variant = 'standard',
+  compact = false,
+  heroSize = 'normal',
+  heroWidth = 'normal',
   logoSrc = '/logo.png',
   logoAlt = 'SwiftCause',
   brandPrimary = 'Swift',
   brandAccent = 'Cause',
   accentColor = '#0DA573',
   actionButton,
+  actionPosition = 'right',
+  hideBrand = false,
 }) => {
   if (variant === 'hero') {
     return (
@@ -44,6 +59,30 @@ export const KioskHeader: React.FC<KioskHeaderProps> = ({
             background: #FFFFFF;
             box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
             animation: kioskHeroFloat 7s ease-in-out infinite;
+          }
+          .kiosk-hero-shell.compact .kiosk-hero-content {
+            padding: 18px 20px;
+          }
+          .kiosk-hero-shell.compact .kiosk-hero-title {
+            font-size: 2rem;
+          }
+          .kiosk-hero-shell.compact .kiosk-hero-subtitle {
+            margin-top: 4px;
+          }
+          .kiosk-hero-shell.compact .kiosk-brand-title {
+            font-size: 1.5rem;
+          }
+          .kiosk-hero-shell.compact .kiosk-logo-wrap {
+            height: 44px;
+            width: 44px;
+            border-radius: 14px;
+          }
+          .kiosk-hero-shell.compact .kiosk-hero-story {
+            margin-top: 10px;
+            height: 22px;
+          }
+          .kiosk-hero-shell.tall .kiosk-hero-content {
+            padding: 26px 24px;
           }
           .kiosk-hero-border {
             position: absolute;
@@ -222,26 +261,39 @@ export const KioskHeader: React.FC<KioskHeaderProps> = ({
             }
           }
         `}</style>
-        <div className="max-w-5/6 mx-auto px-6 lg:px-12 xl:px-16 py-6">
-          <div className="kiosk-hero-shell">
+        <div className={`${heroWidth === 'wide' ? 'max-w-[92%]' : 'max-w-5/6'} mx-auto px-6 lg:px-12 xl:px-16 py-6`}>
+          <div className={`kiosk-hero-shell${compact ? ' compact' : ''}${heroSize === 'tall' ? ' tall' : ''}`}>
             <div className="kiosk-hero-border" />
-            <div className="kiosk-hero-content px-6 py-6 sm:px-8 sm:py-7">
+            <div className={`kiosk-hero-content ${compact ? '' : 'px-6 py-6 sm:px-8 sm:py-7'}`}>
               <div className="flex items-center justify-between gap-4">
-                <div className="kiosk-brand">
-                  <div className="kiosk-logo-wrap">
-                    <img src={logoSrc} alt={logoAlt} className="h-10 w-10" />
-                  </div>
-                  <div className="kiosk-brand-title text-2xl sm:text-3xl">
-                    <span className="kiosk-brand-gradient">
-                      {brandPrimary}
-                      {brandAccent}
-                    </span>
-                  </div>
-                </div>
-                {actionButton ? (
+                {actionPosition === 'left' && actionButton ? (
                   <div className="shrink-0 self-start sm:self-center">
                     {actionButton}
                   </div>
+                ) : null}
+                {!hideBrand ? (
+                  <div className="kiosk-brand">
+                    <div className="kiosk-logo-wrap">
+                      <img src={logoSrc} alt={logoAlt} className="h-10 w-10" />
+                    </div>
+                    <div className="kiosk-brand-title text-2xl sm:text-3xl">
+                      <span className="kiosk-brand-gradient">
+                        {brandPrimary}
+                        {brandAccent}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex-1" />
+                )}
+                {actionPosition === 'right' ? (
+                  actionButton ? (
+                    <div className="shrink-0 self-start sm:self-center">
+                      {actionButton}
+                    </div>
+                  ) : (
+                    <div className="w-11 h-11" />
+                  )
                 ) : (
                   <div className="w-11 h-11" />
                 )}
