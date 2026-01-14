@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Badge } from '../../shared/ui/badge';
 import { CardContent, CardDescription, CardHeader, CardTitle } from '../../shared/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shared/ui/tabs';
@@ -8,7 +8,6 @@ import {
   Heart,
   Users,
   Globe,
-  DollarSign,
   Monitor,
   ArrowLeft,
   UserCog,
@@ -22,6 +21,7 @@ import { DynamicGradientMesh } from './backgrounds/DynamicGradientMesh';
 import { ParticleField } from './backgrounds/ParticleField';
 import { GlassMorphCard } from './cards/GlassMorphCard';
 import { LiquidFillProgress } from './cards/LiquidFillProgress';
+import { FeaturedCampaign } from './components/FeaturedCampaign';
 
 interface LoginScreenProps {
   onLogin: (role: UserRole, sessionData?: KioskSession | AdminSession) => void;
@@ -34,32 +34,10 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
   const [formProgress, setFormProgress] = useState(0);
 
   // Mock real-time statistics
-  const [stats, setStats] = useState({
-    totalRaised: 2847650,
+  const [stats] = useState({
     activeCampaigns: 42,
-    totalDonors: 15847,
     activeKiosks: 28,
   });
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setStats(prev => ({
-        ...prev,
-        totalRaised: prev.totalRaised + Math.floor(Math.random() * 100),
-        totalDonors: prev.totalDonors + Math.floor(Math.random() * 3)
-      }));
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-GB', {
-      style: 'currency',
-      currency: 'GBP',
-      minimumFractionDigits: 0
-    }).format(amount);
-  };
 
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat('en-GB').format(num);
@@ -114,71 +92,24 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
               Comprehensive donation management platform trusted by organizations worldwide.
             </p>
 
-            {/* Animated stats cards */}
-            <div className="grid grid-cols-2 gap-4 mb-12 animate-fade-in-delay-2">
-              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-md border border-green-100 hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer group">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="h-6 w-6 text-green-600 transform group-hover:scale-110 transition-transform">
-                    <DollarSign className="h-6 w-6" />
-                  </div>
-                  <Badge variant="secondary" className="text-xs animate-pulse bg-green-100 text-green-700">Live</Badge>
-                </div>
-                <div className="text-xl xl:text-2xl font-semibold text-gray-900 group-hover:text-green-600 transition-colors">
-                  {formatCurrency(stats.totalRaised)}
-                </div>
-                <p className="text-xs xl:text-sm text-gray-600">Total raised this year</p>
-              </div>
+            {/* Featured Campaign */}
+            <FeaturedCampaign />
 
-              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-md border border-emerald-100 hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer group">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="h-6 w-6 text-emerald-600 transform group-hover:scale-110 transition-transform">
-                    <Users className="h-6 w-6" />
-                  </div>
-                  <Badge variant="secondary" className="text-xs bg-emerald-100 text-emerald-700">Active</Badge>
-                </div>
-                <div className="text-xl xl:text-2xl font-semibold text-gray-900 group-hover:text-emerald-600 transition-colors">
-                  {formatNumber(stats.totalDonors)}
-                </div>
-                <p className="text-xs xl:text-sm text-gray-600">Generous donors</p>
-              </div>
-
-              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-md border border-teal-100 hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer group">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="h-6 w-6 text-teal-600 transform group-hover:scale-110 transition-transform">
-                    <Globe className="h-6 w-6" />
-                  </div>
-                  <Badge variant="secondary" className="text-xs bg-teal-100 text-teal-700">Global</Badge>
-                </div>
-                <div className="text-xl xl:text-2xl font-semibold text-gray-900 group-hover:text-teal-600 transition-colors">
-                  {stats.activeCampaigns}
-                </div>
-                <p className="text-xs xl:text-sm text-gray-600">Active campaigns</p>
-              </div>
-
-              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-md border border-green-100 hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer group">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="h-6 w-6 text-green-600 transform group-hover:scale-110 transition-transform">
-                    <Monitor className="h-6 w-6" />
-                  </div>
-                  <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">Online</Badge>
-                </div>
-                <div className="text-xl xl:text-2xl font-semibold text-gray-900 group-hover:text-green-600 transition-colors">
-                  {stats.activeKiosks}
-                </div>
-                <p className="text-xs xl:text-sm text-gray-600">Active kiosks</p>
-              </div>
-            </div>
-
-            {/* Testimonial */}
-            <div className="space-y-4 animate-fade-in-delay-3">
-              <div className="bg-white/70 backdrop-blur-md rounded-xl p-5 border border-green-100 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-102">
-                <div className="w-12 h-1 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 rounded-full my-3"></div>
-                <p className="text-sm text-gray-700 mb-3 italic leading-relaxed">
+            {/* Testimonial - Matching login form style */}
+            <div className="mt-8 animate-fade-in-delay-3">
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 shadow-sm">
+                {/* Accent line matching the green theme */}
+                <div className="w-12 h-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full mb-4" />
+                
+                {/* Quote text */}
+                <p className="text-gray-700 text-sm leading-relaxed mb-3">
                   "We make a living by what we get, but we make a life by what we give."
                 </p>
-                <div className="text-xs text-gray-600">
+
+                {/* Author */}
+                <p className="text-xs text-gray-600">
                   <span className="font-semibold">Winston Churchill</span>
-                </div>
+                </p>
               </div>
             </div>
           </div>
