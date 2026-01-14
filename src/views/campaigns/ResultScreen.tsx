@@ -1,6 +1,5 @@
-import { CheckCircle, XCircle, Mail, Home, RefreshCw } from 'lucide-react';
+import { CheckCircle, XCircle, Mail, Home, RefreshCw, ArrowLeft } from 'lucide-react';
 import { PaymentResult } from '../../shared/types';
-import { KioskHeader } from '../../shared/components/KioskHeader';
 
 interface ResultScreenProps {
   result: PaymentResult;
@@ -11,29 +10,66 @@ interface ResultScreenProps {
 export function ResultScreen({ result, onEmailConfirmation, onReturnToStart }: ResultScreenProps) {
   if (result.success) {
     return (
-      <div className="h-screen flex flex-col bg-[#FAFAFA]">
-        <KioskHeader title="Donation Complete" backText="Done" onBack={onReturnToStart} />
+      <div className="min-h-screen flex flex-col bg-linear-to-b from-green-50 via-white to-emerald-50/70 relative overflow-hidden">
+        <div className="absolute -top-24 right-0 h-80 w-80 rounded-full bg-green-100 blur-3xl opacity-70" />
+        <div className="absolute top-1/3 -left-24 h-72 w-72 rounded-full bg-emerald-100 blur-3xl opacity-60" />
+        <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full bg-green-50 blur-3xl opacity-90" />
 
-        <main className="flex-1 flex items-center justify-center px-4">
+        <header className="relative z-10 max-w-6xl mx-auto px-6 lg:px-12 xl:px-16 py-4">
+          <style>{`
+            .result-hero-title {
+              display: inline-flex;
+              align-items: center;
+              gap: 10px;
+              font-weight: 700;
+              letter-spacing: -0.02em;
+              background: linear-gradient(90deg, #16A34A, #22C55E, #0EA5E9);
+              background-size: 200% 100%;
+              -webkit-background-clip: text;
+              background-clip: text;
+              color: transparent;
+              animation: resultTitleGlow 4.5s ease-in-out infinite;
+            }
+            .result-hero-subtitle {
+              font-size: 0.95rem;
+              color: #374151;
+              margin-top: 2px;
+            }
+            @keyframes resultTitleGlow {
+              0%, 100% { background-position: 0% 50%; }
+              50% { background-position: 100% 50%; }
+            }
+            @keyframes resultPulse {
+              0%, 100% { transform: scale(0.85); opacity: 0.6; }
+              50% { transform: scale(1.1); opacity: 1; }
+            }
+          `}</style>
+          <div className="text-left">
+            <h1 className="text-xl sm:text-2xl result-hero-title">Donation Complete</h1>
+            <p className="text-sm result-hero-subtitle">Your generosity has been received.</p>
+          </div>
+        </header>
+
+        <main className="relative z-10 flex-1 flex items-center justify-center px-4 pb-8">
           <div className="w-full max-w-xl">
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div className="bg-white/90 rounded-3xl border border-green-100 shadow-xl overflow-hidden">
               {/* Success Header */}
-              <div className="bg-[#159A6F] text-white p-8 text-center">
-                <div className="flex justify-center mb-4">
-                  <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center">
-                    <CheckCircle className="w-12 h-12" />
+              <div className="bg-linear-to-r from-green-600 to-emerald-600 text-white px-6 py-5 text-center">
+                <div className="flex justify-center mb-3">
+                  <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center shadow-lg">
+                    <CheckCircle className="w-10 h-10" />
                   </div>
                 </div>
-                <h2 className="text-2xl lg:text-3xl font-bold mb-2">Thank You!</h2>
-                <p className="text-white/80">Your donation has been processed successfully.</p>
+                <h2 className="text-2xl lg:text-3xl font-bold mb-1">Thank You!</h2>
+                <p className="text-white/85">Your donation has been processed successfully.</p>
               </div>
 
               <div className="p-8 lg:p-10">
                 {/* Transaction ID */}
                 {result.transactionId && (
-                  <div className="mb-8 p-4 bg-gray-50 rounded-xl text-center">
-                    <p className="text-sm text-gray-500 mb-1">Transaction ID</p>
-                    <p className="font-mono text-sm text-[#0A0A0A]">{result.transactionId}</p>
+                  <div className="mb-8 p-4 bg-green-50/70 border border-green-100 rounded-2xl text-center">
+                    <p className="text-sm text-green-700 mb-1">Transaction ID</p>
+                    <p className="font-mono text-sm text-[#0A0A0A] break-all">{result.transactionId}</p>
                   </div>
                 )}
 
@@ -49,10 +85,7 @@ export function ResultScreen({ result, onEmailConfirmation, onReturnToStart }: R
                   {onEmailConfirmation && (
                     <button
                       onClick={onEmailConfirmation}
-                      className="w-full h-14 rounded-xl font-medium text-white flex items-center justify-center gap-2 transition-colors"
-                      style={{ backgroundColor: '#159A6F' }}
-                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#128A62')}
-                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#159A6F')}
+                      className="w-full h-14 rounded-xl font-medium text-white flex items-center justify-center gap-2 transition-all bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-200/70"
                     >
                       <Mail className="w-5 h-5" />
                       Send Receipt to Email
@@ -61,7 +94,7 @@ export function ResultScreen({ result, onEmailConfirmation, onReturnToStart }: R
 
                   <button
                     onClick={onReturnToStart}
-                    className="w-full h-14 rounded-xl font-medium border-2 border-gray-200 text-[#0A0A0A] flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors"
+                    className="w-full max-w-md mx-auto h-16 rounded-xl font-semibold text-lg border-2 border-green-200 text-green-800 flex items-center justify-center gap-2 hover:bg-green-50 transition-colors"
                   >
                     <Home className="w-5 h-5" />
                     Return to Campaigns
@@ -70,7 +103,7 @@ export function ResultScreen({ result, onEmailConfirmation, onReturnToStart }: R
 
                 {/* Footer Message */}
                 <div className="mt-8 text-center">
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-gray-500">
                     Thank you for using our donation kiosk.
                   </p>
                 </div>
@@ -84,27 +117,36 @@ export function ResultScreen({ result, onEmailConfirmation, onReturnToStart }: R
 
   // Failed state
   return (
-    <div className="h-screen flex flex-col bg-[#FAFAFA]">
-      <KioskHeader title="Payment Failed" backText="Back" onBack={onReturnToStart} />
+    <div className="min-h-screen flex flex-col bg-linear-to-b from-green-50 via-white to-emerald-50/70 relative overflow-hidden">
+      <div className="absolute -top-24 right-0 h-80 w-80 rounded-full bg-green-100 blur-3xl opacity-70" />
+      <div className="absolute top-1/3 -left-24 h-72 w-72 rounded-full bg-emerald-100 blur-3xl opacity-60" />
+      <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full bg-green-50 blur-3xl opacity-90" />
 
-      <main className="flex-1 flex items-center justify-center px-4">
+      <header className="relative z-10 max-w-6xl mx-auto px-6 lg:px-12 xl:px-16 py-4">
+        <div className="text-left">
+          <h1 className="text-lg sm:text-xl font-semibold text-gray-900">Payment Failed</h1>
+          <p className="text-sm text-gray-600">Something went wrong while processing.</p>
+        </div>
+      </header>
+
+      <main className="relative z-10 flex-1 flex items-center justify-center px-4 pb-8">
         <div className="w-full max-w-xl">
-          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div className="bg-white/90 rounded-3xl border border-green-100 shadow-xl overflow-hidden">
             {/* Error Header */}
-            <div className="bg-red-500 text-white p-8 text-center">
-              <div className="flex justify-center mb-4">
-                <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center">
-                  <XCircle className="w-12 h-12" />
+            <div className="bg-linear-to-r from-red-500 to-rose-500 text-white px-6 py-5 text-center">
+              <div className="flex justify-center mb-3">
+                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center shadow-lg">
+                  <XCircle className="w-10 h-10" />
                 </div>
               </div>
-              <h2 className="text-2xl lg:text-3xl font-bold mb-2">Payment Failed</h2>
-              <p className="text-white/80">We encountered an issue processing your donation.</p>
+              <h2 className="text-2xl lg:text-3xl font-bold mb-1">Payment Failed</h2>
+              <p className="text-white/85">We encountered an issue processing your donation.</p>
             </div>
 
             <div className="p-8 lg:p-10">
               {/* Error Message */}
               {result.error && (
-                <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-xl">
+                <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-2xl">
                   <p className="text-sm text-red-700 text-center">{result.error}</p>
                 </div>
               )}
@@ -136,10 +178,7 @@ export function ResultScreen({ result, onEmailConfirmation, onReturnToStart }: R
               <div className="space-y-4">
                 <button
                   onClick={onReturnToStart}
-                  className="w-full h-14 rounded-xl font-medium text-white flex items-center justify-center gap-2 transition-colors"
-                  style={{ backgroundColor: '#159A6F' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#128A62')}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#159A6F')}
+                  className="w-full h-14 rounded-xl font-medium text-white flex items-center justify-center gap-2 transition-all bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-200/70"
                 >
                   <RefreshCw className="w-5 h-5" />
                   Try Again
@@ -147,7 +186,7 @@ export function ResultScreen({ result, onEmailConfirmation, onReturnToStart }: R
 
                 <button
                   onClick={onReturnToStart}
-                  className="w-full h-14 rounded-xl font-medium border-2 border-gray-200 text-[#0A0A0A] flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors"
+                  className="w-full max-w-md mx-auto h-16 rounded-xl font-semibold text-lg border-2 border-green-200 text-green-800 flex items-center justify-center gap-2 hover:bg-green-50 transition-colors"
                 >
                   <Home className="w-5 h-5" />
                   Return to Campaigns
@@ -156,7 +195,7 @@ export function ResultScreen({ result, onEmailConfirmation, onReturnToStart }: R
 
               {/* Support Info */}
               <div className="mt-8 text-center">
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-gray-500">
                   If you continue to experience issues, please contact support.
                 </p>
               </div>
