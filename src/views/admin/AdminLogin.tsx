@@ -1,7 +1,7 @@
 import React from 'react';
 import { UserCog, ArrowRight } from 'lucide-react';
-import { SmartEmailField } from '../auth/interactions/SmartEmailField';
-import { PasswordStrengthTree } from '../auth/interactions/PasswordStrengthTree';
+import { ProfessionalEmailField } from '../auth/interactions/ProfessionalEmailField';
+import { ProfessionalPasswordField } from '../auth/interactions/ProfessionalPasswordField';
 import { MagneticButton } from '../auth/interactions/MagneticButton';
 
 interface AdminLoginProps {
@@ -44,7 +44,7 @@ export function AdminLogin({
 			</div>
 
 			<form onSubmit={onSubmit} className="space-y-4 animate-fade-in-delay">
-				<SmartEmailField
+				<ProfessionalEmailField
 					id="email"
 					value={email}
 					onChange={onEmailChange}
@@ -52,7 +52,7 @@ export function AdminLogin({
 					error={emailError || error}
 				/>
 
-				<PasswordStrengthTree
+				<ProfessionalPasswordField
 					id="password"
 					value={password}
 					onChange={onPasswordChange}
