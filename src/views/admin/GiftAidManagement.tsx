@@ -58,6 +58,9 @@ import {
   Banknote,
   CalendarDays,
 } from "lucide-react";
+import { AdminSearchFilterHeader, AdminSearchFilterConfig } from "./components/AdminSearchFilterHeader";
+import { SortableTableHeader } from "./components/SortableTableHeader";
+import { useTableSort } from "../../shared/lib/hooks/useTableSort";
 
 interface GiftAidManagementProps {
   onNavigate: (screen: Screen) => void;
@@ -177,7 +180,35 @@ export function GiftAidManagement({
     fetchGiftAidDeclarations();
   }, [userSession.user.organizationId]);
 
-  const filteredDonations = giftAidDonations.filter((donation) => {
+  // Configuration for AdminSearchFilterHeader
+  const searchFilterConfig: AdminSearchFilterConfig = {
+    searchPlaceholder: "Search by donor name or campaign...",
+    filters: [
+      {
+        key: "statusFilter",
+        label: "Status",
+        type: "select",
+        options: [
+          { label: "Pending", value: "pending" },
+          { label: "Claimed", value: "claimed" },
+          { label: "Rejected", value: "rejected" }
+        ]
+      }
+    ]
+  };
+
+  const filterValues = {
+    statusFilter
+  };
+
+  const handleFilterChange = (key: string, value: any) => {
+    if (key === "statusFilter") {
+      setStatusFilter(value);
+    }
+  };
+
+  // Filter donations first
+  const filteredDonationsData = giftAidDonations.filter((donation) => {
     const matchesSearch = 
       (donation.donorName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (donation.campaignTitle || "").toLowerCase().includes(searchTerm.toLowerCase());
@@ -185,6 +216,11 @@ export function GiftAidManagement({
     const matchesStatus = statusFilter === "all" || donation.giftAidStatus === statusFilter;
     
     return matchesSearch && matchesStatus;
+  });
+
+  // Use sorting hook
+  const { sortedData: filteredDonations, sortKey, sortDirection, handleSort } = useTableSort({
+    data: filteredDonationsData
   });
 
   const getStatusBadge = (status: string) => {
@@ -342,33 +378,9 @@ export function GiftAidManagement({
       userSession={userSession} 
       hasPermission={hasPermission}
       activeScreen="admin-gift-aid"
-      headerTitle="Gift Aid Donations"
-      headerSubtitle="Manage and track Gift Aid eligible donations for tax reclaim"
-      headerActions={(
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            onClick={handleRefresh}
-            disabled={loading}
-            aria-label="Refresh"
-            className="border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800 hover:border-green-300"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""} sm:mr-2`} />
-            <span className="hidden sm:inline">Refresh</span>
-          </Button>
-          <Button
-            onClick={handleExportData}
-            className="bg-green-600 hover:bg-green-700 text-white shadow-sm"
-            aria-label="Export Data"
-          >
-            <Download className="w-4 h-4 sm:mr-2" />
-            <span className="hidden sm:inline">Export Data</span>
-          </Button>
-        </div>
-      )}
       hideSidebarTrigger
     >
-      <div className="px-2 sm:px-6 lg:px-8 pb-4 sm:pb-8 space-y-6">
+      <div className="px-2 sm:px-4 lg:px-8 pb-4 sm:pb-8 space-y-4 sm:space-y-6">
         {/* Error Alert */}
         {error && (
           <Card className="border-red-200 bg-red-50">
@@ -382,131 +394,160 @@ export function GiftAidManagement({
         )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mb-6">
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Total Gift Aid (Shown)</p>
-                  <p className="text-2xl font-bold text-yellow-600">
+                  <p className="text-xl sm:text-2xl font-bold text-yellow-600">
                     {loading ? "..." : formatCurrency(totalGiftAidPending)}
                   </p>
                 </div>
-                <div className="h-12 w-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                  <Clock className="h-6 w-6 text-yellow-600" />
+                <div className="h-10 w-10 sm:h-12 sm:w-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                  <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Total Gift Aid</p>
-                  <p className="text-2xl font-bold text-green-600">
+                  <p className="text-xl sm:text-2xl font-bold text-green-600">
                     {loading ? "..." : formatCurrency(totalGiftAidClaimed)}
                   </p>
                 </div>
-                <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <CheckCircle className="h-6 w-6 text-green-600" />
+                <div className="h-10 w-10 sm:h-12 sm:w-12 bg-green-100 rounded-lg flex items-center justify-center">
+                  <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Total Donations</p>
-                  <p className="text-2xl font-bold text-indigo-600">
+                  <p className="text-xl sm:text-2xl font-bold text-indigo-600">
                     {loading ? "..." : giftAidDonations.length}
                   </p>
                 </div>
-                <div className="h-12 w-12 bg-indigo-100 rounded-lg flex items-center justify-center">
-                  <Gift className="h-6 w-6 text-indigo-600" />
+                <div className="h-10 w-10 sm:h-12 sm:w-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+                  <Gift className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Filters and Search */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Gift Aid Donations</CardTitle>
-            <CardDescription>
-              View and manage all Gift Aid eligible donations
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col sm:flex-row gap-4 mb-6">
-              <div className="w-full max-w-sm">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    placeholder="Search by donor name or campaign..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 border-2 border-gray-300 focus:border-indigo-500"
-                  />
-                </div>
-              </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-48 border-2 border-gray-300 focus:border-indigo-500">
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="claimed">Claimed</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+        {/* Unified Header Component */}
+        <AdminSearchFilterHeader
+          title={`Gift Aid Donations (${filteredDonations.length})`}
+          subtitle="Manage and track Gift Aid eligible donations for tax reclaim"
+          config={searchFilterConfig}
+          searchValue={searchTerm}
+          onSearchChange={setSearchTerm}
+          filterValues={filterValues}
+          onFilterChange={handleFilterChange}
+          exportData={filteredDonations}
+          onExport={handleExportData}
+          actions={
+            <Button
+              variant="outline"
+              onClick={handleRefresh}
+              disabled={loading}
+              aria-label="Refresh"
+              className="border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800 hover:border-green-300"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""} sm:mr-2`} />
+              <span className="hidden sm:inline">Refresh</span>
+            </Button>
+          }
+        />
 
-            {/* Donations Table */}
-            <div className="rounded-md border">
-              <Table>
+        {/* Donations Table */}
+        <Card className="overflow-hidden">
+          <CardContent className="p-0">
+            <Table className="w-full table-fixed">
                 <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-base font-semibold text-gray-900">
+                  <TableRow className="bg-gray-100 border-b-2 border-gray-300">
+                    <SortableTableHeader 
+                      sortKey="donorName" 
+                      currentSortKey={sortKey} 
+                      currentSortDirection={sortDirection} 
+                      onSort={handleSort}
+                      className="w-[20%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                    >
                       <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-gray-500" />
-                        Donor
+                        <User className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                        <span className="whitespace-nowrap">Donor</span>
                       </div>
-                    </TableHead>
-                    <TableHead className="text-base font-semibold text-gray-900">
+                    </SortableTableHeader>
+                    <SortableTableHeader 
+                      sortKey="campaignTitle" 
+                      currentSortKey={sortKey} 
+                      currentSortDirection={sortDirection} 
+                      onSort={handleSort}
+                      className="w-[18%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                    >
                       <div className="flex items-center gap-2">
-                        <Target className="h-4 w-4 text-gray-500" />
-                        Campaign
+                        <Target className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                        <span className="whitespace-nowrap">Campaign</span>
                       </div>
-                    </TableHead>
-                    <TableHead className="text-base font-semibold text-gray-900">
+                    </SortableTableHeader>
+                    <SortableTableHeader 
+                      sortKey="amount" 
+                      currentSortKey={sortKey} 
+                      currentSortDirection={sortDirection} 
+                      onSort={handleSort}
+                      className="w-[12%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
+                    >
+                      <div className="flex items-center justify-end gap-2">
+                        <Banknote className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                        <span className="whitespace-nowrap">Donation</span>
+                      </div>
+                    </SortableTableHeader>
+                    <SortableTableHeader 
+                      sortKey="giftAidAmount" 
+                      currentSortKey={sortKey} 
+                      currentSortDirection={sortDirection} 
+                      onSort={handleSort}
+                      className="w-[12%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
+                    >
+                      <div className="flex items-center justify-end gap-2">
+                        <Gift className="h-4 w-4 text-green-600 flex-shrink-0" />
+                        <span className="whitespace-nowrap">Gift Aid</span>
+                      </div>
+                    </SortableTableHeader>
+                    <SortableTableHeader 
+                      sortKey="donationDate" 
+                      currentSortKey={sortKey} 
+                      currentSortDirection={sortDirection} 
+                      onSort={handleSort}
+                      className="w-[20%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                    >
                       <div className="flex items-center gap-2">
-                        <Banknote className="h-4 w-4 text-gray-500" />
-                        Donation
+                        <CalendarDays className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                        <span className="whitespace-nowrap">Date</span>
                       </div>
-                    </TableHead>
-                    <TableHead className="text-base font-semibold text-gray-900">
-                      <div className="flex items-center gap-2">
-                        <Gift className="h-4 w-4 text-green-600" />
-                        Gift Aid
+                    </SortableTableHeader>
+                    <SortableTableHeader 
+                      sortable={false}
+                      sortKey="actions" 
+                      currentSortKey={sortKey} 
+                      currentSortDirection={sortDirection} 
+                      onSort={handleSort}
+                      className="w-[18%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center"
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <Eye className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                        <span className="whitespace-nowrap">Actions</span>
                       </div>
-                    </TableHead>
-                    <TableHead className="text-base font-semibold text-gray-900">
-                      <div className="flex items-center gap-2">
-                        <CalendarDays className="h-4 w-4 text-gray-500" />
-                        Date
-                      </div>
-                    </TableHead>
-                    <TableHead className="text-base font-semibold text-gray-900">
-                      <div className="flex items-center gap-2">
-                        <Eye className="h-4 w-4 text-gray-500" />
-                        Actions
-                      </div>
-                    </TableHead>
+                    </SortableTableHeader>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -576,7 +617,7 @@ export function GiftAidManagement({
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8">
+                      <TableCell colSpan={6} className="text-center py-8 p-6">
                         <div className="flex flex-col items-center gap-2">
                           <Gift className="h-12 w-12 text-gray-400" />
                           <p className="text-xl font-bold text-gray-600">No Gift Aid donations found</p>
@@ -596,7 +637,6 @@ export function GiftAidManagement({
                   )}
                 </TableBody>
               </Table>
-            </div>
           </CardContent>
         </Card>
 

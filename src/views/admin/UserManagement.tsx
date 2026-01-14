@@ -18,6 +18,9 @@ import { Label } from '../../shared/ui/label';
 import { Checkbox } from '../../shared/ui/checkbox';
 import { DialogPortal } from '@radix-ui/react-dialog';
 import { AdminLayout } from './AdminLayout';
+import { AdminSearchFilterHeader, AdminSearchFilterConfig } from './components/AdminSearchFilterHeader';
+import { SortableTableHeader } from './components/SortableTableHeader';
+import { useTableSort } from '../../shared/lib/hooks/useTableSort';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -51,8 +54,6 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
     
 
     const [dialogMessage, setDialogMessage] = useState<string | null>(null);
-    const [dialogAction, setDialogAction] = useState<(() => void) | null>(null);
-    const [showConfirm, setShowConfirm] = useState(false);
     
     // Delete confirmation dialog state
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -100,7 +101,8 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
         }
     };
 
-    const filteredUsers = users.filter(user => {
+    // Filter users first
+    const filteredUsersData = users.filter(user => {
         const matchesSearch = user.username?.toLowerCase().includes(searchTerm.toLowerCase()) || user.email?.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesRole = roleFilter === 'all' || user.role === roleFilter;
         // Hide super_admin users from non-super-admin users
@@ -108,7 +110,40 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
         return matchesSearch && matchesRole && canViewSuperAdmin;
     });
 
+    // Use sorting hook
+    const { sortedData: filteredUsers, sortKey, sortDirection, handleSort } = useTableSort({
+        data: filteredUsersData
+    });
+
     const stats = calculateUserStats(users);
+
+    // Configuration for AdminSearchFilterHeader
+    const searchFilterConfig: AdminSearchFilterConfig = {
+        searchPlaceholder: "Search users...",
+        filters: [
+            {
+                key: "roleFilter",
+                label: "Role",
+                type: "select",
+                options: [
+                    { label: "Admin", value: "admin" },
+                    { label: "Manager", value: "manager" },
+                    { label: "Operator", value: "operator" },
+                    { label: "Viewer", value: "viewer" }
+                ]
+            }
+        ]
+    };
+
+    const filterValues = {
+        roleFilter
+    };
+
+    const handleFilterChange = (key: string, value: any) => {
+        if (key === "roleFilter") {
+            setRoleFilter(value);
+        }
+    };
 
     return (
         <AdminLayout
@@ -117,71 +152,42 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
             userSession={userSession}
             hasPermission={hasPermission}
             activeScreen="admin-users"
-            headerTitle="User Management"
-            headerSubtitle="Manage platform users and permissions"
             hideSidebarTrigger
         >
-        <div className="space-y-4">
-            <main className="px-2 sm:px-6 lg:px-8 pb-4 sm:pb-8">
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Users</p><p className="text-2xl font-semibold text-gray-900">{stats.total}</p></div><Users className="h-8 w-8 text-blue-600" /></div></CardContent></Card>
-                    <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Administrators</p><p className="text-2xl font-semibold text-gray-900">{stats.admins}</p></div><UserCog className="h-8 w-8 text-purple-600" /></div></CardContent></Card>
-                    <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Kiosk Users</p><p className="text-2xl font-semibold text-gray-900">{stats.kiosks}</p></div><Shield className="h-8 w-8 text-green-600" /></div></CardContent></Card>
-                    <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Active Users</p><p className="text-2xl font-semibold text-gray-900">{stats.active}</p></div><Activity className="h-8 w-8 text-orange-600" /></div></CardContent></Card>
+        <div className="space-y-4 sm:space-y-6">
+            <main className="px-2 sm:px-4 lg:px-8 pb-4 sm:pb-8">
+                {/* Stat Cards Section */}
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
+                    <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Total Users</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{stats.total}</p></div><Users className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-blue-600" /></div></CardContent></Card>
+                    <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Administrators</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{stats.admins}</p></div><UserCog className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-purple-600" /></div></CardContent></Card>
+                    <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Kiosk Users</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{stats.kiosks}</p></div><Shield className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-green-600" /></div></CardContent></Card>
+                    <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Active Users</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{stats.active}</p></div><Activity className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-orange-600" /></div></CardContent></Card>
                 </div>
 
-                <Card className="mb-8">
-                    <CardContent className="p-5">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                                <Select value={roleFilter} onValueChange={setRoleFilter}>
-                                    <SelectTrigger className="w-full h-12 border-0 focus:ring-0"><SelectValue placeholder="Filter by role" /></SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Roles</SelectItem>
-                                        <SelectItem value="admin">Admin</SelectItem>
-                                        <SelectItem value="manager">Manager</SelectItem>
-                                        <SelectItem value="operator">Operator</SelectItem>
-                                        <SelectItem value="viewer">Viewer</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
+                {/* Unified Header Component */}
+                <AdminSearchFilterHeader
+                    title={`Users (${filteredUsers.length})`}
+                    subtitle="Manage platform users and permissions"
+                    config={searchFilterConfig}
+                    searchValue={searchTerm}
+                    onSearchChange={setSearchTerm}
+                    filterValues={filterValues}
+                    onFilterChange={handleFilterChange}
+                    actions={
+                        hasPermission('create_user') ? (
+                            <Button
+                                className="bg-indigo-600 text-white"
+                                onClick={() => setCreateDialogOpen(true)}
+                            >
+                                <Plus className="w-4 h-4 mr-2" />Add User
+                            </Button>
+                        ) : undefined
+                    }
+                />
 
                 {/* Modern Table Container */}
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                    <div className="px-6 pt-6">
-                        <div className="flex items-center justify-between gap-3">
-                            <div className="w-full max-w-sm">
-                                <div className="relative border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                                    <Input placeholder="Search users by name or email..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 border-0 focus-visible:ring-0 focus-visible:border-transparent" />
-                                </div>
-                            </div>
-                            {hasPermission('create_user') && (
-                                <>
-                                    <Button
-                                        className="bg-indigo-600 text-white h-12 w-12 p-0 sm:hidden"
-                                        onClick={() => setCreateDialogOpen(true)}
-                                        aria-label="Add User"
-                                    >
-                                        <Plus className="w-5 h-5" />
-                                    </Button>
-                                    <Button
-                                        className="bg-indigo-600 text-white hidden sm:inline-flex"
-                                        onClick={() => setCreateDialogOpen(true)}
-                                    >
-                                        <Plus className="w-4 h-4 mr-2" />Add User
-                                    </Button>
-                                </>
-                            )}
-                        </div>
-                    </div>
-                    <div className="px-6 py-5 border-b border-gray-200">
-                        <h3 className="text-lg font-semibold text-gray-900">Users ({filteredUsers.length})</h3>
-                        <p className="text-sm text-gray-600 mt-1">Manage user accounts and permissions</p>
-                    </div>
+                <Card className="overflow-hidden">
+                    <CardContent className="p-0">
                     {loading ? (
                         <div className="flex justify-center p-12">
                             <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
@@ -275,15 +281,57 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                                     </div>
                                 )}
                             </div>
-                            <div className="hidden md:block overflow-x-auto">
-                                <Table>
+                            <div className="hidden md:block overflow-hidden">
+                                <Table className="w-full table-fixed">
                                     <TableHeader>
-                                        <TableRow className="bg-gray-50 border-b border-gray-200">
-                                            <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">User Details</TableHead>
-                                            <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Role</TableHead>
-                                            <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</TableHead>
-                                            <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Permissions</TableHead>
-                                            <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">Actions</TableHead>
+                                        <TableRow className="bg-gray-100 border-b-2 border-gray-300">
+                                            <SortableTableHeader 
+                                                sortKey="username" 
+                                                currentSortKey={sortKey} 
+                                                currentSortDirection={sortDirection} 
+                                                onSort={handleSort}
+                                                className="w-[30%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                                            >
+                                                User Details
+                                            </SortableTableHeader>
+                                            <SortableTableHeader 
+                                                sortKey="role" 
+                                                currentSortKey={sortKey} 
+                                                currentSortDirection={sortDirection} 
+                                                onSort={handleSort}
+                                                className="w-[15%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                                            >
+                                                Role
+                                            </SortableTableHeader>
+                                            <SortableTableHeader 
+                                                sortKey="status" 
+                                                currentSortKey={sortKey} 
+                                                currentSortDirection={sortDirection} 
+                                                onSort={handleSort}
+                                                className="w-[12%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                                            >
+                                                Status
+                                            </SortableTableHeader>
+                                            <SortableTableHeader 
+                                                sortable={false}
+                                                sortKey="permissions" 
+                                                currentSortKey={sortKey} 
+                                                currentSortDirection={sortDirection} 
+                                                onSort={handleSort}
+                                                className="w-[28%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                                            >
+                                                Permissions
+                                            </SortableTableHeader>
+                                            <SortableTableHeader 
+                                                sortable={false}
+                                                sortKey="actions" 
+                                                currentSortKey={sortKey} 
+                                                currentSortDirection={sortDirection} 
+                                                onSort={handleSort}
+                                                className="w-[15%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
+                                            >
+                                                Actions
+                                            </SortableTableHeader>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -339,7 +387,8 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                             </div>
                         </>
                     )}
-                </div>
+                </CardContent>
+            </Card>
             </main>
 
             <CreateUserDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} newUser={newUser} onUserChange={setNewUser} onCreateUser={handleCreateUser} userSession={userSession} />
