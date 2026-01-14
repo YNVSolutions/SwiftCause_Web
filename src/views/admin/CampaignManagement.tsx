@@ -1486,7 +1486,7 @@ const CampaignManagement = ({
   const filteredCampaigns = campaigns.filter((campaign: any) => {
     const matchesSearch = campaign.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       campaign.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      campaign.tags?.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+      (Array.isArray(campaign.tags) && campaign.tags.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase())));
     const matchesStatus = statusFilter === "all" || campaign.status === statusFilter;
     const matchesCategory = categoryFilter === "all" || campaign.category === categoryFilter;
     const matchesDate = !dateFilter || (campaign.endDate && new Date(campaign.endDate.seconds * 1000).toDateString() === dateFilter.toDateString());
