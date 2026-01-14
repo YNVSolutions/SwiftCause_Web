@@ -9,6 +9,7 @@ interface GiftAidBoostPanelProps {
   onCustomAmountChange: (value: string) => void;
   currency: string;
   campaignTitle: string;
+  onBack: () => void;
   onAccept: () => void;
   onDecline: () => void;
 }
@@ -20,6 +21,7 @@ export const GiftAidBoostPanel: React.FC<GiftAidBoostPanelProps> = ({
   onCustomAmountChange,
   currency,
   campaignTitle,
+  onBack,
   onAccept,
   onDecline,
 }) => {
@@ -39,18 +41,41 @@ export const GiftAidBoostPanel: React.FC<GiftAidBoostPanelProps> = ({
   };
 
   return (
-    <div className="bg-white/90 rounded-3xl border border-green-100 shadow-xl p-8 lg:p-10 h-full flex flex-col max-w-2xl mx-auto relative overflow-hidden">
+    <div className="bg-white/90 rounded-3xl border border-green-100 shadow-xl p-6 lg:p-8 flex flex-col max-w-2xl mx-auto relative overflow-hidden">
       <div className="absolute -top-20 -right-16 h-40 w-40 rounded-full bg-green-100 blur-3xl opacity-60" />
       <div className="absolute -bottom-16 -left-16 h-36 w-36 rounded-full bg-emerald-100 blur-3xl opacity-70" />
+      <div className="relative z-10">
+        <div className="grid grid-cols-[auto_1fr_auto] items-start gap-4">
+          <button
+            onClick={onBack}
+            title="Back"
+            aria-label="Back"
+            className="flex items-center justify-center h-9 w-9 rounded-lg border border-green-200 bg-white/90 text-green-700 shadow-sm hover:bg-green-50 hover:border-green-300 transition-colors"
+          >
+            <ArrowUp className="h-4 w-4 rotate-[-90deg]" strokeWidth={2.4} />
+          </button>
+          <div className="text-center">
+            <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
+              Boost your donation
+            </h1>
+            <p className="text-sm text-gray-600">
+              Turn your gift into even more impact in seconds.
+            </p>
+          </div>
+          <div className="h-9 w-9" aria-hidden="true" />
+        </div>
+        <div className="h-px bg-green-100 my-4" />
+      </div>
+
       {/* Icon */}
-      <div className="flex justify-center mb-8 relative z-10">
-        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center shadow-lg shadow-green-100">
-          <ArrowUp className="w-10 h-10 text-green-700" />
+      <div className="flex justify-center mb-6 relative z-10">
+        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center shadow-lg shadow-green-100">
+          <ArrowUp className="w-8 h-8 text-green-700" />
         </div>
       </div>
 
       {/* Main Message */}
-      <div className="text-center mb-8 grow relative z-10">
+      <div className="text-center mb-6 grow relative z-10">
         {isCustomAmount ? (
           <div className="space-y-6">
             <h1 className="text-3xl lg:text-4xl font-bold text-[#0A0A0A] mb-3">
@@ -93,7 +118,7 @@ export const GiftAidBoostPanel: React.FC<GiftAidBoostPanelProps> = ({
       </div>
 
       {/* Campaign Info */}
-      <div className="mb-6 p-4 bg-green-50/70 border border-green-100 rounded-2xl text-center relative z-10">
+      <div className="mb-5 p-4 bg-green-50/70 border border-green-100 rounded-2xl text-center relative z-10">
         <div className="inline-flex items-center gap-2 text-xs uppercase tracking-wide text-green-700 mb-2">
           <Sparkles className="w-3.5 h-3.5" />
           Donating to
@@ -102,7 +127,7 @@ export const GiftAidBoostPanel: React.FC<GiftAidBoostPanelProps> = ({
       </div>
 
       {/* UK Taxpayer Info - moved below donating to box */}
-      <p className="text-gray-600 text-lg leading-relaxed text-center mb-8 relative z-10">
+      <p className="text-gray-600 text-base leading-relaxed text-center mb-6 relative z-10">
         Are you a UK Taxpayer? We can reclaim{' '}
         <span className="font-semibold text-[#0A0A0A]">25%</span>{' '}
         <span className="font-semibold text-[#0A0A0A]">
@@ -131,7 +156,7 @@ export const GiftAidBoostPanel: React.FC<GiftAidBoostPanelProps> = ({
       </div>
 
       {/* Additional Info */}
-      <div className="mt-8 text-center relative z-10">
+      <div className="mt-6 text-center relative z-10">
         <p className="text-sm text-gray-500 leading-relaxed">
           Gift Aid allows UK charities to reclaim tax on donations made by UK taxpayers, increasing
           the value of donations at no extra cost to the donor.
