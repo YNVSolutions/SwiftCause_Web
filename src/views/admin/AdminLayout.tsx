@@ -556,7 +556,7 @@ export function AdminLayout({
 
           {/* Main Content Area */}
           <div className="flex-1 flex flex-col overflow-hidden">
-            <header className="px-4 sm:px-6 py-4 bg-slate-50">
+            <header className="sticky top-0 z-20 px-4 sm:px-6 py-4 bg-slate-50/95 backdrop-blur supports-backdrop-filter:bg-slate-50/80">
               <AdminPageHeader
                 title={resolvedTitle}
                 subtitle={resolvedSubtitle}

@@ -426,7 +426,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                             currentSortKey={sortKey} 
                             currentSortDirection={sortDirection} 
                             onSort={handleSort}
-                            className="px-3 py-2.5 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                            className="px-3 py-2.5 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center"
                           >
                             Status
                           </SortableTableHeader>
@@ -485,7 +485,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                             </div>
                           </TableCell>
 
-                          <TableCell className="px-6 py-4">
+                          <TableCell className="flex px-6 py-4 text-right">
                             <p className="text-lg font-semibold text-gray-900">
                               {formatCurrency(donation.amount, donation.currency)}
                             </p>
@@ -498,7 +498,9 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                             </div>
                           </TableCell>
 
-                          <TableCell className="px-6 py-4">{getStatusBadge(donation.paymentStatus)}</TableCell>
+                          <TableCell className="px-6 py-4 text-center">
+                            <div className="inline-flex justify-center">{getStatusBadge(donation.paymentStatus)}</div>
+                          </TableCell>
 
                           <TableCell className="px-6 py-4">
                             <div className="space-y-1">
@@ -515,19 +517,19 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                             </div>
                           </TableCell>
 
-                          <TableCell className="px-6 py-4">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleViewDetails(donation);
-                              }}
-                              className="hover:bg-gray-100"
-                              title="View donation details"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
+                        <TableCell className="px-6 py-4 text-center">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewDetails(donation);
+                            }}
+                            className="mx-auto hover:bg-gray-100"
+                            title="View donation details"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
                           </TableCell>
                         </TableRow>
                       ))}

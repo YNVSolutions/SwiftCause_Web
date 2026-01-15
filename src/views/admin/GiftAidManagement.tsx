@@ -372,10 +372,10 @@ export function GiftAidManagement({
   }
 
   return (
-    <AdminLayout 
-      onNavigate={onNavigate} 
-      onLogout={onLogout} 
-      userSession={userSession} 
+    <AdminLayout
+      onNavigate={onNavigate}
+      onLogout={onLogout}
+      userSession={userSession}
       hasPermission={hasPermission}
       activeScreen="admin-gift-aid"
       hideSidebarTrigger
@@ -399,7 +399,9 @@ export function GiftAidManagement({
             <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Gift Aid (Shown)</p>
+                  <p className="text-sm font-medium text-gray-600">
+                    Total Gift Aid (Shown)
+                  </p>
                   <p className="text-xl sm:text-2xl font-bold text-yellow-600">
                     {loading ? "..." : formatCurrency(totalGiftAidPending)}
                   </p>
@@ -415,7 +417,9 @@ export function GiftAidManagement({
             <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Gift Aid</p>
+                  <p className="text-sm font-medium text-gray-600">
+                    Total Gift Aid
+                  </p>
                   <p className="text-xl sm:text-2xl font-bold text-green-600">
                     {loading ? "..." : formatCurrency(totalGiftAidClaimed)}
                   </p>
@@ -431,7 +435,9 @@ export function GiftAidManagement({
             <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Donations</p>
+                  <p className="text-sm font-medium text-gray-600">
+                    Total Donations
+                  </p>
                   <p className="text-xl sm:text-2xl font-bold text-indigo-600">
                     {loading ? "..." : giftAidDonations.length}
                   </p>
@@ -463,7 +469,9 @@ export function GiftAidManagement({
               aria-label="Refresh"
               className="border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800 hover:border-green-300"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""} sm:mr-2`} />
+              <RefreshCw
+                className={`w-4 h-4 ${loading ? "animate-spin" : ""} sm:mr-2`}
+              />
               <span className="hidden sm:inline">Refresh</span>
             </Button>
           }
@@ -476,7 +484,10 @@ export function GiftAidManagement({
               <>
                 <div className="md:hidden space-y-4 px-4 py-5">
                   {Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="rounded-2xl border border-emerald-100 bg-white px-4 py-4">
+                    <div
+                      key={i}
+                      className="rounded-2xl border border-emerald-100 bg-white px-4 py-4"
+                    >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0 space-y-2">
                           <Skeleton className="h-4 w-36" />
@@ -499,23 +510,47 @@ export function GiftAidManagement({
                   <Table className="w-full table-fixed">
                     <TableHeader>
                       <TableRow className="bg-gray-100 border-b-2 border-gray-300">
-                        <TableHead className="w-[20%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide">Donor</TableHead>
-                        <TableHead className="w-[18%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide">Campaign</TableHead>
-                        <TableHead className="w-[12%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right">Donation</TableHead>
-                        <TableHead className="w-[12%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right">Gift Aid</TableHead>
-                        <TableHead className="w-[20%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide">Date</TableHead>
-                        <TableHead className="w-[18%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center">Actions</TableHead>
+                        <TableHead className="w-[20%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                          Donor
+                        </TableHead>
+                        <TableHead className="w-[18%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                          Campaign
+                        </TableHead>
+                        <TableHead className="w-[12%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right">
+                          Donation
+                        </TableHead>
+                        <TableHead className="w-[12%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right">
+                          Gift Aid
+                        </TableHead>
+                        <TableHead className="w-[20%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                          Date
+                        </TableHead>
+                        <TableHead className="w-[18%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center">
+                          Actions
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {Array.from({ length: 5 }).map((_, i) => (
                         <TableRow key={i} className="h-16">
-                          <TableCell className="py-4"><Skeleton className="h-5 w-32" /></TableCell>
-                          <TableCell className="py-4"><Skeleton className="h-5 w-24" /></TableCell>
-                          <TableCell className="py-4"><Skeleton className="h-5 w-16" /></TableCell>
-                          <TableCell className="py-4"><Skeleton className="h-5 w-16" /></TableCell>
-                          <TableCell className="py-4"><Skeleton className="h-5 w-20" /></TableCell>
-                          <TableCell className="py-4"><Skeleton className="h-8 w-8 rounded" /></TableCell>
+                          <TableCell className="py-4">
+                            <Skeleton className="h-5 w-32" />
+                          </TableCell>
+                          <TableCell className="py-4">
+                            <Skeleton className="h-5 w-24" />
+                          </TableCell>
+                          <TableCell className="py-4">
+                            <Skeleton className="h-5 w-16" />
+                          </TableCell>
+                          <TableCell className="py-4">
+                            <Skeleton className="h-5 w-16" />
+                          </TableCell>
+                          <TableCell className="py-4">
+                            <Skeleton className="h-5 w-20" />
+                          </TableCell>
+                          <TableCell className="py-4">
+                            <Skeleton className="h-8 w-8 rounded" />
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -541,7 +576,9 @@ export function GiftAidManagement({
                               {donation.donorName || "N/A"}
                             </span>
                           </div>
-                          <div className="mt-1 text-xs text-gray-500 truncate">{donation.donorPostcode || "Postcode unavailable"}</div>
+                          <div className="mt-1 text-xs text-gray-500 truncate">
+                            {donation.donorPostcode || "Postcode unavailable"}
+                          </div>
                           <div className="text-[11px] font-mono text-gray-400 truncate">
                             {donation.transactionId || "No transaction ID"}
                           </div>
@@ -575,8 +612,11 @@ export function GiftAidManagement({
                         <div className="flex items-center gap-2">
                           <CalendarDays className="h-3.5 w-3.5 text-gray-400" />
                           <span className="truncate">
-                            {donation.donationDate && donation.donationDate !== "Unknown Date"
-                              ? new Date(donation.donationDate).toLocaleDateString()
+                            {donation.donationDate &&
+                            donation.donationDate !== "Unknown Date"
+                              ? new Date(
+                                  donation.donationDate
+                                ).toLocaleDateString()
                               : "Unknown Date"}
                           </span>
                         </div>
@@ -599,153 +639,171 @@ export function GiftAidManagement({
 
                 <div className="hidden md:block overflow-hidden">
                   <Table className="w-full table-fixed">
-                      <TableHeader>
-                        <TableRow className="bg-gray-100 border-b-2 border-gray-300">
-                          <SortableTableHeader 
-                            sortKey="donorName" 
-                            currentSortKey={sortKey} 
-                            currentSortDirection={sortDirection} 
-                            onSort={handleSort}
-                            className="w-[20%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
-                          >
+                    <TableHeader>
+                      <TableRow className="bg-gray-100 border-b-2 border-gray-300">
+                        <SortableTableHeader
+                          sortKey="donorName"
+                          currentSortKey={sortKey}
+                          currentSortDirection={sortDirection}
+                          onSort={handleSort}
+                          className="w-[20%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                        >
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-gray-500 shrink-0" />
+                            <span className="whitespace-nowrap">Donor</span>
+                          </div>
+                        </SortableTableHeader>
+                        <SortableTableHeader
+                          sortKey="campaignTitle"
+                          currentSortKey={sortKey}
+                          currentSortDirection={sortDirection}
+                          onSort={handleSort}
+                          className="w-[18%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Target className="h-4 w-4 text-gray-500 shrink-0" />
+                            <span className="whitespace-nowrap">Campaign</span>
+                          </div>
+                        </SortableTableHeader>
+                        <SortableTableHeader
+                          sortKey="amount"
+                          currentSortKey={sortKey}
+                          currentSortDirection={sortDirection}
+                          onSort={handleSort}
+                          className="w-[12%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
+                        >
+                          <div className="flex items-center justify-end gap-2">
+                            <Banknote className="h-4 w-4 text-gray-500 shrink-0" />
+                            <span className="whitespace-nowrap">Donation</span>
+                          </div>
+                        </SortableTableHeader>
+                        <SortableTableHeader
+                          sortKey="giftAidAmount"
+                          currentSortKey={sortKey}
+                          currentSortDirection={sortDirection}
+                          onSort={handleSort}
+                          className="w-[12%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
+                        >
+                          <div className="flex items-center justify-end gap-2">
+                            <Gift className="h-4 w-4 text-green-600 shrink-0" />
+                            <span className="whitespace-nowrap">Gift Aid</span>
+                          </div>
+                        </SortableTableHeader>
+                        <SortableTableHeader
+                          sortKey="donationDate"
+                          currentSortKey={sortKey}
+                          currentSortDirection={sortDirection}
+                          onSort={handleSort}
+                          className="w-[20%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                        >
+                          <div className="flex items-center gap-2">
+                            <CalendarDays className="h-4 w-4 text-gray-500 shrink-0" />
+                            <span className="whitespace-nowrap">Date</span>
+                          </div>
+                        </SortableTableHeader>
+                        <SortableTableHeader
+                          sortable={false}
+                          sortKey="actions"
+                          currentSortKey={sortKey}
+                          currentSortDirection={sortDirection}
+                          onSort={handleSort}
+                          className="w-[18%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center"
+                        >
+                          <div className="flex items-center justify-center gap-2">
+                            <Eye className="h-4 w-4 text-gray-500 shrink-0" />
+                            <span className="whitespace-nowrap">Actions</span>
+                          </div>
+                        </SortableTableHeader>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredDonations.map((donation) => (
+                        <TableRow
+                          key={donation.id}
+                          className="cursor-pointer hover:bg-gray-50 transition-colors h-16"
+                          onClick={() => handleViewDetails(donation)}
+                        >
+                          <TableCell className="py-4">
                             <div className="flex items-center gap-2">
-                              <User className="h-4 w-4 text-gray-500 flex-shrink-0" />
-                              <span className="whitespace-nowrap">Donor</span>
+                              <User className="h-4 w-4 text-gray-400 shrink-0" />
+                              <p className="text-base text-gray-900">
+                                {donation.donorName || "N/A"}
+                              </p>
                             </div>
-                          </SortableTableHeader>
-                          <SortableTableHeader 
-                            sortKey="campaignTitle" 
-                            currentSortKey={sortKey} 
-                            currentSortDirection={sortDirection} 
-                            onSort={handleSort}
-                            className="w-[18%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
-                          >
+                          </TableCell>
+                          <TableCell className="py-4">
                             <div className="flex items-center gap-2">
-                              <Target className="h-4 w-4 text-gray-500 flex-shrink-0" />
-                              <span className="whitespace-nowrap">Campaign</span>
+                              <Target className="h-4 w-4 text-gray-400 shrink-0" />
+                              <p className="text-base text-gray-800">
+                                {donation.campaignTitle || "N/A"}
+                              </p>
                             </div>
-                          </SortableTableHeader>
-                          <SortableTableHeader 
-                            sortKey="amount" 
-                            currentSortKey={sortKey} 
-                            currentSortDirection={sortDirection} 
-                            onSort={handleSort}
-                            className="w-[12%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
-                          >
-                            <div className="flex items-center justify-end gap-2">
-                              <Banknote className="h-4 w-4 text-gray-500 flex-shrink-0" />
-                              <span className="whitespace-nowrap">Donation</span>
-                            </div>
-                          </SortableTableHeader>
-                          <SortableTableHeader 
-                            sortKey="giftAidAmount" 
-                            currentSortKey={sortKey} 
-                            currentSortDirection={sortDirection} 
-                            onSort={handleSort}
-                            className="w-[12%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
-                          >
-                            <div className="flex items-center justify-end gap-2">
-                              <Gift className="h-4 w-4 text-green-600 flex-shrink-0" />
-                              <span className="whitespace-nowrap">Gift Aid</span>
-                            </div>
-                          </SortableTableHeader>
-                          <SortableTableHeader 
-                            sortKey="donationDate" 
-                            currentSortKey={sortKey} 
-                            currentSortDirection={sortDirection} 
-                            onSort={handleSort}
-                            className="w-[20%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
-                          >
+                          </TableCell>
+                          <TableCell className="py-4">
                             <div className="flex items-center gap-2">
-                              <CalendarDays className="h-4 w-4 text-gray-500 flex-shrink-0" />
-                              <span className="whitespace-nowrap">Date</span>
+                              <Banknote className="h-4 w-4 text-gray-400 shrink-0" />
+                              <p className="text-base font-bold text-gray-900">
+                                {formatCurrency(donation.amount || 0)}
+                              </p>
                             </div>
-                          </SortableTableHeader>
-                          <SortableTableHeader 
-                            sortable={false}
-                            sortKey="actions" 
-                            currentSortKey={sortKey} 
-                            currentSortDirection={sortDirection} 
-                            onSort={handleSort}
-                            className="w-[18%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center"
-                          >
-                            <div className="flex items-center justify-center gap-2">
-                              <Eye className="h-4 w-4 text-gray-500 flex-shrink-0" />
-                              <span className="whitespace-nowrap">Actions</span>
+                          </TableCell>
+                          <TableCell className="py-4">
+                            <div className="flex items-center gap-2">
+                              <Gift className="h-4 w-4 text-green-500 shrink-0" />
+                              <p className="text-base font-bold text-green-700">
+                                {formatCurrency(donation.giftAidAmount || 0)}
+                              </p>
                             </div>
-                          </SortableTableHeader>
+                          </TableCell>
+                          <TableCell className="py-4">
+                            <div className="flex items-center gap-2">
+                              <CalendarDays className="h-4 w-4 text-gray-400" />
+                              <p className="text-base text-gray-700">
+                                {donation.donationDate &&
+                                donation.donationDate !== "Unknown Date"
+                                  ? new Date(
+                                      donation.donationDate
+                                    ).toLocaleDateString()
+                                  : "Unknown Date"}
+                              </p>
+                            </div>
+                          </TableCell>
+                          <TableCell className="flex flex-col items-center py-4">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewDetails(donation);
+                              }}
+                              className="h-8 w-8 p-0 hover:bg-indigo-100 hover:text-indigo-600 transition-colors"
+                              title="View donation details"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredDonations.map((donation) => (
-                          <TableRow 
-                            key={donation.id}
-                            className="cursor-pointer hover:bg-gray-50 transition-colors h-16"
-                            onClick={() => handleViewDetails(donation)}
-                          >
-                            <TableCell className="py-4">
-                              <div className="flex items-center gap-2">
-                                <User className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                                <p className="text-base text-gray-900">{donation.donorName || "N/A"}</p>
-                              </div>
-                            </TableCell>
-                            <TableCell className="py-4">
-                              <div className="flex items-center gap-2">
-                                <Target className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                                <p className="text-base text-gray-800">{donation.campaignTitle || "N/A"}</p>
-                              </div>
-                            </TableCell>
-                            <TableCell className="py-4">
-                              <div className="flex items-center gap-2">
-                                <Banknote className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                                <p className="text-base font-bold text-gray-900">{formatCurrency(donation.amount || 0)}</p>
-                              </div>
-                            </TableCell>
-                            <TableCell className="py-4">
-                              <div className="flex items-center gap-2">
-                                <Gift className="h-4 w-4 text-green-500 flex-shrink-0" />
-                                <p className="text-base font-bold text-green-700">{formatCurrency(donation.giftAidAmount || 0)}</p>
-                              </div>
-                            </TableCell>
-                            <TableCell className="py-4">
-                              <div className="flex items-center gap-2">
-                                <CalendarDays className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                                <p className="text-base text-gray-700">{donation.donationDate && donation.donationDate !== "Unknown Date" ? new Date(donation.donationDate).toLocaleDateString() : "Unknown Date"}</p>
-                              </div>
-                            </TableCell>
-                            <TableCell className="py-4">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleViewDetails(donation);
-                                }}
-                                className="h-8 w-8 p-0 hover:bg-indigo-100 hover:text-indigo-600 transition-colors"
-                                title="View donation details"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </div>
               </>
             ) : (
               <div className="text-center py-8 px-6">
                 <div className="flex flex-col items-center gap-2">
                   <Gift className="h-12 w-12 text-gray-400" />
-                  <p className="text-xl font-bold text-gray-600">No Gift Aid donations found</p>
+                  <p className="text-xl font-bold text-gray-600">
+                    No Gift Aid donations found
+                  </p>
                   <p className="text-base text-gray-500 mt-2">
-                    {searchTerm || statusFilter !== "all" 
-                      ? "Try adjusting your search or filters" 
+                    {searchTerm || statusFilter !== "all"
+                      ? "Try adjusting your search or filters"
                       : "Gift Aid eligible donations will appear here when donors opt-in for Gift Aid"}
                   </p>
                   {!searchTerm && statusFilter === "all" && (
                     <p className="text-sm text-gray-400 mt-2">
-                      Gift Aid declarations are created automatically when donors opt-in during the donation process.
+                      Gift Aid declarations are created automatically when
+                      donors opt-in during the donation process.
                     </p>
                   )}
                 </div>
@@ -766,69 +824,113 @@ export function GiftAidManagement({
                 Complete information about this Gift Aid eligible donation
               </DialogDescription>
             </DialogHeader>
-            
+
             {selectedDonation && (
               <div className="grid gap-4 py-4">
                 <div>
-                  <Label className="text-sm font-medium text-gray-700">Donor Name</Label>
-                  <p className="text-sm text-gray-900 mt-1">{selectedDonation.donorName || "N/A"}</p>
+                  <Label className="text-sm font-medium text-gray-700">
+                    Donor Name
+                  </Label>
+                  <p className="text-sm text-gray-900 mt-1">
+                    {selectedDonation.donorName || "N/A"}
+                  </p>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-sm font-medium text-gray-700">Donation Amount</Label>
-                    <p className="text-sm font-semibold text-gray-900 mt-1">{formatCurrency(selectedDonation.amount || 0)}</p>
+                    <Label className="text-sm font-medium text-gray-700">
+                      Donation Amount
+                    </Label>
+                    <p className="text-sm font-semibold text-gray-900 mt-1">
+                      {formatCurrency(selectedDonation.amount || 0)}
+                    </p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-gray-700">Gift Aid Amount</Label>
-                    <p className="text-sm font-semibold text-green-600 mt-1">{formatCurrency(selectedDonation.giftAidAmount || 0)}</p>
+                    <Label className="text-sm font-medium text-gray-700">
+                      Gift Aid Amount
+                    </Label>
+                    <p className="text-sm font-semibold text-green-600 mt-1">
+                      {formatCurrency(selectedDonation.giftAidAmount || 0)}
+                    </p>
                   </div>
                 </div>
-                
+
                 <div>
-                  <Label className="text-sm font-medium text-gray-700">Campaign</Label>
-                  <p className="text-sm text-gray-900 mt-1">{selectedDonation.campaignTitle || "N/A"}</p>
+                  <Label className="text-sm font-medium text-gray-700">
+                    Campaign
+                  </Label>
+                  <p className="text-sm text-gray-900 mt-1">
+                    {selectedDonation.campaignTitle || "N/A"}
+                  </p>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-sm font-medium text-gray-700">Donation Date</Label>
-                    <p className="text-sm text-gray-900 mt-1">{selectedDonation.donationDate && selectedDonation.donationDate !== "Unknown Date" ? new Date(selectedDonation.donationDate).toLocaleDateString() : "Unknown Date"}</p>
+                    <Label className="text-sm font-medium text-gray-700">
+                      Donation Date
+                    </Label>
+                    <p className="text-sm text-gray-900 mt-1">
+                      {selectedDonation.donationDate &&
+                      selectedDonation.donationDate !== "Unknown Date"
+                        ? new Date(
+                            selectedDonation.donationDate
+                          ).toLocaleDateString()
+                        : "Unknown Date"}
+                    </p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-gray-700">Tax Year</Label>
-                    <p className="text-sm text-gray-900 mt-1">{selectedDonation.taxYear || "N/A"}</p>
+                    <Label className="text-sm font-medium text-gray-700">
+                      Tax Year
+                    </Label>
+                    <p className="text-sm text-gray-900 mt-1">
+                      {selectedDonation.taxYear || "N/A"}
+                    </p>
                   </div>
                 </div>
-                
+
                 {selectedDonation.donorAddress && (
                   <div>
-                    <Label className="text-sm font-medium text-gray-700">Address</Label>
-                    <p className="text-sm text-gray-900 mt-1">{selectedDonation.donorAddress}</p>
+                    <Label className="text-sm font-medium text-gray-700">
+                      Address
+                    </Label>
+                    <p className="text-sm text-gray-900 mt-1">
+                      {selectedDonation.donorAddress}
+                    </p>
                     {selectedDonation.donorPostcode && (
-                      <p className="text-sm text-gray-900">{selectedDonation.donorPostcode}</p>
+                      <p className="text-sm text-gray-900">
+                        {selectedDonation.donorPostcode}
+                      </p>
                     )}
                   </div>
                 )}
-                
+
                 <div>
-                  <Label className="text-sm font-medium text-gray-700">Status</Label>
+                  <Label className="text-sm font-medium text-gray-700">
+                    Status
+                  </Label>
                   <div className="mt-1">
-                    {getStatusBadge(selectedDonation.giftAidStatus || "pending")}
+                    {getStatusBadge(
+                      selectedDonation.giftAidStatus || "pending"
+                    )}
                   </div>
                 </div>
-                
+
                 <div>
-                  <Label className="text-sm font-medium text-gray-700">Transaction ID</Label>
+                  <Label className="text-sm font-medium text-gray-700">
+                    Transaction ID
+                  </Label>
                   <p className="text-xs text-gray-700 font-mono mt-1 bg-green-50 px-2 py-1 rounded border border-green-100 inline-block">
                     {selectedDonation.transactionId || "N/A"}
                   </p>
                 </div>
               </div>
             )}
-            
+
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowDetailsDialog(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setShowDetailsDialog(false)}
+              >
                 Close
               </Button>
             </div>
