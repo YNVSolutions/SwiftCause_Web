@@ -8,6 +8,10 @@ import { kioskApi } from "../../entities/kiosk/api";
 import { Button } from "../../shared/ui/button";
 import { Input } from "../../shared/ui/input";
 import { Label } from "../../shared/ui/label";
+import { 
+  syncKiosksForCampaign, 
+  normalizeAssignments 
+} from "../../shared/lib/sync/campaignKioskSync";
 import { Textarea } from "../../shared/ui/textarea";
 import {
   Dialog,
@@ -490,7 +494,7 @@ const CampaignDialog = ({
         );
         if (url) {
           setFormData((prev) => ({ ...prev, organizationInfoLogo: url }));
-          setOrganizationLogoPreview(url); // Update preview with uploaded URL
+          setOrganizationLogoPreview(url);
         }
       } catch (error) {
         console.error("Error uploading organization logo:", error);
@@ -1224,7 +1228,9 @@ const CampaignManagement = ({
     predefinedAmounts: [25, 50, 100],
     startDate: '',
     endDate: '',
-    tags: []
+    tags: [],
+    isGlobal: false,
+    assignedKiosks: []
   });
   
   const [editCampaignFormData, setEditCampaignFormData] = useState<CampaignFormData>({
@@ -1240,7 +1246,9 @@ const CampaignManagement = ({
     predefinedAmounts: [25, 50, 100],
     startDate: '',
     endDate: '',
-    tags: []
+    tags: [],
+    isGlobal: false,
+    assignedKiosks: []
   });
   
   const [selectedNewCampaignImageFile, setSelectedNewCampaignImageFile] = useState<File | null>(null);
@@ -1318,8 +1326,7 @@ const CampaignManagement = ({
   };
 
   const handleEditClick = (campaign: DocumentData) => {
-    // Populate form data from campaign
-    setEditCampaignFormData({
+    const formData = {
       title: campaign.title || '',
       briefOverview: campaign.briefOverview || '',
       description: campaign.description || '',
@@ -1338,9 +1345,12 @@ const CampaignManagement = ({
       endDate: campaign.endDate?.seconds
         ? new Date(campaign.endDate.seconds * 1000).toISOString().split('T')[0]
         : '',
-      tags: Array.isArray(campaign.tags) ? campaign.tags : []
-    });
+      tags: Array.isArray(campaign.tags) ? campaign.tags : [],
+      isGlobal: campaign.isGlobal || false,
+      assignedKiosks: normalizeAssignments(campaign.assignedKiosks)
+    };
     
+    setEditCampaignFormData(formData);
     setEditingCampaignForNewForm(campaign as Campaign);
     setIsEditCampaignFormOpen(true);
   };
@@ -1362,10 +1372,7 @@ const CampaignManagement = ({
         coverImageUrl: data.coverImageUrl || "",
         category: data.category || "",
         organizationId: userSession.user.organizationId || "",
-        assignedKiosks: data.assignedKiosks
-          .split(",")
-          .map((t: string) => t.trim())
-          .filter(Boolean),
+        assignedKiosks: normalizeAssignments(data.assignedKiosks),
         isGlobal: data.isGlobal,
         longDescription: data.longDescription || "",
         videoUrl: data.videoUrl || "",
@@ -1446,10 +1453,26 @@ const CampaignManagement = ({
 
       const finalDataToSave = removeUndefined(dataToSave);
 
+      let savedCampaignId = campaignId;
+      
       if (isNew) {
-        await createWithImage(finalDataToSave);
+        const newCampaign = await createWithImage(finalDataToSave);
+        savedCampaignId = newCampaign.id;
+        
+        await syncKiosksForCampaign(
+          newCampaign.id,
+          normalizeAssignments(data.assignedKiosks),
+          []
+        );
       } else if (campaignId) {
         await updateWithImage(campaignId, finalDataToSave);
+        
+        const oldAssignedKiosks = normalizeAssignments(editingCampaign?.assignedKiosks);
+        await syncKiosksForCampaign(
+          campaignId,
+          normalizeAssignments(data.assignedKiosks),
+          oldAssignedKiosks
+        );
       }
     } catch (error) {
       console.error(
@@ -1508,8 +1531,8 @@ const CampaignManagement = ({
         galleryImages: galleryImageUrls,
         category: newCampaignFormData.category || "",
         organizationId: userSession.user.organizationId || "",
-        assignedKiosks: [],
-        isGlobal: false,
+        assignedKiosks: normalizeAssignments(newCampaignFormData.assignedKiosks),
+        isGlobal: newCampaignFormData.isGlobal,
         configuration: {
           ...DEFAULT_CAMPAIGN_CONFIG,
           predefinedAmounts: newCampaignFormData.predefinedAmounts.filter(a => a > 0),
@@ -1524,7 +1547,9 @@ const CampaignManagement = ({
       }
 
       const finalDataToSave = removeUndefined(dataToSave);
-      await createWithImage(finalDataToSave);
+      const newCampaign = await createWithImage(finalDataToSave);
+      
+      await syncKiosksForCampaign(newCampaign.id, normalizeAssignments(newCampaignFormData.assignedKiosks), []);
       
       // Reset form and close
       setIsNewCampaignFormOpen(false);
@@ -1543,7 +1568,9 @@ const CampaignManagement = ({
         predefinedAmounts: [25, 50, 100],
         startDate: '',
         endDate: '',
-        tags: []
+        tags: [],
+        isGlobal: false,
+        assignedKiosks: []
       });
     } catch (error) {
       console.error("Error creating campaign:", error);
@@ -1568,7 +1595,9 @@ const CampaignManagement = ({
       predefinedAmounts: [25, 50, 100],
       startDate: '',
       endDate: '',
-      tags: []
+      tags: [],
+      isGlobal: false,
+      assignedKiosks: []
     });
   };
 
@@ -1613,8 +1642,8 @@ const CampaignManagement = ({
         galleryImages: galleryImageUrls,
         category: newCampaignFormData.category || "",
         organizationId: userSession.user.organizationId || "",
-        assignedKiosks: [],
-        isGlobal: false,
+        assignedKiosks: normalizeAssignments(newCampaignFormData.assignedKiosks),
+        isGlobal: newCampaignFormData.isGlobal,
         configuration: {
           ...DEFAULT_CAMPAIGN_CONFIG,
           predefinedAmounts: newCampaignFormData.predefinedAmounts.filter(a => a > 0),
@@ -1629,7 +1658,9 @@ const CampaignManagement = ({
       }
 
       const finalDataToSave = removeUndefined(dataToSave);
-      await createWithImage(finalDataToSave);
+      const newCampaign = await createWithImage(finalDataToSave);
+      
+      await syncKiosksForCampaign(newCampaign.id, normalizeAssignments(newCampaignFormData.assignedKiosks), []);
       
       // Reset form and close
       setIsNewCampaignFormOpen(false);
@@ -1648,7 +1679,9 @@ const CampaignManagement = ({
         predefinedAmounts: [25, 50, 100],
         startDate: '',
         endDate: '',
-        tags: []
+        tags: [],
+        isGlobal: false,
+        assignedKiosks: []
       });
     } catch (error) {
       console.error("Error saving campaign draft:", error);
@@ -1698,6 +1731,8 @@ const CampaignManagement = ({
         videoUrl: editCampaignFormData.videoUrl || "",
         galleryImages: galleryImageUrls,
         category: editCampaignFormData.category || "",
+        assignedKiosks: normalizeAssignments(editCampaignFormData.assignedKiosks),
+        isGlobal: editCampaignFormData.isGlobal,
         configuration: {
           ...DEFAULT_CAMPAIGN_CONFIG,
           ...(editingCampaignForNewForm.configuration || {}),
@@ -1714,6 +1749,12 @@ const CampaignManagement = ({
 
       const finalDataToSave = removeUndefined(dataToSave);
       await updateWithImage(editingCampaignForNewForm.id, finalDataToSave);
+      
+      await syncKiosksForCampaign(
+        editingCampaignForNewForm.id,
+        normalizeAssignments(editCampaignFormData.assignedKiosks),
+        normalizeAssignments(editingCampaignForNewForm.assignedKiosks)
+      );
       
       // Reset form and close
       setIsEditCampaignFormOpen(false);
@@ -1733,7 +1774,9 @@ const CampaignManagement = ({
         predefinedAmounts: [25, 50, 100],
         startDate: '',
         endDate: '',
-        tags: []
+        tags: [],
+        isGlobal: false,
+        assignedKiosks: []
       });
     } catch (error) {
       console.error("Error saving campaign draft:", error);
@@ -1783,6 +1826,8 @@ const CampaignManagement = ({
         videoUrl: editCampaignFormData.videoUrl || "",
         galleryImages: galleryImageUrls,
         category: editCampaignFormData.category || "",
+        assignedKiosks: normalizeAssignments(editCampaignFormData.assignedKiosks),
+        isGlobal: editCampaignFormData.isGlobal,
         configuration: {
           ...DEFAULT_CAMPAIGN_CONFIG,
           ...(editingCampaignForNewForm.configuration || {}),
@@ -1799,6 +1844,12 @@ const CampaignManagement = ({
 
       const finalDataToSave = removeUndefined(dataToSave);
       await updateWithImage(editingCampaignForNewForm.id, finalDataToSave);
+      
+      await syncKiosksForCampaign(
+        editingCampaignForNewForm.id,
+        normalizeAssignments(editCampaignFormData.assignedKiosks),
+        normalizeAssignments(editingCampaignForNewForm.assignedKiosks)
+      );
       
       // Reset form and close
       setIsEditCampaignFormOpen(false);
@@ -1818,7 +1869,9 @@ const CampaignManagement = ({
         predefinedAmounts: [25, 50, 100],
         startDate: '',
         endDate: '',
-        tags: []
+        tags: [],
+        isGlobal: false,
+        assignedKiosks: []
       });
     } catch (error) {
       console.error("Error updating campaign:", error);
@@ -1844,7 +1897,9 @@ const CampaignManagement = ({
       predefinedAmounts: [25, 50, 100],
       startDate: '',
       endDate: '',
-      tags: []
+      tags: [],
+      isGlobal: false,
+      assignedKiosks: []
     });
   };
 
@@ -2375,6 +2430,7 @@ const CampaignManagement = ({
         formatCurrency={formatCurrency}
         onImageFileSelect={setSelectedNewCampaignImageFile}
         onGalleryImagesSelect={setSelectedNewCampaignGalleryFiles}
+        organizationId={userSession.user.organizationId}
       />
 
       {/* Edit CampaignForm Component */}
@@ -2390,6 +2446,7 @@ const CampaignManagement = ({
         formatCurrency={formatCurrency}
         onImageFileSelect={setSelectedEditCampaignImageFile}
         onGalleryImagesSelect={setSelectedEditCampaignGalleryFiles}
+        organizationId={userSession.user.organizationId}
       />
       
       {/* Delete Confirmation Dialog */}
