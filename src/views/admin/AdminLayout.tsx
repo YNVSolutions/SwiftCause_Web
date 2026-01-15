@@ -618,7 +618,7 @@ export function AdminLayout({
               onClick={() => setShowUserProfile(false)}
             ></div>
 
-            <div className="fixed top-20 right-6 w-80 bg-white rounded-xl shadow-2xl z-[60] transform transition-all duration-300 ease-out border border-gray-100">
+            <div className="fixed top-20 right-6 w-80 bg-white rounded-xl shadow-2xl z-60 transform transition-all duration-300 ease-out border border-gray-100">
               <div className="relative px-6 py-5 bg-linear-to-r from-green-600 to-emerald-600 rounded-t-xl">
                 <button
                   onClick={() => setShowUserProfile(false)}
