@@ -49,6 +49,17 @@ const SCREEN_LABELS: Partial<Record<Screen, string>> = {
   "admin-bank-details": "Bank Details",
 };
 
+const SCREEN_SUBTITLES: Partial<Record<Screen, string>> = {
+  admin: "Overview of key metrics and activity.",
+  "admin-dashboard": "Overview of key metrics and activity.",
+  "admin-campaigns": "Create, edit, and monitor campaign performance.",
+  "admin-kiosks": "Manage kiosk devices, access, and assignments.",
+  "admin-donations": "Review donations, exports, and recent activity.",
+  "admin-gift-aid": "Track Gift Aid claims and eligible donations.",
+  "admin-users": "Manage admin users, access, and roles.",
+  "admin-bank-details": "Manage your payment settings and Stripe integration.",
+};
+
 interface AdminLayoutProps {
   onNavigate: (screen: Screen) => void;
   onLogout: () => void;
@@ -74,6 +85,16 @@ const getInitials = (name: string) => {
     .slice(0, 2);
 };
 
+const SIDEBAR_COLORS = {
+  base: "#14532D",
+  dark: "#0F3D23",
+  panel: "#1B5E36",
+  panelSoft: "rgba(27, 94, 54, 0.6)",
+  accent: "#22C55E",
+  accentHover: "rgba(34, 197, 94, 0.22)",
+  accentHoverCompact: "rgba(34, 197, 94, 0.28)",
+};
+
 export function AdminLayout({
   onNavigate,
   onLogout,
@@ -89,12 +110,21 @@ export function AdminLayout({
   hideSidebarTrigger,
 }: AdminLayoutProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [logoAnimating, setLogoAnimating] = useState(false);
   const [showUserProfile, setShowUserProfile] = useState(false);
 
   React.useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 1023px)");
-    const handleChange = () => setIsCollapsed(mediaQuery.matches);
+    const handleChange = () => {
+      const matches = mediaQuery.matches;
+      setIsMobile(matches);
+      if (matches) {
+        setIsCollapsed(false);
+        setIsMobileMenuOpen(false);
+      }
+    };
 
     handleChange();
     if (mediaQuery.addEventListener) {
@@ -128,10 +158,15 @@ export function AdminLayout({
   const isActive = (...screens: Screen[]) => screens.includes(activeScreen);
   const currentLabel = SCREEN_LABELS[activeScreen] ?? "Admin";
   const resolvedTitle = headerTitle ?? currentLabel;
-  const resolvedSubtitle = headerSubtitle ?? undefined;
+  const resolvedSubtitle =
+    headerSubtitle ?? SCREEN_SUBTITLES[activeScreen] ?? undefined;
   const userInitials = getInitials(userSession.user.username || userSession.user.email || "U");
 
   const toggleSidebar = () => {
+    if (isMobile) {
+      setIsMobileMenuOpen((open) => !open);
+      return;
+    }
     setIsCollapsed(!isCollapsed);
   };
 
@@ -157,7 +192,7 @@ export function AdminLayout({
         }
       `,
       style: isActiveButton ? {
-        background: '#22C55E',
+        background: SIDEBAR_COLORS.accent,
         boxShadow: isCollapsed
           ? 'inset 3px 0 0 rgba(255,255,255,0.7), 0 0 12px rgba(34,197,94,0.45), 0 2px 8px rgba(0,0,0,0.2)'
           : 'inset 3px 0 0 rgba(255,255,255,0.7), 0 2px 10px rgba(34,197,94,0.35)'
@@ -165,8 +200,8 @@ export function AdminLayout({
       onMouseEnter: (e: React.MouseEvent<HTMLButtonElement>) => {
         if (!isActiveButton) {
           e.currentTarget.style.backgroundColor = isCollapsed
-            ? 'rgba(74, 222, 128, 0.28)'
-            : 'rgba(74, 222, 128, 0.22)';
+            ? SIDEBAR_COLORS.accentHoverCompact
+            : SIDEBAR_COLORS.accentHover;
           e.currentTarget.style.boxShadow = '0 10px 24px rgba(22,163,74,0.2)';
         }
       },
@@ -276,12 +311,18 @@ export function AdminLayout({
         }
       `}</style>
       <div className="relative h-screen w-full">
+        {isMobile && isMobileMenuOpen && (
+          <div
+            className="fixed inset-0 z-40 bg-black/40"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+        )}
         <div className={`flex h-full w-full transition-[filter] duration-300 ${showUserProfile ? "blur-sm" : ""}`}>
           {/* Custom Green Gradient Sidebar */}
           <div 
-            className={`${isCollapsed ? 'w-16' : 'w-80'} relative flex flex-col shadow-2xl border-r border-green-400/40 shrink-0 transition-all duration-300 ease-in-out overflow-hidden`}
+            className={`${isMobile ? "fixed inset-y-0 left-0 z-50" : "relative"} ${isCollapsed ? 'w-16' : 'w-80'} flex flex-col shadow-2xl border-r border-emerald-900/60 shrink-0 transition-all duration-300 ease-in-out overflow-hidden ${isMobile ? (isMobileMenuOpen ? "translate-x-0" : "-translate-x-full") : ""}`}
             style={{
-              background: 'linear-gradient(180deg, #1FBF55 0%, #3FD77B 100%)'
+              background: `linear-gradient(180deg, ${SIDEBAR_COLORS.base} 0%, ${SIDEBAR_COLORS.dark} 100%)`
             }}
           >
           <div className="pointer-events-none absolute -top-24 -right-20 h-72 w-72 rounded-full bg-white/15 blur-3xl"></div>
@@ -291,7 +332,7 @@ export function AdminLayout({
           <div 
             className={`mb-4 overflow-hidden transition-all duration-300 ease-in-out ${isCollapsed ? 'p-2' : 'p-4'}`}
             style={{
-              background: 'rgba(34, 197, 94, 0.18)',
+              background: SIDEBAR_COLORS.panelSoft,
               borderRadius: '12px',
               backdropFilter: 'blur(10px)'
             }}
@@ -316,12 +357,18 @@ export function AdminLayout({
               {/* Collapse/Expand Arrow Button */}
               <button
                 onClick={toggleSidebar}
-                className="p-3 text-white/80 hover:text-white hover:bg-green-400/20 rounded-lg transition-colors duration-200 shrink-0 ml-auto"
+                className="p-3 text-white/80 hover:text-white hover:bg-emerald-500/20 rounded-lg transition-colors duration-200 shrink-0 ml-auto"
               >
-                {isCollapsed ? (
-                  <ChevronRight className="h-6 w-6" />
+                {isMobile ? (
+                  <X className="h-6 w-6" />
                 ) : (
-                  <ChevronLeft className="h-6 w-6" />
+                  <>
+                    {isCollapsed ? (
+                      <ChevronRight className="h-6 w-6" />
+                    ) : (
+                      <ChevronLeft className="h-6 w-6" />
+                    )}
+                  </>
                 )}
               </button>
             </div>
@@ -330,8 +377,9 @@ export function AdminLayout({
           {/* User Profile Card */}
           {!isCollapsed && (
             <div 
-              className="mb-4 rounded-2xl p-5 transition-all duration-300 ease-in-out shadow-[0_12px_26px_rgba(22,163,74,0.35)] border border-white/15 bg-[#16A34A]"
+              className="mb-4 rounded-2xl p-5 transition-all duration-300 ease-in-out shadow-[0_12px_26px_rgba(6,78,59,0.35)] border border-white/12"
               style={{
+                background: SIDEBAR_COLORS.panel,
                 backdropFilter: 'blur(10px)'
               }}
             >
@@ -544,10 +592,20 @@ export function AdminLayout({
             </header>
           
           <main
-            className="flex-1 w-full bg-slate-50 overflow-y-auto overflow-x-hidden"
+            className="flex-1 w-full bg-slate-50 overflow-y-auto overflow-x-hidden relative"
             style={{ scrollbarGutter: "stable" }}
             data-testid="main-content-area"
           >
+            {isMobile && !isMobileMenuOpen && (
+              <button
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="fixed left-0 top-10 z-30 flex h-12  items-center justify-center rounded-r-2xl bg-emerald-500 text-white shadow-[0_10px_20px_rgba(16,185,129,0.35)] transition-transform duration-200 hover:translate-x-1"
+                aria-label="Open menu"
+                title="Open menu"
+              >
+                <ChevronRight className="h-6 w-6" />
+              </button>
+            )}
             {children}
           </main>
           </div>
