@@ -37,10 +37,10 @@ export function DynamicGradientMesh() {
       blob3: 'bg-green-300',
     },
     night: {
-      primary: 'from-green-900 via-emerald-900 to-teal-900',
-      blob1: 'bg-green-700',
-      blob2: 'bg-emerald-700',
-      blob3: 'bg-teal-700',
+      primary: 'from-slate-100 via-gray-50 to-slate-100',
+      blob1: 'bg-green-200',
+      blob2: 'bg-emerald-200',
+      blob3: 'bg-teal-200',
     },
   };
 
@@ -58,18 +58,17 @@ export function DynamicGradientMesh() {
         <div className="absolute top-0 left-0 right-0 h-96 bg-gradient-to-b from-green-400/30 via-emerald-400/20 to-transparent animate-aurora"></div>
       </div>
 
-      {/* Starfield for night mode */}
       {timeOfDay === 'night' && (
         <div className="absolute inset-0">
-          {[...Array(50)].map((_, i) => (
+          {[...Array(30)].map((_, i) => (
             <div
               key={i}
-              className="absolute w-1 h-1 bg-white rounded-full animate-twinkle"
+              className="absolute w-1 h-1 bg-green-400 rounded-full animate-twinkle"
               style={{
                 top: `${Math.random() * 100}%`,
                 left: `${Math.random() * 100}%`,
                 animationDelay: `${Math.random() * 3}s`,
-                opacity: Math.random() * 0.7 + 0.3,
+                opacity: Math.random() * 0.3 + 0.1,
               }}
             />
           ))}
