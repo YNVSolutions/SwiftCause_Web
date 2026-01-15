@@ -472,171 +472,285 @@ export function GiftAidManagement({
         {/* Donations Table */}
         <Card className="overflow-hidden">
           <CardContent className="p-0">
-            <Table className="w-full table-fixed">
-                <TableHeader>
-                  <TableRow className="bg-gray-100 border-b-2 border-gray-300">
-                    <SortableTableHeader 
-                      sortKey="donorName" 
-                      currentSortKey={sortKey} 
-                      currentSortDirection={sortDirection} 
-                      onSort={handleSort}
-                      className="w-[20%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
-                    >
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-gray-500 flex-shrink-0" />
-                        <span className="whitespace-nowrap">Donor</span>
-                      </div>
-                    </SortableTableHeader>
-                    <SortableTableHeader 
-                      sortKey="campaignTitle" 
-                      currentSortKey={sortKey} 
-                      currentSortDirection={sortDirection} 
-                      onSort={handleSort}
-                      className="w-[18%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Target className="h-4 w-4 text-gray-500 flex-shrink-0" />
-                        <span className="whitespace-nowrap">Campaign</span>
-                      </div>
-                    </SortableTableHeader>
-                    <SortableTableHeader 
-                      sortKey="amount" 
-                      currentSortKey={sortKey} 
-                      currentSortDirection={sortDirection} 
-                      onSort={handleSort}
-                      className="w-[12%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
-                    >
-                      <div className="flex items-center justify-end gap-2">
-                        <Banknote className="h-4 w-4 text-gray-500 flex-shrink-0" />
-                        <span className="whitespace-nowrap">Donation</span>
-                      </div>
-                    </SortableTableHeader>
-                    <SortableTableHeader 
-                      sortKey="giftAidAmount" 
-                      currentSortKey={sortKey} 
-                      currentSortDirection={sortDirection} 
-                      onSort={handleSort}
-                      className="w-[12%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
-                    >
-                      <div className="flex items-center justify-end gap-2">
-                        <Gift className="h-4 w-4 text-green-600 flex-shrink-0" />
-                        <span className="whitespace-nowrap">Gift Aid</span>
-                      </div>
-                    </SortableTableHeader>
-                    <SortableTableHeader 
-                      sortKey="donationDate" 
-                      currentSortKey={sortKey} 
-                      currentSortDirection={sortDirection} 
-                      onSort={handleSort}
-                      className="w-[20%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
-                    >
-                      <div className="flex items-center gap-2">
-                        <CalendarDays className="h-4 w-4 text-gray-500 flex-shrink-0" />
-                        <span className="whitespace-nowrap">Date</span>
-                      </div>
-                    </SortableTableHeader>
-                    <SortableTableHeader 
-                      sortable={false}
-                      sortKey="actions" 
-                      currentSortKey={sortKey} 
-                      currentSortDirection={sortDirection} 
-                      onSort={handleSort}
-                      className="w-[18%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center"
-                    >
-                      <div className="flex items-center justify-center gap-2">
-                        <Eye className="h-4 w-4 text-gray-500 flex-shrink-0" />
-                        <span className="whitespace-nowrap">Actions</span>
-                      </div>
-                    </SortableTableHeader>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loading ? (
-                    Array.from({ length: 5 }).map((_, i) => (
-                      <TableRow key={i} className="h-16">
-                        <TableCell className="py-4"><Skeleton className="h-5 w-32" /></TableCell>
-                        <TableCell className="py-4"><Skeleton className="h-5 w-24" /></TableCell>
-                        <TableCell className="py-4"><Skeleton className="h-5 w-16" /></TableCell>
-                        <TableCell className="py-4"><Skeleton className="h-5 w-16" /></TableCell>
-                        <TableCell className="py-4"><Skeleton className="h-5 w-20" /></TableCell>
-                        <TableCell className="py-4"><Skeleton className="h-8 w-8 rounded" /></TableCell>
-                      </TableRow>
-                    ))
-                  ) : filteredDonations.length > 0 ? (
-                    filteredDonations.map((donation) => (
-                      <TableRow 
-                        key={donation.id}
-                        className="cursor-pointer hover:bg-gray-50 transition-colors h-16"
-                        onClick={() => handleViewDetails(donation)}
-                      >
-                        <TableCell className="py-4">
-                          <div className="flex items-center gap-2">
-                            <User className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                            <p className="text-base text-gray-900">{donation.donorName || "N/A"}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-4">
-                          <div className="flex items-center gap-2">
-                            <Target className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                            <p className="text-base text-gray-800">{donation.campaignTitle || "N/A"}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-4">
-                          <div className="flex items-center gap-2">
-                            <Banknote className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                            <p className="text-base font-bold text-gray-900">{formatCurrency(donation.amount || 0)}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-4">
-                          <div className="flex items-center gap-2">
-                            <Gift className="h-4 w-4 text-green-500 flex-shrink-0" />
-                            <p className="text-base font-bold text-green-700">{formatCurrency(donation.giftAidAmount || 0)}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-4">
-                          <div className="flex items-center gap-2">
-                            <CalendarDays className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                            <p className="text-base text-gray-700">{donation.donationDate && donation.donationDate !== "Unknown Date" ? new Date(donation.donationDate).toLocaleDateString() : "Unknown Date"}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-4">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleViewDetails(donation);
-                            }}
-                            className="h-8 w-8 p-0 hover:bg-indigo-100 hover:text-indigo-600 transition-colors"
-                            title="View donation details"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 p-6">
-                        <div className="flex flex-col items-center gap-2">
-                          <Gift className="h-12 w-12 text-gray-400" />
-                          <p className="text-xl font-bold text-gray-600">No Gift Aid donations found</p>
-                          <p className="text-base text-gray-500 mt-2">
-                            {searchTerm || statusFilter !== "all" 
-                              ? "Try adjusting your search or filters" 
-                              : "Gift Aid eligible donations will appear here when donors opt-in for Gift Aid"}
-                          </p>
-                          {!searchTerm && statusFilter === "all" && (
-                            <p className="text-sm text-gray-400 mt-2">
-                              Gift Aid declarations are created automatically when donors opt-in during the donation process.
-                            </p>
-                          )}
+            {loading ? (
+              <>
+                <div className="md:hidden space-y-4 px-4 py-5">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="rounded-2xl border border-emerald-100 bg-white px-4 py-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 space-y-2">
+                          <Skeleton className="h-4 w-36" />
+                          <Skeleton className="h-3 w-28" />
+                          <Skeleton className="h-3 w-24" />
                         </div>
-                      </TableCell>
-                    </TableRow>
+                        <div className="flex flex-col items-end gap-2">
+                          <Skeleton className="h-4 w-20" />
+                          <Skeleton className="h-4 w-16" />
+                        </div>
+                      </div>
+                      <div className="mt-3 space-y-2">
+                        <Skeleton className="h-4 w-48" />
+                        <Skeleton className="h-4 w-24" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="hidden md:block">
+                  <Table className="w-full table-fixed">
+                    <TableHeader>
+                      <TableRow className="bg-gray-100 border-b-2 border-gray-300">
+                        <TableHead className="w-[20%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide">Donor</TableHead>
+                        <TableHead className="w-[18%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide">Campaign</TableHead>
+                        <TableHead className="w-[12%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right">Donation</TableHead>
+                        <TableHead className="w-[12%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right">Gift Aid</TableHead>
+                        <TableHead className="w-[20%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide">Date</TableHead>
+                        <TableHead className="w-[18%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <TableRow key={i} className="h-16">
+                          <TableCell className="py-4"><Skeleton className="h-5 w-32" /></TableCell>
+                          <TableCell className="py-4"><Skeleton className="h-5 w-24" /></TableCell>
+                          <TableCell className="py-4"><Skeleton className="h-5 w-16" /></TableCell>
+                          <TableCell className="py-4"><Skeleton className="h-5 w-16" /></TableCell>
+                          <TableCell className="py-4"><Skeleton className="h-5 w-20" /></TableCell>
+                          <TableCell className="py-4"><Skeleton className="h-8 w-8 rounded" /></TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
+            ) : filteredDonations.length > 0 ? (
+              <>
+                <div className="md:hidden space-y-4 px-4 py-5">
+                  {filteredDonations.map((donation) => (
+                    <button
+                      key={donation.id}
+                      type="button"
+                      onClick={() => handleViewDetails(donation)}
+                      className="group relative w-full rounded-2xl border border-emerald-100 bg-white px-4 pb-4 pt-3 text-left shadow-[0_10px_24px_rgba(15,23,42,0.06)] transition-transform duration-200 hover:-translate-y-0.5"
+                    >
+                      <span className="absolute left-0 top-4 h-12 w-1.5 rounded-full bg-emerald-500" />
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-emerald-500" />
+                            <span className="text-sm font-semibold text-gray-900 truncate">
+                              {donation.donorName || "N/A"}
+                            </span>
+                          </div>
+                          <div className="mt-1 text-xs text-gray-500 truncate">{donation.donorPostcode || "Postcode unavailable"}</div>
+                          <div className="text-[11px] font-mono text-gray-400 truncate">
+                            {donation.transactionId || "No transaction ID"}
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-2 shrink-0">
+                          <span className="text-sm font-semibold text-gray-900">
+                            {formatCurrency(donation.amount || 0)}
+                          </span>
+                          <span className="text-sm font-semibold text-emerald-700">
+                            {formatCurrency(donation.giftAidAmount || 0)}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {donation.campaignTitle || "N/A"}
+                          </p>
+                          <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700">
+                            <Gift className="h-3.5 w-3.5" />
+                            Gift Aid
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {getStatusBadge(donation.giftAidStatus || "pending")}
+                        </div>
+                      </div>
+
+                      <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-gray-600">
+                        <div className="flex items-center gap-2">
+                          <CalendarDays className="h-3.5 w-3.5 text-gray-400" />
+                          <span className="truncate">
+                            {donation.donationDate && donation.donationDate !== "Unknown Date"
+                              ? new Date(donation.donationDate).toLocaleDateString()
+                              : "Unknown Date"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 justify-end">
+                          <Badge variant="secondary" className="text-[11px]">
+                            {donation.taxYear || "Tax year"}
+                          </Badge>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 flex items-center justify-end">
+                        <span className="inline-flex items-center gap-2 rounded-full border border-gray-200 px-3 py-1 text-xs font-medium text-gray-600">
+                          <Eye className="h-3.5 w-3.5" />
+                          View details
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="hidden md:block overflow-hidden">
+                  <Table className="w-full table-fixed">
+                      <TableHeader>
+                        <TableRow className="bg-gray-100 border-b-2 border-gray-300">
+                          <SortableTableHeader 
+                            sortKey="donorName" 
+                            currentSortKey={sortKey} 
+                            currentSortDirection={sortDirection} 
+                            onSort={handleSort}
+                            className="w-[20%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                          >
+                            <div className="flex items-center gap-2">
+                              <User className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                              <span className="whitespace-nowrap">Donor</span>
+                            </div>
+                          </SortableTableHeader>
+                          <SortableTableHeader 
+                            sortKey="campaignTitle" 
+                            currentSortKey={sortKey} 
+                            currentSortDirection={sortDirection} 
+                            onSort={handleSort}
+                            className="w-[18%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Target className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                              <span className="whitespace-nowrap">Campaign</span>
+                            </div>
+                          </SortableTableHeader>
+                          <SortableTableHeader 
+                            sortKey="amount" 
+                            currentSortKey={sortKey} 
+                            currentSortDirection={sortDirection} 
+                            onSort={handleSort}
+                            className="w-[12%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
+                          >
+                            <div className="flex items-center justify-end gap-2">
+                              <Banknote className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                              <span className="whitespace-nowrap">Donation</span>
+                            </div>
+                          </SortableTableHeader>
+                          <SortableTableHeader 
+                            sortKey="giftAidAmount" 
+                            currentSortKey={sortKey} 
+                            currentSortDirection={sortDirection} 
+                            onSort={handleSort}
+                            className="w-[12%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
+                          >
+                            <div className="flex items-center justify-end gap-2">
+                              <Gift className="h-4 w-4 text-green-600 flex-shrink-0" />
+                              <span className="whitespace-nowrap">Gift Aid</span>
+                            </div>
+                          </SortableTableHeader>
+                          <SortableTableHeader 
+                            sortKey="donationDate" 
+                            currentSortKey={sortKey} 
+                            currentSortDirection={sortDirection} 
+                            onSort={handleSort}
+                            className="w-[20%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                          >
+                            <div className="flex items-center gap-2">
+                              <CalendarDays className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                              <span className="whitespace-nowrap">Date</span>
+                            </div>
+                          </SortableTableHeader>
+                          <SortableTableHeader 
+                            sortable={false}
+                            sortKey="actions" 
+                            currentSortKey={sortKey} 
+                            currentSortDirection={sortDirection} 
+                            onSort={handleSort}
+                            className="w-[18%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center"
+                          >
+                            <div className="flex items-center justify-center gap-2">
+                              <Eye className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                              <span className="whitespace-nowrap">Actions</span>
+                            </div>
+                          </SortableTableHeader>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredDonations.map((donation) => (
+                          <TableRow 
+                            key={donation.id}
+                            className="cursor-pointer hover:bg-gray-50 transition-colors h-16"
+                            onClick={() => handleViewDetails(donation)}
+                          >
+                            <TableCell className="py-4">
+                              <div className="flex items-center gap-2">
+                                <User className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                                <p className="text-base text-gray-900">{donation.donorName || "N/A"}</p>
+                              </div>
+                            </TableCell>
+                            <TableCell className="py-4">
+                              <div className="flex items-center gap-2">
+                                <Target className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                                <p className="text-base text-gray-800">{donation.campaignTitle || "N/A"}</p>
+                              </div>
+                            </TableCell>
+                            <TableCell className="py-4">
+                              <div className="flex items-center gap-2">
+                                <Banknote className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                                <p className="text-base font-bold text-gray-900">{formatCurrency(donation.amount || 0)}</p>
+                              </div>
+                            </TableCell>
+                            <TableCell className="py-4">
+                              <div className="flex items-center gap-2">
+                                <Gift className="h-4 w-4 text-green-500 flex-shrink-0" />
+                                <p className="text-base font-bold text-green-700">{formatCurrency(donation.giftAidAmount || 0)}</p>
+                              </div>
+                            </TableCell>
+                            <TableCell className="py-4">
+                              <div className="flex items-center gap-2">
+                                <CalendarDays className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                                <p className="text-base text-gray-700">{donation.donationDate && donation.donationDate !== "Unknown Date" ? new Date(donation.donationDate).toLocaleDateString() : "Unknown Date"}</p>
+                              </div>
+                            </TableCell>
+                            <TableCell className="py-4">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleViewDetails(donation);
+                                }}
+                                className="h-8 w-8 p-0 hover:bg-indigo-100 hover:text-indigo-600 transition-colors"
+                                title="View donation details"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-8 px-6">
+                <div className="flex flex-col items-center gap-2">
+                  <Gift className="h-12 w-12 text-gray-400" />
+                  <p className="text-xl font-bold text-gray-600">No Gift Aid donations found</p>
+                  <p className="text-base text-gray-500 mt-2">
+                    {searchTerm || statusFilter !== "all" 
+                      ? "Try adjusting your search or filters" 
+                      : "Gift Aid eligible donations will appear here when donors opt-in for Gift Aid"}
+                  </p>
+                  {!searchTerm && statusFilter === "all" && (
+                    <p className="text-sm text-gray-400 mt-2">
+                      Gift Aid declarations are created automatically when donors opt-in during the donation process.
+                    </p>
                   )}
-                </TableBody>
-              </Table>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
