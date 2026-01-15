@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Campaign } from '../../../shared/types';
 import { useScrollSpy } from '../../../shared/lib/hooks/useScrollSpy';
+import { kioskApi } from '../../../entities/kiosk/api';
 
 // UI Components
 import { Button } from '../../../shared/ui/button';
@@ -13,6 +14,8 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription, VisuallyHidden }
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../shared/ui/select';
 import { Textarea } from '../../../shared/ui/textarea';
 import { SlateEditor } from '../../../shared/ui/slate-editor';
+import { Switch } from '../../../shared/ui/switch';
+import { Checkbox } from '../../../shared/ui/checkbox';
 
 import {
   Menu, X, Save, Upload
@@ -33,6 +36,8 @@ export interface CampaignFormData {
   startDate: string;
   endDate: string;
   tags: string[];
+  isGlobal: boolean;
+  assignedKiosks: string[];
 }
 
 export interface CampaignFormProps {
@@ -47,6 +52,7 @@ export interface CampaignFormProps {
   formatCurrency: (amount: number) => string;
   onImageFileSelect?: (file: File | null) => void;
   onGalleryImagesSelect?: (files: File[]) => void;
+  organizationId?: string;
 }
 
 export function CampaignForm({
@@ -60,7 +66,8 @@ export function CampaignForm({
   onCancel,
   formatCurrency,
   onImageFileSelect,
-  onGalleryImagesSelect
+  onGalleryImagesSelect,
+  organizationId
 }: CampaignFormProps) {
   
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -68,6 +75,8 @@ export function CampaignForm({
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedGalleryFiles, setSelectedGalleryFiles] = useState<File[]>([]);
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
+  const [kiosks, setKiosks] = useState<any[]>([]);
+  const [loadingKiosks, setLoadingKiosks] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   
@@ -76,11 +85,13 @@ export function CampaignForm({
   const basicInfoRef = useRef<HTMLElement>(null);
   const detailsRef = useRef<HTMLElement>(null);
   const mediaRef = useRef<HTMLElement>(null);
+  const kioskDistributionRef = useRef<HTMLElement>(null);
   
   const sectionRefsObject = useRef({
     'basic-info': basicInfoRef,
     details: detailsRef,
     media: mediaRef,
+    'kiosk-distribution': kioskDistributionRef,
   });
   
   const sectionRefs = sectionRefsObject.current;
@@ -89,7 +100,8 @@ export function CampaignForm({
   const navigationItems = [
     { id: 'basic-info', label: 'BASIC INFO' },
     { id: 'details', label: 'DETAILS' },
-    { id: 'media', label: 'MEDIA' }
+    { id: 'media', label: 'MEDIA' },
+    { id: 'kiosk-distribution', label: 'KIOSK DISTRIBUTION' }
   ];
 
   // Use ScrollSpy hook
@@ -125,6 +137,24 @@ export function CampaignForm({
       setSelectedGalleryFiles([]);
     }
   }, [open, editingCampaign, campaignData.galleryImages]);
+
+  useEffect(() => {
+    if (open && organizationId) {
+      const fetchKiosks = async () => {
+        try {
+          setLoadingKiosks(true);
+          const kiosksList = await kioskApi.getKiosks(organizationId);
+          setKiosks(kiosksList);
+        } catch (error) {
+          console.error('Failed to fetch kiosks:', error);
+          setKiosks([]);
+        } finally {
+          setLoadingKiosks(false);
+        }
+      };
+      fetchKiosks();
+    }
+  }, [open, organizationId]);
 
   // Handle keyboard navigation
   const handleNavKeyDown = (event: React.KeyboardEvent, sectionId: string) => {
@@ -244,6 +274,37 @@ export function CampaignForm({
         onGalleryImagesSelect(updatedFiles);
       }
     }
+  };
+
+  // Handle kiosk selection
+  const handleKioskToggle = (kioskId: string) => {
+    setCampaignData(p => {
+      const currentAssigned = p.assignedKiosks || [];
+      const isAssigned = currentAssigned.includes(kioskId);
+      
+      return {
+        ...p,
+        assignedKiosks: isAssigned
+          ? currentAssigned.filter(id => id !== kioskId)
+          : [...currentAssigned, kioskId]
+      };
+    });
+  };
+
+  // Select all kiosks
+  const handleSelectAllKiosks = () => {
+    setCampaignData(p => ({
+      ...p,
+      assignedKiosks: kiosks.map(k => k.id)
+    }));
+  };
+
+  // Deselect all kiosks
+  const handleDeselectAllKiosks = () => {
+    setCampaignData(p => ({
+      ...p,
+      assignedKiosks: []
+    }));
   };
 
   return (
@@ -771,6 +832,154 @@ export function CampaignForm({
                           <div className="text-blue-600 text-sm font-semibold">ADD IMAGE</div>
                         </button>
                       )}
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Kiosk Distribution Section */}
+              <section 
+                id="kiosk-distribution"
+                ref={sectionRefs['kiosk-distribution']}
+                className="p-4 sm:p-6 lg:p-8 border-b border-gray-100"
+                style={{ scrollSnapAlign: 'start' }}
+              >
+                <div className="max-w-4xl">
+                  <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-6 sm:mb-8">
+                    Kiosk Distribution
+                  </h2>
+                  
+                  <div className="space-y-6">
+                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Distribution Settings</h3>
+                      
+                      <div className="space-y-4">
+                        <div className={`flex items-center justify-between p-4 rounded-lg transition-colors ${
+                          campaignData.isGlobal 
+                            ? 'bg-green-50 border border-green-200' 
+                            : 'bg-gray-50'
+                        }`}>
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-900 mb-1">Global Distribution</p>
+                            <p className="text-sm text-gray-600">
+                              {campaignData.isGlobal 
+                                ? 'This campaign will be automatically distributed to all active kiosks in your organization.'
+                                : 'Enable global distribution to make this campaign available on all kiosks, or manage specific kiosk assignments from the Kiosk Management section.'
+                              }
+                            </p>
+                          </div>
+                          <Switch
+                            checked={campaignData.isGlobal}
+                            onCheckedChange={(checked) => setCampaignData(p => ({ ...p, isGlobal: checked }))}
+                            className="ml-4"
+                          />
+                        </div>
+
+                        {/* Active Kiosks List */}
+                        <div className="border-t pt-4">
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                              <h4 className="font-medium text-gray-900">Kiosk Assignment</h4>
+                              {!campaignData.isGlobal && kiosks.length > 0 && (
+                                <div className="flex gap-2">
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={handleSelectAllKiosks}
+                                    className="h-7 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                  >
+                                    Select All
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={handleDeselectAllKiosks}
+                                    className="h-7 text-xs text-gray-600 hover:text-gray-700 hover:bg-gray-50"
+                                  >
+                                    Clear
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                            <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-200">
+                              {loadingKiosks ? '...' : 
+                                campaignData.isGlobal 
+                                  ? `${kiosks.length} Total`
+                                  : `${(campaignData.assignedKiosks || []).length} Selected`
+                              }
+                            </Badge>
+                          </div>
+                          
+                          {loadingKiosks ? (
+                            <div className="space-y-2">
+                              {[1, 2, 3].map((i) => (
+                                <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse"></div>
+                              ))}
+                            </div>
+                          ) : kiosks.length === 0 ? (
+                            <div className="text-center py-8 text-gray-500">
+                              <svg className="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                              </svg>
+                              <p className="text-sm font-medium">No kiosks found</p>
+                              <p className="text-xs mt-1">Add kiosks from Kiosk Management</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-2 max-h-64 overflow-y-auto">
+                              {kiosks.map((kiosk) => {
+                                const isAssigned = (campaignData.assignedKiosks || []).includes(kiosk.id);
+                                const isDisabled = campaignData.isGlobal;
+                                
+                                return (
+                                  <div 
+                                    key={kiosk.id} 
+                                    className={`flex items-center justify-between p-3 rounded-lg transition-colors ${
+                                      isDisabled 
+                                        ? 'bg-gray-50 opacity-60 cursor-not-allowed' 
+                                        : isAssigned
+                                          ? 'bg-green-50 border border-green-200 hover:bg-green-100'
+                                          : 'bg-gray-50 hover:bg-gray-100 cursor-pointer'
+                                    }`}
+                                    onClick={() => !isDisabled && handleKioskToggle(kiosk.id)}
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      <Checkbox
+                                        checked={isDisabled || isAssigned}
+                                        disabled={isDisabled}
+                                        onCheckedChange={() => handleKioskToggle(kiosk.id)}
+                                        className="cursor-pointer"
+                                      />
+                                      <div className={`w-2 h-2 rounded-full ${
+                                        kiosk.status === 'online' ? 'bg-green-500' : 
+                                        kiosk.status === 'offline' ? 'bg-gray-400' : 
+                                        'bg-yellow-500'
+                                      }`}></div>
+                                      <div>
+                                        <p className="font-medium text-gray-900 text-sm">{kiosk.name}</p>
+                                        <p className="text-xs text-gray-500">{kiosk.location || 'No location'}</p>
+                                      </div>
+                                    </div>
+                                    <Badge 
+                                      variant="secondary" 
+                                      className={`text-xs capitalize ${
+                                        kiosk.status === 'online' 
+                                          ? 'bg-green-100 text-green-700 border-green-200' : 
+                                        kiosk.status === 'offline'
+                                          ? 'bg-gray-100 text-gray-700 border-gray-200'
+                                          : 'bg-yellow-100 text-yellow-700 border-yellow-200'
+                                      }`}
+                                    >
+                                      {kiosk.status || 'Unknown'}
+                                    </Badge>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
