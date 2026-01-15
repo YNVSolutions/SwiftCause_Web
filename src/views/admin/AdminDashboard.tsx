@@ -223,6 +223,7 @@ export function AdminDashboard({
   const [showCampaignFormDialog, setShowCampaignFormDialog] = useState(false);
   const [selectedCampaignImageFile, setSelectedCampaignImageFile] = useState<File | null>(null);
   const [editingCampaignInTour, setEditingCampaignInTour] = useState<Campaign | null>(null);
+  const [selectedCampaignInTour, setSelectedCampaignInTour] = useState<Campaign | null>(null);
   const [isCreatingCampaign, setIsCreatingCampaign] = useState(false);
   const [isCreatingKiosk, setIsCreatingKiosk] = useState(false);
   const [linkingCampaignId, setLinkingCampaignId] = useState<string | null>(null);
@@ -696,6 +697,12 @@ export function AdminDashboard({
         );
         setAllCampaigns(campaigns);
         
+        // Set the newly created campaign as selected
+        const newlyCreatedCampaign = campaigns.find(c => c.id === docRef.id);
+        if (newlyCreatedCampaign) {
+          setSelectedCampaignInTour(newlyCreatedCampaign);
+        }
+        
         // Move to next step only when creating new
         setShowCampaignForm(false);
         setShowKioskForm(true);
@@ -1126,21 +1133,10 @@ export function AdminDashboard({
                 <div className="w-full max-w-2xl mx-auto">
                   <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
                     <CardContent className="p-8">
-                      {/* Header with Title and Skip Button */}
-                      <div className="flex items-start justify-between mb-6">
-                        <div className="flex-1">
-                          <h2 className="text-3xl font-bold text-gray-900 mb-2">Create New Campaign</h2>
-                          <p className="text-base text-gray-500">Configure a new fundraising campaign for your organization.</p>
-                        </div>
-                        <Button
-                          onClick={() => {
-                            setShowCampaignForm(false);
-                            setShowKioskForm(true);
-                          }}
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium ml-4"
-                        >
-                          Skip
-                        </Button>
+                      {/* Header with Title */}
+                      <div className="mb-6">
+                        <h2 className="text-3xl font-bold text-gray-900 mb-2">Create New Campaign</h2>
+                        <p className="text-base text-gray-500">Configure a new fundraising campaign for your organization.</p>
                       </div>
 
                       {/* What is a Campaign Info */}
@@ -1162,21 +1158,39 @@ export function AdminDashboard({
                       {allCampaigns.length > 0 && (
                         <div className="mb-6">
                           <h3 className="text-lg font-semibold text-gray-900 mb-4">Existing Campaigns ({allCampaigns.length})</h3>
+                          <p className="text-sm text-gray-500 mb-3">Click on a campaign to select it, or create a new one below.</p>
                           <div className="space-y-3 max-h-64 overflow-y-auto">
                             {allCampaigns.map((campaign) => (
                               <div
                                 key={campaign.id}
-                                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200"
+                                onClick={() => setSelectedCampaignInTour(selectedCampaignInTour?.id === campaign.id ? null : campaign)}
+                                className={`flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                                  selectedCampaignInTour?.id === campaign.id
+                                    ? 'bg-green-50 border-green-500'
+                                    : 'bg-gray-50 border-gray-200 hover:border-gray-300'
+                                }`}
                               >
-                                <div className="flex-1 min-w-0">
-                                  <h4 className="font-medium text-gray-900 truncate">{campaign.title}</h4>
-                                  <div className="flex items-center gap-3 mt-1">
-                                    <span className="text-sm text-gray-500">
-                                      Goal: {formatCurrency(campaign.goal || 0)}
-                                    </span>
-                                    <span className="text-sm text-gray-500">
-                                      Raised: {formatCurrency(campaign.raised || 0)}
-                                    </span>
+                                <div className="flex items-center gap-3 flex-1 min-w-0">
+                                  {/* Selection indicator */}
+                                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                                    selectedCampaignInTour?.id === campaign.id
+                                      ? 'border-green-500 bg-green-500'
+                                      : 'border-gray-300'
+                                  }`}>
+                                    {selectedCampaignInTour?.id === campaign.id && (
+                                      <CheckCircle className="w-4 h-4 text-white" />
+                                    )}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <h4 className="font-medium text-gray-900 truncate">{campaign.title}</h4>
+                                    <div className="flex items-center gap-3 mt-1">
+                                      <span className="text-sm text-gray-500">
+                                        Goal: {formatCurrency(campaign.goal || 0)}
+                                      </span>
+                                      <span className="text-sm text-gray-500">
+                                        Raised: {formatCurrency(campaign.raised || 0)}
+                                      </span>
+                                    </div>
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -1193,7 +1207,8 @@ export function AdminDashboard({
                                   </Badge>
                                   <button 
                                     className="p-1 hover:bg-gray-200 rounded-md transition-colors"
-                                    onClick={() => {
+                                    onClick={(e) => {
+                                      e.stopPropagation();
                                       setEditingCampaignInTour(campaign);
                                       // Handle date conversion safely
                                       let startDateStr = '';
@@ -1256,6 +1271,10 @@ export function AdminDashboard({
                         </Button>
                         <Button
                           onClick={() => {
+                            // If a campaign is selected, use it for the next step
+                            if (selectedCampaignInTour) {
+                              setCreatedCampaignId(selectedCampaignInTour.id);
+                            }
                             setShowCampaignForm(false);
                             setShowKioskForm(true);
                           }}
@@ -1463,7 +1482,38 @@ export function AdminDashboard({
                           Back
                         </Button>
                         <Button
-                          onClick={() => {
+                          onClick={async () => {
+                            // Assign selected campaign to assigned kiosks
+                            if (selectedCampaignInTour && assignedKioskIds.length > 0) {
+                              try {
+                                // Update each assigned kiosk with the campaign
+                                const updatePromises = assignedKioskIds.map(async (kioskId) => {
+                                  const kioskRef = doc(db, 'kiosks', kioskId);
+                                  const kiosk = allKiosks.find(k => k.id === kioskId);
+                                  
+                                  if (kiosk) {
+                                    const currentAssignedCampaigns = kiosk.assignedCampaigns || [];
+                                    // Add campaign if not already assigned
+                                    if (!currentAssignedCampaigns.includes(selectedCampaignInTour.id)) {
+                                      const updatedCampaigns = [...currentAssignedCampaigns, selectedCampaignInTour.id];
+                                      await updateDoc(kioskRef, {
+                                        assignedCampaigns: updatedCampaigns,
+                                        defaultCampaign: updatedCampaigns[0],
+                                        updatedAt: new Date(),
+                                      });
+                                    }
+                                  }
+                                });
+                                
+                                await Promise.all(updatePromises);
+                                console.log(`Campaign ${selectedCampaignInTour.id} assigned to ${assignedKioskIds.length} kiosk(s)`);
+                              } catch (error) {
+                                console.error("Error assigning campaign to kiosks:", error);
+                                alert("Failed to assign campaign to kiosks. Please try again.");
+                                return;
+                              }
+                            }
+                            
                             setShowKioskForm(false);
                             setShowStripeStep(true);
                           }}
