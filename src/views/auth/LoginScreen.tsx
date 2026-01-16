@@ -43,8 +43,8 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
 
       <div className="flex min-h-screen relative z-10">
         {/* Left side - Stats and branding */}
-        <div className="hidden lg:flex lg:w-1/2 xl:w-3/5 flex-col justify-center p-6 xl:p-12">
-          <div className="max-w-lg mx-auto w-full">
+        <div className="hidden lg:flex lg:w-1/2 xl:w-3/5 flex-col justify-center p-6 xl:p-8">
+          <div className="max-w-lg mx-auto w-full space-y-4">
             <Button 
               onClick={onGoBackToHome} 
               variant="ghost" 
@@ -58,40 +58,40 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
             {/* Logo */}
             <button 
               onClick={onGoBackToHome} 
-              className="flex items-center space-x-3 mb-4 text-left hover:opacity-90 transition-all duration-300 hover:scale-105 group"
+              className="flex items-center space-x-3 text-left hover:opacity-90 transition-all duration-300 hover:scale-105 group"
             >
-              <div className="flex h-14 w-14 items-center justify-center transform transition-transform group-hover:scale-110">
-                <img src="/logo.png" className="h-14 w-14 rounded-xl shadow-lg" alt="Swift Cause Logo" />
+              <div className="flex h-12 w-12 items-center justify-center transform transition-transform group-hover:scale-110">
+                <img src="/logo.png" className="h-12 w-12 rounded-xl shadow-lg" alt="Swift Cause Logo" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 group-hover:text-green-600 transition-colors">
+                <h1 className="text-xl font-bold text-gray-900 group-hover:text-green-600 transition-colors">
                   Swift Cause
                 </h1>
-                <p className="text-sm text-green-600 font-medium">
+                <p className="text-xs text-green-600 font-medium">
                   Modern Donation Platform
                 </p>
               </div>
             </button>
 
             {/* Professional greeting */}
-            <h2 className="text-3xl xl:text-4xl font-bold text-gray-900 mb-4 leading-tight animate-fade-in">
-              Welcome back to <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600">Swift Cause</span>
-            </h2>
+            <div>
+              <h2 className="text-2xl xl:text-3xl font-bold text-gray-900 mb-2 leading-tight animate-fade-in">
+                Welcome back to <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600">Swift Cause</span>
+              </h2>
 
-            <p className="text-base xl:text-lg text-gray-600 mb-8 animate-fade-in-delay">
-              Comprehensive donation management platform trusted by organizations worldwide.
-            </p>
+              <p className="text-sm xl:text-base text-gray-600 animate-fade-in-delay">
+                Comprehensive donation management platform trusted by organizations worldwide.
+              </p>
+            </div>
 
-            {/* Featured Campaign - Real data from Firestore */}
+            {/* Featured Campaign */}
             {loading ? (
-              <div className="w-full max-w-lg mx-auto mb-8 p-8 text-center">
-                <div className="animate-pulse">
-                  <div className="h-64 bg-white/60 rounded-3xl" />
-                </div>
+              <div className="w-full animate-pulse">
+                <div className="h-48 bg-white/60 rounded-3xl" />
               </div>
             ) : error ? (
-              <div className="w-full max-w-lg mx-auto mb-8 p-8 text-center text-gray-500">
-                <p className="text-sm">Unable to load campaigns</p>
+              <div className="w-full p-6 text-center text-gray-500">
+                <p className="text-xs">Unable to load campaigns</p>
               </div>
             ) : (
               <FeaturedCampaign 
@@ -101,21 +101,50 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
               />
             )}
 
-            {/* Testimonial - Matching login form style */}
-            <div className="mt-8 animate-fade-in-delay-3">
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 shadow-sm">
-                {/* Accent line matching the green theme */}
-                <div className="w-12 h-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full mb-4" />
+            {/* Creative Quote Card with Animated Elements */}
+            <div className="animate-fade-in-delay-3">
+              <div className="relative group">
+                {/* Floating background layers */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-green-400 to-emerald-400 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-500" />
                 
-                {/* Quote text */}
-                <p className="text-gray-700 text-sm leading-relaxed mb-3">
-                  "We make a living by what we get, but we make a life by what we give."
-                </p>
+                {/* Main card */}
+                <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl p-4 border border-green-100/50 shadow-lg overflow-hidden">
+                  {/* Decorative corner elements */}
+                  <div className="absolute top-0 left-0 w-16 h-16 bg-gradient-to-br from-green-400/10 to-transparent rounded-br-full" />
+                  <div className="absolute bottom-0 right-0 w-16 h-16 bg-gradient-to-tl from-emerald-400/10 to-transparent rounded-tl-full" />
+                  
+                  {/* Animated quote icon */}
+                  <div className="relative mb-3">
+                    <div className="inline-flex items-center justify-center w-9 h-9 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl shadow-lg transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+                      <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
+                      </svg>
+                    </div>
+                  </div>
 
-                {/* Author */}
-                <p className="text-xs text-gray-600">
-                  <span className="font-semibold">Winston Churchill</span>
-                </p>
+                  {/* Quote text with gradient */}
+                  <p className="text-gray-800 text-sm font-medium leading-relaxed mb-3 relative z-10">
+                    We make a living by what we get, but we make a{' '}
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 font-semibold">
+                      life by what we give
+                    </span>
+                    .
+                  </p>
+
+                  {/* Author section with avatar placeholder */}
+                  <div className="flex items-center space-x-2 relative z-10">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center text-white text-xs font-bold shadow-md">
+                      WC
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-gray-900">Winston Churchill</p>
+                      <p className="text-[10px] text-gray-500">British Statesman</p>
+                    </div>
+                  </div>
+
+                  {/* Animated accent line */}
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-700 ease-out" />
+                </div>
               </div>
             </div>
           </div>
