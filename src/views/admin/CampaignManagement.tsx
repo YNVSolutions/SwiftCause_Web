@@ -1228,6 +1228,8 @@ const CampaignManagement = ({
     predefinedAmounts: [25, 50, 100],
     startDate: '',
     endDate: '',
+    enableRecurring: false,
+    recurringIntervals: [],
     tags: [],
     isGlobal: false,
     assignedKiosks: []
@@ -1246,6 +1248,8 @@ const CampaignManagement = ({
     predefinedAmounts: [25, 50, 100],
     startDate: '',
     endDate: '',
+    enableRecurring: false,
+    recurringIntervals: [],
     tags: [],
     isGlobal: false,
     assignedKiosks: []
@@ -1345,6 +1349,10 @@ const CampaignManagement = ({
       endDate: campaign.endDate?.seconds
         ? new Date(campaign.endDate.seconds * 1000).toISOString().split('T')[0]
         : '',
+      enableRecurring: campaign.configuration?.enableRecurring || false,
+      recurringIntervals: Array.isArray(campaign.configuration?.recurringIntervals)
+        ? campaign.configuration.recurringIntervals
+        : [],
       tags: Array.isArray(campaign.tags) ? campaign.tags : [],
       isGlobal: campaign.isGlobal || false,
       assignedKiosks: normalizeAssignments(campaign.assignedKiosks)
@@ -1536,6 +1544,8 @@ const CampaignManagement = ({
         configuration: {
           ...DEFAULT_CAMPAIGN_CONFIG,
           predefinedAmounts: newCampaignFormData.predefinedAmounts.filter(a => a > 0),
+          enableRecurring: newCampaignFormData.enableRecurring,
+          recurringIntervals: newCampaignFormData.recurringIntervals,
         },
       };
 
@@ -1568,6 +1578,8 @@ const CampaignManagement = ({
         predefinedAmounts: [25, 50, 100],
         startDate: '',
         endDate: '',
+        enableRecurring: false,
+        recurringIntervals: [],
         tags: [],
         isGlobal: false,
         assignedKiosks: []
@@ -1595,6 +1607,8 @@ const CampaignManagement = ({
       predefinedAmounts: [25, 50, 100],
       startDate: '',
       endDate: '',
+      enableRecurring: false,
+      recurringIntervals: [],
       tags: [],
       isGlobal: false,
       assignedKiosks: []
@@ -1634,7 +1648,7 @@ const CampaignManagement = ({
         title: newCampaignFormData.title,
         briefOverview: newCampaignFormData.briefOverview,
         description: newCampaignFormData.description,
-        status: 'paused', // Force paused status for draft
+        status: 'paused',
         goal: Number(newCampaignFormData.goal),
         tags: Array.isArray(newCampaignFormData.tags) ? newCampaignFormData.tags.filter(t => t.trim().length > 0) : [],
         coverImageUrl: coverImageUrl || "",
@@ -1647,6 +1661,8 @@ const CampaignManagement = ({
         configuration: {
           ...DEFAULT_CAMPAIGN_CONFIG,
           predefinedAmounts: newCampaignFormData.predefinedAmounts.filter(a => a > 0),
+          enableRecurring: newCampaignFormData.enableRecurring,
+          recurringIntervals: newCampaignFormData.recurringIntervals,
         },
       };
 
@@ -1679,6 +1695,8 @@ const CampaignManagement = ({
         predefinedAmounts: [25, 50, 100],
         startDate: '',
         endDate: '',
+        enableRecurring: false,
+        recurringIntervals: [],
         tags: [],
         isGlobal: false,
         assignedKiosks: []
@@ -1724,7 +1742,7 @@ const CampaignManagement = ({
         title: editCampaignFormData.title,
         briefOverview: editCampaignFormData.briefOverview,
         description: editCampaignFormData.description,
-        status: 'paused', // Force paused status for draft
+        status: 'paused',
         goal: Number(editCampaignFormData.goal),
         tags: Array.isArray(editCampaignFormData.tags) ? editCampaignFormData.tags.filter(t => t.trim().length > 0) : [],
         coverImageUrl: coverImageUrl || "",
@@ -1737,6 +1755,8 @@ const CampaignManagement = ({
           ...DEFAULT_CAMPAIGN_CONFIG,
           ...(editingCampaignForNewForm.configuration || {}),
           predefinedAmounts: editCampaignFormData.predefinedAmounts.filter(a => a > 0),
+          enableRecurring: editCampaignFormData.enableRecurring,
+          recurringIntervals: editCampaignFormData.recurringIntervals,
         },
       };
 
@@ -1774,6 +1794,8 @@ const CampaignManagement = ({
         predefinedAmounts: [25, 50, 100],
         startDate: '',
         endDate: '',
+        enableRecurring: false,
+        recurringIntervals: [],
         tags: [],
         isGlobal: false,
         assignedKiosks: []
@@ -1832,6 +1854,8 @@ const CampaignManagement = ({
           ...DEFAULT_CAMPAIGN_CONFIG,
           ...(editingCampaignForNewForm.configuration || {}),
           predefinedAmounts: editCampaignFormData.predefinedAmounts.filter(a => a > 0),
+          enableRecurring: editCampaignFormData.enableRecurring,
+          recurringIntervals: editCampaignFormData.recurringIntervals,
         },
       };
 
@@ -1869,6 +1893,8 @@ const CampaignManagement = ({
         predefinedAmounts: [25, 50, 100],
         startDate: '',
         endDate: '',
+        enableRecurring: false,
+        recurringIntervals: [],
         tags: [],
         isGlobal: false,
         assignedKiosks: []
@@ -1897,6 +1923,8 @@ const CampaignManagement = ({
       predefinedAmounts: [25, 50, 100],
       startDate: '',
       endDate: '',
+      enableRecurring: false,
+      recurringIntervals: [],
       tags: [],
       isGlobal: false,
       assignedKiosks: []

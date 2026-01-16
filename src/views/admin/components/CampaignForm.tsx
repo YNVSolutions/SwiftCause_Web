@@ -35,6 +35,8 @@ export interface CampaignFormData {
   predefinedAmounts: number[];
   startDate: string;
   endDate: string;
+  enableRecurring: boolean;
+  recurringIntervals: string[];
   tags: string[];
   isGlobal: boolean;
   assignedKiosks: string[];
@@ -77,6 +79,7 @@ export function CampaignForm({
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
   const [kiosks, setKiosks] = useState<any[]>([]);
   const [loadingKiosks, setLoadingKiosks] = useState(false);
+  const [imageUploadError, setImageUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   
@@ -181,6 +184,22 @@ export function CampaignForm({
   const handleImageFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Check file size (5MB limit)
+      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+      if (file.size > maxSize) {
+        setImageUploadError('Cover image must be less than 5MB. Please choose a smaller file.');
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        // Clear error after 5 seconds
+        setTimeout(() => {
+          setImageUploadError(null);
+        }, 5000);
+        return;
+      }
+
+      // Clear any previous errors
+      setImageUploadError(null);
       setSelectedImageFile(file);
       
       // Notify parent component
@@ -207,6 +226,7 @@ export function CampaignForm({
   const handleRemoveImage = () => {
     setSelectedImageFile(null);
     setImagePreview(null);
+    setImageUploadError(null);
     setCampaignData(p => ({ ...p, coverImageUrl: '' }));
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -291,15 +311,6 @@ export function CampaignForm({
     });
   };
 
-  // Select all kiosks
-  const handleSelectAllKiosks = () => {
-    setCampaignData(p => ({
-      ...p,
-      assignedKiosks: kiosks.map(k => k.id)
-    }));
-  };
-
-  // Deselect all kiosks
   const handleDeselectAllKiosks = () => {
     setCampaignData(p => ({
       ...p,
@@ -615,6 +626,85 @@ export function CampaignForm({
                       </div>
                     </div>
 
+                    {/* Recurring Payments Toggle */}
+                    <div className="col-span-full">
+                      <div className="flex items-center justify-between mb-4">
+                        <Label className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                          RECURRING PAYMENTS
+                        </Label>
+                        <button
+                          type="button"
+                          onClick={() => setCampaignData(p => ({ 
+                            ...p, 
+                            enableRecurring: !p.enableRecurring,
+                            recurringIntervals: !p.enableRecurring ? ['monthly'] : []
+                          }))}
+                          className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors ${
+                            campaignData.enableRecurring ? 'bg-green-600' : 'bg-gray-300'
+                          }`}
+                        >
+                          <span
+                            className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                              campaignData.enableRecurring ? 'translate-x-8' : 'translate-x-1'
+                            }`}
+                          />
+                        </button>
+                      </div>
+
+                      {campaignData.enableRecurring && (
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+                          {[
+                            { value: 'monthly', label: 'Monthly' },
+                            { value: 'quarterly', label: 'Quarterly' },
+                            { value: 'yearly', label: 'Yearly' }
+                          ].map((interval) => (
+                            <button
+                              key={interval.value}
+                              type="button"
+                              onClick={() => {
+                                const isSelected = campaignData.recurringIntervals.includes(interval.value);
+                                if (isSelected) {
+                                  setCampaignData(p => ({
+                                    ...p,
+                                    recurringIntervals: p.recurringIntervals.filter(i => i !== interval.value)
+                                  }));
+                                } else {
+                                  setCampaignData(p => ({
+                                    ...p,
+                                    recurringIntervals: [...p.recurringIntervals, interval.value]
+                                  }));
+                                }
+                              }}
+                              className={`relative flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
+                                campaignData.recurringIntervals.includes(interval.value)
+                                  ? 'border-green-500 bg-green-50'
+                                  : 'border-gray-300 bg-white hover:border-gray-400'
+                              }`}
+                            >
+                              <span className={`text-base font-semibold ${
+                                campaignData.recurringIntervals.includes(interval.value)
+                                  ? 'text-green-700'
+                                  : 'text-gray-700'
+                              }`}>
+                                {interval.label}
+                              </span>
+                              <div className={`w-6 h-6 rounded border-2 flex items-center justify-center ${
+                                campaignData.recurringIntervals.includes(interval.value)
+                                  ? 'border-green-500 bg-green-500'
+                                  : 'border-gray-300 bg-white'
+                              }`}>
+                                {campaignData.recurringIntervals.includes(interval.value) && (
+                                  <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                )}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
                     <div className="col-span-full">
                       <Label htmlFor="tags" className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3 block">
                         TAGS (COMMA-SEPARATED)
@@ -720,6 +810,11 @@ export function CampaignForm({
                           <p className="text-gray-500 text-sm mb-2">Click to upload from device or enter URL above</p>
                           <p className="text-xs text-gray-400">JPG, PNG or WebP (max. 5MB)</p>
                         </button>
+                      )}
+                      
+                      {/* Error message */}
+                      {imageUploadError && (
+                        <p className="text-sm text-red-600 mt-2">{imageUploadError}</p>
                       )}
                     </div>
                   </div>
@@ -882,15 +977,6 @@ export function CampaignForm({
                               <h4 className="font-medium text-gray-900">Kiosk Assignment</h4>
                               {!campaignData.isGlobal && kiosks.length > 0 && (
                                 <div className="flex gap-2">
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={handleSelectAllKiosks}
-                                    className="h-7 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                  >
-                                    Select All
-                                  </Button>
                                   <Button
                                     type="button"
                                     variant="ghost"
