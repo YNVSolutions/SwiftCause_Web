@@ -853,37 +853,48 @@ export function AdminDashboard({
             {/* Step 2: Campaign Form */}
             <div className="min-w-full h-full flex flex-col bg-white">
               {/* Progress Stepper - Outside form, at top */}
-              <div className="w-full bg-white border-b border-gray-200 py-4 px-4 sm:px-6 lg:px-8 pt-20 mb-8">
-                <div className="max-w-2xl mx-auto">
-                  <div className="flex items-center justify-between">
+              <div className="w-full bg-white border-b border-gray-200 py-8 px-4 sm:px-6 lg:px-8 pt-20 mb-8">
+                <div className="max-w-5xl mx-auto">
+                  <div className="flex items-center justify-between gap-2 sm:gap-4">
                     {/* Step 1: Campaign */}
                     <div className="flex flex-col items-center flex-1">
-                      <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center mb-2">
-                        <Target className="w-5 h-5 text-white" />
+                      <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center mb-3">
+                        <Target className="w-6 h-6 text-white" />
                       </div>
-                      <span className="text-xs font-semibold text-green-600">Create Campaign</span>
+                      <span className="text-xs sm:text-sm font-semibold text-green-600 text-center">Create Campaign</span>
                     </div>
                     
-                    {/* Connector Line */}
-                    <div className="flex-1 h-0.5 bg-gray-300 mx-2 -mt-6"></div>
+                    {/* Connector Line 1 */}
+                    <div className="flex-1 h-1 bg-green-500 mb-8"></div>
                     
                     {/* Step 2: Kiosk */}
                     <div className="flex flex-col items-center flex-1">
-                      <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center mb-2">
-                        <Monitor className="w-5 h-5 text-gray-500" />
+                      <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center mb-3">
+                        <Monitor className="w-6 h-6 text-white" />
                       </div>
-                      <span className="text-xs font-medium text-gray-400">Add Kiosk</span>
+                      <span className="text-xs sm:text-sm font-semibold text-green-600 text-center">Add Kiosk</span>
                     </div>
                     
-                    {/* Connector Line */}
-                    <div className="flex-1 h-0.5 bg-gray-300 mx-2 -mt-6"></div>
+                    {/* Connector Line 2 */}
+                    <div className="flex-1 h-1 bg-green-500 mb-8"></div>
                     
-                    {/* Step 3: Stripe */}
+                    {/* Step 3: Link Campaign */}
                     <div className="flex flex-col items-center flex-1">
-                      <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center mb-2">
-                        <CreditCard className="w-5 h-5 text-gray-500" />
+                      <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center mb-3">
+                        <Zap className="w-6 h-6 text-white" />
                       </div>
-                      <span className="text-xs font-medium text-gray-400">Setup Payments</span>
+                      <span className="text-xs sm:text-sm font-semibold text-green-600 text-center">Link Campaign</span>
+                    </div>
+                    
+                    {/* Connector Line 3 */}
+                    <div className="flex-1 h-1 bg-gray-300 mb-8"></div>
+                    
+                    {/* Step 4: Stripe */}
+                    <div className="flex flex-col items-center flex-1">
+                      <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center mb-3">
+                        <CreditCard className="w-6 h-6 text-gray-500" />
+                      </div>
+                      <span className="text-xs sm:text-sm font-medium text-gray-400 text-center">Setup Payments</span>
                     </div>
                   </div>
                 </div>
