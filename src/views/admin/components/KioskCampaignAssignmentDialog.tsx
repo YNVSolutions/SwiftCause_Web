@@ -49,6 +49,7 @@ import {
   Minus,
   RotateCcw,
   Eye,
+  Edit,
 } from "lucide-react";
 import { Kiosk, Campaign } from "../../../shared/types";
 
@@ -66,6 +67,7 @@ interface KioskCampaignAssignmentDialogProps {
   kiosk: Kiosk | null;
   onSave: (kiosk: Kiosk) => void;
   campaigns: Campaign[];
+  onEditCampaign?: (campaignId: string) => void;
 }
 
 export function KioskCampaignAssignmentDialog({
@@ -74,6 +76,7 @@ export function KioskCampaignAssignmentDialog({
   kiosk,
   onSave,
   campaigns,
+  onEditCampaign,
 }: KioskCampaignAssignmentDialogProps) {
   const [formData, setFormData] = useState<KioskForm>(() => {
     if (kiosk) return { ...kiosk };
@@ -573,6 +576,16 @@ export function KioskCampaignAssignmentDialog({
                               Set Default
                             </Button>
                           )}
+                          {onEditCampaign && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => onEditCampaign(campaign.id)}
+                              className="gap-2 bg-white hover:bg-blue-50 text-blue-600 border-blue-200"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          )}
                           <Button
                             variant="destructive"
                             size="sm"
@@ -639,6 +652,16 @@ export function KioskCampaignAssignmentDialog({
                             <Plus className="w-4 h-4" />
                             Assign
                           </Button>
+                          {onEditCampaign && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => onEditCampaign(campaign.id)}
+                              className="gap-2 flex-shrink-0 hover:!bg-blue-50 text-blue-600 border-blue-200 transition-colors"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          )}
                         </div>
                       ))}
                     </div>

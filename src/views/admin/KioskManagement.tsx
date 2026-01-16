@@ -51,6 +51,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../../shared/ui/dropdown-menu";
+import { AdminSearchFilterHeader, AdminSearchFilterConfig } from './components/AdminSearchFilterHeader';
+import { SortableTableHeader } from './components/SortableTableHeader';
+import { useTableSort } from '../../shared/lib/hooks/useTableSort';
 
 
 export function KioskManagement({ onNavigate, onLogout, userSession, hasPermission }: {
@@ -76,13 +79,26 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
   
   const isLoading = kiosksLoading || campaignsLoading;
 
+  // Enrich kiosks with performance data for proper sorting
+  const enrichedKiosks = kiosks.map(kiosk => ({
+    ...kiosk,
+    totalRaised: performanceData[kiosk.id]?.totalRaised || 0,
+    donorCount: performanceData[kiosk.id]?.donorCount || 0
+  }));
+
   // Filtered kiosks derived state
-  const filteredKiosks = kiosks.filter((kiosk) => {
+  // Filter kiosks first
+  const filteredKiosksData = enrichedKiosks.filter((kiosk) => {
     const matchesSearch = kiosk.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       kiosk.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
       kiosk.id.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || kiosk.status === statusFilter;
     return matchesSearch && matchesStatus;
+  });
+
+  // Use sorting hook
+  const { sortedData: filteredKiosks, sortKey, sortDirection, handleSort } = useTableSort({
+    data: filteredKiosksData
   });
 
   // Calculate total stats
@@ -111,6 +127,33 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
   // State for showing access codes and copy feedback
   const [showAccessCodes, setShowAccessCodes] = useState<{ [key: string]: boolean }>({});
   const [copiedIds, setCopiedIds] = useState<{ [key: string]: boolean }>({});
+
+  // Configuration for AdminSearchFilterHeader
+  const searchFilterConfig: AdminSearchFilterConfig = {
+    searchPlaceholder: "Search kiosks...",
+    filters: [
+      {
+        key: "statusFilter",
+        label: "Status",
+        type: "select",
+        options: [
+          { label: "Online", value: "online" },
+          { label: "Offline", value: "offline" },
+          { label: "Maintenance", value: "maintenance" }
+        ]
+      }
+    ]
+  };
+
+  const filterValues = {
+    statusFilter
+  };
+
+  const handleFilterChange = (key: string, value: any) => {
+    if (key === "statusFilter") {
+      setStatusFilter(value);
+    }
+  };
 
   useEffect(() => {
     refreshKiosks();
@@ -214,6 +257,13 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
   const handleDeleteKiosk = (kiosk: Kiosk) => {
     setKioskToDelete(kiosk);
     setIsDeleteDialogOpen(true);
+  };
+
+  const handleEditCampaign = (campaignId: string) => {
+    const campaign = campaigns.find(c => c.id === campaignId);
+    if (campaign) {
+      onNavigate(`admin-campaigns`);
+    }
   };
 
   const confirmDeleteKiosk = async () => {
@@ -331,74 +381,47 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
       userSession={userSession}
       hasPermission={hasPermission}
       activeScreen="admin-kiosks"
-      headerTitle="Kiosk Management"
-      headerSubtitle="Configure and monitor donation kiosks"
-      headerActions={(
-        <Button
-          variant="outline"
-          size="sm"
-          className="hover:bg-gray-100 transition-colors"
-          onClick={handleExportKiosks}
-          aria-label="Export CSV"
-        >
-          <Download className="w-4 h-4 sm:mr-2" />
-          <span className="hidden sm:inline">Export CSV</span>
-        </Button>
-      )}
       hideSidebarTrigger
     >
       <div className="min-h-screen bg-gray-50">
-        <main className="px-2 sm:px-6 lg:px-8 pb-4 sm:pb-8">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Kiosks</p><p className="text-2xl font-semibold text-gray-900">{filteredKiosks.length}</p><div className="flex items-center space-x-4 text-xs text-gray-500 mt-1"><span className="text-green-600">{totalStats.online} online</span><span className="text-red-600">{totalStats.offline} offline</span></div></div><Settings className="h-8 w-8 text-blue-600" /></div></CardContent></Card>
-            <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Raised</p><p className="text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.totalRaised)}</p></div><DollarSign className="h-8 w-8 text-green-600" /></div></CardContent></Card>
-            <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Donations</p><p className="text-2xl font-semibold text-gray-900">{totalStats.totalDonations.toLocaleString()}</p></div><Users className="h-8 w-8 text-purple-600" /></div></CardContent></Card>
-            <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Maintenance</p><p className="text-2xl font-semibold text-gray-900">{totalStats.maintenance}</p></div><Activity className="h-8 w-8 text-orange-600" /></div></CardContent></Card>
+        <main className="px-2 sm:px-4 lg:px-8 pb-4 sm:pb-8">
+          {/* Stat Cards Section */}
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
+            <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Total Kiosks</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{filteredKiosks.length}</p><div className="flex items-center space-x-2 sm:space-x-4 text-xs text-gray-500 mt-1"><span className="text-green-600">{totalStats.online} online</span><span className="text-red-600">{totalStats.offline} offline</span></div></div><Settings className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-blue-600" /></div></CardContent></Card>
+            <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Total Raised</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.totalRaised)}</p></div><DollarSign className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-green-600" /></div></CardContent></Card>
+            <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Total Donations</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{totalStats.totalDonations.toLocaleString()}</p></div><Users className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-purple-600" /></div></CardContent></Card>
+            <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Maintenance</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{totalStats.maintenance}</p></div><Activity className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-orange-600" /></div></CardContent></Card>
           </div>
+
+          {/* Unified Header Component */}
+          <AdminSearchFilterHeader
+            title={`Kiosks (${filteredKiosks.length})`}
+            subtitle="Configure and monitor donation kiosks"
+            config={searchFilterConfig}
+            searchValue={searchTerm}
+            onSearchChange={setSearchTerm}
+            filterValues={filterValues}
+            onFilterChange={handleFilterChange}
+            exportData={filteredKiosks}
+            onExport={handleExportKiosks}
+            actions={
+              hasPermission('create_kiosk') ? (
+                <Button
+                  onClick={() => {
+                    setIsCreateDialogOpen(true);
+                  }}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 h-10"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Kiosk
+                </Button>
+              ) : undefined
+            }
+          />
+          
           {/* Modern Table Container */}
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="px-6 pt-6">
-              <div className="flex items-center justify-between gap-3">
-                <div className="w-full max-w-sm">
-                  <div className="relative border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <Input
-                      placeholder="Search kiosks..."
-                      value={searchTerm}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
-                      className="pl-10 pr-3 w-full h-12 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
-                    />
-                  </div>
-                </div>
-                {hasPermission('create_kiosk') && (
-                  <>
-                    <Button
-                      onClick={() => {
-                        setIsCreateDialogOpen(true);
-                      }}
-                      className="bg-indigo-600 hover:bg-indigo-700 h-10 w-10 p-0 text-white sm:hidden"
-                      aria-label="Add Kiosk"
-                    >
-                      <Plus className="w-5 h-5" />
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        setIsCreateDialogOpen(true);
-                      }}
-                      className="bg-indigo-600 hover:bg-indigo-700 h-10 px-4 text-white hidden sm:inline-flex"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Kiosk
-                    </Button>
-                  </>
-                )}
-              </div>
-            </div>
-            <div className="px-6 py-5 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">Kiosks ({filteredKiosks.length})</h3>
-              <p className="text-sm text-gray-600 mt-1">Monitor and manage your kiosk network</p>
-            </div>
-            <div className="overflow-x-auto">
+          <Card className="overflow-hidden">
+            <CardContent className="p-0">
               {filteredKiosks.length > 0 ? (
                 <>
                   <div className="md:hidden px-6 py-6 space-y-4">
@@ -525,25 +548,56 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                       );
                     })}
                   </div>
-                  <div className="hidden md:block overflow-x-auto">
-                    <Table className="min-w-full">
+                  <div className="hidden md:block overflow-hidden">
+                    <Table className="w-full table-fixed">
                       <TableHeader>
-                        <TableRow className="bg-gray-50 border-b border-gray-200">
-                          <TableHead className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <TableRow className="bg-gray-100 border-b-2 border-gray-300">
+                          <SortableTableHeader 
+                            sortKey="name" 
+                            currentSortKey={sortKey} 
+                            currentSortDirection={sortDirection} 
+                            onSort={handleSort}
+                            className="w-[30%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                          >
                             Kiosk Details
-                          </TableHead>
-                          <TableHead className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          </SortableTableHeader>
+                          <SortableTableHeader 
+                            sortKey="status" 
+                            currentSortKey={sortKey} 
+                            currentSortDirection={sortDirection} 
+                            onSort={handleSort}
+                            className="w-[12%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                          >
                             Status
-                          </TableHead>
-                          <TableHead className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          </SortableTableHeader>
+                          <SortableTableHeader 
+                            sortKey="totalRaised" 
+                            currentSortKey={sortKey} 
+                            currentSortDirection={sortDirection} 
+                            onSort={handleSort}
+                            className="w-[15%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
+                          >
                             Performance
-                          </TableHead>
-                          <TableHead className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          </SortableTableHeader>
+                          <SortableTableHeader 
+                            sortKey="assignedCampaigns" 
+                            currentSortKey={sortKey} 
+                            currentSortDirection={sortDirection} 
+                            onSort={handleSort}
+                            className="w-[18%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                          >
                             Campaign Assignment
-                          </TableHead>
-                          <TableHead className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          </SortableTableHeader>
+                          <SortableTableHeader 
+                            sortable={false}
+                            sortKey="actions" 
+                            currentSortKey={sortKey} 
+                            currentSortDirection={sortDirection} 
+                            onSort={handleSort}
+                            className="w-[25%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                          >
                             Actions
-                          </TableHead>
+                          </SortableTableHeader>
                         </TableRow>
                       </TableHeader>
                       <TableBody className="bg-white divide-y divide-gray-200">
@@ -668,12 +722,12 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                   </div>
                 </>
               ) : (
-                <div className="text-center py-12">
+                <div className="text-center py-12 p-6">
                   <p className="text-gray-500">No kiosks found matching your search criteria.</p>
                 </div>
               )}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </main>
       </div>
 
@@ -695,6 +749,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
         onCancel={handleCancel}
         onAssignCampaign={handleAssignCampaign}
         onUnassignCampaign={handleUnassignCampaign}
+        onEditCampaign={handleEditCampaign}
         formatCurrency={formatCurrency}
       />
       

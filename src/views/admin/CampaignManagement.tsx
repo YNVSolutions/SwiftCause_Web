@@ -85,6 +85,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../../shared/ui/dropdown-menu";
+import { AdminSearchFilterHeader, AdminSearchFilterConfig } from "./components/AdminSearchFilterHeader";
+import { SortableTableHeader } from "./components/SortableTableHeader";
+import { useTableSort } from "../../shared/lib/hooks/useTableSort";
+import { CampaignForm, CampaignFormData } from "./components/CampaignForm";
+import { Campaign } from "../../shared/types";
 
 interface CampaignDialogProps {
   open: boolean;
@@ -1200,17 +1205,49 @@ const CampaignManagement = ({
     null
   );
 
+  // New CampaignForm state
+  const [isNewCampaignFormOpen, setIsNewCampaignFormOpen] = useState(false);
+  const [isEditCampaignFormOpen, setIsEditCampaignFormOpen] = useState(false);
+  const [editingCampaignForNewForm, setEditingCampaignForNewForm] = useState<Campaign | null>(null);
+  
+  // Separate state for create and edit
+  const [newCampaignFormData, setNewCampaignFormData] = useState<CampaignFormData>({
+    title: '',
+    description: '',
+    goal: 0,
+    category: '',
+    status: 'active',
+    coverImageUrl: '',
+    startDate: '',
+    endDate: '',
+    tags: []
+  });
+  
+  const [editCampaignFormData, setEditCampaignFormData] = useState<CampaignFormData>({
+    title: '',
+    description: '',
+    goal: 0,
+    category: '',
+    status: 'active',
+    coverImageUrl: '',
+    startDate: '',
+    endDate: '',
+    tags: []
+  });
+  
+  const [selectedNewCampaignImageFile, setSelectedNewCampaignImageFile] = useState<File | null>(null);
+  const [selectedEditCampaignImageFile, setSelectedEditCampaignImageFile] = useState<File | null>(null);
+
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const [sortOrder, setSortOrder] = useState("endDate");
   const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
-  const [showCalendar, setShowCalendar] = useState(false);
+  const [showCalendar, setShowCalendar] = useState<Record<string, boolean>>({});
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [campaignToDelete, setCampaignToDelete] = useState<DocumentData | null>(null);
   const [confirmDeleteInput, setConfirmDeleteInput] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const { campaigns, updateWithImage, createWithImage, remove, loading } =
+  const { campaigns, updateWithImage, createWithImage, remove, loading, uploadFile } =
     useCampaignManagement(userSession.user.organizationId || "");
 
   const { organization, loading: orgLoading } = useOrganization(
@@ -1271,8 +1308,25 @@ const CampaignManagement = ({
   };
 
   const handleEditClick = (campaign: DocumentData) => {
-    setEditingCampaign(campaign);
-    setIsEditDialogOpen(true);
+    // Populate form data from campaign
+    setEditCampaignFormData({
+      title: campaign.title || '',
+      description: campaign.description || '',
+      goal: campaign.goal || 0,
+      category: campaign.category || '',
+      status: campaign.status || 'active',
+      coverImageUrl: campaign.coverImageUrl || '',
+      startDate: campaign.startDate?.seconds
+        ? new Date(campaign.startDate.seconds * 1000).toISOString().split('T')[0]
+        : '',
+      endDate: campaign.endDate?.seconds
+        ? new Date(campaign.endDate.seconds * 1000).toISOString().split('T')[0]
+        : '',
+      tags: Array.isArray(campaign.tags) ? campaign.tags : []
+    });
+    
+    setEditingCampaignForNewForm(campaign as Campaign);
+    setIsEditCampaignFormOpen(true);
   };
 
   const handleSave = async (
@@ -1396,6 +1450,166 @@ const CampaignManagement = ({
     }
   };
 
+  // New handlers for CampaignForm
+  const handleNewCampaignFormSubmit = async () => {
+    try {
+      let coverImageUrl = newCampaignFormData.coverImageUrl;
+      
+      // Upload image file if one was selected
+      if (selectedNewCampaignImageFile) {
+        const uploadedUrl = await uploadFile(
+          selectedNewCampaignImageFile,
+          `campaigns/new/${Date.now()}_${selectedNewCampaignImageFile.name}`
+        );
+        if (uploadedUrl) {
+          coverImageUrl = uploadedUrl;
+        }
+      }
+      
+      const dataToSave: { [key: string]: any } = {
+        title: newCampaignFormData.title,
+        description: newCampaignFormData.description,
+        status: newCampaignFormData.status,
+        goal: Number(newCampaignFormData.goal),
+        tags: Array.isArray(newCampaignFormData.tags) ? newCampaignFormData.tags : [],
+        coverImageUrl: coverImageUrl || "",
+        category: newCampaignFormData.category || "",
+        organizationId: userSession.user.organizationId || "",
+        assignedKiosks: [],
+        isGlobal: false,
+        configuration: DEFAULT_CAMPAIGN_CONFIG,
+      };
+
+      if (newCampaignFormData.startDate) {
+        dataToSave.startDate = Timestamp.fromDate(new Date(newCampaignFormData.startDate));
+      }
+      if (newCampaignFormData.endDate) {
+        dataToSave.endDate = Timestamp.fromDate(new Date(newCampaignFormData.endDate));
+      }
+
+      const finalDataToSave = removeUndefined(dataToSave);
+      await createWithImage(finalDataToSave);
+      
+      // Reset form and close
+      setIsNewCampaignFormOpen(false);
+      setSelectedNewCampaignImageFile(null);
+      setNewCampaignFormData({
+        title: '',
+        description: '',
+        goal: 0,
+        category: '',
+        status: 'active',
+        coverImageUrl: '',
+        startDate: '',
+        endDate: '',
+        tags: []
+      });
+    } catch (error) {
+      console.error("Error creating campaign:", error);
+      alert("Failed to create campaign. Please try again.");
+    }
+  };
+
+  const handleNewCampaignFormCancel = () => {
+    setIsNewCampaignFormOpen(false);
+    setSelectedNewCampaignImageFile(null);
+    setNewCampaignFormData({
+      title: '',
+      description: '',
+      goal: 0,
+      category: '',
+      status: 'active',
+      coverImageUrl: '',
+      startDate: '',
+      endDate: '',
+      tags: []
+    });
+  };
+
+  const handleEditCampaignFormSubmit = async () => {
+    if (!editingCampaignForNewForm) return;
+    
+    try {
+      let coverImageUrl = editCampaignFormData.coverImageUrl;
+      
+      // Upload image file if one was selected
+      if (selectedEditCampaignImageFile) {
+        const uploadedUrl = await uploadFile(
+          selectedEditCampaignImageFile,
+          `campaigns/${editingCampaignForNewForm.id}/${Date.now()}_${selectedEditCampaignImageFile.name}`
+        );
+        if (uploadedUrl) {
+          coverImageUrl = uploadedUrl;
+        }
+      }
+      
+      const dataToSave: { [key: string]: any } = {
+        title: editCampaignFormData.title,
+        description: editCampaignFormData.description,
+        status: editCampaignFormData.status,
+        goal: Number(editCampaignFormData.goal),
+        tags: Array.isArray(editCampaignFormData.tags) ? editCampaignFormData.tags : [],
+        coverImageUrl: coverImageUrl || "",
+        category: editCampaignFormData.category || "",
+      };
+
+      if (editCampaignFormData.startDate) {
+        dataToSave.startDate = Timestamp.fromDate(new Date(editCampaignFormData.startDate));
+      }
+      if (editCampaignFormData.endDate) {
+        dataToSave.endDate = Timestamp.fromDate(new Date(editCampaignFormData.endDate));
+      }
+
+      const finalDataToSave = removeUndefined(dataToSave);
+      await updateWithImage(editingCampaignForNewForm.id, finalDataToSave);
+      
+      // Reset form and close
+      setIsEditCampaignFormOpen(false);
+      setEditingCampaignForNewForm(null);
+      setSelectedEditCampaignImageFile(null);
+      setEditCampaignFormData({
+        title: '',
+        description: '',
+        goal: 0,
+        category: '',
+        status: 'active',
+        coverImageUrl: '',
+        startDate: '',
+        endDate: '',
+        tags: []
+      });
+    } catch (error) {
+      console.error("Error updating campaign:", error);
+      alert("Failed to update campaign. Please try again.");
+    }
+  };
+
+  const handleEditCampaignFormCancel = () => {
+    setIsEditCampaignFormOpen(false);
+    setEditingCampaignForNewForm(null);
+    setSelectedEditCampaignImageFile(null);
+    setEditCampaignFormData({
+      title: '',
+      description: '',
+      goal: 0,
+      category: '',
+      status: 'active',
+      coverImageUrl: '',
+      startDate: '',
+      endDate: '',
+      tags: []
+    });
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case "active":
@@ -1428,36 +1642,73 @@ const CampaignManagement = ({
     )
   );
 
-  const filteredAndSortedCampaigns = campaigns
-    .filter((campaign: any) => {
-      const matchesSearch = campaign.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        campaign.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        campaign.tags?.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-      const matchesStatus = statusFilter === "all" || campaign.status === statusFilter;
-      const matchesCategory = categoryFilter === "all" || campaign.category === categoryFilter;
-      const matchesDate = !dateFilter || (campaign.endDate && new Date(campaign.endDate.seconds * 1000).toDateString() === dateFilter.toDateString());
-      return matchesSearch && matchesStatus && matchesCategory && matchesDate;
-    })
-    .sort((a: any, b: any) => {
-      switch (sortOrder) {
-        case "title":
-          return a.title.localeCompare(b.title);
-        case "endDate":
-          // Assuming endDate is a Timestamp object, convert to Date for comparison
-          const dateA = a.endDate?.seconds ? new Date(a.endDate.seconds * 1000).getTime() : 0;
-          const dateB = b.endDate?.seconds ? new Date(b.endDate.seconds * 1000).getTime() : 0;
-          return dateA - dateB;
-        case "goal":
-          return (a.goal || 0) - (b.goal || 0);
-        case "createdAt": // Assuming createdAt is also a Timestamp or string that can be compared
-          // Need to parse createdAt if it's a string, or convert if Timestamp
-          const createdA = a.createdAt?.seconds ? new Date(a.createdAt.seconds * 1000).getTime() : 0;
-          const createdB = b.createdAt?.seconds ? new Date(b.createdAt.seconds * 1000).getTime() : 0;
-          return createdA - createdB;
-        default:
-          return 0;
+  // Configuration for AdminSearchFilterHeader
+  const searchFilterConfig: AdminSearchFilterConfig = {
+    searchPlaceholder: "Search campaigns...",
+    filters: [
+      {
+        key: "statusFilter",
+        label: "Status",
+        type: "select",
+        options: [
+          { label: "Active", value: "active" },
+          { label: "Paused", value: "paused" },
+          { label: "Completed", value: "completed" }
+        ]
+      },
+      {
+        key: "categoryFilter", 
+        label: "Category",
+        type: "select",
+        options: uniqueCategories.map(cat => ({ label: cat, value: cat }))
+      },
+      {
+        key: "dateFilter",
+        label: "Filter by date",
+        type: "date"
       }
-    });
+    ]
+  };
+
+  const filterValues = {
+    statusFilter,
+    categoryFilter,
+    dateFilter
+  };
+
+  const handleFilterChange = (key: string, value: any) => {
+    switch (key) {
+      case "statusFilter":
+        setStatusFilter(value);
+        break;
+      case "categoryFilter":
+        setCategoryFilter(value);
+        break;
+      case "dateFilter":
+        setDateFilter(value);
+        break;
+    }
+  };
+
+  const handleCalendarToggle = (key: string, open: boolean) => {
+    setShowCalendar(prev => ({ ...prev, [key]: open }));
+  };
+
+  // Filter campaigns first
+  const filteredCampaigns = campaigns.filter((campaign: any) => {
+    const matchesSearch = campaign.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      campaign.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (Array.isArray(campaign.tags) && campaign.tags.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase())));
+    const matchesStatus = statusFilter === "all" || campaign.status === statusFilter;
+    const matchesCategory = categoryFilter === "all" || campaign.category === categoryFilter;
+    const matchesDate = !dateFilter || (campaign.endDate && new Date(campaign.endDate.seconds * 1000).toDateString() === dateFilter.toDateString());
+    return matchesSearch && matchesStatus && matchesCategory && matchesDate;
+  });
+
+  // Use sorting hook
+  const { sortedData: filteredAndSortedCampaigns, sortKey, sortDirection, handleSort } = useTableSort({
+    data: filteredCampaigns
+  });
 
   const exportToCsv = (data: DocumentData[]) => {
     if (data.length === 0) {
@@ -1491,186 +1742,45 @@ const CampaignManagement = ({
       userSession={userSession}
       hasPermission={hasPermission}
       activeScreen="admin-campaigns"
-      headerTitle="Campaign Management"
-      headerSubtitle="Configure and monitor campaigns"
-      headerActions={(
-        <Button
-          variant="outline"
-          size="sm"
-          className="hover:bg-gray-100 transition-colors"
-          onClick={() => exportToCsv(filteredAndSortedCampaigns)}
-          aria-label="Export CSV"
-        >
-          <Download className="w-4 h-4 sm:mr-2" />
-          <span className="hidden sm:inline">Export CSV</span>
-        </Button>
-      )}
       hideSidebarTrigger
     >
-      <div className="space-y-4">
-        <main className="px-2 sm:px-6 lg:px-8 pb-4 sm:pb-8">
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <Card>
-              <CardContent className="p-2">
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-full h-5 border-0 shadow-none focus:ring-0 bg-transparent hover:bg-transparent font-semibold text-gray-900 [&>span]:font-semibold">
-                    <SelectValue placeholder="All Statuses" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="paused">Paused</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                  </SelectContent>
-                </Select>
-              </CardContent>
-            </Card>
+      <div className="space-y-4 sm:space-y-6">
+        <main className="px-2 sm:px-4 lg:px-8 pb-4 sm:pb-8">
+          <AdminSearchFilterHeader
+            title={`Campaigns (${filteredAndSortedCampaigns.length})`}
+            subtitle="Manage your donation campaigns"
+            config={searchFilterConfig}
+            searchValue={searchTerm}
+            onSearchChange={setSearchTerm}
+            filterValues={filterValues}
+            onFilterChange={handleFilterChange}
+            showCalendar={showCalendar}
+            onCalendarToggle={handleCalendarToggle}
+            exportData={filteredAndSortedCampaigns}
+            actions={
+              <Button
+                className="bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-60 disabled:cursor-not-allowed px-6 py-2 h-10"
+                onClick={() => {
+                  if (!isStripeOnboarded) {
+                    setShowOnboardingDialog(true);
+                  } else {
+                    setIsNewCampaignFormOpen(true);
+                  }
+                }}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Campaign
+              </Button>
+            }
+          />
 
-            <Card>
-              <CardContent className="p-3">
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                  <SelectTrigger className="w-full h-10 border-0 shadow-none focus:ring-0 bg-transparent hover:bg-transparent font-semibold text-gray-900 [&>span]:font-semibold">
-                    <SelectValue placeholder="All Categories" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    {uniqueCategories.map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-3">
-                <Select value={sortOrder} onValueChange={setSortOrder}>
-                  <SelectTrigger className="w-full h-10 border-0 shadow-none focus:ring-0 bg-transparent hover:bg-transparent font-semibold text-gray-900 [&>span]:font-semibold">
-                    <SelectValue placeholder="End Date" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="endDate">End Date</SelectItem>
-                    <SelectItem value="title">Title</SelectItem>
-                    <SelectItem value="goal">Goal Amount</SelectItem>
-                    <SelectItem value="createdAt">Created Date</SelectItem>
-                  </SelectContent>
-                </Select>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-3">
-                <Popover open={showCalendar} onOpenChange={setShowCalendar}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="justify-between text-left font-semibold w-full h-10 px-3 flex items-center border-0 shadow-none hover:bg-transparent bg-transparent text-gray-900"
-                    >
-                      <div className="flex items-center">
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        <span>
-                          {dateFilter
-                            ? dateFilter.toLocaleDateString()
-                            : "Filter by date"}
-                        </span>
-                      </div>
-                      <svg
-                        className="h-4 w-4 opacity-50"
-                        fill="none"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={dateFilter}
-                      onSelect={(date) => {
-                        setDateFilter(date);
-                        setShowCalendar(false);
-                      }}
-                      initialFocus
-                    />
-                    <div className="p-3 border-t">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setDateFilter(undefined);
-                          setShowCalendar(false);
-                        }}
-                        className="w-full"
-                      >
-                        Clear Date Filter
-                      </Button>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              </CardContent>
-            </Card>
-          </div>
-          {/* Campaigns Table/List – aligned with Donations layout */}
-          <Card>
-            <div className="px-6 pt-6">
-              <div className="flex items-center justify-between gap-3">
-                <div className="w-full max-w-sm">
-                  <div className="relative border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                    <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <Input
-                      placeholder="Search campaigns..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 pr-3 w-full h-12 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    className="bg-indigo-600 hover:bg-indigo-700 h-12 w-12 p-0 sm:hidden disabled:opacity-60 disabled:cursor-not-allowed"
-                    onClick={() => {
-                      if (!isStripeOnboarded) {
-                        setShowOnboardingDialog(true);
-                      } else {
-                        setIsAddDialogOpen(true);
-                      }
-                    }}
-                    aria-label="Add Campaign"
-                  >
-                    <Plus className="w-5 h-5" />
-                  </Button>
-                  <Button
-                    className="bg-indigo-600 text-white hidden sm:inline-flex disabled:opacity-60 disabled:cursor-not-allowed"
-                    onClick={() => {
-                      if (!isStripeOnboarded) {
-                        setShowOnboardingDialog(true);
-                      } else {
-                        setIsAddDialogOpen(true);
-                      }
-                    }}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Campaign
-                  </Button>
-                </div>
-              </div>
-            </div>
-            <CardHeader>
-              <CardTitle>Campaigns ({filteredAndSortedCampaigns.length})</CardTitle>
-              <CardDescription>Manage your donation campaigns</CardDescription>
-            </CardHeader>
-            <CardContent>
+          {/* Campaigns Table/List */}
+          <Card className="overflow-hidden">
+            <CardContent className="p-0">
               {loading ? (
-                <div className="space-y-4">
+                <div className="space-y-4 p-6">
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="grid grid-cols-6 gap-4 py-4 px-6 border-b border-gray-200">
+                    <div key={i} className="grid grid-cols-6 gap-4 py-4 border-b border-gray-200">
                       <Skeleton className="h-10 w-full col-span-2" />
                       <Skeleton className="h-10 w-full col-span-1" />
                       <Skeleton className="h-10 w-full col-span-1" />
@@ -1681,7 +1791,8 @@ const CampaignManagement = ({
                 </div>
               ) : filteredAndSortedCampaigns.length > 0 ? (
                 <>
-                  <div className="md:hidden space-y-4">
+                  {/* Mobile Card View */}
+                  <div className="md:hidden space-y-4 p-4">
                   {filteredAndSortedCampaigns.map((campaign: any) => {
                     const progress =
                       campaign.goal && campaign.raised
@@ -1809,16 +1920,65 @@ const CampaignManagement = ({
                       </div>
                     );
                   })}
-                </div>
-                <div className="hidden md:block overflow-x-auto">
-                  <Table>
+                  </div>
+
+                  {/* Desktop Table View */}
+                  <Table className="hidden md:table w-full">
+                    <colgroup>
+                      <col style={{ width: '40%' }} />
+                      <col style={{ width: '15%' }} />
+                      <col style={{ width: '15%' }} />
+                      <col style={{ width: '18%' }} />
+                      <col style={{ width: '12%' }} />
+                    </colgroup>
                     <TableHeader>
-                      <TableRow>
-                        <TableHead>Campaign</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Goal</TableHead>
-                        <TableHead>End Date</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                      <TableRow className="bg-gray-100 border-b-2 border-gray-300">
+                        <SortableTableHeader 
+                          sortKey="title" 
+                          currentSortKey={sortKey} 
+                          currentSortDirection={sortDirection} 
+                          onSort={handleSort}
+                          className="px-4 py-2.5 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                        >
+                          Campaign
+                        </SortableTableHeader>
+                        <SortableTableHeader 
+                          sortKey="status" 
+                          currentSortKey={sortKey} 
+                          currentSortDirection={sortDirection} 
+                          onSort={handleSort}
+                          className="px-4 py-2.5 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                        >
+                          Status
+                        </SortableTableHeader>
+                        <SortableTableHeader 
+                          sortKey="goal" 
+                          currentSortKey={sortKey} 
+                          currentSortDirection={sortDirection} 
+                          onSort={handleSort}
+                          className="px-4 py-2.5 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
+                        >
+                          Goal
+                        </SortableTableHeader>
+                        <SortableTableHeader 
+                          sortKey="endDate" 
+                          currentSortKey={sortKey} 
+                          currentSortDirection={sortDirection} 
+                          onSort={handleSort}
+                          className="px-4 py-2.5 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                        >
+                          End Date
+                        </SortableTableHeader>
+                        <SortableTableHeader 
+                          sortable={false}
+                          sortKey="actions" 
+                          currentSortKey={sortKey} 
+                          currentSortDirection={sortDirection} 
+                          onSort={handleSort}
+                          className="px-4 py-2.5 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center"
+                        >
+                          Actions
+                        </SortableTableHeader>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -1833,19 +1993,19 @@ const CampaignManagement = ({
                             : 0;
 
                         return (
-                          <TableRow key={campaign.id ?? campaign.title}>
-                            <TableCell>
+                          <TableRow key={campaign.id ?? campaign.title} className="border-b border-gray-100">
+                            <TableCell className="px-4 py-3">
                               <div className="flex items-start gap-3">
                                 <ImageWithFallback
                                   src={campaign.coverImageUrl}
                                   alt={campaign.title}
-                                  className="w-16 h-16 object-cover rounded-lg border border-gray-200 shrink-0 bg-gray-100"
+                                  className="w-14 h-14 object-cover rounded-lg border border-gray-200 shrink-0 bg-gray-100"
                                   fallbackSrc="/campaign-fallback.svg"
                                 />
-                                <div className="space-y-1 flex-1">
-                                  <div className="flex items-center justify-between gap-2">
-                                    <div>
-                                      <p className="font-medium text-gray-900">
+                                <div className="space-y-1.5 flex-1 min-w-0">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div className="flex-1 min-w-0">
+                                      <p className="font-medium text-gray-900 text-sm truncate">
                                         {campaign.title}
                                       </p>
                                       {campaign.category && (
@@ -1856,8 +2016,8 @@ const CampaignManagement = ({
                                     </div>
                                     {typeof progress === "number" &&
                                       progress > 0 && (
-                                        <div className="flex items-center gap-2">
-                                          <span className="text-xs text-gray-500">
+                                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                                          <span className="text-xs text-gray-500 font-medium">
                                             {progress.toFixed(0)}%
                                           </span>
                                           <div className="h-1.5 w-20 bg-gray-100 rounded-full overflow-hidden">
@@ -1875,38 +2035,45 @@ const CampaignManagement = ({
                                   {Array.isArray(campaign.tags) &&
                                     campaign.tags.length > 0 && (
                                       <div className="flex flex-wrap gap-1">
-                                        {campaign.tags.map((tag: string) => (
+                                        {campaign.tags.slice(0, 3).map((tag: string) => (
                                           <Badge
                                             key={tag}
                                             variant="secondary"
-                                            className="text-xs"
+                                            className="text-xs px-1.5 py-0.5"
                                           >
                                             {tag}
                                           </Badge>
                                         ))}
+                                        {campaign.tags.length > 3 && (
+                                          <Badge variant="secondary" className="text-xs px-1.5 py-0.5">
+                                            +{campaign.tags.length - 3}
+                                          </Badge>
+                                        )}
                                       </div>
                                     )}
                                 </div>
                               </div>
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="px-4 py-3">
                               <Badge
-                                className={`text-xs px-2 py-1 rounded-full ${getStatusColor(
+                                className={`text-xs px-2.5 py-0.5 rounded-full ${getStatusColor(
                                   campaign.status ?? "unknown"
                                 )}`}
                               >
                                 {campaign.status ?? "Unknown"}
                               </Badge>
                             </TableCell>
-                            <TableCell>
-                              <span className="font-medium">
+                            <TableCell className="px-4 py-3 text-right">
+                              <span className="font-medium text-sm">
                                 {typeof campaign.goal === "number"
                                   ? campaign.goal.toLocaleString()
                                   : "—"}
                               </span>
                             </TableCell>
-                            <TableCell>{formatDate(campaign.endDate)}</TableCell>
-                            <TableCell className="text-right">
+                            <TableCell className="px-4 py-3">
+                              <span className="text-sm text-gray-700">{formatDate(campaign.endDate)}</span>
+                            </TableCell>
+                            <TableCell className="px-4 py-3 text-center">
                               <div className="inline-flex items-center gap-2">
                                 <Button
                                   variant="outline"
@@ -1923,7 +2090,7 @@ const CampaignManagement = ({
                                   onClick={() => handleDeleteClick(campaign)}
                                   title="Delete campaign"
                                 >
-                                  <FaTrashAlt className="h-4 w-4" />
+                                  <FaTrashAlt className="h-3.5 w-3.5" />
                                 </Button>
                               </div>
                             </TableCell>
@@ -1932,10 +2099,9 @@ const CampaignManagement = ({
                       })}
                     </TableBody>
                   </Table>
-                </div>
                 </>
               ) : (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-gray-500 p-6">
                   <Ghost className="mx-auto h-12 w-12 text-gray-400 mb-3" />
                   <p className="text-lg font-medium mb-2">No Campaigns Found</p>
                   <p className="text-sm mb-4">No campaigns have been added to your organization yet.</p>
@@ -1948,6 +2114,33 @@ const CampaignManagement = ({
       {/* Dialogs remain after main content */}
       <CampaignDialog open={isEditDialogOpen} onOpenChange={open => { setIsEditDialogOpen(open); if(!open) setEditingCampaign(null); }} campaign={editingCampaign} organizationId={userSession.user.organizationId || ""} onSave={handleSave} />
       <CampaignDialog open={isAddDialogOpen} onOpenChange={open => { setIsAddDialogOpen(open); }} organizationId={userSession.user.organizationId || ""} onSave={(data, isNew) => handleSave(data, isNew, undefined)} />
+      
+      {/* New CampaignForm Component */}
+      <CampaignForm
+        open={isNewCampaignFormOpen}
+        onOpenChange={setIsNewCampaignFormOpen}
+        editingCampaign={null}
+        campaignData={newCampaignFormData}
+        setCampaignData={setNewCampaignFormData}
+        onSubmit={handleNewCampaignFormSubmit}
+        onCancel={handleNewCampaignFormCancel}
+        formatCurrency={formatCurrency}
+        onImageFileSelect={setSelectedNewCampaignImageFile}
+      />
+
+      {/* Edit CampaignForm Component */}
+      <CampaignForm
+        open={isEditCampaignFormOpen}
+        onOpenChange={setIsEditCampaignFormOpen}
+        editingCampaign={editingCampaignForNewForm}
+        campaignData={editCampaignFormData}
+        setCampaignData={setEditCampaignFormData}
+        onSubmit={handleEditCampaignFormSubmit}
+        onCancel={handleEditCampaignFormCancel}
+        formatCurrency={formatCurrency}
+        onImageFileSelect={setSelectedEditCampaignImageFile}
+      />
+      
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[400px] p-0 border-0 shadow-2xl">
