@@ -59,5 +59,3 @@ export function KioskLogin({ kioskId, accessCode, error, loading, onKioskIdChang
 		</>
 	);
 }
-
-

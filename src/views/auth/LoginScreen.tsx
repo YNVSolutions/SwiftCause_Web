@@ -45,10 +45,10 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
         {/* Left side - Stats and branding */}
         <div className="hidden lg:flex lg:w-1/2 xl:w-3/5 flex-col justify-center p-6 xl:p-12">
           <div className="max-w-lg mx-auto w-full">
-            <Button 
-              onClick={onGoBackToHome} 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              onClick={onGoBackToHome}
+              variant="ghost"
+              size="icon"
               className="absolute top-4 left-4 text-gray-700 hover:text-green-600 hover:bg-green-50 transition-all duration-300 hover:scale-110"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -56,8 +56,8 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
             </Button>
 
             {/* Logo */}
-            <button 
-              onClick={onGoBackToHome} 
+            <button
+              onClick={onGoBackToHome}
               className="flex items-center space-x-3 mb-4 text-left hover:opacity-90 transition-all duration-300 hover:scale-105 group"
             >
               <div className="flex h-14 w-14 items-center justify-center transform transition-transform group-hover:scale-110">
@@ -94,7 +94,7 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
                 <p className="text-sm">Unable to load campaigns</p>
               </div>
             ) : (
-              <FeaturedCampaign 
+              <FeaturedCampaign
                 campaigns={campaigns}
                 autoRotateInterval={6000}
                 showNavigation={true}
@@ -106,7 +106,7 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 shadow-sm">
                 {/* Accent line matching the green theme */}
                 <div className="w-12 h-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full mb-4" />
-                
+
                 {/* Quote text */}
                 <p className="text-gray-700 text-sm leading-relaxed mb-3">
                   "We make a living by what we get, but we make a life by what we give."
@@ -139,7 +139,7 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
             <GlassMorphCard formState={formState} className="relative">
               {/* Phase 2: Liquid fill progress indicator */}
               <LiquidFillProgress progress={formProgress} />
-              
+
               <CardHeader className="text-center space-y-1 pt-6 pb-4 relative z-10">
                 <CardTitle className="text-lg sm:text-xl lg:text-2xl bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
                   Platform Access
@@ -150,8 +150,8 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
               </CardHeader>
 
               <CardContent className="space-y-4 pt-2 pb-6 px-4 sm:px-6 relative z-10">
-                <Tabs 
-                  value={activeTab} 
+                <Tabs
+                  value={activeTab}
                   onValueChange={(value) => {
                     setActiveTab(value as 'kiosk' | 'admin');
                     setFormProgress(0);
@@ -159,15 +159,15 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
                   }}
                 >
                   <TabsList className="grid w-full grid-cols-2 h-11 bg-green-50/50">
-                    <TabsTrigger 
-                      value="admin" 
+                    <TabsTrigger
+                      value="admin"
                       className="flex items-center space-x-2 text-sm data-[state=active]:bg-green-600 data-[state=active]:text-white transition-all duration-300"
                     >
                       <UserCog className="w-4 h-4" />
                       <span>User</span>
                     </TabsTrigger>
-                    <TabsTrigger 
-                      value="kiosk" 
+                    <TabsTrigger
+                      value="kiosk"
                       className="flex items-center space-x-2 text-sm data-[state=active]:bg-green-600 data-[state=active]:text-white transition-all duration-300"
                     >
                       <Heart className="w-4 h-4" />
@@ -189,19 +189,19 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
                 <div className="pt-3 border-t border-green-100 text-center space-y-2 relative z-10">
                   <p className="text-xs sm:text-sm text-gray-600">Need assistance?</p>
                   <div className="flex flex-col sm:flex-row items-center justify-center sm:space-x-4 space-y-1 sm:space-y-0 text-xs sm:text-sm">
-                    <a 
-                      href="mailto:swiftcauseweb@gmail.com" 
+                    <a
+                      href="mailto:swiftcauseweb@gmail.com"
                       className="text-green-600 hover:text-green-700 font-medium transition-colors hover:underline"
                     >
-                      📩 swiftcauseweb@gmail.com
+                      swiftcauseweb@gmail.com
                     </a>
-                    <span className="hidden sm:inline text-gray-300">•</span>
+                    <span className="hidden sm:inline text-gray-300">|</span>
                     <span className="text-gray-600">24/7 Support</span>
                   </div>
 
                   <div className="flex items-center justify-center space-x-2 text-xs text-gray-500 pt-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span>Secure • Encrypted • Verified</span>
+                    <span>Secure - Encrypted - Verified</span>
                   </div>
                 </div>
               </CardContent>

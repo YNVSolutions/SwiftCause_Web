@@ -1,7 +1,6 @@
 import { useState, FormEvent, ChangeEvent } from 'react';
 import { createThankYouMail } from '../../shared/api';
-import { Mail, Send, Home, CheckCircle } from 'lucide-react';
-import { KioskHeader } from '../../shared/components/KioskHeader';
+import { Mail, Send, Home, CheckCircle, ArrowLeft } from 'lucide-react';
 
 interface EmailConfirmationScreenProps {
   transactionId?: string;
@@ -36,21 +35,23 @@ export function EmailConfirmationScreen({ transactionId, onComplete }: EmailConf
 
   if (emailSent) {
     return (
-      <div className="h-screen flex flex-col bg-[#FAFAFA]">
-        <KioskHeader title="Email Sent" />
+      <div className="min-h-screen flex flex-col bg-gradient-to-b from-green-50 via-white to-emerald-50/70 relative overflow-hidden">
+        <div className="absolute -top-24 right-0 h-80 w-80 rounded-full bg-green-100 blur-3xl opacity-70" />
+        <div className="absolute top-1/3 -left-24 h-72 w-72 rounded-full bg-emerald-100 blur-3xl opacity-60" />
+        <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full bg-green-50 blur-3xl opacity-90" />
 
-        <main className="flex-1 flex items-center justify-center px-4">
+        <main className="relative z-10 flex-1 flex items-center justify-center px-4 pb-8">
           <div className="w-full max-w-xl">
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div className="bg-white/90 rounded-3xl border border-green-100 shadow-xl overflow-hidden">
               {/* Success Header */}
-              <div className="bg-[#159A6F] text-white p-8 text-center">
-                <div className="flex justify-center mb-4">
-                  <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center">
-                    <CheckCircle className="w-12 h-12" />
+              <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-5 text-center">
+                <div className="flex justify-center mb-3">
+                  <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center shadow-lg">
+                    <CheckCircle className="w-10 h-10" />
                   </div>
                 </div>
-                <h2 className="text-2xl lg:text-3xl font-bold mb-2">Email Sent!</h2>
-                <p className="text-white/80">Your receipt has been sent to {email}</p>
+                <h2 className="text-2xl lg:text-3xl font-bold mb-1">Email Sent!</h2>
+                <p className="text-white/85">Your receipt has been sent to {email}</p>
               </div>
 
               <div className="p-8 lg:p-10">
@@ -64,10 +65,7 @@ export function EmailConfirmationScreen({ transactionId, onComplete }: EmailConf
                 {/* Action Button */}
                 <button
                   onClick={onComplete}
-                  className="w-full h-14 rounded-xl font-medium text-white flex items-center justify-center gap-2 transition-colors"
-                  style={{ backgroundColor: '#159A6F' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#128A62')}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#159A6F')}
+                  className="w-full h-14 rounded-xl font-medium text-white flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-200/70"
                 >
                   <Home className="w-5 h-5" />
                   Back to Campaigns
@@ -75,7 +73,7 @@ export function EmailConfirmationScreen({ transactionId, onComplete }: EmailConf
 
                 {/* Footer Message */}
                 <div className="mt-8 text-center">
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-gray-500">
                     Thank you for your donation!
                   </p>
                 </div>
@@ -88,30 +86,32 @@ export function EmailConfirmationScreen({ transactionId, onComplete }: EmailConf
   }
 
   return (
-    <div className="h-screen flex flex-col bg-[#FAFAFA]">
-      <KioskHeader title="Send Receipt" backText="Skip" onBack={handleSkip} />
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-green-50 via-white to-emerald-50/70 relative overflow-hidden">
+      <div className="absolute -top-24 right-0 h-80 w-80 rounded-full bg-green-100 blur-3xl opacity-70" />
+      <div className="absolute top-1/3 -left-24 h-72 w-72 rounded-full bg-emerald-100 blur-3xl opacity-60" />
+      <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full bg-green-50 blur-3xl opacity-90" />
 
-      <main className="flex-1 flex items-center justify-center px-4">
+      <main className="relative z-10 flex-1 flex items-center justify-center px-4 pb-8">
         <div className="w-full max-w-xl">
-          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div className="bg-white/90 rounded-3xl border border-green-100 shadow-xl overflow-hidden">
             {/* Header */}
-            <div className="bg-[#159A6F] text-white p-8 text-center">
-              <div className="flex justify-center mb-4">
-                <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center">
-                  <Mail className="w-10 h-10" />
+            <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-5 text-center">
+              <div className="flex justify-center mb-3">
+                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center shadow-lg">
+                  <Mail className="w-9 h-9" />
                 </div>
               </div>
-              <h2 className="text-2xl lg:text-3xl font-bold mb-2">Send Receipt</h2>
-              <p className="text-white/80">Would you like to receive a donation receipt by email?</p>
+              <h2 className="text-2xl lg:text-3xl font-bold mb-1">Send Receipt</h2>
+              <p className="text-white/85">Would you like to receive a donation receipt by email?</p>
             </div>
 
             <div className="p-8 lg:p-10">
               <form onSubmit={handleSubmit}>
                 {/* Transaction ID */}
                 {transactionId && (
-                  <div className="mb-6 p-4 bg-gray-50 rounded-xl text-center">
-                    <p className="text-sm text-gray-500 mb-1">Transaction Id</p>
-                    <p className="font-mono text-sm text-[#0A0A0A]">{transactionId}</p>
+                  <div className="mb-6 p-4 bg-green-50/70 border border-green-100 rounded-2xl text-center">
+                    <p className="text-sm text-green-700 mb-1">Transaction Id</p>
+                    <p className="font-mono text-sm text-[#0A0A0A] break-all">{transactionId}</p>
                   </div>
                 )}
 
@@ -128,7 +128,7 @@ export function EmailConfirmationScreen({ transactionId, onComplete }: EmailConf
                     onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                     required
                     disabled={isSending}
-                    className="w-full h-14 px-4 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#159A6F] focus:ring-1 focus:ring-[#159A6F] disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    className="w-full h-14 px-4 text-lg border-2 border-green-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200 disabled:bg-gray-100 disabled:cursor-not-allowed bg-white"
                   />
                   <p className="text-xs text-gray-500 mt-2">
                     We'll only use this email to send your receipt
@@ -137,7 +137,7 @@ export function EmailConfirmationScreen({ transactionId, onComplete }: EmailConf
 
                 {/* Error Message */}
                 {error && (
-                  <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                  <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl">
                     <p className="text-sm text-red-700 text-center">{error}</p>
                   </div>
                 )}
@@ -147,14 +147,7 @@ export function EmailConfirmationScreen({ transactionId, onComplete }: EmailConf
                   <button
                     type="submit"
                     disabled={isSending || !email}
-                    className="w-full h-14 rounded-xl font-medium text-white flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{ backgroundColor: isSending || !email ? '#9CA3AF' : '#159A6F' }}
-                    onMouseEnter={(e) => {
-                      if (!isSending && email) e.currentTarget.style.backgroundColor = '#128A62';
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isSending && email) e.currentTarget.style.backgroundColor = '#159A6F';
-                    }}
+                    className="w-full h-14 rounded-xl font-medium text-white flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-200/70"
                   >
                     {isSending ? (
                       <>
@@ -173,7 +166,7 @@ export function EmailConfirmationScreen({ transactionId, onComplete }: EmailConf
                     type="button"
                     onClick={handleSkip}
                     disabled={isSending}
-                    className="w-full h-14 rounded-xl font-medium border-2 border-gray-200 text-[#0A0A0A] flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full max-w-md mx-auto h-16 rounded-xl font-semibold text-lg border-2 border-green-200 text-green-800 flex items-center justify-center gap-2 hover:bg-green-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Skip Email Receipt
                   </button>
@@ -181,7 +174,7 @@ export function EmailConfirmationScreen({ transactionId, onComplete }: EmailConf
 
                 {/* Footer Message */}
                 <div className="mt-8 text-center">
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-gray-500">
                     Your donation has been successfully processed. Email receipt is optional.
                   </p>
                 </div>

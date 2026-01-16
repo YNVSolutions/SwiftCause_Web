@@ -58,6 +58,7 @@ export interface AmountSelectorProps {
 export interface DonateButtonProps {
   disabled: boolean;
   onClick: () => void;
+  label?: string;
 }
 
 // Props for video player
