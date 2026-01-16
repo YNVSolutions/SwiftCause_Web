@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription, VisuallyHidden }
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../shared/ui/select';
 
 import {
-  Plus, Menu, X, Grid3X3, List, GalleryThumbnails, Image, Save
+  Plus, Menu, X, Grid3X3, List, GalleryThumbnails, Image, Save, Edit
 } from 'lucide-react';
 
 // Types for the form data
@@ -44,6 +44,7 @@ export interface KioskFormProps {
   onCancel: () => void;
   onAssignCampaign: (campaignId: string) => void;
   onUnassignCampaign: (campaignId: string) => void;
+  onEditCampaign?: (campaignId: string) => void;
   formatCurrency: (amount: number) => string;
 }
 
@@ -58,6 +59,7 @@ export function KioskForm({
   onCancel,
   onAssignCampaign,
   onUnassignCampaign,
+  onEditCampaign,
   formatCurrency
 }: KioskFormProps) {
   
@@ -463,6 +465,17 @@ export function KioskForm({
                                 >
                                   Remove
                                 </Button>
+                                {onEditCampaign && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => onEditCampaign(campaign.id)}
+                                    className="text-blue-600 border-blue-200 hover:bg-blue-50 w-full sm:w-auto"
+                                  >
+                                    <Edit className="w-4 h-4 mr-1" />
+                                    Edit
+                                  </Button>
+                                )}
                               </div>
                             );
                           })}
@@ -524,6 +537,17 @@ export function KioskForm({
                                   <Plus className="w-4 h-4 mr-1" />
                                   ASSIGN
                                 </Button>
+                                {onEditCampaign && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => onEditCampaign(campaign.id)}
+                                    className="text-blue-600 border-blue-200 hover:bg-blue-50 w-full sm:w-auto"
+                                  >
+                                    <Edit className="w-4 h-4 mr-1" />
+                                    Edit
+                                  </Button>
+                                )}
                               </div>
                             );
                           })}

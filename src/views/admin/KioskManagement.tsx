@@ -265,6 +265,13 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
     setIsDeleteDialogOpen(true);
   };
 
+  const handleEditCampaign = (campaignId: string) => {
+    const campaign = campaigns.find(c => c.id === campaignId);
+    if (campaign) {
+      onNavigate(`admin-campaigns`);
+    }
+  };
+
   const confirmDeleteKiosk = async () => {
     if (!kioskToDelete) return;
     
@@ -752,6 +759,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
         onCancel={handleCancel}
         onAssignCampaign={handleAssignCampaign}
         onUnassignCampaign={handleUnassignCampaign}
+        onEditCampaign={handleEditCampaign}
         formatCurrency={formatCurrency}
       />
       
