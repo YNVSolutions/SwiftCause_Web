@@ -18,7 +18,7 @@ import { Switch } from '../../../shared/ui/switch';
 import { Checkbox } from '../../../shared/ui/checkbox';
 
 import {
-  Menu, X, Save, Upload
+  Menu, X, Save, Upload, RefreshCw
 } from 'lucide-react';
 
 // Types for the form data
@@ -55,6 +55,8 @@ export interface CampaignFormProps {
   onImageFileSelect?: (file: File | null) => void;
   onGalleryImagesSelect?: (files: File[]) => void;
   organizationId?: string;
+  isSubmitting?: boolean;
+  isSavingDraft?: boolean;
 }
 
 export function CampaignForm({
@@ -69,7 +71,9 @@ export function CampaignForm({
   formatCurrency,
   onImageFileSelect,
   onGalleryImagesSelect,
-  organizationId
+  organizationId,
+  isSubmitting = false,
+  isSavingDraft = false
 }: CampaignFormProps) {
   
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -1077,28 +1081,38 @@ export function CampaignForm({
               <Button
                 variant="ghost"
                 onClick={onSaveDraft}
-                disabled={!campaignData.title}
+                disabled={!campaignData.title || isSavingDraft || isSubmitting}
                 className="text-gray-600 hover:text-gray-800 w-full sm:w-auto h-12 sm:h-auto"
               >
                 <Save className="w-4 h-4 mr-2" />
-                SAVE DRAFT
+                {isSavingDraft ? 'SAVING...' : 'SAVE DRAFT'}
               </Button>
               
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
                 <Button
                   variant="outline"
                   onClick={onCancel}
+                  disabled={isSubmitting || isSavingDraft}
                   className="border-gray-300 text-gray-700 hover:bg-gray-50 w-full sm:w-auto h-12 sm:h-auto"
                 >
                   CANCEL
                 </Button>
                 <Button
                   onClick={onSubmit}
-                  disabled={!campaignData.title || !campaignData.description || !campaignData.goal}
+                  disabled={!campaignData.title || !campaignData.description || !campaignData.goal || isSubmitting || isSavingDraft}
                   className="bg-black hover:bg-gray-800 text-white px-6 w-full sm:w-auto h-12 sm:h-auto"
                 >
-                  <Save className="w-4 h-4 mr-2" />
-                  {editingCampaign ? 'UPDATE CAMPAIGN' : 'SAVE CAMPAIGN'}
+                  {isSubmitting ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      {editingCampaign ? 'UPDATING...' : 'SAVING...'}
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      {editingCampaign ? 'UPDATE CAMPAIGN' : 'SAVE CAMPAIGN'}
+                    </>
+                  )}
                 </Button>
               </div>
             </footer>

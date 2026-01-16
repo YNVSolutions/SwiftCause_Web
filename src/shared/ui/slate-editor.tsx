@@ -235,6 +235,11 @@ export function SlateEditor({ value, onChange, placeholder, className }: SlateEd
 
   return (
     <div className={className}>
+      <style>{`
+        [data-slate-editor]:focus [data-slate-placeholder] {
+          opacity: 0 !important;
+        }
+      `}</style>
       <Slate editor={editor} initialValue={initialValue} onChange={handleChange}>
         <div className="border border-gray-300 rounded-lg overflow-hidden focus-within:border-green-500 focus-within:ring-2 focus-within:ring-green-500 focus-within:ring-opacity-20">
           <div className="flex flex-wrap items-center gap-1 px-3 py-2 bg-gray-50 border-b border-gray-200">

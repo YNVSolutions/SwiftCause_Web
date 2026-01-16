@@ -1260,6 +1260,12 @@ const CampaignManagement = ({
   const [selectedNewCampaignGalleryFiles, setSelectedNewCampaignGalleryFiles] = useState<File[]>([]);
   const [selectedEditCampaignGalleryFiles, setSelectedEditCampaignGalleryFiles] = useState<File[]>([]);
 
+  // Submission states to prevent double-submission
+  const [isSubmittingNewCampaign, setIsSubmittingNewCampaign] = useState(false);
+  const [isSavingNewDraft, setIsSavingNewDraft] = useState(false);
+  const [isSubmittingEditCampaign, setIsSubmittingEditCampaign] = useState(false);
+  const [isSavingEditDraft, setIsSavingEditDraft] = useState(false);
+
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
@@ -1499,6 +1505,14 @@ const CampaignManagement = ({
 
   // New handlers for CampaignForm
   const handleNewCampaignFormSubmit = async () => {
+    // Hard guard: prevent re-entry while submission is in progress
+    if (isSubmittingNewCampaign) {
+      console.warn('[CampaignManagement] Submission already in progress, ignoring duplicate request');
+      return;
+    }
+
+    setIsSubmittingNewCampaign(true);
+    
     try {
       let coverImageUrl = newCampaignFormData.coverImageUrl;
       
@@ -1587,6 +1601,8 @@ const CampaignManagement = ({
     } catch (error) {
       console.error("Error creating campaign:", error);
       alert("Failed to create campaign. Please try again.");
+    } finally {
+      setIsSubmittingNewCampaign(false);
     }
   };
 
@@ -1616,6 +1632,14 @@ const CampaignManagement = ({
   };
 
   const handleNewCampaignFormSaveDraft = async () => {
+    // Hard guard: prevent re-entry while saving draft
+    if (isSavingNewDraft) {
+      console.warn('[CampaignManagement] Draft save already in progress, ignoring duplicate request');
+      return;
+    }
+
+    setIsSavingNewDraft(true);
+    
     try {
       let coverImageUrl = newCampaignFormData.coverImageUrl;
       
@@ -1704,11 +1728,21 @@ const CampaignManagement = ({
     } catch (error) {
       console.error("Error saving campaign draft:", error);
       alert("Failed to save campaign draft. Please try again.");
+    } finally {
+      setIsSavingNewDraft(false);
     }
   };
 
   const handleEditCampaignFormSaveDraft = async () => {
     if (!editingCampaignForNewForm) return;
+
+    // Hard guard: prevent re-entry while saving draft
+    if (isSavingEditDraft) {
+      console.warn('[CampaignManagement] Edit draft save already in progress, ignoring duplicate request');
+      return;
+    }
+
+    setIsSavingEditDraft(true);
     
     try {
       let coverImageUrl = editCampaignFormData.coverImageUrl;
@@ -1803,11 +1837,21 @@ const CampaignManagement = ({
     } catch (error) {
       console.error("Error saving campaign draft:", error);
       alert("Failed to save campaign draft. Please try again.");
+    } finally {
+      setIsSavingEditDraft(false);
     }
   };
 
   const handleEditCampaignFormSubmit = async () => {
     if (!editingCampaignForNewForm) return;
+
+    // Hard guard: prevent re-entry while submission is in progress
+    if (isSubmittingEditCampaign) {
+      console.warn('[CampaignManagement] Edit submission already in progress, ignoring duplicate request');
+      return;
+    }
+
+    setIsSubmittingEditCampaign(true);
     
     try {
       let coverImageUrl = editCampaignFormData.coverImageUrl;
@@ -1902,6 +1946,8 @@ const CampaignManagement = ({
     } catch (error) {
       console.error("Error updating campaign:", error);
       alert("Failed to update campaign. Please try again.");
+    } finally {
+      setIsSubmittingEditCampaign(false);
     }
   };
 
@@ -2459,6 +2505,8 @@ const CampaignManagement = ({
         onImageFileSelect={setSelectedNewCampaignImageFile}
         onGalleryImagesSelect={setSelectedNewCampaignGalleryFiles}
         organizationId={userSession.user.organizationId}
+        isSubmitting={isSubmittingNewCampaign}
+        isSavingDraft={isSavingNewDraft}
       />
 
       {/* Edit CampaignForm Component */}
@@ -2475,6 +2523,8 @@ const CampaignManagement = ({
         onImageFileSelect={setSelectedEditCampaignImageFile}
         onGalleryImagesSelect={setSelectedEditCampaignGalleryFiles}
         organizationId={userSession.user.organizationId}
+        isSubmitting={isSubmittingEditCampaign}
+        isSavingDraft={isSavingEditDraft}
       />
       
       {/* Delete Confirmation Dialog */}
