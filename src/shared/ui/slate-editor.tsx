@@ -122,7 +122,7 @@ const Element = ({ attributes, children, element }: RenderElementProps) => {
 export function SlateEditor({ value, onChange, placeholder, className }: SlateEditorProps) {
   const editor = useMemo(() => withHistory(withReact(createEditor())), []);
   
-  const initialValue = useMemo(() => deserialize(value), []);
+  const initialValue = useMemo(() => deserialize(value), [value]);
   
   const handleChange = useCallback((newValue: Descendant[]) => {
     const isAstChange = editor.operations.some(
