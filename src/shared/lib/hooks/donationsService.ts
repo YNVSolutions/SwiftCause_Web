@@ -2,11 +2,21 @@ import { fetchAllDonations } from '../../api/legacy/donationsApi';
 import { Donation } from '../../types'; 
 
 
-function formatTimestamp(timestamp: any): string {
-  if (!timestamp || !timestamp.toDate) {
-    return 'N/A';
+type TimestampLike = { toDate: () => Date };
+
+function formatTimestamp(timestamp: unknown): string {
+  if (
+    typeof timestamp === 'object' &&
+    timestamp !== null &&
+    'toDate' in timestamp &&
+    typeof (timestamp as TimestampLike).toDate === 'function'
+  ) {
+    return (timestamp as TimestampLike).toDate().toLocaleString();
   }
-  return timestamp.toDate().toLocaleString();
+  if (typeof timestamp === 'string') {
+    return timestamp;
+  }
+  return 'N/A';
 }
 
 
@@ -14,10 +24,13 @@ export async function getDonations(organizationId: string): Promise<Donation[]> 
   try {
     const rawDonations = await fetchAllDonations(organizationId);
 
-    const formattedDonations: Donation[] = rawDonations.map((donation: any) => ({
-      ...donation,
-      timestamp: formatTimestamp(donation.timestamp), // Format the timestamp here
-    })) as Donation[];
+    const formattedDonations: Donation[] = rawDonations.map((donation) => {
+      const record = donation as Record<string, unknown>;
+      return {
+        ...(record as Donation),
+        timestamp: formatTimestamp(record.timestamp),
+      };
+    });
 
     return formattedDonations;
   } catch (error) {

@@ -33,6 +33,9 @@ function logSync(
   message: string,
   context: Record<string, unknown>
 ) {
+  if (level === 'info') {
+    return;
+  }
   const timestamp = new Date().toISOString();
   const logData = {
     timestamp,
@@ -43,9 +46,6 @@ function logSync(
   const logMessage = `[CampaignKioskSync] ${message}`;
   
   switch (level) {
-    case 'info':
-      console.log(logMessage, logData);
-      break;
     case 'warn':
       console.warn(logMessage, logData);
       break;

@@ -27,6 +27,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
   const [isToastVisible, setIsToastVisible] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const [toastVariant, setToastVariant] = useState<ToastVariant>('info')
+  const [toastDurationMs, setToastDurationMs] = useState(2500)
 
   const showToast = (
     message: string,
@@ -35,6 +36,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
   ) => {
     setToastMessage(message)
     setToastVariant(variant)
+    setToastDurationMs(durationMs)
     setIsToastVisible(true)
   }
 
@@ -47,13 +49,13 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
       {children}
       <ToastHost 
         visible={isToastVisible} 
-        onClose={() => setIsToastVisible(false)} 
         align="top"
       >
         <Toast 
           message={toastMessage} 
           variant={toastVariant} 
           onClose={() => setIsToastVisible(false)} 
+          durationMs={toastDurationMs}
         />
       </ToastHost>
     </ToastContext.Provider>

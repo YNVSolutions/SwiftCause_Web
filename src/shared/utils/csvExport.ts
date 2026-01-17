@@ -1,5 +1,5 @@
 // Shared CSV export utility
-export const exportToCsv = <T extends Record<string, any>>(
+export const exportToCsv = <T extends Record<string, unknown>>(
   data: T[],
   filename: string,
   customHeaders?: string[]
@@ -15,7 +15,7 @@ export const exportToCsv = <T extends Record<string, any>>(
   
   const csvContent = data.map(row => 
     headers.map(header => {
-      const value = row[header];
+      const value = (row as Record<string, unknown>)[header];
       const stringValue = String(value || '');
       // Escape quotes and wrap in quotes
       return `"${stringValue.replace(/"/g, '""')}"`;

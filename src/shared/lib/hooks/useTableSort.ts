@@ -15,7 +15,33 @@ interface UseTableSortReturn<T> {
   handleSort: (key: string) => void;
 }
 
-export function useTableSort<T extends Record<string, any>>({
+const getNestedValue = (obj: Record<string, unknown>, path: string): unknown => {
+  return path.split('.').reduce<unknown>((value, key) => {
+    if (typeof value === 'object' && value !== null) {
+      return (value as Record<string, unknown>)[key];
+    }
+    return undefined;
+  }, obj);
+};
+
+const toTimestamp = (value: unknown): number | null => {
+  if (value instanceof Date) {
+    return value.getTime();
+  }
+  if (typeof value === 'string' || typeof value === 'number') {
+    const parsed = new Date(value).getTime();
+    return isNaN(parsed) ? null : parsed;
+  }
+  if (typeof value === 'object' && value !== null && 'seconds' in value) {
+    const seconds = (value as { seconds?: unknown }).seconds;
+    if (typeof seconds === 'number') {
+      return seconds * 1000;
+    }
+  }
+  return null;
+};
+
+export function useTableSort<T extends Record<string, unknown>>({
   data,
   defaultSortKey = null,
   defaultSortDirection = null
@@ -47,14 +73,13 @@ export function useTableSort<T extends Record<string, any>>({
     }
 
     return [...data].sort((a, b) => {
-      let aValue = a[sortKey];
-      let bValue = b[sortKey];
+      let aValue: unknown = a[sortKey as keyof T];
+      let bValue: unknown = b[sortKey as keyof T];
 
       // Handle nested properties (e.g., 'user.name')
       if (sortKey.includes('.')) {
-        const keys = sortKey.split('.');
-        aValue = keys.reduce((obj, key) => obj?.[key], a);
-        bValue = keys.reduce((obj, key) => obj?.[key], b);
+        aValue = getNestedValue(a, sortKey);
+        bValue = getNestedValue(b, sortKey);
       }
 
       // Handle null/undefined values
@@ -74,9 +99,11 @@ export function useTableSort<T extends Record<string, any>>({
       }
 
       // Handle dates (including Firestore Timestamps)
-      if (aValue?.seconds || bValue?.seconds || aValue instanceof Date || bValue instanceof Date) {
-        const aTime = aValue?.seconds ? aValue.seconds * 1000 : new Date(aValue).getTime();
-        const bTime = bValue?.seconds ? bValue.seconds * 1000 : new Date(bValue).getTime();
+      const aTime = toTimestamp(aValue);
+      const bTime = toTimestamp(bValue);
+      if (aTime !== null || bTime !== null) {
+        if (aTime === null) return sortDirection === 'asc' ? 1 : -1;
+        if (bTime === null) return sortDirection === 'asc' ? -1 : 1;
         const comparison = aTime - bTime;
         return sortDirection === 'asc' ? comparison : -comparison;
       }

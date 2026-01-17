@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { getAuth, onAuthStateChanged, User as FirebaseAuthUser } from 'firebase/auth'
+import { getAuth, onAuthStateChanged } from 'firebase/auth'
 import { doc, getDoc, db } from './firebase'
 import {
   UserRole,
@@ -60,7 +60,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const kioskRef = doc(db, 'kiosks', targetKioskId)
         const kioskSnap = await getDoc(kioskRef)
         if (kioskSnap.exists()) {
-          const kioskData = kioskSnap.data() as any
+          const kioskData = kioskSnap.data() as Partial<KioskSession>
           
           setCurrentKioskSession((prev) => ({
             ...prev!,

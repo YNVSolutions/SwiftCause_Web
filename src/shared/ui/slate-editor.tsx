@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo } from 'react';
+import type { ComponentType } from 'react';
 import { createEditor, Descendant, Editor, Transforms, Element as SlateElement, BaseEditor } from 'slate';
 import { Slate, Editable, withReact, RenderLeafProps, RenderElementProps, ReactEditor } from 'slate-react';
 import { withHistory, HistoryEditor } from 'slate-history';
@@ -99,7 +100,8 @@ const Leaf = ({ attributes, children, leaf }: RenderLeafProps) => {
 };
 
 const Element = ({ attributes, children, element }: RenderElementProps) => {
-  const style = { textAlign: (element as any).align || 'left' };
+  const alignValue = 'align' in element && typeof element.align === 'string' ? element.align : 'left';
+  const style = { textAlign: alignValue };
   
   switch (element.type) {
     case 'heading-one':
@@ -140,8 +142,8 @@ export function SlateEditor({ value, onChange, placeholder, className }: SlateEd
   const renderElement = useCallback((props: RenderElementProps) => <Element {...props} />, []);
 
   const isMarkActive = (format: keyof CustomText) => {
-    const marks = Editor.marks(editor);
-    return marks ? (marks as any)[format] === true : false;
+    const marks = Editor.marks(editor) as Partial<CustomText> | null;
+    return Boolean(marks?.[format]);
   };
 
   const toggleMark = (format: keyof CustomText) => {
@@ -160,7 +162,7 @@ export function SlateEditor({ value, onChange, placeholder, className }: SlateEd
     const [match] = Array.from(
       Editor.nodes(editor, {
         at: Editor.unhangRange(editor, selection),
-        match: n => !Editor.isEditor(n) && SlateElement.isElement(n) && (n as any).type === format,
+        match: n => !Editor.isEditor(n) && SlateElement.isElement(n) && n.type === format,
       })
     );
 
@@ -172,17 +174,21 @@ export function SlateEditor({ value, onChange, placeholder, className }: SlateEd
     const isList = ['numbered-list', 'bulleted-list'].includes(format);
 
     Transforms.unwrapNodes(editor, {
-      match: n => !Editor.isEditor(n) && SlateElement.isElement(n) && ['numbered-list', 'bulleted-list'].includes((n as any).type),
+      match: n => !Editor.isEditor(n) && SlateElement.isElement(n) && ['numbered-list', 'bulleted-list'].includes(n.type),
       split: true,
     });
 
-    const newProperties: Partial<CustomElement> = {
-      type: isActive ? 'paragraph' : (isList ? 'list-item' : format) as any,
-    };
-    Transforms.setNodes<SlateElement>(editor, newProperties);
+    const nextType: CustomElement['type'] = isActive
+      ? 'paragraph'
+      : (isList ? 'list-item' : format) as CustomElement['type'];
+    const newProperties: Partial<SlateElement> = { type: nextType };
+    Transforms.setNodes(editor, newProperties);
 
     if (!isActive && isList) {
-      const block = { type: format, children: [] } as any;
+      const block: BulletedListElement | NumberedListElement = {
+        type: format as 'numbered-list' | 'bulleted-list',
+        children: [],
+      };
       Transforms.wrapNodes(editor, block);
     }
   };
@@ -190,7 +196,7 @@ export function SlateEditor({ value, onChange, placeholder, className }: SlateEd
   const setAlignment = (align: string) => {
     Transforms.setNodes(
       editor,
-      { align } as any,
+      { align } as Partial<SlateElement>,
       { match: n => !Editor.isEditor(n) && SlateElement.isElement(n) }
     );
   };
@@ -207,15 +213,15 @@ export function SlateEditor({ value, onChange, placeholder, className }: SlateEd
     } as ParagraphElement);
   };
 
-  const ToolbarButton = ({ 
-    format, 
-    icon: Icon, 
-    title, 
-    onToggle 
-  }: { 
-    format?: string; 
-    icon: any; 
-    title: string; 
+  const ToolbarButton = ({
+    format,
+    icon: Icon,
+    title,
+    onToggle
+  }: {
+    format?: string;
+    icon: ComponentType<{ className?: string }>;
+    title: string;
     onToggle: () => void;
   }) => {
     const isActive = format ? (format.includes('-') ? isBlockActive(format) : isMarkActive(format as keyof CustomText)) : false;

@@ -25,7 +25,6 @@ const deleteFile = async (fileUrl: string) => {
   try {
     const fileRef = ref(storage, fileUrl);
     await deleteObject(fileRef);
-    console.log(`File deleted successfully: ${fileUrl}`);
   } catch (error) {
     console.error(`Error deleting file ${fileUrl}:`, error);
     throw error; // Re-throw the error for handling in the calling component

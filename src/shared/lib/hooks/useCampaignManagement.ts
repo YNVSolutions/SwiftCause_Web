@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { useCampaigns } from '../../../entities/campaign/model/hooks';
 import { storage } from '../firebase'; // Import storage
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'; // Import storage functions
+import type { Campaign } from '../../types';
 
 export function useCampaignManagement(organizationId?: string) {
   const { campaigns, updateWithImage, create, createWithImage, loading, error, remove } = useCampaigns(organizationId);
@@ -35,7 +36,7 @@ export function useCampaignManagement(organizationId?: string) {
     }
   }, []);
 
-  const handleImageUpload = useCallback(async (campaignId: string, campaignData: any) => {
+  const handleImageUpload = useCallback(async (campaignId: string, campaignData: Partial<Campaign>) => {
     if (!selectedImage) return null;
     
     setUploadingImage(true);
@@ -52,8 +53,6 @@ export function useCampaignManagement(organizationId?: string) {
       setImagePreview(updatedData.coverImageUrl);
       setSelectedImage(null);
       return updatedData;
-    } catch (error) {
-      throw error;
     } finally {
       setUploadingImage(false);
     }

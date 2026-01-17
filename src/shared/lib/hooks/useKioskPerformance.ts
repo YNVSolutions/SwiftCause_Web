@@ -8,9 +8,13 @@ export function useKioskPerformance(kiosks: Array<{ id: string }>) {
     async function fetchAll() {
       const result: { [kioskId: string]: { totalRaised: number, donorCount: number } } = {};
       for (const kiosk of kiosks) {
-        const donations = await getDonationsByKiosk(kiosk.id);
-        const totalRaised = donations.reduce((sum: number, d: any) => sum + (d.amount || 0), 0);
-        const donorSet = new Set(donations.map((d: any) => d.donorId).filter(Boolean));
+        const donations = await getDonationsByKiosk(kiosk.id) as Array<{ amount?: number; donorId?: string | null }>;
+        const totalRaised = donations.reduce((sum, donation) => sum + (Number(donation.amount) || 0), 0);
+        const donorSet = new Set(
+          donations
+            .map((donation) => donation.donorId)
+            .filter((donorId): donorId is string => Boolean(donorId))
+        );
         result[kiosk.id] = { totalRaised, donorCount: donorSet.size };
       }
       setPerformance(result);

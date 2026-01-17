@@ -1,19 +1,32 @@
 import { useState, useCallback, useEffect } from 'react';
 import { getKiosks, getRecentDonations, getCampaigns } from '../../api/firestoreService';
-import { getCountFromServer, collection, query, where } from 'firebase/firestore';
+import { collection, query, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Campaign } from '../../types';
 import { Kiosk, Donation } from '../../types';
 
+const getStringProp = (value: unknown, key: string): string | undefined => {
+  if (typeof value !== 'object' || value === null) {
+    return undefined;
+  }
+  const record = value as Record<string, unknown>;
+  const prop = record[key];
+  return typeof prop === 'string' ? prop : undefined;
+};
+
 const toErrorDetails = (error: unknown) => {
   if (error instanceof Error) {
-    return { code: (error as any)?.code || 'error', message: error.message, stack: error.stack || 'No stack trace' };
+    return {
+      code: getStringProp(error, 'code') ?? 'error',
+      message: error.message,
+      stack: error.stack || 'No stack trace',
+    };
   }
   if (typeof error === 'object' && error !== null) {
     return {
-      code: (error as any).code || 'unknown',
-      message: (error as any).message || JSON.stringify(error),
-      stack: (error as any).stack || 'No stack trace',
+      code: getStringProp(error, 'code') ?? 'unknown',
+      message: getStringProp(error, 'message') ?? JSON.stringify(error),
+      stack: getStringProp(error, 'stack') ?? 'No stack trace',
     };
   }
   return { code: 'unknown', message: String(error), stack: 'No stack trace' };
@@ -142,8 +155,6 @@ export function useDashboardData(organizationId?: string) {
           { min: 500, max: 10000, label: '£500+', isLast: true }
         ];
 
-        console.log('Fetching donations for distribution analysis, organization:', organizationId);
-
         // Fetch all donations for this organization (client-side counting approach)
         const { getDocs } = await import('firebase/firestore');
         const donationsQuery = query(
@@ -152,8 +163,6 @@ export function useDashboardData(organizationId?: string) {
         );
         const donationsSnapshot = await getDocs(donationsQuery);
         
-        console.log(`Total donations fetched: ${donationsSnapshot.size}`);
-
         // Initialize counts for each range
         donationDistribution = ranges.map(range => ({
           range: range.label,
@@ -195,7 +204,6 @@ export function useDashboardData(organizationId?: string) {
           }
         });
         
-        console.log('Donation distribution calculated:', donationDistribution);
       } catch (error) {
         console.error('Donation distribution query failed:', error);
         const details = toErrorDetails(error);
@@ -216,7 +224,7 @@ export function useDashboardData(organizationId?: string) {
       });
 
       const formattedActivities = recentDonationsData.map((donation: Donation): Activity => {
-        const rawTs: any = donation.timestamp;
+        const rawTs: unknown = donation.timestamp;
 
         // Normalize into ISO string for sorting
         let iso: string;
@@ -227,7 +235,8 @@ export function useDashboardData(organizationId?: string) {
           iso = safeIso(String(rawTs));
         }
 
-        const platform: string | undefined = (donation as any).platform;
+        const donationExtras = donation as Donation & { platform?: unknown };
+        const platform = typeof donationExtras.platform === 'string' ? donationExtras.platform : undefined;
         const campaignName =
           campaignsData.find(c => c.id === donation.campaignId)?.title ||
           donation.campaignId;
@@ -344,14 +353,11 @@ function getTimeBucket(isoString: string): string {
 }
 
 function isFirestoreTimestamp(value: unknown): value is FirestoreTimestamp {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "seconds" in value &&
-    typeof (value as any).seconds === "number" &&
-    "nanoseconds" in value &&
-    typeof (value as any).nanoseconds === "number"
-  );
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+  const record = value as { seconds?: unknown; nanoseconds?: unknown };
+  return typeof record.seconds === "number" && typeof record.nanoseconds === "number";
 }
 
 function safeIso(input: string): string {

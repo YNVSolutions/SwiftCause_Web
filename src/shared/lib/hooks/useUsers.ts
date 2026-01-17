@@ -18,12 +18,32 @@ export function useUsers(organizationId?: string) {
     setError(null);
     try {
       const usersData = await fetchAllUsers(organizationId);
-      const formattedUsers = usersData.map((user: any) => ({
-        ...user,
-        createdAt: user.createdAt?.toDate ? user.createdAt.toDate().toLocaleDateString() : 'N/A',
-        lastLogin: user.lastLogin?.toDate ? user.lastLogin.toDate().toLocaleString() : 'N/A',
-        permissions: Array.isArray(user.permissions) ? user.permissions : [],
-      })) as User[];
+      const formattedUsers = usersData.map((user) => {
+        const record = user as Record<string, unknown>;
+        const createdAt = record.createdAt;
+        const lastLogin = record.lastLogin;
+        const formattedCreatedAt =
+          typeof createdAt === 'object' &&
+          createdAt !== null &&
+          'toDate' in createdAt &&
+          typeof (createdAt as { toDate?: unknown }).toDate === 'function'
+            ? (createdAt as { toDate: () => Date }).toDate().toLocaleDateString()
+            : 'N/A';
+        const formattedLastLogin =
+          typeof lastLogin === 'object' &&
+          lastLogin !== null &&
+          'toDate' in lastLogin &&
+          typeof (lastLogin as { toDate?: unknown }).toDate === 'function'
+            ? (lastLogin as { toDate: () => Date }).toDate().toLocaleString()
+            : 'N/A';
+
+        return {
+          ...(record as User),
+          createdAt: formattedCreatedAt,
+          lastLogin: formattedLastLogin,
+          permissions: Array.isArray(record.permissions) ? record.permissions as Permission[] : [],
+        };
+      });
       setUsers(formattedUsers);
     } catch (e) {
       setError((e as Error).message);

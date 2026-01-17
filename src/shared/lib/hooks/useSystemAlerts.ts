@@ -11,7 +11,7 @@ export interface SystemAlert {
   title: string;
   message: string;
   actionScreen?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   timestamp?: string;
 }
 
@@ -23,6 +23,23 @@ interface UseSystemAlertsProps {
 export function useSystemAlerts({ organization, organizationId }: UseSystemAlertsProps) {
   const [alerts, setAlerts] = useState<SystemAlert[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const toDate = (value: unknown): Date | null => {
+    if (value instanceof Date) {
+      return value;
+    }
+    if (typeof value === 'string') {
+      const parsed = new Date(value);
+      return isNaN(parsed.getTime()) ? null : parsed;
+    }
+    if (typeof value === 'object' && value !== null && 'seconds' in value) {
+      const seconds = (value as { seconds?: unknown }).seconds;
+      if (typeof seconds === 'number') {
+        return new Date(seconds * 1000);
+      }
+    }
+    return null;
+  };
 
   useEffect(() => {
     if (!organizationId) {
@@ -117,19 +134,14 @@ export function useSystemAlerts({ organization, organizationId }: UseSystemAlert
               );
               const now = new Date();
               const allExpired = assignedCampaigns.every((campaign) => {
-                if (!campaign.endDate) return false;
-                let endDate: Date;
-                const endDateValue = campaign.endDate as any;
-                if (endDateValue instanceof Date) {
-                  endDate = endDateValue;
-                } else if (typeof endDateValue === 'object' && endDateValue !== null && 'seconds' in endDateValue) {
-                  endDate = new Date(endDateValue.seconds * 1000);
-                } else if (typeof endDateValue === 'string') {
-                  endDate = new Date(endDateValue);
-                } else {
+                if (!campaign.endDate) {
                   return false;
                 }
-                return endDate < now && !isNaN(endDate.getTime());
+                const endDate = toDate(campaign.endDate as unknown);
+                if (!endDate) {
+                  return false;
+                }
+                return endDate < now;
               });
 
               if (allExpired && assignedCampaigns.length > 0) {
@@ -151,19 +163,10 @@ export function useSystemAlerts({ organization, organizationId }: UseSystemAlert
         const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
         campaigns.forEach((campaign) => {
           if (campaign.endDate && campaign.status === "active") {
-            let endDate: Date;
-            const endDateValue = campaign.endDate as any;
-            if (endDateValue instanceof Date) {
-              endDate = endDateValue;
-            } else if (typeof endDateValue === 'object' && endDateValue !== null && 'seconds' in endDateValue) {
-              endDate = new Date(endDateValue.seconds * 1000);
-            } else if (typeof endDateValue === 'string') {
-              endDate = new Date(endDateValue);
-            } else {
+            const endDate = toDate(campaign.endDate as unknown);
+            if (!endDate) {
               return;
             }
-            
-            if (isNaN(endDate.getTime())) return;
             
             if (endDate >= now && endDate <= threeDaysFromNow) {
               newAlerts.push({
@@ -206,4 +209,3 @@ export function useSystemAlerts({ organization, organizationId }: UseSystemAlert
 
   return { alerts, loading };
 }
-

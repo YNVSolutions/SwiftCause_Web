@@ -88,11 +88,10 @@ export function Toast({ message, variant = "info", onClose, durationMs = 2500 }:
 interface ToastHostProps {
   children?: React.ReactNode;
   visible: boolean;
-  onClose?: () => void;
   align?: "top" | "bottom";
 }
 
-export function ToastHost({ children, visible, onClose, align = "top" }: ToastHostProps) {
+export function ToastHost({ children, visible, align = "top" }: ToastHostProps) {
   if (!visible) return null;
   const vertical = align === "top" ? "top-4" : "bottom-4";
   return (
@@ -103,5 +102,4 @@ export function ToastHost({ children, visible, onClose, align = "top" }: ToastHo
     </div>
   );
 }
-
 

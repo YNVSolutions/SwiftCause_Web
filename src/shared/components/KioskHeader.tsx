@@ -44,7 +44,6 @@ export const KioskHeader: React.FC<KioskHeaderProps> = ({
   logoAlt = 'SwiftCause',
   brandPrimary = 'Swift',
   brandAccent = 'Cause',
-  accentColor = '#0DA573',
   actionButton,
   actionPosition = 'right',
   hideBrand = false,
