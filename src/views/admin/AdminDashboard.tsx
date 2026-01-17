@@ -218,7 +218,7 @@ export function AdminDashboard({
     coverImageUrl: '',
     startDate: '',
     endDate: '',
-    tags: []
+    tags: [] as string[]
   });
   const [showCampaignFormDialog, setShowCampaignFormDialog] = useState(false);
   const [selectedCampaignImageFile, setSelectedCampaignImageFile] = useState<File | null>(null);
@@ -720,7 +720,7 @@ export function AdminDashboard({
         coverImageUrl: '',
         startDate: '',
         endDate: '',
-        tags: []
+        tags: [] as string[]
       });
       setShowCampaignFormDialog(false);
       setEditingCampaignInTour(null);
@@ -864,7 +864,7 @@ export function AdminDashboard({
       status: 'active',
       startDate: '',
       endDate: '',
-      tags: [],
+      tags: [] as string[],
       coverImageUrl: '',
       category: '',
       isGlobal: false
@@ -1302,6 +1302,10 @@ export function AdminDashboard({
                 campaignData={campaignFormData}
                 setCampaignData={setCampaignFormData}
                 onSubmit={handleCampaignFormSubmit}
+                onSaveDraft={() => {
+                  setShowCampaignFormDialog(false);
+                  setEditingCampaignInTour(null);
+                }}
                 onCancel={() => {
                   setShowCampaignFormDialog(false);
                   setEditingCampaignInTour(null);
@@ -1582,7 +1586,7 @@ export function AdminDashboard({
                         <Button
                           onClick={() => {
                           setNewKiosk({ name: '', location: '', accessCode: '' });
-                          setNewCampaign({ title: '', description: '', goal: 0, status: 'active', startDate: '', endDate: '', tags: [], coverImageUrl: '', category: '', isGlobal: false });
+                          setNewCampaign({ title: '', description: '', goal: 0, status: 'active', startDate: '', endDate: '', tags: [] as string[], coverImageUrl: '', category: '', isGlobal: false });
                           setShowStripeStep(false);
                           setShowCampaignForm(false);
                           setShowKioskForm(false);
@@ -1663,7 +1667,7 @@ export function AdminDashboard({
                       <Button
                         onClick={() => {
                           setNewKiosk({ name: '', location: '', accessCode: '' });
-                          setNewCampaign({ title: '', description: '', goal: 0, status: 'active', startDate: '', endDate: '', tags: [], coverImageUrl: '', category: '', isGlobal: false });
+                          setNewCampaign({ title: '', description: '', goal: 0, status: 'active', startDate: '', endDate: '', tags: [] as string[], coverImageUrl: '', category: '', isGlobal: false });
                           setShowStripeStep(false);
                           setShowCampaignForm(false);
                           setShowKioskForm(false);

@@ -67,7 +67,14 @@ export function CampaignListScreen({
   const handleLayoutChange = async (newLayout: 'grid' | 'list' | 'carousel') => {
     if (kioskSession && kioskSession.kioskId) {
       try {
-        await updateKiosk(kioskSession.kioskId, { settings: { ...kioskSession.settings, displayMode: newLayout } });
+        const updatedSettings = {
+          displayMode: newLayout,
+          showAllCampaigns: kioskSession.settings?.showAllCampaigns ?? false,
+          maxCampaignsDisplay: kioskSession.settings?.maxCampaignsDisplay ?? 6,
+          autoRotateCampaigns: kioskSession.settings?.autoRotateCampaigns ?? false,
+          rotationInterval: kioskSession.settings?.rotationInterval,
+        };
+        await updateKiosk(kioskSession.kioskId, { settings: updatedSettings });
         await refreshCurrentKioskSession(); // Refresh kiosk session to get updated settings
       } catch (e) {
         console.error("Failed to update kiosk display mode:", e);

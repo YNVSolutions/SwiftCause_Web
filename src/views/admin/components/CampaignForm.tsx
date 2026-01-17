@@ -36,6 +36,7 @@ export interface CampaignFormProps {
   campaignData: CampaignFormData;
   setCampaignData: React.Dispatch<React.SetStateAction<CampaignFormData>>;
   onSubmit: () => void;
+  onSaveDraft: () => void;
   onCancel: () => void;
   formatCurrency: (amount: number) => string;
   onImageFileSelect?: (file: File | null) => void;
@@ -48,6 +49,7 @@ export function CampaignForm({
   campaignData,
   setCampaignData,
   onSubmit,
+  onSaveDraft,
   onCancel,
   formatCurrency,
   onImageFileSelect
@@ -619,7 +621,7 @@ export function CampaignForm({
             <footer className="flex flex-col sm:flex-row items-center justify-between p-4 sm:p-6 lg:p-8 border-t border-gray-200 bg-gray-50 gap-4 sm:gap-0 flex-shrink-0">
               <Button
                 variant="ghost"
-                onClick={onCancel}
+                onClick={onSaveDraft}
                 className="text-gray-600 hover:text-gray-800 w-full sm:w-auto h-12 sm:h-auto"
               >
                 <Save className="w-4 h-4 mr-2" />

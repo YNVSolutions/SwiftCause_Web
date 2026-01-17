@@ -239,12 +239,8 @@ export async function submitCurrencyRequest(data: CurrencyRequestData) {
 }
 
 export async function checkEmailExists(email: string): Promise<boolean> {
-  try {
-    const usersRef = collection(db, 'users');
-    const q = query(usersRef, where('email', '==', email.toLowerCase()));
-    const snapshot = await getDocs(q);
-    return !snapshot.empty;
-  } catch (error) {
-    throw error;
-  }
+  const usersRef = collection(db, 'users');
+  const q = query(usersRef, where('email', '==', email.toLowerCase()));
+  const snapshot = await getDocs(q);
+  return !snapshot.empty;
 }

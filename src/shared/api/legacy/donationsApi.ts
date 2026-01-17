@@ -9,7 +9,6 @@ export async function fetchAllDonations(organizationId: string): Promise<Documen
     const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {
-      console.log('No donations found.');
       return [];
     }
 
