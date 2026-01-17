@@ -1,6 +1,4 @@
-"use client";
-
-import { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { createEditor, Descendant, Editor, Transforms, Element as SlateElement, BaseEditor } from 'slate';
 import { Slate, Editable, withReact, RenderLeafProps, RenderElementProps, ReactEditor } from 'slate-react';
 import { withHistory, HistoryEditor } from 'slate-history';
