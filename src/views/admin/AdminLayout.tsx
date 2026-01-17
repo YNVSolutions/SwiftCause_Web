@@ -5,6 +5,14 @@ import { Screen, AdminSession, Permission } from "../../shared/types";
 import { Avatar, AvatarFallback, AvatarImage } from "../../shared/ui/avatar";
 import { Button } from "../../shared/ui/button";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "../../shared/ui/dialog";
+import {
   SidebarProvider,
   Sidebar,
   SidebarHeader,
@@ -36,7 +44,11 @@ import {
   Wallet,
   ChevronLeft,
   ChevronRight,
+  CreditCard,
+  Loader2,
 } from "lucide-react";
+import { db } from "../../shared/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 const SCREEN_LABELS: Partial<Record<Screen, string>> = {
   admin: "Dashboard",
@@ -47,6 +59,7 @@ const SCREEN_LABELS: Partial<Record<Screen, string>> = {
   "admin-gift-aid": "Gift Aid Donations",
   "admin-users": "Users",
   "admin-bank-details": "Bank Details",
+  "admin-stripe-account": "Stripe account",
 };
 
 interface AdminLayoutProps {
@@ -57,6 +70,7 @@ interface AdminLayoutProps {
   children: React.ReactNode;
   activeScreen?: Screen;
   onStartTour?: () => void;
+  onOpenStripeSetup?: () => void;
   headerTitle?: React.ReactNode;
   headerSubtitle?: React.ReactNode;
   hideHeaderDivider?: boolean;
@@ -82,6 +96,7 @@ export function AdminLayout({
   children,
   activeScreen = "admin-dashboard",
   onStartTour,
+  onOpenStripeSetup,
   headerTitle,
   headerSubtitle,
   headerActions,
@@ -91,6 +106,8 @@ export function AdminLayout({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [logoAnimating, setLogoAnimating] = useState(false);
   const [showUserProfile, setShowUserProfile] = useState(false);
+  const [showStripeConfigDialog, setShowStripeConfigDialog] = useState(false);
+  const [isLoadingStripe, setIsLoadingStripe] = useState(false);
 
   React.useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 1023px)");
@@ -138,6 +155,69 @@ export function AdminLayout({
   const handleLogoClick = () => {
     setLogoAnimating(true);
     setTimeout(() => setLogoAnimating(false), 500); // Animation duration
+  };
+
+  const handleStripeAccountClick = async () => {
+    setIsLoadingStripe(true);
+    try {
+      if (!userSession.user.organizationId) {
+        console.log("No organization ID found");
+        setIsLoadingStripe(false);
+        return;
+      }
+
+      const orgRef = doc(db, "organizations", userSession.user.organizationId);
+      const orgDoc = await getDoc(orgRef);
+
+      if (orgDoc.exists()) {
+        const orgData = orgDoc.data();
+        const stripeAccountId = orgData?.stripe?.accountId;
+        
+        if (!stripeAccountId) {
+          console.log("No Stripe account ID found in organization data");
+          setIsLoadingStripe(false);
+          setShowStripeConfigDialog(true);
+          return;
+        }
+
+        console.log("Stripe Account ID:", stripeAccountId);
+
+        // Make POST request to get the dashboard link
+        const response = await fetch("https://createexpressdashboardlink-j2f5w4qwxq-uc.a.run.app", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            accountId: stripeAccountId,
+          }),
+        });
+
+        if (!response.ok) {
+          setIsLoadingStripe(false);
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("Dashboard link response:", data);
+
+        // Redirect to the link
+        if (data.url || data.link) {
+          const dashboardUrl = data.url || data.link;
+          window.location.href = dashboardUrl;
+          // Keep loading state true during redirect
+        } else {
+          console.error("No URL found in response:", data);
+          setIsLoadingStripe(false);
+        }
+      } else {
+        console.log("Organization document not found");
+        setIsLoadingStripe(false);
+      }
+    } catch (error) {
+      console.error("Error fetching Stripe dashboard link:", error);
+      setIsLoadingStripe(false);
+    }
   };
 
   // Centralized navigation button attributes
@@ -461,6 +541,18 @@ export function AdminLayout({
                 </div>
                 {renderActiveArrow("admin-bank-details")}
               </button>
+              
+              {/* Stripe account */}
+              <button
+                onClick={handleStripeAccountClick}
+                {...getNavButtonProps("admin-stripe-account", "Stripe account")}
+              >
+                <div className="flex items-center">
+                  <CreditCard {...getIconProps()} />
+                  <span {...getTextSpanProps()}>Stripe account</span>
+                </div>
+                {renderActiveArrow("admin-stripe-account")}
+              </button>
             </div>
           </div>
           
@@ -746,6 +838,59 @@ export function AdminLayout({
             </div>
           </>
         )}
+
+        {/* Loading Overlay for Stripe */}
+        {isLoadingStripe && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center">
+            <div className="bg-white rounded-xl shadow-2xl p-8 flex flex-col items-center gap-4 max-w-sm mx-4">
+              <Loader2 className="h-12 w-12 text-green-600 animate-spin" />
+              <div className="text-center">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Loading Stripe Dashboard
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Please wait while we redirect you to your Stripe account...
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Stripe Configuration Dialog */}
+        <Dialog open={showStripeConfigDialog} onOpenChange={setShowStripeConfigDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5 text-orange-600" />
+                Stripe Account Not Configured
+              </DialogTitle>
+              <DialogDescription>
+                Your Stripe account is not configured yet. Please complete the Stripe setup to access your dashboard and start accepting donations.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowStripeConfigDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowStripeConfigDialog(false);
+                  if (onOpenStripeSetup) {
+                    onOpenStripeSetup();
+                  } else {
+                    onNavigate("admin-dashboard");
+                  }
+                }}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                Go to Stripe Setup
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </SidebarProvider>
   );
