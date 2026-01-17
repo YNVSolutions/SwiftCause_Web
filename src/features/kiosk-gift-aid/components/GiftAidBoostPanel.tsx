@@ -1,5 +1,5 @@
-import React from 'react';
-import { ArrowUp } from 'lucide-react';
+﻿import React from 'react';
+import { ArrowUp, Sparkles } from 'lucide-react';
 import { formatCurrency } from '@/shared/lib/currencyFormatter';
 
 interface GiftAidBoostPanelProps {
@@ -9,6 +9,7 @@ interface GiftAidBoostPanelProps {
   onCustomAmountChange: (value: string) => void;
   currency: string;
   campaignTitle: string;
+  onBack: () => void;
   onAccept: () => void;
   onDecline: () => void;
 }
@@ -20,6 +21,7 @@ export const GiftAidBoostPanel: React.FC<GiftAidBoostPanelProps> = ({
   onCustomAmountChange,
   currency,
   campaignTitle,
+  onBack,
   onAccept,
   onDecline,
 }) => {
@@ -33,30 +35,56 @@ export const GiftAidBoostPanel: React.FC<GiftAidBoostPanelProps> = ({
   };
 
   const getCurrencySymbol = () => {
-    if (currency === 'GBP') return '£';
-    if (currency === 'EUR') return '€';
+    if (currency === 'GBP') return '\\u00a3';
+    if (currency === 'EUR') return '\\u20ac';
     return '$';
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-10 lg:p-14 h-full flex flex-col max-w-2xl mx-auto">
+    <div className="bg-white/90 rounded-3xl border border-green-100 shadow-xl p-6 lg:p-8 flex flex-col max-w-2xl mx-auto relative overflow-hidden">
+      <div className="absolute -top-20 -right-16 h-40 w-40 rounded-full bg-green-100 blur-3xl opacity-60" />
+      <div className="absolute -bottom-16 -left-16 h-36 w-36 rounded-full bg-emerald-100 blur-3xl opacity-70" />
+      <div className="relative z-10">
+        <div className="grid grid-cols-[auto_1fr_auto] items-start gap-4">
+          <button
+            onClick={onBack}
+            title="Back"
+            aria-label="Back"
+            className="flex items-center justify-center h-9 w-9 rounded-lg border border-green-200 bg-white/90 text-green-700 shadow-sm hover:bg-green-50 hover:border-green-300 transition-colors"
+          >
+            <ArrowUp className="h-4 w-4 rotate-[-90deg]" strokeWidth={2.4} />
+          </button>
+          <div className="text-center">
+            <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
+              Boost your donation
+            </h1>
+            <p className="text-sm text-gray-600">
+              Turn your gift into even more impact in seconds.
+            </p>
+          </div>
+          <div className="h-9 w-9" aria-hidden="true" />
+        </div>
+        <div className="h-px bg-green-100 my-4" />
+      </div>
+
       {/* Icon */}
-      <div className="flex justify-center mb-10">
-        <div className="w-24 h-24 bg-[#E6FBF2] rounded-full flex items-center justify-center">
-          <ArrowUp className="w-12 h-12 text-[#159A6F]" />
+      <div className="flex justify-center mb-6 relative z-10">
+        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center shadow-lg shadow-green-100">
+          <ArrowUp className="w-8 h-8 text-green-700" />
         </div>
       </div>
 
       {/* Main Message */}
-      <div className="text-center mb-10 grow">
+      <div className="text-center mb-6 grow relative z-10">
         {isCustomAmount ? (
           <div className="space-y-6">
-            <h1 className="text-3xl lg:text-4xl font-bold text-[#0A0A0A] mb-4">
+            <h1 className="text-3xl lg:text-4xl font-bold text-[#0A0A0A] mb-3">
               Turn your donation into{' '}
-              <span className="text-[#159A6F]">
+              <span className="text-green-700">
                 {isValidAmount ? formatAmount(totalWithGiftAid) : formatAmount(0)}
               </span>{' '}
-              for free?
+              for free
+              <span className="text-green-600">.</span>
             </h1>
 
             {/* Custom Amount Input */}
@@ -71,7 +99,7 @@ export const GiftAidBoostPanel: React.FC<GiftAidBoostPanelProps> = ({
                   max="10000"
                   value={customAmountValue}
                   onChange={(e) => onCustomAmountChange(e.target.value)}
-                  className="w-full h-18 pl-12 pr-4 text-center text-4xl font-bold border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#159A6F] focus:ring-1 focus:ring-[#159A6F]"
+                  className="w-full h-16 pl-12 pr-4 text-center text-4xl font-bold border-2 border-green-200 rounded-2xl focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200 bg-white"
                   placeholder="0"
                 />
               </div>
@@ -83,19 +111,23 @@ export const GiftAidBoostPanel: React.FC<GiftAidBoostPanelProps> = ({
         ) : (
           <h1 className="text-3xl lg:text-4xl font-bold text-[#0A0A0A] mb-6">
             Turn your {formatAmount(currentAmount)} into{' '}
-            <span className="text-[#159A6F]">{formatAmount(totalWithGiftAid)}</span> for free?
+            <span className="text-green-700">{formatAmount(totalWithGiftAid)}</span> for free
+            <span className="text-green-600">.</span>
           </h1>
         )}
       </div>
 
       {/* Campaign Info */}
-      <div className="mb-6 p-5 bg-gray-50 rounded-xl text-center">
-        <p className="text-sm text-gray-500 mb-1">Donating to:</p>
+      <div className="mb-5 p-4 bg-green-50/70 border border-green-100 rounded-2xl text-center relative z-10">
+        <div className="inline-flex items-center gap-2 text-xs uppercase tracking-wide text-green-700 mb-2">
+          <Sparkles className="w-3.5 h-3.5" />
+          Donating to
+        </div>
         <p className="font-semibold text-[#0A0A0A] text-lg">{campaignTitle}</p>
       </div>
 
       {/* UK Taxpayer Info - moved below donating to box */}
-      <p className="text-gray-600 text-xl leading-relaxed text-center mb-10">
+      <p className="text-gray-600 text-base leading-relaxed text-center mb-6 relative z-10">
         Are you a UK Taxpayer? We can reclaim{' '}
         <span className="font-semibold text-[#0A0A0A]">25%</span>{' '}
         <span className="font-semibold text-[#0A0A0A]">
@@ -105,18 +137,11 @@ export const GiftAidBoostPanel: React.FC<GiftAidBoostPanelProps> = ({
       </p>
 
       {/* Action Buttons */}
-      <div className="space-y-4">
+      <div className="space-y-3 relative z-10">
         <button
           onClick={onAccept}
           disabled={!isValidAmount}
-          className="w-full h-16 rounded-xl font-semibold text-lg text-white transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{ backgroundColor: isValidAmount ? '#159A6F' : '#9CA3AF' }}
-          onMouseEnter={(e) => {
-            if (isValidAmount) e.currentTarget.style.backgroundColor = '#128A62';
-          }}
-          onMouseLeave={(e) => {
-            if (isValidAmount) e.currentTarget.style.backgroundColor = '#159A6F';
-          }}
+          className="w-full h-14 rounded-xl font-semibold text-lg text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-200/70"
         >
           Yes, Boost My Donation
         </button>
@@ -124,15 +149,15 @@ export const GiftAidBoostPanel: React.FC<GiftAidBoostPanelProps> = ({
         <button
           onClick={onDecline}
           disabled={!isValidAmount}
-          className="w-full h-12 text-gray-500 hover:text-gray-700 font-medium text-base transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full h-12 text-green-700 hover:text-green-800 font-medium text-base transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           No, continue with {isValidAmount ? formatAmount(currentAmount) : formatAmount(0)}
         </button>
       </div>
 
       {/* Additional Info */}
-      <div className="mt-10 text-center">
-        <p className="text-sm text-gray-400 leading-relaxed">
+      <div className="mt-6 text-center relative z-10">
+        <p className="text-sm text-gray-500 leading-relaxed">
           Gift Aid allows UK charities to reclaim tax on donations made by UK taxpayers, increasing
           the value of donations at no extra cost to the donor.
         </p>
@@ -140,3 +165,5 @@ export const GiftAidBoostPanel: React.FC<GiftAidBoostPanelProps> = ({
     </div>
   );
 };
+
+
