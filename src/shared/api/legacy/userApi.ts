@@ -1,10 +1,11 @@
-import { collection, getDocs, doc, DocumentData, query, where } from 'firebase/firestore';
+import { collection, getDocs, DocumentData, query, where } from 'firebase/firestore';
+import type { Query } from 'firebase/firestore';
 import { getAuth } from "firebase/auth";
 import { db } from '../../lib/firebase';
 import { User, UserRole, Permission } from '../../types';
 
 // Helper function to make authenticated fetch calls to Firebase Functions
-async function callAuthenticatedFunction(functionName: string, method: string, data?: any) {
+async function callAuthenticatedFunction(functionName: string, method: string, data?: Record<string, unknown>) {
   const auth = getAuth();
   const token = await auth.currentUser?.getIdToken();
 
@@ -34,7 +35,7 @@ async function callAuthenticatedFunction(functionName: string, method: string, d
 
 export async function fetchAllUsers(organizationId?: string): Promise<DocumentData[]> {
   try {
-    let usersCollectionRef: any = collection(db, 'users');
+    let usersCollectionRef: Query<DocumentData> = collection(db, 'users');
     if (organizationId) {
       usersCollectionRef = query(usersCollectionRef, where("organizationId", "==", organizationId));
     }
@@ -50,7 +51,7 @@ export async function fetchAllUsers(organizationId?: string): Promise<DocumentDa
   }
 }
 
-export async function updateUser(userId: string, data: Partial<User>): Promise<any> {
+export async function updateUser(userId: string, data: Partial<User>): Promise<Record<string, unknown>> {
   try {
     const result = await callAuthenticatedFunction('updateUser', 'POST', { userId, data });
     return result;
@@ -67,7 +68,7 @@ export async function createUser(userData: {
   role: UserRole;
   permissions: Permission[];
   organizationId: string;
-}): Promise<any> {
+}): Promise<Record<string, unknown>> {
   try {
     const result = await callAuthenticatedFunction('createUser', 'POST', userData);
     return result;
@@ -77,7 +78,7 @@ export async function createUser(userData: {
   }
 }
 
-export async function deleteUser(userId: string): Promise<any> {
+export async function deleteUser(userId: string): Promise<Record<string, unknown>> {
   try {
     const result = await callAuthenticatedFunction('deleteUser', 'POST', { userId });
     return result;
