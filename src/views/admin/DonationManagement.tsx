@@ -10,7 +10,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '../../shared/ui/popover
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../../shared/ui/dialog';
 import {
   Search,
-  ArrowLeft,
   Download,
   Calendar as CalendarIcon,
   DollarSign,
@@ -28,10 +27,14 @@ import { Skeleton } from "../../shared/ui/skeleton"; // Import Skeleton
 import { Ghost } from "lucide-react"; // Import Ghost
 import { Screen, AdminSession, Permission, Donation } from '../../shared/types';
 import { getDonations } from '../../shared/lib/hooks/donationsService';
+import { AdminSearchFilterHeader, AdminSearchFilterConfig } from './components/AdminSearchFilterHeader';
+import { SortableTableHeader } from './components/SortableTableHeader';
+import { useTableSort } from '../../shared/lib/hooks/useTableSort';
 
 import { getAllCampaigns } from '../../shared/api';
 import { AdminLayout } from './AdminLayout';
 import { exportToCsv } from '../../shared/utils/csvExport';
+import { useOrganization } from "../../shared/lib/hooks/useOrganization";
 interface FetchedDonation extends Omit<Donation, 'timestamp'> {
   id: string;
   amount: number;
@@ -64,11 +67,14 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const { organization, loading: orgLoading } = useOrganization(
+    userSession.user.organizationId ?? null
+  );
+
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [campaignFilter, setCampaignFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
-  const [showCalendar, setShowCalendar] = useState(false);
   const [ selectedDonation, setSelectedDonation] = useState<FetchedDonation | null>(null);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
 
@@ -102,10 +108,65 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
     }, {} as Record<string, string>);
   }, [campaigns]);
 
+  // Configuration for AdminSearchFilterHeader
+  const [showCalendar, setShowCalendar] = useState<Record<string, boolean>>({});
+
+  const searchFilterConfig: AdminSearchFilterConfig = {
+    searchPlaceholder: "Search donations...",
+    filters: [
+      {
+        key: "statusFilter",
+        label: "Status",
+        type: "select",
+        options: [
+          { label: "Success", value: "success" },
+          { label: "Pending", value: "pending" },
+          { label: "Failed", value: "failed" }
+        ]
+      },
+      {
+        key: "campaignFilter",
+        label: "Campaign",
+        type: "select",
+        options: campaigns.map(campaign => ({ label: campaign.title, value: campaign.id }))
+      },
+      {
+        key: "dateFilter",
+        label: "Filter by date",
+        type: "date"
+      }
+    ]
+  };
+
+  const filterValues = {
+    statusFilter,
+    campaignFilter,
+    dateFilter
+  };
+
+  const handleFilterChange = (key: string, value: any) => {
+    switch (key) {
+      case "statusFilter":
+        setStatusFilter(value);
+        break;
+      case "campaignFilter":
+        setCampaignFilter(value);
+        break;
+      case "dateFilter":
+        setDateFilter(value);
+        break;
+    }
+  };
+
+  const handleCalendarToggle = (key: string, open: boolean) => {
+    setShowCalendar(prev => ({ ...prev, [key]: open }));
+  };
 
 
 
-  const filteredDonations = donations.filter(donation => {
+
+  // Filter donations first
+  const filteredDonationsData = donations.filter(donation => {
     const campaignName = campaignMap[donation.campaignId] || '';
     const matchesSearch = (donation.donorName && donation.donorName.toLowerCase().includes(searchTerm.toLowerCase())) ||
                          (donation.stripePaymentIntentId && donation.stripePaymentIntentId.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -115,6 +176,11 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
     const matchesDate = !dateFilter || new Date(donation.timestamp).toDateString() === dateFilter.toDateString();
     
     return matchesSearch && matchesStatus && matchesCampaign && matchesDate;
+  });
+
+  // Use sorting hook
+  const { sortedData: filteredDonations, sortKey, sortDirection, handleSort } = useTableSort({
+    data: filteredDonationsData
   });
 
   const formatCurrency = (amount: number, currency: string) => {
@@ -187,117 +253,36 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
       userSession={userSession}
       hasPermission={hasPermission}
       activeScreen="admin-donations"
+      hideSidebarTrigger
     >
-      <div className="space-y-6">
-        <header className="bg-white shadow-sm border-b rounded-md">
-          <div className="px-2 sm:px-6 lg:px-8">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between h-auto sm:h-16 gap-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onNavigate('admin')}
-                  className="flex items-center space-x-2"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  <span>Back to Dashboard</span>
-                </Button>
-                <div className="h-6 w-px bg-gray-300 hidden sm:block" />
-                <div>
-                  <h1 className="text-xl font-semibold text-gray-900">Donation Management</h1>
-                  <p className="text-sm text-gray-600">Track and analyze donation transactions</p>
-                </div>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="hidden sm:inline-flex hover:bg-gray-100 transition-colors"
-                onClick={handleExportDonations}
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Export CSV
-              </Button>
-            </div>
-          </div>
-        </header>
-
-        <main className="px-2 sm:px-6 lg:px-8 py-4 sm:py-8">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
-            <div className="w-full sm:max-w-md">
-              <div className="relative border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  placeholder="Search donations..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 border-0 focus-visible:ring-0 focus-visible:border-transparent"
-                />
-              </div>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="sm:hidden hover:bg-gray-100 transition-colors"
-              onClick={handleExportDonations}
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Export CSV
-            </Button>
+      <div className="space-y-4 sm:space-y-6">
+        <main className="px-2 sm:px-4 lg:px-8 pb-4 sm:pb-8">
+          {/* Stat Cards Section */}
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
+            <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Total Raised</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.totalAmount, summaryCurrency)}</p></div><DollarSign className="h-6 w-6 sm:h-7 sm:w-7 lg:w-8 lg:h-8 text-green-500" /></div></CardContent></Card>
+            <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Total Donations</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{totalStats.totalDonations}</p></div><Users className="h-6 w-6 sm:h-7 sm:w-7 lg:w-8 lg:h-8 text-indigo-500" /></div></CardContent></Card>
+            <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Completed</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{totalStats.completedDonations}</p></div><CheckCircle className="h-6 w-6 sm:h-7 sm:w-7 lg:w-8 lg:h-8 text-emerald-500" /></div></CardContent></Card>
+            <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Average Donation</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.avgDonation, summaryCurrency)}</p></div><TrendingUp className="h-6 w-6 sm:h-7 sm:w-7 lg:w-8 lg:h-8 text-orange-500" /></div></CardContent></Card>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Raised</p><p className="text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.totalAmount, summaryCurrency)}</p></div><DollarSign className="w-8 h-8 text-green-500" /></div></CardContent></Card>
-            <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Donations</p><p className="text-2xl font-semibold text-gray-900">{totalStats.totalDonations}</p></div><Users className="w-8 h-8 text-indigo-500" /></div></CardContent></Card>
-            <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Completed</p><p className="text-2xl font-semibold text-gray-900">{totalStats.completedDonations}</p></div><CheckCircle className="w-8 h-8 text-emerald-500" /></div></CardContent></Card>
-            <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Average Donation</p><p className="text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.avgDonation, summaryCurrency)}</p></div><TrendingUp className="w-8 h-8 text-orange-500" /></div></CardContent></Card>
-          </div>
-
-          <Card className="mb-8">
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-full h-12 border-0 focus:ring-0"><SelectValue placeholder="Filter by status" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Statuses</SelectItem>
-                      <SelectItem value="success">Success</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="failed">Failed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                  <Select value={campaignFilter} onValueChange={setCampaignFilter}>
-                    <SelectTrigger className="w-full h-12 border-0 focus:ring-0"><SelectValue placeholder="Filter by campaign" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Campaigns</SelectItem>
-                      {campaigns.map(campaign => (
-                        <SelectItem key={campaign.id} value={campaign.id}>{campaign.title}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Popover open={showCalendar} onOpenChange={setShowCalendar}>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="border !border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors justify-start text-left font-normal w-full h-12 px-3 flex items-center hover:bg-gray-100"><CalendarIcon className="mr-2 h-4 w-4" />{dateFilter ? dateFilter.toLocaleDateString() : "Filter by date"}</Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="center" side="bottom" sideOffset={8} avoidCollisions={false} collisionPadding={0}>
-                    <Calendar mode="single" selected={dateFilter} onSelect={(date) => { setDateFilter(date); setShowCalendar(false); }} />
-                    <div className="p-3 border-t"><Button variant="ghost" size="sm" onClick={() => { setDateFilter(undefined); setShowCalendar(false); }} className="w-full">Clear Date Filter</Button></div>
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Unified Header Component */}
+          <AdminSearchFilterHeader
+            title={`Donations (${filteredDonations.length})`}
+            subtitle="Track and analyze donation transactions"
+            config={searchFilterConfig}
+            searchValue={searchTerm}
+            onSearchChange={setSearchTerm}
+            filterValues={filterValues}
+            onFilterChange={handleFilterChange}
+            showCalendar={showCalendar}
+            onCalendarToggle={handleCalendarToggle}
+            exportData={filteredDonations}
+            onExport={handleExportDonations}
+          />
 
           {/* Modern Table Container */}
-          <Card>
-            <div className="px-6 py-5 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">Donations ({filteredDonations.length})</h3>
-              <p className="text-sm text-gray-600 mt-1">All donation transactions and their details</p>
-            </div>
+          <Card className="overflow-hidden">
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
               {loading ? (
                 <div className="space-y-4 p-6">
                   {Array.from({ length: 5 }).map((_, i) => (
@@ -316,23 +301,88 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                   <p className="text-lg">{error}</p>
                 </div>
               ) : filteredDonations.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-gray-50 border-b border-gray-200">
-                      <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Donor & Transaction</TableHead>
-                      <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Campaign</TableHead>
-                      <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</TableHead>
-                      <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Details</TableHead>
-                      <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</TableHead>
-                      <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Platform</TableHead>
-                      <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <div className="flex items-center gap-2">
-                          <Eye className="h-4 w-4 text-gray-500" />
-                          Actions
-                        </div>
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
+                <div className="overflow-hidden">
+                  <Table className="w-full">
+                    <colgroup>
+                      <col style={{ width: '20%' }} />
+                      <col style={{ width: '16%' }} />
+                      <col style={{ width: '11%' }} />
+                      <col style={{ width: '16%' }} />
+                      <col style={{ width: '10%' }} />
+                      <col style={{ width: '19%' }} />
+                      <col style={{ width: '8%' }} />
+                    </colgroup>
+                    <TableHeader>
+                      <TableRow className="bg-gray-100 border-b-2 border-gray-300">
+                        <SortableTableHeader 
+                          sortKey="donorName" 
+                          currentSortKey={sortKey} 
+                          currentSortDirection={sortDirection} 
+                          onSort={handleSort}
+                          className="px-3 py-2.5 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                        >
+                          Donor & Transaction
+                        </SortableTableHeader>
+                        <SortableTableHeader 
+                          sortKey="campaignId" 
+                          currentSortKey={sortKey} 
+                          currentSortDirection={sortDirection} 
+                          onSort={handleSort}
+                          className="px-3 py-2.5 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                        >
+                          Campaign
+                        </SortableTableHeader>
+                        <SortableTableHeader 
+                          sortKey="amount" 
+                          currentSortKey={sortKey} 
+                          currentSortDirection={sortDirection} 
+                          onSort={handleSort}
+                          className="px-3 py-2.5 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
+                        >
+                          Amount
+                        </SortableTableHeader>
+                        <SortableTableHeader 
+                          sortKey="paymentMethod" 
+                          currentSortKey={sortKey} 
+                          currentSortDirection={sortDirection} 
+                          onSort={handleSort}
+                          className="px-3 py-2.5 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                        >
+                          Payment Details
+                        </SortableTableHeader>
+                        <SortableTableHeader 
+                          sortKey="paymentStatus" 
+                          currentSortKey={sortKey} 
+                          currentSortDirection={sortDirection} 
+                          onSort={handleSort}
+                          className="px-3 py-2.5 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                        >
+                          Status
+                        </SortableTableHeader>
+                        <SortableTableHeader 
+                          sortKey="timestamp" 
+                          currentSortKey={sortKey} 
+                          currentSortDirection={sortDirection} 
+                          onSort={handleSort}
+                          className="px-3 py-2.5 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                        >
+                          Date & Platform
+                        </SortableTableHeader>
+                        <SortableTableHeader 
+                          sortable={false}
+                          sortKey="actions" 
+                          currentSortKey={sortKey} 
+                          currentSortDirection={sortDirection} 
+                          onSort={handleSort}
+                          className="px-3 py-2.5 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center"
+                        >
+                          <div className="flex items-center justify-center gap-2">
+                            <Eye className="h-4 w-4 text-gray-500" />
+                            Actions
+                          </div>
+                        </SortableTableHeader>
+                      </TableRow>
+                    </TableHeader>
                   <TableBody>
                     {filteredDonations.map((donation) => (
                       <TableRow 
@@ -412,6 +462,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               ) : (
                 <div className="text-center py-8 text-gray-500">
                   <Ghost className="mx-auto h-12 w-12 text-gray-400 mb-3" />
@@ -419,105 +470,10 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                   <p className="text-sm mb-4">No donations have been made to your organization yet.</p>
                 </div>
               )}
-              </div>
             </CardContent>
           </Card>
         </main>
       </div>
-
-      {/* Donation Details Dialog */}
-      <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Heart className="w-5 h-5 text-indigo-600" />
-              Donation Details
-            </DialogTitle>
-            <DialogDescription>
-              Complete information about this donation
-            </DialogDescription>
-          </DialogHeader>
-
-          {selectedDonation && (
-            <div className="space-y-4 py-2">
-              {/* Donor Information */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Donor Name</label>
-                  <p className="text-sm text-gray-900 mt-1">{selectedDonation.donorName || 'Anonymous'}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Donation Amount</label>
-                  <p className="text-lg font-semibold text-gray-900 mt-1">
-                    {formatCurrency(selectedDonation.amount, selectedDonation.currency)}
-                  </p>
-                </div>
-              </div>
-
-              {/* Campaign and Gift Aid */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Campaign</label>
-                  <p className="text-sm text-gray-900 mt-1">
-                    {campaignMap[selectedDonation.campaignId] || selectedDonation.campaignId}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Gift Aid</label>
-                  <div className="mt-1">
-                    {selectedDonation.isGiftAid ? (
-                      <Badge className="bg-purple-100 text-purple-700">Eligible</Badge>
-                    ) : (
-                      <Badge variant="secondary">Not Eligible</Badge>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Payment Details */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Donation Date</label>
-                  <p className="text-sm text-gray-900 mt-1">{selectedDonation.timestamp}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Platform</label>
-                  <p className="text-sm text-gray-900 mt-1">{selectedDonation.platform}</p>
-                </div>
-              </div>
-
-              {/* Status and Donor ID */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Status</label>
-                  <div className="mt-1">{getStatusBadge(selectedDonation.paymentStatus)}</div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Donor ID</label>
-                  <p className="text-sm text-gray-900 mt-1 font-mono">
-                    {selectedDonation.donorId || 'Anonymous'}
-                  </p>
-                </div>
-              </div>
-
-              {/* Transaction ID */}
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-2">Transaction ID</label>
-                <p className="text-xs text-gray-700 font-mono break-all bg-green-50 px-2 py-1 rounded border border-green-100 inline-block">
-                  {(selectedDonation as any).transactionId || selectedDonation.stripePaymentIntentId || 'N/A'}
-                </p>
-              </div>
-
-              {/* Close Button */}
-              <div className="flex justify-end mt-3">
-                <Button onClick={() => setIsDetailsDialogOpen(false)} variant="outline">
-                  Close
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </AdminLayout>
   );
 }

@@ -1,38 +1,61 @@
+﻿"use client";
+
 import React, { useState, useEffect } from 'react';
 import { db } from '../../shared/lib/firebase';
 import { useKiosks } from '../../shared/lib/hooks/useKiosks';
 import { useCampaigns } from '../../entities/campaign';
 import { useKioskPerformance } from '../../shared/lib/hooks/useKioskPerformance';
+import { useOrganization } from "../../shared/lib/hooks/useOrganization";
+import { useStripeOnboarding, StripeOnboardingDialog } from "../../features/stripe-onboarding";
 import {
   collection,
   updateDoc,
   doc,
   addDoc,
   deleteDoc,
-  DocumentData,
+  getDoc,
 } from 'firebase/firestore';
-import { Screen, Kiosk, Campaign, AdminSession, Permission } from '../../shared/types';
+import { Screen, Kiosk, AdminSession, Permission } from '../../shared/types';
+import { syncCampaignsForKiosk, removeKioskFromAllCampaigns } from "../../shared/lib/sync/campaignKioskSync";
 
 // UI Components
 import { Button } from '../../shared/ui/button';
 import { Input } from '../../shared/ui/input';
-import { Label } from '../../shared/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../shared/ui/card';
 import { Badge } from '../../shared/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../../shared/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
+import { Card, CardContent } from '../../shared/ui/card';
+import { Dialog, DialogContent, DialogTitle, VisuallyHidden } from '../../shared/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../shared/ui/table';
-import { KioskCampaignAssignmentDialog } from './components/KioskCampaignAssignmentDialog';
-import { KioskCredentialsCard } from './components/KioskCredentialsCard';
-
 
 import {
-  Plus, Edit, Trash2, Search, ArrowLeft, Settings, Activity, MapPin,
-  DollarSign, Users, WifiOff, CheckCircle, Monitor, Download, Target, Star, AlertTriangle
+  Plus,
+  Edit,
+  Trash2,
+  MapPin,
+  Eye,
+  EyeOff,
+  Copy,
+  Check,
+  MoreVertical,
+  Search,
+  DollarSign,
+  Users,
+  Settings,
+  Activity,
+  AlertTriangle,
+  Download,
 } from 'lucide-react';
-import { Skeleton } from "../../shared/ui/skeleton"; // Import Skeleton
-import { Ghost } from "lucide-react"; // Import Ghost
 import { AdminLayout } from './AdminLayout';
+import { KioskForm, KioskFormData } from './components/KioskForm';
+import { exportToCsv } from '../../shared/utils/csvExport';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../../shared/ui/dropdown-menu";
+import { AdminSearchFilterHeader, AdminSearchFilterConfig } from './components/AdminSearchFilterHeader';
+import { SortableTableHeader } from './components/SortableTableHeader';
+import { useTableSort } from '../../shared/lib/hooks/useTableSort';
 
 
 export function KioskManagement({ onNavigate, onLogout, userSession, hasPermission }: {
@@ -41,55 +64,200 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
   userSession: AdminSession;
   hasPermission: (permission: Permission) => boolean;
 }) {
-  const { kiosks, loading: kiosksLoading, error: kiosksError, refresh: refreshKiosks } = useKiosks(userSession.user.organizationId);
-  const { campaigns, loading: campaignsLoading, error: campaignsError, refresh: refreshCampaigns } = useCampaigns(userSession.user.organizationId);
+  const { kiosks, loading: kiosksLoading, refresh: refreshKiosks } = useKiosks(userSession.user.organizationId);
+  const { campaigns, loading: campaignsLoading, refresh: refreshCampaigns } = useCampaigns(userSession.user.organizationId);
   const performanceData = useKioskPerformance(kiosks);
   
+  // Stripe onboarding state & hooks
+  const { organization, loading: orgLoading } = useOrganization(
+    userSession.user.organizationId ?? null
+  );
+  const { needsOnboarding } = useStripeOnboarding(organization);
+  const [showOnboardingDialog, setShowOnboardingDialog] = useState(false);
+  
+  // Search + status filter state
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'online' | 'offline' | 'maintenance'>('all');
+  
   const isLoading = kiosksLoading || campaignsLoading;
 
+  const enrichedKiosks = kiosks.map(kiosk => ({
+    ...kiosk,
+    totalRaised: performanceData[kiosk.id]?.totalRaised || 0,
+    donorCount: performanceData[kiosk.id]?.donorCount || 0
+  }));
+
+  // Filtered kiosks derived state
+  // Filter kiosks first
+  const filteredKiosksData = enrichedKiosks.filter((kiosk) => {
+    const matchesSearch = kiosk.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      kiosk.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      kiosk.id.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || kiosk.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  // Use sorting hook
+  const { sortedData: filteredKiosks, sortKey, sortDirection, handleSort } = useTableSort({
+    data: filteredKiosksData
+  });
+
+  // Calculate total stats
+  const totalStats = {
+    online: filteredKiosks.filter(k => k.status === 'online').length,
+    offline: filteredKiosks.filter(k => k.status === 'offline').length,
+    maintenance: filteredKiosks.filter(k => k.status === 'maintenance').length,
+    totalRaised: Object.values(performanceData).reduce((sum, data) => sum + (data?.totalRaised || 0), 0),
+    totalDonations: Object.values(performanceData).reduce((sum, data) => sum + (data?.donorCount || 0), 0)
+  };
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [newKiosk, setNewKiosk] = useState({ name: '', location: '', accessCode: '' });
-
-
-  const [isAssignmentDialogOpen, setIsAssignmentDialogOpen] = useState(false);
-  const [assigningKiosk, setAssigningKiosk] = useState<Kiosk | null>(null);
+  const [editingKiosk, setEditingKiosk] = useState<Kiosk | null>(null);
+  const [newKiosk, setNewKiosk] = useState<KioskFormData>({ 
+    name: '', 
+    location: '', 
+    accessCode: '', 
+    status: 'offline' as Kiosk['status'],
+    assignedCampaigns: [] as string[],
+    displayLayout: 'grid' as 'grid' | 'list' | 'carousel'
+  });
   
-  // Delete confirmation dialog state
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [kioskToDelete, setKioskToDelete] = useState<Kiosk | null>(null);
+  
+  // State for showing access codes and copy feedback
+  const [showAccessCodes, setShowAccessCodes] = useState<{ [key: string]: boolean }>({});
+  const [copiedIds, setCopiedIds] = useState<{ [key: string]: boolean }>({});
+
+  // Configuration for AdminSearchFilterHeader
+  const searchFilterConfig: AdminSearchFilterConfig = {
+    searchPlaceholder: "Search kiosks...",
+    filters: [
+      {
+        key: "statusFilter",
+        label: "Status",
+        type: "select",
+        options: [
+          { label: "Online", value: "online" },
+          { label: "Offline", value: "offline" },
+          { label: "Maintenance", value: "maintenance" }
+        ]
+      }
+    ]
+  };
+
+  const filterValues = {
+    statusFilter
+  };
+
+  const handleFilterChange = (key: string, value: any) => {
+    if (key === "statusFilter") {
+      setStatusFilter(value);
+    }
+  };
 
   useEffect(() => {
     refreshKiosks();
     refreshCampaigns();
   }, [refreshKiosks, refreshCampaigns]);
 
+  const handleAssignCampaign = (campaignId: string) => {
+    if (needsOnboarding) {
+      setShowOnboardingDialog(true);
+      return;
+    }
+    
+    setNewKiosk(prev => ({
+      ...prev,
+      assignedCampaigns: [...prev.assignedCampaigns, campaignId]
+    }));
+  };
+
+  const handleUnassignCampaign = (campaignId: string) => {
+    setNewKiosk(prev => ({
+      ...prev,
+      assignedCampaigns: prev.assignedCampaigns.filter(id => id !== campaignId)
+    }));
+  };
+
   const handleCreateKiosk = async () => {
+    if (needsOnboarding) {
+      setShowOnboardingDialog(true);
+      return;
+    }
+    
     if (!newKiosk.name || !newKiosk.location || !userSession) return;
     try {
-      const newKioskData: Omit<Kiosk, 'id'> = {
-        ...newKiosk,
-        status: 'offline',
-        lastActive: new Date().toISOString(),
-        totalDonations: 0,
-        totalRaised: 0,
-        assignedCampaigns: [],
-        defaultCampaign: '',
-        deviceInfo: {},
-        operatingHours: {},
-        settings: { displayMode: 'grid', showAllCampaigns: true, maxCampaignsDisplay: 6, autoRotateCampaigns: false },
-        organizationId: userSession.user.organizationId,
-      };
-      const docRef = await addDoc(collection(db, 'kiosks'), newKioskData);
-      //setKiosks(prev => [...prev, { id: docRef.id, ...newKioskData }]);
+      if (editingKiosk) {
+        const updatedKioskData = {
+          ...editingKiosk,
+          name: newKiosk.name,
+          location: newKiosk.location,
+          accessCode: newKiosk.accessCode,
+          status: newKiosk.status,
+          assignedCampaigns: newKiosk.assignedCampaigns,
+          settings: {
+            ...editingKiosk.settings,
+            displayMode: newKiosk.displayLayout,
+          },
+          organizationId: userSession.user.organizationId,
+        };
+        const kioskRef = doc(db, 'kiosks', editingKiosk.id);
+        await updateDoc(kioskRef, updatedKioskData);
+        
+        const oldAssignedCampaigns = editingKiosk.assignedCampaigns || [];
+        await syncCampaignsForKiosk(editingKiosk.id, newKiosk.assignedCampaigns, oldAssignedCampaigns);
+      } else {
+        // Create new kiosk
+        const newKioskData: Omit<Kiosk, 'id'> = {
+          ...newKiosk,
+          status: newKiosk.status,
+          lastActive: new Date().toISOString(),
+          totalDonations: 0,
+          totalRaised: 0,
+          assignedCampaigns: newKiosk.assignedCampaigns,
+          defaultCampaign: '',
+          deviceInfo: {},
+          operatingHours: {},
+          settings: { 
+            displayMode: newKiosk.displayLayout, 
+            showAllCampaigns: true, 
+            maxCampaignsDisplay: 6, 
+            autoRotateCampaigns: false 
+          },
+          organizationId: userSession.user.organizationId,
+        };
+        const docRef = await addDoc(collection(db, 'kiosks'), newKioskData);
+        
+        await syncCampaignsForKiosk(docRef.id, newKiosk.assignedCampaigns, []);
+      }
       refreshKiosks();
-      setNewKiosk({ name: '', location: '', accessCode: '' });
+      refreshCampaigns(); // Refresh campaigns to show updated assignments
+      setNewKiosk({ name: '', location: '', accessCode: '', status: 'offline', assignedCampaigns: [], displayLayout: 'grid' });
       setIsCreateDialogOpen(false);
+      setEditingKiosk(null);
     } catch (error) {
-      console.error("Error adding kiosk: ", error);
+      console.error("Error saving kiosk: ", error);
     }
+  };
+
+  const handleCancel = () => {
+    setIsCreateDialogOpen(false);
+    setEditingKiosk(null);
+    setNewKiosk({ name: '', location: '', accessCode: '', status: 'offline', assignedCampaigns: [], displayLayout: 'grid' });
+  };
+
+  const handleEditKiosk = (kiosk: Kiosk) => {
+    setEditingKiosk(kiosk);
+    setNewKiosk({
+      name: kiosk.name,
+      location: kiosk.location,
+      accessCode: kiosk.accessCode || '',
+      status: kiosk.status,
+      assignedCampaigns: kiosk.assignedCampaigns || [],
+      displayLayout: (kiosk.settings?.displayMode as 'grid' | 'list' | 'carousel') || 'grid'
+    });
+    setIsCreateDialogOpen(true);
   };
 
   const handleDeleteKiosk = (kiosk: Kiosk) => {
@@ -97,83 +265,99 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
     setIsDeleteDialogOpen(true);
   };
 
+  const handleEditCampaign = (campaignId: string) => {
+    const campaign = campaigns.find(c => c.id === campaignId);
+    if (campaign) {
+      onNavigate(`admin-campaigns`);
+    }
+  };
+
   const confirmDeleteKiosk = async () => {
     if (!kioskToDelete) return;
     
     try {
+      const assignedCampaigns = kioskToDelete.assignedCampaigns || [];
+      await removeKioskFromAllCampaigns(kioskToDelete.id, assignedCampaigns);
+      
       await deleteDoc(doc(db, 'kiosks', kioskToDelete.id));
       refreshKiosks();
+      refreshCampaigns(); // Refresh campaigns to show updated assignments
       setIsDeleteDialogOpen(false);
       setKioskToDelete(null);
     } catch (error) {
       console.error("Error deleting kiosk: ", error);
     }
   };
-  
-  const handleAssignCampaigns = (kiosk: Kiosk) => {
-    setAssigningKiosk(kiosk);
-    setIsAssignmentDialogOpen(true);
-  };
-  
-  const handleSaveKioskAssignment = async (updatedKiosk: Kiosk) => {
-    const { id, ...dataToSave } = updatedKiosk;
+
+  // Copy kiosk ID to clipboard
+  const copyKioskId = async (kioskId: string) => {
     try {
-        const kioskRef = doc(db, 'kiosks', id);
-        await updateDoc(kioskRef, dataToSave);
-        refreshKiosks();
+      await navigator.clipboard.writeText(kioskId);
+      setCopiedIds(prev => ({ ...prev, [kioskId]: true }));
+      
+      // Reset copied state after 2 seconds
+      setTimeout(() => {
+        setCopiedIds(prev => ({ ...prev, [kioskId]: false }));
+      }, 2000);
     } catch (error) {
-        console.error("Error updating kiosk assignment: ", error);
+      console.error('Failed to copy kiosk ID:', error);
     }
   };
 
-  const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(amount);
+  // Toggle access code visibility
+  const toggleAccessCode = (kioskId: string) => {
+    setShowAccessCodes(prev => ({
+      ...prev,
+      [kioskId]: !prev[kioskId]
+    }));
+  };
+
+  const formatCurrency = (amount: number) => new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', minimumFractionDigits: 0 }).format(amount);
+  const handleExportKiosks = () => {
+    const exportData = filteredKiosks.map((kiosk) => {
+      const performance = performanceData[kiosk.id];
+      return {
+        name: kiosk.name,
+        location: kiosk.location,
+        status: kiosk.status,
+        kioskId: kiosk.id,
+        totalRaised: performance?.totalRaised ?? 0,
+        totalDonations: performance?.donorCount ?? 0,
+        assignedCampaigns: kiosk.assignedCampaigns?.length ?? 0,
+        lastActive: kiosk.lastActive || '',
+      };
+    });
+
+    exportToCsv(exportData, 'kiosks');
+  };
   
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'online': 
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 ring-1 ring-green-600/20">
-            <CheckCircle className="w-3 h-3 mr-1" />
+          <Badge className="bg-green-100 text-green-800 border-green-200">
             Online
-          </span>
+          </Badge>
         );
       case 'offline': 
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700 ring-1 ring-red-600/20">
-            <WifiOff className="w-3 h-3 mr-1" />
+          <Badge className="bg-red-100 text-red-800 border-red-200">
             Offline
-          </span>
+          </Badge>
         );
       case 'maintenance': 
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-50 text-yellow-700 ring-1 ring-yellow-600/20">
-            <AlertTriangle className="w-3 h-3 mr-1" />
+          <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
             Maintenance
-          </span>
+          </Badge>
         );
       default: 
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-50 text-gray-700 ring-1 ring-gray-600/20">
+          <Badge className="bg-gray-100 text-gray-800 border-gray-200">
             {status}
-          </span>
+          </Badge>
         );
     }
-  };
-
-  const filteredKiosks = kiosks.filter(kiosk => {
-    const matchesSearch = kiosk.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         kiosk.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         kiosk.id.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || kiosk.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
-  
-  const totalStats = {
-    online: kiosks.filter(k => k.status === 'online').length,
-    offline: kiosks.filter(k => k.status === 'offline').length,
-    maintenance: kiosks.filter(k => k.status === 'maintenance').length,
-    totalRaised: kiosks.reduce((sum, k) => sum + (k.totalRaised || 0), 0),
-    totalDonations: kiosks.reduce((sum, k) => sum + (k.totalDonations || 0), 0),
   };
 
   if (isLoading) {
@@ -184,43 +368,17 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
         userSession={userSession}
         hasPermission={hasPermission}
         activeScreen="admin-kiosks"
+        hideHeaderDivider
+        hideSidebarTrigger
       >
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Card key={i}><CardContent className="p-6"><div className="flex items-center justify-between"><div><Skeleton className="w-24 h-5 mb-2" /><Skeleton className="w-32 h-8" /></div><Skeleton className="h-8 w-8" /></div></CardContent></Card>
-            ))}
+        <div className="min-h-screen bg-gray-50">
+          <div className="text-center py-12">
+            <div className="animate-pulse">
+              <div className="w-12 h-12 bg-gray-300 rounded-full mx-auto mb-3"></div>
+              <div className="h-4 bg-gray-300 rounded w-32 mx-auto mb-2"></div>
+              <div className="h-3 bg-gray-300 rounded w-48 mx-auto"></div>
+            </div>
           </div>
-          <Card>
-            <CardHeader>
-              <Skeleton className="w-48 h-6 mb-2" />
-              <Skeleton className="w-64 h-4" />
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <Table className="min-w-full">
-                  <TableHeader>
-                    <TableRow>
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <TableHead key={i}><Skeleton className="h-6 w-24" /></TableHead>
-                      ))}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <TableRow key={i}>
-                        <TableCell><Skeleton className="h-10 w-full" /></TableCell>
-                        <TableCell><Skeleton className="h-10 w-24" /></TableCell>
-                        <TableCell><Skeleton className="h-10 w-32" /></TableCell>
-                        <TableCell><Skeleton className="h-10 w-40" /></TableCell>
-                        <TableCell><Skeleton className="h-10 w-20" /></TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </AdminLayout>
     );
@@ -233,273 +391,409 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
       userSession={userSession}
       hasPermission={hasPermission}
       activeScreen="admin-kiosks"
+      hideSidebarTrigger
     >
-      <div className="space-y-6">
-        <header className="bg-white shadow-sm border-b rounded-md">
-          <div className="px-2 sm:px-6 lg:px-8">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between h-auto sm:h-16 gap-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                <Button variant="ghost" size="sm" onClick={() => onNavigate('admin')} className="flex items-center space-x-2">
-                  <ArrowLeft className="w-4 h-4" /><span>Back to Dashboard</span>
+      <div className="min-h-screen bg-gray-50">
+        <main className="px-2 sm:px-4 lg:px-8 pb-4 sm:pb-8">
+          {/* Stat Cards Section */}
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
+            <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Total Kiosks</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{filteredKiosks.length}</p><div className="flex items-center space-x-2 sm:space-x-4 text-xs text-gray-500 mt-1"><span className="text-green-600">{totalStats.online} online</span><span className="text-red-600">{totalStats.offline} offline</span></div></div><Settings className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-blue-600" /></div></CardContent></Card>
+            <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Total Raised</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.totalRaised)}</p></div><DollarSign className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-green-600" /></div></CardContent></Card>
+            <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Total Donations</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{totalStats.totalDonations.toLocaleString()}</p></div><Users className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-purple-600" /></div></CardContent></Card>
+            <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Maintenance</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{totalStats.maintenance}</p></div><Activity className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-orange-600" /></div></CardContent></Card>
+          </div>
+
+          {/* Unified Header Component */}
+          <AdminSearchFilterHeader
+            title={`Kiosks (${filteredKiosks.length})`}
+            subtitle="Configure and monitor donation kiosks"
+            config={searchFilterConfig}
+            searchValue={searchTerm}
+            onSearchChange={setSearchTerm}
+            filterValues={filterValues}
+            onFilterChange={handleFilterChange}
+            exportData={filteredKiosks}
+            onExport={handleExportKiosks}
+            actions={
+              hasPermission('create_kiosk') ? (
+                <Button
+                  onClick={() => {
+                    setIsCreateDialogOpen(true);
+                  }}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 h-10"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Kiosk
                 </Button>
-                <div className="h-6 w-px bg-gray-300 hidden sm:block" />
-                <div>
-                  <h1 className="text-xl font-semibold text-gray-900">Kiosk Management</h1>
-                  <p className="text-sm text-gray-600">Configure and monitor donation kiosks</p>
-                </div>
-              </div>
-              <div className="flex flex-col sm:flex-row items-stretch gap-2 mb-6 sm:mb-0 mt-2">
-                <div className="w-full sm:w-80">
-                  <div className="relative">
-                    <div className="h-10 items-center flex flex-row gap-5 border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                      <div>
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                      </div>
-                      <div>
-                        <Input
-                          placeholder="Search kiosks..."
-                          value={searchTerm}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
-                          className="pl-10 w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                {hasPermission('create_kiosk') && (
-                  <Button onClick={() => setIsCreateDialogOpen(true)} className="bg-indigo-600 hover:bg-indigo-700">
-                    <Plus className="w-4 h-4 mr-2" />Add Kiosk
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-        </header>
-        <main className="px-2 sm:px-6 lg:px-8 py-4 sm:py-8">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Kiosks</p><p className="text-2xl font-semibold text-gray-900">{kiosks.length}</p><div className="flex items-center space-x-4 text-xs text-gray-500 mt-1"><span className="text-green-600">{totalStats.online} online</span><span className="text-red-600">{totalStats.offline} offline</span></div></div><Settings className="h-8 w-8 text-blue-600" /></div></CardContent></Card>
-            <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Raised</p><p className="text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.totalRaised)}</p></div><DollarSign className="h-8 w-8 text-green-600" /></div></CardContent></Card>
-            <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Donations</p><p className="text-2xl font-semibold text-gray-900">{totalStats.totalDonations.toLocaleString()}</p></div><Users className="h-8 w-8 text-purple-600" /></div></CardContent></Card>
-            <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Maintenance</p><p className="text-2xl font-semibold text-gray-900">{totalStats.maintenance}</p></div><Activity className="h-8 w-8 text-orange-600" /></div></CardContent></Card>
-          </div>
+              ) : undefined
+            }
+          />
+          
           {/* Modern Table Container */}
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="px-6 py-5 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">Kiosks ({filteredKiosks.length})</h3>
-              <p className="text-sm text-gray-600 mt-1">Monitor and manage your kiosk network</p>
-            </div>
-            <div className="overflow-x-auto">
+          <Card className="overflow-hidden">
+            <CardContent className="p-0">
               {filteredKiosks.length > 0 ? (
-                <Table className="min-w-full">
-                  <TableHeader>
-                    <TableRow className="bg-gray-50 border-b border-gray-200">
-                      <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Kiosk Details</TableHead>
-                      <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</TableHead>
-                      <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Performance</TableHead>
-                      <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Campaign Assignment</TableHead>
-                      <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredKiosks.map((kiosk) => (
-                      <TableRow key={kiosk.id} className="hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0">
-                        <TableCell className="px-6 py-4">
-                          <div className="space-y-3">
-                            <div className="space-y-1">
-                              <div className="flex items-center space-x-2">
-                                <Monitor className="w-4 h-4 text-gray-400" />
-                                <span className="text-sm font-medium text-gray-900">{kiosk.name}</span>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <MapPin className="w-3 h-3 text-gray-400" />
-                                <span className="text-sm text-gray-500">{kiosk.location}</span>
+                <>
+                  <div className="md:hidden px-6 py-6 space-y-4">
+                    {filteredKiosks.map((kiosk) => {
+                      const assignedIds = Array.from(new Set(kiosk.assignedCampaigns || [])).filter(Boolean);
+                      const assignedCount = campaigns.filter((c) => assignedIds.includes(c.id)).length;
+
+                      return (
+                        <div
+                          key={kiosk.id}
+                          className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <div className="text-sm font-semibold text-gray-900">{kiosk.name}</div>
+                              <div className="flex items-center gap-1 text-xs text-gray-500">
+                                <MapPin className="h-3 w-3" />
+                                {kiosk.location}
                               </div>
                             </div>
-                            <KioskCredentialsCard
-                              kioskId={kiosk.id}
-                              accessCode={kiosk.accessCode}
-                              className="w-full max-w-md"
-                            />
+                            {(hasPermission('edit_kiosk') || hasPermission('delete_kiosk')) && (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-gray-500 hover:bg-gray-100"
+                                    aria-label="Kiosk actions"
+                                  >
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  {hasPermission('edit_kiosk') && (
+                                    <DropdownMenuItem
+                                      onSelect={() => handleEditKiosk(kiosk)}
+                                      className="flex items-center gap-2"
+                                    >
+                                      <Edit className="h-4 w-4" />
+                                      Edit
+                                    </DropdownMenuItem>
+                                  )}
+                                  {hasPermission('delete_kiosk') && (
+                                    <DropdownMenuItem
+                                      onSelect={() => handleDeleteKiosk(kiosk)}
+                                      className="flex items-center gap-2 text-red-600 focus:text-red-600"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  )}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            )}
                           </div>
-                        </TableCell>
-                        <TableCell className="px-6 py-4">{getStatusBadge(kiosk.status)}</TableCell>
-                        <TableCell className="px-6 py-4">
-                          <div className="flex items-center space-x-2">
-                            <DollarSign className="w-4 h-4 text-gray-400" />
-                            <span className="text-sm font-medium text-gray-900">
+
+                          <div className="mt-4 space-y-3">
+                            <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                              <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                                Kiosk ID
+                              </p>
+                              <div className="flex items-center justify-between gap-2">
+                                <p className="font-mono text-sm text-gray-900 break-all">{kiosk.id}</p>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => copyKioskId(kiosk.id)}
+                                  className="h-8 w-8 text-blue-600 hover:text-blue-800"
+                                  title="Copy ID"
+                                >
+                                  {copiedIds[kiosk.id] ? (
+                                    <Check className="h-4 w-4" />
+                                  ) : (
+                                    <Copy className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
+                            <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                              <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                                Access Code
+                              </p>
+                              <div className="flex items-center justify-between gap-2">
+                                <p className="font-mono text-sm text-gray-900">
+                                  {showAccessCodes[kiosk.id]
+                                    ? kiosk.accessCode || 'Not set'
+                                    : '******'}
+                                </p>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => toggleAccessCode(kiosk.id)}
+                                  className="h-8 w-8 text-blue-600 hover:text-blue-800"
+                                  title={showAccessCodes[kiosk.id] ? "Hide Access Code" : "Show Access Code"}
+                                >
+                                  {showAccessCodes[kiosk.id] ? (
+                                    <EyeOff className="h-4 w-4" />
+                                  ) : (
+                                    <Eye className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="mt-4">{getStatusBadge(kiosk.status)}</div>
+
+                          <div className="mt-4 border-t border-gray-100 pt-4 text-sm text-gray-600">
+                            <div className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+                              Performance
+                            </div>
+                            <div className="mt-1 font-semibold text-gray-900">
                               {formatCurrency(performanceData[kiosk.id]?.totalRaised || 0)}
-                            </span>
+                            </div>
                           </div>
-                        </TableCell>
-                        <TableCell className="px-6 py-4">
-                          {(() => {
-                            const assignedIds = Array.from(new Set(kiosk.assignedCampaigns || [])).filter(Boolean);
-                            const assignedCount = campaigns.filter((c) => assignedIds.includes(c.id)).length;
-                            const globalCount = kiosk.settings?.showAllCampaigns
-                              ? campaigns.filter((c) => c.isGlobal).length
-                              : 0;
-                            return (
-                              <div className="space-y-2">
-                                <div className="flex items-center space-x-2">
-                                  <Target className="w-4 h-4 text-gray-400" />
-                                  <span className="text-sm text-gray-500">
-                                    {assignedCount} assigned
-                                    {globalCount > 0 && (
-                                      <span className="text-xs text-gray-400 ml-2">
-                                        (+{globalCount} global showing)
-                                      </span>
-                                    )}
-                                  </span>
-                                </div>
-                                {kiosk.defaultCampaign && (
-                                  <div className="flex items-center space-x-2">
-                                    <Star className="w-4 h-4 text-yellow-500" />
-                                    <span className="text-sm text-gray-500">
-                                      {campaigns.find((c) => c.id === kiosk.defaultCampaign)?.title?.slice(0, 20) || '...'}
-                                    </span>
+
+                          <div className="mt-4 border-t border-gray-100 pt-4 text-sm text-gray-600">
+                            <div className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+                              Campaign Assignment
+                            </div>
+                            <div className="mt-2">{assignedCount} assigned</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="hidden md:block overflow-hidden">
+                    <Table className="w-full table-fixed">
+                      <TableHeader>
+                        <TableRow className="bg-gray-100 border-b-2 border-gray-300">
+                          <SortableTableHeader 
+                            sortKey="name" 
+                            currentSortKey={sortKey} 
+                            currentSortDirection={sortDirection} 
+                            onSort={handleSort}
+                            className="w-[30%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                          >
+                            Kiosk Details
+                          </SortableTableHeader>
+                          <SortableTableHeader 
+                            sortKey="status" 
+                            currentSortKey={sortKey} 
+                            currentSortDirection={sortDirection} 
+                            onSort={handleSort}
+                            className="w-[12%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                          >
+                            Status
+                          </SortableTableHeader>
+                          <SortableTableHeader 
+                            sortKey="totalRaised" 
+                            currentSortKey={sortKey} 
+                            currentSortDirection={sortDirection} 
+                            onSort={handleSort}
+                            className="w-[15%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
+                          >
+                            Performance
+                          </SortableTableHeader>
+                          <SortableTableHeader 
+                            sortKey="assignedCampaigns" 
+                            currentSortKey={sortKey} 
+                            currentSortDirection={sortDirection} 
+                            onSort={handleSort}
+                            className="w-[18%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                          >
+                            Campaign Assignment
+                          </SortableTableHeader>
+                          <SortableTableHeader 
+                            sortable={false}
+                            sortKey="actions" 
+                            currentSortKey={sortKey} 
+                            currentSortDirection={sortDirection} 
+                            onSort={handleSort}
+                            className="w-[25%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                          >
+                            Actions
+                          </SortableTableHeader>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody className="bg-white divide-y divide-gray-200">
+                        {filteredKiosks.map((kiosk) => (
+                          <TableRow key={kiosk.id} className="hover:bg-gray-50">
+                            <TableCell className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                              <div className="space-y-3">
+                                <div>
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-sm font-medium text-gray-900">{kiosk.name}</span>
                                   </div>
+                                  <div className="flex items-center gap-1">
+                                    <MapPin className="w-3 h-3 text-gray-400" />
+                                    <span className="text-sm text-gray-500">{kiosk.location}</span>
+                                  </div>
+                                </div>
+                                <div className="bg-gray-50 rounded p-3 text-xs space-y-2">
+                                  <div>
+                                    <div className="text-gray-500 uppercase font-medium mb-1">Kiosk ID</div>
+                                    <div className="font-mono text-gray-900 flex items-center justify-between">
+                                      <span className="truncate">{kiosk.id}</span>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => copyKioskId(kiosk.id)}
+                                        className="h-auto p-1 text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                                        title="Copy ID"
+                                      >
+                                        {copiedIds[kiosk.id] ? (
+                                          <>
+                                            <Check className="w-3 h-3" />
+                                            Copied
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Copy className="w-3 h-3" />
+                                            Copy ID
+                                          </>
+                                        )}
+                                      </Button>
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <div className="text-gray-500 uppercase font-medium mb-1">Access Code</div>
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-blue-600 font-medium font-mono">
+                                        {showAccessCodes[kiosk.id] ? (kiosk.accessCode || 'Not set') : '******'}
+                                      </span>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => toggleAccessCode(kiosk.id)}
+                                        className="h-auto p-1 text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                                        title={showAccessCodes[kiosk.id] ? "Hide Access Code" : "Show Access Code"}
+                                      >
+                                        {showAccessCodes[kiosk.id] ? (
+                                          <>
+                                            <EyeOff className="w-3 h-3" />
+                                            Hide
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Eye className="w-3 h-3" />
+                                            Show
+                                          </>
+                                        )}
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                              {getStatusBadge(kiosk.status)}
+                            </TableCell>
+                            <TableCell className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">
+                                {formatCurrency(performanceData[kiosk.id]?.totalRaised || 0)}
+                              </div>
+                            </TableCell>
+                            <TableCell className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                              {(() => {
+                                const assignedIds = Array.from(new Set(kiosk.assignedCampaigns || [])).filter(Boolean);
+                                const assignedCount = campaigns.filter((c) => assignedIds.includes(c.id)).length;
+                                return (
+                                  <div className="text-sm text-gray-500">
+                                    {assignedCount} assigned
+                                  </div>
+                                );
+                              })()}
+                            </TableCell>
+                            <TableCell className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center gap-2">
+                                {hasPermission('edit_kiosk') && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleEditKiosk(kiosk)}
+                                    className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600"
+                                    title="Edit Kiosk"
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </Button>
+                                )}
+                                {hasPermission('delete_kiosk') && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDeleteKiosk(kiosk)}
+                                    className="h-8 w-8 p-0 text-gray-400 hover:text-red-600"
+                                    title="Delete Kiosk"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
                                 )}
                               </div>
-                            );
-                          })()}
-                        </TableCell>
-                        <TableCell className="px-6 py-4">
-                          <div className="flex items-center justify-end gap-2">
-                            {hasPermission('edit_kiosk') && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => {
-                                  setAssigningKiosk(kiosk);
-                                  setIsAssignmentDialogOpen(true);
-                                }}
-                                className="h-8 w-8 hover:bg-indigo-50 hover:text-indigo-600"
-                                title="Edit Kiosk Details & Campaigns"
-                              >
-                                <Edit className="w-4 h-4" />
-                              </Button>
-                            )}
-                            {hasPermission('delete_kiosk') && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDeleteKiosk(kiosk)}
-                                className="h-8 w-8 hover:bg-red-50 hover:text-red-600"
-                                title="Delete kiosk"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </>
               ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <Ghost className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-                  <p className="text-lg font-medium mb-2">No Kiosks Found</p>
-                  <p className="text-sm mb-4">
-                    No kiosks have been registered yet.
-                  </p>
-                  {hasPermission("create_kiosk") && (
-                    <Button onClick={() => setIsCreateDialogOpen(true)}>
-                      <Plus className="w-4 h-4 mr-2" /> Register New Kiosk
-                    </Button>
-                  )}
+                <div className="text-center py-12 p-6">
+                  <p className="text-gray-500">No kiosks found matching your search criteria.</p>
                 </div>
               )}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </main>
       </div>
 
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]"> {/* Adjusted max-width */}
-          <DialogHeader><DialogTitle>Add New Kiosk</DialogTitle><DialogDescription>Configure a new donation kiosk for deployment.</DialogDescription></DialogHeader>
-          <div className="space-y-4 py-4">
-            <div>
-              <Label htmlFor="kioskName">Kiosk Name</Label>
-              <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                <Input
-                  id="kioskName"
-                  value={newKiosk.name}
-                  onChange={(e) => setNewKiosk(p => ({ ...p, name: e.target.value }))}
-                  placeholder="Times Square Kiosk"
-                  className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="kioskLocation">Location</Label>
-              <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                <Input
-                  id="kioskLocation"
-                  value={newKiosk.location}
-                  onChange={(e) => setNewKiosk(p => ({ ...p, location: e.target.value }))}
-                  placeholder="Times Square, New York, NY"
-                  className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="accessCode">Access Code</Label>
-              <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                <Input
-                  id="accessCode"
-                  value={newKiosk.accessCode}
-                  onChange={(e) => setNewKiosk(p => ({ ...p, accessCode: e.target.value }))}
-                  placeholder="TS2024"
-                  className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
-                />
-              </div>
-            </div>
-          </div>
-          <div className="flex justify-end space-x-2 pt-4"><Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>Cancel</Button><Button onClick={handleCreateKiosk} disabled={!newKiosk.name || !newKiosk.location}>Add Kiosk</Button></div>
-        </DialogContent>
-      </Dialog>
-      
-      <KioskCampaignAssignmentDialog open={isAssignmentDialogOpen} onOpenChange={setIsAssignmentDialogOpen} kiosk={assigningKiosk} campaigns={campaigns} onSave={handleSaveKioskAssignment} />
+      {/* Kiosk Setup/Edit Dialog */}
+      <KioskForm
+        open={isCreateDialogOpen}
+        onOpenChange={(open) => {
+          setIsCreateDialogOpen(open);
+          if (!open) {
+            setEditingKiosk(null);
+            setNewKiosk({ name: '', location: '', accessCode: '', status: 'offline', assignedCampaigns: [], displayLayout: 'grid' });
+          }
+        }}
+        editingKiosk={editingKiosk}
+        kioskData={newKiosk}
+        setKioskData={setNewKiosk}
+        campaigns={campaigns}
+        onSubmit={handleCreateKiosk}
+        onCancel={handleCancel}
+        onAssignCampaign={handleAssignCampaign}
+        onUnassignCampaign={handleUnassignCampaign}
+        onEditCampaign={handleEditCampaign}
+        formatCurrency={formatCurrency}
+      />
       
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[400px] p-0 border-0 shadow-2xl">
-          <div className="bg-white rounded-2xl p-8 text-center">
-            {/* Warning Icon */}
-            <div className="flex justify-center mb-6">
-              <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center">
-                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                  <AlertTriangle className="w-6 h-6 text-red-500" />
-                </div>
+        <DialogContent className="sm:max-w-[400px]">
+          <VisuallyHidden>
+            <DialogTitle>Delete Kiosk Confirmation</DialogTitle>
+          </VisuallyHidden>
+          <div className="text-center py-4">
+            <div className="flex justify-center mb-4">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-red-600" />
               </div>
             </div>
             
-            {/* Title */}
-            <h2 className="text-xl font-semibold text-gray-900 mb-3">
-              Delete kiosk
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">
+              Delete Kiosk
             </h2>
             
-            {/* Description */}
-            <p className="text-gray-600 mb-8 leading-relaxed">
-              Are you sure you want to delete this kiosk?<br />
-              This action cannot be undone.
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete this kiosk? This action cannot be undone.
             </p>
             
-            {/* Action Buttons */}
-            <div className="flex gap-3">
+            <div className="flex gap-3 justify-center">
               <Button 
                 variant="outline" 
                 onClick={() => setIsDeleteDialogOpen(false)}
-                className="flex-1 h-11 border-gray-300 text-gray-700 hover:bg-gray-50"
               >
                 Cancel
               </Button>
               <Button 
                 onClick={confirmDeleteKiosk}
-                className="flex-1 h-11 bg-red-500 hover:bg-red-600 text-white border-0"
+                className="bg-red-600 hover:bg-red-700 text-white"
               >
                 Delete
               </Button>
@@ -507,6 +801,14 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
           </div>
         </DialogContent>
       </Dialog>
+      
+      {/* Stripe Onboarding Dialog */}
+      <StripeOnboardingDialog
+        open={showOnboardingDialog}
+        onOpenChange={setShowOnboardingDialog}
+        organization={organization}
+        loading={orgLoading}
+      />
     </AdminLayout>
   );
 }

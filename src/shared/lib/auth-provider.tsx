@@ -99,6 +99,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
 
     loadPersistedSession()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Persist kiosk session changes to localStorage
@@ -154,6 +155,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       clearTimeout(timeout)
       unsubscribe()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleLogin = async (role: UserRole, sessionData?: KioskSession | AdminSession) => {
@@ -195,10 +197,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       )
       const userId = userCredential.user.uid
 
-      await setDoc(doc(firestore, 'users', userId), {
+      const userData = {
         username: `${signupData.firstName} ${signupData.lastName}`,
         email: signupData.email,
-        role: 'admin',
+        role: 'admin' as UserRole,
         permissions: [
           'view_dashboard',
           'view_campaigns',
@@ -217,11 +219,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           'edit_user',
           'delete_user',
           'manage_permissions',
-        ],
+        ] as Permission[],
         isActive: true,
         createdAt: new Date().toISOString(),
         organizationId: signupData.organizationId,
-      })
+      }
+
+      await setDoc(doc(firestore, 'users', userId), userData)
 
       await setDoc(doc(firestore, 'organizations', signupData.organizationId), {
         name: signupData.organizationName,
@@ -232,6 +236,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         tags: [],
         createdAt: new Date().toISOString(),
       })
+
+      // Establish session immediately after account creation
+      const adminSession: AdminSession = {
+        user: {
+          id: userId,
+          ...userData,
+        },
+        loginTime: new Date().toISOString(),
+        permissions: userData.permissions,
+      }
+
+      // Set session state to log user in automatically
+      await handleLogin('admin', adminSession)
     } catch (error) {
       if (error instanceof Error) {
         console.error('Signup error:', error)

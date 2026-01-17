@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useKiosks } from '../../../shared/lib/hooks/useKiosks';
-import { KioskSession, UserRole } from '../../../shared/types';
+import { KioskSession, UserRole, Kiosk } from '../../../shared/types';
 import { kioskAuthApi } from '../api';
 
 type OnLogin = (role: UserRole, sessionData?: KioskSession) => void;
 
 export function useKioskLogin(onLogin: OnLogin) {
-	const { kiosks, loading: kiosksLoading, error: kiosksError } = useKiosks() as unknown as { kiosks: any[]; loading: boolean; error: string | null };
+	const { loading: kiosksLoading, error: kiosksError } = useKiosks() as unknown as { kiosks: Kiosk[]; loading: boolean; error: string | null };
 	const [kioskId, setKioskId] = useState('');
 	const [accessCode, setAccessCode] = useState('');
 	const [localError, setLocalError] = useState<string>('');
@@ -32,22 +32,22 @@ export function useKioskLogin(onLogin: OnLogin) {
 			}
 
 			onLogin('kiosk', kioskSession);
-		} catch (error) {
-			setLocalError('Authentication failed. Please try again.');
+		} catch (err: unknown) {
+			const errorMessage =
+				err instanceof Error ? err.message : 'Authentication failed. Please try again.';
+			setLocalError(errorMessage);
 		}
 	}, [kioskId, accessCode, onLogin]);
 
-	const error = useMemo(() => localError || '', [localError]);
+	const errorMessage = useMemo(() => localError || '', [localError]);
 
 	return {
 		kioskId,
 		accessCode,
 		setKioskId,
 		setAccessCode,
-		error,
+		error: errorMessage,
 		loading: kiosksLoading,
 		handleSubmit
 	};
 }
-
-

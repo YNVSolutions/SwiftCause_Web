@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "../../shared/ui/button";
 import { Input } from "../../shared/ui/input";
 import { Label } from "../../shared/ui/label";
@@ -68,10 +68,15 @@ import {
   Rocket,
   Play,
   TriangleAlert,
+  Building2,
   ArrowUpRight,
   ArrowDownRight,
   Trophy,
   Medal,
+  X,
+  Zap,
+  MoreVertical,
+  Pencil,
 } from "lucide-react";
 import {
   Dialog,
@@ -79,11 +84,10 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
   DialogClose,
 } from "../../shared/ui/dialog";
-import { Screen, AdminSession, Permission, Campaign } from "../../shared/types";
+import { Screen, AdminSession, Permission, Campaign, Kiosk } from "../../shared/types";
 import { db } from "../../shared/lib/firebase";
 import {
   collection,
@@ -106,8 +110,13 @@ import { useOrganization } from "../../shared/lib/hooks/useOrganization";
 import { auth } from "../../shared/lib/firebase";
 
 import { AdminLayout } from "./AdminLayout";
-import { SystemAlertsWidget } from "./components/SystemAlertsWidget";
-import { useSystemAlerts } from "../../shared/lib/hooks/useSystemAlerts";
+import { useStripeOnboarding, StripeOnboardingDialog } from "../../features/stripe-onboarding";
+import { useToast } from "../../shared/ui/ToastProvider";
+import { FundraisingEfficiencyGauge, PerformanceDetailDialog } from "../../widgets/campaign-performance";
+import { CampaignProgressBars, CampaignProgressDialog, transformCampaignsToProgress } from "../../widgets/campaign-progress";
+import { DonationDistributionChart, DonationDistributionDialog } from "../../widgets/donation-distribution";
+import { KioskForm, KioskFormData } from "./components/KioskForm";
+import { CampaignForm, CampaignFormData } from "./components/CampaignForm";
 
 interface AdminDashboardProps {
   onNavigate: (screen: Screen) => void;
@@ -146,7 +155,9 @@ const CustomChartTooltip = ({ active, payload, label }: any) => {
               />
               <span className="text-gray-600">{entry.name}:</span>
             </div>
-            <span className="font-semibold text-gray-900">{entry.value}</span>
+            <span className="font-semibold text-gray-900">
+              {typeof entry.value === 'number' ? `£${entry.value.toLocaleString('en-GB')}` : entry.value}
+            </span>
           </div>
         ))}
       </div>
@@ -168,22 +179,51 @@ export function AdminDashboard({
   const { deviceDistribution } = stats;
 
   const [topCampaigns, setTopCampaigns] = useState<Campaign[]>([]);
+  const [allCampaignsForPerformance, setAllCampaignsForPerformance] = useState<Campaign[]>([]);
   const [goalComparisonData, setGoalComparisonData] = useState<any[]>([]);
   const [categoryData, setCategoryData] = useState<any[]>([]);
   const [showFeatures, setShowFeatures] = useState(false);
-  const [showGettingStarted, setShowGettingStarted] = useState(false);
   const [isLegendExpanded, setIsLegendExpanded] = useState(false);
   const [stripeStatusMessage, setStripeStatusMessage] = useState<{ type: 'success' | 'error' | 'warning', message: string } | null>(null);
   const [showStripeStatusDialog, setShowStripeStatusDialog] = useState(false);
-  const [isStripeOnboardingLoading, setIsStripeOnboardingLoading] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [showActivityDialog, setShowActivityDialog] = useState(false);
+  const [showPerformanceDialog, setShowPerformanceDialog] = useState(false);
+  const [showDonationDistributionDialog, setShowDonationDistributionDialog] = useState(false);
+  const [showCampaignProgressDialog, setShowCampaignProgressDialog] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showKioskForm, setShowKioskForm] = useState(false);
   const [showLinkingForm, setShowLinkingForm] = useState(false);
   const [allCampaigns, setAllCampaigns] = useState<Campaign[]>([]);
   const [assignedCampaignIds, setAssignedCampaignIds] = useState<string[]>([]);
+  const [allKiosks, setAllKiosks] = useState<Kiosk[]>([]);
+  const [assignedKioskIds, setAssignedKioskIds] = useState<string[]>([]);
+  const [isGlobalCampaign, setIsGlobalCampaign] = useState(false);
+  const [showCreateKioskModal, setShowCreateKioskModal] = useState(false);
   const [newKiosk, setNewKiosk] = useState({ name: '', location: '', accessCode: '' });
+  const [kioskFormData, setKioskFormData] = useState<KioskFormData>({
+    name: '',
+    location: '',
+    accessCode: '',
+    status: 'online',
+    assignedCampaigns: [],
+    displayLayout: 'grid'
+  });
+  const [campaignFormData, setCampaignFormData] = useState<CampaignFormData>({
+    title: '',
+    description: '',
+    goal: 0,
+    category: '',
+    status: 'active',
+    coverImageUrl: '',
+    startDate: '',
+    endDate: '',
+    tags: []
+  });
+  const [showCampaignFormDialog, setShowCampaignFormDialog] = useState(false);
+  const [selectedCampaignImageFile, setSelectedCampaignImageFile] = useState<File | null>(null);
+  const [editingCampaignInTour, setEditingCampaignInTour] = useState<Campaign | null>(null);
+  const [selectedCampaignInTour, setSelectedCampaignInTour] = useState<Campaign | null>(null);
   const [isCreatingCampaign, setIsCreatingCampaign] = useState(false);
   const [isCreatingKiosk, setIsCreatingKiosk] = useState(false);
   const [linkingCampaignId, setLinkingCampaignId] = useState<string | null>(null);
@@ -210,12 +250,14 @@ export function AdminDashboard({
     userSession.user.organizationId ?? null
   );
 
-  const { alerts: systemAlerts, loading: systemAlertsLoading } = useSystemAlerts({
-    organization,
-    organizationId: userSession.user.organizationId,
-  });
 
-  // console.log(stats);
+  const { isStripeOnboarded, needsOnboarding } = useStripeOnboarding(organization);
+  const { showToast } = useToast();
+  const [showOnboardingPopup, setShowOnboardingPopup] = useState(false);
+  const [showSmallPopup, setShowSmallPopup] = useState(false);
+
+  // Handle return from Stripe onboarding
+
   useEffect(() => {
     const hash = window.location.hash;
     const params = new URLSearchParams(hash.split("?")[1]);
@@ -227,147 +269,52 @@ export function AdminDashboard({
         message:
           "Stripe onboarding complete! Your account is being reviewed and will be payout-ready shortly.",
       });
+      showToast("Stripe onboarding completed successfully!", "success", 3000);
+      // Organization data will auto-refresh via Firestore listener
     } else if (stripeStatus === "refresh") {
       setStripeStatusMessage({
         type: "warning",
         message: "Stripe onboarding session expired or was cancelled. Please try again.",
       });
+      showToast("Stripe onboarding was cancelled. Please try again.", "warning", 3000);
     }
 
     if (stripeStatus) {
       const newHash = hash.split("?")[0];
       window.history.replaceState(null, '', newHash);
     }
-  }, []);
+  }, [showToast]);
 
-  const handleStripeOnboarding = async () => {
-    if (!organization?.id) {
-      console.error("Organization ID not available for Stripe onboarding.");
-      return;
-    }
-
-    if (!auth.currentUser) {
-      console.error("No authenticated Firebase user found.");
-      return;
-    }
-
-    try {
-      setIsStripeOnboardingLoading(true);
-      const idToken = await auth.currentUser.getIdToken();
-      
-      const response = await fetch('https://createonboardinglink-j2f5w4qwxq-uc.a.run.app', {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${idToken}`,
-        },
-        body: JSON.stringify({ orgId: organization.id }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || response.statusText || "Failed to create onboarding link.");
-      }
-
-      const { url } = await response.json();
-      if (url) {
-        window.location.href = url;
-      }
-    } catch (error) {
-      console.error("Error creating Stripe onboarding link:", error);
-      setStripeStatusMessage({ type: 'error', message: `Failed to start Stripe onboarding: ${(error as Error).message}` });
-    } finally {
-      setIsStripeOnboardingLoading(false);
-    }
-  };
-
-
-
-
-  const gettingStartedSteps = [
-    {
-      step: 1,
-      title: "Create Your First Campaign",
-      description:
-        "Set up a donation campaign with custom goals, pricing, and branding",
-      action: "Create Campaign",
-      actionFunction: () => onNavigate("admin-campaigns"),
-      icon: <Target className="w-5 h-5" />,
-      estimated: "5 minutes",
-      canAccess: hasPermission("create_campaign"),
-    },
-    {
-      step: 2,
-      title: "Configure Donation Kiosks",
-      description:
-        "Set up kiosks in your locations with QR codes and access controls",
-      action: "Setup Kiosks",
-      actionFunction: () => onNavigate("admin-kiosks"),
-      icon: <Monitor className="w-5 h-5" />,
-      estimated: "10 minutes",
-      canAccess: hasPermission("create_kiosk"),
-    },
-    {
-      step: 3,
-      title: "Assign Campaigns to Kiosks",
-      description:
-        "Connect your campaigns to specific kiosk locations for targeted fundraising",
-      action: "Assign Campaigns",
-      actionFunction: () => onNavigate("admin-kiosks"),
-      icon: <Workflow className="w-5 h-5" />,
-      estimated: "3 minutes",
-      canAccess: hasPermission("assign_campaigns"),
-    },
-    {
-      step: 4,
-      title: "Invite Team Members",
-      description:
-        "Add users with appropriate permissions to help manage your platform",
-      action: "Manage Users",
-      actionFunction: () => onNavigate("admin-users"),
-      icon: <Users className="w-5 h-5" />,
-      estimated: "5 minutes",
-      canAccess: hasPermission("create_user"),
-    },
-  ];
-
-
-  const quickTips = [
-    {
-      icon: <Lightbulb className="w-5 h-5 text-yellow-600" />,
-      title: "Pro Tip: Use Global Campaigns",
-      description:
-        'Mark campaigns as "Global" to display them across all kiosks automatically.',
-    },
-    {
-      icon: <Star className="w-5 h-5 text-blue-600" />,
-      title: "Feature Campaigns",
-      description:
-        "Set default campaigns for each kiosk to highlight your most important causes.",
-    },
-    {
-      icon: <Bell className="w-5 h-5 text-green-600" />,
-      title: "Monitor Performance",
-      description:
-        "Check the analytics regularly to optimize campaign performance and kiosk placement.",
-    },
-  ];
-
+  // Auto-open Stripe onboarding popup on mount if not onboarded
   useEffect(() => {
-    const fetchChartData = async () => {
-      if (!userSession.user.organizationId) return;
-      try {
-        const campaignsRef = collection(db, "campaigns");
-        const orgQuery = where("organizationId", "==", userSession.user.organizationId);
+    if (!orgLoading && organization && needsOnboarding) {
+      // Show small popup after a short delay for better UX
+      const timer = setTimeout(() => {
+        setShowSmallPopup(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [orgLoading, organization, needsOnboarding]);
 
-        const topListQuery = query(
-          campaignsRef,
-          orgQuery
-        );
-        const topListSnapshot = await getDocs(topListQuery);
-        const allCampaigns = topListSnapshot.docs.map(
-          (doc) => ({ id: doc.id, ...doc.data() } as Campaign)
-        );
+
+
+  const fetchChartData = useCallback(async () => {
+    if (!userSession.user.organizationId) return;
+    try {
+      const campaignsRef = collection(db, "campaigns");
+      const orgQuery = where("organizationId", "==", userSession.user.organizationId);
+
+      const topListQuery = query(
+        campaignsRef,
+        orgQuery
+      );
+      const topListSnapshot = await getDocs(topListQuery);
+      const allCampaigns = topListSnapshot.docs.map(
+        (doc) => ({ id: doc.id, ...doc.data() } as Campaign)
+      );
+      
+      // Store all campaigns for performance widget
+      setAllCampaignsForPerformance(allCampaigns);
         
         // Check if there are no campaigns and show onboarding
         if (allCampaigns.length === 0 && !showOnboarding) {
@@ -452,13 +399,15 @@ export function AdminDashboard({
       } catch (error) {
         console.error("Error fetching chart data: ", error);
       }
-    };
+    }, [userSession.user.organizationId, showOnboarding]);
 
+  useEffect(() => {
     fetchChartData();
-  }, [userSession.user.organizationId]);
+  }, [fetchChartData]);
 
   const handleRefresh = () => {
     refreshDashboard();
+    fetchChartData();
   };
 
   const handleCreateCampaign = async () => {
@@ -601,10 +550,193 @@ export function AdminDashboard({
     }
   };
 
-  // Fetch all campaigns when linking form is shown
+  // Kiosk Form Handlers
+  const handleKioskFormSubmit = async () => {
+    if (!kioskFormData.name || !kioskFormData.location || !userSession) return;
+    
+    if (!kioskFormData.accessCode || kioskFormData.accessCode.length < 4) {
+      alert("Access code must be at least 4 characters");
+      return;
+    }
+    
+    setIsCreatingKiosk(true);
+    try {
+      const newKioskData = {
+        name: kioskFormData.name,
+        location: kioskFormData.location,
+        accessCode: kioskFormData.accessCode,
+        status: kioskFormData.status,
+        lastActive: new Date().toISOString(),
+        totalDonations: 0,
+        totalRaised: 0,
+        assignedCampaigns: kioskFormData.assignedCampaigns,
+        defaultCampaign: kioskFormData.assignedCampaigns[0] || '',
+        deviceInfo: {},
+        operatingHours: {},
+        settings: { displayMode: kioskFormData.displayLayout, showAllCampaigns: true, maxCampaignsDisplay: 6, autoRotateCampaigns: false },
+        organizationId: userSession.user.organizationId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      const docRef = await addDoc(collection(db, 'kiosks'), newKioskData);
+      
+      // Add the new kiosk to the list
+      setAllKiosks(prev => [...prev, { id: docRef.id, ...newKioskData } as Kiosk]);
+      
+      // Reset form and close modal
+      setKioskFormData({
+        name: '',
+        location: '',
+        accessCode: '',
+        status: 'online',
+        assignedCampaigns: [],
+        displayLayout: 'grid'
+      });
+      setShowCreateKioskModal(false);
+      
+      console.log("Kiosk created successfully with ID:", docRef.id);
+    } catch (error) {
+      console.error("Error adding kiosk: ", error);
+      alert("Failed to create kiosk. Please try again.");
+    } finally {
+      setIsCreatingKiosk(false);
+    }
+  };
+
+  const handleKioskFormAssignCampaign = (campaignId: string) => {
+    setKioskFormData(prev => ({
+      ...prev,
+      assignedCampaigns: [...prev.assignedCampaigns, campaignId]
+    }));
+  };
+
+  const handleKioskFormUnassignCampaign = (campaignId: string) => {
+    setKioskFormData(prev => ({
+      ...prev,
+      assignedCampaigns: prev.assignedCampaigns.filter(id => id !== campaignId)
+    }));
+  };
+
+  // Campaign Form Handler for Get a Tour flow
+  const handleCampaignFormSubmit = async () => {
+    if (!campaignFormData.title || !campaignFormData.description || !userSession) {
+      alert("Please fill in all required fields");
+      return;
+    }
+    
+    if (!campaignFormData.goal || campaignFormData.goal <= 0) {
+      alert("Fundraising goal must be greater than 0");
+      return;
+    }
+    
+    setIsCreatingCampaign(true);
+    try {
+      const startDate = campaignFormData.startDate ? new Date(campaignFormData.startDate) : new Date();
+      const endDate = campaignFormData.endDate ? new Date(campaignFormData.endDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      
+      if (editingCampaignInTour) {
+        // Update existing campaign
+        const campaignRef = doc(db, 'campaigns', editingCampaignInTour.id);
+        await updateDoc(campaignRef, {
+          title: campaignFormData.title,
+          description: campaignFormData.description,
+          goal: Number(campaignFormData.goal),
+          status: campaignFormData.status || 'active',
+          startDate: startDate,
+          endDate: endDate,
+          updatedAt: new Date(),
+          tags: campaignFormData.tags || [],
+          coverImageUrl: campaignFormData.coverImageUrl || '',
+          category: campaignFormData.category || 'General',
+        });
+        
+        // Refresh campaigns list
+        const campaignsRef = collection(db, "campaigns");
+        const q = query(
+          campaignsRef,
+          where("organizationId", "==", userSession.user.organizationId)
+        );
+        const snapshot = await getDocs(q);
+        const campaigns = snapshot.docs.map(
+          (d) => ({ id: d.id, ...d.data() } as Campaign)
+        );
+        setAllCampaigns(campaigns);
+        
+        console.log("Campaign updated successfully:", editingCampaignInTour.id);
+      } else {
+        // Create new campaign
+        const campaignData = {
+          title: campaignFormData.title,
+          description: campaignFormData.description,
+          goal: Number(campaignFormData.goal),
+          raised: 0,
+          status: campaignFormData.status || 'active',
+          startDate: startDate,
+          endDate: endDate,
+          organizationId: userSession.user.organizationId,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          isGlobal: false,
+          tags: campaignFormData.tags || [],
+          coverImageUrl: campaignFormData.coverImageUrl || '',
+          category: campaignFormData.category || 'General',
+        };
+        
+        const docRef = await addDoc(collection(db, 'campaigns'), campaignData);
+        setCreatedCampaignId(docRef.id);
+        
+        // Refresh campaigns list
+        const campaignsRef = collection(db, "campaigns");
+        const q = query(
+          campaignsRef,
+          where("organizationId", "==", userSession.user.organizationId)
+        );
+        const snapshot = await getDocs(q);
+        const campaigns = snapshot.docs.map(
+          (d) => ({ id: d.id, ...d.data() } as Campaign)
+        );
+        setAllCampaigns(campaigns);
+        
+        // Set the newly created campaign as selected
+        const newlyCreatedCampaign = campaigns.find(c => c.id === docRef.id);
+        if (newlyCreatedCampaign) {
+          setSelectedCampaignInTour(newlyCreatedCampaign);
+        }
+        
+        // Move to next step only when creating new
+        setShowCampaignForm(false);
+        setShowKioskForm(true);
+        
+        console.log("Campaign created successfully with ID:", docRef.id);
+      }
+      
+      // Reset form and close dialog
+      setCampaignFormData({
+        title: '',
+        description: '',
+        goal: 0,
+        category: '',
+        status: 'active',
+        coverImageUrl: '',
+        startDate: '',
+        endDate: '',
+        tags: []
+      });
+      setShowCampaignFormDialog(false);
+      setEditingCampaignInTour(null);
+      
+    } catch (error) {
+      console.error("Error saving campaign: ", error);
+      alert("Failed to save campaign. Please try again.");
+    } finally {
+      setIsCreatingCampaign(false);
+    }
+  };
+
+  // Fetch all campaigns when linking form or campaign form is shown
   useEffect(() => {
     const fetchAllCampaigns = async () => {
-      if (!showLinkingForm || !userSession.user.organizationId) return;
+      if ((!showLinkingForm && !showCampaignForm) || !userSession.user.organizationId) return;
       
       try {
         const campaignsRef = collection(db, "campaigns");
@@ -623,19 +755,43 @@ export function AdminDashboard({
     };
 
     fetchAllCampaigns();
-  }, [showLinkingForm, userSession.user.organizationId]);
+  }, [showLinkingForm, showCampaignForm, userSession.user.organizationId]);
+
+  // Fetch all kiosks when kiosk form is shown
+  useEffect(() => {
+    const fetchAllKiosks = async () => {
+      if (!showKioskForm || !userSession.user.organizationId) return;
+      
+      try {
+        const kiosksRef = collection(db, "kiosks");
+        const q = query(
+          kiosksRef,
+          where("organizationId", "==", userSession.user.organizationId)
+        );
+        const snapshot = await getDocs(q);
+        const kiosks = snapshot.docs.map(
+          (doc) => ({ id: doc.id, ...doc.data() } as Kiosk)
+        );
+        setAllKiosks(kiosks);
+      } catch (error) {
+        console.error("Error fetching kiosks: ", error);
+      }
+    };
+
+    fetchAllKiosks();
+  }, [showKioskForm, userSession.user.organizationId]);
 
   const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat("en-US", {
+    new Intl.NumberFormat("en-GB", {
       style: "currency",
-      currency: "USD",
+      currency: "GBP",
       minimumFractionDigits: 0,
     }).format(amount);
   const formatNumber = (num: number) =>
-    new Intl.NumberFormat("en-US").format(num);
+    new Intl.NumberFormat("en-GB").format(num);
 
   const formatLargeCurrency = (amount: number) => {
-    if (amount === 0) return "$0";
+    if (amount === 0) return "£0";
     if (typeof amount !== "number") return "...";
 
     const tiers = [
@@ -649,13 +805,13 @@ export function AdminDashboard({
 
     if (tier) {
       const value = (amount / tier.value).toFixed(1);
-      return `$${value}${tier.name}`;
+      return `£${value}${tier.name}`;
     }
 
     return formatCurrency(amount);
   };
   const formatShortCurrency = (amount: number) => {
-    if (amount === 0) return "$0";
+    if (amount === 0) return "£0";
     if (typeof amount !== "number") return "...";
     const tiers = [
       { value: 1e12, name: "T" },
@@ -666,9 +822,9 @@ export function AdminDashboard({
     const tier = tiers.find((t) => amount >= t.value);
     if (tier) {
       const value = (amount / tier.value).toFixed(1);
-      return `$${value}${tier.name}`;
+      return `£${value}${tier.name}`;
     }
-    return `$${amount}`;
+    return `£${amount}`;
   };
 
   const getActivityIcon = (type: string) => {
@@ -742,12 +898,97 @@ export function AdminDashboard({
       userSession={userSession} 
       hasPermission={hasPermission}
       onStartTour={handleStartTour}
+      headerTitle={(
+        <div className="flex flex-col">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-3xl font-semibold text-gray-900">
+              <span className="header-title-text">Dashboard</span>
+            </h1>
+            <Badge className="px-3 py-1 text-xs font-semibold rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+              {userSession.user.role.replace('_', ' ').toUpperCase()}
+            </Badge>
+          </div>
+        </div>
+      )}
+      headerActions={(
+        <div className="flex items-center gap-2 flex-nowrap ml-auto">
+          {organization && organization.stripe && (
+            <div className="relative">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowStripeStatusDialog(true)}
+                className={`relative rounded-lg
+                  ${!organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled
+                    ? 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100 animate-pulse'
+                    : 'border-green-200 bg-green-50 text-green-700 hover:bg-green-100'
+                  }`}
+                aria-label="Stripe Status"
+              >
+                <CreditCard className="h-4 w-4" />
+              </Button>
+              {needsOnboarding && (
+                <div className="absolute -bottom-2 -right-2 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse" />
+              )}
+
+              {showSmallPopup && needsOnboarding && (
+                <div className="fixed sm:absolute top-16 sm:top-full right-2 sm:right-0 mt-2 w-[calc(100vw-1rem)] sm:w-80 max-w-sm bg-white rounded-lg shadow-xl border-2 border-yellow-400 p-3 sm:p-4 z-50 animate-in slide-in-from-top-2">
+                  <button
+                    onClick={() => setShowSmallPopup(false)}
+                    className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 z-10"
+                    aria-label="Close notification"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                  <div className="flex items-start space-x-2 sm:space-x-3">
+                    <div className="flex-shrink-0">
+                      <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600" />
+                    </div>
+                    <div className="flex-1 min-w-0 pr-6">
+                      <h4 className="text-xs sm:text-sm font-semibold text-gray-900 mb-1">
+                        Complete Stripe Onboarding
+                      </h4>
+                      <p className="text-[10px] sm:text-xs text-gray-600 mb-2 sm:mb-3">
+                        You need to onboard with Stripe to accept donations and create campaigns.
+                      </p>
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          setShowSmallPopup(false);
+                          setShowStripeStatusDialog(true);
+                        }}
+                        className="bg-yellow-600 hover:bg-yellow-700 text-xs h-7 sm:h-8 w-full sm:w-auto"
+                      >
+                        <CreditCard className="w-3 h-3 mr-1" />
+                        Onboard Now
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleRefresh} 
+            disabled={loading} 
+            className="rounded-lg border-gray-300 hover:bg-gray-50"
+            aria-label="Refresh Dashboard"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+            <span className="hidden sm:inline ml-2">Refresh</span>
+          </Button>
+        </div>
+      )}
+      hideSidebarTrigger={false}
+      hideHeader={showOnboarding}
     >
       {/* Onboarding Flow with Sliding Animation */}
       {showOnboarding && !loading && campaignCountChecked ? (
-        <div className="absolute inset-0 bg-white overflow-hidden z-10">
+        <div className="h-full bg-white overflow-hidden">
           <div className="flex h-full transition-transform duration-700 ease-in-out" style={{
-            transform: showStripeStep ? 'translateX(-400%)' : showLinkingForm ? 'translateX(-300%)' : showKioskForm ? 'translateX(-200%)' : showCampaignForm ? 'translateX(-100%)' : 'translateX(0)'
+            transform: showStripeStep ? 'translateX(-300%)' : showKioskForm ? 'translateX(-200%)' : showCampaignForm ? 'translateX(-100%)' : 'translateX(0)'
           }}>
             {/* Step 1: Welcome Screen */}
             <div className="min-w-full h-full flex items-center justify-center p-4 sm:p-6 lg:p-8">
@@ -851,7 +1092,7 @@ export function AdminDashboard({
             {/* Step 2: Campaign Form */}
             <div className="min-w-full h-full flex flex-col bg-white">
               {/* Progress Stepper - Outside form, at top */}
-              <div className="w-full bg-white border-b border-gray-200 py-4 px-4 sm:px-6 lg:px-8 pt-20 mb-8">
+              <div className="w-full bg-white border-b border-gray-200 py-2 px-4 sm:px-6 lg:px-8 pt-6 mb-4">
                 <div className="max-w-2xl mx-auto">
                   <div className="flex items-center justify-between">
                     {/* Step 1: Campaign */}
@@ -870,7 +1111,7 @@ export function AdminDashboard({
                       <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center mb-2">
                         <Monitor className="w-5 h-5 text-gray-500" />
                       </div>
-                      <span className="text-xs font-medium text-gray-400">Add Kiosk</span>
+                      <span className="text-xs font-medium text-gray-400">Assign Kiosk</span>
                     </div>
                     
                     {/* Connector Line */}
@@ -892,236 +1133,188 @@ export function AdminDashboard({
                 <div className="w-full max-w-2xl mx-auto">
                   <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
                     <CardContent className="p-8">
-                      {/* Header with Title and Skip Button */}
-                      <div className="flex items-start justify-between mb-6">
-                        <div className="flex-1">
-                          <h2 className="text-3xl font-bold text-gray-900 mb-2">Create New Campaign</h2>
-                          <p className="text-base text-gray-500">Configure a new fundraising campaign for your organization.</p>
+                      {/* Header with Title */}
+                      <div className="mb-6">
+                        <h2 className="text-3xl font-bold text-gray-900 mb-2">Create New Campaign</h2>
+                        <p className="text-base text-gray-500">Configure a new fundraising campaign for your organization.</p>
+                      </div>
+
+                      {/* What is a Campaign Info */}
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                            <Target className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-sm text-blue-900 mb-1">What is a Campaign?</h4>
+                            <p className="text-xs text-blue-700 leading-relaxed">
+                              A campaign is a fundraising initiative with a specific goal. Donors can contribute to campaigns through your kiosks.
+                            </p>
+                          </div>
                         </div>
+                      </div>
+
+                      {/* Existing Campaigns List */}
+                      {allCampaigns.length > 0 && (
+                        <div className="mb-6">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-4">Existing Campaigns ({allCampaigns.length})</h3>
+                          <p className="text-sm text-gray-500 mb-3">Click on a campaign to select it, or create a new one below.</p>
+                          <div className="space-y-3 max-h-64 overflow-y-auto">
+                            {allCampaigns.map((campaign) => (
+                              <div
+                                key={campaign.id}
+                                onClick={() => setSelectedCampaignInTour(selectedCampaignInTour?.id === campaign.id ? null : campaign)}
+                                className={`flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                                  selectedCampaignInTour?.id === campaign.id
+                                    ? 'bg-green-50 border-green-500'
+                                    : 'bg-gray-50 border-gray-200 hover:border-gray-300'
+                                }`}
+                              >
+                                <div className="flex items-center gap-3 flex-1 min-w-0">
+                                  {/* Selection indicator */}
+                                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                                    selectedCampaignInTour?.id === campaign.id
+                                      ? 'border-green-500 bg-green-500'
+                                      : 'border-gray-300'
+                                  }`}>
+                                    {selectedCampaignInTour?.id === campaign.id && (
+                                      <CheckCircle className="w-4 h-4 text-white" />
+                                    )}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <h4 className="font-medium text-gray-900 truncate">{campaign.title}</h4>
+                                    <div className="flex items-center gap-3 mt-1">
+                                      <span className="text-sm text-gray-500">
+                                        Goal: {formatCurrency(campaign.goal || 0)}
+                                      </span>
+                                      <span className="text-sm text-gray-500">
+                                        Raised: {formatCurrency(campaign.raised || 0)}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Badge
+                                    className={`${
+                                      campaign.status === 'active'
+                                        ? 'bg-green-100 text-green-700'
+                                        : campaign.status === 'paused'
+                                        ? 'bg-yellow-100 text-yellow-700'
+                                        : 'bg-gray-100 text-gray-700'
+                                    }`}
+                                  >
+                                    {campaign.status}
+                                  </Badge>
+                                  <button 
+                                    className="p-1 hover:bg-gray-200 rounded-md transition-colors"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setEditingCampaignInTour(campaign);
+                                      // Handle date conversion safely
+                                      let startDateStr = '';
+                                      let endDateStr = '';
+                                      if ((campaign as any).startDate) {
+                                        const sd = (campaign as any).startDate;
+                                        const startDateObj = sd.seconds ? new Date(sd.seconds * 1000) : new Date(sd);
+                                        startDateStr = startDateObj.toISOString().split('T')[0];
+                                      }
+                                      if (campaign.endDate) {
+                                        const ed = campaign.endDate as any;
+                                        const endDateObj = ed.seconds ? new Date(ed.seconds * 1000) : new Date(ed);
+                                        endDateStr = endDateObj.toISOString().split('T')[0];
+                                      }
+                                      setCampaignFormData({
+                                        title: campaign.title || '',
+                                        description: campaign.description || '',
+                                        goal: campaign.goal || 0,
+                                        category: campaign.category || '',
+                                        status: campaign.status || 'active',
+                                        coverImageUrl: campaign.coverImageUrl || '',
+                                        startDate: startDateStr,
+                                        endDate: endDateStr,
+                                        tags: campaign.tags || []
+                                      });
+                                      setShowCampaignFormDialog(true);
+                                    }}
+                                  >
+                                    <Pencil className="w-5 h-5 text-gray-500" />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Create Campaign Button */}
+                      <div className="py-4">
+                        <button
+                          onClick={() => setShowCampaignFormDialog(true)}
+                          className="w-full py-5 border-2 border-dashed border-gray-300 rounded-xl text-gray-700 font-semibold text-lg hover:border-gray-400 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                        >
+                          <Plus className="w-6 h-6" />
+                          Create New Campaign
+                        </button>
+                      </div>
+
+                      {/* Form Actions */}
+                      <div className="flex justify-end gap-3 mt-6">
                         <Button
+                          variant="outline"
                           onClick={() => {
                             setShowCampaignForm(false);
-                            setShowOnboarding(false);
                           }}
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium ml-4"
+                          className="px-6"
                         >
-                          Skip
+                          <ChevronRight className="w-4 h-4 mr-2 rotate-180" />
+                          Back
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            // If a campaign is selected, use it for the next step
+                            if (selectedCampaignInTour) {
+                              setCreatedCampaignId(selectedCampaignInTour.id);
+                            }
+                            setShowCampaignForm(false);
+                            setShowKioskForm(true);
+                          }}
+                          className="bg-gray-900 hover:bg-gray-800 px-6"
+                        >
+                          Continue
+                          <ChevronRight className="w-4 h-4 ml-2" />
                         </Button>
                       </div>
-
-                    {/* What is a Campaign Info */}
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                      <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-                          <Target className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-sm text-blue-900 mb-1">What is a Campaign?</h4>
-                          <p className="text-xs text-blue-700 leading-relaxed">
-                            A campaign is a fundraising initiative with a specific goal. Donors can contribute to campaigns through your kiosks.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Form Fields */}
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="campaignTitle" className="text-sm font-medium text-gray-700 mb-1.5 block">
-                          Campaign Title *
-                        </Label>
-                        <Input
-                          id="campaignTitle"
-                          value={newCampaign.title}
-                          onChange={(e) => setNewCampaign(p => ({ ...p, title: e.target.value }))}
-                          placeholder="Name your campaign"
- className="
-    w-full h-10 px-4 rounded-lg
-    border border-gray-300
-    focus-visible:outline-none
-    focus-visible:border-blue-700
-    focus-visible:ring-1
-    focus-visible:ring-blue-700
-  "                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="campaignDescription" className="text-sm font-medium text-gray-700 mb-1.5 block">
-                          Description *
-                        </Label>
-                        <textarea
-                          id="campaignDescription"
-                          value={newCampaign.description}
-                          onChange={(e) => setNewCampaign(p => ({ ...p, description: e.target.value }))}
-                          placeholder="Describe your campaign and its impact..."
-                          className="w-full h-20 px-4 py-2 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-1 focus:ring-blue-800 focus:border-blue-800"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="campaignGoal" className="text-sm font-medium text-gray-700 mb-1.5 block">
-                            Fundraising Goal ($) *
-                          </Label>
-                          <Input
-                            id="campaignGoal"
-                            type="number"
-                            value={newCampaign.goal || ''}
-                            onChange={(e) => setNewCampaign(p => ({ ...p, goal: e.target.value === '' ? 0 : Number(e.target.value) }))}
-                            placeholder="10000"
-                            min="0"
-                           className="
-    w-full h-10 px-4 rounded-lg
-    border border-gray-300
-    focus-visible:outline-none
-    focus-visible:border-blue-700
-    focus-visible:ring-1
-    focus-visible:ring-blue-700
-  "                        
-                          />
-                        </div>
-
-                        <div>
-                          <Label htmlFor="campaignStatus" className="text-sm font-medium text-gray-700 mb-1.5 block">
-                            Status *
-                          </Label>
-                          <select
-                            id="campaignStatus"
-                            value={newCampaign.status}
-                            onChange={(e) => setNewCampaign(p => ({ ...p, status: e.target.value }))}
-                           className="
-    w-full h-10 px-4 rounded-lg
-    border border-gray-300
-    focus-visible:outline-none
-    focus-visible:border-blue-700
-    focus-visible:ring-1
-    focus-visible:ring-blue-700
-  "                        
-                          >
-                            <option value="active">Active</option>
-                            <option value="paused">Paused</option>
-                            <option value="completed">Completed</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="campaignCategory" className="text-sm font-medium text-gray-700 mb-1.5 block">
-                          Category *
-                        </Label>
-                        <Input
-                          id="campaignCategory"
-                          value={newCampaign.category}
-                          onChange={(e) => setNewCampaign(p => ({ ...p, category: e.target.value }))}
-                          placeholder="e.g., Education, Health, Environment"
-                          className="
-    w-full h-10 px-4 rounded-lg
-    border border-gray-300
-    focus-visible:outline-none
-    focus-visible:border-blue-700
-    focus-visible:ring-1
-    focus-visible:ring-blue-700
-  "                        
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="startDate" className="text-sm font-medium text-gray-700 mb-1.5 block">
-                            Start Date *
-                          </Label>
-                          <Input
-                            id="startDate"
-                            type="date"
-                            value={newCampaign.startDate}
-                            onChange={(e) => setNewCampaign(p => ({ ...p, startDate: e.target.value }))}
-                            className="
-    w-full h-10 px-4 rounded-lg
-    border border-gray-300
-    focus-visible:outline-none
-    focus-visible:border-blue-700
-    focus-visible:ring-1
-    focus-visible:ring-blue-700
-  "                        
-                          />
-                        </div>
-
-                        <div>
-                          <Label htmlFor="endDate" className="text-sm font-medium text-gray-700 mb-1.5 block">
-                            End Date *
-                          </Label>
-                          <Input
-                            id="endDate"
-                            type="date"
-                            value={newCampaign.endDate}
-                            onChange={(e) => setNewCampaign(p => ({ ...p, endDate: e.target.value }))}
-                            className="
-    w-full h-10 px-4 rounded-lg
-    border border-gray-300
-    focus-visible:outline-none
-    focus-visible:border-blue-700
-    focus-visible:ring-1
-    focus-visible:ring-blue-700
-  "                        
-                          />
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          id="isGlobal"
-                          checked={newCampaign.isGlobal}
-                          onChange={(e) => setNewCampaign(p => ({ ...p, isGlobal: e.target.checked }))}
-                          className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                        />
-                        <Label htmlFor="isGlobal" className="text-sm font-medium text-gray-700 cursor-pointer">
-                          Make this campaign global (visible on all kiosks)
-                        </Label>
-                      </div>
-                    </div>
-
-                    {/* Form Actions */}
-                    <div className="flex justify-end gap-3 mt-6">
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setShowCampaignForm(false);
-                        }}
-                        className="px-6"
-                        disabled={isCreatingCampaign}
-                      >
-                        <ChevronRight className="w-4 h-4 mr-2 rotate-180" />
-                        Back
-                      </Button>
-                      <Button
-                        onClick={handleCreateCampaign}
-                        disabled={!newCampaign.title || !newCampaign.description || !newCampaign.goal || !newCampaign.status || !newCampaign.category || !newCampaign.startDate || !newCampaign.endDate || isCreatingCampaign}
-                        className="bg-gray-900 hover:bg-gray-800 px-6"
-                      >
-                        {isCreatingCampaign ? (
-                          <>
-                            <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                            Creating Campaign...
-                          </>
-                        ) : (
-                          <>
-                            Create Campaign & Continue
-                            <ChevronRight className="w-4 h-4 ml-2" />
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
-            </div>
+
+              {/* Campaign Form Dialog */}
+              <CampaignForm
+                open={showCampaignFormDialog}
+                onOpenChange={(open) => {
+                  setShowCampaignFormDialog(open);
+                  if (!open) {
+                    setEditingCampaignInTour(null);
+                  }
+                }}
+                editingCampaign={editingCampaignInTour}
+                campaignData={campaignFormData}
+                setCampaignData={setCampaignFormData}
+                onSubmit={handleCampaignFormSubmit}
+                onCancel={() => {
+                  setShowCampaignFormDialog(false);
+                  setEditingCampaignInTour(null);
+                }}
+                formatCurrency={formatCurrency}
+                onImageFileSelect={setSelectedCampaignImageFile}
+              />
             </div>
 
             {/* Step 3: Kiosk Form */}
             <div className="min-w-full h-full flex flex-col bg-white">
               {/* Progress Stepper - Outside form, at top */}
-              <div className="w-full bg-white border-b border-gray-200 py-4 px-4 sm:px-6 lg:px-8 pt-20 mb-8">
+              <div className="w-full bg-white border-b border-gray-200 py-2 px-4 sm:px-6 lg:px-8 pt-6 mb-4">
                 <div className="max-w-2xl mx-auto">
                   <div className="flex items-center justify-between">
                     {/* Step 1: Campaign - Completed */}
@@ -1140,7 +1333,7 @@ export function AdminDashboard({
                       <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center mb-2">
                         <Monitor className="w-5 h-5 text-white" />
                       </div>
-                      <span className="text-xs font-semibold text-green-600">Add Kiosk</span>
+                      <span className="text-xs font-semibold text-green-600">Assign Kiosk</span>
                     </div>
                     
                     {/* Connector Line - Inactive */}
@@ -1165,180 +1358,12 @@ export function AdminDashboard({
                       {/* Header with Title and Skip Button */}
                       <div className="flex items-start justify-between mb-6">
                         <div className="flex-1">
-                          <h2 className="text-3xl font-bold text-gray-900 mb-2">Add New Kiosk</h2>
-                          <p className="text-base text-gray-500">Configure a new donation kiosk for deployment.</p>
-                        </div>
-                        <Button
-                        onClick={() => {
-                          setShowKioskForm(false);
-                          setShowOnboarding(false);
-                        }}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium ml-4"
-                      >
-                        Skip
-                      </Button>
-                    </div>
-
-                    {/* What is a Kiosk Info */}
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                      <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-                          <Monitor className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-sm text-blue-900 mb-1">What is a Kiosk?</h4>
-                          <p className="text-xs text-blue-700 leading-relaxed">
-                            A kiosk is a physical or digital donation point. It has hardware device who donates tap their cards to donate.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Form Fields */}
-                    <div className="space-y-5">
-                      <div>
-                        <Label htmlFor="kioskName" className="text-sm font-medium text-gray-700 mb-1.5 block">
-                          Kiosk Name *
-                        </Label>
-                        <Input
-                          id="kioskName"
-                          value={newKiosk.name}
-                          onChange={(e) => setNewKiosk(p => ({ ...p, name: e.target.value }))}
-                          placeholder="Times Square Kiosk"
-                          className="w-full h-12 px-4 border-gray-300 rounded-lg focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">A friendly name to identify this kiosk</p>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="kioskLocation" className="text-sm font-medium text-gray-700 mb-1.5 block">
-                          Location *
-                        </Label>
-                        <Input
-                          id="kioskLocation"
-                          value={newKiosk.location}
-                          onChange={(e) => setNewKiosk(p => ({ ...p, location: e.target.value }))}
-                          placeholder="Times Square, New York, NY"
-                          className="w-full h-12 px-4 border-gray-300 rounded-lg focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">Physical location where this kiosk is deployed</p>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="accessCode" className="text-sm font-medium text-gray-700 mb-1.5 block">
-                          Access Code *
-                        </Label>
-                        <Input
-                          id="accessCode"
-                          value={newKiosk.accessCode}
-                          onChange={(e) => setNewKiosk(p => ({ ...p, accessCode: e.target.value }))}
-                          placeholder="TS2024"
-                          minLength={4}
-                          className="w-full h-12 px-4 border-gray-300 rounded-lg focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">Unique code for kiosk access (minimum 4 characters)</p>
-                      </div>
-                    </div>
-
-                    {/* Form Actions */}
-                    <div className="flex justify-end gap-3 mt-8">
-                      <Button
-                        variant="outline"
-                        onClick={() => setShowKioskForm(false)}
-                        className="px-6"
-                        disabled={isCreatingKiosk}
-                      >
-                        <ChevronRight className="w-4 h-4 mr-2 rotate-180" />
-                        Back
-                      </Button>
-                      <Button
-                        onClick={handleCreateKiosk}
-                        disabled={!newKiosk.name || !newKiosk.location || !newKiosk.accessCode || newKiosk.accessCode.length < 4 || isCreatingKiosk}
-                        className="bg-gray-900 hover:bg-gray-800 px-6"
-                      >
-                        {isCreatingKiosk ? (
-                          <>
-                            <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                            Creating Kiosk...
-                          </>
-                        ) : (
-                          <>
-                            Add Kiosk & Continue
-                            <ChevronRight className="w-4 h-4 ml-2" />
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-            </div>
-
-            {/* Step 4: Link Campaign to Kiosk */}
-            <div className="min-w-full h-full flex flex-col bg-white">
-              {/* Progress Stepper - Outside form, at top */}
-              <div className="w-full bg-white border-b border-gray-200 py-4 px-4 sm:px-6 lg:px-8 pt-20 mb-8">
-                <div className="max-w-2xl mx-auto">
-                  <div className="flex items-center justify-between">
-                    {/* Step 1: Campaign - Completed */}
-                    <div className="flex flex-col items-center flex-1">
-                      <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center mb-2">
-                        <CheckCircle className="w-5 h-5 text-white" />
-                      </div>
-                      <span className="text-xs font-semibold text-green-600">Create Campaign</span>
-                    </div>
-                    
-                    {/* Connector Line - Completed */}
-                    <div className="flex-1 h-0.5 bg-green-500 mx-2 -mt-6"></div>
-                    
-                    {/* Step 2: Kiosk - Completed */}
-                    <div className="flex flex-col items-center flex-1">
-                      <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center mb-2">
-                        <CheckCircle className="w-5 h-5 text-white" />
-                      </div>
-                      <span className="text-xs font-semibold text-green-600">Add Kiosk</span>
-                    </div>
-                    
-                    {/* Connector Line - Completed */}
-                    <div className="flex-1 h-0.5 bg-green-500 mx-2 -mt-6"></div>
-                    
-                    {/* Step 3: Link - Active */}
-                    <div className="flex flex-col items-center flex-1">
-                      <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center mb-2">
-                        <Workflow className="w-5 h-5 text-white" />
-                      </div>
-                      <span className="text-xs font-semibold text-green-600">Link Campaign</span>
-                    </div>
-                    
-                    {/* Connector Line - Inactive */}
-                    <div className="flex-1 h-0.5 bg-gray-300 mx-2 -mt-6"></div>
-                    
-                    {/* Step 4: Stripe - Inactive */}
-                    <div className="flex flex-col items-center flex-1">
-                      <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center mb-2">
-                        <CreditCard className="w-5 h-5 text-gray-500" />
-                      </div>
-                      <span className="text-xs font-medium text-gray-400">Setup Payments</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Form Content */}
-              <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8">
-                <div className="w-full max-w-2xl mx-auto">
-                  <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
-                    <CardContent className="p-8">
-                      {/* Header with Title and Skip Button */}
-                      <div className="flex items-start justify-between mb-6">
-                        <div className="flex-1">
-                          <h2 className="text-3xl font-bold text-gray-900 mb-2">Link Campaign to Kiosk</h2>
-                          <p className="text-base text-gray-500">Assign your campaign to the kiosk you just created.</p>
+                          <h2 className="text-3xl font-bold text-gray-900 mb-2">Assign Kiosk</h2>
+                          <p className="text-base text-gray-500">Assign your campaign to kiosks in your organization.</p>
                         </div>
                         <Button
                           onClick={() => {
-                            setShowLinkingForm(false);
+                            setShowKioskForm(false);
                             setShowStripeStep(true);
                           }}
                           className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium ml-4"
@@ -1347,139 +1372,155 @@ export function AdminDashboard({
                         </Button>
                       </div>
 
-                      {/* No Campaigns Assigned Message */}
-                      {assignedCampaignIds.length === 0 && (
-                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 mb-6 text-center">
-                          <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-                            <Target className="w-8 h-8 text-gray-400" />
-                          </div>
-                          <h3 className="text-lg font-semibold text-gray-900 mb-2">No campaigns assigned</h3>
-                          <p className="text-sm text-gray-500">Select campaigns from the available list below to get started</p>
-                        </div>
-                      )}
+                      {/* Make Campaign Global Button */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (isGlobalCampaign) {
+                            // If already global, turn off and unassign all
+                            setIsGlobalCampaign(false);
+                            setAssignedKioskIds([]);
+                          } else {
+                            // Make global - assign all kiosks
+                            setIsGlobalCampaign(true);
+                            setAssignedKioskIds(allKiosks.map(k => k.id));
+                          }
+                        }}
+                        className={`w-full py-4 px-6 rounded-lg font-semibold text-lg transition-all duration-200 mb-6 flex items-center justify-center gap-3 ${
+                          isGlobalCampaign
+                            ? 'bg-green-500 hover:bg-green-600 text-white'
+                            : 'bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-300'
+                        }`}
+                      >
+                        <Globe className="w-6 h-6" />
+                        {isGlobalCampaign ? 'Your Campaign is now Global' : 'Make this Campaign Global'}
+                      </button>
 
-                      {/* Assigned Campaigns Section */}
-                      {assignedCampaignIds.length > 0 && (
-                        <div className="mb-6">
-                          <div className="flex items-center gap-2 mb-4">
-                            <CheckCircle className="w-5 h-5 text-green-600" />
-                            <h3 className="text-lg font-semibold text-gray-900">Assigned Campaigns</h3>
-                            <Badge variant="secondary" className="ml-2 bg-green-100 text-green-700">{assignedCampaignIds.length} assigned</Badge>
+                      {/* Kiosk List */}
+                      <div className="space-y-3 mb-6">
+                        <h3 className="text-sm font-medium text-gray-700 mb-3">Organization Kiosks</h3>
+                        {allKiosks.length === 0 ? (
+                          <div className="text-center py-8 text-gray-500">
+                            <Monitor className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                            <p className="text-sm">No kiosks found in your organization</p>
                           </div>
-
-                          <div className="space-y-3">
-                            {allCampaigns
-                              .filter(campaign => assignedCampaignIds.includes(campaign.id))
-                              .map((campaign) => (
-                                <div key={campaign.id} className="border border-green-200 bg-green-50 rounded-lg p-4">
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-4 flex-1">
-                                      <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center flex-shrink-0">
-                                        <Target className="w-6 h-6 text-white" />
-                                      </div>
-                                      <div className="flex-1 min-w-0">
-                                        <h4 className="font-semibold text-gray-900 mb-1">{campaign.title}</h4>
-                                        <div className="flex items-center gap-3 text-sm text-gray-500">
-                                          <span>${campaign.raised || 0} raised</span>
-                                          <span>•</span>
-                                          <span>{campaign.goal ? Math.round(((campaign.raised || 0) / campaign.goal) * 100) : 0}% funded</span>
-                                        </div>
-                                      </div>
+                        ) : (
+                          <div className="space-y-2 max-h-64 overflow-y-auto">
+                            {allKiosks.map((kiosk) => {
+                              const isAssigned = assignedKioskIds.includes(kiosk.id);
+                              return (
+                                <div
+                                  key={kiosk.id}
+                                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center">
+                                      <Monitor className="w-5 h-5 text-gray-600" />
                                     </div>
-                                    <CheckCircle className="w-5 h-5 text-green-600 ml-4" />
-                                  </div>
-                                </div>
-                              ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Available Campaigns Section */}
-                      <div className="mb-6">
-                        <div className="flex items-center gap-2 mb-4">
-                          <Plus className="w-5 h-5 text-gray-700" />
-                          <h3 className="text-lg font-semibold text-gray-900">Available Campaigns</h3>
-                          <Badge variant="secondary" className="ml-2 bg-gray-100 text-gray-600">
-                            {allCampaigns.filter(c => !assignedCampaignIds.includes(c.id)).length} available
-                          </Badge>
-                        </div>
-
-                        {/* Campaign Cards */}
-                        <div className="space-y-3">
-                          {allCampaigns.length === 0 ? (
-                            <div className="text-center py-8 text-gray-500">
-                              <p>Loading campaigns...</p>
-                            </div>
-                          ) : allCampaigns.filter(c => !assignedCampaignIds.includes(c.id)).length === 0 ? (
-                            <div className="text-center py-8 text-gray-500">
-                              <p>All campaigns have been assigned</p>
-                            </div>
-                          ) : (
-                            allCampaigns
-                              .filter(campaign => !assignedCampaignIds.includes(campaign.id))
-                              .map((campaign) => (
-                                <div key={campaign.id} className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors">
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-4 flex-1">
-                                      <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
-                                        <Target className="w-6 h-6 text-white" />
-                                      </div>
-                                      <div className="flex-1 min-w-0">
-                                        <h4 className="font-semibold text-gray-900 mb-1">{campaign.title}</h4>
-                                        <div className="flex items-center gap-3 text-sm text-gray-500">
-                                          <span>${campaign.raised || 0} raised</span>
-                                          <span>•</span>
-                                          <span>{campaign.goal ? Math.round(((campaign.raised || 0) / campaign.goal) * 100) : 0}% funded</span>
-                                        </div>
-                                      </div>
+                                    <div>
+                                      <p className="font-medium text-gray-900">{kiosk.name}</p>
+                                      <p className="text-xs text-gray-500">{kiosk.location}</p>
                                     </div>
-                                    <Button
-                                      onClick={() => handleLinkCampaignToKiosk(campaign.id)}
-                                      disabled={linkingCampaignId !== null}
-                                      variant="outline"
-                                      className="ml-4 border-gray-300 hover:bg-gray-50"
-                                    >
-                                      {linkingCampaignId === campaign.id ? (
-                                        <>
-                                          <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                                          Assigning...
-                                        </>
-                                      ) : (
-                                        <>
-                                          <Plus className="w-4 h-4 mr-2" />
-                                          Assign
-                                        </>
-                                      )}
-                                    </Button>
                                   </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (isAssigned) {
+                                        // Unassign this kiosk
+                                        const newAssignedIds = assignedKioskIds.filter(id => id !== kiosk.id);
+                                        setAssignedKioskIds(newAssignedIds);
+                                        // If not all kiosks are assigned anymore, turn off global
+                                        if (newAssignedIds.length < allKiosks.length) {
+                                          setIsGlobalCampaign(false);
+                                        }
+                                      } else {
+                                        // Assign this kiosk
+                                        const newAssignedIds = [...assignedKioskIds, kiosk.id];
+                                        setAssignedKioskIds(newAssignedIds);
+                                        // If all kiosks are now assigned, turn on global
+                                        if (newAssignedIds.length === allKiosks.length) {
+                                          setIsGlobalCampaign(true);
+                                        }
+                                      }
+                                    }}
+                                    className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
+                                      isAssigned
+                                        ? 'bg-green-500 hover:bg-green-600 text-white'
+                                        : 'bg-gray-900 hover:bg-gray-800 text-white'
+                                    }`}
+                                  >
+                                    {isAssigned ? 'Assigned' : 'Assign'}
+                                  </button>
                                 </div>
-                              ))
-                          )}
-                        </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
 
+                      {/* Create New Kiosk Button */}
+                      <button
+                        type="button"
+                        onClick={() => setShowCreateKioskModal(true)}
+                        className="w-full py-4 px-6 rounded-lg font-medium text-gray-600 border-2 border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 flex items-center justify-center gap-2"
+                      >
+                        <Plus className="w-5 h-5" />
+                        Create a new Kiosk
+                      </button>
+
                       {/* Form Actions */}
-                      <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-gray-200">
+                      <div className="flex justify-end gap-3 mt-8">
                         <Button
                           variant="outline"
                           onClick={() => {
-                            setShowLinkingForm(false);
-                            setShowStripeStep(true);
+                            setShowKioskForm(false);
+                            setShowCampaignForm(true);
                           }}
                           className="px-6"
-                          disabled={linkingCampaignId !== null}
                         >
-                          Cancel
+                          <ChevronRight className="w-4 h-4 mr-2 rotate-180" />
+                          Back
                         </Button>
                         <Button
-                          onClick={() => {
-                            // If campaign is already linked, just move to next step
+                          onClick={async () => {
+                            // Assign selected campaign to assigned kiosks
+                            if (selectedCampaignInTour && assignedKioskIds.length > 0) {
+                              try {
+                                // Update each assigned kiosk with the campaign
+                                const updatePromises = assignedKioskIds.map(async (kioskId) => {
+                                  const kioskRef = doc(db, 'kiosks', kioskId);
+                                  const kiosk = allKiosks.find(k => k.id === kioskId);
+                                  
+                                  if (kiosk) {
+                                    const currentAssignedCampaigns = kiosk.assignedCampaigns || [];
+                                    // Add campaign if not already assigned
+                                    if (!currentAssignedCampaigns.includes(selectedCampaignInTour.id)) {
+                                      const updatedCampaigns = [...currentAssignedCampaigns, selectedCampaignInTour.id];
+                                      await updateDoc(kioskRef, {
+                                        assignedCampaigns: updatedCampaigns,
+                                        defaultCampaign: updatedCampaigns[0],
+                                        updatedAt: new Date(),
+                                      });
+                                    }
+                                  }
+                                });
+                                
+                                await Promise.all(updatePromises);
+                                console.log(`Campaign ${selectedCampaignInTour.id} assigned to ${assignedKioskIds.length} kiosk(s)`);
+                              } catch (error) {
+                                console.error("Error assigning campaign to kiosks:", error);
+                                alert("Failed to assign campaign to kiosks. Please try again.");
+                                return;
+                              }
+                            }
+                            
+                            setShowKioskForm(false);
                             setShowStripeStep(true);
                           }}
-                          disabled={linkingCampaignId !== null}
-                          className="bg-indigo-600 hover:bg-indigo-700 px-6"
+                          className="bg-gray-900 hover:bg-gray-800 px-6"
                         >
-                          Save Configuration
+                          Continue
+                          <ChevronRight className="w-4 h-4 ml-2" />
                         </Button>
                       </div>
                     </CardContent>
@@ -1488,10 +1529,10 @@ export function AdminDashboard({
               </div>
             </div>
 
-            {/* Step 5: Stripe Account Status */}
+            {/* Step 4: Stripe Account Status */}
             <div className="min-w-full h-full flex flex-col bg-white">
               {/* Progress Stepper - Outside form, at top */}
-              <div className="w-full bg-white border-b border-gray-200 py-4 px-4 sm:px-6 lg:px-8 pt-20 mb-8">
+              <div className="w-full bg-white border-b border-gray-200 py-2 px-4 sm:px-6 lg:px-8 pt-6 mb-4">
                 <div className="max-w-2xl mx-auto">
                   <div className="flex items-center justify-between">
                     {/* Step 1: Campaign - Completed */}
@@ -1510,24 +1551,13 @@ export function AdminDashboard({
                       <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center mb-2">
                         <CheckCircle className="w-5 h-5 text-white" />
                       </div>
-                      <span className="text-xs font-semibold text-green-600">Add Kiosk</span>
+                      <span className="text-xs font-semibold text-green-600">Assign Kiosk</span>
                     </div>
                     
                     {/* Connector Line - Completed */}
                     <div className="flex-1 h-0.5 bg-green-500 mx-2 -mt-6"></div>
                     
-                    {/* Step 3: Link - Completed */}
-                    <div className="flex flex-col items-center flex-1">
-                      <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center mb-2">
-                        <CheckCircle className="w-5 h-5 text-white" />
-                      </div>
-                      <span className="text-xs font-semibold text-green-600">Link Campaign</span>
-                    </div>
-                    
-                    {/* Connector Line - Completed */}
-                    <div className="flex-1 h-0.5 bg-green-500 mx-2 -mt-6"></div>
-                    
-                    {/* Step 4: Stripe - Active */}
+                    {/* Step 3: Stripe - Active */}
                     <div className="flex flex-col items-center flex-1">
                       <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center mb-2">
                         <CreditCard className="w-5 h-5 text-white" />
@@ -1594,21 +1624,11 @@ export function AdminDashboard({
                             </div>
                           </div>
                           <Button
-                            onClick={handleStripeOnboarding}
+                            onClick={() => setShowStripeStatusDialog(true)}
                             className="w-full bg-yellow-600 hover:bg-yellow-700 h-12 text-base font-semibold"
-                            disabled={isStripeOnboardingLoading}
                           >
-                            {isStripeOnboardingLoading ? (
-                              <>
-                                <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
-                                Processing...
-                              </>
-                            ) : (
-                              <>
-                                <CreditCard className="w-5 h-5 mr-2" />
-                                Complete Stripe Onboarding
-                              </>
-                            )}
+                            <CreditCard className="w-5 h-5 mr-2" />
+                            Complete Stripe Onboarding
                           </Button>
                         </>
                       ) : organization && organization.stripe && organization.stripe.chargesEnabled && !organization.stripe.payoutsEnabled ? (
@@ -1664,119 +1684,31 @@ export function AdminDashboard({
             </div>
             </div>
           </div>
+
+          {/* Kiosk Form Dialog - Inside Onboarding */}
+          <KioskForm
+            open={showCreateKioskModal}
+            onOpenChange={setShowCreateKioskModal}
+            editingKiosk={null}
+            kioskData={kioskFormData}
+            setKioskData={setKioskFormData}
+            campaigns={allCampaigns.map(c => ({
+              id: c.id,
+              title: c.title,
+              raised: c.raised || 0,
+              goal: c.goal,
+              coverImageUrl: c.coverImageUrl
+            }))}
+            onSubmit={handleKioskFormSubmit}
+            onCancel={() => setShowCreateKioskModal(false)}
+            onAssignCampaign={handleKioskFormAssignCampaign}
+            onUnassignCampaign={handleKioskFormUnassignCampaign}
+            formatCurrency={formatCurrency}
+          />
         </div>
       ) : campaignCountChecked && !showOnboarding ? (
         <>
-        <div className="px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-          <div className="flex items-center gap-4 flex-1 min-w-0">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                  Dashboard
-                </h1>
-                <Badge className="px-3 py-1 text-xs font-semibold rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                  {userSession.user.role.replace('_', ' ').toUpperCase()}
-                </Badge>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            {userSession.user.role === 'super_admin' && hasPermission('system_admin') && (
-              <div className="w-full sm:w-auto">
-                <OrganizationSwitcher userSession={userSession} onOrganizationChange={onOrganizationSwitch} />
-              </div>
-            )}
-            {organization && organization.stripe && (
-              <Dialog open={showStripeStatusDialog} onOpenChange={setShowStripeStatusDialog}>
-                <DialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={`relative rounded-lg
-                      ${!organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled
-                        ? 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100 animate-pulse'
-                        : 'border-green-200 bg-green-50 text-green-700 hover:bg-green-100'
-                      }`}
-                    aria-label="Stripe Status"
-                  >
-                    <CreditCard className="h-4 w-4" />
-                  </Button>
-                </DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px] mx-4">
-                      <DialogHeader>
-                        <DialogTitle className="flex items-center space-x-2 text-base sm:text-lg">
-                          {!organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled ? (
-                            <CreditCard className="h-5 w-5 text-red-600" />
-                          ) : (
-                            <CreditCard className="h-5 w-5 text-green-600" />
-                          )}
-                          <span>Stripe Account Status</span>
-                        </DialogTitle>
-                        <DialogDescription className="text-sm">
-                          Review the current status of your Stripe integration.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="grid gap-4 py-4">
-                        {orgLoading ? (
-                          <p className="text-sm">Loading organization data...</p>
-                        ) : orgError ? (
-                          <p className="text-sm text-red-500">Error: {orgError}</p>
-                        ) : organization &&
-                          organization.stripe &&
-                          !organization.stripe.chargesEnabled ? (
-                          <>
-                            <p className="text-sm text-yellow-700">
-                              Your organization needs to complete Stripe onboarding to accept donations and receive payouts.
-                            </p>
-                            <Button
-                              onClick={handleStripeOnboarding}
-                              className="bg-yellow-600 hover:bg-yellow-700 w-full sm:w-auto"
-                              disabled={isStripeOnboardingLoading}
-                            >
-                              {isStripeOnboardingLoading ? (
-                                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                              ) : (
-                                <CreditCard className="w-4 h-4 mr-2" />
-                              )}
-                              {isStripeOnboardingLoading ? "Processing..." : "Complete Stripe Onboarding"}
-                            </Button>
-                          </>
-                        ) : organization &&
-                          organization.stripe &&
-                          organization.stripe.chargesEnabled &&
-                          !organization.stripe.payoutsEnabled ? (
-                          <p className="text-sm text-blue-700">
-                            Your Stripe account is being reviewed. Payouts will be enabled shortly.
-                          </p>
-                        ) : (
-                          <p className="text-sm text-green-700">
-                            Your Stripe account is fully configured and ready to accept donations and process payouts.
-                          </p>
-                        )}
-                      </div>
-                      <DialogFooter>
-                        <DialogClose asChild>
-                          <Button type="button" variant="secondary" className="w-full sm:w-auto">
-                            Close
-                          </Button>
-                        </DialogClose>
-                      </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            )}
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleRefresh} 
-              disabled={loading} 
-              className="rounded-lg border-gray-300 hover:bg-gray-50"
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-              <span className="hidden sm:inline ml-2">Refresh</span>
-            </Button>
-          </div>
-        </div>
+        <div className="px-2 sm:px-6 lg:px-8 pb-4 sm:pb-8">
 
         {stripeStatusMessage && (
           <Card className={`mb-6 ${stripeStatusMessage.type === 'success' ? 'border-green-400 bg-green-50 text-green-800' : stripeStatusMessage.type === 'warning' ? 'border-yellow-400 bg-yellow-50 text-yellow-800' : 'border-red-400 bg-red-50 text-red-800'}`}>
@@ -1794,11 +1726,35 @@ export function AdminDashboard({
           <p className="text-red-500">Error: {orgError}</p>
         ) : null}
         
+        {/* Organization Switcher for Super Admin */}
+        {userSession.user.role === 'super_admin' && (
+          <div className="mb-8">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100 p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                      <Building2 className="w-4 h-4 text-white" />
+                    </div>
+                    <h2 className="text-lg font-semibold text-gray-900">Organization View</h2>
+                  </div>
+                  <p className="text-sm text-gray-600 ml-10">
+                    Switch between organizations to manage their campaigns, kiosks, and view analytics
+                  </p>
+                </div>
+                <div className="sm:flex-shrink-0">
+                  <OrganizationSwitcher userSession={userSession} onOrganizationChange={onOrganizationSwitch} />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
         {/* Bento Grid Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
           {/* Total Raised Card */}
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
+          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+            <CardContent className="p-6 relative z-10">
               <div className="flex items-start justify-between mb-4">
                 <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
                   <DollarSign className="h-5 w-5" />
@@ -1809,17 +1765,27 @@ export function AdminDashboard({
                 <p className="text-2xl font-bold text-gray-900">
                   {loading ? "..." : formatLargeCurrency(stats.totalRaised)}
                 </p>
-                <div className="flex items-center text-sm text-emerald-600">
-                  <ArrowUpRight className="h-4 w-4 mr-1" />
-                  <span className="font-medium">12% vs last month</span>
+                <div className={`flex items-center text-sm ${
+                  loading ? "text-gray-500" : 
+                  stats.totalDonations > 0 ? "text-emerald-600" : "text-gray-400"
+                }`}>
+                  <span className="font-medium">
+                    {loading ? "..." : stats.totalDonations > 0 
+                      ? `Avg ${formatCurrency(stats.totalRaised / stats.totalDonations)} per donation`
+                      : "No donations yet"}
+                  </span>
                 </div>
               </div>
             </CardContent>
+            {/* Floating Background Icon */}
+            <div className="absolute -right-4 -bottom-4 opacity-[0.08] pointer-events-none">
+              <DollarSign className="h-32 w-32 text-emerald-600" />
+            </div>
           </Card>
 
           {/* Total Donations Card */}
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
+          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+            <CardContent className="p-6 relative z-10">
               <div className="flex items-start justify-between mb-4">
                 <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
                   <Heart className="h-5 w-5" />
@@ -1830,17 +1796,27 @@ export function AdminDashboard({
                 <p className="text-2xl font-bold text-gray-900">
                   {loading ? "..." : formatNumber(stats.totalDonations)}
                 </p>
-                <div className="flex items-center text-sm text-emerald-600">
-                  <ArrowUpRight className="h-4 w-4 mr-1" />
-                  <span className="font-medium">8% vs last month</span>
+                <div className={`flex items-center text-sm ${
+                  loading ? "text-gray-500" : 
+                  recentActivities.length > 0 ? "text-emerald-600" : "text-gray-400"
+                }`}>
+                  <span className="font-medium">
+                    {loading ? "..." : recentActivities.length > 0 
+                      ? `Latest: ${recentActivities[0].timeAgo}`
+                      : "No recent activity"}
+                  </span>
                 </div>
               </div>
             </CardContent>
+            {/* Floating Background Icon */}
+            <div className="absolute -right-4 -bottom-4 opacity-[0.08] pointer-events-none">
+              <Heart className="h-32 w-32 text-blue-600" />
+            </div>
           </Card>
 
           {/* Active Campaigns Card */}
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
+          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+            <CardContent className="p-6 relative z-10">
               <div className="flex items-start justify-between mb-4">
                 <div className="w-10 h-10 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
                   <Globe className="h-5 w-5" />
@@ -1851,16 +1827,33 @@ export function AdminDashboard({
                 <p className="text-2xl font-bold text-gray-900">
                   {loading ? "..." : stats.activeCampaigns}
                 </p>
-                <div className="flex items-center text-sm text-gray-500">
-                  <span className="font-medium">Running now</span>
+                <div className={`flex items-center text-sm ${
+                  loading ? "text-gray-500" : 
+                  topCampaigns.length > 0 
+                    ? (topCampaigns[0].raised || 0) / (topCampaigns[0].goal || 1) >= 0.75 
+                      ? "text-emerald-600" 
+                      : (topCampaigns[0].raised || 0) / (topCampaigns[0].goal || 1) >= 0.5
+                        ? "text-yellow-600"
+                        : "text-red-600"
+                    : "text-gray-400"
+                }`}>
+                  <span className="font-medium">
+                    {loading ? "..." : topCampaigns.length > 0 
+                      ? `Top: ${Math.round((topCampaigns[0].raised || 0) / (topCampaigns[0].goal || 1) * 100)}% funded`
+                      : "No campaigns yet"}
+                  </span>
                 </div>
               </div>
             </CardContent>
+            {/* Floating Background Icon */}
+            <div className="absolute -right-4 -bottom-4 opacity-[0.08] pointer-events-none">
+              <Globe className="h-32 w-32 text-purple-600" />
+            </div>
           </Card>
 
           {/* Active Kiosks Card */}
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
+          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+            <CardContent className="p-6 relative z-10">
               <div className="flex items-start justify-between mb-4">
                 <div className="w-10 h-10 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center">
                   <Monitor className="h-5 w-5" />
@@ -1871,201 +1864,126 @@ export function AdminDashboard({
                 <p className="text-2xl font-bold text-gray-900">
                   {loading ? "..." : stats.activeKiosks}
                 </p>
-                <div className="flex items-center text-sm text-red-600">
-                  <ArrowDownRight className="h-4 w-4 mr-1" />
-                  <span className="font-medium">3% vs last month</span>
+                <div className={`flex items-center text-sm ${
+                  loading ? "text-gray-500" : 
+                  stats.activeKiosks > 0 ? "text-emerald-600" : "text-red-600"
+                }`}>
+                  <span className="font-medium">
+                    {loading ? "..." : stats.topLocations.length > 0 
+                      ? `Top: ${stats.topLocations[0].name}`
+                      : stats.activeKiosks === 0 
+                        ? "No active kiosks"
+                        : "No locations yet"}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+            {/* Floating Background Icon */}
+            <div className="absolute -right-4 -bottom-4 opacity-[0.08] pointer-events-none">
+              <Monitor className="h-32 w-32 text-orange-600" />
+            </div>
+          </Card>
+        </div>
+
+        {/* Stripe Onboarding Alert Card */}
+        {needsOnboarding && organization && (
+          <Card className="mb-8 border-l-4 border-l-yellow-500 bg-gradient-to-r from-yellow-50 to-orange-50 shadow-lg hover:shadow-xl transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-start space-x-4 flex-1">
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-yellow-100 flex items-center justify-center animate-pulse">
+                      <CreditCard className="w-6 h-6 sm:w-7 sm:h-7 text-yellow-600" />
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                      <AlertCircle className="w-5 h-5 text-yellow-600" />
+                      Complete Stripe Onboarding
+                    </h3>
+                    <p className="text-sm sm:text-base text-gray-700 mb-3">
+                      Your organization needs to connect with Stripe to accept donations and process payments. 
+                      <span className="hidden sm:inline"> This quick setup takes only 5-10 minutes.</span>
+                    </p>
+                    <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-gray-600">
+                      <div className="flex items-center gap-1.5">
+                        <Shield className="w-4 h-4 text-green-600" />
+                        <span>Secure</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Zap className="w-4 h-4 text-purple-600" />
+                        <span>Fast Setup</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <TrendingUp className="w-4 h-4 text-blue-600" />
+                        <span>Accept Donations</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="w-full sm:w-auto flex-shrink-0">
+                  <Button
+                    onClick={() => setShowStripeStatusDialog(true)}
+                    className="w-full sm:w-auto bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all h-11 sm:h-12 px-6"
+                  >
+                    <CreditCard className="w-5 h-5 mr-2" />
+                    Start Onboarding
+                    <ArrowUpRight className="w-4 h-4 ml-2" />
+                  </Button>
                 </div>
               </div>
             </CardContent>
           </Card>
-        </div>
-        <div className="mb-8">
-          
+        )}
 
-          <Collapsible
-            open={showGettingStarted}
-            onOpenChange={setShowGettingStarted}
-          >
-            <CollapsibleTrigger asChild>
-              <Button
-                variant="ghost"
-                className="w-full justify-between p-2 sm:p-3 h-auto mb-2 text-left"
-              >
-                <div className="flex items-center space-x-2">
-                  <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 flex-shrink-0" />
-                  <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900">
-                    Getting Started
-                  </h3>
-                </div>
-                {showGettingStarted ? (
-                  <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                ) : (
-                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                )}
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-4 mb-6 sm:mb-8">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                {gettingStartedSteps.map((step, index) => (
-                  <Card
-                    key={index}
-                    className={`${
-                      step.canAccess
-                        ? "hover:shadow-md transition-shadow"
-                        : "opacity-60"
-                    }`}
-                  >
-                    <CardContent className="p-4 sm:p-6">
-                      <div className="flex items-start space-x-3 sm:space-x-4">
-                        <div className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-indigo-100 text-indigo-600 rounded-full text-xs sm:text-sm font-semibold flex-shrink-0">
-                          {step.step}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center space-x-2 mb-2 flex-wrap">
-                            <div className="text-indigo-600 flex-shrink-0">{step.icon}</div>
-                            <h4 className="font-semibold text-sm sm:text-base text-gray-900">
-                              {step.title}
-                            </h4>
-                          </div>
-                          <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
-                            {step.description}
-                          </p>
-                          <div className="flex items-center justify-between gap-2 flex-wrap">
-                            {step.canAccess ? (
-                              <Button
-                                onClick={step.actionFunction}
-                                size="sm"
-                                className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm"
-                              >
-                                <Play className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                                <span className="hidden sm:inline">{step.action}</span>
-                                <span className="sm:hidden">Go</span>
-                              </Button>
-                            ) : (
-                              <Badge variant="secondary" className="text-xs">
-                                <HelpCircle className="w-3 h-3 mr-1" />
-                                Requires permission
-                              </Badge>
-                            )}
-                            <span className="text-xs text-gray-500 whitespace-nowrap">
-                              ~{step.estimated}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-                <CardHeader className="p-4 sm:p-6">
-                  <CardTitle className="flex items-center space-x-2 text-blue-900 text-base sm:text-lg">
-                    <Lightbulb className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                    <span>Quick Tips</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 sm:p-6 pt-0">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {quickTips.map((tip, index) => (
-                      <div key={index} className="flex items-start space-x-2 sm:space-x-3">
-                        <div className="flex-shrink-0">{tip.icon}</div>
-                        <div className="min-w-0">
-                          <h5 className="font-medium text-sm sm:text-base text-gray-900 mb-1">
-                            {tip.title}
-                          </h5>
-                          <p className="text-xs sm:text-sm text-gray-600">
-                            {tip.description}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </CollapsibleContent>
-          </Collapsible>
-        </div>
         {/* Bento Grid Charts Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {/* Campaign Goal Comparison - Spans 2 columns */}
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm md:col-span-2">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+          {/* Fundraising Efficiency Rating - Spans 2 columns */}
+          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm lg:col-span-2">
             <CardHeader className="p-6 border-b border-gray-100">
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
-                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mr-3">
-                      <BarChart3 className="w-4 h-4" />
+                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mr-3">
+                      <Target className="w-4 h-4" />
                     </div>
-                    Campaign Goal Comparison
+                    Fundraising Efficiency Rating
                   </CardTitle>
                   <CardDescription className="text-sm text-gray-600 mt-1 ml-11">
-                    Track progress towards fundraising goals
+                    Overall performance across all campaigns
                   </CardDescription>
                 </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowPerformanceDialog(true)}
+                  className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+                >
+                  <ArrowUpRight className="w-4 h-4 mr-1" />
+                  View Details
+                </Button>
               </div>
             </CardHeader>
-            <CardContent className="p-6">
-              {loading ? (
-                <div className="space-y-4">
-                  <Skeleton className="h-[250px] sm:h-[300px] w-full" />
-                </div>
-              ) : goalComparisonData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
-                  <BarChart data={goalComparisonData}>
-                    <CartesianGrid 
-                      vertical={false} 
-                      strokeDasharray="3 3" 
-                      stroke="#E5E7EB" 
-                    />
-                    <XAxis 
-                      dataKey="name" 
-                      tick={false}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      tickFormatter={(value) => formatShortCurrency(value as number)}
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: '#6B7280', fontSize: 12 }}
-                    />
-                    <Tooltip content={<CustomChartTooltip />} />
-                    <Legend 
-                      wrapperStyle={{ fontSize: '12px' }}
-                      iconType="circle"
-                    />
-                    <Bar 
-                      dataKey="Collected" 
-                      fill="#10B981" 
-                      radius={[4, 4, 0, 0]}
-                    />
-                    <Bar 
-                      dataKey="Goal" 
-                      fill="#94A3B8" 
-                      radius={[4, 4, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="text-center py-6 sm:py-8 text-gray-500">
-                  <Target className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3" />
-                  <p className="text-base sm:text-lg font-medium mb-2">No Campaigns Yet</p>
-                  <p className="text-xs sm:text-sm mb-4 px-4">
-                    Start by creating your first fundraising campaign to track progress.
-                  </p>
-                  {hasPermission("create_campaign") && (
-                    <Button onClick={() => onNavigate("admin-campaigns")} size="sm" className="text-xs sm:text-sm">
-                      <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-2" /> Create New Campaign
-                    </Button>
-                  )}
-                </div>
-              )}
+            <CardContent className="p-6 cursor-pointer" onClick={() => setShowPerformanceDialog(true)}>
+              <FundraisingEfficiencyGauge 
+                value={
+                  loading ? 0 : 
+                  allCampaignsForPerformance.length > 0 
+                    ? (() => {
+                        const totalRaised = allCampaignsForPerformance.reduce((sum, c) => sum + (c.raised || 0), 0);
+                        const totalGoals = allCampaignsForPerformance.reduce((sum, c) => sum + (c.goal || 0), 0);
+                        return totalGoals > 0 ? Math.min(100, Math.round((totalRaised / totalGoals) * 100)) : 0;
+                      })()
+                    : 0
+                }
+                onDetailsClick={() => setShowPerformanceDialog(true)}
+                onRefresh={handleRefresh}
+              />
             </CardContent>
           </Card>
 
           {/* Average Donation - Spans 2 columns */}
-          <Card className="flex flex-col bg-white rounded-xl border border-gray-200 shadow-sm md:col-span-2">
+          <Card className="flex flex-col bg-white rounded-xl border border-gray-200 shadow-sm lg:col-span-2">
             <CardHeader className="p-6 border-b border-gray-100">
               <div className="flex items-center justify-between">
                 <div>
@@ -2138,177 +2056,6 @@ export function AdminDashboard({
                     )}
                 </div>
               )}
-              <div className="mt-2 border-t pt-2">                 
-                {categoryData.length > 6 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full mt-3 text-indigo-600 hover:text-indigo-700 text-xs sm:text-sm"
-                    onClick={() => setIsLegendExpanded(!isLegendExpanded)}
-                  >
-                    {isLegendExpanded ? (
-                      <span className="flex items-center justify-center">
-                        Show Less <ChevronUp className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
-                      </span>
-                    ) : (
-                      <span className="flex items-center justify-center">
-                        Show More <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
-                      </span>
-                    )}
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        
-        {/* Top Performing Campaigns - Gamified Leaderboard */}
-        <div className="mb-8">
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm h-full">
-            <CardHeader className="p-6 border-b border-gray-100 bg-gradient-to-r from-yellow-50/50 to-orange-50/30">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="flex items-start gap-4 flex-1 min-w-0">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-md flex-shrink-0">
-                    <Trophy className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <CardTitle className="text-xl font-bold text-gray-900 mb-1">
-                      Top Performing Campaigns
-                    </CardTitle>
-                    <CardDescription className="text-sm text-gray-600 flex items-center gap-2">
-                      <span>Ranked by fundraising progress</span>
-                      <span className="hidden sm:inline text-gray-400">•</span>
-                      <span className="hidden sm:inline text-indigo-600 font-medium">
-                        {topCampaigns.length} {topCampaigns.length === 1 ? 'Campaign' : 'Campaigns'}
-                      </span>
-                    </CardDescription>
-                  </div>
-                </div>
-                {hasPermission("view_campaigns") && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onNavigate("admin-campaigns")}
-                    className="w-full sm:w-auto bg-white hover:bg-gray-50 border-gray-300 shadow-sm font-medium"
-                  >
-                    View All Campaigns
-                    <ChevronRight className="w-4 h-4 ml-1" />
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className="p-6">
-              {loading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="space-y-3">
-                      <Skeleton className="h-32 w-full rounded-lg" />
-                      <Skeleton className="h-5 w-3/4" />
-                      <Skeleton className="h-4 w-1/2" />
-                      <Skeleton className="h-1.5 w-full" />
-                    </div>
-                  ))}
-                </div>
-              ) : topCampaigns.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {topCampaigns.map((campaign: Campaign, index: number) => {
-                    const collected = campaign.raised || 0;
-                    const goal = campaign.goal || 1;
-                    const progressRaw = (collected / goal) * 100;
-                    const progressValue = Math.min(progressRaw, 100);
-                    const rank = index + 1;
-                    
-                    // Rank overlay styling
-                    const getRankOverlay = () => {
-                      if (rank === 1) {
-                        return (
-                          <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-yellow-500 border-2 border-white flex items-center justify-center shadow-lg">
-                            <Trophy className="w-4 h-4 text-white" />
-                          </div>
-                        );
-                      } else if (rank === 2) {
-                        return (
-                          <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-400 border-2 border-white flex items-center justify-center shadow-lg">
-                            <Medal className="w-4 h-4 text-white" />
-                          </div>
-                        );
-                      } else if (rank === 3) {
-                        return (
-                          <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-orange-500 border-2 border-white flex items-center justify-center shadow-lg">
-                            <Medal className="w-4 h-4 text-white" />
-                          </div>
-                        );
-                      } else {
-                        return (
-                          <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-gray-600 border-2 border-white flex items-center justify-center shadow-lg">
-                            <span className="text-sm font-bold text-white">{rank}</span>
-                          </div>
-                        );
-                      }
-                    };
-
-                    return (
-                      <div 
-                        key={campaign.id} 
-                        className="group bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg hover:border-gray-300 transition-all cursor-pointer"
-                        onClick={() => onNavigate("admin-campaigns")}
-                      >
-                        {/* Campaign Image */}
-                        <div className="relative h-32 bg-gradient-to-br from-gray-100 to-gray-200">
-                          <ImageWithFallback
-                            src={campaign.coverImageUrl}
-                            alt={campaign.title}
-                            className="w-full h-full object-cover"
-                          />
-                          {getRankOverlay()}
-                        </div>
-
-                        {/* Campaign Info */}
-                        <div className="p-4 space-y-3">
-                          <div>
-                            <h4 className="font-semibold text-sm text-gray-900 truncate mb-1">
-                              {campaign.title}
-                            </h4>
-                            <p className="text-lg font-bold text-gray-900">
-                              {formatCurrency(collected)}
-                            </p>
-                          </div>
-
-                          <Progress 
-                            value={progressValue} 
-                            className={`h-1.5 rounded-full ${progressRaw >= 100 ? '[&>div]:bg-green-500' : '[&>div]:bg-indigo-500'}`}
-                          />
-
-                          <div className="flex items-center justify-between text-xs text-gray-500">
-                            <span className="flex items-center gap-1">
-                              <BarChart3 className="w-3 h-3" />
-                              {formatShortCurrency(goal)}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Users className="w-3 h-3" />
-                              {campaign.donationCount || 0}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-12 text-gray-500">
-                  <Trophy className="mx-auto h-12 w-12 text-gray-300 mb-3" />
-                  <p className="text-lg font-medium mb-2 text-gray-900">No Campaigns Yet</p>
-                  <p className="text-sm mb-4 text-gray-600">
-                    Start by creating your first fundraising campaign to track progress.
-                  </p>
-                  {hasPermission("create_campaign") && (
-                    <Button onClick={() => onNavigate("admin-campaigns")} size="sm">
-                      <Plus className="w-4 h-4 mr-2" /> Create New Campaign
-                    </Button>
-                  )}
-                </div>
-              )}
             </CardContent>
           </Card>
         </div>
@@ -2317,19 +2064,42 @@ export function AdminDashboard({
         {/* Donation Distribution and Recent Activity */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {/* Donation Distribution - Spans 2 columns */}
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm md:col-span-2">
+          <Card 
+            className="bg-white rounded-xl border border-gray-200 shadow-sm md:col-span-2"
+          >
             <CardHeader className="p-6 border-b border-gray-100">
-              <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
-                <div className="w-8 h-8 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center mr-3">
-                  <DollarSign className="w-4 h-4" />
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
+                    <div className="w-8 h-8 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center mr-3">
+                      <DollarSign className="w-4 h-4" />
+                    </div>
+                    Donation Distribution by Amount
+                  </CardTitle>
+                  <CardDescription className="text-sm text-gray-600 mt-1 ml-11">
+                    Number of donations in different amount ranges
+                  </CardDescription>
                 </div>
-                Donation Distribution by Amount
-              </CardTitle>
-              <CardDescription className="text-sm text-gray-600 mt-1 ml-11">
-                Number of donations in different amount ranges
-              </CardDescription>
+                {!loading && !stats.donationDistributionError && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowDonationDistributionDialog(true);
+                    }}
+                    className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                  >
+                    <ArrowUpRight className="w-4 h-4 mr-1" />
+                    View Details
+                  </Button>
+                )}
+              </div>
             </CardHeader>
-            <CardContent className="p-6">
+            <CardContent 
+              className="p-6 cursor-pointer hover:bg-gray-50 transition-colors"
+              onClick={() => !loading && !stats.donationDistributionError && setShowDonationDistributionDialog(true)}
+            >
               {loading ? (
                 <div className="space-y-4">
                   <Skeleton className="h-[250px] sm:h-[300px] w-full" />
@@ -2342,69 +2112,96 @@ export function AdminDashboard({
                     Unable to load donation distribution. Please try refreshing the page.
                   </p>
                 </div>
-              ) : stats.donationDistribution.length > 0 ? (
-                <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
-                  <LineChart data={stats.donationDistribution}>
-                    <CartesianGrid 
-                      vertical={false} 
-                      strokeDasharray="3 3" 
-                      stroke="#E5E7EB" 
-                    />
-                    <XAxis 
-                      dataKey="range" 
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: '#6B7280', fontSize: 12 }}
-                      angle={-45}
-                      textAnchor="end"
-                      height={80}
-                    />
-                    <YAxis
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: '#6B7280', fontSize: 12 }}
-                      label={{ 
-                        value: 'Number of Donations', 
-                        angle: -90, 
-                        position: 'insideLeft',
-                        offset: 10,
-                        style: { 
-                          fontSize: 12, 
-                          fill: '#6B7280',
-                          textAnchor: 'middle'
-                        } 
-                      }}
-                    />
-                    <Tooltip content={<CustomChartTooltip />} />
-                    <Legend 
-                      wrapperStyle={{ fontSize: '12px' }}
-                      iconType="circle"
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="count" 
-                      stroke="#4F46E5" 
-                      strokeWidth={2} 
-                      dot={false}
-                      activeDot={{ r: 6, fill: '#4F46E5' }}
-                      name="Donations"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
               ) : (
-                <div className="text-center py-6 sm:py-8 text-gray-500">
-                  <TrendingUp className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3" />
-                  <p className="text-base sm:text-lg font-medium mb-2">No Donation Data</p>
-                  <p className="text-xs sm:text-sm mb-4 px-4">
-                    Start receiving donations to see distribution trends.
-                  </p>
-                </div>
+                <DonationDistributionChart
+                  data={stats.donationDistribution}
+                  totalRaised={stats.totalRaised}
+                  formatCurrency={(amount) => `£${amount.toLocaleString()}`}
+                />
               )}
             </CardContent>
           </Card>
 
-          {/* Recent Activity - Spans 2 columns */}
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm md:col-span-2">
+          {/* Campaign Goal Comparison - Spans 2 columns */}
+          <Card 
+            className="bg-white rounded-xl border border-gray-200 shadow-sm md:col-span-2"
+          >
+            <CardHeader className="p-6 border-b border-gray-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
+                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mr-3">
+                      <BarChart3 className="w-4 h-4" />
+                    </div>
+                    Campaign Goal Comparison
+                  </CardTitle>
+                  <CardDescription className="text-sm text-gray-600 mt-1 ml-11">
+                    Track progress towards fundraising goals
+                  </CardDescription>
+                </div>
+                {!loading && goalComparisonData.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowCampaignProgressDialog(true);
+                    }}
+                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                  >
+                    <ArrowUpRight className="w-4 h-4 mr-1" />
+                    View Details
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent 
+              className="p-6 cursor-pointer hover:bg-gray-50 transition-colors"
+              onClick={() => !loading && goalComparisonData.length > 0 && setShowCampaignProgressDialog(true)}
+            >
+              {loading ? (
+                <div className="space-y-3">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="space-y-2">
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-2 w-full" />
+                      <Skeleton className="h-3 w-1/2" />
+                    </div>
+                  ))}
+                </div>
+              ) : goalComparisonData.length > 0 ? (
+                <CampaignProgressBars
+                  campaigns={transformCampaignsToProgress(
+                    goalComparisonData.map((d, index) => ({
+                      id: `${d.name}-${index}`,
+                      title: d.name,
+                      raised: d.Collected,
+                      goal: d.Goal,
+                    } as any))
+                  )}
+                  formatCurrency={formatCurrency}
+                />
+              ) : (
+                <div className="text-center py-6 sm:py-8 text-gray-500">
+                  <Target className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3" />
+                  <p className="text-base sm:text-lg font-medium mb-2">No Campaigns Yet</p>
+                  <p className="text-xs sm:text-sm mb-4 px-4">
+                    Start by creating your first fundraising campaign to track progress.
+                  </p>
+                  {hasPermission("create_campaign") && (
+                    <Button onClick={() => onNavigate("admin-campaigns")} size="sm" className="text-xs sm:text-sm">
+                      <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-2" /> Create New Campaign
+                    </Button>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Recent Activity */}
+        <div className="mb-8">
+          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm">
             <CardHeader className="p-6 border-b border-gray-100">
               <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
                 <div className="w-8 h-8 rounded-lg bg-cyan-50 text-cyan-600 flex items-center justify-center mr-3">
@@ -2482,105 +2279,6 @@ export function AdminDashboard({
                       )}
                     </div>
                   </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* System Alerts and Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* System Alerts - Spans 2 columns */}
-          <div className="md:col-span-2">
-            <SystemAlertsWidget
-              alerts={systemAlerts}
-              loading={systemAlertsLoading}
-              onNavigate={onNavigate}
-            />
-          </div>
-          
-          {/* Quick Actions - Spans 2 columns */}
-          <Card className="bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 shadow-sm md:col-span-2">
-            <CardHeader className="p-6 border-b border-gray-100 bg-white rounded-t-xl">
-              <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
-                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-600 text-white flex items-center justify-center mr-3 shadow-sm">
-                  <Rocket className="w-5 h-5" />
-                </div>
-                Quick Actions
-              </CardTitle>
-              <CardDescription className="text-sm text-gray-600 mt-1 ml-12">
-                Navigate to key management areas
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {hasPermission("view_campaigns") && (
-                  <Button
-                    variant="outline"
-                    className="justify-start h-auto py-4 px-4 text-left hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all duration-200 group border-gray-200 bg-white"
-                    onClick={() => onNavigate("admin-campaigns")}
-                  >
-                    <div className="flex items-start w-full">
-                      <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform shadow-sm flex-shrink-0">
-                        <Database className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex flex-col items-start">
-                        <span className="font-semibold text-gray-900 text-sm">Manage Campaigns</span>
-                        <span className="text-xs text-gray-500 mt-0.5">Create and edit campaigns</span>
-                      </div>
-                    </div>
-                  </Button>
-                )}
-                {hasPermission("view_kiosks") && (
-                  <Button
-                    variant="outline"
-                    className="justify-start h-auto py-4 px-4 text-left hover:bg-purple-50 hover:border-purple-300 hover:shadow-md transition-all duration-200 group border-gray-200 bg-white"
-                    onClick={() => onNavigate("admin-kiosks")}
-                  >
-                    <div className="flex items-start w-full">
-                      <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform shadow-sm flex-shrink-0">
-                        <Monitor className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex flex-col items-start">
-                        <span className="font-semibold text-gray-900 text-sm">Configure Kiosks</span>
-                        <span className="text-xs text-gray-500 mt-0.5">Manage kiosk settings</span>
-                      </div>
-                    </div>
-                  </Button>
-                )}
-                {hasPermission("view_donations") && (
-                  <Button
-                    variant="outline"
-                    className="justify-start h-auto py-4 px-4 text-left hover:bg-green-50 hover:border-green-300 hover:shadow-md transition-all duration-200 group border-gray-200 bg-white"
-                    onClick={() => onNavigate("admin-donations")}
-                  >
-                    <div className="flex items-start w-full">
-                      <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform shadow-sm flex-shrink-0">
-                        <TrendingUp className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex flex-col items-start">
-                        <span className="font-semibold text-gray-900 text-sm">View Donations</span>
-                        <span className="text-xs text-gray-500 mt-0.5">Track donation history</span>
-                      </div>
-                    </div>
-                  </Button>
-                )}
-                {hasPermission("view_users") && (
-                  <Button
-                    variant="outline"
-                    className="justify-start h-auto py-4 px-4 text-left hover:bg-orange-50 hover:border-orange-300 hover:shadow-md transition-all duration-200 group border-gray-200 bg-white"
-                    onClick={() => onNavigate("admin-users")}
-                  >
-                    <div className="flex items-start w-full">
-                      <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform shadow-sm flex-shrink-0">
-                        <UserCog className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex flex-col items-start">
-                        <span className="font-semibold text-gray-900 text-sm">User Management</span>
-                        <span className="text-xs text-gray-500 mt-0.5">Manage user accounts</span>
-                      </div>
-                    </div>
-                  </Button>
                 )}
               </div>
             </CardContent>
@@ -2721,6 +2419,58 @@ export function AdminDashboard({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Centralized Stripe Onboarding Dialog - New Redesigned Version */}
+      <StripeOnboardingDialog
+        open={showStripeStatusDialog}
+        onOpenChange={setShowStripeStatusDialog}
+        organization={organization}
+        loading={orgLoading}
+      />
+
+      {/* Additional Onboarding Dialog for other triggers */}
+      <StripeOnboardingDialog
+        open={showOnboardingPopup}
+        onOpenChange={setShowOnboardingPopup}
+        organization={organization}
+        loading={orgLoading}
+      />
+
+      {/* Performance Detail Dialog */}
+      <PerformanceDetailDialog
+        isOpen={showPerformanceDialog}
+        onClose={() => setShowPerformanceDialog(false)}
+        campaigns={allCampaignsForPerformance}
+        stats={stats}
+      />
+
+      {/* Donation Distribution Dialog */}
+      <DonationDistributionDialog
+        isOpen={showDonationDistributionDialog}
+        onClose={() => setShowDonationDistributionDialog(false)}
+        data={stats.donationDistribution}
+        totalRaised={stats.totalRaised}
+        formatCurrency={formatCurrency}
+      />
+
+      {/* Campaign Progress Dialog */}
+      <CampaignProgressDialog
+        isOpen={showCampaignProgressDialog}
+        onClose={() => setShowCampaignProgressDialog(false)}
+        campaigns={transformCampaignsToProgress(
+          goalComparisonData.map((d, index) => ({
+            id: `${d.name}-${index}`,
+            title: d.name,
+            raised: d.Collected,
+            goal: d.Goal,
+          } as any))
+        )}
+        onCampaignClick={(id) => {
+          setShowCampaignProgressDialog(false);
+          onNavigate("admin-campaigns");
+        }}
+        formatCurrency={formatCurrency}
+      />
       </div>
       </>
       ) : (

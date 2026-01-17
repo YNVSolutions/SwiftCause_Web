@@ -1,4 +1,4 @@
-import { User, AdminSession } from '../../../shared/types';
+import { User } from '../../../shared/types';
 
 export interface LoginCredentials {
   email: string;

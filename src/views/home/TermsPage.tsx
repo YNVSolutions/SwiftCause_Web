@@ -17,8 +17,8 @@ export function TermsPage({ onNavigate }: { onNavigate?: (screen: string) => voi
   }, []);
 
   const PointBox = ({ children }: { children: React.ReactNode }) => (
-    <li className="flex items-start bg-gray-50/70 p-3 sm:p-4 rounded-lg border border-gray-200 transition-all duration-300 ease-in-out hover:shadow-lg hover:bg-white hover:border-indigo-300 transform hover:-translate-y-1">
-      <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-500 mr-2 sm:mr-3 mt-0.5 flex-shrink-0" />
+    <li className="flex items-start bg-gray-50/70 p-3 sm:p-4 rounded-lg border border-gray-200 transition-all duration-300 ease-in-out hover:shadow-lg hover:bg-white hover:border-green-300 transform hover:-translate-y-1">
+      <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mr-2 sm:mr-3 mt-0.5 flex-shrink-0" />
       <span className="flex-1 text-sm sm:text-base text-gray-700 leading-relaxed">{children}</span>
     </li>
   );
@@ -54,9 +54,9 @@ export function TermsPage({ onNavigate }: { onNavigate?: (screen: string) => voi
       </header>
 
       <main role="main">
-        <section className="relative py-6 sm:py-10 lg:py-14 bg-gradient-to-b from-indigo-50 to-gray-50" aria-labelledby="terms-title">
+        <section className="relative py-6 sm:py-10 lg:py-14 bg-gradient-to-b from-green-50 to-gray-50" aria-labelledby="terms-title">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <div className="flex items-center justify-center mx-auto h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-indigo-100 text-indigo-600 mb-4 sm:mb-6" aria-hidden="true">
+            <div className="flex items-center justify-center mx-auto h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-green-100 text-green-600 mb-4 sm:mb-6" aria-hidden="true">
               <FileText className="h-7 w-7 sm:h-8 sm:w-8" />
             </div>
             <h1 id="terms-title" className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight mb-3 sm:mb-4">

@@ -5,8 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../shared/ui/table';
 import {
-  Plus, Search, ArrowLeft, UserCog, Users, Shield, Activity,
-  Loader2, AlertCircle, Pencil, Trash2, AlertTriangle
+  Plus, Search, UserCog, Users, Shield, Activity,
+  Loader2, AlertCircle, Pencil, Trash2, AlertTriangle, MoreVertical
 } from 'lucide-react';
 import { Skeleton } from "../../shared/ui/skeleton";
 import { Ghost } from "lucide-react";
@@ -18,6 +18,15 @@ import { Label } from '../../shared/ui/label';
 import { Checkbox } from '../../shared/ui/checkbox';
 import { DialogPortal } from '@radix-ui/react-dialog';
 import { AdminLayout } from './AdminLayout';
+import { AdminSearchFilterHeader, AdminSearchFilterConfig } from './components/AdminSearchFilterHeader';
+import { SortableTableHeader } from './components/SortableTableHeader';
+import { useTableSort } from '../../shared/lib/hooks/useTableSort';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../../shared/ui/dropdown-menu";
 
 const allPermissions: Permission[] = [
     'view_dashboard', 'manage_permissions', 'create_user', 'edit_user', 'delete_user',
@@ -45,8 +54,6 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
     
 
     const [dialogMessage, setDialogMessage] = useState<string | null>(null);
-    const [dialogAction, setDialogAction] = useState<(() => void) | null>(null);
-    const [showConfirm, setShowConfirm] = useState(false);
     
     // Delete confirmation dialog state
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -94,7 +101,8 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
         }
     };
 
-    const filteredUsers = users.filter(user => {
+    // Filter users first
+    const filteredUsersData = users.filter(user => {
         const matchesSearch = user.username?.toLowerCase().includes(searchTerm.toLowerCase()) || user.email?.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesRole = roleFilter === 'all' || user.role === roleFilter;
         // Hide super_admin users from non-super-admin users
@@ -102,7 +110,40 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
         return matchesSearch && matchesRole && canViewSuperAdmin;
     });
 
+    // Use sorting hook
+    const { sortedData: filteredUsers, sortKey, sortDirection, handleSort } = useTableSort({
+        data: filteredUsersData
+    });
+
     const stats = calculateUserStats(users);
+
+    // Configuration for AdminSearchFilterHeader
+    const searchFilterConfig: AdminSearchFilterConfig = {
+        searchPlaceholder: "Search users...",
+        filters: [
+            {
+                key: "roleFilter",
+                label: "Role",
+                type: "select",
+                options: [
+                    { label: "Admin", value: "admin" },
+                    { label: "Manager", value: "manager" },
+                    { label: "Operator", value: "operator" },
+                    { label: "Viewer", value: "viewer" }
+                ]
+            }
+        ]
+    };
+
+    const filterValues = {
+        roleFilter
+    };
+
+    const handleFilterChange = (key: string, value: any) => {
+        if (key === "roleFilter") {
+            setRoleFilter(value);
+        }
+    };
 
     return (
         <AdminLayout
@@ -111,152 +152,243 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
             userSession={userSession}
             hasPermission={hasPermission}
             activeScreen="admin-users"
+            hideSidebarTrigger
         >
-        <div className="space-y-6">
-            <header className="bg-white shadow-sm border-b rounded-md">
-                <div className="px-2 sm:px-6 lg:px-8">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between h-auto sm:h-16 gap-4">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                            <Button variant="ghost" size="sm" onClick={() => onNavigate('admin')} className="flex items-center space-x-2">
-                                <ArrowLeft className="w-4 h-4" /><span className="hidden sm:inline">Back to Dashboard</span><span className="sm:hidden">Back</span>
-                            </Button>
-                            <div className="h-6 w-px bg-gray-300 hidden sm:block" />
-                            <div>
-                                <h1 className="text-xl font-semibold text-gray-900">User Management</h1>
-                                <p className="text-sm text-gray-600 hidden lg:block">Manage platform users and permissions</p>
-                                <p className="text-sm text-gray-600 hidden sm:block lg:hidden">Manage users and permissions</p>
-                            </div>
-                        </div>
-                        {hasPermission('create_user') && (
-                            <Button className="bg-indigo-600 text-white hidden sm:inline-flex" onClick={() => setCreateDialogOpen(true)}>
+        <div className="space-y-4 sm:space-y-6">
+            <main className="px-2 sm:px-4 lg:px-8 pb-4 sm:pb-8">
+                {/* Stat Cards Section */}
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
+                    <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Total Users</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{stats.total}</p></div><Users className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-blue-600" /></div></CardContent></Card>
+                    <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Administrators</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{stats.admins}</p></div><UserCog className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-purple-600" /></div></CardContent></Card>
+                    <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Kiosk Users</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{stats.kiosks}</p></div><Shield className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-green-600" /></div></CardContent></Card>
+                    <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Active Users</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{stats.active}</p></div><Activity className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-orange-600" /></div></CardContent></Card>
+                </div>
+
+                {/* Unified Header Component */}
+                <AdminSearchFilterHeader
+                    title={`Users (${filteredUsers.length})`}
+                    subtitle="Manage platform users and permissions"
+                    config={searchFilterConfig}
+                    searchValue={searchTerm}
+                    onSearchChange={setSearchTerm}
+                    filterValues={filterValues}
+                    onFilterChange={handleFilterChange}
+                    actions={
+                        hasPermission('create_user') ? (
+                            <Button
+                                className="bg-indigo-600 text-white"
+                                onClick={() => setCreateDialogOpen(true)}
+                            >
                                 <Plus className="w-4 h-4 mr-2" />Add User
                             </Button>
-                        )}
-                    </div>
-                </div>
-            </header>
-
-            <main className="px-2 sm:px-6 lg:px-8 py-4 sm:py-8">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-8">
-                    <div className="w-full sm:max-w-md">
-                        <div className="relative border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                            <Input placeholder="Search users by name or email..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 border-0 focus-visible:ring-0 focus-visible:border-transparent" />
-                        </div>
-                    </div>
-                    {hasPermission('create_user') && (
-                        <Button className="bg-indigo-600 text-white w-full sm:w-auto sm:hidden" onClick={() => setCreateDialogOpen(true)}>
-                            <Plus className="w-4 h-4 mr-2" />Add User
-                        </Button>
-                    )}
-                </div>
-
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Total Users</p><p className="text-2xl font-semibold text-gray-900">{stats.total}</p></div><Users className="h-8 w-8 text-blue-600" /></div></CardContent></Card>
-                    <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Administrators</p><p className="text-2xl font-semibold text-gray-900">{stats.admins}</p></div><UserCog className="h-8 w-8 text-purple-600" /></div></CardContent></Card>
-                    <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Kiosk Users</p><p className="text-2xl font-semibold text-gray-900">{stats.kiosks}</p></div><Shield className="h-8 w-8 text-green-600" /></div></CardContent></Card>
-                    <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-600">Active Users</p><p className="text-2xl font-semibold text-gray-900">{stats.active}</p></div><Activity className="h-8 w-8 text-orange-600" /></div></CardContent></Card>
-                </div>
-
-                <Card className="mb-8">
-                    <CardContent className="p-5">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                                <Select value={roleFilter} onValueChange={setRoleFilter}>
-                                    <SelectTrigger className="w-full h-12 border-0 focus:ring-0"><SelectValue placeholder="Filter by role" /></SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Roles</SelectItem>
-                                        <SelectItem value="admin">Admin</SelectItem>
-                                        <SelectItem value="manager">Manager</SelectItem>
-                                        <SelectItem value="operator">Operator</SelectItem>
-                                        <SelectItem value="viewer">Viewer</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
+                        ) : undefined
+                    }
+                />
 
                 {/* Modern Table Container */}
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                    <div className="px-6 py-5 border-b border-gray-200">
-                        <h3 className="text-lg font-semibold text-gray-900">Users ({filteredUsers.length})</h3>
-                        <p className="text-sm text-gray-600 mt-1">Manage user accounts and permissions</p>
-                    </div>
-                    <div className="overflow-x-auto">
-                        {loading ? (
-                            <div className="flex justify-center p-12">
-                                <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-                            </div>
-                        ) : error ? (
-                            <div className="text-center text-red-600 p-12">
-                                <AlertCircle className="mx-auto h-8 w-8 mb-2" />
-                                <p>{error}</p>
-                            </div>
-                        ) : (
-                            <Table>
-                                <TableHeader>
-                                    <TableRow className="bg-gray-50 border-b border-gray-200">
-                                        <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">User Details</TableHead>
-                                        <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Role</TableHead>
-                                        <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</TableHead>
-                                        <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Permissions</TableHead>
-                                        <TableHead className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">Actions</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {filteredUsers.map((user) => (
-                                        <TableRow key={user.id} className="hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0">
-                                            <TableCell className="px-6 py-4">
-                                                <div className="text-sm font-medium text-gray-900">{user.username}</div>
-                                                <div className="text-sm text-gray-500">{user.email}</div>
-                                            </TableCell>
-                                            <TableCell className="px-6 py-4">
+                <Card className="overflow-hidden">
+                    <CardContent className="p-0">
+                    {loading ? (
+                        <div className="flex justify-center p-12">
+                            <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+                        </div>
+                    ) : error ? (
+                        <div className="text-center text-red-600 p-12">
+                            <AlertCircle className="mx-auto h-8 w-8 mb-2" />
+                            <p>{error}</p>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="md:hidden px-6 py-6 space-y-4">
+                                {filteredUsers.length > 0 ? (
+                                    filteredUsers.map((user) => (
+                                        <div
+                                            key={user.id}
+                                            className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
+                                        >
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div>
+                                                    <div className="text-sm font-semibold text-gray-900">
+                                                        {user.username}
+                                                    </div>
+                                                    <div className="text-xs text-gray-500">
+                                                        {user.email}
+                                                    </div>
+                                                </div>
+                                                {(hasPermission('edit_user') ||
+                                                    (hasPermission('delete_user') && user.id !== userSession.user.id)) && (
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8 text-gray-500 hover:bg-gray-100"
+                                                                aria-label="User actions"
+                                                            >
+                                                                <MoreVertical className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            {hasPermission('edit_user') && (
+                                                                <DropdownMenuItem
+                                                                    onSelect={() => setEditingUser(user)}
+                                                                    className="flex items-center gap-2"
+                                                                >
+                                                                    <Pencil className="h-4 w-4" />
+                                                                    Edit
+                                                                </DropdownMenuItem>
+                                                            )}
+                                                            {hasPermission('delete_user') && user.id !== userSession.user.id && (
+                                                                <DropdownMenuItem
+                                                                    onSelect={() => handleDeleteUser(user)}
+                                                                    className="flex items-center gap-2 text-red-600 focus:text-red-600"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                    Delete
+                                                                </DropdownMenuItem>
+                                                            )}
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                )}
+                                            </div>
+
+                                            <div className="mt-4 flex flex-wrap items-center gap-2">
                                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 ring-1 ring-indigo-600/20 capitalize">
                                                     {user.role.replace('_', ' ')}
                                                 </span>
-                                            </TableCell>
-                                            <TableCell className="px-6 py-4">
                                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 ring-1 ring-green-600/20">
                                                     Active
                                                 </span>
-                                            </TableCell>
-                                            <TableCell className="px-6 py-4">
-                                                <div className="text-sm text-gray-500 truncate max-w-xs">
+                                            </div>
+
+                                            <div className="mt-4 border-t border-gray-100 pt-4 text-sm">
+                                                <div className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+                                                    Permissions
+                                                </div>
+                                                <div className="mt-1 text-sm text-gray-600">
                                                     {user.permissions?.length ? `${user.permissions.length} permissions` : 'None'}
                                                 </div>
-                                            </TableCell>
-                                            <TableCell className="px-6 py-4 text-right">
-                                                <div className="flex items-center justify-end gap-2">
-                                                    {hasPermission('edit_user') && (
-                                                        <Button 
-                                                            variant="ghost" 
-                                                            size="icon" 
-                                                            onClick={() => setEditingUser(user)}
-                                                            className="h-8 w-8 hover:bg-indigo-50 hover:text-indigo-600"
-                                                        >
-                                                            <Pencil className="h-4 w-4" />
-                                                        </Button>
-                                                    )}
-                                                    {hasPermission('delete_user') && user.id !== userSession.user.id && (
-                                                        <Button 
-                                                            variant="ghost" 
-                                                            size="icon" 
-                                                            onClick={() => handleDeleteUser(user)}
-                                                            className="h-8 w-8 hover:bg-red-50 hover:text-red-600"
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    )}
-                                                </div>
-                                            </TableCell>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-8 text-gray-500">
+                                        <Ghost className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                                        <p className="text-lg font-medium mb-2">No Users Found</p>
+                                        <p className="text-sm mb-4">
+                                            No users match your filters.
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="hidden md:block overflow-hidden">
+                                <Table className="w-full table-fixed">
+                                    <TableHeader>
+                                        <TableRow className="bg-gray-100 border-b-2 border-gray-300">
+                                            <SortableTableHeader 
+                                                sortKey="username" 
+                                                currentSortKey={sortKey} 
+                                                currentSortDirection={sortDirection} 
+                                                onSort={handleSort}
+                                                className="w-[30%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                                            >
+                                                User Details
+                                            </SortableTableHeader>
+                                            <SortableTableHeader 
+                                                sortKey="role" 
+                                                currentSortKey={sortKey} 
+                                                currentSortDirection={sortDirection} 
+                                                onSort={handleSort}
+                                                className="w-[15%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                                            >
+                                                Role
+                                            </SortableTableHeader>
+                                            <SortableTableHeader 
+                                                sortKey="status" 
+                                                currentSortKey={sortKey} 
+                                                currentSortDirection={sortDirection} 
+                                                onSort={handleSort}
+                                                className="w-[12%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                                            >
+                                                Status
+                                            </SortableTableHeader>
+                                            <SortableTableHeader 
+                                                sortable={false}
+                                                sortKey="permissions" 
+                                                currentSortKey={sortKey} 
+                                                currentSortDirection={sortDirection} 
+                                                onSort={handleSort}
+                                                className="w-[28%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                                            >
+                                                Permissions
+                                            </SortableTableHeader>
+                                            <SortableTableHeader 
+                                                sortable={false}
+                                                sortKey="actions" 
+                                                currentSortKey={sortKey} 
+                                                currentSortDirection={sortDirection} 
+                                                onSort={handleSort}
+                                                className="w-[15%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
+                                            >
+                                                Actions
+                                            </SortableTableHeader>
                                         </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        )}
-                    </div>
-                </div>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {filteredUsers.map((user) => (
+                                            <TableRow key={user.id} className="hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0">
+                                                <TableCell className="px-6 py-4">
+                                                    <div className="text-sm font-medium text-gray-900">{user.username}</div>
+                                                    <div className="text-sm text-gray-500">{user.email}</div>
+                                                </TableCell>
+                                                <TableCell className="px-6 py-4">
+                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 ring-1 ring-indigo-600/20 capitalize">
+                                                        {user.role.replace('_', ' ')}
+                                                    </span>
+                                                </TableCell>
+                                                <TableCell className="px-6 py-4">
+                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 ring-1 ring-green-600/20">
+                                                        Active
+                                                    </span>
+                                                </TableCell>
+                                                <TableCell className="px-6 py-4">
+                                                    <div className="text-sm text-gray-500 truncate max-w-xs">
+                                                        {user.permissions?.length ? `${user.permissions.length} permissions` : 'None'}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="px-6 py-4 text-right">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        {hasPermission('edit_user') && (
+                                                            <Button 
+                                                                variant="ghost" 
+                                                                size="icon" 
+                                                                onClick={() => setEditingUser(user)}
+                                                                className="h-8 w-8 hover:bg-indigo-50 hover:text-indigo-600"
+                                                            >
+                                                                <Pencil className="h-4 w-4" />
+                                                            </Button>
+                                                        )}
+                                                        {hasPermission('delete_user') && user.id !== userSession.user.id && (
+                                                            <Button 
+                                                                variant="ghost" 
+                                                                size="icon" 
+                                                                onClick={() => handleDeleteUser(user)}
+                                                                className="h-8 w-8 hover:bg-red-50 hover:text-red-600"
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </>
+                    )}
+                </CardContent>
+            </Card>
             </main>
 
             <CreateUserDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} newUser={newUser} onUserChange={setNewUser} onCreateUser={handleCreateUser} userSession={userSession} />
@@ -265,6 +397,12 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
             {/* Delete Confirmation Dialog */}
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                 <DialogContent className="sm:max-w-[400px] p-0 border-0 shadow-2xl">
+                    <DialogHeader className="sr-only">
+                        <DialogTitle>Delete user</DialogTitle>
+                        <DialogDescription>
+                            Confirm deletion of the selected user.
+                        </DialogDescription>
+                    </DialogHeader>
                     <div className="bg-white rounded-2xl p-8 text-center">
                         {/* Warning Icon */}
                         <div className="flex justify-center mb-6">

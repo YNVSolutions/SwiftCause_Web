@@ -55,7 +55,7 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({
   };
 
   return (
-    <div className="relative w-full h-full rounded-2xl overflow-hidden bg-gray-100">
+    <div className="relative w-full h-full rounded-2xl overflow-hidden bg-green-50">
       {/* Main Image - key forces re-render on index change */}
       <img
         key={`carousel-image-${safeIndex}`}
@@ -70,16 +70,16 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({
           <button
             type="button"
             onClick={handlePrev}
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 hover:bg-white rounded-full flex items-center justify-center shadow-md transition-colors z-10"
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-md transition-colors z-10 border border-green-100"
           >
-            <ChevronLeft className="w-6 h-6 text-[#0A0A0A]" />
+            <ChevronLeft className="w-6 h-6 text-green-700" />
           </button>
           <button
             type="button"
             onClick={handleNext}
-            className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 hover:bg-white rounded-full flex items-center justify-center shadow-md transition-colors z-10"
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-md transition-colors z-10 border border-green-100"
           >
-            <ChevronRight className="w-6 h-6 text-[#0A0A0A]" />
+            <ChevronRight className="w-6 h-6 text-green-700" />
           </button>
         </>
       )}
@@ -93,7 +93,7 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({
               key={index}
               onClick={(e) => handleDotClick(e, index)}
               className={`w-2.5 h-2.5 rounded-full transition-colors ${
-                index === safeIndex ? 'bg-white' : 'bg-white/50'
+                index === safeIndex ? 'bg-green-600' : 'bg-green-200'
               }`}
             />
           ))}

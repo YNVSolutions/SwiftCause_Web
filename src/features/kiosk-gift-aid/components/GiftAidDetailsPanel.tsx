@@ -100,18 +100,18 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden h-full flex flex-col max-w-2xl mx-auto">
+    <div className="bg-white/90 rounded-3xl border border-green-100 shadow-xl overflow-hidden h-full flex flex-col max-w-2xl mx-auto">
       {/* Header */}
-      <div className="bg-[#159A6F] text-white p-8 text-center">
-        <div className="flex justify-center mb-4">
-          <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center">
-            <ArrowRight className="w-7 h-7 rotate-45" />
+      <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-5 sm:px-8 sm:py-6 text-center">
+        <div className="flex justify-center mb-3">
+          <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center shadow-lg">
+            <ArrowRight className="w-6 h-6 rotate-45" />
           </div>
         </div>
-        <h2 className="text-2xl lg:text-3xl font-bold mb-2">
+        <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1">
           Boosting {formatAmount(amount)} to {formatAmount(totalWithGiftAid)}
         </h2>
-        <p className="text-white/80 text-base">
+        <p className="text-white/85 text-sm sm:text-base">
           Just a few details to add extra {formatAmount(giftAidAmount)} to your donation
         </p>
       </div>
@@ -119,8 +119,8 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
       {/* Form */}
       <form onSubmit={handleSubmit} className="p-8 lg:p-10 grow flex flex-col">
         {/* Campaign Info */}
-        <div className="mb-8 p-4 bg-gray-50 rounded-xl text-center">
-          <p className="text-sm text-gray-500">Donating to:</p>
+        <div className="mb-8 p-4 bg-green-50/70 border border-green-100 rounded-2xl text-center">
+          <p className="text-sm text-green-700">Donating to</p>
           <p className="font-semibold text-[#0A0A0A]">{campaignTitle}</p>
         </div>
 
@@ -138,10 +138,10 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
                 setFullName(e.target.value);
                 if (errors.fullName) setErrors((prev) => ({ ...prev, fullName: undefined }));
               }}
-              className={`w-full h-14 px-4 rounded-xl border-2 text-lg focus:outline-none transition-colors ${
+              className={`w-full h-14 px-4 rounded-xl border-2 text-lg focus:outline-none transition-colors bg-white ${
                 errors.fullName
                   ? 'border-red-400 focus:border-red-500'
-                  : 'border-gray-200 focus:border-[#159A6F]'
+                  : 'border-green-200 focus:border-green-500 focus:ring-2 focus:ring-green-200'
               }`}
               placeholder="e.g. John Smith"
             />
@@ -161,10 +161,10 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
                 setPostcode(e.target.value.toUpperCase());
                 if (errors.postcode) setErrors((prev) => ({ ...prev, postcode: undefined }));
               }}
-              className={`w-full h-14 px-4 rounded-xl border-2 text-lg uppercase focus:outline-none transition-colors ${
+              className={`w-full h-14 px-4 rounded-xl border-2 text-lg uppercase focus:outline-none transition-colors bg-white ${
                 errors.postcode
                   ? 'border-red-400 focus:border-red-500'
-                  : 'border-gray-200 focus:border-[#159A6F]'
+                  : 'border-green-200 focus:border-green-500 focus:ring-2 focus:ring-green-200'
               }`}
               placeholder="e.g. SW1A 1AA"
               maxLength={8}
@@ -182,15 +182,15 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
               errors.consent
                 ? 'border-red-400 bg-red-50'
                 : giftAidConsent
-                  ? 'border-[#159A6F] bg-[#E6FBF2]'
-                  : 'border-gray-200 bg-white hover:border-gray-300'
+                  ? 'border-green-500 bg-green-50'
+                  : 'border-green-200 bg-white hover:border-green-400'
             }`}
           >
             {/* Custom Checkbox */}
             <div
               className={`w-6 h-6 rounded-md border-2 shrink-0 flex items-center justify-center transition-all ${
                 giftAidConsent
-                  ? 'bg-[#159A6F] border-[#159A6F]'
+                  ? 'bg-green-600 border-green-600'
                   : 'bg-white border-gray-300'
               }`}
             >
@@ -210,16 +210,7 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
           <button
             type="submit"
             disabled={!giftAidConsent}
-            className="w-full h-16 rounded-xl font-semibold text-lg text-white transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-            style={{
-              backgroundColor: giftAidConsent ? '#159A6F' : '#9CA3AF',
-            }}
-            onMouseEnter={(e) => {
-              if (giftAidConsent) e.currentTarget.style.backgroundColor = '#128A62';
-            }}
-            onMouseLeave={(e) => {
-              if (giftAidConsent) e.currentTarget.style.backgroundColor = '#159A6F';
-            }}
+            className="w-full h-14 rounded-xl font-semibold text-lg text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-200/70"
           >
             <ArrowRight className="w-5 h-5 mr-2" />
             Continue to Payment
@@ -228,7 +219,7 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
           <button
             type="button"
             onClick={onBack}
-            className="w-full h-12 text-gray-500 hover:text-gray-700 font-medium text-base transition-colors"
+            className="w-full h-12 text-green-700 hover:text-green-800 font-medium text-base transition-colors"
           >
             Back
           </button>

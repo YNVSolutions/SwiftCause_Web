@@ -31,9 +31,9 @@ Based on the project structure, SwiftCause includes:
 
 ## 🚀 Live Demo
 
-A live version of the project is deployed on Vercel:
+A live version of the project is deployed:
 
-[**https://swift-cause-web.vercel.app**](https://swift-cause-web.vercel.app)
+[**SwiftCause**](https://swiftcause--swiftcause-app.us-east4.hosted.app/)
 
 ## 🛠️ Tech Stack
 

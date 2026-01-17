@@ -2,9 +2,8 @@
 
 import React, { useState } from "react";
 import { Screen, AdminSession, Permission } from "../../shared/types";
-import { Button } from "../../shared/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../../shared/ui/avatar";
-import { Badge } from "../../shared/ui/badge";
+import { Button } from "../../shared/ui/button";
 import {
   SidebarProvider,
   Sidebar,
@@ -18,10 +17,9 @@ import {
   SidebarMenuButton,
 
   SidebarInset,
-  SidebarTrigger,
-  SidebarRail,
   useSidebar,
 } from "../../shared/ui/sidebar";
+import { AdminPageHeader } from "./components/AdminPageHeader";
 import {
   LayoutDashboard,
   Settings,
@@ -35,8 +33,9 @@ import {
   Building2,
   Shield,
   Calendar,
-  Compass,
   Wallet,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 const SCREEN_LABELS: Partial<Record<Screen, string>> = {
@@ -58,6 +57,12 @@ interface AdminLayoutProps {
   children: React.ReactNode;
   activeScreen?: Screen;
   onStartTour?: () => void;
+  headerTitle?: React.ReactNode;
+  headerSubtitle?: React.ReactNode;
+  hideHeaderDivider?: boolean;
+  headerActions?: React.ReactNode;
+  hideSidebarTrigger?: boolean;
+  hideHeader?: boolean;
 }
 
 // Get user initials for avatar
@@ -70,276 +75,6 @@ const getInitials = (name: string) => {
     .slice(0, 2);
 };
 
-// Format role display name
-const getRoleDisplayName = (role: string) => {
-  const roleMap: Record<string, string> = {
-    'super_admin': 'Super Admin',
-    'admin': 'Administrator',
-    'manager': 'Manager',
-    'operator': 'Operator',
-    'viewer': 'Viewer',
-    'kiosk': 'Kiosk User'
-  };
-  return roleMap[role] || role;
-};
-
-// Get role badge color
-const getRoleBadgeColor = (role: string) => {
-  const colorMap: Record<string, string> = {
-    'super_admin': 'bg-red-500/20 text-red-100 border-red-400/30',
-    'admin': 'bg-purple-500/20 text-purple-100 border-purple-400/30',
-    'manager': 'bg-blue-500/20 text-blue-100 border-blue-400/30',
-    'operator': 'bg-green-500/20 text-green-100 border-green-400/30',
-    'viewer': 'bg-gray-500/20 text-gray-100 border-gray-400/30',
-    'kiosk': 'bg-orange-500/20 text-orange-100 border-orange-400/30'
-  };
-  return colorMap[role] || 'bg-white/20 text-white border-white/30';
-};
-
-function ProfileSidebar({
-  isOpen,
-  onClose,
-  userSession,
-  onLogout
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  userSession: AdminSession;
-  onLogout: () => void;
-}) {
-  return (
-    <>
-      {/* Backdrop with blur */}
-      <div 
-        className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity duration-300 ${
-          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        }`}
-        onClick={onClose}
-      />
-      
-      {/* Profile Sidebar */}
-      <div 
-        className={`fixed top-0 right-0 h-full w-full sm:w-96 bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
-          isOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
-      >
-        {/* Header */}
-        <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-6 relative">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="absolute top-4 right-4 text-white hover:bg-white/20 rounded-lg"
-          >
-            <X className="h-5 w-5" />
-          </Button>
-          
-          <div className="flex flex-col items-center text-center mt-8">
-            <Avatar className="h-24 w-24 ring-4 ring-white/30 shadow-xl mb-4">
-              <AvatarImage src={userSession.user.photoURL || undefined} />
-              <AvatarFallback className="bg-white text-blue-600 text-2xl font-bold">
-                {getInitials(userSession.user.username || userSession.user.email || 'U')}
-              </AvatarFallback>
-            </Avatar>
-            <h2 className="text-2xl font-bold text-white mb-1">
-              {userSession.user.username || 'User'}
-            </h2>
-            <Badge className={`${getRoleBadgeColor(userSession.user.role)} hover:bg-white/30 font-semibold`}>
-              {getRoleDisplayName(userSession.user.role)}
-            </Badge>
-          </div>
-        </div>
-        
-        {/* Content */}
-        <div className="p-6 space-y-6 overflow-y-auto h-[calc(100%-280px)]">
-          {/* User Information Section */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
-              Account Information
-            </h3>
-            
-            <div className="space-y-3">
-              {/* Email */}
-              <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-                  <Mail className="h-5 w-5 text-blue-600" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-gray-500 mb-1">Email Address</p>
-                  <p className="text-sm font-semibold text-gray-900 truncate">
-                    {userSession.user.email}
-                  </p>
-                </div>
-              </div>
-              
-              {/* Organization */}
-              {userSession.user.organizationName && (
-                <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                  <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
-                    <Building2 className="h-5 w-5 text-purple-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-gray-500 mb-1">Organization</p>
-                    <p className="text-sm font-semibold text-gray-900 truncate">
-                      {userSession.user.organizationName}
-                    </p>
-                  </div>
-                </div>
-              )}
-              
-              {/* Role */}
-              <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                <div className="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
-                  <Shield className="h-5 w-5 text-green-600" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-gray-500 mb-1">Role</p>
-                  <p className="text-sm font-semibold text-gray-900">
-                    {getRoleDisplayName(userSession.user.role)}
-                  </p>
-                </div>
-              </div>
-              
-              {/* Member Since */}
-              {userSession.user.createdAt && (
-                <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                  <div className="h-10 w-10 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
-                    <Calendar className="h-5 w-5 text-orange-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-gray-500 mb-1">Member Since</p>
-                    <p className="text-sm font-semibold text-gray-900">
-                      {new Date(userSession.user.createdAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-          
-          {/* Permissions Section */}
-          {userSession.permissions && userSession.permissions.length > 0 && (
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
-                Permissions
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {userSession.permissions.map((permission) => (
-                  <Badge
-                    key={permission}
-                    variant="outline"
-                    className="text-xs bg-blue-50 text-blue-700 border-blue-200"
-                  >
-                    {permission.replace(/_/g, ' ')}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-        
-        {/* Footer with Logout Button */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 bg-gray-50 border-t border-gray-200">
-          <Button
-            onClick={onLogout}
-            className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
-          >
-            <LogOut className="h-5 w-5 mr-2" />
-            Sign Out
-          </Button>
-        </div>
-      </div>
-    </>
-  );
-}
-
-function SidebarUserFooter({
-  userSession,
-  onLogout,
-  onProfileClick
-}: {
-  userSession: AdminSession;
-  onLogout: () => void;
-  onProfileClick: () => void;
-}) {
-  const { state } = useSidebar();
-  const isExpanded = state === "expanded";
-  
-  return (
-    <div className="border-t border-gray-200 p-3 bg-gray-50/50">
-      <div className="flex items-center gap-3">
-        <button
-          onClick={onProfileClick}
-          className="flex items-center gap-3 flex-1 min-w-0 hover:bg-gray-100 rounded-lg p-1 transition-colors"
-        >
-          <Avatar className="h-9 w-9 ring-2 ring-indigo-100 shadow-sm">
-            <AvatarImage src={userSession.user.photoURL || undefined} />
-            <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white text-xs font-semibold">
-              {getInitials(userSession.user.username || userSession.user.email || 'U')}
-            </AvatarFallback>
-          </Avatar>
-          {isExpanded && (
-            <div className="flex-1 min-w-0 text-left">
-              <p className="text-sm font-semibold text-gray-900 truncate">
-                {userSession.user.username || 'User'}
-              </p>
-              <p className="text-xs text-gray-500 truncate">
-                {userSession.user.email}
-              </p>
-            </div>
-          )}
-        </button>
-        {isExpanded ? (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onLogout}
-            className="h-8 w-8 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
-            title="Log out"
-          >
-            <LogOut className="h-4 w-4" />
-          </Button>
-        ) : (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onLogout}
-            className="h-8 w-8 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors absolute bottom-3 left-1/2 -translate-x-1/2"
-            title="Log out"
-          >
-            <LogOut className="h-4 w-4" />
-          </Button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function SidebarHeaderContent() {
-  const { state } = useSidebar();
-  const isExpanded = state === "expanded";
-  return (
-    <div className="flex items-center gap-3 px-4 py-4">
-      <div className="relative">
-        <img src="/logo.png" alt="SwiftCause Logo" className="h-10 w-10 rounded-xl shadow-md" />
-        <div className="absolute -bottom-1 -right-1 h-3 w-3 bg-green-500 rounded-full border-2 border-white"></div>
-      </div>
-      {isExpanded && (
-        <div className="flex flex-col">
-          <span className="text-base font-bold text-gray-900">SwiftCause</span>
-          <span className="text-xs font-medium text-gray-500">
-            Admin Portal
-          </span>
-        </div>
-      )}
-    </div>
-  );
-}
-
 export function AdminLayout({
   onNavigate,
   onLogout,
@@ -348,224 +83,674 @@ export function AdminLayout({
   children,
   activeScreen = "admin-dashboard",
   onStartTour,
+  headerTitle,
+  headerSubtitle,
+  headerActions,
+  hideHeaderDivider,
+  hideSidebarTrigger,
+  hideHeader,
 }: AdminLayoutProps) {
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [logoAnimating, setLogoAnimating] = useState(false);
+  const [showUserProfile, setShowUserProfile] = useState(false);
+
+  React.useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 1023px)");
+    const handleChange = () => setIsCollapsed(mediaQuery.matches);
+
+    handleChange();
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener("change", handleChange);
+    } else {
+      mediaQuery.addListener(handleChange);
+    }
+
+    return () => {
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener("change", handleChange);
+      } else {
+        mediaQuery.removeListener(handleChange);
+      }
+    };
+  }, []);
+
+  // Handle ESC key to close profile panel
+  React.useEffect(() => {
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && showUserProfile) {
+        setShowUserProfile(false);
+      }
+    };
+
+    if (showUserProfile) {
+      document.addEventListener("keydown", handleEscKey);
+      return () => document.removeEventListener("keydown", handleEscKey);
+    }
+  }, [showUserProfile]);
   const isActive = (...screens: Screen[]) => screens.includes(activeScreen);
   const currentLabel = SCREEN_LABELS[activeScreen] ?? "Admin";
+  const resolvedTitle = headerTitle ?? currentLabel;
+  const resolvedSubtitle = headerSubtitle ?? undefined;
+  const userInitials = getInitials(userSession.user.username || userSession.user.email || "U");
+
+  const toggleSidebar = () => {
+    setIsCollapsed(!isCollapsed);
+  };
+
+  const handleLogoClick = () => {
+    setLogoAnimating(true);
+    setTimeout(() => setLogoAnimating(false), 500); // Animation duration
+  };
+
+  // Centralized navigation button attributes
+  const getNavButtonProps = (screen: Screen | Screen[], title: string) => {
+    const isActiveButton = Array.isArray(screen) ? isActive(...screen) : isActive(screen);
+    
+    return {
+      className: `
+        sidebar-item flex items-center w-full text-left group rounded-lg transition-all duration-300 ease-in-out hover:translate-x-1 hover:shadow-md
+        ${isCollapsed 
+          ? 'px-2 py-3 justify-center' 
+          : 'px-4 py-3 justify-between'
+        }
+        ${isActiveButton
+          ? "text-white sidebar-item-active"
+          : "text-white/90 hover:text-white"
+        }
+      `,
+      style: isActiveButton ? {
+        background: '#22C55E',
+        boxShadow: isCollapsed
+          ? 'inset 3px 0 0 rgba(255,255,255,0.7), 0 0 12px rgba(34,197,94,0.45), 0 2px 8px rgba(0,0,0,0.2)'
+          : 'inset 3px 0 0 rgba(255,255,255,0.7), 0 2px 10px rgba(34,197,94,0.35)'
+      } : {},
+      onMouseEnter: (e: React.MouseEvent<HTMLButtonElement>) => {
+        if (!isActiveButton) {
+          e.currentTarget.style.backgroundColor = isCollapsed
+            ? 'rgba(74, 222, 128, 0.28)'
+            : 'rgba(74, 222, 128, 0.22)';
+          e.currentTarget.style.boxShadow = '0 10px 24px rgba(22,163,74,0.2)';
+        }
+      },
+      onMouseLeave: (e: React.MouseEvent<HTMLButtonElement>) => {
+        if (!isActiveButton) {
+          e.currentTarget.style.backgroundColor = 'transparent';
+          e.currentTarget.style.boxShadow = 'none';
+        }
+      },
+      title: isCollapsed ? title : ""
+    };
+  };
+
+  // Centralized icon props
+  const getIconProps = () => ({
+    className: `flex-shrink-0 transition-transform duration-200 group-hover:scale-105 ${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'}`,
+    strokeWidth: isCollapsed ? 2.2 : 2
+  });
+
+  // Centralized text span props
+  const getTextSpanProps = () => ({
+    className: `font-medium ml-3 transition-colors duration-200 group-hover:text-white group-hover:font-semibold ${isCollapsed ? 'hidden' : 'block'}`
+  });
+
+  // Centralized arrow icon for active states
+  const renderActiveArrow = (screenToCheck: Screen | Screen[]) => {
+    const isActiveButton = Array.isArray(screenToCheck) ? isActive(...screenToCheck) : isActive(screenToCheck);
+    return !isCollapsed && isActiveButton && (
+      <svg className="h-4 w-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+      </svg>
+    );
+  };
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <Sidebar 
-        side="left" 
-        variant="sidebar" 
-        collapsible="icon" 
-        className="bg-white border-r border-gray-200"
-      >
-        <SidebarHeader className="border-b border-gray-100 shrink-0">
-          <SidebarHeaderContent />
-        </SidebarHeader>
-        
-        <SidebarContent className="px-3 py-4 flex-1 overflow-y-auto">
-          <SidebarGroup>
-            <SidebarGroupLabel className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-3">
-              Main Menu
-            </SidebarGroupLabel>
-            <SidebarMenu className="space-y-1">
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  onClick={() => onNavigate("admin")}
-                  isActive={isActive("admin", "admin-dashboard")}
-                  tooltip="Dashboard"
-                  className={
-                    isActive("admin", "admin-dashboard")
-                      ? "bg-indigo-50 text-indigo-700 font-semibold shadow-sm rounded-md hover:bg-indigo-100"
-                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md"
-                  }
-                >
-                  <LayoutDashboard className="h-5 w-5" />
-                  <span>Dashboard</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              
-              {hasPermission("view_campaigns") && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    onClick={() => onNavigate("admin-campaigns")}
-                    tooltip="Campaigns"
-                    isActive={isActive("admin-campaigns")}
-                    className={
-                      isActive("admin-campaigns")
-                        ? "bg-indigo-50 text-indigo-700 font-semibold shadow-sm rounded-md hover:bg-indigo-100"
-                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md"
-                    }
-                  >
-                    <Settings className="h-5 w-5" />
-                    <span>Campaigns</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+      <style>{`
+        @keyframes wobble {
+          0% { transform: rotate(0deg) scale(1); }
+          25% { transform: rotate(-5deg) scale(0.9); }
+          50% { transform: rotate(5deg) scale(1.1); }
+          75% { transform: rotate(-5deg) scale(0.95); }
+          100% { transform: rotate(0deg) scale(1); }
+        }
+        .logo-wobble.animate {
+          animation: wobble 0.5s ease-in-out;
+        }
+        .signout-btn {
+          position: relative;
+          overflow: hidden;
+          transition: all 0.3s ease;
+        }
+        .signout-btn::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+          transition: left 0.5s ease;
+        }
+        .signout-btn:hover::before {
+          left: 100%;
+        }
+        .signout-btn:hover {
+          transform: scale(1.02);
+          box-shadow: 0 4px 15px rgba(185, 28, 28, 0.4);
+        }
+        .signout-btn:active {
+          transform: scale(0.98);
+        }
+        .signout-icon {
+          transition: transform 0.3s ease;
+        }
+        .signout-btn:hover .signout-icon {
+          transform: translateX(3px);
+        }
+        .sidebar-item {
+          position: relative;
+          overflow: hidden;
+        }
+        .sidebar-item::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(120deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));
+          opacity: 0;
+          transform: translateX(-12%);
+          transition: opacity 0.3s ease, transform 0.3s ease;
+          pointer-events: none;
+        }
+        .sidebar-item:hover::before {
+          opacity: 1;
+          transform: translateX(0);
+        }
+        .sidebar-item-active::after {
+          content: "";
+          position: absolute;
+          left: 0;
+          top: 12%;
+          bottom: 12%;
+          width: 4px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.9);
+          box-shadow: 0 0 12px rgba(255, 255, 255, 0.7);
+        }
+      `}</style>
+      <div className="relative h-screen w-full">
+        <div className={`flex h-full w-full transition-[filter] duration-300 ${showUserProfile ? "blur-sm" : ""}`}>
+          {/* Custom Green Gradient Sidebar */}
+          <div 
+            className={`${isCollapsed ? 'w-16' : 'w-80'} relative flex flex-col shadow-2xl border-r border-green-400/40 shrink-0 transition-all duration-300 ease-in-out overflow-hidden`}
+            style={{
+              background: 'linear-gradient(180deg, #1FBF55 0%, #3FD77B 100%)'
+            }}
+          >
+          <div className="pointer-events-none absolute -top-24 -right-20 h-72 w-72 rounded-full bg-white/15 blur-3xl"></div>
+          <div className="pointer-events-none absolute bottom-20 -left-24 h-64 w-64 rounded-full bg-emerald-200/20 blur-3xl"></div>
+          <div className="pointer-events-none absolute bottom-6 left-8 h-28 w-28 rounded-full bg-white/10 blur-2xl"></div>
+          {/* Header Card */}
+          <div 
+            className={`mb-4 overflow-hidden transition-all duration-300 ease-in-out ${isCollapsed ? 'p-2' : 'p-4'}`}
+            style={{
+              background: 'rgba(34, 197, 94, 0.18)',
+              borderRadius: '12px',
+              backdropFilter: 'blur(10px)'
+            }}
+          >
+            <div className="flex items-center justify-between">
+              {/* Logo Section */}
+              {!isCollapsed && (
+                <div className="flex items-center gap-3 flex-1">
+                  <img 
+                    src="/logo.png" 
+                    alt="SwiftCause Logo" 
+                    className={`w-10 h-10 rounded-lg logo-wobble cursor-pointer ${logoAnimating ? 'animate' : ''}`}
+                    onClick={handleLogoClick}
+                  />
+                  <div>
+                    <h1 className="text-white font-bold text-lg leading-tight">SwiftCause</h1>
+                    <p className="text-white/70 text-xs font-medium uppercase tracking-wide">ADMIN CONTROL</p>
+                  </div>
+                </div>
               )}
               
-              {hasPermission("view_kiosks") && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    onClick={() => onNavigate("admin-kiosks")}
-                    tooltip="Kiosks"
-                    isActive={isActive("admin-kiosks")}
-                    className={
-                      isActive("admin-kiosks")
-                        ? "bg-indigo-50 text-indigo-700 font-semibold shadow-sm rounded-md hover:bg-indigo-100"
-                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md"
-                    }
-                  >
-                    <Monitor className="h-5 w-5" />
-                    <span>Kiosks</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
-              
-              {hasPermission("view_donations") && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    onClick={() => onNavigate("admin-donations")}
-                    tooltip="Donations"
-                    isActive={isActive("admin-donations")}
-                    className={
-                      isActive("admin-donations")
-                        ? "bg-indigo-50 text-indigo-700 font-semibold shadow-sm rounded-md hover:bg-indigo-100"
-                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md"
-                    }
-                  >
-                    <Database className="h-5 w-5" />
-                    <span>Donations</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
-              
-              {hasPermission("view_donations") && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    onClick={() => onNavigate("admin-gift-aid")}
-                    tooltip="Gift Aid Donations"
-                    isActive={isActive("admin-gift-aid")}
-                    className={
-                      isActive("admin-gift-aid")
-                        ? "bg-indigo-50 text-indigo-700 font-semibold shadow-sm rounded-md hover:bg-indigo-100"
-                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md"
-                    }
-                  >
-                    <Gift className="h-5 w-5" />
-                    <span>Gift Aid Donations</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
-              
-              {hasPermission("view_users") && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    onClick={() => onNavigate("admin-users")}
-                    tooltip="Users"
-                    isActive={isActive("admin-users")}
-                    className={
-                      isActive("admin-users")
-                        ? "bg-indigo-50 text-indigo-700 font-semibold shadow-sm rounded-md hover:bg-indigo-100"
-                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md"
-                    }
-                  >
-                    <Users className="h-5 w-5" />
-                    <span>Users</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
-              
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  onClick={() => onNavigate("admin-bank-details")}
-                  tooltip="Bank Details"
-                  isActive={isActive("admin-bank-details")}
-                  className={
-                    isActive("admin-bank-details")
-                      ? "bg-indigo-50 text-indigo-700 font-semibold shadow-sm rounded-md hover:bg-indigo-100"
-                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md"
-                  }
-                >
-                  <Wallet className="h-5 w-5" />
-                  <span>Bank Details</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroup>
-        </SidebarContent>
-        
-        <SidebarFooter className="mt-auto shrink-0">
-          <SidebarUserFooter 
-            userSession={userSession}
-            onLogout={onLogout}
-            onProfileClick={() => setIsProfileOpen(true)}
-          />
-        </SidebarFooter>
-        <SidebarRail />
-      </Sidebar>
-
-      <SidebarInset className="flex-1 flex flex-col overflow-hidden relative">
-        <header className="absolute top-0 left-0 right-0 z-20 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm">
-          <div className="flex items-center justify-between px-4 sm:px-6 h-16">
-            <div className="flex items-center gap-3">
-              <SidebarTrigger className="text-gray-600 hover:text-gray-900" />
-              <div className="h-6 w-px bg-gray-200 hidden sm:block" />
-              <h1 className="font-bold text-lg text-gray-900">{currentLabel}</h1>
-            </div>
-            
-            {/* Right side buttons */}
-            <div className="flex items-center gap-2">
-              {/* Get a Tour Button */}
-              {onStartTour && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onStartTour}
-                  className="hidden sm:flex items-center gap-2 border-blue-200 text-blue-600 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 transition-colors animate-pulse"
-                >
-                  <Compass className="h-4 w-4" />
-                  <span className="font-medium">Get a Tour</span>
-                </Button>
-              )}
-              
-              {/* Profile Icon in Header */}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsProfileOpen(true)}
-                className="h-10 w-10 rounded-full hover:bg-gray-100 transition-colors"
-                title="View Profile"
+              {/* Collapse/Expand Arrow Button */}
+              <button
+                onClick={toggleSidebar}
+                className="p-3 text-white/80 hover:text-white hover:bg-green-400/20 rounded-lg transition-colors duration-200 shrink-0 ml-auto"
               >
-                <Avatar className="h-8 w-8 ring-2 ring-gray-200 hover:ring-blue-300 transition-all">
-                  <AvatarImage src={userSession.user.photoURL || undefined} />
-                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-xs font-semibold">
-                    {getInitials(userSession.user.username || userSession.user.email || 'U')}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
+                {isCollapsed ? (
+                  <ChevronRight className="h-6 w-6" />
+                ) : (
+                  <ChevronLeft className="h-6 w-6" />
+                )}
+              </button>
             </div>
           </div>
-        </header>
-        
-        <main
-          className="flex-1 w-full bg-slate-50 overflow-y-auto overflow-x-hidden pt-16"
-          data-testid="main-content-area"
-        >
-          {children}
-        </main>
-      </SidebarInset>
 
-      {/* Profile Sidebar */}
-      <ProfileSidebar
-        isOpen={isProfileOpen}
-        onClose={() => setIsProfileOpen(false)}
-        userSession={userSession}
-        onLogout={onLogout}
-      />
+          {/* User Profile Card */}
+          {!isCollapsed && (
+            <div 
+              className="mb-4 rounded-2xl p-5 transition-all duration-300 ease-in-out shadow-[0_12px_26px_rgba(22,163,74,0.35)] border border-white/15 bg-[#16A34A]"
+              style={{
+                backdropFilter: 'blur(10px)'
+              }}
+            >
+              <div className="flex flex-col items-center text-center">
+                {/* User Profile Avatar */}
+                <div className="relative mb-4">
+                  <div 
+                    className="w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-all duration-300"
+                    style={{
+                      background: 'linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%)',
+                      border: '3px solid rgba(255,255,255,0.3)'
+                    }}
+                  >
+                    <Avatar className="w-12 h-12 transition-all duration-300">
+                      <AvatarImage src={userSession.user.photoURL || undefined} />
+                      <AvatarFallback className="bg-transparent text-green-500 text-lg font-bold transition-all duration-300">
+                        {getInitials(userSession.user.username || userSession.user.email || 'U')}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+                  {/* Online indicator */}
+                  <div className="absolute bottom-1 right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+                </div>
+                
+                {/* User Info */}
+                <h2 className="text-white font-semibold text-lg mb-1">
+                  {userSession.user.username || 'Ayush Bhatia'}
+                </h2>
+                <p className="text-white/60 text-sm">System Administrator</p>
+              </div>
+            </div>
+          )}
+
+          {/* Navigation Menu */}
+          <div className="flex-1 overflow-y-auto">
+            <div className={`${isCollapsed ? 'space-y-2 px-1' : 'space-y-1 px-4'} transition-all duration-300 ease-in-out`}>
+              {/* Dashboard */}
+              <button
+                onClick={() => onNavigate("admin")}
+                {...getNavButtonProps(["admin", "admin-dashboard"], "Dashboard")}
+              >
+                <div className="flex items-center">
+                  <LayoutDashboard {...getIconProps()} />
+                  <span {...getTextSpanProps()}>Dashboard</span>
+                </div>
+                {renderActiveArrow(["admin", "admin-dashboard"])}
+              </button>
+              
+              {/* Campaigns */}
+              {hasPermission("view_campaigns") && (
+                <button
+                  onClick={() => onNavigate("admin-campaigns")}
+                  {...getNavButtonProps("admin-campaigns", "Campaigns")}
+                >
+                  <div className="flex items-center">
+                    <Settings {...getIconProps()} />
+                    <span {...getTextSpanProps()}>Campaigns</span>
+                  </div>
+                  {renderActiveArrow("admin-campaigns")}
+                </button>
+              )}
+              
+              {/* Kiosks */}
+              {hasPermission("view_kiosks") && (
+                <button
+                  onClick={() => onNavigate("admin-kiosks")}
+                  {...getNavButtonProps("admin-kiosks", "Kiosks")}
+                >
+                  <div className="flex items-center">
+                    <Monitor {...getIconProps()} />
+                    <span {...getTextSpanProps()}>Kiosks</span>
+                  </div>
+                  {renderActiveArrow("admin-kiosks")}
+                </button>
+              )}
+              
+              {/* Donations */}
+              {hasPermission("view_donations") && (
+                <button
+                  onClick={() => onNavigate("admin-donations")}
+                  {...getNavButtonProps("admin-donations", "Donations")}
+                >
+                  <div className="flex items-center">
+                    <Database {...getIconProps()} />
+                    <span {...getTextSpanProps()}>Donations</span>
+                  </div>
+                  {renderActiveArrow("admin-donations")}
+                </button>
+              )}
+              
+              {/* Gift Aid Donations */}
+              {hasPermission("view_donations") && (
+                <button
+                  onClick={() => onNavigate("admin-gift-aid")}
+                  {...getNavButtonProps("admin-gift-aid", "Gift Aid Donations")}
+                >
+                  <div className="flex items-center">
+                    <Gift {...getIconProps()} />
+                    <span {...getTextSpanProps()}>Gift Aid Donations</span>
+                  </div>
+                  {renderActiveArrow("admin-gift-aid")}
+                </button>
+              )}
+              
+              {/* Users */}
+              {hasPermission("view_users") && (
+                <button
+                  onClick={() => onNavigate("admin-users")}
+                  {...getNavButtonProps("admin-users", "Users")}
+                >
+                  <div className="flex items-center">
+                    <Users {...getIconProps()} />
+                    <span {...getTextSpanProps()}>Users</span>
+                  </div>
+                  {renderActiveArrow("admin-users")}
+                </button>
+              )}
+              
+              {/* Bank Details */}
+              <button
+                onClick={() => onNavigate("admin-bank-details")}
+                {...getNavButtonProps("admin-bank-details", "Bank Details")}
+              >
+                <div className="flex items-center">
+                  <Wallet {...getIconProps()} />
+                  <span {...getTextSpanProps()}>Bank Details</span>
+                </div>
+                {renderActiveArrow("admin-bank-details")}
+              </button>
+            </div>
+          </div>
+          
+          {/* Footer */}
+          <div className={`mt-auto ${isCollapsed ? 'p-4 flex justify-center' : 'p-4'}`}>
+            {!isCollapsed ? (
+              <button
+                onClick={onLogout}
+                className="signout-btn w-full flex items-center justify-center px-4 py-4 rounded-xl text-white border border-red-900/30"
+                style={{
+                  background: '#7F1D1D'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#7F1D1D';
+                  e.currentTarget.style.borderColor = '#7F1D1D';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#B91C1C';
+                  e.currentTarget.style.borderColor = '#B91C1C';
+                }}
+              >
+                <LogOut className="signout-icon h-5 w-5 mr-3" />
+                <span className="font-medium text-base">Log Out</span>
+              </button>
+            ) : (
+              <button
+                onClick={onLogout}
+                className="signout-btn mx-auto flex h-12 w-12 items-center justify-center rounded-2xl text-white"
+                style={{
+                  background: '#7F1D1D'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#7F1D1D';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#B91C1C';
+                }}
+                title="Log Out"
+              >
+                <LogOut className="signout-icon h-6 w-6 text-white" strokeWidth={2.2} />
+              </button>
+            )}
+          </div>
+          </div>
+
+          {/* Main Content Area */}
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {!hideHeader && (
+            <header className="px-4 sm:px-6 py-4 bg-slate-50">
+              <AdminPageHeader
+                title={resolvedTitle}
+                subtitle={resolvedSubtitle}
+                actions={headerActions}
+                showSidebarTrigger={!hideSidebarTrigger}
+                onStartTour={onStartTour}
+                onProfileClick={() => setShowUserProfile(!showUserProfile)}
+                userPhotoUrl={userSession.user.photoURL || undefined}
+                userInitials={userInitials}
+                profileSlot={(
+                  <div className="flex items-center gap-3 ml-4 relative">
+                    <div className="relative">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowUserProfile(!showUserProfile)}
+                        className="group h-10 w-10 p-0 rounded-full border-0 bg-green-500 text-white shadow-md hover:bg-green-600 hover:shadow-lg transition-colors"
+                        aria-label="Open profile"
+                      >
+                        <Avatar className="h-8 w-8 transition-transform duration-200 group-hover:scale-105">
+                          <AvatarImage src={userSession.user.photoURL || undefined} />
+                          <AvatarFallback className="bg-transparent text-white text-sm font-semibold">
+                            {userInitials}
+                          </AvatarFallback>
+                        </Avatar>
+                      </Button>
+                      {/* Online indicator */}
+                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white shadow-[0_0_6px_rgba(16,185,129,0.8)]"></div>
+                    </div>
+                  </div>
+                )}
+              />
+            </header>
+            )}
+          
+          <main
+            className="flex-1 w-full bg-slate-50 overflow-y-auto overflow-x-hidden"
+            style={{ scrollbarGutter: "stable" }}
+            data-testid="main-content-area"
+          >
+            {children}
+          </main>
+          </div>
+        </div>
+
+        {showUserProfile && (
+          <>
+            <div
+              className="fixed inset-0 bg-black/30 z-50 transition-all duration-300"
+              onClick={() => setShowUserProfile(false)}
+            ></div>
+
+            <div className="fixed top-20 right-6 w-80 bg-white rounded-xl shadow-2xl z-[60] transform transition-all duration-300 ease-out border border-gray-100">
+              <div className="relative px-6 py-5 bg-linear-to-r from-green-600 to-emerald-600 rounded-t-xl">
+                <button
+                  onClick={() => setShowUserProfile(false)}
+                  className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-2 border-white/30">
+                    <Avatar className="w-12 h-12">
+                      <AvatarImage src={userSession.user.photoURL || undefined} />
+                      <AvatarFallback className="bg-white text-green-600 text-lg font-bold">
+                        {userInitials}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+
+                  <div className="text-white">
+                    <h3 className="font-semibold text-lg leading-tight">
+                      {userSession.user.username || "Ayush Bhatia"}
+                    </h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="px-2 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-medium border border-white/30">
+                        Administrator
+                      </span>
+                      <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 max-h-96 overflow-y-auto">
+                <div className="space-y-3 mb-6">
+                  <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Account Information</h4>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3 text-sm">
+                      <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center shrink-0">
+                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                        </svg>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-gray-500 text-xs">Email Address</p>
+                        <p className="text-gray-900 font-medium truncate">{userSession.user.email || "ayushbhatia590@gmail.com"}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 text-sm">
+                      <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center shrink-0">
+                        <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 text-xs">Role</p>
+                        <p className="text-gray-900 font-medium">Administrator</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 text-sm">
+                      <div className="w-8 h-8 bg-orange-50 rounded-lg flex items-center justify-center shrink-0">
+                        <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a4 4 0 118 0v4m-4 8a2 2 0 100-4 2 2 0 000 4zm6 0a2 2 0 100-4 2 2 0 000 4z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 text-xs">Member Since</p>
+                        <p className="text-gray-900 font-medium">November 16, 2025</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Permissions</h4>
+
+                  <div className="flex flex-wrap gap-1.5">
+                    {hasPermission("view_dashboard") && (
+                      <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-md">
+                        view dashboard
+                      </span>
+                    )}
+                    {hasPermission("view_campaigns") && (
+                      <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-md">
+                        view campaigns
+                      </span>
+                    )}
+                    {hasPermission("create_campaign") && (
+                      <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-md">
+                        create campaign
+                      </span>
+                    )}
+                    {hasPermission("edit_campaign") && (
+                      <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-md">
+                        edit campaign
+                      </span>
+                    )}
+                    {hasPermission("delete_campaign") && (
+                      <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-md">
+                        delete campaign
+                      </span>
+                    )}
+                    {hasPermission("view_kiosks") && (
+                      <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-md">
+                        view kiosks
+                      </span>
+                    )}
+                    {hasPermission("create_kiosk") && (
+                      <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-md">
+                        create kiosk
+                      </span>
+                    )}
+                    {hasPermission("edit_kiosk") && (
+                      <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-md">
+                        edit kiosk
+                      </span>
+                    )}
+                    {hasPermission("delete_kiosk") && (
+                      <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-md">
+                        delete kiosk
+                      </span>
+                    )}
+                    {hasPermission("assign_campaigns") && (
+                      <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-md">
+                        assign campaigns
+                      </span>
+                    )}
+                    {hasPermission("view_donations") && (
+                      <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-md">
+                        view donations
+                      </span>
+                    )}
+                    {hasPermission("export_donations") && (
+                      <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-xs font-medium rounded-md">
+                        export donations
+                      </span>
+                    )}
+                    {hasPermission("view_users") && (
+                      <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-md">
+                        view users
+                      </span>
+                    )}
+                    {hasPermission("create_user") && (
+                      <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-md">
+                        create user
+                      </span>
+                    )}
+                    {hasPermission("edit_user") && (
+                      <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-md">
+                        edit user
+                      </span>
+                    )}
+                    {hasPermission("delete_user") && (
+                      <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-md">
+                        delete user
+                      </span>
+                    )}
+                    {hasPermission("manage_permissions") && (
+                      <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-md">
+                        manage permissions
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-gray-100">
+                  <button
+                    onClick={() => {
+                      setShowUserProfile(false);
+                      onLogout();
+                    }}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors font-medium text-sm border border-red-200"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Log Out
+                  </button>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
     </SidebarProvider>
   );
 }
-
-

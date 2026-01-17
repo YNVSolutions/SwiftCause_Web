@@ -25,8 +25,26 @@ export const authApi = {
         } as User;
       }
       return null;
-    } catch (error) {
-      console.error('Error signing in:', error);
+    } catch (error: unknown) {
+      // Don't log expected authentication errors to console
+      const expectedErrors = [
+        'auth/invalid-email',
+        'auth/invalid-credential',
+        'auth/user-not-found',
+        'auth/wrong-password',
+        'auth/user-disabled',
+        'auth/too-many-requests'
+      ];
+      
+      // Type guard to check if error has a code property
+      const hasCode = (err: unknown): err is { code: string } => {
+        return typeof err === 'object' && err !== null && 'code' in err;
+      };
+      
+      if (!hasCode(error) || !expectedErrors.includes(error.code)) {
+        console.error('Unexpected error signing in:', error);
+      }
+      
       throw error;
     }
   },
@@ -86,8 +104,24 @@ export const authApi = {
         id: userId,
         ...userData
       } as User;
-    } catch (error) {
-      console.error('Error signing up:', error);
+    } catch (error: unknown) {
+      // Don't log expected authentication errors to console
+      const expectedErrors = [
+        'auth/email-already-in-use',
+        'auth/invalid-email',
+        'auth/weak-password',
+        'auth/operation-not-allowed'
+      ];
+      
+      // Type guard to check if error has a code property
+      const hasCode = (err: unknown): err is { code: string } => {
+        return typeof err === 'object' && err !== null && 'code' in err;
+      };
+      
+      if (!hasCode(error) || !expectedErrors.includes(error.code)) {
+        console.error('Unexpected error signing up:', error);
+      }
+      
       throw error;
     }
   },
@@ -96,7 +130,7 @@ export const authApi = {
   async signOut(): Promise<void> {
     try {
       await signOut(auth);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error signing out:', error);
       throw error;
     }
@@ -118,7 +152,7 @@ export const authApi = {
         } as User;
       }
       return null;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error getting current user:', error);
       throw error;
     }

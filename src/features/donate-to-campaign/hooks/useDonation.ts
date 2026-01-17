@@ -35,8 +35,8 @@ export function useDonation() {
 
       const donationId = await donationApi.createDonation(donation);
       return donationId;
-    } catch (err: any) {
-      setError(err.message || 'Failed to create donation');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to create donation');
       return null;
     } finally {
       setIsProcessing(false);

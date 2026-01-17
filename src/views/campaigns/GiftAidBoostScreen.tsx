@@ -126,7 +126,7 @@ export function GiftAidBoostScreen({
                           placeholder="0.00"
                         />
                       </div>
-                      <p className="text-sm text-gray-500 mt-2">Enter amount between $1 - $10,000</p>
+                      <p className="text-sm text-gray-500 mt-2">Enter amount between £1 - £10,000</p>
                     </div>
                   </div>
                 ) : (
