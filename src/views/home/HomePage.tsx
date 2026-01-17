@@ -382,7 +382,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
       nextStep();
     }, 5000);
     return () => clearInterval(interval);
-  }, [activeFlowStep]);
+  }, [nextStep]);
 
   // Mouse move handler for 3D tilt effect
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {

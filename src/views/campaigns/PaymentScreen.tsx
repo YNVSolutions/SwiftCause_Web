@@ -8,7 +8,7 @@ interface PaymentScreenProps {
   donation: Donation;
   isProcessing: boolean;
   error: string | null;
-  handlePaymentSubmit: (amount: number, metadata: any, currency: string) => Promise<void>;
+  handlePaymentSubmit: (amount: number, metadata: Record<string, unknown>, currency: string) => Promise<void>;
   onBack: () => void;
   organizationCurrency?: string;
 }

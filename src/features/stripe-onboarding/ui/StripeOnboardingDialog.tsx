@@ -3,10 +3,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogHeader,
   DialogTitle,
-  DialogFooter,
-  DialogClose,
 } from '../../../shared/ui/dialog';
 import { Button } from '../../../shared/ui/button';
 import { CreditCard, RefreshCw, AlertCircle, CheckCircle, ArrowRight, Shield, Zap, TrendingUp } from 'lucide-react';
@@ -83,14 +80,15 @@ export function StripeOnboardingDialog({
       } else {
         throw new Error('No onboarding URL received from server.');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating Stripe onboarding link:', error);
-      
-      if (error.name === 'AbortError') {
+
+      if (error instanceof DOMException && error.name === 'AbortError') {
         showToast('Request timed out. Please check your connection and try again.', 'error', 4000);
       } else {
+        const message = error instanceof Error ? error.message : 'An unexpected error occurred.';
         showToast(
-          `Failed to start Stripe onboarding: ${error.message}`,
+          `Failed to start Stripe onboarding: ${message}`,
           'error',
           4000
         );

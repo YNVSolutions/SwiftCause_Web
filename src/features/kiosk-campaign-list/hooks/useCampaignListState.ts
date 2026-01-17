@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Campaign, KioskSession } from '@/shared/types';
+import { KioskSession } from '@/shared/types';
 import { useCampaigns } from '@/entities/campaign';
 import { CampaignListState, CampaignLayoutMode } from '../types';
 
