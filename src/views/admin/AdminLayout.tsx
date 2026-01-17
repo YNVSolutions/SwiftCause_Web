@@ -73,6 +73,7 @@ interface AdminLayoutProps {
   hideHeaderDivider?: boolean;
   headerActions?: React.ReactNode;
   hideSidebarTrigger?: boolean;
+  hideHeader?: boolean;
 }
 
 // Get user initials for avatar
@@ -108,6 +109,7 @@ export function AdminLayout({
   headerActions,
   hideHeaderDivider,
   hideSidebarTrigger,
+  hideHeader,
 }: AdminLayoutProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -556,6 +558,7 @@ export function AdminLayout({
 
           {/* Main Content Area */}
           <div className="flex-1 flex flex-col overflow-hidden">
+            {!hideHeader && (
             <header className="sticky top-0 z-20 px-4 sm:px-6 py-4 bg-slate-50/95 backdrop-blur supports-backdrop-filter:bg-slate-50/80">
               <AdminPageHeader
                 title={resolvedTitle}
@@ -590,6 +593,7 @@ export function AdminLayout({
                 )}
               />
             </header>
+            )}
           
           <main
             className="flex-1 w-full bg-slate-50 overflow-y-auto overflow-x-hidden relative"
