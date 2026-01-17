@@ -15,11 +15,15 @@ interface Particle {
 export function ParticleField() {
   const [particles, setParticles] = useState<Particle[]>([]);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [particleCounter, setParticleCounter] = useState(0);
 
   const generateParticle = useCallback(() => {
     const types: Particle['type'][] = ['heart', 'coin', 'star', 'sparkle'];
+    const id = Date.now() + particleCounter;
+    setParticleCounter(prev => prev + 1);
+    
     return {
-      id: Date.now() + Math.random(),
+      id,
       x: Math.random() * 100,
       y: 100,
       size: Math.random() * 20 + 15,
@@ -28,7 +32,7 @@ export function ParticleField() {
       type: types[Math.floor(Math.random() * types.length)],
       drift: (Math.random() - 0.5) * 40,
     };
-  }, []);
+  }, [particleCounter]);
 
   useEffect(() => {
     // Initial particles
