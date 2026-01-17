@@ -53,7 +53,7 @@ export async function updateCampaign(campaignId: string, data: Partial<Campaign>
   await updateDoc(ref, data);
 }
 
-export async function updateCampaignWithImage(campaignId: string, data: Partial<Campaign>, imageFile: File | null = null) {
+export async function updateCampaignWithImage(campaignId: string, data: Partial<Campaign>) {
   const ref = doc(db, 'campaigns', campaignId);
   await updateDoc(ref, data);
   return data;
@@ -84,7 +84,6 @@ export async function getOrganizationById(organizationId: string): Promise<Organ
   if (docSnap.exists()) {
     return { ...(docSnap.data() as Organization), id: docSnap.id };
   } else {
-    console.log("No such organization document!");
     return null;
   }
 }
@@ -108,18 +107,18 @@ export async function createCampaign(data: Omit<Campaign, 'id'>): Promise<Campai
   return { id: docRef.id, ...data, raised: data.raised || 0 } as Campaign;
 }
 
-export async function createCampaignWithImage(data: Omit<Campaign, 'id'>, imageFile: File | null = null): Promise<Campaign> {
-  const campaignData = {
+export async function createCampaignWithImage(data: Omit<Campaign, 'id'>): Promise<Campaign> {
+  const campaignData: Omit<Campaign, 'id'> = {
     ...data,
     raised: 0,
     donationCount: 0,
-    createdAt: new Date(),
+    createdAt: new Date().toISOString(),
     status: data.status || 'active'
   };
   
   const campaignsRef = collection(db, 'campaigns');
   const docRef = await addDoc(campaignsRef, campaignData);
-  return { id: docRef.id, ...campaignData } as Campaign;
+  return { id: docRef.id, ...campaignData };
 }
 
 export async function deleteCampaign(campaignId: string) {
@@ -128,7 +127,7 @@ export async function deleteCampaign(campaignId: string) {
 }
 
 export async function getRecentDonations(limitCount: number, organizationId?: string) {
-  let donationsRef: Query<DocumentData> = collection(db, 'donations');
+  const donationsRef: Query<DocumentData> = collection(db, 'donations');
   let q = query(donationsRef, orderBy('timestamp', 'desc'), limit(limitCount));
   if (organizationId) {
     q = query(donationsRef, where("organizationId", "==", organizationId), orderBy('timestamp', 'desc'), limit(limitCount));
@@ -144,7 +143,7 @@ export async function createThankYouMail(recipientEmail: string) {
     message: {
       subject: 'Thank you for your donation!',
       text: `Dear Donor,\n\nThank you so much for your generous contribution to our campaign. Your support means a lot to us and helps us move closer to our goal.\n\nWe truly appreciate your kindness and belief in our mission.\n\nWith gratitude,\nSwift Cause`,
-      html: `<!DOCTYPE html>\n<html>\n  <body style=\"font-family: Arial, sans-serif; color: #333;\">\n    <h2>Thank You for Your Donation!</h2>\n    <p>Dear Donor,</p>\n    <p>Thank you so much for your generous contribution to our campaign. Your support means a lot to us and helps us move closer to our goal.</p>\n    <p>We truly appreciate your kindness and belief in our mission.</p>\n    <p>With gratitude,</p>\n    <p><strong>Swift Cause</strong></p>\n  </body>\n</html>`
+      html: `<!DOCTYPE html>\n<html>\n  <body style="font-family: Arial, sans-serif; color: #333;">\n    <h2>Thank You for Your Donation!</h2>\n    <p>Dear Donor,</p>\n    <p>Thank you so much for your generous contribution to our campaign. Your support means a lot to us and helps us move closer to our goal.</p>\n    <p>We truly appreciate your kindness and belief in our mission.</p>\n    <p>With gratitude,</p>\n    <p><strong>Swift Cause</strong></p>\n  </body>\n</html>`
     }
   };
 
@@ -209,7 +208,6 @@ export async function storeGiftAidDeclaration(giftAidData: GiftAidDetails, trans
   };
   
   const docRef = await addDoc(giftAidRef, giftAidDeclaration);
-  console.log('Gift Aid declaration stored with ID:', docRef.id);
   return { id: docRef.id, ...giftAidDeclaration };
 }
 
@@ -237,7 +235,6 @@ export async function submitCurrencyRequest(data: CurrencyRequestData) {
   };
   
   const docRef = await addDoc(currencyRequestsRef, requestData);
-  console.log('Currency request submitted with ID:', docRef.id);
   return { id: docRef.id, ...requestData };
 }
 
@@ -248,7 +245,6 @@ export async function checkEmailExists(email: string): Promise<boolean> {
     const snapshot = await getDocs(q);
     return !snapshot.empty;
   } catch (error) {
-    console.error('Error checking email existence:', error);
     throw error;
   }
 }
