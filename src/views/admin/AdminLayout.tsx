@@ -87,13 +87,13 @@ const getInitials = (name: string) => {
 };
 
 const SIDEBAR_COLORS = {
-  base: "#14532D",
-  dark: "#0F3D23",
-  panel: "#1B5E36",
-  panelSoft: "rgba(27, 94, 54, 0.6)",
-  accent: "#22C55E",
-  accentHover: "rgba(34, 197, 94, 0.22)",
-  accentHoverCompact: "rgba(34, 197, 94, 0.28)",
+  base: "#1A9A8A",
+  dark: "#11786D",
+  panel: "#1F8F80",
+  panelSoft: "rgba(31, 143, 128, 0.6)",
+  accent: "#6BD3C1",
+  accentHover: "rgba(107, 211, 193, 0.22)",
+  accentHoverCompact: "rgba(107, 211, 193, 0.28)",
 };
 
 export function AdminLayout({
@@ -196,15 +196,15 @@ export function AdminLayout({
       style: isActiveButton ? {
         background: SIDEBAR_COLORS.accent,
         boxShadow: isCollapsed
-          ? 'inset 3px 0 0 rgba(255,255,255,0.7), 0 0 12px rgba(34,197,94,0.45), 0 2px 8px rgba(0,0,0,0.2)'
-          : 'inset 3px 0 0 rgba(255,255,255,0.7), 0 2px 10px rgba(34,197,94,0.35)'
+          ? 'inset 3px 0 0 rgba(255,255,255,0.7), 0 0 12px rgba(107,211,193,0.45), 0 2px 8px rgba(0,0,0,0.2)'
+          : 'inset 3px 0 0 rgba(255,255,255,0.7), 0 2px 10px rgba(107,211,193,0.35)'
       } : {},
       onMouseEnter: (e: React.MouseEvent<HTMLButtonElement>) => {
         if (!isActiveButton) {
           e.currentTarget.style.backgroundColor = isCollapsed
             ? SIDEBAR_COLORS.accentHoverCompact
             : SIDEBAR_COLORS.accentHover;
-          e.currentTarget.style.boxShadow = '0 10px 24px rgba(22,163,74,0.2)';
+          e.currentTarget.style.boxShadow = '0 10px 24px rgba(12, 116, 103, 0.2)';
         }
       },
       onMouseLeave: (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -322,13 +322,13 @@ export function AdminLayout({
         <div className={`flex h-full w-full transition-[filter] duration-300 ${showUserProfile ? "blur-sm" : ""}`}>
           {/* Custom Green Gradient Sidebar */}
           <div 
-            className={`${isMobile ? "fixed inset-y-0 left-0 z-50" : "relative"} ${isCollapsed ? 'w-16' : 'w-80'} flex flex-col shadow-2xl border-r border-emerald-900/60 shrink-0 transition-all duration-300 ease-in-out overflow-hidden ${isMobile ? (isMobileMenuOpen ? "translate-x-0" : "-translate-x-full") : ""}`}
+            className={`${isMobile ? "fixed inset-y-0 left-0 z-50" : "relative"} ${isCollapsed ? 'w-16' : 'w-80'} flex flex-col shadow-2xl border-r border-teal-900/60 shrink-0 transition-all duration-300 ease-in-out overflow-hidden ${isMobile ? (isMobileMenuOpen ? "translate-x-0" : "-translate-x-full") : ""}`}
             style={{
               background: `linear-gradient(180deg, ${SIDEBAR_COLORS.base} 0%, ${SIDEBAR_COLORS.dark} 100%)`
             }}
           >
           <div className="pointer-events-none absolute -top-24 -right-20 h-72 w-72 rounded-full bg-white/15 blur-3xl"></div>
-          <div className="pointer-events-none absolute bottom-20 -left-24 h-64 w-64 rounded-full bg-emerald-200/20 blur-3xl"></div>
+          <div className="pointer-events-none absolute bottom-20 -left-24 h-64 w-64 rounded-full bg-teal-200/20 blur-3xl"></div>
           <div className="pointer-events-none absolute bottom-6 left-8 h-28 w-28 rounded-full bg-white/10 blur-2xl"></div>
           {/* Header Card */}
           <div 
@@ -359,7 +359,7 @@ export function AdminLayout({
               {/* Collapse/Expand Arrow Button */}
               <button
                 onClick={toggleSidebar}
-                className="p-3 text-white/80 hover:text-white hover:bg-emerald-500/20 rounded-lg transition-colors duration-200 shrink-0 ml-auto"
+                className="p-3 text-white/80 hover:text-white hover:bg-teal-500/20 rounded-lg transition-colors duration-200 shrink-0 ml-auto"
               >
                 {isMobile ? (
                   <X className="h-6 w-6" />
@@ -601,12 +601,12 @@ export function AdminLayout({
             data-testid="main-content-area"
           >
             {isMobile && !isMobileMenuOpen && (
-              <button
-                onClick={() => setIsMobileMenuOpen(true)}
-                className="fixed left-0 top-10 z-30 flex h-12  items-center justify-center rounded-r-2xl bg-emerald-500 text-white shadow-[0_10px_20px_rgba(16,185,129,0.35)] transition-transform duration-200 hover:translate-x-1"
-                aria-label="Open menu"
-                title="Open menu"
-              >
+                <button
+                  onClick={() => setIsMobileMenuOpen(true)}
+                  className="fixed left-0 top-10 z-30 flex h-12  items-center justify-center rounded-r-2xl bg-teal-500 text-white shadow-[0_10px_20px_rgba(13,148,136,0.35)] transition-transform duration-200 hover:translate-x-1"
+                  aria-label="Open menu"
+                  title="Open menu"
+                >
                 <ChevronRight className="h-6 w-6" />
               </button>
             )}
@@ -623,7 +623,7 @@ export function AdminLayout({
             ></div>
 
             <div className="fixed top-20 right-6 w-80 bg-white rounded-xl shadow-2xl z-60 transform transition-all duration-300 ease-out border border-gray-100">
-              <div className="relative px-6 py-5 bg-linear-to-r from-green-600 to-emerald-600 rounded-t-xl">
+              <div className="relative px-6 py-5 bg-linear-to-r from-teal-600 to-cyan-600 rounded-t-xl">
                 <button
                   onClick={() => setShowUserProfile(false)}
                   className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10"
