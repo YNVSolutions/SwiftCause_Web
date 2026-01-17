@@ -2,6 +2,8 @@
 export {
   handleStripeWebhook,
   createPaymentIntent,
+  createSetupIntent,
+  createSubscription,
 } from './functions/payments';
 
 export {

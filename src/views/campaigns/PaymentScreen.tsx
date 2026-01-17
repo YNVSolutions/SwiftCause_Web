@@ -46,6 +46,7 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
       donationAmount: donation.amount,
       organizationId: campaign.organizationId,
       isRecurring: donation.isRecurring,
+      recurringInterval: donation.isRecurring ? donation.recurringInterval : undefined,
       isGiftAid: isGiftAid,
       kioskId: donation.kioskId || null,
       // Add donor name if gift aid is provided, otherwise empty string
