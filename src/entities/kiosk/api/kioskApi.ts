@@ -6,30 +6,21 @@ export const kioskApi = {
   // Get all kiosks
   async getKiosks(organizationId?: string): Promise<Kiosk[]> {
     try {
-      let q;
+      let q = query(collection(db, 'kiosks'), orderBy('name', 'asc'));
       
       if (organizationId) {
-        // When filtering by organizationId, don't use orderBy to avoid needing a composite index
         q = query(
           collection(db, 'kiosks'),
-          where('organizationId', '==', organizationId)
+          where('organizationId', '==', organizationId),
+          orderBy('name', 'asc')
         );
-      } else {
-        q = query(collection(db, 'kiosks'), orderBy('name', 'asc'));
       }
 
       const querySnapshot = await getDocs(q);
-      const kiosks = querySnapshot.docs.map(doc => ({
+      return querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       } as Kiosk));
-      
-      // Sort in memory when filtering by organizationId
-      if (organizationId) {
-        kiosks.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-      }
-      
-      return kiosks;
     } catch (error) {
       console.error('Error fetching kiosks:', error);
       throw error;
