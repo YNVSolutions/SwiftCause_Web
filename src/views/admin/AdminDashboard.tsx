@@ -192,22 +192,22 @@ export function AdminDashboard({
   });
   const [campaignFormData, setCampaignFormData] = useState<CampaignFormData>({
     title: '',
+    briefOverview: '',
     description: '',
     goal: 0,
     category: '',
     status: 'active',
     coverImageUrl: '',
+    videoUrl: '',
+    galleryImages: [],
+    predefinedAmounts: [25, 50, 100],
     startDate: '',
     endDate: '',
-<<<<<<< HEAD
     enableRecurring: false,
     recurringIntervals: [],
     tags: [] as string[],
     isGlobal: false,
     assignedKiosks: []
-=======
-    tags: []
->>>>>>> main
   });
   const [showCampaignFormDialog, setShowCampaignFormDialog] = useState(false);
   const [editingCampaignInTour, setEditingCampaignInTour] = useState<Campaign | null>(null);
@@ -524,22 +524,22 @@ export function AdminDashboard({
       // Reset form and close dialog
       setCampaignFormData({
         title: '',
+        briefOverview: '',
         description: '',
         goal: 0,
         category: '',
         status: 'active',
         coverImageUrl: '',
+        videoUrl: '',
+        galleryImages: [],
+        predefinedAmounts: [25, 50, 100],
         startDate: '',
         endDate: '',
-<<<<<<< HEAD
         enableRecurring: false,
         recurringIntervals: [],
         tags: [] as string[],
         isGlobal: false,
         assignedKiosks: []
-=======
-        tags: []
->>>>>>> main
       });
       setShowCampaignFormDialog(false);
       setEditingCampaignInTour(null);
@@ -1023,14 +1023,26 @@ export function AdminDashboard({
                                       const endDateStr = toDateInputValue(campaign.endDate as unknown);
                                       setCampaignFormData({
                                         title: campaign.title || '',
+                                        briefOverview: campaign.briefOverview || '',
                                         description: campaign.description || '',
                                         goal: campaign.goal || 0,
                                         category: campaign.category || '',
                                         status: campaign.status || 'active',
                                         coverImageUrl: campaign.coverImageUrl || '',
+                                        videoUrl: campaign.videoUrl || '',
+                                        galleryImages: Array.isArray(campaign.galleryImages) ? campaign.galleryImages : [],
+                                        predefinedAmounts: Array.isArray(campaign.configuration?.predefinedAmounts)
+                                          ? campaign.configuration.predefinedAmounts
+                                          : [25, 50, 100],
                                         startDate: startDateStr,
                                         endDate: endDateStr,
-                                        tags: campaign.tags || []
+                                        enableRecurring: campaign.configuration?.enableRecurring ?? false,
+                                        recurringIntervals: Array.isArray(campaign.configuration?.recurringIntervals)
+                                          ? campaign.configuration.recurringIntervals
+                                          : [],
+                                        tags: Array.isArray(campaign.tags) ? campaign.tags : [],
+                                        isGlobal: campaign.isGlobal ?? false,
+                                        assignedKiosks: Array.isArray(campaign.assignedKiosks) ? campaign.assignedKiosks : []
                                       });
                                       setShowCampaignFormDialog(true);
                                     }}
@@ -1096,13 +1108,6 @@ export function AdminDashboard({
                 campaignData={campaignFormData}
                 setCampaignData={setCampaignFormData}
                 onSubmit={handleCampaignFormSubmit}
-<<<<<<< HEAD
-                onSaveDraft={() => {
-                  setShowCampaignFormDialog(false);
-                  setEditingCampaignInTour(null);
-                }}
-=======
->>>>>>> main
                 onCancel={() => {
                   setShowCampaignFormDialog(false);
                   setEditingCampaignInTour(null);

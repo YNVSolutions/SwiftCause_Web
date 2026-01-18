@@ -106,7 +106,7 @@ export function DeviceChart({ data }: DeviceChartProps) {
             >
               <div className="flex items-center gap-2">
                 <span
-                  className="h-3 w-3 rounded-sm flex-shrink-0"
+                  className="h-3 w-3 rounded-sm shrink-0"
                   style={{ backgroundColor: entry.color }}
                 />
                 <span className="text-gray-600 truncate">

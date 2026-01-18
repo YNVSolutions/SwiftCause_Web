@@ -1,14 +1,7 @@
 "use client";
 
-<<<<<<< HEAD
-import React, { useState, useRef, useEffect } from 'react';
-import type { Campaign, Kiosk } from '../../../shared/types';
-import { useScrollSpy } from '../../../shared/lib/hooks/useScrollSpy';
-import { kioskApi } from '../../../entities/kiosk/api';
-=======
 import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { Campaign } from '../../../shared/types';
->>>>>>> main
+import type { Campaign } from '../../../shared/types';
 
 // UI Components
 import { Button } from '../../../shared/ui/button';
@@ -20,20 +13,28 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Textarea } from '../../../shared/ui/textarea';
 
 import {
-  Menu, X, Image, Save, Upload
+  Menu, X, Save, Upload
 } from 'lucide-react';
 
 // Types for the form data
 export interface CampaignFormData {
   title: string;
+  briefOverview: string;
   description: string;
   goal: number;
   category: string;
   status: Campaign['status'];
   coverImageUrl: string;
+  videoUrl: string;
+  galleryImages: string[];
+  predefinedAmounts: number[];
   startDate: string;
   endDate: string;
+  enableRecurring: boolean;
+  recurringIntervals: string[];
   tags: string[];
+  isGlobal: boolean;
+  assignedKiosks: string[];
 }
 
 export interface CampaignFormProps {
@@ -56,30 +57,13 @@ export function CampaignForm({
   setCampaignData,
   onSubmit,
   onCancel,
-<<<<<<< HEAD
-  onImageFileSelect,
-  onGalleryImagesSelect,
-  organizationId,
-  isSubmitting = false,
-  isSavingDraft = false
-=======
-  formatCurrency,
   onImageFileSelect
->>>>>>> main
 }: CampaignFormProps) {
   
   const [activeSection, setActiveSection] = useState('basic-info');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-<<<<<<< HEAD
-  const [selectedGalleryFiles, setSelectedGalleryFiles] = useState<File[]>([]);
-  const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
-  const [kiosks, setKiosks] = useState<Kiosk[]>([]);
-  const [loadingKiosks, setLoadingKiosks] = useState(false);
-  const [imageUploadError, setImageUploadError] = useState<string | null>(null);
-=======
->>>>>>> main
   const fileInputRef = useRef<HTMLInputElement>(null);
   const lastUpdateTimeRef = useRef<number>(0);
   
