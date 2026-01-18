@@ -50,7 +50,7 @@ export function useCampaignManagement(organizationId?: string) {
       } else {
         updatedData = await createWithImage({ ...campaignData, coverImageUrl: downloadURL });
       }
-      setImagePreview(updatedData.coverImageUrl);
+      setImagePreview(updatedData.coverImageUrl ?? null);
       setSelectedImage(null);
       return updatedData;
     } finally {
@@ -63,8 +63,8 @@ export function useCampaignManagement(organizationId?: string) {
     setImagePreview(null);
   }, []);
 
-  const setImagePreviewUrl = useCallback((url: string | null) => {
-    setImagePreview(url);
+  const setImagePreviewUrl = useCallback((url: string | undefined) => {
+    setImagePreview(url ?? null);
   }, []);
 
   return {

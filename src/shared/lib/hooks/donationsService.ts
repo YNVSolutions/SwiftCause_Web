@@ -26,8 +26,9 @@ export async function getDonations(organizationId: string): Promise<Donation[]> 
 
     const formattedDonations: Donation[] = rawDonations.map((donation) => {
       const record = donation as Record<string, unknown>;
+      const typedDonation = donation as unknown as Donation;
       return {
-        ...(record as Donation),
+        ...typedDonation,
         timestamp: formatTimestamp(record.timestamp),
       };
     });

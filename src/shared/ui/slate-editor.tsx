@@ -2,9 +2,9 @@
 
 import { useCallback, useMemo } from 'react';
 import type { ComponentType } from 'react';
-import { createEditor, Descendant, Editor, Transforms, Element as SlateElement, BaseEditor } from 'slate';
-import { Slate, Editable, withReact, RenderLeafProps, RenderElementProps, ReactEditor } from 'slate-react';
-import { withHistory, HistoryEditor } from 'slate-history';
+import { createEditor, Descendant, Editor, Transforms, Element as SlateElement } from 'slate';
+import { Slate, Editable, withReact, RenderLeafProps, RenderElementProps } from 'slate-react';
+import { withHistory } from 'slate-history';
 import { 
   Bold, 
   Italic, 
@@ -46,14 +46,6 @@ type CustomElement =
   | BulletedListElement 
   | ListItemElement 
   | DividerElement;
-
-declare module 'slate' {
-  interface CustomTypes {
-    Editor: BaseEditor & ReactEditor & HistoryEditor;
-    Element: CustomElement;
-    Text: CustomText;
-  }
-}
 
 interface SlateEditorProps {
   value: string;

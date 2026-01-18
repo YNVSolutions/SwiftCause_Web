@@ -9,6 +9,7 @@ import { Button } from "../../shared/ui/button";
 import { Input } from "../../shared/ui/input";
 import { Label } from "../../shared/ui/label";
 import { Textarea } from "../../shared/ui/textarea";
+import { normalizeAssignments, syncKiosksForCampaign } from "../../shared/lib/sync/campaignKioskSync";
 import {
   Dialog,
   DialogContent,
