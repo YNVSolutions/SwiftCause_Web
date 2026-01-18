@@ -192,22 +192,22 @@ export function AdminDashboard({
   });
   const [campaignFormData, setCampaignFormData] = useState<CampaignFormData>({
     title: '',
-    briefOverview: '',
     description: '',
     goal: 0,
     category: '',
     status: 'active',
     coverImageUrl: '',
-    videoUrl: '',
-    galleryImages: [],
-    predefinedAmounts: [10, 25, 50],
     startDate: '',
     endDate: '',
+<<<<<<< HEAD
     enableRecurring: false,
     recurringIntervals: [],
     tags: [] as string[],
     isGlobal: false,
     assignedKiosks: []
+=======
+    tags: []
+>>>>>>> main
   });
   const [showCampaignFormDialog, setShowCampaignFormDialog] = useState(false);
   const [editingCampaignInTour, setEditingCampaignInTour] = useState<Campaign | null>(null);
@@ -524,22 +524,22 @@ export function AdminDashboard({
       // Reset form and close dialog
       setCampaignFormData({
         title: '',
-        briefOverview: '',
         description: '',
         goal: 0,
         category: '',
         status: 'active',
         coverImageUrl: '',
-        videoUrl: '',
-        galleryImages: [],
-        predefinedAmounts: [10, 25, 50],
         startDate: '',
         endDate: '',
+<<<<<<< HEAD
         enableRecurring: false,
         recurringIntervals: [],
         tags: [] as string[],
         isGlobal: false,
         assignedKiosks: []
+=======
+        tags: []
+>>>>>>> main
       });
       setShowCampaignFormDialog(false);
       setEditingCampaignInTour(null);
@@ -1023,22 +1023,14 @@ export function AdminDashboard({
                                       const endDateStr = toDateInputValue(campaign.endDate as unknown);
                                       setCampaignFormData({
                                         title: campaign.title || '',
-                                        briefOverview: '', // Campaign type doesn't have briefOverview, so use empty string
                                         description: campaign.description || '',
                                         goal: campaign.goal || 0,
                                         category: campaign.category || '',
                                         status: campaign.status || 'active',
                                         coverImageUrl: campaign.coverImageUrl || '',
-                                        videoUrl: campaign.videoUrl || '',
-                                        galleryImages: campaign.galleryImages || [],
-                                        predefinedAmounts: campaign.configuration?.predefinedAmounts || [10, 25, 50],
                                         startDate: startDateStr,
                                         endDate: endDateStr,
-                                        enableRecurring: campaign.configuration?.enableRecurring || false,
-                                        recurringIntervals: campaign.configuration?.recurringIntervals || [],
-                                        tags: campaign.tags || [],
-                                        isGlobal: campaign.isGlobal || false,
-                                        assignedKiosks: campaign.assignedKiosks || []
+                                        tags: campaign.tags || []
                                       });
                                       setShowCampaignFormDialog(true);
                                     }}
@@ -1104,10 +1096,13 @@ export function AdminDashboard({
                 campaignData={campaignFormData}
                 setCampaignData={setCampaignFormData}
                 onSubmit={handleCampaignFormSubmit}
+<<<<<<< HEAD
                 onSaveDraft={() => {
                   setShowCampaignFormDialog(false);
                   setEditingCampaignInTour(null);
                 }}
+=======
+>>>>>>> main
                 onCancel={() => {
                   setShowCampaignFormDialog(false);
                   setEditingCampaignInTour(null);
