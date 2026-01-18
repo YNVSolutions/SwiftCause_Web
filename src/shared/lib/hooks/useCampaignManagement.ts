@@ -43,6 +43,9 @@ export function useCampaignManagement(organizationId?: string) {
     try {
       const filePath = `campaigns/${campaignId}/coverImage/${selectedImage.name}`;
       const downloadURL = await uploadFile(selectedImage, filePath);
+      if (!downloadURL) {
+        return null;
+      }
 
       let updatedData;
       if (campaignId) {

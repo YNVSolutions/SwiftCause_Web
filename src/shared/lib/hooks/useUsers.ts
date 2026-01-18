@@ -20,6 +20,7 @@ export function useUsers(organizationId?: string) {
       const usersData = await fetchAllUsers(organizationId);
       const formattedUsers = usersData.map((user) => {
         const record = user as Record<string, unknown>;
+        const typedUser = user as unknown as User;
         const createdAt = record.createdAt;
         const lastLogin = record.lastLogin;
         const formattedCreatedAt =
@@ -38,7 +39,7 @@ export function useUsers(organizationId?: string) {
             : 'N/A';
 
         return {
-          ...(record as User),
+          ...typedUser,
           createdAt: formattedCreatedAt,
           lastLogin: formattedLastLogin,
           permissions: Array.isArray(record.permissions) ? record.permissions as Permission[] : [],

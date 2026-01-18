@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo } from 'react';
-import type { ComponentType } from 'react';
+import type { ComponentType, CSSProperties } from 'react';
 import { createEditor, Descendant, Editor, Transforms, Element as SlateElement } from 'slate';
 import { Slate, Editable, withReact, RenderLeafProps, RenderElementProps } from 'slate-react';
 import { withHistory } from 'slate-history';
@@ -91,11 +91,19 @@ const Leaf = ({ attributes, children, leaf }: RenderLeafProps) => {
   return <span {...attributes}>{children}</span>;
 };
 
+const isCustomElement = (value: unknown): value is CustomElement => {
+  return typeof value === 'object' && value !== null && 'type' in value;
+};
+
 const Element = ({ attributes, children, element }: RenderElementProps) => {
-  const alignValue = 'align' in element && typeof element.align === 'string' ? element.align : 'left';
-  const style = { textAlign: alignValue };
+  const elementValue = isCustomElement(element) ? element : { type: 'paragraph', children: [] };
+  const alignValue =
+    'align' in elementValue && typeof elementValue.align === 'string'
+      ? elementValue.align
+      : 'left';
+  const style: CSSProperties = { textAlign: alignValue as CSSProperties['textAlign'] };
   
-  switch (element.type) {
+  switch (elementValue.type) {
     case 'heading-one':
       return <h1 {...attributes} style={style} className="text-3xl font-bold mb-4">{children}</h1>;
     case 'heading-two':
@@ -154,7 +162,7 @@ export function SlateEditor({ value, onChange, placeholder, className }: SlateEd
     const [match] = Array.from(
       Editor.nodes(editor, {
         at: Editor.unhangRange(editor, selection),
-        match: n => !Editor.isEditor(n) && SlateElement.isElement(n) && n.type === format,
+        match: n => !Editor.isEditor(n) && SlateElement.isElement(n) && isCustomElement(n) && n.type === format,
       })
     );
 
@@ -166,15 +174,19 @@ export function SlateEditor({ value, onChange, placeholder, className }: SlateEd
     const isList = ['numbered-list', 'bulleted-list'].includes(format);
 
     Transforms.unwrapNodes(editor, {
-      match: n => !Editor.isEditor(n) && SlateElement.isElement(n) && ['numbered-list', 'bulleted-list'].includes(n.type),
+      match: n =>
+        !Editor.isEditor(n) &&
+        SlateElement.isElement(n) &&
+        isCustomElement(n) &&
+        ['numbered-list', 'bulleted-list'].includes(n.type),
       split: true,
     });
 
     const nextType: CustomElement['type'] = isActive
       ? 'paragraph'
       : (isList ? 'list-item' : format) as CustomElement['type'];
-    const newProperties: Partial<SlateElement> = { type: nextType };
-    Transforms.setNodes(editor, newProperties);
+    const newProperties: Partial<CustomElement> = { type: nextType };
+    Transforms.setNodes(editor, newProperties as Partial<SlateElement>);
 
     if (!isActive && isList) {
       const block: BulletedListElement | NumberedListElement = {
@@ -188,7 +200,7 @@ export function SlateEditor({ value, onChange, placeholder, className }: SlateEd
   const setAlignment = (align: string) => {
     Transforms.setNodes(
       editor,
-      { align } as Partial<SlateElement>,
+      { align } as Partial<CustomElement>,
       { match: n => !Editor.isEditor(n) && SlateElement.isElement(n) }
     );
   };
