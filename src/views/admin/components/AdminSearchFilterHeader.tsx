@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Calendar } from '../../../shared/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '../../../shared/ui/popover';
 import { Search, Calendar as CalendarIcon, Download } from 'lucide-react';
+import { exportToCsv } from '../../../shared/utils/csvExport';
 
 export interface FilterConfig {
   key: string;
@@ -25,12 +26,12 @@ interface AdminPageHeaderProps {
   config: AdminSearchFilterConfig;
   searchValue: string;
   onSearchChange: (value: string) => void;
-  filterValues: Record<string, any>;
-  onFilterChange: (key: string, value: any) => void;
+  filterValues: Record<string, unknown>;
+  onFilterChange: (key: string, value: unknown) => void;
   showCalendar?: Record<string, boolean>;
   onCalendarToggle?: (key: string, open: boolean) => void;
   actions?: React.ReactNode;
-  exportData?: any[];
+  exportData?: unknown[];
   onExport?: () => void;
 }
 
@@ -53,20 +54,21 @@ export function AdminPageHeader({
       onExport();
     } else if (exportData) {
       // Default export logic if no custom handler provided
-      const { exportToCsv } = require('../../../shared/utils/csvExport');
       exportToCsv(exportData);
     }
   };
 
   const renderFilter = (filter: FilterConfig) => {
     const value = filterValues[filter.key];
+    const dateValue = value instanceof Date ? value : undefined;
+    const selectValue = typeof value === 'string' ? value : 'all';
 
     switch (filter.type) {
       case 'select':
         return (
           <Select 
             key={filter.key}
-            value={value || 'all'} 
+            value={selectValue}
             onValueChange={(newValue) => onFilterChange(filter.key, newValue)}
           >
             <SelectTrigger className="w-full sm:w-auto sm:min-w-[120px] h-8 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50">
@@ -85,7 +87,11 @@ export function AdminPageHeader({
 
       case 'date':
         return (
-          <Popover key={filter.key}>
+          <Popover
+            key={filter.key}
+            open={onCalendarToggle ? Boolean(showCalendar[filter.key]) : undefined}
+            onOpenChange={onCalendarToggle ? (open) => onCalendarToggle(filter.key, open) : undefined}
+          >
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
@@ -93,8 +99,8 @@ export function AdminPageHeader({
               >
                 <CalendarIcon className="mr-2 h-3 w-3 flex-shrink-0" />
                 <span className="truncate">
-                  {value
-                    ? value.toLocaleDateString()
+                  {dateValue
+                    ? dateValue.toLocaleDateString()
                     : filter.label}
                 </span>
               </Button>
@@ -102,7 +108,7 @@ export function AdminPageHeader({
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
-                selected={value}
+                selected={dateValue}
                 onSelect={(date) => {
                   onFilterChange(filter.key, date);
                 }}
@@ -155,8 +161,8 @@ export function AdminPageHeader({
             )}
             
             {/* Custom Actions */}
-            {actions && (
-              <div className="flex gap-2">
+             {actions && (
+               <div className="flex gap-2">
                 {typeof actions === 'object' && React.isValidElement(actions) ? (
                   actions
                 ) : Array.isArray(actions) ? (
@@ -225,21 +231,20 @@ export function AdminPageHeader({
             )}
             
             {/* Custom Actions */}
-            {actions && (
-              <div className="flex flex-col gap-2 w-full">
-                {typeof actions === 'object' && React.isValidElement(actions) ? (
-                  // Single action element
-                  React.cloneElement(actions as React.ReactElement<any>, {
-                    className: `${(actions as any).props?.className || ''} w-full justify-center`.trim()
+             {actions && (
+               <div className="flex flex-col gap-2 w-full">
+                 {typeof actions === 'object' && React.isValidElement(actions) ? (
+                   // Single action element
+                  React.cloneElement(actions as React.ReactElement<{ className?: string }>, {
+                    className: `${(actions.props as { className?: string }).className || ''} w-full justify-center`.trim()
                   })
                 ) : Array.isArray(actions) ? (
                   // Multiple action elements
-                  actions.map((action) => {
+                  actions.map((action, index) => {
                     if (React.isValidElement(action)) {
-                      return React.cloneElement(action as React.ReactElement<any>, {
-                        ...((action as any).props || {}),
-                        className: `${(action as any).props?.className || ''} w-full justify-center`.trim(),
-                        key: (action as any).key || Math.random()
+                      return React.cloneElement(action as React.ReactElement<{ className?: string }>, {
+                        className: `${(action.props as { className?: string }).className || ''} w-full justify-center`.trim(),
+                        key: action.key ?? index
                       });
                     }
                     return action;

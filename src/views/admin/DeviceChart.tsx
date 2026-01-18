@@ -30,8 +30,18 @@ const CHART_COLORS = [
   "#64748B"  // Slate-500
 ];
 
+type TooltipPayloadEntry = {
+  name?: string;
+  value?: number;
+};
+
+type TooltipProps = {
+  active?: boolean;
+  payload?: TooltipPayloadEntry[];
+};
+
 // Custom Tooltip Component
-const CustomTooltip = ({ active, payload }: any) => {
+const CustomTooltip = ({ active, payload }: TooltipProps) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-white p-3 border border-gray-100 shadow-lg rounded-lg text-sm">

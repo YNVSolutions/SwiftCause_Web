@@ -69,7 +69,6 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
         giftAidTimestamp: giftAidDetails.timestamp
       } : {})
     };
-    console.log('PaymentScreen - handleSubmit: Final metadata object', metadata);
     await handlePaymentSubmit(donation.amount, metadata, organizationCurrency || 'GBP'); 
   };
 

@@ -41,7 +41,7 @@ const toTimestamp = (value: unknown): number | null => {
   return null;
 };
 
-export function useTableSort<T extends Record<string, unknown>>({
+export function useTableSort<T extends object>({
   data,
   defaultSortKey = null,
   defaultSortDirection = null
@@ -78,8 +78,8 @@ export function useTableSort<T extends Record<string, unknown>>({
 
       // Handle nested properties (e.g., 'user.name')
       if (sortKey.includes('.')) {
-        aValue = getNestedValue(a, sortKey);
-        bValue = getNestedValue(b, sortKey);
+        aValue = getNestedValue(a as Record<string, unknown>, sortKey);
+        bValue = getNestedValue(b as Record<string, unknown>, sortKey);
       }
 
       // Handle null/undefined values

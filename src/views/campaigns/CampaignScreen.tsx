@@ -44,10 +44,9 @@ export function CampaignScreen({
   view = 'donate', // Default to 'donate' view
   onSubmit,
   onBack,
-  onViewChange,
   initialShowDetails = false // Default to collapsed
 }: CampaignScreenProps) {
-  const [currentView, setCurrentView] = useState<CampaignView>(view);
+  const currentView = view;
   const [showDetails, setShowDetails] = useState(initialShowDetails); // Use new prop for initial state
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState('');
@@ -55,7 +54,7 @@ export function CampaignScreen({
   const [recurringInterval, setRecurringInterval] = useState<'monthly' | 'quarterly' | 'yearly'>(
     campaign.configuration.defaultRecurringInterval
   );
-  const [donorInfo, setDonorInfo] = useState<DonorInfo>({
+  const [donorInfo] = useState<DonorInfo>({
     isAnonymous: false
   });
   const [organizationCurrency, setOrganizationCurrency] = useState<string | undefined>(undefined);
@@ -97,11 +96,6 @@ export function CampaignScreen({
       return amount * (1 - (config.recurringDiscount / 100));
     }
     return amount;
-  };
-
-  const handleViewChange = (newView: CampaignView) => {
-    setCurrentView(newView);
-    onViewChange?.(newView);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -376,7 +370,14 @@ export function CampaignScreen({
                     {isRecurring && config.recurringIntervals.length > 1 && (
                       <div>
                         <Label>Recurring Frequency</Label>
-                        <Select value={recurringInterval} onValueChange={(value: any) => setRecurringInterval(value)}>
+                        <Select
+                          value={recurringInterval}
+                          onValueChange={(value: string) => {
+                            if (value === 'monthly' || value === 'quarterly' || value === 'yearly') {
+                              setRecurringInterval(value);
+                            }
+                          }}
+                        >
                           <SelectTrigger className="mt-2">
                             <SelectValue />
                           </SelectTrigger>

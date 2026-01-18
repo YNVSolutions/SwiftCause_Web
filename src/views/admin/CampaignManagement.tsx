@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Screen, AdminSession, Permission, Kiosk } from "../../shared/types";
 import { DEFAULT_CAMPAIGN_CONFIG } from "../../shared/config";
 import { DocumentData, Timestamp } from "firebase/firestore";
@@ -20,64 +20,27 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../../shared/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../shared/ui/select";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "../../shared/ui/command";
 import { Badge } from "../../shared/ui/badge";
-import { X, Check, ChevronsUpDown, Trash2, Save } from "lucide-react";
+import { Save } from "lucide-react";
 import {
   FaEdit,
-  FaSearch,
-  FaEllipsisV,
-  FaUpload,
-  FaImage,
-  FaTrashAlt, // Added FaTrashAlt
-  FaPlus, // Import FaPlus
+  FaTrashAlt,
 } from "react-icons/fa";
-import { Plus, Settings, Download, RefreshCw, MoreVertical } from "lucide-react";
-import { Calendar } from "../../shared/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "../../shared/ui/popover";
+import { Plus, RefreshCw, MoreVertical } from "lucide-react";
 import { AlertTriangle } from "lucide-react"; // Import AlertTriangle
 import { Skeleton } from "../../shared/ui/skeleton";
 import { Ghost } from "lucide-react";
 import { ImageWithFallback } from "../../shared/ui/figma/ImageWithFallback";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "../../shared/ui/alert-dialog";
-import { Calendar as CalendarIcon } from "lucide-react";
 import { AdminLayout } from "./AdminLayout";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "../../shared/ui/card";
 import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
   TableHeader,
   TableRow,
 } from "../../shared/ui/table";
@@ -106,6 +69,8 @@ interface CampaignDialogProps {
     campaignId?: string
   ) => Promise<void>;
 }
+
+type CampaignTab = "basic" | "media-gallery" | "funding-details" | "kiosk-distribution";
 
 const getInitialFormData = () => ({
   title: "",
@@ -180,7 +145,7 @@ const CampaignDialog = ({
   onSave,
 }: CampaignDialogProps) => {
   const [formData, setFormData] = useState<DocumentData>(getInitialFormData());
-  const [activeTab, setActiveTab] = useState<"basic" | "media-gallery" | "funding-details" | "kiosk-distribution">("basic");
+  const [activeTab, setActiveTab] = useState<CampaignTab>("basic");
   const [kiosks, setKiosks] = useState<Kiosk[]>([]);
   const [loadingKiosks, setLoadingKiosks] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -201,14 +166,14 @@ const CampaignDialog = ({
       const fundingSection = container.querySelector('[data-section="funding-details"]') as HTMLElement;
       const kioskSection = container.querySelector('[data-section="kiosk-distribution"]') as HTMLElement;
 
-      const sections = [
-        { element: basicInfoSection, id: 'basic' },
-        { element: mediaSection, id: 'media-gallery' },
-        { element: fundingSection, id: 'funding-details' },
-        { element: kioskSection, id: 'kiosk-distribution' }
+      const sections: Array<{ element: HTMLElement | null; id: CampaignTab }> = [
+        { element: basicInfoSection, id: "basic" },
+        { element: mediaSection, id: "media-gallery" },
+        { element: fundingSection, id: "funding-details" },
+        { element: kioskSection, id: "kiosk-distribution" }
       ];
 
-      let closestSection = 'basic';
+      let closestSection: CampaignTab = "basic";
       let closestDistance = Infinity;
 
       sections.forEach(({ element, id }) => {
@@ -224,7 +189,7 @@ const CampaignDialog = ({
         }
       });
 
-      setActiveTab(closestSection as any);
+      setActiveTab(closestSection);
     };
 
     container.addEventListener('scroll', handleScroll, { passive: true });
@@ -251,7 +216,6 @@ const CampaignDialog = ({
     fetchKiosks();
   }, [open, organizationId]);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const isEditMode = !!campaign;
 
   const {
@@ -270,15 +234,10 @@ const CampaignDialog = ({
 
   // Tags dropdown state
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [tagSearchOpen, setTagSearchOpen] = useState(false);
-  const [tagSearchValue, setTagSearchValue] = useState("");
 
   // New state for advanced image uploads
   const [selectedOrganizationLogo, setSelectedOrganizationLogo] =
     useState<File | null>(null);
-  const [organizationLogoPreview, setOrganizationLogoPreview] = useState<
-    string | null
-  >(null);
   // New state for gallery image uploads
   const [selectedGalleryImages, setSelectedGalleryImages] = useState<File[]>(
     []
@@ -287,8 +246,6 @@ const CampaignDialog = ({
     []
   );
 
-  // New states for specific image upload loading
-  const [isUploadingOrganizationLogo, setIsUploadingOrganizationLogo] = useState(false);
   // Loading state for the dialog submit (create/save)
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -397,10 +354,6 @@ const CampaignDialog = ({
       setFormData(editableData);
       setSelectedTags(Array.isArray(campaign.tags) ? campaign.tags : []);
       setImagePreviewUrl(campaign.coverImageUrl || null);
-      // Set initial previews for advanced images
-      if (campaign.organizationInfo?.logo) {
-        setOrganizationLogoPreview(campaign.organizationInfo.logo);
-      }
       // Set initial previews for gallery images
       if (
         Array.isArray(campaign.galleryImages) &&
@@ -414,7 +367,6 @@ const CampaignDialog = ({
       setImagePreviewUrl(null);
       // Clear advanced image selections/previews for add mode
       setSelectedOrganizationLogo(null);
-      setOrganizationLogoPreview(null);
       // Clear gallery image selections/previews for add mode
       setSelectedGalleryImages([]);
       setGalleryImagePreviews([]);
@@ -456,10 +408,6 @@ const CampaignDialog = ({
       } else if (inputName === "organizationInfoLogo") {
         const file = files[0];
         setSelectedOrganizationLogo(file);
-        const reader = new FileReader();
-        reader.onload = (e) =>
-          setOrganizationLogoPreview(e.target?.result as string);
-        reader.readAsDataURL(file);
       } else if (inputName === "galleryImages") {
         const newFiles = Array.from(files);
 
@@ -479,28 +427,6 @@ const CampaignDialog = ({
             ]);
           reader.readAsDataURL(file);
         });
-      }
-    }
-  };
-
-  const handleOrganizationLogoUpload = async () => {
-    if (selectedOrganizationLogo) {
-      setIsUploadingOrganizationLogo(true); // Set loading state
-      try {
-        const url = await uploadFile(
-          selectedOrganizationLogo,
-          `campaigns/${campaign?.id || "new"}/organizationLogo/${selectedOrganizationLogo.name
-          }`
-        );
-        if (url) {
-          setFormData((prev) => ({ ...prev, organizationInfoLogo: url }));
-          setOrganizationLogoPreview(url);
-        }
-      } catch (error) {
-        console.error("Error uploading organization logo:", error);
-        alert("Failed to upload organization logo. Please try again.");
-      } finally {
-        setIsUploadingOrganizationLogo(false); // Reset loading state
       }
     }
   };
@@ -643,11 +569,8 @@ const CampaignDialog = ({
     setFormData(getInitialFormData()); // Reset for add mode
     // Clear tags
     setSelectedTags([]);
-    setTagSearchValue("");
-    setTagSearchOpen(false);
     // Clear advanced image selections/previews
     setSelectedOrganizationLogo(null);
-    setOrganizationLogoPreview(null);
     setSelectedGalleryImages([]);
     setGalleryImagePreviews([]);
   };
@@ -663,7 +586,6 @@ const CampaignDialog = ({
   const dialogDescription = isEditMode
     ? "Make changes to your campaign below. Click save when you're done."
     : "Fill in the details below to create a new campaign.";
-  const saveButtonText = isEditMode ? "Save Changes" : "Create Campaign";
   const isSaveDisabled =
     uploadingImage || !formData.title || !formData.description;
 
@@ -1272,7 +1194,6 @@ const CampaignManagement = ({
   const [showCalendar, setShowCalendar] = useState<Record<string, boolean>>({});
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [campaignToDelete, setCampaignToDelete] = useState<DocumentData | null>(null);
-  const [confirmDeleteInput, setConfirmDeleteInput] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
 
   const { campaigns, updateWithImage, createWithImage, remove, loading, uploadFile } =
@@ -1281,7 +1202,7 @@ const CampaignManagement = ({
   const { organization, loading: orgLoading } = useOrganization(
     userSession.user.organizationId ?? null
   );
-  const { isStripeOnboarded, needsOnboarding } = useStripeOnboarding(organization);
+  const { isStripeOnboarded } = useStripeOnboarding(organization);
   const [showOnboardingDialog, setShowOnboardingDialog] = useState(false);
 
   const handleDeleteClick = (campaign: DocumentData) => {
@@ -1307,7 +1228,7 @@ const CampaignManagement = ({
   };
 
   // Helper function to remove undefined properties from an object
-  const removeUndefined = (obj: any): any => {
+  const removeUndefined = (obj: unknown): unknown => {
     if (obj === null || typeof obj !== "object") {
       return obj;
     }
@@ -1316,20 +1237,19 @@ const CampaignManagement = ({
       return obj.map(removeUndefined).filter((item) => item !== undefined);
     }
 
-    const newObj: any = {};
-    for (const key in obj) {
-      if (Object.prototype.hasOwnProperty.call(obj, key)) {
-        const value = obj[key];
-        if (value !== undefined) {
-          const processedValue = removeUndefined(value);
-          if (processedValue !== undefined) {
-            newObj[key] = processedValue;
-          }
+    const record = obj as Record<string, unknown>;
+    const newObj: Record<string, unknown> = {};
+    for (const key of Object.keys(record)) {
+      const value = record[key];
+      if (value !== undefined) {
+        const processedValue = removeUndefined(value);
+        if (processedValue !== undefined) {
+          newObj[key] = processedValue;
         }
       }
     }
     // If all properties of an object are undefined, return undefined so it can be removed from parent.
-    if (Object.keys(newObj).length === 0 && Object.keys(obj).length > 0) {
+    if (Object.keys(newObj).length === 0 && Object.keys(record).length > 0) {
       return undefined;
     }
     return newObj;
@@ -1375,7 +1295,7 @@ const CampaignManagement = ({
     campaignId?: string
   ) => {
     try {
-      const dataToSave: { [key: string]: any } = {
+      const dataToSave: Record<string, unknown> = {
         title: data.title,
         description: data.description,
         status: data.status,
@@ -1465,14 +1385,11 @@ const CampaignManagement = ({
       if (data.endDate)
         dataToSave.endDate = Timestamp.fromDate(new Date(data.endDate));
 
-      const finalDataToSave = removeUndefined(dataToSave);
+      const finalDataToSave = removeUndefined(dataToSave) as Record<string, unknown>;
 
-      let savedCampaignId = campaignId;
-      
       if (isNew) {
         const newCampaign = await createWithImage(finalDataToSave);
-        savedCampaignId = newCampaign.id;
-        
+
         await syncKiosksForCampaign(
           newCampaign.id,
           normalizeAssignments(data.assignedKiosks),
@@ -1528,7 +1445,7 @@ const CampaignManagement = ({
       }
       
       // Upload gallery images if any were selected
-      let galleryImageUrls = [...newCampaignFormData.galleryImages];
+      const galleryImageUrls = [...newCampaignFormData.galleryImages];
       if (selectedNewCampaignGalleryFiles.length > 0) {
         for (const file of selectedNewCampaignGalleryFiles) {
           const uploadedUrl = await uploadFile(
@@ -1541,7 +1458,7 @@ const CampaignManagement = ({
         }
       }
       
-      const dataToSave: { [key: string]: any } = {
+      const dataToSave: Record<string, unknown> = {
         title: newCampaignFormData.title,
         briefOverview: newCampaignFormData.briefOverview,
         description: newCampaignFormData.description,
@@ -1570,7 +1487,7 @@ const CampaignManagement = ({
         dataToSave.endDate = Timestamp.fromDate(new Date(newCampaignFormData.endDate));
       }
 
-      const finalDataToSave = removeUndefined(dataToSave);
+      const finalDataToSave = removeUndefined(dataToSave) as Record<string, unknown>;
       const newCampaign = await createWithImage(finalDataToSave);
       
       await syncKiosksForCampaign(newCampaign.id, normalizeAssignments(newCampaignFormData.assignedKiosks), []);
@@ -1655,7 +1572,7 @@ const CampaignManagement = ({
       }
       
       // Upload gallery images if any were selected
-      let galleryImageUrls = [...newCampaignFormData.galleryImages];
+      const galleryImageUrls = [...newCampaignFormData.galleryImages];
       if (selectedNewCampaignGalleryFiles.length > 0) {
         for (const file of selectedNewCampaignGalleryFiles) {
           const uploadedUrl = await uploadFile(
@@ -1668,7 +1585,7 @@ const CampaignManagement = ({
         }
       }
       
-      const dataToSave: { [key: string]: any } = {
+      const dataToSave: Record<string, unknown> = {
         title: newCampaignFormData.title,
         briefOverview: newCampaignFormData.briefOverview,
         description: newCampaignFormData.description,
@@ -1697,7 +1614,7 @@ const CampaignManagement = ({
         dataToSave.endDate = Timestamp.fromDate(new Date(newCampaignFormData.endDate));
       }
 
-      const finalDataToSave = removeUndefined(dataToSave);
+      const finalDataToSave = removeUndefined(dataToSave) as Record<string, unknown>;
       const newCampaign = await createWithImage(finalDataToSave);
       
       await syncKiosksForCampaign(newCampaign.id, normalizeAssignments(newCampaignFormData.assignedKiosks), []);
@@ -1759,7 +1676,7 @@ const CampaignManagement = ({
       }
       
       // Upload gallery images if any were selected
-      let galleryImageUrls = [...editCampaignFormData.galleryImages];
+      const galleryImageUrls = [...editCampaignFormData.galleryImages];
       if (selectedEditCampaignGalleryFiles.length > 0) {
         for (const file of selectedEditCampaignGalleryFiles) {
           const uploadedUrl = await uploadFile(
@@ -1772,7 +1689,7 @@ const CampaignManagement = ({
         }
       }
       
-      const dataToSave: { [key: string]: any } = {
+      const dataToSave: Record<string, unknown> = {
         title: editCampaignFormData.title,
         briefOverview: editCampaignFormData.briefOverview,
         description: editCampaignFormData.description,
@@ -1801,7 +1718,7 @@ const CampaignManagement = ({
         dataToSave.endDate = Timestamp.fromDate(new Date(editCampaignFormData.endDate));
       }
 
-      const finalDataToSave = removeUndefined(dataToSave);
+      const finalDataToSave = removeUndefined(dataToSave) as Record<string, unknown>;
       await updateWithImage(editingCampaignForNewForm.id, finalDataToSave);
       
       await syncKiosksForCampaign(
@@ -1868,7 +1785,7 @@ const CampaignManagement = ({
       }
       
       // Upload gallery images if any were selected
-      let galleryImageUrls = [...editCampaignFormData.galleryImages];
+      const galleryImageUrls = [...editCampaignFormData.galleryImages];
       if (selectedEditCampaignGalleryFiles.length > 0) {
         for (const file of selectedEditCampaignGalleryFiles) {
           const uploadedUrl = await uploadFile(
@@ -1881,7 +1798,7 @@ const CampaignManagement = ({
         }
       }
       
-      const dataToSave: { [key: string]: any } = {
+      const dataToSave: Record<string, unknown> = {
         title: editCampaignFormData.title,
         briefOverview: editCampaignFormData.briefOverview,
         description: editCampaignFormData.description,
@@ -1910,7 +1827,7 @@ const CampaignManagement = ({
         dataToSave.endDate = Timestamp.fromDate(new Date(editCampaignFormData.endDate));
       }
 
-      const finalDataToSave = removeUndefined(dataToSave);
+      const finalDataToSave = removeUndefined(dataToSave) as Record<string, unknown>;
       await updateWithImage(editingCampaignForNewForm.id, finalDataToSave);
       
       await syncKiosksForCampaign(
@@ -2010,9 +1927,10 @@ const CampaignManagement = ({
     return new Date(timestamp.seconds * 1000).toLocaleDateString();
   };
 
+  const campaignList = campaigns as Campaign[];
   const uniqueCategories: string[] = Array.from(
     new Set(
-      (campaigns as any[])
+      campaignList
         .map((c) => (typeof c.category === 'string' ? c.category : ''))
         .filter((v): v is string => Boolean(v))
     )
@@ -2052,16 +1970,16 @@ const CampaignManagement = ({
     dateFilter
   };
 
-  const handleFilterChange = (key: string, value: any) => {
+  const handleFilterChange = (key: string, value: unknown) => {
     switch (key) {
       case "statusFilter":
-        setStatusFilter(value);
+        setStatusFilter(typeof value === "string" ? value : "all");
         break;
       case "categoryFilter":
-        setCategoryFilter(value);
+        setCategoryFilter(typeof value === "string" ? value : "all");
         break;
       case "dateFilter":
-        setDateFilter(value);
+        setDateFilter(value instanceof Date ? value : undefined);
         break;
     }
   };
@@ -2071,13 +1989,19 @@ const CampaignManagement = ({
   };
 
   // Filter campaigns first
-  const filteredCampaigns = campaigns.filter((campaign: any) => {
+  const filteredCampaigns = campaignList.filter((campaign) => {
     const matchesSearch = campaign.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       campaign.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (Array.isArray(campaign.tags) && campaign.tags.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase())));
     const matchesStatus = statusFilter === "all" || campaign.status === statusFilter;
     const matchesCategory = categoryFilter === "all" || campaign.category === categoryFilter;
-    const matchesDate = !dateFilter || (campaign.endDate && new Date(campaign.endDate.seconds * 1000).toDateString() === dateFilter.toDateString());
+    const matchesDate = !dateFilter || (
+      campaign.endDate &&
+      typeof campaign.endDate === "object" &&
+      "seconds" in campaign.endDate &&
+      typeof (campaign.endDate as { seconds?: unknown }).seconds === "number" &&
+      new Date((campaign.endDate as { seconds: number }).seconds * 1000).toDateString() === dateFilter.toDateString()
+    );
     return matchesSearch && matchesStatus && matchesCategory && matchesDate;
   });
 
@@ -2085,31 +2009,6 @@ const CampaignManagement = ({
   const { sortedData: filteredAndSortedCampaigns, sortKey, sortDirection, handleSort } = useTableSort({
     data: filteredCampaigns
   });
-
-  const exportToCsv = (data: DocumentData[]) => {
-    if (data.length === 0) {
-      alert("No campaign data to export.");
-      return;
-    }
-
-    const headers = Object.keys(data[0]).join(',');
-    const csvContent = data.map(row => Object.values(row).map(value => {
-      const stringValue = String(value);
-      return `"${stringValue.replace(/"/g, '""')}"`;
-    }).join(',')).join('\n');
-
-    const csv = `${headers}\n${csvContent}`;
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `campaigns_${new Date().toISOString().slice(0, 10)}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
 
   return (
     <AdminLayout
@@ -2169,7 +2068,7 @@ const CampaignManagement = ({
                 <>
                   {/* Mobile Card View */}
                   <div className="md:hidden space-y-4 p-4">
-                  {filteredAndSortedCampaigns.map((campaign: any) => {
+                  {filteredAndSortedCampaigns.map((campaign) => {
                     const progress =
                       campaign.goal && campaign.raised
                         ? Math.min(
@@ -2358,7 +2257,7 @@ const CampaignManagement = ({
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredAndSortedCampaigns.map((campaign: any) => {
+                      {filteredAndSortedCampaigns.map((campaign) => {
                         const progress =
                           campaign.goal && campaign.raised
                             ? Math.min(
@@ -2397,7 +2296,6 @@ const CampaignManagement = ({
                                             {progress.toFixed(0)}%
                                           </span>
                                           <div className="h-1.5 w-20 bg-gray-100 rounded-full overflow-hidden">
-                                            {/* eslint-disable-next-line */}
                                             <div
                                               className={`h-full ${getProgressColor(
                                                 progress

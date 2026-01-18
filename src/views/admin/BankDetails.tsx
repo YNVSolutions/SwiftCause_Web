@@ -20,7 +20,7 @@ import {
 import { useOrganization } from "../../shared/lib/hooks/useOrganization";
 import { AdminSession, Screen, Permission } from "../../shared/types";
 import { AdminLayout } from "./AdminLayout";
-import { useStripeOnboarding, StripeOnboardingDialog } from "../../features/stripe-onboarding";
+import { StripeOnboardingDialog } from "../../features/stripe-onboarding";
 
 interface BankDetailsProps {
   onNavigate: (screen: Screen) => void;

@@ -1,6 +1,6 @@
 import { useState, FormEvent, ChangeEvent } from 'react';
 import { createThankYouMail } from '../../shared/api';
-import { Mail, Send, Home, CheckCircle, ArrowLeft } from 'lucide-react';
+import { Mail, Send, Home, CheckCircle } from 'lucide-react';
 
 interface EmailConfirmationScreenProps {
   transactionId?: string;

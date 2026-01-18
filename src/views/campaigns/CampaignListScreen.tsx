@@ -3,7 +3,6 @@ import { NavigationHeader } from '../../shared/ui/NavigationHeader';
 import { Campaign, KioskSession } from '../../shared/types';
 import { Button } from '../../shared/ui/button';
 import { ChevronLeft } from 'lucide-react';
-import { updateKiosk } from '../../shared/api';
 import { formatCurrency } from '../../shared/lib/currencyFormatter';
 
 interface CampaignListScreenProps {
@@ -33,11 +32,9 @@ export function CampaignListScreen({
   onViewDetails,
   isDefaultCampaign,
   onLogout,
-  refreshCampaigns,
   layoutMode,
   autoRotateCampaigns,
   rotationInterval,
-  refreshCurrentKioskSession,
 }: CampaignListScreenProps) {
 
   const [page, setPage] = useState(1);
@@ -59,28 +56,6 @@ export function CampaignListScreen({
     }
   }, [page, totalPages]);
 
-  const handleRefresh = async () => {
-    await refreshCampaigns();
-    await refreshCurrentKioskSession();
-  };
-
-  const handleLayoutChange = async (newLayout: 'grid' | 'list' | 'carousel') => {
-    if (kioskSession && kioskSession.kioskId) {
-      try {
-        const updatedSettings = {
-          displayMode: newLayout,
-          showAllCampaigns: kioskSession.settings?.showAllCampaigns ?? false,
-          maxCampaignsDisplay: kioskSession.settings?.maxCampaignsDisplay ?? 6,
-          autoRotateCampaigns: kioskSession.settings?.autoRotateCampaigns ?? false,
-          rotationInterval: kioskSession.settings?.rotationInterval,
-        };
-        await updateKiosk(kioskSession.kioskId, { settings: updatedSettings });
-        await refreshCurrentKioskSession(); // Refresh kiosk session to get updated settings
-      } catch (e) {
-        console.error("Failed to update kiosk display mode:", e);
-      }
-    }
-  };
 
   const handleSelectCampaign = async (campaign: Campaign, amount?: number) => {
     setIsLoadingPayment(true);

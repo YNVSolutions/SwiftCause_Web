@@ -27,28 +27,20 @@ import {
 } from "../../../shared/ui/card";
 import { Badge } from "../../../shared/ui/badge";
 import { Switch } from "../../../shared/ui/switch";
-import { Checkbox } from "../../../shared/ui/checkbox";
-import { Separator } from "../../../shared/ui/separator";
 import { ScrollArea } from "../../../shared/ui/scroll-area";
 import {
   Monitor,
   Settings,
   Target,
-  Users,
-  DollarSign,
-  MapPin,
   Star,
   Globe,
   LayoutGrid,
   List,
   Shuffle,
-  Clock,
   CheckCircle,
   AlertCircle,
   Plus,
   Minus,
-  RotateCcw,
-  Eye,
   Edit,
 } from "lucide-react";
 import { Kiosk, Campaign } from "../../../shared/types";
@@ -132,25 +124,22 @@ export function KioskCampaignAssignmentDialog({
   const handleSave = () => {
     
     const device = formData.deviceInfo || {};
+    const { modelCustom, osCustom, screenSizeCustom, ...deviceBase } = device;
     const normalizedDevice: Kiosk["deviceInfo"] = {
-      ...device,
+      ...deviceBase,
       model:
-        device.model === "Custom" && device.modelCustom
-          ? device.modelCustom
+        device.model === "Custom" && modelCustom
+          ? modelCustom
           : device.model,
       os:
-        device.os === "Other" && device.osCustom
-          ? device.osCustom
+        device.os === "Other" && osCustom
+          ? osCustom
           : device.os,
       screenSize:
-        device.screenSize === "Custom" && device.screenSizeCustom
-          ? device.screenSizeCustom
+        device.screenSize === "Custom" && screenSizeCustom
+          ? screenSizeCustom
           : device.screenSize,
     };
-    
-    delete (normalizedDevice as any).modelCustom;
-    delete (normalizedDevice as any).osCustom;
-    delete (normalizedDevice as any).screenSizeCustom;
 
     // Remove undefined values from deviceInfo to prevent Firestore errors
     Object.keys(normalizedDevice).forEach(key => {

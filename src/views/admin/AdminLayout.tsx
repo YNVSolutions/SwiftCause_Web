@@ -4,21 +4,7 @@ import React, { useState } from "react";
 import { Screen, AdminSession, Permission } from "../../shared/types";
 import { Avatar, AvatarFallback, AvatarImage } from "../../shared/ui/avatar";
 import { Button } from "../../shared/ui/button";
-import {
-  SidebarProvider,
-  Sidebar,
-  SidebarHeader,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-
-  SidebarInset,
-  useSidebar,
-} from "../../shared/ui/sidebar";
+import { SidebarProvider } from "../../shared/ui/sidebar";
 import { AdminPageHeader } from "./components/AdminPageHeader";
 import {
   LayoutDashboard,
@@ -29,10 +15,6 @@ import {
   Gift,
   LogOut,
   X,
-  Mail,
-  Building2,
-  Shield,
-  Calendar,
   Wallet,
   ChevronLeft,
   ChevronRight,
@@ -107,7 +89,6 @@ export function AdminLayout({
   headerTitle,
   headerSubtitle,
   headerActions,
-  hideHeaderDivider,
   hideSidebarTrigger,
   hideHeader,
 }: AdminLayoutProps) {

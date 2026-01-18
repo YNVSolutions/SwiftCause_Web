@@ -1,4 +1,4 @@
-import { CheckCircle, XCircle, Mail, Home, RefreshCw, ArrowLeft } from 'lucide-react';
+import { CheckCircle, XCircle, Mail, Home, RefreshCw } from 'lucide-react';
 import { PaymentResult } from '../../shared/types';
 
 interface ResultScreenProps {

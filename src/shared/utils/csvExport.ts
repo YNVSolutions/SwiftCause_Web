@@ -1,5 +1,5 @@
 // Shared CSV export utility
-export const exportToCsv = <T extends Record<string, unknown>>(
+export const exportToCsv = <T extends object>(
   data: T[],
   filename: string,
   customHeaders?: string[]

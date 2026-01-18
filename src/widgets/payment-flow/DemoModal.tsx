@@ -5,7 +5,6 @@ import { Badge } from '../../shared/ui/badge';
 import { Progress } from '../../shared/ui/progress';
 import { Card, CardContent } from '../../shared/ui/card';
 import { 
-  X, 
   Play, 
   Pause, 
   RotateCcw,
@@ -648,4 +647,3 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
     </>
   );
 }
-

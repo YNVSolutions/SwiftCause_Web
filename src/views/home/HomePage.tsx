@@ -1,12 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '../../shared/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../shared/ui/card';
+import { Card, CardContent } from '../../shared/ui/card';
 import { Badge } from '../../shared/ui/badge';
-import { Progress } from '../../shared/ui/progress';
 import { DemoModal } from '../../widgets/payment-flow/DemoModal';
-import { EnterprisePlatformShowcase } from '../../widgets/payment-flow/EnterprisePlatformShowcase';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '../../shared/ui/carousel';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shared/ui/tabs';
 import { 
   Heart,
   Shield,
@@ -16,50 +12,27 @@ import {
   CheckCircle,
   ArrowRight,
   DollarSign,
-  Users,
   Settings,
   Star,
   MapPin,
-  Smartphone,
   CreditCard,
   BarChart3,
-  QrCode,
   Zap,
-  Target,
-  UserCog,
   PlayCircle,
   Quote,
   ArrowDown,
   ChevronRight,
-  Monitor,
-  Database,
-  Clock,
-  Calendar,
-  Layers,
-  Handshake,
-  Wifi,
   Lock,
-  Cloud,
   Building,
-  CheckSquare,
-  Tablet,
   Activity,
-  PieChart,
-  Download,
-  Upload,
-  Eye,
-  Pause,
-  Play,
-  RotateCcw
 } from 'lucide-react';
 
-import { ImageWithFallback } from '../../shared/ui/figma/ImageWithFallback';
 import { Footer } from '../../shared/ui/Footer';
 
 interface HomePageProps {
   onLogin: () => void;
   onSignup: () => void;
-  onNavigate?: (screen: any) => void;
+  onNavigate?: (screen: string) => void;
 }
 
 export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
@@ -68,12 +41,6 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
   const [activeFlowStep, setActiveFlowStep] = useState(0);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [cardTilt, setCardTilt] = useState({ rotateX: 0, rotateY: 0 });
-  const [globalDonations, setGlobalDonations] = useState<Array<{
-    id: number;
-    lat: number;
-    lng: number;
-    amount: number;
-  }>>([]);
   const [floatingParticles, setFloatingParticles] = useState<Array<{
     id: number;
     left: number;
@@ -121,10 +88,6 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
       currency: 'GBP',
       minimumFractionDigits: 0
     }).format(amount);
-  };
-
-  const formatNumber = (num: number) => {
-    return new Intl.NumberFormat('en-GB').format(num);
   };
 
   const toggleFaq = (index: number) => {
@@ -404,47 +367,6 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
   const handleMouseLeave = () => {
     setCardTilt({ rotateX: 0, rotateY: 0 });
   };
-
-  // Generate global donation pulses
-  useEffect(() => {
-    const locations = [
-      { lat: 51.5, lng: -0.1, city: 'London' },
-      { lat: 40.7, lng: -74, city: 'New York' },
-      { lat: 35.7, lng: 139.7, city: 'Tokyo' },
-      { lat: -33.9, lng: 151.2, city: 'Sydney' },
-      { lat: 48.9, lng: 2.3, city: 'Paris' },
-      { lat: 55.8, lng: 37.6, city: 'Moscow' },
-      { lat: 19.4, lng: -99.1, city: 'Mexico City' },
-      { lat: -23.5, lng: -46.6, city: 'São Paulo' }
-    ];
-    
-    const generatePulse = () => {
-      const location = locations[Math.floor(Math.random() * locations.length)];
-      const newPulse = {
-        id: Date.now() + Math.random(),
-        lat: location.lat,
-        lng: location.lng,
-        amount: [10, 25, 50, 100][Math.floor(Math.random() * 4)]
-      };
-      
-      setGlobalDonations(prev => [...prev, newPulse]);
-      
-      setTimeout(() => {
-        setGlobalDonations(prev => prev.filter(p => p.id !== newPulse.id));
-      }, 3000);
-    };
-    
-    // Initial pulses
-    for (let i = 0; i < 3; i++) {
-      setTimeout(() => generatePulse(), i * 800);
-    }
-    
-    const interval = setInterval(() => {
-      generatePulse();
-    }, 2000);
-    
-    return () => clearInterval(interval);
-  }, []);
 
   // Generate floating heart particles
   useEffect(() => {

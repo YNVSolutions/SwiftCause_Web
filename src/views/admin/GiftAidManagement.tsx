@@ -13,9 +13,6 @@ import { exportToCsv } from "../../shared/utils/csvExport";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "../../shared/ui/card";
 import {
   Table,
@@ -27,7 +24,6 @@ import {
 } from "../../shared/ui/table";
 import { Badge } from "../../shared/ui/badge";
 import { Button } from "../../shared/ui/button";
-import { Input } from "../../shared/ui/input";
 import { Label } from "../../shared/ui/label";
 import { Skeleton } from "../../shared/ui/skeleton";
 import {
@@ -38,16 +34,7 @@ import {
   DialogTitle,
 } from "../../shared/ui/dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../shared/ui/select";
-import {
   Gift,
-  Search,
-  Download,
   RefreshCw,
   Eye,
   CheckCircle,
@@ -156,21 +143,22 @@ export function GiftAidManagement({
 
         setGiftAidDonations(declarations);
         setError(null);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Error fetching Gift Aid declarations:", err);
+        const error = err as { code?: unknown; message?: unknown };
+        const errorCode = typeof error.code === 'string' ? error.code : '';
+        const errorMessage = typeof error.message === 'string' ? error.message : 'Unknown error';
         // Handle different types of errors gracefully
-        if (err.code === 'permission-denied') {
+        if (errorCode === 'permission-denied') {
           setError("Permission denied. Please check your access rights.");
-        } else if (err.code === 'failed-precondition') {
+        } else if (errorCode === 'failed-precondition') {
           setError("Database index required. Please contact your administrator.");
-        } else if (err.code === 'not-found') {
+        } else if (errorCode === 'not-found') {
           // Collection doesn't exist yet, which is fine
           setGiftAidDonations([]);
           setError(null);
         } else {
-          // For development, show a more helpful error message
-          console.log("Full error details:", err);
-          setError(`Failed to load Gift Aid declarations: ${err.message || 'Unknown error'}`);
+          setError(`Failed to load Gift Aid declarations: ${errorMessage}`);
         }
       } finally {
         setLoading(false);
@@ -201,9 +189,9 @@ export function GiftAidManagement({
     statusFilter
   };
 
-  const handleFilterChange = (key: string, value: any) => {
+  const handleFilterChange = (key: string, value: unknown) => {
     if (key === "statusFilter") {
-      setStatusFilter(value);
+      setStatusFilter(typeof value === "string" ? value : "all");
     }
   };
 

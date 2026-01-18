@@ -36,7 +36,7 @@ export function calculateDistributionSummary(
     range: item.range,
     count: item.count,
     percentage: totalDonations > 0 ? Math.round((item.count / totalDonations) * 100) : 0,
-    color: getGradientColor(index, data.length),
+    color: getGradientColor(index),
   }));
 
   return {
@@ -52,7 +52,7 @@ export function calculateDistributionSummary(
  * Get gradient color for bar based on index
  * Creates a gradient from light blue to dark blue
  */
-function getGradientColor(index: number, total: number): string {
+function getGradientColor(index: number): string {
   const colors = [
     'bg-blue-200',
     'bg-blue-300',

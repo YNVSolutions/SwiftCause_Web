@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { getTopCampaigns } from '../../../shared/api/firestoreService';
-import { Campaign as FirestoreCampaign } from '../../../shared/types';
 import { Campaign } from '../components/FeaturedCampaign';
 
 export function useFeaturedCampaigns(limit: number = 3) {
@@ -17,20 +16,50 @@ export function useFeaturedCampaigns(limit: number = 3) {
         const firestoreCampaigns = await getTopCampaigns(limit);
 
         const transformedCampaigns: Campaign[] = firestoreCampaigns
-          .filter((c: any) => c.status === 'active')
-          .map((c: any, index: number) => ({
-            id: c.id,
-            title: c.name || c.title || 'Untitled Campaign',
-            description: c.description || 'Help us reach our goal and make a difference',
-            raised: c.raised || 0,
-            goal: c.goal || c.targetAmount || 10000,
-            supporters: c.donationCount || c.supporters || 0,
-            category: c.category || 'General',
-            isActive: c.status === 'active',
-            createdAt: c.createdAt,
-            gradient: getGradientByIndex(index),
-            accentColor: getAccentColorByIndex(index),
-          }));
+          .filter((campaign) => (campaign as { status?: unknown }).status === 'active')
+          .map((campaign, index) => {
+            const data = campaign as Record<string, unknown>;
+            const title =
+              (typeof data.name === 'string' && data.name) ||
+              (typeof data.title === 'string' && data.title) ||
+              'Untitled Campaign';
+            const description =
+              typeof data.description === 'string'
+                ? data.description
+                : 'Help us reach our goal and make a difference';
+            const raised = typeof data.raised === 'number' ? data.raised : 0;
+            const goal =
+              typeof data.goal === 'number'
+                ? data.goal
+                : typeof data.targetAmount === 'number'
+                  ? data.targetAmount
+                  : 10000;
+            const supporters =
+              typeof data.donationCount === 'number'
+                ? data.donationCount
+                : typeof data.supporters === 'number'
+                  ? data.supporters
+                  : 0;
+            const category = typeof data.category === 'string' ? data.category : 'General';
+            const createdAt = typeof data.createdAt === 'string' ? data.createdAt : undefined;
+            const id = typeof data.id === 'string' || typeof data.id === 'number'
+              ? data.id
+              : `campaign-${index}`;
+
+            return {
+              id,
+              title,
+              description,
+              raised,
+              goal,
+              supporters,
+              category,
+              isActive: (data.status as string | undefined) === 'active',
+              createdAt,
+              gradient: getGradientByIndex(index),
+              accentColor: getAccentColorByIndex(index),
+            };
+          });
 
         setCampaigns(transformedCampaigns);
       } catch (err) {

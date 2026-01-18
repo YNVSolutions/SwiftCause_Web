@@ -13,18 +13,16 @@ import {
   doc,
   addDoc,
   deleteDoc,
-  getDoc,
 } from 'firebase/firestore';
 import { Screen, Kiosk, AdminSession, Permission } from '../../shared/types';
 import { syncCampaignsForKiosk, removeKioskFromAllCampaigns } from "../../shared/lib/sync/campaignKioskSync";
 
 // UI Components
 import { Button } from '../../shared/ui/button';
-import { Input } from '../../shared/ui/input';
 import { Badge } from '../../shared/ui/badge';
 import { Card, CardContent } from '../../shared/ui/card';
 import { Dialog, DialogContent, DialogTitle, VisuallyHidden } from '../../shared/ui/dialog';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../shared/ui/table';
+import { Table, TableBody, TableCell, TableHeader, TableRow } from '../../shared/ui/table';
 
 import {
   Plus,
@@ -36,13 +34,11 @@ import {
   Copy,
   Check,
   MoreVertical,
-  Search,
   DollarSign,
   Users,
   Settings,
   Activity,
   AlertTriangle,
-  Download,
 } from 'lucide-react';
 import { AdminLayout } from './AdminLayout';
 import { KioskForm, KioskFormData } from './components/KioskForm';
@@ -150,9 +146,11 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
     statusFilter
   };
 
-  const handleFilterChange = (key: string, value: any) => {
+  const handleFilterChange = (key: string, value: unknown) => {
     if (key === "statusFilter") {
-      setStatusFilter(value);
+      if (value === "online" || value === "offline" || value === "maintenance" || value === "all") {
+        setStatusFilter(value);
+      }
     }
   };
 

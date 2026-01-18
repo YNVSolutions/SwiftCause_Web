@@ -1,21 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '../../shared/ui/button';
-import { Input } from '../../shared/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../shared/ui/card';
+import { Card, CardContent } from '../../shared/ui/card';
 import { Badge } from '../../shared/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../shared/ui/table';
-import { Calendar } from '../../shared/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '../../shared/ui/popover';
+import { Table, TableBody, TableCell, TableHeader, TableRow } from '../../shared/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../../shared/ui/dialog';
 import {
-  Search,
-  Download,
-  Calendar as CalendarIcon,
   DollarSign,
   Users,
   TrendingUp,
-  Heart,
   MapPin,
   Clock,
   CreditCard,
@@ -34,7 +26,6 @@ import { useTableSort } from '../../shared/lib/hooks/useTableSort';
 import { getAllCampaigns } from '../../shared/api';
 import { AdminLayout } from './AdminLayout';
 import { exportToCsv } from '../../shared/utils/csvExport';
-import { useOrganization } from "../../shared/lib/hooks/useOrganization";
 interface FetchedDonation extends Omit<Donation, 'timestamp'> {
   id: string;
   amount: number;
@@ -66,10 +57,6 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const { organization, loading: orgLoading } = useOrganization(
-    userSession.user.organizationId ?? null
-  );
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -144,16 +131,16 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
     dateFilter
   };
 
-  const handleFilterChange = (key: string, value: any) => {
+  const handleFilterChange = (key: string, value: unknown) => {
     switch (key) {
       case "statusFilter":
-        setStatusFilter(value);
+        setStatusFilter(typeof value === "string" ? value : "all");
         break;
       case "campaignFilter":
-        setCampaignFilter(value);
+        setCampaignFilter(typeof value === "string" ? value : "all");
         break;
       case "dateFilter":
-        setDateFilter(value);
+        setDateFilter(value instanceof Date ? value : undefined);
         break;
     }
   };
@@ -547,6 +534,70 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
             </CardContent>
           </Card>
         </main>
+        <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
+          <DialogContent className="sm:max-w-[520px]">
+            <DialogHeader>
+              <DialogTitle>Donation Details</DialogTitle>
+              <DialogDescription>Transaction summary and donor information.</DialogDescription>
+            </DialogHeader>
+            {selectedDonation ? (
+              <div className="space-y-3 text-sm text-gray-700">
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-gray-500">Amount</span>
+                  <span className="font-semibold text-gray-900">
+                    {formatCurrency(selectedDonation.amount, selectedDonation.currency)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-gray-500">Campaign</span>
+                  <span className="font-medium text-gray-900">
+                    {campaignMap[selectedDonation.campaignId] || 'Unknown'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-gray-500">Donor</span>
+                  <span className="font-medium text-gray-900">
+                    {selectedDonation.donorName || 'Anonymous'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-gray-500">Status</span>
+                  <span className="font-medium text-gray-900">
+                    {selectedDonation.paymentStatus}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-gray-500">Platform</span>
+                  <span className="font-medium text-gray-900">{selectedDonation.platform}</span>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-gray-500">Gift Aid</span>
+                  <span className="font-medium text-gray-900">
+                    {selectedDonation.isGiftAid ? 'Yes' : 'No'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-gray-500">Date</span>
+                  <span className="font-medium text-gray-900">
+                    {selectedDonation.timestamp
+                      ? new Date(selectedDonation.timestamp).toLocaleString()
+                      : 'N/A'}
+                  </span>
+                </div>
+                {selectedDonation.stripePaymentIntentId && (
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-gray-500">Payment Intent</span>
+                    <span className="font-mono text-xs text-gray-700 break-all">
+                      {selectedDonation.stripePaymentIntentId}
+                    </span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">No donation selected.</p>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );

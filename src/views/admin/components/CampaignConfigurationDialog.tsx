@@ -10,7 +10,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Badge } from '../../../shared/ui/badge';
 import { Switch } from '../../../shared/ui/switch';
 import { Checkbox } from '../../../shared/ui/checkbox';
-import { Slider } from '../../../shared/ui/slider';
 import { Separator } from '../../../shared/ui/separator';
 import {
   Settings,
@@ -18,14 +17,8 @@ import {
   Palette,
   Users,
   Share2,
-  Eye,
   Plus,
   X,
-  Wand2,
-  Zap,
-  Heart,
-  Clock,
-  Globe,
   Phone,
   Mail,
   MapPin,
@@ -463,7 +456,7 @@ export function CampaignConfigurationDialog({
                             ? 'border-primary bg-primary/5'
                             : 'border-border hover:border-primary/50'
                         }`}
-                        onClick={() => updateConfiguration({ theme: theme.value as any })}
+                        onClick={() => updateConfiguration({ theme: theme.value as CampaignConfiguration['theme'] })}
                       >
                         <div className="flex items-center space-x-2">
                           <div className={`w-4 h-4 rounded ${
@@ -612,18 +605,22 @@ export function CampaignConfigurationDialog({
                   <div>
                     <Label className="text-base font-medium">Optional Fields</Label>
                     <div className="space-y-3 mt-3">
-                      {(['email', 'name', 'phone', 'address', 'message'] as const).map(field => (
+                      {(['email', 'name', 'phone', 'address', 'message'] as const).map(field => {
+                        const isRequiredField =
+                          field !== 'message' &&
+                          formData.configuration.requiredFields.includes(field);
+                        return (
                         <div key={field} className="flex items-center space-x-2">
                           <Checkbox
                             id={`opt-${field}`}
                             checked={formData.configuration.optionalFields.includes(field)}
                             onCheckedChange={() => toggleOptionalField(field)}
-                            disabled={formData.configuration.requiredFields.includes(field as any)}
+                            disabled={isRequiredField}
                           />
                           <Label 
                             htmlFor={`opt-${field}`} 
                             className={`flex items-center space-x-2 capitalize ${
-                              formData.configuration.requiredFields.includes(field as any) 
+                              isRequiredField
                                 ? 'text-gray-400' 
                                 : ''
                             }`}
@@ -634,12 +631,13 @@ export function CampaignConfigurationDialog({
                             {field === 'address' && <MapPin className="w-4 h-4" />}
                             {field === 'message' && <MessageSquare className="w-4 h-4" />}
                             <span>{field}</span>
-                            {formData.configuration.requiredFields.includes(field as any) && 
+                            {isRequiredField && 
                               <span className="text-xs">(Required)</span>
                             }
                           </Label>
                         </div>
-                      ))}
+                      );
+                      })}
                     </div>
                   </div>
                 </div>

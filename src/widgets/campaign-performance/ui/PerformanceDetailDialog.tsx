@@ -18,18 +18,12 @@ interface PerformanceDetailDialogProps {
   isOpen: boolean;
   onClose: () => void;
   campaigns: Campaign[];
-  stats: {
-    totalRaised: number;
-    totalDonations: number;
-    activeCampaigns: number;
-  };
 }
 
 export const PerformanceDetailDialog: React.FC<PerformanceDetailDialogProps> = ({ 
   isOpen, 
   onClose, 
-  campaigns,
-  stats
+  campaigns
 }) => {
   if (!isOpen) return null;
 

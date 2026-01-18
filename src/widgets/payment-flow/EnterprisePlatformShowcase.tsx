@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Badge } from '../../shared/ui/badge';
-import { Card, CardContent } from '../../shared/ui/card';
 import { Progress } from '../../shared/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shared/ui/tabs';
 import { 
@@ -15,18 +14,14 @@ import {
   Zap,
   Activity,
   CheckCircle,
-  AlertCircle,
   Smartphone,
   Monitor,
   CreditCard,
   QrCode,
   Globe,
-  Calendar,
   ArrowUp,
   ArrowDown,
   Wifi,
-  WifiOff,
-  Settings,
   Eye,
   PieChart
 } from 'lucide-react';

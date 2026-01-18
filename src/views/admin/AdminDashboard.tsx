@@ -1,7 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "../../shared/ui/button";
-import { Input } from "../../shared/ui/input";
-import { Label } from "../../shared/ui/label";
 import {
   Card,
   CardContent,
@@ -10,72 +8,38 @@ import {
   CardTitle,
 } from "../../shared/ui/card";
 import { Badge } from "../../shared/ui/badge";
-import { Progress } from "../../shared/ui/progress";
 import { Skeleton } from "../../shared/ui/skeleton";
-import { ImageWithFallback } from "../../shared/ui/figma/ImageWithFallback";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "../../shared/ui/collapsible";
 import {
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
-  BarChart,
-  Bar,
   LineChart,
   Line,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
 } from "recharts";
 import {
   DollarSign,
-  Users,
   TrendingUp,
-  TrendingDown,
   Settings,
   Heart,
   Globe,
   Activity as ActivityIcon,
   AlertCircle,
   CheckCircle,
-  Database,
-  UserCog,
-  LogOut,
   Plus,
   RefreshCw,
-  Smartphone,
   CreditCard,
   Shield,
-  BookOpen,
-  HelpCircle,
-  Star,
-  ChevronDown,
-  ChevronUp,
   ChevronRight,
   Monitor,
-  QrCode,
   BarChart3,
   Target,
-  Workflow,
-  Bell,
-  Lightbulb,
-  Rocket,
-  Play,
   TriangleAlert,
   Building2,
   ArrowUpRight,
-  ArrowDownRight,
-  Trophy,
-  Medal,
   X,
   Zap,
-  MoreVertical,
   Pencil,
 } from "lucide-react";
 import {
@@ -103,11 +67,10 @@ import {
 import {
   useDashboardData,
   Activity,
-  Alert,
 } from "../../shared/lib/hooks/useDashboardData";
 import { OrganizationSwitcher } from "./OrganizationSwitcher";
 import { useOrganization } from "../../shared/lib/hooks/useOrganization";
-import { auth } from "../../shared/lib/firebase";
+import { DEFAULT_CAMPAIGN_CONFIG } from "../../shared/config";
 
 import { AdminLayout } from "./AdminLayout";
 import { useStripeOnboarding, StripeOnboardingDialog } from "../../features/stripe-onboarding";
@@ -140,13 +103,37 @@ const CHART_COLORS = [
   "#64748B"  // Slate-500
 ]
 
+type GoalComparisonDatum = {
+  name: string;
+  Collected: number;
+  Goal: number;
+};
+
+type CategoryDatum = {
+  name: string;
+  value: number;
+  color: string;
+};
+
+type ChartTooltipEntry = {
+  color?: string;
+  name?: string;
+  value?: number | string;
+};
+
+type ChartTooltipProps = {
+  active?: boolean;
+  payload?: ChartTooltipEntry[];
+  label?: string | number;
+};
+
 // Custom Tooltip Component for Charts
-const CustomChartTooltip = ({ active, payload, label }: any) => {
+const CustomChartTooltip = ({ active, payload, label }: ChartTooltipProps) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-white p-3 border border-gray-100 shadow-lg rounded-lg text-sm">
         {label && <p className="font-semibold text-gray-900 mb-2">{label}</p>}
-        {payload.map((entry: any, index: number) => (
+        {payload.map((entry, index) => (
           <div key={index} className="flex items-center justify-between gap-4 mb-1 last:mb-0">
             <div className="flex items-center gap-2">
               <span 
@@ -173,17 +160,13 @@ export function AdminDashboard({
   hasPermission,
   onOrganizationSwitch,
 }: AdminDashboardProps) {
-  const { stats, recentActivities, alerts, loading, error, refreshDashboard } =
+  const { stats, recentActivities, loading, error, refreshDashboard } =
     useDashboardData(userSession.user.organizationId);
-  
-  const { deviceDistribution } = stats;
 
   const [topCampaigns, setTopCampaigns] = useState<Campaign[]>([]);
   const [allCampaignsForPerformance, setAllCampaignsForPerformance] = useState<Campaign[]>([]);
-  const [goalComparisonData, setGoalComparisonData] = useState<any[]>([]);
-  const [categoryData, setCategoryData] = useState<any[]>([]);
-  const [showFeatures, setShowFeatures] = useState(false);
-  const [isLegendExpanded, setIsLegendExpanded] = useState(false);
+  const [goalComparisonData, setGoalComparisonData] = useState<GoalComparisonDatum[]>([]);
+  const [categoryData, setCategoryData] = useState<CategoryDatum[]>([]);
   const [stripeStatusMessage, setStripeStatusMessage] = useState<{ type: 'success' | 'error' | 'warning', message: string } | null>(null);
   const [showStripeStatusDialog, setShowStripeStatusDialog] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
@@ -195,12 +178,10 @@ export function AdminDashboard({
   const [showKioskForm, setShowKioskForm] = useState(false);
   const [showLinkingForm, setShowLinkingForm] = useState(false);
   const [allCampaigns, setAllCampaigns] = useState<Campaign[]>([]);
-  const [assignedCampaignIds, setAssignedCampaignIds] = useState<string[]>([]);
   const [allKiosks, setAllKiosks] = useState<Kiosk[]>([]);
   const [assignedKioskIds, setAssignedKioskIds] = useState<string[]>([]);
   const [isGlobalCampaign, setIsGlobalCampaign] = useState(false);
   const [showCreateKioskModal, setShowCreateKioskModal] = useState(false);
-  const [newKiosk, setNewKiosk] = useState({ name: '', location: '', accessCode: '' });
   const [kioskFormData, setKioskFormData] = useState<KioskFormData>({
     name: '',
     location: '',
@@ -229,37 +210,18 @@ export function AdminDashboard({
     assignedKiosks: []
   });
   const [showCampaignFormDialog, setShowCampaignFormDialog] = useState(false);
-  const [selectedCampaignImageFile, setSelectedCampaignImageFile] = useState<File | null>(null);
   const [editingCampaignInTour, setEditingCampaignInTour] = useState<Campaign | null>(null);
   const [selectedCampaignInTour, setSelectedCampaignInTour] = useState<Campaign | null>(null);
-  const [isCreatingCampaign, setIsCreatingCampaign] = useState(false);
-  const [isCreatingKiosk, setIsCreatingKiosk] = useState(false);
-  const [linkingCampaignId, setLinkingCampaignId] = useState<string | null>(null);
-  const [createdCampaignId, setCreatedCampaignId] = useState<string>('');
-  const [createdKioskId, setCreatedKioskId] = useState<string>('');
   const [campaignCountChecked, setCampaignCountChecked] = useState(false);
   const [showCampaignForm, setShowCampaignForm] = useState(false);
   const [showStripeStep, setShowStripeStep] = useState(false);
-  const [isTourActive, setIsTourActive] = useState(false);
-  const [newCampaign, setNewCampaign] = useState({ 
-    title: '', 
-    description: '', 
-    goal: 0, 
-    status: 'active',
-    startDate: '',
-    endDate: '',
-    tags: [] as string[],
-    coverImageUrl: '',
-    category: '',
-    isGlobal: false
-  });
 
   const { organization, loading: orgLoading, error: orgError } = useOrganization(
     userSession.user.organizationId ?? null
   );
 
 
-  const { isStripeOnboarded, needsOnboarding } = useStripeOnboarding(organization);
+  const { needsOnboarding } = useStripeOnboarding(organization);
   const { showToast } = useToast();
   const [showOnboardingPopup, setShowOnboardingPopup] = useState(false);
   const [showSmallPopup, setShowSmallPopup] = useState(false);
@@ -362,17 +324,6 @@ export function AdminDashboard({
         const allCampaignsQuery = query(campaignsRef, orgQuery);
         const allCampaignsSnapshot = await getDocs(allCampaignsQuery);
 
-        const averageDonation: { [key: string]: number } = {};
-        let average = 0;
-        allCampaignsSnapshot.forEach((doc) => {
-          const raisedAmount = (doc.data() as Campaign).raised;
-          const donationCount = (doc.data() as Campaign).donationCount;
-
-          if (raisedAmount > 0) {
-            const average = raisedAmount / (donationCount || 1);
-            averageDonation[doc.id] = average;
-          }
-        });
         // Build categoryData from per-campaign average donation values so the
         // pie chart shows the relative average donation per campaign.
         const averages: { id: string; name: string; avg: number }[] = [];
@@ -418,146 +369,6 @@ export function AdminDashboard({
     fetchChartData();
   };
 
-  const handleCreateCampaign = async () => {
-    // Validate all required fields
-    if (!newCampaign.title || !newCampaign.description || !newCampaign.category || !newCampaign.status || !newCampaign.startDate || !newCampaign.endDate || !userSession) {
-      alert("Please fill in all required fields");
-      return;
-    }
-    
-    // Validate goal is a positive number
-    if (!newCampaign.goal || newCampaign.goal <= 0) {
-      alert("Fundraising goal must be greater than 0");
-      return;
-    }
-    
-    // Validate dates
-    const startDate = new Date(newCampaign.startDate);
-    const endDate = new Date(newCampaign.endDate);
-    
-    if (endDate <= startDate) {
-      alert("End date must be after start date");
-      return;
-    }
-    
-    setIsCreatingCampaign(true);
-    try {
-      // Save the campaign to database
-      const campaignData = {
-        title: newCampaign.title,
-        description: newCampaign.description,
-        goal: Number(newCampaign.goal),
-        status: newCampaign.status,
-        startDate: startDate,
-        endDate: endDate,
-        organizationId: userSession.user.organizationId,
-        raised: 0,
-        donationCount: 0,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        isGlobal: newCampaign.isGlobal || false,
-        tags: newCampaign.tags || [],
-        coverImageUrl: newCampaign.coverImageUrl || '',
-        category: newCampaign.category,
-      };
-      const docRef = await addDoc(collection(db, 'campaigns'), campaignData);
-      
-      // Save the created campaign ID
-      setCreatedCampaignId(docRef.id);
-      
-      console.log("Campaign created successfully with ID:", docRef.id);
-      
-      // Move to kiosk form
-      setShowKioskForm(true);
-    } catch (error) {
-      console.error("Error creating campaign: ", error);
-      alert("Failed to create campaign. Please try again.");
-    } finally {
-      setIsCreatingCampaign(false);
-    }
-  };
-
-  const handleCreateKiosk = async () => {
-    if (!newKiosk.name || !newKiosk.location || !userSession) return;
-    
-    // Validate access code
-    if (!newKiosk.accessCode || newKiosk.accessCode.length < 4) {
-      alert("Access code must be at least 4 characters");
-      return;
-    }
-    
-    setIsCreatingKiosk(true);
-    try {
-      // Create the kiosk (campaign was already created in previous step)
-      const newKioskData = {
-        name: newKiosk.name,
-        location: newKiosk.location,
-        accessCode: newKiosk.accessCode,
-        status: 'offline',
-        lastActive: new Date().toISOString(),
-        totalDonations: 0,
-        totalRaised: 0,
-        assignedCampaigns: [],
-        defaultCampaign: '',
-        deviceInfo: {},
-        operatingHours: {},
-        settings: { displayMode: 'grid', showAllCampaigns: true, maxCampaignsDisplay: 6, autoRotateCampaigns: false },
-        organizationId: userSession.user.organizationId,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      const docRef = await addDoc(collection(db, 'kiosks'), newKioskData);
-      
-      // Save the created kiosk ID
-      setCreatedKioskId(docRef.id);
-      
-      // Show success message
-      console.log("Kiosk created successfully with ID:", docRef.id);
-      
-      // Move to linking form
-      setShowLinkingForm(true);
-    } catch (error) {
-      console.error("Error adding kiosk: ", error);
-      alert("Failed to create kiosk. Please try again.");
-    } finally {
-      setIsCreatingKiosk(false);
-    }
-  };
-
-  const handleLinkCampaignToKiosk = async (campaignId: string) => {
-    if (!campaignId || !createdKioskId) {
-      alert("Campaign or Kiosk ID is missing");
-      return;
-    }
-    
-    setLinkingCampaignId(campaignId);
-    try {
-      // Update kiosk with the campaign assignment
-      const kioskRef = doc(db, 'kiosks', createdKioskId);
-      
-      // Add campaign to assigned campaigns if not already assigned
-      const updatedAssignedCampaigns = assignedCampaignIds.includes(campaignId)
-        ? assignedCampaignIds
-        : [...assignedCampaignIds, campaignId];
-      
-      await updateDoc(kioskRef, {
-        assignedCampaigns: updatedAssignedCampaigns,
-        defaultCampaign: updatedAssignedCampaigns[0], // Set first campaign as default
-        updatedAt: new Date(),
-      });
-      
-      // Update local state
-      setAssignedCampaignIds(updatedAssignedCampaigns);
-      
-      console.log("Campaign linked to kiosk successfully!");
-    } catch (error) {
-      console.error("Error linking campaign to kiosk: ", error);
-      alert("Failed to link campaign. Please try again.");
-    } finally {
-      setLinkingCampaignId(null);
-    }
-  };
-
   // Kiosk Form Handlers
   const handleKioskFormSubmit = async () => {
     if (!kioskFormData.name || !kioskFormData.location || !userSession) return;
@@ -567,7 +378,6 @@ export function AdminDashboard({
       return;
     }
     
-    setIsCreatingKiosk(true);
     try {
       const newKioskData = {
         name: kioskFormData.name,
@@ -602,12 +412,9 @@ export function AdminDashboard({
       });
       setShowCreateKioskModal(false);
       
-      console.log("Kiosk created successfully with ID:", docRef.id);
     } catch (error) {
       console.error("Error adding kiosk: ", error);
       alert("Failed to create kiosk. Please try again.");
-    } finally {
-      setIsCreatingKiosk(false);
     }
   };
 
@@ -637,7 +444,6 @@ export function AdminDashboard({
       return;
     }
     
-    setIsCreatingCampaign(true);
     try {
       const startDate = campaignFormData.startDate ? new Date(campaignFormData.startDate) : new Date();
       const endDate = campaignFormData.endDate ? new Date(campaignFormData.endDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
@@ -670,7 +476,6 @@ export function AdminDashboard({
         );
         setAllCampaigns(campaigns);
         
-        console.log("Campaign updated successfully:", editingCampaignInTour.id);
       } else {
         // Create new campaign
         const campaignData = {
@@ -691,7 +496,6 @@ export function AdminDashboard({
         };
         
         const docRef = await addDoc(collection(db, 'campaigns'), campaignData);
-        setCreatedCampaignId(docRef.id);
         
         // Refresh campaigns list
         const campaignsRef = collection(db, "campaigns");
@@ -715,7 +519,6 @@ export function AdminDashboard({
         setShowCampaignForm(false);
         setShowKioskForm(true);
         
-        console.log("Campaign created successfully with ID:", docRef.id);
       }
       
       // Reset form and close dialog
@@ -744,8 +547,6 @@ export function AdminDashboard({
     } catch (error) {
       console.error("Error saving campaign: ", error);
       alert("Failed to save campaign. Please try again.");
-    } finally {
-      setIsCreatingCampaign(false);
     }
   };
 
@@ -803,8 +604,24 @@ export function AdminDashboard({
       currency: "GBP",
       minimumFractionDigits: 0,
     }).format(amount);
-  const formatNumber = (num: number) =>
-    new Intl.NumberFormat("en-GB").format(num);
+
+  const toDateInputValue = (value?: unknown): string => {
+    if (!value) return '';
+    if (value instanceof Date) {
+      return value.toISOString().split('T')[0];
+    }
+    if (typeof value === 'string') {
+      const parsed = new Date(value);
+      return isNaN(parsed.getTime()) ? '' : parsed.toISOString().split('T')[0];
+    }
+    if (typeof value === 'object' && value !== null && 'seconds' in value) {
+      const seconds = (value as { seconds?: unknown }).seconds;
+      if (typeof seconds === 'number') {
+        return new Date(seconds * 1000).toISOString().split('T')[0];
+      }
+    }
+    return '';
+  };
 
   const formatLargeCurrency = (amount: number) => {
     if (amount === 0) return "£0";
@@ -856,47 +673,23 @@ export function AdminDashboard({
     }
   };
 
-  const getAlertIcon = (type: string) => {
-    switch (type) {
-      case "warning":
-        return <AlertCircle className="w-4 h-4 text-yellow-600" />;
-      case "success":
-        return <CheckCircle className="w-4 h-4 text-green-600" />;
-      default:
-        return <ActivityIcon className="w-4 h-4 text-blue-600" />;
-    }
-  };
-
-  const displayedCategories = isLegendExpanded
-    ? categoryData
-    : categoryData.slice(0, 6);
-
   const handleStartTour = () => {
-    // Reset all form states
-    setNewCampaign({ 
-      title: '', 
-      description: '', 
-      goal: 0, 
-      status: 'active',
-      startDate: '',
-      endDate: '',
-      tags: [] as string[],
-      coverImageUrl: '',
-      category: '',
-      isGlobal: false
-    });
-    setNewKiosk({ name: '', location: '', accessCode: '' });
-    setCreatedCampaignId('');
-    setCreatedKioskId('');
-    
-    // Start the tour by showing onboarding
-    setIsTourActive(true);
     setShowOnboarding(true);
     setShowCampaignForm(false);
     setShowKioskForm(false);
     setShowLinkingForm(false);
     setShowStripeStep(false);
   };
+  const goalComparisonCampaigns: Campaign[] = goalComparisonData.map((datum, index) => ({
+    id: `${datum.name}-${index}`,
+    title: datum.name,
+    description: '',
+    goal: datum.Goal,
+    raised: datum.Collected,
+    coverImageUrl: '',
+    category: '',
+    configuration: DEFAULT_CAMPAIGN_CONFIG,
+  }));
 
   if (error) {
     return (
@@ -1223,22 +1016,11 @@ export function AdminDashboard({
                                   </Badge>
                                   <button 
                                     className="p-1 hover:bg-gray-200 rounded-md transition-colors"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setEditingCampaignInTour(campaign);
-                                      // Handle date conversion safely
-                                      let startDateStr = '';
-                                      let endDateStr = '';
-                                      if ((campaign as any).startDate) {
-                                        const sd = (campaign as any).startDate;
-                                        const startDateObj = sd.seconds ? new Date(sd.seconds * 1000) : new Date(sd);
-                                        startDateStr = startDateObj.toISOString().split('T')[0];
-                                      }
-                                      if (campaign.endDate) {
-                                        const ed = campaign.endDate as any;
-                                        const endDateObj = ed.seconds ? new Date(ed.seconds * 1000) : new Date(ed);
-                                        endDateStr = endDateObj.toISOString().split('T')[0];
-                                      }
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setEditingCampaignInTour(campaign);
+                                      const startDateStr = toDateInputValue(campaign.startDate as unknown);
+                                      const endDateStr = toDateInputValue(campaign.endDate as unknown);
                                       setCampaignFormData({
                                         title: campaign.title || '',
                                         briefOverview: '', // Campaign type doesn't have briefOverview, so use empty string
@@ -1295,10 +1077,6 @@ export function AdminDashboard({
                         </Button>
                         <Button
                           onClick={() => {
-                            // If a campaign is selected, use it for the next step
-                            if (selectedCampaignInTour) {
-                              setCreatedCampaignId(selectedCampaignInTour.id);
-                            }
                             setShowCampaignForm(false);
                             setShowKioskForm(true);
                           }}
@@ -1335,7 +1113,6 @@ export function AdminDashboard({
                   setEditingCampaignInTour(null);
                 }}
                 formatCurrency={formatCurrency}
-                onImageFileSelect={setSelectedCampaignImageFile}
               />
             </div>
 
@@ -1534,7 +1311,6 @@ export function AdminDashboard({
                                 });
                                 
                                 await Promise.all(updatePromises);
-                                console.log(`Campaign ${selectedCampaignInTour.id} assigned to ${assignedKioskIds.length} kiosk(s)`);
                               } catch (error) {
                                 console.error("Error assigning campaign to kiosks:", error);
                                 alert("Failed to assign campaign to kiosks. Please try again.");
@@ -1609,8 +1385,6 @@ export function AdminDashboard({
                         </div>
                         <Button
                           onClick={() => {
-                          setNewKiosk({ name: '', location: '', accessCode: '' });
-                          setNewCampaign({ title: '', description: '', goal: 0, status: 'active', startDate: '', endDate: '', tags: [] as string[], coverImageUrl: '', category: '', isGlobal: false });
                           setShowStripeStep(false);
                           setShowCampaignForm(false);
                           setShowKioskForm(false);
@@ -1690,8 +1464,6 @@ export function AdminDashboard({
                     <div className="flex justify-end gap-3 mt-8">
                       <Button
                         onClick={() => {
-                          setNewKiosk({ name: '', location: '', accessCode: '' });
-                          setNewCampaign({ title: '', description: '', goal: 0, status: 'active', startDate: '', endDate: '', tags: [] as string[], coverImageUrl: '', category: '', isGlobal: false });
                           setShowStripeStep(false);
                           setShowCampaignForm(false);
                           setShowKioskForm(false);
@@ -2199,14 +1971,7 @@ export function AdminDashboard({
                 </div>
               ) : goalComparisonData.length > 0 ? (
                 <CampaignProgressBars
-                  campaigns={transformCampaignsToProgress(
-                    goalComparisonData.map((d, index) => ({
-                      id: `${d.name}-${index}`,
-                      title: d.name,
-                      raised: d.Collected,
-                      goal: d.Goal,
-                    } as any))
-                  )}
+                  campaigns={transformCampaignsToProgress(goalComparisonCampaigns)}
                   formatCurrency={formatCurrency}
                 />
               ) : (
@@ -2469,7 +2234,6 @@ export function AdminDashboard({
         isOpen={showPerformanceDialog}
         onClose={() => setShowPerformanceDialog(false)}
         campaigns={allCampaignsForPerformance}
-        stats={stats}
       />
 
       {/* Donation Distribution Dialog */}
@@ -2485,15 +2249,8 @@ export function AdminDashboard({
       <CampaignProgressDialog
         isOpen={showCampaignProgressDialog}
         onClose={() => setShowCampaignProgressDialog(false)}
-        campaigns={transformCampaignsToProgress(
-          goalComparisonData.map((d, index) => ({
-            id: `${d.name}-${index}`,
-            title: d.name,
-            raised: d.Collected,
-            goal: d.Goal,
-          } as any))
-        )}
-        onCampaignClick={(id) => {
+        campaigns={transformCampaignsToProgress(goalComparisonCampaigns)}
+        onCampaignClick={() => {
           setShowCampaignProgressDialog(false);
           onNavigate("admin-campaigns");
         }}

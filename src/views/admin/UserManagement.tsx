@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '../../shared/ui/button';
 import { Input } from '../../shared/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../shared/ui/card';
+import { Card, CardContent } from '../../shared/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../shared/ui/table';
+import { Table, TableBody, TableCell, TableHeader, TableRow } from '../../shared/ui/table';
 import {
-  Plus, Search, UserCog, Users, Shield, Activity,
+  Plus, UserCog, Users, Shield, Activity,
   Loader2, AlertCircle, Pencil, Trash2, AlertTriangle, MoreVertical
 } from 'lucide-react';
-import { Skeleton } from "../../shared/ui/skeleton";
 import { Ghost } from "lucide-react";
 import { Screen, User, UserRole, AdminSession, Permission } from '../../shared/types';
 import { calculateUserStats } from '../../shared/lib/userManagementHelpers';
@@ -16,7 +15,6 @@ import { useUsers } from '../../shared/lib/hooks/useUsers';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../../shared/ui/dialog';
 import { Label } from '../../shared/ui/label';
 import { Checkbox } from '../../shared/ui/checkbox';
-import { DialogPortal } from '@radix-ui/react-dialog';
 import { AdminLayout } from './AdminLayout';
 import { AdminSearchFilterHeader, AdminSearchFilterConfig } from './components/AdminSearchFilterHeader';
 import { SortableTableHeader } from './components/SortableTableHeader';
@@ -42,13 +40,21 @@ interface UserManagementProps {
   hasPermission: (permission: Permission) => boolean;
 }
 
+type NewUserData = {
+    username: string;
+    email: string;
+    password: string;
+    role: UserRole;
+    permissions: Permission[];
+};
+
 export function UserManagement({ onNavigate, onLogout, userSession, hasPermission }: UserManagementProps) {
     const { users, loading, error, updateUser, addUser, deleteUser } = useUsers(userSession.user.organizationId);
     const [searchTerm, setSearchTerm] = useState('');
     const [roleFilter, setRoleFilter] = useState('all');
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
-    const [newUser, setNewUser] = useState({
+    const [newUser, setNewUser] = useState<NewUserData>({
         username: '', email: '', password: '', role: 'viewer' as UserRole, permissions: [] as Permission[],
     });
     
@@ -139,9 +145,11 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
         roleFilter
     };
 
-    const handleFilterChange = (key: string, value: any) => {
+    const handleFilterChange = (key: string, value: unknown) => {
         if (key === "roleFilter") {
-            setRoleFilter(value);
+            if (typeof value === "string") {
+                setRoleFilter(value);
+            }
         }
     };
 
@@ -464,7 +472,16 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
     );
 }
 
-function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateUser, userSession }: any) {
+interface CreateUserDialogProps {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    newUser: NewUserData;
+    onUserChange: (user: NewUserData) => void;
+    onCreateUser: () => void;
+    userSession: AdminSession;
+}
+
+function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateUser, userSession }: CreateUserDialogProps) {
     const onPermissionChange = (permission: Permission, checked: boolean) => {
         const currentPermissions = newUser.permissions || [];
         const newPermissions = checked ? [...currentPermissions, permission] : currentPermissions.filter((p: Permission) => p !== permission);

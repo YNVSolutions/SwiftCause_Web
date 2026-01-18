@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { DollarSign, TrendingUp, Award, AlertCircle } from 'lucide-react';
+import { DollarSign, TrendingUp, Award } from 'lucide-react';
 import {
   calculateDistributionSummary,
   getHoverColor,
   estimateRangeTotal,
-  DonationRange,
 } from '../lib/distributionCalculations';
 
 interface DonationDistributionChartProps {

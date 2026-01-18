@@ -3,7 +3,7 @@ import { Button } from '../../shared/ui/button';
 import { Input } from '../../shared/ui/input';
 import { Label } from '../../shared/ui/label';
 import { Checkbox } from '../../shared/ui/checkbox';
-import { Card, CardContent, CardHeader, CardTitle } from '../../shared/ui/card';
+import { Card, CardContent, CardHeader } from '../../shared/ui/card';
 import { NavigationHeader } from '../../shared/ui/NavigationHeader';
 import { User, MapPin, ArrowRight } from 'lucide-react';
 import { Campaign, GiftAidDetails } from '../../shared/types';

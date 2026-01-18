@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Badge } from '../../shared/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
 import { Checkbox } from '../../shared/ui/checkbox';
-import { Progress } from '../../shared/ui/progress';
 import { submitCurrencyRequest, checkEmailExists } from '../../shared/api/firestoreService';
 import { 
   Heart,
@@ -17,28 +16,16 @@ import {
   Users,
   Building,
   Mail,
-  Phone,
   User,
   Globe,
   Eye,
   EyeOff,
   AlertCircle,
-  Zap,
-  Star,
-  Award,
   TrendingUp,
-  Target,
-  BarChart3,
-  Lock,
-  Cloud,
-  CheckSquare,
-  Clock,
   DollarSign,
   ChevronDown
 } from 'lucide-react';
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
-import { getFirestore, doc, setDoc } from 'firebase/firestore';
-import { ORGANIZATION_TYPES, ORGANIZATION_SIZES, CURRENCY_OPTIONS } from '../../shared/config';
+import { ORGANIZATION_TYPES, ORGANIZATION_SIZES } from '../../shared/config';
 
 interface SignupScreenProps {
   onSignup: (data: SignupFormData) => Promise<void>;
@@ -88,8 +75,6 @@ interface SignupFormErrors {
   agreeToTerms?: string;
 }
 
-const auth = getAuth();
-const firestore = getFirestore();
 
 export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupScreenProps) {
   const [currentStep, setCurrentStep] = useState(1);
@@ -120,26 +105,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
   const organizationTypes = ORGANIZATION_TYPES;
   const organizationSizes = ORGANIZATION_SIZES;
 
-  const featureOptions = [
-    { id: 'kiosks', label: 'Donation Kiosks', description: 'Touch-friendly donation interfaces' },
-    { id: 'analytics', label: 'Advanced Analytics', description: 'Real-time insights and reporting' },
-    { id: 'campaigns', label: 'Campaign Management', description: 'Flexible campaign configuration' },
-    { id: 'security', label: 'Enterprise Security', description: 'Bank-level security features' },
-    { id: 'mobile', label: 'Mobile Optimization', description: 'Mobile-first design approach' },
-    { id: 'integrations', label: 'API Integrations', description: 'Connect with existing systems' }
-  ];
-
-  const hearAboutUsOptions = [
-    'Search Engine (Google, Bing)',
-    'Social Media',
-    'Referral from colleague',
-    'Conference/Event',
-    'Industry publication',
-    'Partner recommendation',
-    'Other'
-  ];
-
-  const updateFormData = (field: keyof SignupFormData, value: any) => {
+  const updateFormData = <K extends keyof SignupFormData>(field: K, value: SignupFormData[K]) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -266,7 +232,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
             payoutsEnabled: false,
           },
         })
-      } catch (error) {
+      } catch {
         // Error is handled by parent component
         setIsSubmitting(false)
       }
@@ -323,7 +289,6 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
   ];
 
 
-  const stepProgress = (currentStep / 4) * 100;
 
   // Show loading overlay during submission
   if (isSubmitting) {

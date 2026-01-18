@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Campaign } from '../../../shared/types';
+import type { Campaign, Kiosk } from '../../../shared/types';
 import { useScrollSpy } from '../../../shared/lib/hooks/useScrollSpy';
 import { kioskApi } from '../../../entities/kiosk/api';
 
@@ -68,7 +68,6 @@ export function CampaignForm({
   onSubmit,
   onSaveDraft,
   onCancel,
-  formatCurrency,
   onImageFileSelect,
   onGalleryImagesSelect,
   organizationId,
@@ -81,7 +80,7 @@ export function CampaignForm({
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedGalleryFiles, setSelectedGalleryFiles] = useState<File[]>([]);
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
-  const [kiosks, setKiosks] = useState<any[]>([]);
+  const [kiosks, setKiosks] = useState<Kiosk[]>([]);
   const [loadingKiosks, setLoadingKiosks] = useState(false);
   const [imageUploadError, setImageUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);

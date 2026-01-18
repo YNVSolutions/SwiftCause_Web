@@ -17,8 +17,9 @@ export const CampaignProgressDialog: React.FC<CampaignProgressDialogProps> = ({
   onCampaignClick,
   formatCurrency = (amount) => `£${amount.toLocaleString()}`,
 }) => {
+  type FilterStatus = 'all' | CampaignProgress['status'];
   const [sortBy, setSortBy] = useState<'progress' | 'raised' | 'goal' | 'name'>('progress');
-  const [filterStatus, setFilterStatus] = useState<'all' | 'critical' | 'warning' | 'good' | 'completed'>('all');
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   if (!isOpen) return null;
@@ -159,7 +160,7 @@ export const CampaignProgressDialog: React.FC<CampaignProgressDialogProps> = ({
                 <Filter className="w-4 h-4 text-gray-500" />
                 <select
                   value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value as any)}
+                  onChange={(e) => setFilterStatus(e.target.value as FilterStatus)}
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="all">All Status</option>
