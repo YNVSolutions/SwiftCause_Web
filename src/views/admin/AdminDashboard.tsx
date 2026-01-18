@@ -605,6 +605,9 @@ export function AdminDashboard({
       minimumFractionDigits: 0,
     }).format(amount);
 
+  const formatNumber = (value: number) =>
+    new Intl.NumberFormat("en-GB").format(value);
+
   const toDateInputValue = (value?: unknown): string => {
     if (!value) return '';
     if (value instanceof Date) {
