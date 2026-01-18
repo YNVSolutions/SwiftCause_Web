@@ -16,6 +16,7 @@ export type Screen =
   | "admin-gift-aid"
   | "admin-users"
   | "admin-bank-details"
+  | "admin-stripe-account"
   | "about"
   | "contact"
   | "docs"
