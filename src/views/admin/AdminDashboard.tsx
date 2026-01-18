@@ -710,6 +710,7 @@ export function AdminDashboard({
       userSession={userSession} 
       hasPermission={hasPermission}
       onStartTour={handleStartTour}
+      onOpenStripeSetup={() => setShowStripeStatusDialog(true)}
       headerTitle={(
         <div className="flex flex-col">
           <div className="flex items-center gap-3 flex-wrap">
@@ -2042,7 +2043,7 @@ export function AdminDashboard({
                           <p className="text-xs text-gray-500">
                             {activity.timeAgo}
                           </p>
-                          {activity.kioskId && (
+                          {activity.kioskId &&(
                             <Badge variant="secondary" className="text-xs">
                               {activity.kioskId}
                             </Badge>
