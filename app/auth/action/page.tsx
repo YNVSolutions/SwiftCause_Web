@@ -6,6 +6,8 @@ import { useState, useEffect, Suspense } from 'react'
 import { authApi } from '@/features/auth-by-email/api/authApi'
 import { KioskLoading } from '@/shared/ui/KioskLoading'
 
+export const dynamic = 'force-dynamic'
+
 function EmailActionContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
