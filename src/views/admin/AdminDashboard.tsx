@@ -917,7 +917,7 @@ export function AdminDashboard({
       const timeoutId = setTimeout(() => controller.abort(), 30000);
 
       const response = await fetch(
-        'https://createonboardinglink-j2f5w4qwxq-uc.a.run.app',
+        'https://us-central1-swiftcause-app.cloudfunctions.net/createOnboardingLink',
         {
           method: 'POST',
           headers: {
@@ -1682,6 +1682,11 @@ export function AdminDashboard({
                           setShowKioskForm(false);
                           setShowLinkingForm(false);
                           setShowOnboarding(false);
+                          setOnboardingDismissed(true);
+                          // Persist to sessionStorage so it stays dismissed during the session
+                          if (typeof window !== 'undefined') {
+                            sessionStorage.setItem('onboardingDismissed', 'true');
+                          }
                           // Refresh dashboard data
                           refreshDashboard();
                           // Navigate to dashboard to see the new data
@@ -1772,6 +1777,11 @@ export function AdminDashboard({
                           setShowCampaignForm(false);
                           setShowKioskForm(false);
                           setShowOnboarding(false);
+                          setOnboardingDismissed(true);
+                          // Persist to sessionStorage so it stays dismissed during the session
+                          if (typeof window !== 'undefined') {
+                            sessionStorage.setItem('onboardingDismissed', 'true');
+                          }
                           // Refresh dashboard data
                           refreshDashboard();
                           // Navigate to dashboard to see the new data

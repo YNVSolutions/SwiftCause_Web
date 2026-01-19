@@ -58,7 +58,7 @@ export function BankDetails({ onNavigate, onLogout, userSession, hasPermission }
       const timeoutId = setTimeout(() => controller.abort(), 30000);
 
       const response = await fetch(
-        'https://createonboardinglink-j2f5w4qwxq-uc.a.run.app',
+        'https://us-central1-swiftcause-app.cloudfunctions.net/createOnboardingLink',
         {
           method: 'POST',
           headers: {
@@ -140,8 +140,7 @@ export function BankDetails({ onNavigate, onLogout, userSession, hasPermission }
   const chargesEnabled = organization?.stripe?.chargesEnabled;
   const payoutsEnabled = organization?.stripe?.payoutsEnabled;
   
-  // Determine if Stripe is properly set up based on chargesEnabled
-  const isStripeSetup = chargesEnabled === true;
+  const isStripeSetup = chargesEnabled === true || payoutsEnabled === true;
 
   return (
     <AdminLayout 
@@ -172,7 +171,7 @@ export function BankDetails({ onNavigate, onLogout, userSession, hasPermission }
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
-            {!isStripeSetup ? (
+            {!chargesEnabled && !payoutsEnabled ? (
               <>
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-6">
                   <div className="flex items-start gap-3">
@@ -193,7 +192,7 @@ export function BankDetails({ onNavigate, onLogout, userSession, hasPermission }
                   {isOnboarding ? (
                     <>
                       <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
-                      Redirecting...
+                      Redirecting to Stripe...
                     </>
                   ) : (
                     <>
@@ -203,14 +202,14 @@ export function BankDetails({ onNavigate, onLogout, userSession, hasPermission }
                   )}
                 </Button>
               </>
-            ) : !payoutsEnabled ? (
+            ) : chargesEnabled && !payoutsEnabled ? (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
                 <div className="flex items-start gap-3">
                   <RefreshCw className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-2">Under Review</h3>
                     <p className="text-sm text-gray-700 leading-relaxed">
-                      Your Stripe account is being reviewed. Payouts will be enabled shortly.
+                      Your Stripe account is being reviewed. Payouts will be enabled shortly. You can already accept donations.
                     </p>
                   </div>
                 </div>
@@ -220,7 +219,7 @@ export function BankDetails({ onNavigate, onLogout, userSession, hasPermission }
                 <div className="flex items-start gap-3">
                   <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" />
                   <div>
-                    <h3 className="font-semibold text-gray-900 mb-2">Account Active</h3>
+                    <h3 className="font-semibold text-gray-900 mb-2">Account Setup Successfully</h3>
                     <p className="text-sm text-gray-700 leading-relaxed">
                       Your Stripe account is fully configured and ready to accept donations and process payouts.
                     </p>
