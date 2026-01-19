@@ -190,12 +190,25 @@ export function AdminLayout({
       }
 
       const orgData = orgDoc.data();
+      const chargesEnabled = orgData?.stripe?.chargesEnabled;
       const stripeAccountId = orgData?.stripe?.accountId;
       
-      if (!stripeAccountId) {
-        console.log("No Stripe account ID found in organization data");
+      // Check if Stripe is properly onboarded (chargesEnabled must be true)
+      if (!chargesEnabled) {
+        console.log("Stripe account not onboarded (chargesEnabled is false or missing)");
         setIsLoadingStripe(false);
         setShowStripeConfigDialog(true);
+        return;
+      }
+
+      // If onboarded but no accountId (shouldn't happen, but handle it)
+      if (!stripeAccountId) {
+        console.log("No Stripe account ID found despite being onboarded");
+        setIsLoadingStripe(false);
+        setStripeError({
+          title: "Configuration Error",
+          message: "Your Stripe account is incomplete. Please contact support."
+        });
         return;
       }
 

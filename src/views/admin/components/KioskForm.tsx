@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription, VisuallyHidden }
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../shared/ui/select';
 
 import {
-  Plus, Menu, X, Grid3X3, List, GalleryThumbnails, Image, Save, Edit
+  Plus, Menu, X, Grid3X3, List, GalleryThumbnails, Image, Save, Edit, Loader2
 } from 'lucide-react';
 
 // Types for the form data
@@ -46,6 +46,7 @@ export interface KioskFormProps {
   onUnassignCampaign: (campaignId: string) => void;
   onEditCampaign?: (campaignId: string) => void;
   formatCurrency: (amount: number) => string;
+  isLoading?: boolean;
 }
 
 export function KioskForm({
@@ -60,7 +61,8 @@ export function KioskForm({
   onAssignCampaign,
   onUnassignCampaign,
   onEditCampaign,
-  formatCurrency
+  formatCurrency,
+  isLoading = false
 }: KioskFormProps) {
   
   const [activeSection, setActiveSection] = useState('basic-info');
@@ -732,17 +734,27 @@ export function KioskForm({
                 <Button
                   variant="outline"
                   onClick={onCancel}
+                  disabled={isLoading}
                   className="border-gray-300 text-gray-700 hover:bg-gray-50 w-full sm:w-auto h-12 sm:h-auto"
                 >
                   CANCEL
                 </Button>
                 <Button
                   onClick={onSubmit}
-                  disabled={!kioskData.name || !kioskData.location}
-                  className="bg-black hover:bg-gray-800 text-white px-6 w-full sm:w-auto h-12 sm:h-auto"
+                  disabled={!kioskData.name || !kioskData.location || isLoading}
+                  className="bg-black hover:bg-gray-800 text-white px-6 w-full sm:w-auto h-12 sm:h-auto disabled:opacity-50"
                 >
-                  <Save className="w-4 h-4 mr-2" />
-                  {editingKiosk ? 'UPDATE KIOSK' : 'SAVE KIOSK'}
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      {editingKiosk ? 'UPDATING...' : 'SAVING...'}
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      {editingKiosk ? 'UPDATE KIOSK' : 'SAVE KIOSK'}
+                    </>
+                  )}
                 </Button>
               </div>
             </footer>

@@ -1759,13 +1759,9 @@ const CampaignManagement = ({
             exportData={filteredAndSortedCampaigns}
             actions={
               <Button
-                className="bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-60 disabled:cursor-not-allowed px-6 py-2 h-10"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 h-10"
                 onClick={() => {
-                  if (!isStripeOnboarded) {
-                    setShowOnboardingDialog(true);
-                  } else {
-                    setIsNewCampaignFormOpen(true);
-                  }
+                  setIsNewCampaignFormOpen(true);
                 }}
               >
                 <Plus className="w-4 h-4 mr-2" />

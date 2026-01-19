@@ -41,6 +41,7 @@ import {
   Activity,
   AlertTriangle,
   Download,
+  Loader2,
 } from 'lucide-react';
 import { AdminLayout } from './AdminLayout';
 import { KioskForm, KioskFormData } from './components/KioskForm';
@@ -112,6 +113,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingKiosk, setEditingKiosk] = useState<Kiosk | null>(null);
+  const [isCreatingKiosk, setIsCreatingKiosk] = useState(false);
   const [newKiosk, setNewKiosk] = useState<KioskFormData>({ 
     name: '', 
     location: '', 
@@ -123,6 +125,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
   
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [kioskToDelete, setKioskToDelete] = useState<Kiosk | null>(null);
+  const [isDeletingKiosk, setIsDeletingKiosk] = useState(false);
   
   // State for showing access codes and copy feedback
   const [showAccessCodes, setShowAccessCodes] = useState<{ [key: string]: boolean }>({});
@@ -180,12 +183,9 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
   };
 
   const handleCreateKiosk = async () => {
-    if (needsOnboarding) {
-      setShowOnboardingDialog(true);
-      return;
-    }
-    
     if (!newKiosk.name || !newKiosk.location || !userSession) return;
+    
+    setIsCreatingKiosk(true);
     try {
       if (editingKiosk) {
         // Update existing kiosk
@@ -232,6 +232,8 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
       setEditingKiosk(null);
     } catch (error) {
       console.error("Error saving kiosk: ", error);
+    } finally {
+      setIsCreatingKiosk(false);
     }
   };
 
@@ -269,6 +271,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
   const confirmDeleteKiosk = async () => {
     if (!kioskToDelete) return;
     
+    setIsDeletingKiosk(true);
     try {
       await deleteDoc(doc(db, 'kiosks', kioskToDelete.id));
       refreshKiosks();
@@ -276,6 +279,8 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
       setKioskToDelete(null);
     } catch (error) {
       console.error("Error deleting kiosk: ", error);
+    } finally {
+      setIsDeletingKiosk(false);
     }
   };
 
@@ -751,6 +756,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
         onUnassignCampaign={handleUnassignCampaign}
         onEditCampaign={handleEditCampaign}
         formatCurrency={formatCurrency}
+        isLoading={isCreatingKiosk}
       />
       
       {/* Delete Confirmation Dialog */}
@@ -778,14 +784,23 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
               <Button 
                 variant="outline" 
                 onClick={() => setIsDeleteDialogOpen(false)}
+                disabled={isDeletingKiosk}
               >
                 Cancel
               </Button>
               <Button 
                 onClick={confirmDeleteKiosk}
-                className="bg-red-600 hover:bg-red-700 text-white"
+                disabled={isDeletingKiosk}
+                className="bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
               >
-                Delete
+                {isDeletingKiosk ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete'
+                )}
               </Button>
             </div>
           </div>

@@ -480,7 +480,7 @@ export function GiftAidManagement({
                       currentSortKey={sortKey} 
                       currentSortDirection={sortDirection} 
                       onSort={handleSort}
-                      className="w-[20%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                      className="w-[22%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
                     >
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4 text-gray-500 flex-shrink-0" />
@@ -492,7 +492,7 @@ export function GiftAidManagement({
                       currentSortKey={sortKey} 
                       currentSortDirection={sortDirection} 
                       onSort={handleSort}
-                      className="w-[18%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                      className="w-[22%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
                     >
                       <div className="flex items-center gap-2">
                         <Target className="h-4 w-4 text-gray-500 flex-shrink-0" />
@@ -504,7 +504,7 @@ export function GiftAidManagement({
                       currentSortKey={sortKey} 
                       currentSortDirection={sortDirection} 
                       onSort={handleSort}
-                      className="w-[12%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
+                      className="w-[13%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
                     >
                       <div className="flex items-center justify-end gap-2">
                         <Banknote className="h-4 w-4 text-gray-500 flex-shrink-0" />
@@ -516,7 +516,7 @@ export function GiftAidManagement({
                       currentSortKey={sortKey} 
                       currentSortDirection={sortDirection} 
                       onSort={handleSort}
-                      className="w-[12%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
+                      className="w-[13%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
                     >
                       <div className="flex items-center justify-end gap-2">
                         <Gift className="h-4 w-4 text-green-600 flex-shrink-0" />
@@ -528,7 +528,7 @@ export function GiftAidManagement({
                       currentSortKey={sortKey} 
                       currentSortDirection={sortDirection} 
                       onSort={handleSort}
-                      className="w-[20%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                      className="w-[15%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
                     >
                       <div className="flex items-center gap-2">
                         <CalendarDays className="h-4 w-4 text-gray-500 flex-shrink-0" />
@@ -541,7 +541,7 @@ export function GiftAidManagement({
                       currentSortKey={sortKey} 
                       currentSortDirection={sortDirection} 
                       onSort={handleSort}
-                      className="w-[18%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center"
+                      className="w-[10%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center"
                     >
                       <div className="flex items-center justify-center gap-2">
                         <Eye className="h-4 w-4 text-gray-500 flex-shrink-0" />
@@ -599,7 +599,7 @@ export function GiftAidManagement({
                             <p className="text-base text-gray-700">{donation.donationDate && donation.donationDate !== "Unknown Date" ? new Date(donation.donationDate).toLocaleDateString() : "Unknown Date"}</p>
                           </div>
                         </TableCell>
-                        <TableCell className="py-4">
+                        <TableCell className="py-4 text-center">
                           <Button
                             variant="ghost"
                             size="sm"
@@ -607,7 +607,7 @@ export function GiftAidManagement({
                               e.stopPropagation();
                               handleViewDetails(donation);
                             }}
-                            className="h-8 w-8 p-0 hover:bg-indigo-100 hover:text-indigo-600 transition-colors"
+                            className="h-8 w-8 p-0 hover:bg-indigo-100 hover:text-indigo-600 transition-colors mx-auto"
                             title="View donation details"
                           >
                             <Eye className="h-4 w-4" />

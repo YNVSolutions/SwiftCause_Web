@@ -434,8 +434,15 @@ export function CampaignForm({
                           type="date"
                           value={campaignData.endDate}
                           onChange={(e) => setCampaignData(p => ({ ...p, endDate: e.target.value }))}
-                          className="h-12 text-base border-gray-300 rounded-lg focus:border-green-500 focus:ring-green-500"
+                          className={`h-12 text-base rounded-lg focus:border-green-500 focus:ring-green-500 ${
+                            campaignData.startDate && campaignData.endDate && new Date(campaignData.startDate) >= new Date(campaignData.endDate)
+                              ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+                              : 'border-gray-300'
+                          }`}
                         />
+                        {campaignData.startDate && campaignData.endDate && new Date(campaignData.startDate) >= new Date(campaignData.endDate) && (
+                          <p className="text-sm text-red-600 mt-1">End date must be after start date</p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -636,8 +643,15 @@ export function CampaignForm({
                 </Button>
                 <Button
                   onClick={onSubmit}
-                  disabled={!campaignData.title || !campaignData.description || !campaignData.goal}
-                  className="bg-black hover:bg-gray-800 text-white px-6 w-full sm:w-auto h-12 sm:h-auto"
+                  disabled={
+                    !campaignData.title || 
+                    !campaignData.description || 
+                    !campaignData.goal ||
+                    !campaignData.startDate ||
+                    !campaignData.endDate ||
+                    (campaignData.startDate && campaignData.endDate && new Date(campaignData.startDate) >= new Date(campaignData.endDate))
+                  }
+                  className="bg-black hover:bg-gray-800 text-white px-6 w-full sm:w-auto h-12 sm:h-auto disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Save className="w-4 h-4 mr-2" />
                   {editingCampaign ? 'UPDATE CAMPAIGN' : 'SAVE CAMPAIGN'}

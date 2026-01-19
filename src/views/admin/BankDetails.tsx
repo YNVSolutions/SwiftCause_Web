@@ -21,6 +21,8 @@ import { useOrganization } from "../../shared/lib/hooks/useOrganization";
 import { AdminSession, Screen, Permission } from "../../shared/types";
 import { AdminLayout } from "./AdminLayout";
 import { useStripeOnboarding, StripeOnboardingDialog } from "../../features/stripe-onboarding";
+import { auth } from "../../shared/lib/firebase";
+import { useToast } from "../../shared/ui/ToastProvider";
 
 interface BankDetailsProps {
   onNavigate: (screen: Screen) => void;
@@ -34,6 +36,70 @@ export function BankDetails({ onNavigate, onLogout, userSession, hasPermission }
     userSession.user.organizationId ?? null
   );
   const [showOnboardingDialog, setShowOnboardingDialog] = useState(false);
+  const [isOnboarding, setIsOnboarding] = useState(false);
+  const { showToast } = useToast();
+
+  const handleDirectStripeOnboarding = async () => {
+    if (!organization?.id) {
+      showToast('Organization ID not available for Stripe onboarding.', 'error');
+      return;
+    }
+
+    if (!auth.currentUser) {
+      showToast('No authenticated user found. Please log in again.', 'error');
+      return;
+    }
+
+    try {
+      setIsOnboarding(true);
+      const idToken = await auth.currentUser.getIdToken();
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+      const response = await fetch(
+        'https://createonboardinglink-j2f5w4qwxq-uc.a.run.app',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${idToken}`,
+          },
+          body: JSON.stringify({ orgId: organization.id }),
+          signal: controller.signal,
+        }
+      );
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.error || response.statusText || 'Failed to create onboarding link.'
+        );
+      }
+
+      const { url } = await response.json();
+      if (url) {
+        window.location.href = url;
+      } else {
+        throw new Error('No onboarding URL received from server.');
+      }
+    } catch (error: any) {
+      console.error('Error creating Stripe onboarding link:', error);
+      
+      if (error.name === 'AbortError') {
+        showToast('Request timed out. Please check your connection and try again.', 'error', 4000);
+      } else {
+        showToast(
+          `Failed to start Stripe onboarding: ${error.message}`,
+          'error',
+          4000
+        );
+      }
+      setIsOnboarding(false);
+    }
+  };
 
   if (orgLoading) {
     return (
@@ -73,6 +139,9 @@ export function BankDetails({ onNavigate, onLogout, userSession, hasPermission }
   const stripeConnected = organization?.stripe?.accountId;
   const chargesEnabled = organization?.stripe?.chargesEnabled;
   const payoutsEnabled = organization?.stripe?.payoutsEnabled;
+  
+  // Determine if Stripe is properly set up based on chargesEnabled
+  const isStripeSetup = chargesEnabled === true;
 
   return (
     <AdminLayout 
@@ -103,28 +172,38 @@ export function BankDetails({ onNavigate, onLogout, userSession, hasPermission }
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
-            {!stripeConnected ? (
+            {!isStripeSetup ? (
               <>
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-6">
                   <div className="flex items-start gap-3">
                     <AlertCircle className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
                     <div>
-                      <h3 className="font-semibold text-gray-900 mb-2">Action Required</h3>
+                      <h3 className="font-semibold text-gray-900 mb-2">Account Not Set Up</h3>
                       <p className="text-sm text-gray-700 leading-relaxed">
-                        Your organization needs to complete Stripe onboarding to accept donations and receive payouts.
+                        Your Stripe account is not set up yet. Complete the setup to accept donations and receive payouts.
                       </p>
                     </div>
                   </div>
                 </div>
                 <Button
-                  onClick={() => setShowOnboardingDialog(true)}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 text-base font-semibold"
+                  onClick={handleDirectStripeOnboarding}
+                  disabled={isOnboarding}
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <CreditCard className="w-5 h-5 mr-2" />
-                  Complete Stripe Onboarding
+                  {isOnboarding ? (
+                    <>
+                      <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
+                      Redirecting...
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="w-5 h-5 mr-2" />
+                      Setup Stripe Account
+                    </>
+                  )}
                 </Button>
               </>
-            ) : !chargesEnabled || !payoutsEnabled ? (
+            ) : !payoutsEnabled ? (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
                 <div className="flex items-start gap-3">
                   <RefreshCw className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
@@ -151,7 +230,7 @@ export function BankDetails({ onNavigate, onLogout, userSession, hasPermission }
             )}
 
             {/* Stripe Account Details */}
-            {stripeConnected && (
+            {isStripeSetup && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
                 <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
                   <CheckCircle className={`w-5 h-5 ${chargesEnabled ? 'text-green-600' : 'text-gray-400'}`} />
