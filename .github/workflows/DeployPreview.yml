@@ -27,10 +27,10 @@ jobs:
           fi
 
       - name: Deploy to Firebase Preview Channel
-        uses: FirebaseExtended/action-hosting-deploy@v0
+        uses: FirebaseExtended/action-hosting-deploy@v1
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           projectId: swiftcause-app
           entryPoint: backend
-          channelId: pr-${{ github.event.pull_request.number }}
+          channelId: pr-${{ github.event.pull_request.number || github.run_id }}
