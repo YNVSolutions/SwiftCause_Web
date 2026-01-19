@@ -36,7 +36,8 @@ jobs:
           cd backend
           echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" > ./firebase-service-account.json
           npx firebase-tools@latest hosting:channel:deploy pr-${{ github.event.pull_request.number || github.run_id }} \
-            --expires 7d \
-            --project swiftcause-app \
-            --json \
-            --token "$(cat ./firebase-service-account.json)"
+          --expires 7d \
+          --project swiftcause-app
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ./firebase-service-account.json
+
