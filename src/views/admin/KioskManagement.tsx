@@ -13,10 +13,8 @@ import {
   doc,
   addDoc,
   deleteDoc,
-  getDoc,
 } from 'firebase/firestore';
 import { Screen, Kiosk, AdminSession, Permission } from '../../shared/types';
-import { syncCampaignsForKiosk, removeKioskFromAllCampaigns } from "../../shared/lib/sync/campaignKioskSync";
 
 // UI Components
 import { Button } from '../../shared/ui/button';
@@ -81,6 +79,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
   
   const isLoading = kiosksLoading || campaignsLoading;
 
+  // Enrich kiosks with performance data for proper sorting
   const enrichedKiosks = kiosks.map(kiosk => ({
     ...kiosk,
     totalRaised: performanceData[kiosk.id]?.totalRaised || 0,
@@ -189,6 +188,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
     if (!newKiosk.name || !newKiosk.location || !userSession) return;
     try {
       if (editingKiosk) {
+        // Update existing kiosk
         const updatedKioskData = {
           ...editingKiosk,
           name: newKiosk.name,
@@ -204,9 +204,6 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
         };
         const kioskRef = doc(db, 'kiosks', editingKiosk.id);
         await updateDoc(kioskRef, updatedKioskData);
-        
-        const oldAssignedCampaigns = editingKiosk.assignedCampaigns || [];
-        await syncCampaignsForKiosk(editingKiosk.id, newKiosk.assignedCampaigns, oldAssignedCampaigns);
       } else {
         // Create new kiosk
         const newKioskData: Omit<Kiosk, 'id'> = {
@@ -227,12 +224,9 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
           },
           organizationId: userSession.user.organizationId,
         };
-        const docRef = await addDoc(collection(db, 'kiosks'), newKioskData);
-        
-        await syncCampaignsForKiosk(docRef.id, newKiosk.assignedCampaigns, []);
+        await addDoc(collection(db, 'kiosks'), newKioskData);
       }
       refreshKiosks();
-      refreshCampaigns(); // Refresh campaigns to show updated assignments
       setNewKiosk({ name: '', location: '', accessCode: '', status: 'offline', assignedCampaigns: [], displayLayout: 'grid' });
       setIsCreateDialogOpen(false);
       setEditingKiosk(null);
@@ -276,12 +270,8 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
     if (!kioskToDelete) return;
     
     try {
-      const assignedCampaigns = kioskToDelete.assignedCampaigns || [];
-      await removeKioskFromAllCampaigns(kioskToDelete.id, assignedCampaigns);
-      
       await deleteDoc(doc(db, 'kiosks', kioskToDelete.id));
       refreshKiosks();
-      refreshCampaigns(); // Refresh campaigns to show updated assignments
       setIsDeleteDialogOpen(false);
       setKioskToDelete(null);
     } catch (error) {
