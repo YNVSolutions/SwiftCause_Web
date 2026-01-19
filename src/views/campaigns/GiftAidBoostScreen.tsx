@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Button } from '../../shared/ui/button';
 import { Input } from '../../shared/ui/input';
 import { Card, CardContent } from '../../shared/ui/card';
-import { NavigationHeader } from '../../shared/ui/NavigationHeader';
 import { ArrowUp, ArrowLeft } from 'lucide-react';
 import { Campaign } from '../../shared/types';
 import { formatCurrency } from '../../shared/lib/currencyFormatter';
