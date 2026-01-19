@@ -9,14 +9,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Checkout code
       - uses: actions/checkout@v4
 
+      # 2. Install dependencies
       - name: Install dependencies
         run: npm ci
 
+      # 3. Build your project
       - name: Build
         run: npm run build
 
+      # 4. Check Firebase service account secret
       - name: Check Firebase service account secret
         run: |
           if [ -z "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" ]; then
@@ -26,11 +30,12 @@ jobs:
             echo "Firebase service account secret is present"
           fi
 
+      # 5. Deploy to Firebase Preview Channel using CLI directly
       - name: Deploy to Firebase Preview Channel
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          projectId: swiftcause-app
-          entryPoint: backend
-          channelId: pr-${{ github.event.pull_request.number || github.run_id }}
+        run: |
+          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" > ./firebase-service-account.json
+          npx firebase-tools@latest hosting:channel:deploy pr-${{ github.event.pull_request.number || github.run_id }} \
+            --expires 7d \
+            --project swiftcause-app \
+            --json \
+            --token "$(cat ./firebase-service-account.json)"
