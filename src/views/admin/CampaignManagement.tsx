@@ -1338,8 +1338,8 @@ const CampaignManagement = ({
   const handleEditClick = (campaign: DocumentData) => {
     const formData = {
       title: campaign.title || '',
-      briefOverview: campaign.briefOverview || '',
-      description: campaign.description || '',
+      briefOverview: campaign.description || '',
+      description: campaign.longDescription || '',
       goal: campaign.goal || 0,
       category: campaign.category || '',
       status: campaign.status || 'active',
@@ -1543,8 +1543,8 @@ const CampaignManagement = ({
       
       const dataToSave: { [key: string]: any } = {
         title: newCampaignFormData.title,
-        briefOverview: newCampaignFormData.briefOverview,
-        description: newCampaignFormData.description,
+        description: newCampaignFormData.briefOverview,
+        longDescription: newCampaignFormData.description,
         status: newCampaignFormData.status,
         goal: Number(newCampaignFormData.goal),
         tags: Array.isArray(newCampaignFormData.tags) ? newCampaignFormData.tags.filter(t => t.trim().length > 0) : [],
@@ -1670,8 +1670,8 @@ const CampaignManagement = ({
       
       const dataToSave: { [key: string]: any } = {
         title: newCampaignFormData.title,
-        briefOverview: newCampaignFormData.briefOverview,
-        description: newCampaignFormData.description,
+        description: newCampaignFormData.briefOverview,
+        longDescription: newCampaignFormData.description,
         status: 'paused',
         goal: Number(newCampaignFormData.goal),
         tags: Array.isArray(newCampaignFormData.tags) ? newCampaignFormData.tags.filter(t => t.trim().length > 0) : [],
@@ -1774,8 +1774,8 @@ const CampaignManagement = ({
       
       const dataToSave: { [key: string]: any } = {
         title: editCampaignFormData.title,
-        briefOverview: editCampaignFormData.briefOverview,
-        description: editCampaignFormData.description,
+        description: editCampaignFormData.briefOverview,
+        longDescription: editCampaignFormData.description,
         status: 'paused',
         goal: Number(editCampaignFormData.goal),
         tags: Array.isArray(editCampaignFormData.tags) ? editCampaignFormData.tags.filter(t => t.trim().length > 0) : [],
@@ -1883,8 +1883,8 @@ const CampaignManagement = ({
       
       const dataToSave: { [key: string]: any } = {
         title: editCampaignFormData.title,
-        briefOverview: editCampaignFormData.briefOverview,
-        description: editCampaignFormData.description,
+        description: editCampaignFormData.briefOverview,
+        longDescription: editCampaignFormData.description,
         status: editCampaignFormData.status,
         goal: Number(editCampaignFormData.goal),
         tags: Array.isArray(editCampaignFormData.tags) ? editCampaignFormData.tags.filter(t => t.trim().length > 0) : [],

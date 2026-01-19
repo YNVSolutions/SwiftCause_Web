@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { formatCurrency } from '@/shared/lib/currencyFormatter';
 import { ArrowLeft } from 'lucide-react';
 import { CampaignDetailsPageProps } from '../types';
@@ -36,6 +36,38 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
     isRecurring,
     recurringInterval,
   } = state;
+
+  // Ref for the donation panel to measure its height
+  const donationPanelRef = useRef<HTMLDivElement>(null);
+  const [donationPanelHeight, setDonationPanelHeight] = useState(350); // Default height
+
+  // Measure donation panel height and update bottom spacing
+  useEffect(() => {
+    const measurePanelHeight = () => {
+      if (donationPanelRef.current) {
+        const height = donationPanelRef.current.offsetHeight;
+        // Add some extra padding (20px) for better spacing
+        setDonationPanelHeight(height + 20);
+      }
+    };
+
+    // Measure initially
+    measurePanelHeight();
+
+    // Measure when content changes (recurring state, selected amounts, etc.)
+    const observer = new ResizeObserver(measurePanelHeight);
+    if (donationPanelRef.current) {
+      observer.observe(donationPanelRef.current);
+    }
+
+    // Also measure on state changes that might affect height
+    const timeoutId = setTimeout(measurePanelHeight, 100);
+
+    return () => {
+      observer.disconnect();
+      clearTimeout(timeoutId);
+    };
+  }, [isRecurring, selectedAmount, customAmount, recurringInterval]); // Re-measure when these change
 
   // Loading state
   if (loading) {
@@ -80,17 +112,36 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
   // Description to show below images (long description if available, else short)
   const belowImageDescription = campaign.longDescription || campaign.description;
 
-  // Parse and render description safely (supports <br>, <hr>, and **bold**)
+  // Parse and render description safely (supports HTML from SimpleRichEditor: <strong>, <em>, <hr>)
   const renderDescription = (text: string) => {
-    // Split by <hr> first
+    if (!text) return null;
+
+    // Clean and sanitize the HTML content
+    const cleanHtml = text
+      .replace(/<script[^>]*>.*?<\/script>/gi, '') // Remove scripts
+      .replace(/<iframe[^>]*>.*?<\/iframe>/gi, '') // Remove iframes
+      .replace(/on\w+="[^"]*"/gi, '') // Remove event handlers
+      .trim();
+
+    if (!cleanHtml) return null;
+
+    // If it contains HTML tags, render as HTML
+    if (/<[^>]+>/.test(cleanHtml)) {
+      return (
+        <div 
+          className="rich-text-content"
+          dangerouslySetInnerHTML={{ __html: cleanHtml }}
+        />
+      );
+    }
+
+    // Fallback: Handle legacy format (**bold**, <br>, <hr>)
     const hrParts = text.split(/<hr\s*\/?>/gi);
 
     return hrParts.map((hrPart, hrIndex) => {
-      // Split each part by <br>
       const brParts = hrPart.split(/<br\s*\/?>/gi);
 
       const content = brParts.map((brPart, brIndex) => {
-        // Handle **bold** syntax
         const boldParts = brPart.split(/(\*\*.+?\*\*)/g);
         const rendered = boldParts.map((part, partIndex) => {
           if (part.startsWith('**') && part.endsWith('**')) {
@@ -122,7 +173,7 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
     (customAmount && parseFloat(customAmount) > 0);
 
   return (
-    <div className="min-h-screen flex flex-col bg-linear-to-b from-green-50 via-white to-emerald-50/70 relative overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-linear-to-b from-green-50 via-white to-emerald-50/70 relative">
       <style>{`
         .kiosk-progress-bar {
           background-size: 200% 100%;
@@ -151,16 +202,53 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
           50% { background-position: 100% 50%; opacity: 0.9; }
           100% { background-position: 0% 50%; opacity: 0.5; }
         }
+        .rich-text-content strong {
+          font-weight: bold;
+        }
+        .rich-text-content em {
+          font-style: italic;
+        }
+        .rich-text-content hr {
+          border: none;
+          border-top: 2px solid #e5e7eb;
+          margin: 16px 0;
+        }
+        .rich-text-content p {
+          margin: 0 0 8px 0;
+        }
+        .rich-text-content p:last-child {
+          margin-bottom: 0;
+        }
       `}</style>
       <div className="absolute -top-24 right-0 h-80 w-80 rounded-full bg-green-100 blur-3xl opacity-70" />
       <div className="absolute top-1/3 -left-24 h-72 w-72 rounded-full bg-emerald-100 blur-3xl opacity-60" />
       <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full bg-green-50 blur-3xl opacity-90" />
 
       <div className="relative z-10 flex flex-col min-h-screen">
-        <header className="w-full pt-5">
+        {/* Fixed header at top - only visible on mobile */}
+        <header className="lg:hidden fixed top-0 left-0 right-0 z-30">
+          <div className="w-full px-4 py-4 flex justify-center">
+            <div className="bg-white/90 backdrop-blur-md rounded-full px-4 py-3 shadow-lg border border-gray-200/50 flex items-center gap-4">
+              <button
+                onClick={onBack}
+                title="Back"
+                aria-label="Back"
+                className="flex items-center justify-center h-8 w-8 rounded-full bg-green-50 text-green-700 hover:bg-green-100 transition-colors"
+              >
+                <ArrowLeft className="h-4 w-4" strokeWidth={2.4} />
+              </button>
+              <p className="text-base uppercase tracking-[0.15em] text-black font-bold">
+                Campaign Details
+              </p>
+            </div>
+          </div>
+        </header>
+
+        {/* Desktop header - normal flow */}
+        <header className="hidden lg:block w-full pt-5">
           <div className="w-5/6 mx-auto px-4 lg:px-0">
             <div className="rounded-3xl px-6 py-4">
-              <div className="flex items-start gap-4">
+              <div className="flex items-center gap-4">
                 <button
                   onClick={onBack}
                   title="Back"
@@ -169,13 +257,10 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
                 >
                   <ArrowLeft className="h-4.5 w-4.5" strokeWidth={2.4} />
                 </button>
-                <div>
-                  <p className="text-xs uppercase tracking-[0.2em] text-green-600 font-semibold">
+                <div className="flex-1 text-center">
+                  <p className="text-base sm:text-lg uppercase tracking-[0.15em] text-black font-bold">
                     Campaign Details
                   </p>
-                  <h1 className="text-2xl sm:text-3xl font-semibold text-[#0A0A0A] leading-tight mt-1">
-                    Review the story and choose an amount to support this cause.
-                  </h1>
                 </div>
               </div>
               <div className="h-px bg-green-100 mt-4" />
@@ -268,10 +353,13 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
         </div>
       </main>
 
-      {/* Small screens: Single column with sticky donate controls */}
-      <div className="lg:hidden flex flex-col flex-1">
-        {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto px-4 pb-4">
+      {/* Small screens: Natural page scroll with fixed donate controls */}
+      <div className="lg:hidden">
+        {/* Main content - scrolls naturally with the page */}
+        <div 
+          className="px-4 pt-24" 
+          style={{ paddingBottom: `${donationPanelHeight}px` }}
+        >
           {/* Image Carousel */}
           <div className="h-64 sm:h-80 mb-6 rounded-3xl border border-green-100 bg-white/90 shadow-xl overflow-hidden">
             <ImageCarousel
@@ -322,32 +410,35 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
             </div>
           )}
         </div>
+      </div>
 
-        {/* Sticky donate controls at bottom */}
-        <div className="shrink-0 bg-white/90 border-t border-green-100 px-4 py-4 space-y-4 shadow-[0_-8px_24px_rgba(15,23,42,0.08)]">
-          {/* Amount Selector */}
-          <AmountSelector
-            amounts={predefinedAmounts}
-            selectedAmount={selectedAmount}
-            customAmount={customAmount}
-            currency={currency}
-            enableRecurring={enableRecurring}
-            recurringIntervals={recurringIntervals}
-            isRecurring={isRecurring}
-            recurringInterval={recurringInterval}
-            onSelectAmount={onSelectAmount}
-            onCustomAmountChange={onCustomAmountChange}
-            onRecurringToggle={onRecurringToggle}
-            onRecurringIntervalChange={onRecurringIntervalChange}
-          />
+      {/* Fixed donate controls - only visible on mobile, positioned relative to viewport */}
+      <div 
+        ref={donationPanelRef}
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-20 bg-white/95 backdrop-blur-md border-t border-green-100 px-4 py-4 space-y-4 shadow-[0_-8px_32px_rgba(15,23,42,0.12)]"
+      >
+        {/* Amount Selector */}
+        <AmountSelector
+          amounts={predefinedAmounts}
+          selectedAmount={selectedAmount}
+          customAmount={customAmount}
+          currency={currency}
+          enableRecurring={enableRecurring}
+          recurringIntervals={recurringIntervals}
+          isRecurring={isRecurring}
+          recurringInterval={recurringInterval}
+          onSelectAmount={onSelectAmount}
+          onCustomAmountChange={onCustomAmountChange}
+          onRecurringToggle={onRecurringToggle}
+          onRecurringIntervalChange={onRecurringIntervalChange}
+        />
 
-          {/* Donate Button */}
-          <DonateButton
-            disabled={!hasValidAmount}
-            onClick={onDonate}
-            label={isRecurring ? 'Subscribe' : 'Donate'}
-          />
-        </div>
+        {/* Donate Button */}
+        <DonateButton
+          disabled={!hasValidAmount}
+          onClick={onDonate}
+          label={isRecurring ? 'Subscribe' : 'Donate'}
+        />
       </div>
       </div>
     </div>
