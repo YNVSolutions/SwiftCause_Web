@@ -3,9 +3,11 @@ import {
   createUserWithEmailAndPassword, 
   signOut, 
   onAuthStateChanged,
+  sendEmailVerification,
+  applyActionCode,
   User as FirebaseAuthUser
 } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../../../shared/lib/firebase';
 import { User } from '../../../entities/user';
 import { SignupCredentials } from '../model';
@@ -84,6 +86,7 @@ export const authApi = {
           'manage_permissions',
         ],
         isActive: true,
+        emailVerified: false,
         createdAt: new Date().toISOString(),
         organizationId: credentials.organizationId,
       };
@@ -99,6 +102,9 @@ export const authApi = {
         currency: credentials.currency,
         createdAt: new Date().toISOString(),
       });
+
+      // Send verification email
+      await sendEmailVerification(userCredential.user);
 
       return {
         id: userId,
@@ -178,5 +184,71 @@ export const authApi = {
         callback(null);
       }
     });
+  },
+
+  // Send verification email to current user
+  async sendVerificationEmail(user: FirebaseAuthUser): Promise<void> {
+    try {
+      await sendEmailVerification(user);
+    } catch (error: unknown) {
+      console.error('Error sending verification email:', error);
+      throw error;
+    }
+  },
+
+  // Resend verification email
+  async resendVerificationEmail(email: string): Promise<void> {
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error('No authenticated user found. Please sign up again.');
+      }
+      if (user.email !== email) {
+        throw new Error('Email does not match current user');
+      }
+      await sendEmailVerification(user);
+    } catch (error: unknown) {
+      console.error('Error resending verification email:', error);
+      throw error;
+    }
+  },
+
+  // Verify email with action code
+  async verifyEmailCode(code: string): Promise<void> {
+    try {
+      await applyActionCode(auth, code);
+      
+      // Update Firestore user document
+      const user = auth.currentUser;
+      if (user) {
+        const userDocRef = doc(db, 'users', user.uid);
+        await updateDoc(userDocRef, {
+          emailVerified: true
+        });
+      }
+    } catch (error: unknown) {
+      console.error('Error verifying email code:', error);
+      throw error;
+    }
+  },
+
+  // Check if email is verified in Firestore
+  async checkEmailVerification(email: string): Promise<boolean> {
+    try {
+      // This method is used by the login form to check verification status
+      // It's already implemented in PR #376, so we're just documenting it here
+      const usersRef = doc(db, 'users', email);
+      const userSnap = await getDoc(usersRef);
+      
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        return userData.emailVerified === true;
+      }
+      
+      return false;
+    } catch (error: unknown) {
+      console.error('Error checking email verification:', error);
+      return false;
+    }
   }
 };
