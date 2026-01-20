@@ -6,10 +6,14 @@ import { AuthProvider } from '@/shared/lib/auth-provider'
 import { ToastProvider } from '@/shared/ui/ToastProvider'
 import { StripeProvider } from '@/shared/lib/stripe-provider'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ 
+  subsets: ['latin'],
+  display: 'swap',
+})
 const lexend = Lexend({ 
   subsets: ['latin'],
   variable: '--font-lexend',
+  display: 'swap',
 })
 
 export const metadata: Metadata = {
@@ -23,8 +27,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={`${inter.className} ${lexend.variable}`}>
+    <html lang="en" className={lexend.variable}>
+      <body className={inter.className}>
         <AuthProvider>
           <ToastProvider>
             <StripeProvider>
