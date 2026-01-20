@@ -143,7 +143,27 @@ export function CampaignScreen({
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <>
+      <style>{`
+        .rich-text-content strong {
+          font-weight: bold;
+        }
+        .rich-text-content em {
+          font-style: italic;
+        }
+        .rich-text-content hr {
+          border: none;
+          border-top: 2px solid #e5e7eb;
+          margin: 16px 0;
+        }
+        .rich-text-content p {
+          margin: 0 0 8px 0;
+        }
+        .rich-text-content p:last-child {
+          margin-bottom: 0;
+        }
+      `}</style>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <NavigationHeader
         title={currentView === 'overview' ? 'Campaign Details' : 'Make a Donation'}
         onBack={onBack} // Always go back to campaign list
@@ -250,9 +270,12 @@ export function CampaignScreen({
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-3 text-sm text-muted-foreground">
-                          <p>
-                            {campaign.longDescription || 'This campaign is dedicated to making a significant impact. Your support will provide essential resources and foster lasting positive change within the community.'}
-                          </p>
+                          <div 
+                            className="rich-text-content"
+                            dangerouslySetInnerHTML={{ 
+                              __html: campaign.longDescription || 'This campaign is dedicated to making a significant impact. Your support will provide essential resources and foster lasting positive change within the community.' 
+                            }}
+                          />
                           {campaign.videoUrl && (
                             <div className="aspect-video w-full rounded-md overflow-hidden">
                               <iframe
@@ -446,5 +469,6 @@ export function CampaignScreen({
         </div>
       </main>
     </div>
+    </>
   );
 }
