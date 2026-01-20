@@ -7,12 +7,34 @@ import {
   applyActionCode,
   User as FirebaseAuthUser
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '../../../shared/lib/firebase';
 import { User } from '../../../entities/user';
 import { SignupCredentials } from '../model';
 
 export const authApi = {
+  // Check if email exists and is verified in Firestore
+  async checkEmailVerification(email: string): Promise<{ exists: boolean; verified: boolean }> {
+    try {
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('email', '==', email));
+      const querySnapshot = await getDocs(q);
+      
+      if (querySnapshot.empty) {
+        return { exists: false, verified: false };
+      }
+      
+      const userData = querySnapshot.docs[0].data();
+      return { 
+        exists: true, 
+        verified: userData.emailVerified === true 
+      };
+    } catch (error: unknown) {
+      console.error('Error checking email verification:', error);
+      return { exists: false, verified: false };
+    }
+  },
+
   // Sign in with email and password
   async signIn(email: string, password: string): Promise<User | null> {
     try {
