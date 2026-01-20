@@ -7,7 +7,7 @@ import {
   applyActionCode,
   User as FirebaseAuthUser
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '../../../shared/lib/firebase';
 import { User } from '../../../entities/user';
 import { SignupCredentials } from '../model';
@@ -251,26 +251,6 @@ export const authApi = {
     } catch (error: unknown) {
       console.error('Error verifying email code:', error);
       throw error;
-    }
-  },
-
-  // Check if email is verified in Firestore
-  async checkEmailVerification(email: string): Promise<boolean> {
-    try {
-      // This method is used by the login form to check verification status
-      // It's already implemented in PR #376, so we're just documenting it here
-      const usersRef = doc(db, 'users', email);
-      const userSnap = await getDoc(usersRef);
-      
-      if (userSnap.exists()) {
-        const userData = userSnap.data();
-        return userData.emailVerified === true;
-      }
-      
-      return false;
-    } catch (error: unknown) {
-      console.error('Error checking email verification:', error);
-      return false;
     }
   }
 };
