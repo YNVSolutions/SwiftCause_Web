@@ -143,7 +143,7 @@ const CustomChartTooltip = ({ active, payload, label }: ChartTooltipProps) => {
               <span className="text-gray-600">{entry.name}:</span>
             </div>
             <span className="font-semibold text-gray-900">
-              {typeof entry.value === 'number' ? `£${entry.value.toLocaleString('en-GB')}` : entry.value}
+              {typeof entry.value === 'number' ? `Â£${entry.value.toLocaleString('en-GB')}` : entry.value}
             </span>
           </div>
         ))}
@@ -175,6 +175,15 @@ export function AdminDashboard({
   const [showDonationDistributionDialog, setShowDonationDistributionDialog] = useState(false);
   const [showCampaignProgressDialog, setShowCampaignProgressDialog] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  
+  // Initialize onboardingDismissed from sessionStorage
+  const [onboardingDismissed, setOnboardingDismissed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('onboardingDismissed') === 'true';
+    }
+    return false;
+  });
+  
   const [showKioskForm, setShowKioskForm] = useState(false);
   const [showLinkingForm, setShowLinkingForm] = useState(false);
   const [allCampaigns, setAllCampaigns] = useState<Campaign[]>([]);
@@ -200,12 +209,12 @@ export function AdminDashboard({
     coverImageUrl: '',
     videoUrl: '',
     galleryImages: [],
-    predefinedAmounts: [25, 50, 100],
+    predefinedAmounts: [10, 25, 50],
     startDate: '',
     endDate: '',
     enableRecurring: false,
     recurringIntervals: [],
-    tags: [] as string[],
+    tags: [],
     isGlobal: false,
     assignedKiosks: []
   });
@@ -286,8 +295,8 @@ export function AdminDashboard({
       // Store all campaigns for performance widget
       setAllCampaignsForPerformance(allCampaigns);
         
-        // Check if there are no campaigns and show onboarding
-        if (allCampaigns.length === 0 && !showOnboarding) {
+        // Check if there are no campaigns and show onboarding (only if not previously dismissed)
+        if (allCampaigns.length === 0 && !showOnboarding && !onboardingDismissed) {
           setShowOnboarding(true);
         }
         setCampaignCountChecked(true);
@@ -358,7 +367,7 @@ export function AdminDashboard({
       } catch (error) {
         console.error("Error fetching chart data: ", error);
       }
-    }, [userSession.user.organizationId, showOnboarding]);
+    }, [userSession.user.organizationId, showOnboarding, onboardingDismissed]);
 
   useEffect(() => {
     fetchChartData();
@@ -532,12 +541,12 @@ export function AdminDashboard({
         coverImageUrl: '',
         videoUrl: '',
         galleryImages: [],
-        predefinedAmounts: [25, 50, 100],
+        predefinedAmounts: [10, 25, 50],
         startDate: '',
         endDate: '',
         enableRecurring: false,
         recurringIntervals: [],
-        tags: [] as string[],
+        tags: [],
         isGlobal: false,
         assignedKiosks: []
       });
@@ -627,7 +636,7 @@ export function AdminDashboard({
   };
 
   const formatLargeCurrency = (amount: number) => {
-    if (amount === 0) return "£0";
+    if (amount === 0) return "Â£0";
     if (typeof amount !== "number") return "...";
 
     const tiers = [
@@ -641,13 +650,13 @@ export function AdminDashboard({
 
     if (tier) {
       const value = (amount / tier.value).toFixed(1);
-      return `£${value}${tier.name}`;
+      return `Â£${value}${tier.name}`;
     }
 
     return formatCurrency(amount);
   };
   const formatShortCurrency = (amount: number) => {
-    if (amount === 0) return "£0";
+    if (amount === 0) return "Â£0";
     if (typeof amount !== "number") return "...";
     const tiers = [
       { value: 1e12, name: "T" },
@@ -658,9 +667,9 @@ export function AdminDashboard({
     const tier = tiers.find((t) => amount >= t.value);
     if (tier) {
       const value = (amount / tier.value).toFixed(1);
-      return `£${value}${tier.name}`;
+      return `Â£${value}${tier.name}`;
     }
-    return `£${amount}`;
+    return `Â£${amount}`;
   };
 
   const getActivityIcon = (type: string) => {
@@ -678,6 +687,11 @@ export function AdminDashboard({
 
   const handleStartTour = () => {
     setShowOnboarding(true);
+    setOnboardingDismissed(false); // Reset dismissed flag when starting tour
+    // Clear sessionStorage when manually starting tour
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('onboardingDismissed');
+    }
     setShowCampaignForm(false);
     setShowKioskForm(false);
     setShowLinkingForm(false);
@@ -693,6 +707,73 @@ export function AdminDashboard({
     category: '',
     configuration: DEFAULT_CAMPAIGN_CONFIG,
   }));
+
+  const [isOnboardingStripe, setIsOnboardingStripe] = useState(false);
+
+  const handleDirectStripeOnboarding = async () => {
+    if (!organization?.id) {
+      showToast('Organization ID not available for Stripe onboarding.', 'error');
+      return;
+    }
+
+    if (!auth.currentUser) {
+      showToast('No authenticated user found. Please log in again.', 'error');
+      return;
+    }
+
+    try {
+      setIsOnboardingStripe(true);
+      const idToken = await auth.currentUser.getIdToken();
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+      const response = await fetch(
+        'https://us-central1-swiftcause-app.cloudfunctions.net/createOnboardingLink',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${idToken}`,
+          },
+          body: JSON.stringify({ orgId: organization.id }),
+          signal: controller.signal,
+        }
+      );
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.error || response.statusText || 'Failed to create onboarding link.'
+        );
+      }
+
+      const { url } = await response.json();
+      if (url) {
+        window.location.href = url;
+      } else {
+        throw new Error('No onboarding URL received from server.');
+      }
+    } catch (error: unknown) {
+      console.error('Error creating Stripe onboarding link:', error);
+
+      const errorName = error instanceof Error ? error.name : '';
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+      if (errorName === 'AbortError') {
+        showToast('Request timed out. Please check your connection and try again.', 'error', 4000);
+      } else {
+        showToast(
+          `Failed to start Stripe onboarding: ${errorMessage}`,
+          'error',
+          4000
+        );
+      }
+      setIsOnboardingStripe(false);
+    }
+  };
 
   if (error) {
     return (
@@ -838,7 +919,14 @@ export function AdminDashboard({
                         <ChevronRight className="w-5 h-5 ml-2" />
                       </Button>
                       <Button
-                        onClick={() => setShowOnboarding(false)}
+                        onClick={() => {
+                          setShowOnboarding(false);
+                          setOnboardingDismissed(true);
+                          // Persist to sessionStorage so it stays dismissed during the session
+                          if (typeof window !== 'undefined') {
+                            sessionStorage.setItem('onboardingDismissed', 'true');
+                          }
+                        }}
                         variant="ghost"
                         size="lg"
                         className="text-gray-600 hover:text-gray-900 px-8 py-6 text-base font-medium w-full sm:w-auto"
@@ -859,9 +947,9 @@ export function AdminDashboard({
                           Register physical donation points for contactless giving.
                         </p>
                         <ul className="space-y-1 text-xs text-gray-500">
-                          <li>• Mobile-first design</li>
-                          <li>• QR code access</li>
-                          <li>• Real-time tracking</li>
+                          <li>â€¢ Mobile-first design</li>
+                          <li>â€¢ QR code access</li>
+                          <li>â€¢ Real-time tracking</li>
                         </ul>
                       </div>
 
@@ -875,9 +963,9 @@ export function AdminDashboard({
                           Link kiosks to specific goals and monitor real-time progress.
                         </p>
                         <ul className="space-y-1 text-xs text-gray-500">
-                          <li>• Custom goals</li>
-                          <li>• Progress tracking</li>
-                          <li>• Performance metrics</li>
+                          <li>â€¢ Custom goals</li>
+                          <li>â€¢ Progress tracking</li>
+                          <li>â€¢ Performance metrics</li>
                         </ul>
                       </div>
 
@@ -891,9 +979,9 @@ export function AdminDashboard({
                           Receive funds directly to your organization's bank account.
                         </p>
                         <ul className="space-y-1 text-xs text-gray-500">
-                          <li>• Secure processing</li>
-                          <li>• Direct deposits</li>
-                          <li>• Transparent fees</li>
+                          <li>â€¢ Secure processing</li>
+                          <li>â€¢ Direct deposits</li>
+                          <li>â€¢ Transparent fees</li>
                         </ul>
                       </div>
                     </div>
@@ -1027,26 +1115,22 @@ export function AdminDashboard({
                                       const endDateStr = toDateInputValue(campaign.endDate as unknown);
                                       setCampaignFormData({
                                         title: campaign.title || '',
-                                        briefOverview: campaign.briefOverview || '',
+                                        briefOverview: '', // Campaign type doesn't have briefOverview, so use empty string
                                         description: campaign.description || '',
                                         goal: campaign.goal || 0,
                                         category: campaign.category || '',
                                         status: campaign.status || 'active',
                                         coverImageUrl: campaign.coverImageUrl || '',
                                         videoUrl: campaign.videoUrl || '',
-                                        galleryImages: Array.isArray(campaign.galleryImages) ? campaign.galleryImages : [],
-                                        predefinedAmounts: Array.isArray(campaign.configuration?.predefinedAmounts)
-                                          ? campaign.configuration.predefinedAmounts
-                                          : [25, 50, 100],
+                                        galleryImages: campaign.galleryImages || [],
+                                        predefinedAmounts: campaign.configuration?.predefinedAmounts || [10, 25, 50],
                                         startDate: startDateStr,
                                         endDate: endDateStr,
-                                        enableRecurring: campaign.configuration?.enableRecurring ?? false,
-                                        recurringIntervals: Array.isArray(campaign.configuration?.recurringIntervals)
-                                          ? campaign.configuration.recurringIntervals
-                                          : [],
-                                        tags: Array.isArray(campaign.tags) ? campaign.tags : [],
-                                        isGlobal: campaign.isGlobal ?? false,
-                                        assignedKiosks: Array.isArray(campaign.assignedKiosks) ? campaign.assignedKiosks : []
+                                        enableRecurring: campaign.configuration?.enableRecurring || false,
+                                        recurringIntervals: campaign.configuration?.recurringIntervals || [],
+                                        tags: campaign.tags || [],
+                                        isGlobal: campaign.isGlobal || false,
+                                        assignedKiosks: campaign.assignedKiosks || []
                                       });
                                       setShowCampaignFormDialog(true);
                                     }}
@@ -1112,6 +1196,9 @@ export function AdminDashboard({
                 campaignData={campaignFormData}
                 setCampaignData={setCampaignFormData}
                 onSubmit={handleCampaignFormSubmit}
+                  onSaveDraft={() => {
+                    // Handle save draft functionality if needed
+                  }}
                 onCancel={() => {
                   setShowCampaignFormDialog(false);
                   setEditingCampaignInTour(null);
@@ -1181,29 +1268,34 @@ export function AdminDashboard({
                         </Button>
                       </div>
 
-                      {/* Make Campaign Global Button */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (isGlobalCampaign) {
-                            // If already global, turn off and unassign all
-                            setIsGlobalCampaign(false);
-                            setAssignedKioskIds([]);
-                          } else {
-                            // Make global - assign all kiosks
-                            setIsGlobalCampaign(true);
-                            setAssignedKioskIds(allKiosks.map(k => k.id));
-                          }
-                        }}
-                        className={`w-full py-4 px-6 rounded-lg font-semibold text-lg transition-all duration-200 mb-6 flex items-center justify-center gap-3 ${
-                          isGlobalCampaign
-                            ? 'bg-green-500 hover:bg-green-600 text-white'
-                            : 'bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-300'
-                        }`}
-                      >
-                        <Globe className="w-6 h-6" />
-                        {isGlobalCampaign ? 'Your Campaign is now Global' : 'Make this Campaign Global'}
-                      </button>
+                      {/* Make Campaign Global Button - Only show if there are kiosks */}
+                      {allKiosks.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (isGlobalCampaign) {
+                              // If already global, turn off and unassign all
+                              setIsGlobalCampaign(false);
+                              setAssignedKioskIds([]);
+                            } else {
+                              // Make global - assign all kiosks
+                              setIsGlobalCampaign(true);
+                              setAssignedKioskIds(allKiosks.map(k => k.id));
+                            }
+                          }}
+                          disabled={!createdCampaignId}
+                          className={`w-full py-4 px-6 rounded-lg font-semibold text-lg transition-all duration-200 mb-6 flex items-center justify-center gap-3 ${
+                            !createdCampaignId
+                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                              : isGlobalCampaign
+                              ? 'bg-green-500 hover:bg-green-600 text-white'
+                              : 'bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-300'
+                          }`}
+                        >
+                          <Globe className="w-6 h-6" />
+                          {isGlobalCampaign ? 'Your Campaign is now Global' : 'Make this Campaign Global'}
+                        </button>
+                      )}
 
                       {/* Kiosk List */}
                       <div className="space-y-3 mb-6">
@@ -1252,8 +1344,11 @@ export function AdminDashboard({
                                         }
                                       }
                                     }}
+                                    disabled={!createdCampaignId}
                                     className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
-                                      isAssigned
+                                      !createdCampaignId
+                                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                        : isAssigned
                                         ? 'bg-green-500 hover:bg-green-600 text-white'
                                         : 'bg-gray-900 hover:bg-gray-800 text-white'
                                     }`}
@@ -1394,6 +1489,11 @@ export function AdminDashboard({
                           setShowKioskForm(false);
                           setShowLinkingForm(false);
                           setShowOnboarding(false);
+                          setOnboardingDismissed(true);
+                          // Persist to sessionStorage so it stays dismissed during the session
+                          if (typeof window !== 'undefined') {
+                            sessionStorage.setItem('onboardingDismissed', 'true');
+                          }
                           // Refresh dashboard data
                           refreshDashboard();
                           // Navigate to dashboard to see the new data
@@ -1430,11 +1530,21 @@ export function AdminDashboard({
                             </div>
                           </div>
                           <Button
-                            onClick={() => setShowStripeStatusDialog(true)}
-                            className="w-full bg-yellow-600 hover:bg-yellow-700 h-12 text-base font-semibold"
+                            onClick={handleDirectStripeOnboarding}
+                            disabled={isOnboardingStripe}
+                            className="w-full bg-yellow-600 hover:bg-yellow-700 h-12 text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            <CreditCard className="w-5 h-5 mr-2" />
-                            Complete Stripe Onboarding
+                            {isOnboardingStripe ? (
+                              <>
+                                <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
+                                Redirecting...
+                              </>
+                            ) : (
+                              <>
+                                <CreditCard className="w-5 h-5 mr-2" />
+                                Complete Stripe Onboarding
+                              </>
+                            )}
                           </Button>
                         </>
                       ) : organization && organization.stripe && organization.stripe.chargesEnabled && !organization.stripe.payoutsEnabled ? (
@@ -1472,6 +1582,11 @@ export function AdminDashboard({
                           setShowCampaignForm(false);
                           setShowKioskForm(false);
                           setShowOnboarding(false);
+                          setOnboardingDismissed(true);
+                          // Persist to sessionStorage so it stays dismissed during the session
+                          if (typeof window !== 'undefined') {
+                            sessionStorage.setItem('onboardingDismissed', 'true');
+                          }
                           // Refresh dashboard data
                           refreshDashboard();
                           // Navigate to dashboard to see the new data
@@ -1920,7 +2035,7 @@ export function AdminDashboard({
                 <DonationDistributionChart
                   data={stats.donationDistribution}
                   totalRaised={stats.totalRaised}
-                  formatCurrency={(amount) => `£${amount.toLocaleString()}`}
+                  formatCurrency={(amount) => `Â£${amount.toLocaleString()}`}
                 />
               )}
             </CardContent>

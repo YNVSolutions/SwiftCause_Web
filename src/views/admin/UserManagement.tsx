@@ -103,13 +103,16 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
             await updateUser(userId, updates);
             setEditingUser(null);
         } catch (err) {
-            setDialogMessage(`Error: ${(err as Error).message}`);
+            const errorMessage = (err as Error).message || "Failed to update user.";
+            console.error('Update user error:', err);
+            setDialogMessage(`Error: ${errorMessage}`);
         }
     };
 
     // Filter users first
     const filteredUsersData = users.filter(user => {
-        const matchesSearch = user.username?.toLowerCase().includes(searchTerm.toLowerCase()) || user.email?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = !searchTerm || 
+            user.username?.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesRole = roleFilter === 'all' || user.role === roleFilter;
         // Hide super_admin users from non-super-admin users
         const canViewSuperAdmin = userSession.user.role === 'super_admin' || user.role !== 'super_admin';

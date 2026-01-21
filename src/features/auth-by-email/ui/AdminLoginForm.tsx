@@ -8,7 +8,18 @@ interface AdminLoginContainerProps {
 }
 
 export function AdminLoginContainer({ onLogin }: AdminLoginContainerProps) {
-	const { email, password, setEmail, setPassword, error, loading, handleSubmit } = useAdminLogin(onLogin);
+	const { 
+		email, 
+		password, 
+		setEmail, 
+		setPassword, 
+		error, 
+		loading, 
+		emailVerificationError,
+		isCheckingEmail,
+		checkEmailVerification,
+		handleSubmit 
+	} = useAdminLogin(onLogin);
 
 	return (
 		<AdminLogin
@@ -16,8 +27,11 @@ export function AdminLoginContainer({ onLogin }: AdminLoginContainerProps) {
 			password={password}
 			error={error}
 			loading={loading}
+			emailVerificationError={emailVerificationError}
+			isCheckingEmail={isCheckingEmail}
 			onEmailChange={(e) => setEmail(e.target.value)}
 			onPasswordChange={(e) => setPassword(e.target.value)}
+			onEmailBlur={checkEmailVerification}
 			onSubmit={handleSubmit}
 		/>
 	);

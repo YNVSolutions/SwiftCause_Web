@@ -1,5 +1,5 @@
 import React from 'react';
-import { UserCog, ArrowRight } from 'lucide-react';
+import { UserCog, ArrowRight, AlertCircle } from 'lucide-react';
 import { ProfessionalEmailField } from '../auth/interactions/ProfessionalEmailField';
 import { ProfessionalPasswordField } from '../auth/interactions/ProfessionalPasswordField';
 import { MagneticButton } from '../auth/interactions/MagneticButton';
@@ -11,6 +11,8 @@ interface AdminLoginProps {
 	emailError?: string | null;
 	passwordError?: string | null;
 	loading: boolean;
+	emailVerificationError?: string;
+	isCheckingEmail?: boolean;
 	onEmailChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 	onPasswordChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 	onEmailBlur?: () => void;
@@ -25,12 +27,16 @@ export function AdminLogin({
 	emailError, 
 	passwordError, 
 	loading, 
+	emailVerificationError,
+	isCheckingEmail,
 	onEmailChange, 
 	onPasswordChange, 
 	onEmailBlur, 
 	onPasswordBlur, 
 	onSubmit 
 }: AdminLoginProps) {
+	const hasVerificationError = !!emailVerificationError;
+	
 	return (
 		<>
 			<div className="text-center mb-4 animate-fade-in">
@@ -44,13 +50,33 @@ export function AdminLogin({
 			</div>
 
 			<form onSubmit={onSubmit} className="space-y-4 animate-fade-in-delay">
-				<ProfessionalEmailField
-					id="email"
-					value={email}
-					onChange={onEmailChange}
-					onBlur={onEmailBlur}
-					error={emailError || error}
-				/>
+				<div>
+					<ProfessionalEmailField
+						id="email"
+						value={email}
+						onChange={onEmailChange}
+						onBlur={onEmailBlur}
+						error={emailError || error}
+					/>
+					
+					{isCheckingEmail && (
+						<div className="flex items-center gap-2 mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+							<div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+							<p className="text-sm text-blue-800">
+								Checking email verification status...
+							</p>
+						</div>
+					)}
+					
+					{!isCheckingEmail && hasVerificationError && (
+						<div className="flex items-start gap-2 mt-2 p-3 bg-red-50 border border-red-200 rounded-lg animate-slide-down">
+							<AlertCircle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
+							<p className="text-sm text-red-800">
+								{emailVerificationError}
+							</p>
+						</div>
+					)}
+				</div>
 
 				<ProfessionalPasswordField
 					id="password"
@@ -63,7 +89,7 @@ export function AdminLogin({
 				<MagneticButton
 					type="submit"
 					loading={loading}
-					disabled={loading}
+					disabled={loading || hasVerificationError || isCheckingEmail}
 					className="w-full h-12 text-base font-semibold"
 				>
 					{!loading && (

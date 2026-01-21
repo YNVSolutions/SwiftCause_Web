@@ -151,7 +151,7 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
       )}
 
       {/* Preset Amounts */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         {amounts.slice(0, 3).map((amount) => (
           <button
             key={amount}
@@ -186,22 +186,16 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
         />
       </div>
 
-      {enableRecurring && (
+      {enableRecurring && isRecurring && (
         <div className="rounded-lg bg-green-50/70 px-3 py-2 flex items-center justify-center gap-2 text-[15px] border border-green-100 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
           <span className="relative flex items-center justify-center w-8 h-8 shrink-0" aria-hidden="true">
             <span className="absolute inset-0 rounded-full bg-green-100" />
             <span className="absolute -inset-1 rounded-full border border-green-200" />
             <Heart className="w-4 h-4 text-green-600 relative" />
           </span>
-          {isRecurring ? (
-            <span className="text-green-700 font-medium">
-              Your next {recurringLabel.toLowerCase()} donation is on {getNextBillingDate()}
-            </span>
-          ) : (
-            <span className="text-green-700 font-medium">
-              Multiply your impact. Make it {recurringLabel.toLowerCase()}!
-            </span>
-          )}
+          <span className="text-green-700 font-medium">
+            Your next {recurringLabel.toLowerCase()} donation is on {getNextBillingDate()}
+          </span>
         </div>
       )}
 
@@ -220,7 +214,7 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
         </div>
       )}
 
-      {enableRecurring && (
+      {enableRecurring && isRecurring && (
         <p className="text-xs text-gray-600 text-center px-4">
           By enabling recurring donations, you agree to our subscription terms and can cancel anytime.
         </p>

@@ -469,32 +469,7 @@ export function GiftAidManagement({
         <Card className="overflow-hidden">
           <CardContent className="p-0">
             {loading ? (
-              <>
-                <div className="md:hidden space-y-4 px-4 py-5">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <div
-                      key={i}
-                      className="rounded-2xl border border-emerald-100 bg-white px-4 py-4"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0 space-y-2">
-                          <Skeleton className="h-4 w-36" />
-                          <Skeleton className="h-3 w-28" />
-                          <Skeleton className="h-3 w-24" />
-                        </div>
-                        <div className="flex flex-col items-end gap-2">
-                          <Skeleton className="h-4 w-20" />
-                          <Skeleton className="h-4 w-16" />
-                        </div>
-                      </div>
-                      <div className="mt-3 space-y-2">
-                        <Skeleton className="h-4 w-48" />
-                        <Skeleton className="h-4 w-24" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="hidden md:block">
+              <><div className="hidden md:block">
                   <Table className="w-full table-fixed">
                     <TableHeader>
                       <TableRow className="bg-gray-100 border-b-2 border-gray-300">

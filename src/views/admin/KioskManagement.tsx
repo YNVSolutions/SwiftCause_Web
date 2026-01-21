@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from 'react';
 import { db } from '../../shared/lib/firebase';
@@ -15,6 +15,7 @@ import {
   deleteDoc,
 } from 'firebase/firestore';
 import { Screen, Kiosk, AdminSession, Permission } from '../../shared/types';
+import { syncCampaignsForKiosk, removeKioskFromAllCampaigns } from "../../shared/lib/sync/campaignKioskSync";
 
 // UI Components
 import { Button } from '../../shared/ui/button';
@@ -38,6 +39,7 @@ import {
   Settings,
   Activity,
   AlertTriangle,
+  Loader2,
 } from 'lucide-react';
 import { AdminLayout } from './AdminLayout';
 import { KioskForm, KioskFormData } from './components/KioskForm';
@@ -76,7 +78,6 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
   
   const isLoading = kiosksLoading || campaignsLoading;
 
-  // Enrich kiosks with performance data for proper sorting
   const enrichedKiosks = kiosks.map(kiosk => ({
     ...kiosk,
     totalRaised: performanceData[kiosk.id]?.totalRaised || 0,
@@ -109,6 +110,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingKiosk, setEditingKiosk] = useState<Kiosk | null>(null);
+  const [isCreatingKiosk, setIsCreatingKiosk] = useState(false);
   const [newKiosk, setNewKiosk] = useState<KioskFormData>({ 
     name: '', 
     location: '', 
@@ -120,6 +122,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
   
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [kioskToDelete, setKioskToDelete] = useState<Kiosk | null>(null);
+  const [isDeletingKiosk, setIsDeletingKiosk] = useState(false);
   
   // State for showing access codes and copy feedback
   const [showAccessCodes, setShowAccessCodes] = useState<{ [key: string]: boolean }>({});
@@ -179,15 +182,11 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
   };
 
   const handleCreateKiosk = async () => {
-    if (needsOnboarding) {
-      setShowOnboardingDialog(true);
-      return;
-    }
-    
     if (!newKiosk.name || !newKiosk.location || !userSession) return;
+    
+    setIsCreatingKiosk(true);
     try {
       if (editingKiosk) {
-        // Update existing kiosk
         const updatedKioskData = {
           ...editingKiosk,
           name: newKiosk.name,
@@ -203,6 +202,9 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
         };
         const kioskRef = doc(db, 'kiosks', editingKiosk.id);
         await updateDoc(kioskRef, updatedKioskData);
+        
+        const oldAssignedCampaigns = editingKiosk.assignedCampaigns || [];
+        await syncCampaignsForKiosk(editingKiosk.id, newKiosk.assignedCampaigns, oldAssignedCampaigns);
       } else {
         // Create new kiosk
         const newKioskData: Omit<Kiosk, 'id'> = {
@@ -223,14 +225,19 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
           },
           organizationId: userSession.user.organizationId,
         };
-        await addDoc(collection(db, 'kiosks'), newKioskData);
+        const docRef = await addDoc(collection(db, 'kiosks'), newKioskData);
+        
+        await syncCampaignsForKiosk(docRef.id, newKiosk.assignedCampaigns, []);
       }
       refreshKiosks();
+      refreshCampaigns(); // Refresh campaigns to show updated assignments
       setNewKiosk({ name: '', location: '', accessCode: '', status: 'offline', assignedCampaigns: [], displayLayout: 'grid' });
       setIsCreateDialogOpen(false);
       setEditingKiosk(null);
     } catch (error) {
       console.error("Error saving kiosk: ", error);
+    } finally {
+      setIsCreatingKiosk(false);
     }
   };
 
@@ -268,13 +275,20 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
   const confirmDeleteKiosk = async () => {
     if (!kioskToDelete) return;
     
+    setIsDeletingKiosk(true);
     try {
+      const assignedCampaigns = kioskToDelete.assignedCampaigns || [];
+      await removeKioskFromAllCampaigns(kioskToDelete.id, assignedCampaigns);
+      
       await deleteDoc(doc(db, 'kiosks', kioskToDelete.id));
       refreshKiosks();
+      refreshCampaigns(); // Refresh campaigns to show updated assignments
       setIsDeleteDialogOpen(false);
       setKioskToDelete(null);
     } catch (error) {
       console.error("Error deleting kiosk: ", error);
+    } finally {
+      setIsDeletingKiosk(false);
     }
   };
 
@@ -750,6 +764,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
         onUnassignCampaign={handleUnassignCampaign}
         onEditCampaign={handleEditCampaign}
         formatCurrency={formatCurrency}
+        isLoading={isCreatingKiosk}
       />
       
       {/* Delete Confirmation Dialog */}
@@ -777,14 +792,23 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
               <Button 
                 variant="outline" 
                 onClick={() => setIsDeleteDialogOpen(false)}
+                disabled={isDeletingKiosk}
               >
                 Cancel
               </Button>
               <Button 
                 onClick={confirmDeleteKiosk}
-                className="bg-red-600 hover:bg-red-700 text-white"
+                disabled={isDeletingKiosk}
+                className="bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
               >
-                Delete
+                {isDeletingKiosk ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete'
+                )}
               </Button>
             </div>
           </div>

@@ -1,5 +1,5 @@
 /**
- * Campaign ↔ Kiosk Bidirectional Sync Utility
+ * Campaign â†” Kiosk Bidirectional Sync Utility
  * 
  * Provides atomic, race-condition-safe operations for maintaining consistency
  * between campaign.assignedKiosks and kiosk.assignedCampaigns.
@@ -33,9 +33,6 @@ function logSync(
   message: string,
   context: Record<string, unknown>
 ) {
-  if (level === 'info') {
-    return;
-  }
   const timestamp = new Date().toISOString();
   const logData = {
     timestamp,
@@ -46,6 +43,9 @@ function logSync(
   const logMessage = `[CampaignKioskSync] ${message}`;
   
   switch (level) {
+    case 'info':
+      console.warn(logMessage, logData);
+      break;
     case 'warn':
       console.warn(logMessage, logData);
       break;
@@ -173,14 +173,14 @@ async function removeCampaignFromKiosk(
 
 /**
  * Sync kiosk assignments when a campaign is updated
- * Forward sync: campaign.assignedKiosks → kiosk.assignedCampaigns
+ * Forward sync: campaign.assignedKiosks â†’ kiosk.assignedCampaigns
  */
 export async function syncKiosksForCampaign(
   campaignId: string,
   newKioskIds: string[],
   oldKioskIds: string[] = []
 ): Promise<SyncBatchResult> {
-  logSync('info', 'Starting campaign → kiosk sync', {
+  logSync('info', 'Starting campaign â†’ kiosk sync', {
     campaignId,
     newKioskIds,
     oldKioskIds,
@@ -208,7 +208,7 @@ export async function syncKiosksForCampaign(
     .filter(r => !r.success)
     .map(r => ({ operation: r.operation, error: r.error! }));
 
-  logSync('info', 'Completed campaign → kiosk sync', {
+  logSync('info', 'Completed campaign â†’ kiosk sync', {
     campaignId,
     successCount: successful.length,
     failCount: failed.length,
@@ -219,14 +219,14 @@ export async function syncKiosksForCampaign(
 
 /**
  * Sync campaign assignments when a kiosk is updated
- * Reverse sync: kiosk.assignedCampaigns → campaign.assignedKiosks
+ * Reverse sync: kiosk.assignedCampaigns â†’ campaign.assignedKiosks
  */
 export async function syncCampaignsForKiosk(
   kioskId: string,
   newCampaignIds: string[],
   oldCampaignIds: string[] = []
 ): Promise<SyncBatchResult> {
-  logSync('info', 'Starting kiosk → campaign sync', {
+  logSync('info', 'Starting kiosk â†’ campaign sync', {
     kioskId,
     newCampaignIds,
     oldCampaignIds,
@@ -254,7 +254,7 @@ export async function syncCampaignsForKiosk(
     .filter(r => !r.success)
     .map(r => ({ operation: r.operation, error: r.error! }));
 
-  logSync('info', 'Completed kiosk → campaign sync', {
+  logSync('info', 'Completed kiosk â†’ campaign sync', {
     kioskId,
     successCount: successful.length,
     failCount: failed.length,
