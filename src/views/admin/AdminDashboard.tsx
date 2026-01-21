@@ -705,7 +705,14 @@ export function AdminDashboard({
     raised: datum.Collected,
     coverImageUrl: '',
     category: '',
-    configuration: DEFAULT_CAMPAIGN_CONFIG,
+    configuration: {
+      ...DEFAULT_CAMPAIGN_CONFIG,
+      predefinedAmounts: Array.from(DEFAULT_CAMPAIGN_CONFIG.predefinedAmounts),
+      suggestedAmounts: Array.from(DEFAULT_CAMPAIGN_CONFIG.suggestedAmounts),
+      recurringIntervals: Array.from(DEFAULT_CAMPAIGN_CONFIG.recurringIntervals),
+      requiredFields: Array.from(DEFAULT_CAMPAIGN_CONFIG.requiredFields),
+      optionalFields: Array.from(DEFAULT_CAMPAIGN_CONFIG.optionalFields),
+    },
   }));
 
   const [isOnboardingStripe, setIsOnboardingStripe] = useState(false);
