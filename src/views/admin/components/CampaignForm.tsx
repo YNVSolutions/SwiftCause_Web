@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Campaign, Kiosk } from '../../../shared/types';
@@ -335,7 +335,7 @@ export function CampaignForm({
         </VisuallyHidden>
         
         {/* Mobile Header - Fixed */}
-        <div className="sm:hidden flex flex-col border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 flex-shrink-0">
+        <div className="sm:hidden flex flex-col border-b border-gray-200 bg-linear-to-r from-gray-50 to-gray-100 shrink-0">
           {/* Header with aligned controls and title */}
           <div className="flex items-center justify-between px-4 pt-3 pb-4">
             <Button
@@ -370,7 +370,7 @@ export function CampaignForm({
           <nav 
             className={`${
               isMobileSidebarOpen ? 'block' : 'hidden'
-            } sm:block w-full sm:w-72 bg-gradient-to-b from-gray-50 to-gray-100 sm:bg-gray-50 border-r border-gray-200 p-6 sm:p-8 absolute sm:relative z-10 sm:z-auto h-full sm:h-auto flex-shrink-0 shadow-xl sm:shadow-none`} 
+            } sm:block w-full sm:w-72 bg-linear-to-b from-gray-50 to-gray-100 sm:bg-gray-50 border-r border-gray-200 p-6 sm:p-8 absolute sm:relative z-10 sm:z-auto h-full sm:h-auto shrink-0 shadow-xl sm:shadow-none`} 
             aria-label="Campaign setup navigation"
           >
             {/* Mobile Navigation Header */}
@@ -417,10 +417,10 @@ export function CampaignForm({
           {/* Main Content Column - Flex container */}
           <div className="flex-1 flex flex-col min-h-0 min-w-0">
             {/* Header - Fixed */}
-            <header className="hidden sm:flex items-center justify-between p-6 lg:p-8 border-b border-gray-200 flex-shrink-0">
+            <header className="hidden sm:flex items-center justify-between p-6 lg:p-8 border-b border-gray-200 shrink-0">
               <div className="flex items-center gap-4">
                 <div className="text-base text-gray-500 uppercase tracking-wide font-medium">
-                  {editingCampaign ? 'EDIT â€¢ CAMPAIGN' : 'SETUP â€¢ NEW CAMPAIGN'}
+                  {editingCampaign ? 'EDIT • CAMPAIGN' : 'SETUP • NEW CAMPAIGN'}
                 </div>
               </div>
             </header>
@@ -540,7 +540,7 @@ export function CampaignForm({
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       <div>
                         <Label htmlFor="goal" className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3 block">
-                          FUNDRAISING TARGET (Â£)
+                          FUNDRAISING TARGET (£)
                         </Label>
                         <Input
                           id="goal"
@@ -569,10 +569,10 @@ export function CampaignForm({
                         <Label className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3 block">
                           STANDARD TIERS
                         </Label>
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-3 gap-4">
                           {[0, 1, 2].map((index) => (
                             <div key={index} className="relative">
-                              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-base">Â£</span>
+                              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-base">£</span>
                               <Input
                                 type="number"
                                 step="1"
@@ -593,7 +593,7 @@ export function CampaignForm({
                                   }
                                 }}
                                 placeholder="0"
-                                className="h-14 text-base border-gray-300 rounded-xl focus:border-green-500 focus:ring-green-500 bg-white shadow-sm pl-8"
+                                className="h-12 text-base font-medium border border-slate-200 rounded-2xl bg-white pl-10 text-slate-700 shadow-[0_2px_8px_rgba(15,23,42,0.14)] focus:border-green-500 focus:ring-2 focus:ring-green-500"
                               />
                             </div>
                           ))}
@@ -1082,7 +1082,7 @@ export function CampaignForm({
             </div>
 
             {/* Footer - Fixed */}
-            <footer className="flex flex-col sm:flex-row items-center justify-between p-4 sm:p-6 lg:p-8 border-t border-gray-200 bg-gray-50 gap-4 sm:gap-0 flex-shrink-0">
+            <footer className="flex flex-col sm:flex-row items-center justify-between p-4 sm:p-6 lg:p-8 border-t border-gray-200 bg-gray-50 gap-4 sm:gap-0 shrink-0">
               <Button
                 variant="ghost"
                 onClick={onSaveDraft}
@@ -1127,3 +1127,4 @@ export function CampaignForm({
     </Dialog>
   );
 }
+

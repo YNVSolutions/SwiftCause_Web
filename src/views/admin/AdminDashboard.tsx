@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+﻿import { useState, useEffect, useCallback } from "react";
 import { Button } from "../../shared/ui/button";
 import {
   Card,
@@ -143,7 +143,7 @@ const CustomChartTooltip = ({ active, payload, label }: ChartTooltipProps) => {
               <span className="text-gray-600">{entry.name}:</span>
             </div>
             <span className="font-semibold text-gray-900">
-              {typeof entry.value === 'number' ? `Â£${entry.value.toLocaleString('en-GB')}` : entry.value}
+              {typeof entry.value === 'number' ? `Ã‚£${entry.value.toLocaleString('en-GB')}` : entry.value}
             </span>
           </div>
         ))}
@@ -636,7 +636,7 @@ export function AdminDashboard({
   };
 
   const formatLargeCurrency = (amount: number) => {
-    if (amount === 0) return "Â£0";
+    if (amount === 0) return "Ã‚£0";
     if (typeof amount !== "number") return "...";
 
     const tiers = [
@@ -650,13 +650,13 @@ export function AdminDashboard({
 
     if (tier) {
       const value = (amount / tier.value).toFixed(1);
-      return `Â£${value}${tier.name}`;
+      return `Ã‚£${value}${tier.name}`;
     }
 
     return formatCurrency(amount);
   };
   const formatShortCurrency = (amount: number) => {
-    if (amount === 0) return "Â£0";
+    if (amount === 0) return "Ã‚£0";
     if (typeof amount !== "number") return "...";
     const tiers = [
       { value: 1e12, name: "T" },
@@ -667,9 +667,9 @@ export function AdminDashboard({
     const tier = tiers.find((t) => amount >= t.value);
     if (tier) {
       const value = (amount / tier.value).toFixed(1);
-      return `Â£${value}${tier.name}`;
+      return `Ã‚£${value}${tier.name}`;
     }
-    return `Â£${amount}`;
+    return `Ã‚£${amount}`;
   };
 
   const getActivityIcon = (type: string) => {
@@ -947,9 +947,9 @@ export function AdminDashboard({
                           Register physical donation points for contactless giving.
                         </p>
                         <ul className="space-y-1 text-xs text-gray-500">
-                          <li>â€¢ Mobile-first design</li>
-                          <li>â€¢ QR code access</li>
-                          <li>â€¢ Real-time tracking</li>
+                          <li>Ã¢â‚¬Â¢ Mobile-first design</li>
+                          <li>Ã¢â‚¬Â¢ QR code access</li>
+                          <li>Ã¢â‚¬Â¢ Real-time tracking</li>
                         </ul>
                       </div>
 
@@ -963,9 +963,9 @@ export function AdminDashboard({
                           Link kiosks to specific goals and monitor real-time progress.
                         </p>
                         <ul className="space-y-1 text-xs text-gray-500">
-                          <li>â€¢ Custom goals</li>
-                          <li>â€¢ Progress tracking</li>
-                          <li>â€¢ Performance metrics</li>
+                          <li>Ã¢â‚¬Â¢ Custom goals</li>
+                          <li>Ã¢â‚¬Â¢ Progress tracking</li>
+                          <li>Ã¢â‚¬Â¢ Performance metrics</li>
                         </ul>
                       </div>
 
@@ -979,9 +979,9 @@ export function AdminDashboard({
                           Receive funds directly to your organization's bank account.
                         </p>
                         <ul className="space-y-1 text-xs text-gray-500">
-                          <li>â€¢ Secure processing</li>
-                          <li>â€¢ Direct deposits</li>
-                          <li>â€¢ Transparent fees</li>
+                          <li>Ã¢â‚¬Â¢ Secure processing</li>
+                          <li>Ã¢â‚¬Â¢ Direct deposits</li>
+                          <li>Ã¢â‚¬Â¢ Transparent fees</li>
                         </ul>
                       </div>
                     </div>
@@ -2035,7 +2035,7 @@ export function AdminDashboard({
                 <DonationDistributionChart
                   data={stats.donationDistribution}
                   totalRaised={stats.totalRaised}
-                  formatCurrency={(amount) => `Â£${amount.toLocaleString()}`}
+                  formatCurrency={(amount) => `Ã‚£${amount.toLocaleString()}`}
                 />
               )}
             </CardContent>
@@ -2388,3 +2388,4 @@ export function AdminDashboard({
     </AdminLayout>
   );
 }
+

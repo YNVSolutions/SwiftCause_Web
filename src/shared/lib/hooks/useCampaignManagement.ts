@@ -51,7 +51,13 @@ export function useCampaignManagement(organizationId?: string) {
       if (campaignId) {
         updatedData = await updateWithImage(campaignId, { ...campaignData, coverImageUrl: downloadURL });
       } else {
-        updatedData = await createWithImage({ ...campaignData, coverImageUrl: downloadURL });
+        if (!campaignData.title || !campaignData.description) {
+          throw new Error("Campaign title and description are required.");
+        }
+        updatedData = await createWithImage({
+          ...(campaignData as Omit<Campaign, "id">),
+          coverImageUrl: downloadURL,
+        });
       }
       setImagePreview(updatedData.coverImageUrl ?? null);
       setSelectedImage(null);
