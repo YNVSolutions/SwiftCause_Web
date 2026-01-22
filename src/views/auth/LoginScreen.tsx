@@ -37,7 +37,7 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
   return (
     <div className="min-h-screen bg-[#f5f3ef]">
       <div className="grid min-h-screen lg:grid-cols-[1.05fr_1fr]">
-        <section className="relative flex flex-col justify-between bg-linear-to-br from-[#6e8f7f] via-[#7e9e8f] to-[#6a8879] px-8 py-10 text-white lg:py-12">
+        <section className="relative hidden flex-col justify-between bg-linear-to-br from-[#6e8f7f] via-[#7e9e8f] to-[#6a8879] px-8 py-10 text-white lg:flex lg:py-12">
           <button
             onClick={onGoBackToHome}
             className="flex items-center gap-3 text-left text-white/90 transition hover:text-white"
