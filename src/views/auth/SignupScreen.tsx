@@ -513,7 +513,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                             id="firstName"
                             value={formData.firstName}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData('firstName', e.target.value)}
-                            className={errors.firstName ? 'border-red-500' : ''}
+                            className={errors.firstName ? 'border-red-500' : 'border border-gray-300'}
                           />
                           {errors.firstName && (
                             <p className="text-xs text-red-600 flex items-center">
@@ -529,7 +529,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                             id="lastName"
                             value={formData.lastName}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData('lastName', e.target.value)}
-                            className={errors.lastName ? 'border-red-500' : ''}
+                            className={errors.lastName ? 'border-red-500' : 'border border-gray-300'}
                           />
                           {errors.lastName && (
                             <p className="text-xs text-red-600 flex items-center">
@@ -550,7 +550,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                             value={formData.email}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData('email', e.target.value)}
                             onBlur={handleEmailBlur}
-                            className={`pl-10 ${errors.email ? 'border-red-500' : ''} ${isCheckingEmail ? 'opacity-50' : ''}`}
+                            className={`pl-10 border border-gray-300 ${errors.email ? 'border-red-500' : ''} ${isCheckingEmail ? 'opacity-50' : ''}`}
                             placeholder="you@organization.com"
                             disabled={isCheckingEmail}
                           />

@@ -16,6 +16,7 @@ export type Screen =
   | "admin-gift-aid"
   | "admin-users"
   | "admin-bank-details"
+  | "admin-stripe-account"
   | "about"
   | "contact"
   | "docs"
@@ -56,6 +57,7 @@ export interface User {
   role: UserRole;
   permissions: Permission[];
   isActive: boolean;
+  emailVerified?: boolean;
   createdAt?: string;
   lastLogin?: string;
   organizationId?: string;

@@ -192,6 +192,15 @@ export function AdminDashboard({
   const [showDonationDistributionDialog, setShowDonationDistributionDialog] = useState(false);
   const [showCampaignProgressDialog, setShowCampaignProgressDialog] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  
+  // Initialize onboardingDismissed from sessionStorage
+  const [onboardingDismissed, setOnboardingDismissed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('onboardingDismissed') === 'true';
+    }
+    return false;
+  });
+  
   const [showKioskForm, setShowKioskForm] = useState(false);
   const [showLinkingForm, setShowLinkingForm] = useState(false);
   const [allCampaigns, setAllCampaigns] = useState<Campaign[]>([]);
@@ -324,8 +333,8 @@ export function AdminDashboard({
       // Store all campaigns for performance widget
       setAllCampaignsForPerformance(allCampaigns);
         
-        // Check if there are no campaigns and show onboarding
-        if (allCampaigns.length === 0 && !showOnboarding) {
+        // Check if there are no campaigns and show onboarding (only if not previously dismissed)
+        if (allCampaigns.length === 0 && !showOnboarding && !onboardingDismissed) {
           setShowOnboarding(true);
         }
         setCampaignCountChecked(true);
@@ -892,10 +901,79 @@ export function AdminDashboard({
     // Start the tour by showing onboarding
     setIsTourActive(true);
     setShowOnboarding(true);
+    setOnboardingDismissed(false); // Reset dismissed flag when starting tour
+    // Clear sessionStorage when manually starting tour
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('onboardingDismissed');
+    }
     setShowCampaignForm(false);
     setShowKioskForm(false);
     setShowLinkingForm(false);
     setShowStripeStep(false);
+  };
+
+  const [isOnboardingStripe, setIsOnboardingStripe] = useState(false);
+
+  const handleDirectStripeOnboarding = async () => {
+    if (!organization?.id) {
+      showToast('Organization ID not available for Stripe onboarding.', 'error');
+      return;
+    }
+
+    if (!auth.currentUser) {
+      showToast('No authenticated user found. Please log in again.', 'error');
+      return;
+    }
+
+    try {
+      setIsOnboardingStripe(true);
+      const idToken = await auth.currentUser.getIdToken();
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+      const response = await fetch(
+        'https://us-central1-swiftcause-app.cloudfunctions.net/createOnboardingLink',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${idToken}`,
+          },
+          body: JSON.stringify({ orgId: organization.id }),
+          signal: controller.signal,
+        }
+      );
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.error || response.statusText || 'Failed to create onboarding link.'
+        );
+      }
+
+      const { url } = await response.json();
+      if (url) {
+        window.location.href = url;
+      } else {
+        throw new Error('No onboarding URL received from server.');
+      }
+    } catch (error: any) {
+      console.error('Error creating Stripe onboarding link:', error);
+      
+      if (error.name === 'AbortError') {
+        showToast('Request timed out. Please check your connection and try again.', 'error', 4000);
+      } else {
+        showToast(
+          `Failed to start Stripe onboarding: ${error.message}`,
+          'error',
+          4000
+        );
+      }
+      setIsOnboardingStripe(false);
+    }
   };
 
   if (error) {
@@ -914,6 +992,7 @@ export function AdminDashboard({
       userSession={userSession} 
       hasPermission={hasPermission}
       onStartTour={handleStartTour}
+      onOpenStripeSetup={() => setShowStripeStatusDialog(true)}
       headerTitle={(
         <div className="flex flex-col">
           <div className="flex items-center gap-3 flex-wrap">
@@ -1041,7 +1120,14 @@ export function AdminDashboard({
                         <ChevronRight className="w-5 h-5 ml-2" />
                       </Button>
                       <Button
-                        onClick={() => setShowOnboarding(false)}
+                        onClick={() => {
+                          setShowOnboarding(false);
+                          setOnboardingDismissed(true);
+                          // Persist to sessionStorage so it stays dismissed during the session
+                          if (typeof window !== 'undefined') {
+                            sessionStorage.setItem('onboardingDismissed', 'true');
+                          }
+                        }}
                         variant="ghost"
                         size="lg"
                         className="text-gray-600 hover:text-gray-900 px-8 py-6 text-base font-medium w-full sm:w-auto"
@@ -1400,29 +1486,34 @@ export function AdminDashboard({
                         </Button>
                       </div>
 
-                      {/* Make Campaign Global Button */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (isGlobalCampaign) {
-                            // If already global, turn off and unassign all
-                            setIsGlobalCampaign(false);
-                            setAssignedKioskIds([]);
-                          } else {
-                            // Make global - assign all kiosks
-                            setIsGlobalCampaign(true);
-                            setAssignedKioskIds(allKiosks.map(k => k.id));
-                          }
-                        }}
-                        className={`w-full py-4 px-6 rounded-lg font-semibold text-lg transition-all duration-200 mb-6 flex items-center justify-center gap-3 ${
-                          isGlobalCampaign
-                            ? 'bg-green-500 hover:bg-green-600 text-white'
-                            : 'bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-300'
-                        }`}
-                      >
-                        <Globe className="w-6 h-6" />
-                        {isGlobalCampaign ? 'Your Campaign is now Global' : 'Make this Campaign Global'}
-                      </button>
+                      {/* Make Campaign Global Button - Only show if there are kiosks */}
+                      {allKiosks.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (isGlobalCampaign) {
+                              // If already global, turn off and unassign all
+                              setIsGlobalCampaign(false);
+                              setAssignedKioskIds([]);
+                            } else {
+                              // Make global - assign all kiosks
+                              setIsGlobalCampaign(true);
+                              setAssignedKioskIds(allKiosks.map(k => k.id));
+                            }
+                          }}
+                          disabled={!createdCampaignId}
+                          className={`w-full py-4 px-6 rounded-lg font-semibold text-lg transition-all duration-200 mb-6 flex items-center justify-center gap-3 ${
+                            !createdCampaignId
+                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                              : isGlobalCampaign
+                              ? 'bg-green-500 hover:bg-green-600 text-white'
+                              : 'bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-300'
+                          }`}
+                        >
+                          <Globe className="w-6 h-6" />
+                          {isGlobalCampaign ? 'Your Campaign is now Global' : 'Make this Campaign Global'}
+                        </button>
+                      )}
 
                       {/* Kiosk List */}
                       <div className="space-y-3 mb-6">
@@ -1471,8 +1562,11 @@ export function AdminDashboard({
                                         }
                                       }
                                     }}
+                                    disabled={!createdCampaignId}
                                     className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
-                                      isAssigned
+                                      !createdCampaignId
+                                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                        : isAssigned
                                         ? 'bg-green-500 hover:bg-green-600 text-white'
                                         : 'bg-gray-900 hover:bg-gray-800 text-white'
                                     }`}
@@ -1616,6 +1710,11 @@ export function AdminDashboard({
                           setShowKioskForm(false);
                           setShowLinkingForm(false);
                           setShowOnboarding(false);
+                          setOnboardingDismissed(true);
+                          // Persist to sessionStorage so it stays dismissed during the session
+                          if (typeof window !== 'undefined') {
+                            sessionStorage.setItem('onboardingDismissed', 'true');
+                          }
                           // Refresh dashboard data
                           refreshDashboard();
                           // Navigate to dashboard to see the new data
@@ -1652,11 +1751,21 @@ export function AdminDashboard({
                             </div>
                           </div>
                           <Button
-                            onClick={() => setShowStripeStatusDialog(true)}
-                            className="w-full bg-yellow-600 hover:bg-yellow-700 h-12 text-base font-semibold"
+                            onClick={handleDirectStripeOnboarding}
+                            disabled={isOnboardingStripe}
+                            className="w-full bg-yellow-600 hover:bg-yellow-700 h-12 text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            <CreditCard className="w-5 h-5 mr-2" />
-                            Complete Stripe Onboarding
+                            {isOnboardingStripe ? (
+                              <>
+                                <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
+                                Redirecting...
+                              </>
+                            ) : (
+                              <>
+                                <CreditCard className="w-5 h-5 mr-2" />
+                                Complete Stripe Onboarding
+                              </>
+                            )}
                           </Button>
                         </>
                       ) : organization && organization.stripe && organization.stripe.chargesEnabled && !organization.stripe.payoutsEnabled ? (
@@ -1696,6 +1805,11 @@ export function AdminDashboard({
                           setShowCampaignForm(false);
                           setShowKioskForm(false);
                           setShowOnboarding(false);
+                          setOnboardingDismissed(true);
+                          // Persist to sessionStorage so it stays dismissed during the session
+                          if (typeof window !== 'undefined') {
+                            sessionStorage.setItem('onboardingDismissed', 'true');
+                          }
                           // Refresh dashboard data
                           refreshDashboard();
                           // Navigate to dashboard to see the new data
@@ -2274,7 +2388,7 @@ export function AdminDashboard({
                           <p className="text-xs text-gray-500">
                             {activity.timeAgo}
                           </p>
-                          {activity.kioskId && (
+                          {activity.kioskId &&(
                             <Badge variant="secondary" className="text-xs">
                               {activity.kioskId}
                             </Badge>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '../../shared/ui/button';
 import { Input } from '../../shared/ui/input';
+import { Label } from '../../shared/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../shared/ui/card';
 import { Badge } from '../../shared/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
@@ -473,6 +474,105 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
             </CardContent>
           </Card>
         </main>
+
+        {/* Donation Details Dialog */}
+        <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Heart className="h-5 w-5 text-indigo-600" />
+                Donation Details
+              </DialogTitle>
+              <DialogDescription>
+                Complete information about this donation
+              </DialogDescription>
+            </DialogHeader>
+            
+            {selectedDonation && (
+              <div className="grid gap-4 py-4">
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Donor Name</Label>
+                  <p className="text-sm text-gray-900 mt-1">{selectedDonation.donorName || "Anonymous"}</p>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700">Donation Amount</Label>
+                    <p className="text-sm font-semibold text-gray-900 mt-1">
+                      {new Intl.NumberFormat('en-GB', {
+                        style: 'currency',
+                        currency: selectedDonation.currency || 'GBP',
+                      }).format(selectedDonation.amount || 0)}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700">Payment Status</Label>
+                    <div className="mt-1">
+                      {getStatusBadge(selectedDonation.paymentStatus)}
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Campaign</Label>
+                  <p className="text-sm text-gray-900 mt-1">
+                    {campaigns.find(c => c.id === selectedDonation.campaignId)?.title || "N/A"}
+                  </p>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700">Donation Date</Label>
+                    <p className="text-sm text-gray-900 mt-1">
+                      {selectedDonation.timestamp 
+                        ? new Date(selectedDonation.timestamp).toLocaleDateString('en-GB', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })
+                        : "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700">Platform</Label>
+                    <p className="text-sm text-gray-900 mt-1 capitalize">{selectedDonation.platform || "N/A"}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Gift Aid Eligible</Label>
+                  <div className="mt-1">
+                    {selectedDonation.isGiftAid ? (
+                      <Badge className="bg-green-100 text-green-800 border-green-200">
+                        <CheckCircle className="w-3 h-3 mr-1" />
+                        Yes
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-gray-100 text-gray-800 border-gray-200">
+                        No
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Transaction ID</Label>
+                  <p className="text-xs text-gray-700 font-mono mt-1 bg-gray-50 px-2 py-1 rounded border border-gray-200 inline-block">
+                    {selectedDonation.stripePaymentIntentId || selectedDonation.id || "N/A"}
+                  </p>
+                </div>
+              </div>
+            )}
+            
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsDetailsDialogOpen(false)}>
+                Close
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );

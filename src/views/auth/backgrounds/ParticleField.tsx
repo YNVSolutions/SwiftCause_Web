@@ -25,7 +25,7 @@ export function ParticleField() {
     particleCounter.current += 1;
     
     return {
-      id,
+      id: Date.now() + Math.random(),
       x: Math.random() * 100,
       y: 100,
       size: Math.random() * 20 + 15,

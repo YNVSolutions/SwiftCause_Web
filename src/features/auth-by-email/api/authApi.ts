@@ -3,14 +3,38 @@ import {
   createUserWithEmailAndPassword, 
   signOut, 
   onAuthStateChanged,
+  sendEmailVerification,
+  applyActionCode,
   User as FirebaseAuthUser
 } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '../../../shared/lib/firebase';
 import { User } from '../../../entities/user';
 import { SignupCredentials } from '../model';
 
 export const authApi = {
+  // Check if email exists and is verified in Firestore
+  async checkEmailVerification(email: string): Promise<{ exists: boolean; verified: boolean }> {
+    try {
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('email', '==', email));
+      const querySnapshot = await getDocs(q);
+      
+      if (querySnapshot.empty) {
+        return { exists: false, verified: false };
+      }
+      
+      const userData = querySnapshot.docs[0].data();
+      return { 
+        exists: true, 
+        verified: userData.emailVerified === true 
+      };
+    } catch (error: unknown) {
+      console.error('Error checking email verification:', error);
+      return { exists: false, verified: false };
+    }
+  },
+
   // Sign in with email and password
   async signIn(email: string, password: string): Promise<User | null> {
     try {
@@ -84,6 +108,7 @@ export const authApi = {
           'manage_permissions',
         ],
         isActive: true,
+        emailVerified: false,
         createdAt: new Date().toISOString(),
         organizationId: credentials.organizationId,
       };
@@ -99,6 +124,9 @@ export const authApi = {
         currency: credentials.currency,
         createdAt: new Date().toISOString(),
       });
+
+      // Send verification email
+      await sendEmailVerification(userCredential.user);
 
       return {
         id: userId,
@@ -178,5 +206,51 @@ export const authApi = {
         callback(null);
       }
     });
+  },
+
+  // Send verification email to current user
+  async sendVerificationEmail(user: FirebaseAuthUser): Promise<void> {
+    try {
+      await sendEmailVerification(user);
+    } catch (error: unknown) {
+      console.error('Error sending verification email:', error);
+      throw error;
+    }
+  },
+
+  // Resend verification email
+  async resendVerificationEmail(email: string): Promise<void> {
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error('No authenticated user found. Please sign up again.');
+      }
+      if (user.email !== email) {
+        throw new Error('Email does not match current user');
+      }
+      await sendEmailVerification(user);
+    } catch (error: unknown) {
+      console.error('Error resending verification email:', error);
+      throw error;
+    }
+  },
+
+  // Verify email with action code
+  async verifyEmailCode(code: string): Promise<void> {
+    try {
+      await applyActionCode(auth, code);
+      
+      // Update Firestore user document
+      const user = auth.currentUser;
+      if (user) {
+        const userDocRef = doc(db, 'users', user.uid);
+        await updateDoc(userDocRef, {
+          emailVerified: true
+        });
+      }
+    } catch (error: unknown) {
+      console.error('Error verifying email code:', error);
+      throw error;
+    }
   }
 };

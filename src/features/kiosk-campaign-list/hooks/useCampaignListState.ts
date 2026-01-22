@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Campaign, KioskSession } from '@/shared/types';
+import { KioskSession } from '@/shared/types';
 import { useCampaigns } from '@/entities/campaign';
 import { CampaignListState, CampaignLayoutMode } from '../types';
 
@@ -44,11 +44,11 @@ export function useCampaignListState({
       });
     }
 
-    // Apply max display limit
-    const maxDisplay = kioskSession.settings?.maxCampaignsDisplay;
-    if (maxDisplay && filtered.length > maxDisplay) {
-      filtered = filtered.slice(0, maxDisplay);
-    }
+    // Apply max display limit (temporarily disabled to show all campaigns)
+    // const maxDisplay = kioskSession.settings?.maxCampaignsDisplay;
+    // if (maxDisplay && filtered.length > maxDisplay) {
+    //   filtered = filtered.slice(0, maxDisplay);
+    // }
 
     return filtered;
   }, [rawCampaigns, kioskSession]);

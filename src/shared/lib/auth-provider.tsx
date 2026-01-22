@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { getAuth, onAuthStateChanged, User as FirebaseAuthUser } from 'firebase/auth'
+import { getAuth, onAuthStateChanged, User as FirebaseAuthUser, sendEmailVerification } from 'firebase/auth'
 import { doc, getDoc, db } from './firebase'
 import {
   UserRole,
@@ -25,10 +25,11 @@ interface AuthContextType {
   isLoadingAuth: boolean
   handleLogin: (role: UserRole, sessionData?: KioskSession | AdminSession) => Promise<void>
   handleLogout: () => void
-  handleSignup: (signupData: SignupFormData) => Promise<void>
+  handleSignup: (signupData: SignupFormData) => Promise<string>
   hasPermission: (permission: Permission) => boolean
   refreshCurrentKioskSession: (kioskIdToRefresh?: string) => Promise<void>
   handleOrganizationSwitch: (organizationId: string) => void
+  resendVerificationEmail: (email: string) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -129,12 +130,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         if (userDocSnap.exists()) {
           const userData = userDocSnap.data() as User
-          setUserRole(userData.role)
-          setCurrentAdminSession({
-            user: userData,
-            loginTime: new Date().toISOString(),
-            permissions: userData.permissions || []
-          })
+          
+          // Only establish session if email is verified
+          if (userData.emailVerified !== false) {
+            setUserRole(userData.role)
+            setCurrentAdminSession({
+              user: userData,
+              loginTime: new Date().toISOString(),
+              permissions: userData.permissions || []
+            })
+          } else {
+            // User exists but email not verified - don't establish session
+            // This allows them to resend verification email
+            console.warn('AuthProvider: User email not verified:', firebaseUser.email)
+          }
         } else {
           console.warn('AuthProvider: User document not found for UID:', firebaseUser.uid)
           // Only logout if we don't have a kiosk session
@@ -188,7 +197,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }
 
-  const handleSignup = async (signupData: SignupFormData) => {
+  const handleSignup = async (signupData: SignupFormData): Promise<string> => {
     try {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
@@ -221,6 +230,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           'manage_permissions',
         ] as Permission[],
         isActive: true,
+        emailVerified: false,
         createdAt: new Date().toISOString(),
         organizationId: signupData.organizationId,
       }
@@ -237,18 +247,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         createdAt: new Date().toISOString(),
       })
 
-      // Establish session immediately after account creation
-      const adminSession: AdminSession = {
-        user: {
-          id: userId,
-          ...userData,
-        },
-        loginTime: new Date().toISOString(),
-        permissions: userData.permissions,
-      }
+      // Send verification email
+      await sendEmailVerification(userCredential.user)
 
-      // Set session state to log user in automatically
-      await handleLogin('admin', adminSession)
+      // DON'T sign out - keep user authenticated so they can resend verification
+      // But DON'T establish a session in our app (don't call handleLogin)
+
+      // Return email for redirect
+      return signupData.email
     } catch (error) {
       if (error instanceof Error) {
         console.error('Signup error:', error)
@@ -257,6 +263,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.error('Unknown signup error:', error)
         throw new Error('Signup failed due to an unknown error.')
       }
+    }
+  }
+
+  const resendVerificationEmail = async (email: string): Promise<void> => {
+    try {
+      // Check if there's a current user
+      const user = auth.currentUser
+      
+      // If no current user, they need to sign up again
+      if (!user) {
+        throw new Error('Session expired. Please sign up again.')
+      }
+      
+      // Verify the email matches
+      if (user.email !== email) {
+        throw new Error('Email does not match current user')
+      }
+      
+      // Send verification email
+      await sendEmailVerification(user)
+    } catch (error) {
+      console.error('Error resending verification email:', error)
+      throw error
     }
   }
 
@@ -299,6 +328,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     hasPermission,
     refreshCurrentKioskSession,
     handleOrganizationSwitch,
+    resendVerificationEmail,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

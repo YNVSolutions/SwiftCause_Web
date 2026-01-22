@@ -13,7 +13,7 @@ import { Badge } from '../../../shared/ui/badge';
 import { Dialog, DialogContent, DialogTitle, DialogDescription, VisuallyHidden } from '../../../shared/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../shared/ui/select';
 import { Textarea } from '../../../shared/ui/textarea';
-import { SlateEditor } from '../../../shared/ui/slate-editor';
+import { SimpleRichEditor } from '../../../shared/ui/simple-rich-editor';
 import { Switch } from '../../../shared/ui/switch';
 import { Checkbox } from '../../../shared/ui/checkbox';
 
@@ -480,7 +480,7 @@ export function CampaignForm({
                       <Label htmlFor="detailedStory" className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2 block">
                         DETAILED CAMPAIGN STORY
                       </Label>
-                      <SlateEditor
+                      <SimpleRichEditor
                         value={campaignData.description}
                         onChange={(value) => setCampaignData(p => ({ ...p, description: value }))}
                         placeholder="Tell your campaign story..."
@@ -1025,12 +1025,12 @@ export function CampaignForm({
                                 return (
                                   <div 
                                     key={kiosk.id} 
-                                    className={`flex items-center justify-between p-3 rounded-lg transition-colors ${
+                                    className={`flex items-center justify-between p-3 rounded-lg transition-colors cursor-pointer ${
                                       isDisabled 
                                         ? 'bg-gray-50 opacity-60 cursor-not-allowed' 
                                         : isAssigned
                                           ? 'bg-green-50 border border-green-200 hover:bg-green-100'
-                                          : 'bg-gray-50 hover:bg-gray-100 cursor-pointer'
+                                          : 'bg-gray-50 hover:bg-gray-100'
                                     }`}
                                     onClick={() => !isDisabled && handleKioskToggle(kiosk.id)}
                                   >
@@ -1038,7 +1038,13 @@ export function CampaignForm({
                                       <Checkbox
                                         checked={isDisabled || isAssigned}
                                         disabled={isDisabled}
-                                        onCheckedChange={() => handleKioskToggle(kiosk.id)}
+                                        onCheckedChange={(checked) => {
+                                          // Prevent this from firing when container is clicked
+                                          if (!isDisabled) {
+                                            handleKioskToggle(kiosk.id);
+                                          }
+                                        }}
+                                        onClick={(e) => e.stopPropagation()}
                                         className="cursor-pointer"
                                       />
                                       <div className={`w-2 h-2 rounded-full ${

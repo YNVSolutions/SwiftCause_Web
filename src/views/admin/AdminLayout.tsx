@@ -5,6 +5,14 @@ import { Screen, AdminSession, Permission } from "../../shared/types";
 import { Avatar, AvatarFallback, AvatarImage } from "../../shared/ui/avatar";
 import { Button } from "../../shared/ui/button";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "../../shared/ui/dialog";
+import {
   SidebarProvider,
   Sidebar,
   SidebarHeader,
@@ -36,7 +44,12 @@ import {
   Wallet,
   ChevronLeft,
   ChevronRight,
+  CreditCard,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
+import { db } from "../../shared/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 const SCREEN_LABELS: Partial<Record<Screen, string>> = {
   admin: "Dashboard",
@@ -47,7 +60,8 @@ const SCREEN_LABELS: Partial<Record<Screen, string>> = {
   "admin-gift-aid": "Gift Aid Donations",
   "admin-users": "Users",
   "admin-bank-details": "Bank Details",
-};
+  "admin-stripe-account": "Stripe account",
+} as Partial<Record<Screen, string>>;
 
 interface AdminLayoutProps {
   onNavigate: (screen: Screen) => void;
@@ -57,6 +71,7 @@ interface AdminLayoutProps {
   children: React.ReactNode;
   activeScreen?: Screen;
   onStartTour?: () => void;
+  onOpenStripeSetup?: () => void;
   headerTitle?: React.ReactNode;
   headerSubtitle?: React.ReactNode;
   hideHeaderDivider?: boolean;
@@ -83,6 +98,7 @@ export function AdminLayout({
   children,
   activeScreen = "admin-dashboard",
   onStartTour,
+  onOpenStripeSetup,
   headerTitle,
   headerSubtitle,
   headerActions,
@@ -93,6 +109,9 @@ export function AdminLayout({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [logoAnimating, setLogoAnimating] = useState(false);
   const [showUserProfile, setShowUserProfile] = useState(false);
+  const [showStripeConfigDialog, setShowStripeConfigDialog] = useState(false);
+  const [isLoadingStripe, setIsLoadingStripe] = useState(false);
+  const [stripeError, setStripeError] = useState<{ title: string; message: string } | null>(null);
 
   React.useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 1023px)");
@@ -140,6 +159,107 @@ export function AdminLayout({
   const handleLogoClick = () => {
     setLogoAnimating(true);
     setTimeout(() => setLogoAnimating(false), 500); // Animation duration
+  };
+
+  const handleStripeAccountClick = async () => {
+    setIsLoadingStripe(true);
+    setStripeError(null); // Clear any previous errors
+    
+    try {
+      if (!userSession.user.organizationId) {
+        console.log("No organization ID found");
+        setIsLoadingStripe(false);
+        setStripeError({
+          title: "Organization Not Found",
+          message: "Your account is not associated with an organization. Please contact support."
+        });
+        return;
+      }
+
+      const orgRef = doc(db, "organizations", userSession.user.organizationId);
+      const orgDoc = await getDoc(orgRef);
+
+      if (!orgDoc.exists()) {
+        console.log("Organization document not found");
+        setIsLoadingStripe(false);
+        setStripeError({
+          title: "Organization Not Found",
+          message: "We couldn't find your organization details. Please contact support."
+        });
+        return;
+      }
+
+      const orgData = orgDoc.data();
+      const chargesEnabled = orgData?.stripe?.chargesEnabled;
+      const stripeAccountId = orgData?.stripe?.accountId;
+      
+      // Check if Stripe is properly onboarded (chargesEnabled must be true)
+      if (!chargesEnabled) {
+        console.log("Stripe account not onboarded (chargesEnabled is false or missing)");
+        setIsLoadingStripe(false);
+        setShowStripeConfigDialog(true);
+        return;
+      }
+
+      // If onboarded but no accountId (shouldn't happen, but handle it)
+      if (!stripeAccountId) {
+        console.log("No Stripe account ID found despite being onboarded");
+        setIsLoadingStripe(false);
+        setStripeError({
+          title: "Configuration Error",
+          message: "Your Stripe account is incomplete. Please contact support."
+        });
+        return;
+      }
+
+      console.log("Stripe Account ID:", stripeAccountId);
+
+      // Make POST request to get the dashboard link
+      const response = await fetch("https://createexpressdashboardlink-j2f5w4qwxq-uc.a.run.app", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          accountId: stripeAccountId,
+        }),
+      });
+
+      if (!response.ok) {
+        setIsLoadingStripe(false);
+        const errorText = await response.text();
+        console.error("API error:", errorText);
+        setStripeError({
+          title: "Failed to Load Stripe Dashboard",
+          message: `Unable to connect to Stripe (Error ${response.status}). Please try again later or contact support.`
+        });
+        return;
+      }
+
+      const data = await response.json();
+      console.log("Dashboard link response:", data);
+
+      // Redirect to the link
+      if (data.url || data.link) {
+        const dashboardUrl = data.url || data.link;
+        window.location.href = dashboardUrl;
+        // Keep loading state true during redirect
+      } else {
+        console.error("No URL found in response:", data);
+        setIsLoadingStripe(false);
+        setStripeError({
+          title: "Invalid Response",
+          message: "Received an invalid response from Stripe. Please try again or contact support."
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching Stripe dashboard link:", error);
+      setIsLoadingStripe(false);
+      setStripeError({
+        title: "Connection Error",
+        message: "Failed to connect to Stripe. Please check your internet connection and try again."
+      });
+    }
   };
 
   // Centralized navigation button attributes
@@ -463,6 +583,18 @@ export function AdminLayout({
                 </div>
                 {renderActiveArrow("admin-bank-details")}
               </button>
+              
+              {/* Stripe account */}
+              <button
+                onClick={handleStripeAccountClick}
+                {...getNavButtonProps("admin-stripe-account", "Stripe account")}
+              >
+                <div className="flex items-center">
+                  <CreditCard {...getIconProps()} />
+                  <span {...getTextSpanProps()}>Stripe account</span>
+                </div>
+                {renderActiveArrow("admin-stripe-account")}
+              </button>
             </div>
           </div>
           
@@ -750,6 +882,82 @@ export function AdminLayout({
             </div>
           </>
         )}
+
+        {/* Loading Overlay for Stripe */}
+        {isLoadingStripe && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center">
+            <div className="bg-white rounded-xl shadow-2xl p-8 flex flex-col items-center gap-4 max-w-sm mx-4">
+              <Loader2 className="h-12 w-12 text-green-600 animate-spin" />
+              <div className="text-center">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Loading Stripe Dashboard
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Please wait while we redirect you to your Stripe account...
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Stripe Configuration Dialog */}
+        <Dialog open={showStripeConfigDialog} onOpenChange={setShowStripeConfigDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5 text-orange-600" />
+                Stripe Account Not Configured
+              </DialogTitle>
+              <DialogDescription>
+                Your Stripe account is not configured yet. Please complete the Stripe setup to access your dashboard and start accepting donations.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowStripeConfigDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowStripeConfigDialog(false);
+                  if (onOpenStripeSetup) {
+                    onOpenStripeSetup();
+                  } else {
+                    onNavigate("admin-dashboard");
+                  }
+                }}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                Go to Stripe Setup
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Stripe Error Dialog */}
+        <Dialog open={!!stripeError} onOpenChange={(open) => !open && setStripeError(null)}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-red-600" />
+                {stripeError?.title || "Error"}
+              </DialogTitle>
+              <DialogDescription>
+                {stripeError?.message || "An unexpected error occurred."}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                onClick={() => setStripeError(null)}
+                className="bg-gray-900 hover:bg-gray-800"
+              >
+                Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </SidebarProvider>
   );
