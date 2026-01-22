@@ -2,11 +2,7 @@ name: Deploy Feature to Testing environment
 
 on:
   workflow_dispatch:
-    inputs:
-      branch:
-        description: 'Which branch do you want to test?'
-        required: true
-        default: 'develop'
+    # Manual input removed: GitHub UI provides the branch selector automatically
 
 jobs:
   sync-and-deploy:
@@ -27,12 +23,15 @@ jobs:
 
       - name: Reset Testing to Main (Cleanup)
         run: |
+          git fetch origin main
           git checkout testing
           git reset --hard origin/main
           git push origin testing --force
 
-      - name: Merge Feature into Testing
+      - name: Merge Selected Branch into Testing
         run: |
+          git fetch origin ${{ github.ref_name }}
           git checkout testing
-          git merge origin/${{ github.event.inputs.branch }} --no-edit
+          # Merges the branch you selected in the 'Run workflow' dropdown
+          git merge origin/${{ github.ref_name }} --no-edit
           git push origin testing
