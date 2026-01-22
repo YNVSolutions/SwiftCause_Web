@@ -181,8 +181,8 @@ export function DocumentationPage({ onNavigate }: { onNavigate?: (screen: string
       `}</style>
       
       {/* Header */}
-      <nav className="fixed top-0 w-full z-50 px-4 py-6">
-        <div className="max-w-[1400px] mx-auto flex items-center justify-between px-10 py-5 glass-card rounded-3xl">
+      <nav className="fixed top-0 w-full z-50">
+        <div className="max-w-[1400px] mx-auto flex items-center justify-between py-5 glass-card px-4 rounded-b-2xl">
           <div className="flex items-center gap-3">
             <img src="/logo.png" alt="SwiftCause" className="w-8 h-8" />
             <span className="font-bold text-xl tracking-tight text-[#064e3b]">SwiftCause</span>

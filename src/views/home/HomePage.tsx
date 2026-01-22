@@ -23,8 +23,8 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
         }
       `}</style>
       {/* Header */}
-      <nav className="fixed top-0 w-full z-50 px-4 py-6">
-        <div className="max-w-[1400px] mx-auto flex items-center justify-between px-10 py-5 glass-card rounded-3xl">
+      <nav className="fixed top-0 w-full z-50">
+        <div className="max-w-[1400px] mx-auto flex items-center justify-between py-5 glass-card px-4 rounded-b-2xl">
           <div className="flex items-center gap-3">
             <img src="/logo.png" alt="SwiftCause" className="w-8 h-8" />
             <span className="font-bold text-xl tracking-tight text-[#064e3b]">SwiftCause</span>
@@ -243,7 +243,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
                     <div className="flex-1 w-full relative">
                       <div className="absolute inset-0 bg-gradient-to-br from-[#F3F1EA] to-[#F7F6F2] rounded-2xl overflow-hidden">
                         {/* Minimal sidebar indicator */}
-                        <div className="absolute left-0 top-0 bottom-0 w-8 bg-[#064e3b] opacity-20 rounded-l-2xl"></div>
+                        <div className="absolute left-0 top-0 bottom-0 w-8 bg-[#064e3b] opacity-60 rounded-l-2xl"></div>
                         
                         {/* Main chart area - Focus on trends */}
                         <div className="ml-8 h-full bg-white/60 backdrop-blur-sm relative rounded-r-2xl">
