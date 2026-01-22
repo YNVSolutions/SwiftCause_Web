@@ -1,0 +1,38 @@
+name: Deploy Feature to Testing environment
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Which branch do you want to test?'
+        required: true
+        default: 'develop'
+
+jobs:
+  sync-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed to push to the testing branch
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Get all history for merging
+
+      - name: Configure Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+      - name: Reset Testing to Main (Cleanup)
+        run: |
+          git checkout testing
+          git reset --hard origin/main
+          git push origin testing --force
+
+      - name: Merge Feature into Testing
+        run: |
+          git checkout testing
+          git merge origin/${{ github.event.inputs.branch }} --no-edit
+          git push origin testing
