@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Diamond, Star, Shield, Monitor } from 'lucide-react';
+import { Shield, Monitor } from 'lucide-react';
 import { UserRole, KioskSession, AdminSession } from '../../shared/types';
 import { KioskLoginContainer } from '../../features/auth-by-kiosk';
 import { AdminLoginContainer } from '../../features/auth-by-email';
@@ -35,24 +35,24 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
   }, [openCard]);
 
   return (
-    <div className="min-h-screen bg-[#f5f3ef]">
-      <div className="grid min-h-screen lg:grid-cols-[1.05fr_1fr]">
-        <section className="relative hidden flex-col justify-between bg-linear-to-br from-[#6e8f7f] via-[#7e9e8f] to-[#6a8879] px-8 py-10 text-white lg:flex lg:py-12">
+    <div className="min-h-screen bg-[#f5f3ef] font-(--font-lexend)">
+      <div className="grid min-h-screen lg:grid-cols-[0.75fr_1fr]">
+        <section className="relative hidden flex-col justify-between bg-linear-to-br from-[#6e8f7f] via-[#7e9e8f] to-[#6a8879] px-10 py-12 text-white lg:flex">
           <button
             onClick={onGoBackToHome}
-            className="flex items-center gap-3 text-left text-white/90 transition hover:text-white"
+            className="flex items-center gap-2 text-left text-white/90 transition hover:text-white"
           >
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/20 bg-white/10 shadow-sm backdrop-blur">
-              <Diamond className="h-5 w-5" />
+            <span className="flex h-16 w-16 items-center justify-center">
+              <img src="/logo.png" alt="SwiftCause Logo" className="h-12 w-12" />
             </span>
-            <span className="text-lg font-semibold tracking-tight">
+            <span className="text-3xl font-semibold tracking-tight">
               SwiftCause
             </span>
           </button>
 
-          <div className="mt-12 flex flex-1 flex-col justify-center gap-10 lg:mt-0">
-            <div className="flex justify-center lg:justify-start">
-              <div className="relative flex h-56 w-56 items-center justify-center rounded-4xl border border-white/25 bg-white/15 shadow-[0_25px_50px_-30px_rgba(15,23,42,0.7)]">
+          <div className="mt-4 flex flex-1 flex-col justify-center gap-12">
+            <div className="flex justify-center">
+              <div className="relative flex h-64 w-64 items-center justify-center rounded-[36px] border border-white/25 bg-white/15 shadow-[0_30px_60px_-40px_rgba(15,23,42,0.7)]">
                 <div className="flex h-20 w-28 items-center justify-center rounded-2xl bg-white text-[#6b877c] shadow-lg">
                   <Monitor className="h-8 w-8" />
                 </div>
@@ -62,30 +62,7 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
               </div>
             </div>
 
-            <div className="flex items-center justify-center gap-1 text-[#7df0b2] lg:justify-start">
-              {Array.from({ length: 5 }).map((_, index) => (
-                <Star key={index} className="h-4 w-4 fill-current" />
-              ))}
-            </div>
-
-            <p className="max-w-md text-lg leading-relaxed text-white/90">
-              "SwiftCause transformed how we manage our physical donation points. The deployment speed is unmatched."
-            </p>
-
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full border border-white/30 bg-white/15 text-sm font-semibold">
-                N1
-              </div>
-              <div>
-                <p className="text-sm font-semibold">NGO_One</p>
-                <p className="text-xs text-white/70">International Relief Fund</p>
-              </div>
-            </div>
           </div>
-
-          <p className="text-xs uppercase tracking-[0.25em] text-white/50">
-            (c) 2024 SwiftCause Management Inc.
-          </p>
         </section>
 
         <section className="flex items-center justify-center bg-[#fbfaf7] px-6 py-12">
