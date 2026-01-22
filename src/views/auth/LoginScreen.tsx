@@ -65,13 +65,26 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
           </div>
         </section>
 
-        <section className="flex items-center justify-center bg-[#fbfaf7] px-6 py-12">
+        <section className="flex items-start justify-center bg-[#fbfaf7] px-4 py-10 sm:items-center sm:px-6 sm:py-12">
           <div className="w-full max-w-lg">
+            <div className="mb-10 flex items-center justify-start bg-[#fbfaf7] py-3 lg:hidden sticky top-0 z-10 -mx-4 px-4 sm:static sm:mx-0 sm:px-0 sm:py-0">
+              <button
+                onClick={onGoBackToHome}
+                className="flex items-center gap-2 text-left text-[#1f2937] transition hover:text-[#0f172a]"
+              >
+                <span className="flex h-9 w-9 items-center justify-center sm:h-10 sm:w-10">
+                  <img src="/logo.png" alt="SwiftCause Logo" className="h-8 w-8 sm:h-9 sm:w-9" />
+                </span>
+                <span className="text-lg font-semibold tracking-tight sm:text-2xl">
+                  SwiftCause
+                </span>
+              </button>
+            </div>
             <div className="mb-10 text-center">
-              <p className="text-xs uppercase tracking-[0.35em] text-[#9aa09b]">
+              <p className="text-[10px] uppercase tracking-[0.3em] text-[#9aa09b] sm:text-xs sm:tracking-[0.35em]">
                 Secure access
               </p>
-              <h1 className="mt-3 text-3xl font-semibold text-[#1f2937] sm:text-4xl">
+              <h1 className="mt-2 text-2xl font-semibold text-[#1f2937] sm:mt-3 sm:text-4xl">
                 Log in to SwiftCause
               </h1>
               <p className="mt-2 text-sm text-[#6b7280]">
@@ -79,8 +92,8 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
               </p>
             </div>
 
-            <div className="space-y-6">
-              <div className="rounded-3xl border border-[#e3e6e2] bg-white p-6 shadow-[0_18px_35px_-28px_rgba(15,23,42,0.45)]">
+            <div className="space-y-5 sm:space-y-6">
+              <div className="rounded-3xl border border-[#e3e6e2] bg-white p-5 sm:p-6 shadow-[0_18px_35px_-28px_rgba(15,23,42,0.45)]">
                 <div className="flex items-start gap-4">
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eef5f1] text-[#2f5b47]">
                     <Shield className="h-6 w-6" />
@@ -92,7 +105,7 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
                     </p>
                   </div>
                 </div>
-                <div className="mt-5">
+                <div className="mt-4 sm:mt-5">
                   <div
                     className={`overflow-hidden transition-[max-height,opacity] duration-600 ease-out ${
                       openCard === 'admin' ? 'max-h-[520px] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
@@ -119,7 +132,7 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-[#e3e6e2] bg-white p-6 shadow-[0_18px_35px_-28px_rgba(15,23,42,0.45)]">
+              <div className="rounded-3xl border border-[#e3e6e2] bg-white p-5 sm:p-6 shadow-[0_18px_35px_-28px_rgba(15,23,42,0.45)]">
                 <div className="flex items-start gap-4">
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f0f2f5] text-[#6b7280]">
                     <Monitor className="h-6 w-6" />
@@ -131,9 +144,9 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
                     </p>
                   </div>
                 </div>
-                <div className="mt-5">
+                <div className="mt-4 sm:mt-5">
                   <div
-                    className={`overflow-hidden transition-[max-height,opacity] duration-600 ease-out ${
+                    className={`overflow-hidden transition-[max-height,opacity] duration-[600ms] ease-out ${
                       openCard === 'kiosk' ? 'max-h-[520px] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
                     }`}
                   >
@@ -158,7 +171,7 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
                 </div>
               </div>
 
-              <p className="text-center text-sm text-[#6b7280]">
+              <p className="text-center text-xs text-[#6b7280] sm:text-sm">
                 Don't have an account?{' '}
                 <a href="/signup" className="font-semibold text-[#2f4f43] hover:underline">
                   Sign up
