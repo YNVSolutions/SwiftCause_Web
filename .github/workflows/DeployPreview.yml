@@ -28,3 +28,4 @@ jobs:
           projectId: swiftcause-app
           entryPoint: ./backend
           channelId: ${{ github.event_name == 'pull_request' && '' || 'manual-preview' }}
+          expires: 3d
