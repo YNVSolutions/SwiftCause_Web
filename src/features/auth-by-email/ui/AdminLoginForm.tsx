@@ -5,9 +5,12 @@ import { UserRole, AdminSession } from '../../../shared/types';
 
 interface AdminLoginContainerProps {
 	onLogin: (role: UserRole, sessionData?: AdminSession) => void;
+	variant?: 'classic' | 'panel';
+	buttonLabel?: string;
+	buttonClassName?: string;
 }
 
-export function AdminLoginContainer({ onLogin }: AdminLoginContainerProps) {
+export function AdminLoginContainer({ onLogin, variant, buttonLabel, buttonClassName }: AdminLoginContainerProps) {
 	const { 
 		email, 
 		password, 
@@ -33,8 +36,10 @@ export function AdminLoginContainer({ onLogin }: AdminLoginContainerProps) {
 			onPasswordChange={(e) => setPassword(e.target.value)}
 			onEmailBlur={checkEmailVerification}
 			onSubmit={handleSubmit}
+			variant={variant}
+			buttonLabel={buttonLabel}
+			buttonClassName={buttonClassName}
 		/>
 	);
 }
-
 

@@ -1,24 +1,8 @@
-import { useState } from 'react';
-import { CardContent, CardDescription, CardHeader, CardTitle } from '../../shared/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shared/ui/tabs';
-import { Button } from '../../shared/ui/button';
-
-import {
-  Heart,
-  ArrowLeft,
-  UserCog,
-} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Diamond, Star, Shield, Monitor } from 'lucide-react';
 import { UserRole, KioskSession, AdminSession } from '../../shared/types';
 import { KioskLoginContainer } from '../../features/auth-by-kiosk';
 import { AdminLoginContainer } from '../../features/auth-by-email';
-
-// Phase 1-2 Creative Components
-import { DynamicGradientMesh } from './backgrounds/DynamicGradientMesh';
-import { ParticleField } from './backgrounds/ParticleField';
-import { GlassMorphCard } from './cards/GlassMorphCard';
-import { LiquidFillProgress } from './cards/LiquidFillProgress';
-import { FeaturedCampaign } from './components/FeaturedCampaign';
-import { useFeaturedCampaigns } from './hooks/useFeaturedCampaigns';
 
 interface LoginScreenProps {
   onLogin: (role: UserRole, sessionData?: KioskSession | AdminSession) => void;
@@ -26,188 +10,186 @@ interface LoginScreenProps {
 }
 
 export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
-  const [activeTab, setActiveTab] = useState<'kiosk' | 'admin'>('admin');
-  const [formState, setFormState] = useState<'idle' | 'typing' | 'error' | 'success'>('idle');
-  const [formProgress, setFormProgress] = useState(0);
+  const [openCard, setOpenCard] = useState<'admin' | 'kiosk' | null>(null);
+  const [showAdminButton, setShowAdminButton] = useState(true);
+  const [showKioskButton, setShowKioskButton] = useState(true);
 
-  // Fetch real campaign data from Firestore
-  const { campaigns, loading, error } = useFeaturedCampaigns(3);
+  useEffect(() => {
+    if (openCard === 'admin') {
+      setShowAdminButton(false);
+      return;
+    }
+
+    const timer = setTimeout(() => setShowAdminButton(true), 600);
+    return () => clearTimeout(timer);
+  }, [openCard]);
+
+  useEffect(() => {
+    if (openCard === 'kiosk') {
+      setShowKioskButton(false);
+      return;
+    }
+
+    const timer = setTimeout(() => setShowKioskButton(true), 600);
+    return () => clearTimeout(timer);
+  }, [openCard]);
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Phase 1: Dynamic gradient background with time-of-day */}
-      <DynamicGradientMesh />
+    <div className="min-h-screen bg-[#f5f3ef]">
+      <div className="grid min-h-screen lg:grid-cols-[1.05fr_1fr]">
+        <section className="relative flex flex-col justify-between bg-linear-to-br from-[#6e8f7f] via-[#7e9e8f] to-[#6a8879] px-8 py-10 text-white lg:py-12">
+          <button
+            onClick={onGoBackToHome}
+            className="flex items-center gap-3 text-left text-white/90 transition hover:text-white"
+          >
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/20 bg-white/10 shadow-sm backdrop-blur">
+              <Diamond className="h-5 w-5" />
+            </span>
+            <span className="text-lg font-semibold tracking-tight">
+              SwiftCause
+            </span>
+          </button>
 
-      {/* Phase 1: Interactive particle field with physics */}
-      <ParticleField />
-
-      <div className="flex min-h-screen relative z-10">
-        {/* Left side - Stats and branding */}
-        <div className="hidden lg:flex lg:w-1/2 xl:w-3/5 flex-col justify-center p-6 xl:p-12">
-          <div className="max-w-lg mx-auto w-full">
-            <Button
-              onClick={onGoBackToHome}
-              variant="ghost"
-              size="icon"
-              className="absolute top-4 left-4 text-gray-700 hover:text-green-600 hover:bg-green-50 transition-all duration-300 hover:scale-110"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span className="sr-only">Back to Home</span>
-            </Button>
-
-            {/* Logo */}
-            <button
-              onClick={onGoBackToHome}
-              className="flex items-center space-x-3 mb-4 text-left hover:opacity-90 transition-all duration-300 hover:scale-105 group"
-            >
-              <div className="flex h-14 w-14 items-center justify-center transform transition-transform group-hover:scale-110">
-                <img src="/logo.png" className="h-14 w-14 rounded-xl shadow-lg" alt="Swift Cause Logo" />
+          <div className="mt-12 flex flex-1 flex-col justify-center gap-10 lg:mt-0">
+            <div className="flex justify-center lg:justify-start">
+              <div className="relative flex h-56 w-56 items-center justify-center rounded-4xl border border-white/25 bg-white/15 shadow-[0_25px_50px_-30px_rgba(15,23,42,0.7)]">
+                <div className="flex h-20 w-28 items-center justify-center rounded-2xl bg-white text-[#6b877c] shadow-lg">
+                  <Monitor className="h-8 w-8" />
+                </div>
+                <div className="absolute -right-4 -bottom-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#3ba871] text-white shadow-lg">
+                  <Shield className="h-6 w-6" />
+                </div>
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 group-hover:text-green-600 transition-colors">
-                  Swift Cause
-                </h1>
-                <p className="text-sm text-green-600 font-medium">
-                  Modern Donation Platform
-                </p>
-              </div>
-            </button>
+            </div>
 
-            {/* Professional greeting */}
-            <h2 className="text-3xl xl:text-4xl font-bold text-gray-900 mb-4 leading-tight animate-fade-in">
-              Welcome back to <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600">Swift Cause</span>
-            </h2>
+            <div className="flex items-center justify-center gap-1 text-[#7df0b2] lg:justify-start">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <Star key={index} className="h-4 w-4 fill-current" />
+              ))}
+            </div>
 
-            <p className="text-base xl:text-lg text-gray-600 mb-8 animate-fade-in-delay">
-              Comprehensive donation management platform trusted by organizations worldwide.
+            <p className="max-w-md text-lg leading-relaxed text-white/90">
+              "SwiftCause transformed how we manage our physical donation points. The deployment speed is unmatched."
             </p>
 
-            {/* Featured Campaign - Real data from Firestore */}
-            {loading ? (
-              <div className="w-full max-w-lg mx-auto mb-8 p-8 text-center">
-                <div className="animate-pulse">
-                  <div className="h-64 bg-white/60 rounded-3xl" />
-                </div>
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full border border-white/30 bg-white/15 text-sm font-semibold">
+                N1
               </div>
-            ) : error ? (
-              <div className="w-full max-w-lg mx-auto mb-8 p-8 text-center text-gray-500">
-                <p className="text-sm">Unable to load campaigns</p>
-              </div>
-            ) : (
-              <FeaturedCampaign
-                campaigns={campaigns}
-                autoRotateInterval={6000}
-                showNavigation={true}
-              />
-            )}
-
-            {/* Testimonial - Matching login form style */}
-            <div className="mt-8 animate-fade-in-delay-3">
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 shadow-sm">
-                {/* Accent line matching the green theme */}
-                <div className="w-12 h-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full mb-4" />
-
-                {/* Quote text */}
-                <p className="text-gray-700 text-sm leading-relaxed mb-3">
-                  "We make a living by what we get, but we make a life by what we give."
-                </p>
-
-                {/* Author */}
-                <p className="text-xs text-gray-600">
-                  <span className="font-semibold">Winston Churchill</span>
-                </p>
+              <div>
+                <p className="text-sm font-semibold">NGO_One</p>
+                <p className="text-xs text-white/70">International Relief Fund</p>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Right side - Login form */}
-        <div className="w-full lg:w-1/2 xl:w-2/5 flex items-center justify-center p-4 sm:p-6 lg:p-6 xl:p-8">
-          <div className="w-full max-w-md animate-slide-in-right">
-            {/* Mobile header */}
-            <div className="lg:hidden text-center mb-6">
-              <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-green-600 to-emerald-600 shadow-lg">
-                <Heart className="h-8 w-8 text-white" />
-              </div>
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
-                Welcome Back
-              </h2>
-              <p className="text-sm text-gray-600">Swift Cause Platform</p>
+          <p className="text-xs uppercase tracking-[0.25em] text-white/50">
+            (c) 2024 SwiftCause Management Inc.
+          </p>
+        </section>
+
+        <section className="flex items-center justify-center bg-[#fbfaf7] px-6 py-12">
+          <div className="w-full max-w-lg">
+            <div className="mb-10 text-center">
+              <p className="text-xs uppercase tracking-[0.35em] text-[#9aa09b]">
+                Secure access
+              </p>
+              <h1 className="mt-3 text-3xl font-semibold text-[#1f2937] sm:text-4xl">
+                Log in to SwiftCause
+              </h1>
+              <p className="mt-2 text-sm text-[#6b7280]">
+                Choose your access method below to continue.
+              </p>
             </div>
 
-            {/* Phase 2: Glass morph card with liquid fill */}
-            <GlassMorphCard formState={formState} className="relative">
-              {/* Phase 2: Liquid fill progress indicator */}
-              <LiquidFillProgress progress={formProgress} />
-
-              <CardHeader className="text-center space-y-1 pt-6 pb-4 relative z-10">
-                <CardTitle className="text-lg sm:text-xl lg:text-2xl bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-                  Platform Access
-                </CardTitle>
-                <CardDescription className="text-xs sm:text-sm">
-                  Choose your access type to continue
-                </CardDescription>
-              </CardHeader>
-
-              <CardContent className="space-y-4 pt-2 pb-6 px-4 sm:px-6 relative z-10">
-                <Tabs
-                  value={activeTab}
-                  onValueChange={(value) => {
-                    setActiveTab(value as 'kiosk' | 'admin');
-                    setFormProgress(0);
-                    setFormState('idle');
-                  }}
-                >
-                  <TabsList className="grid w-full grid-cols-2 h-11 bg-green-50/50">
-                    <TabsTrigger
-                      value="admin"
-                      className="flex items-center space-x-2 text-sm data-[state=active]:bg-green-600 data-[state=active]:text-white transition-all duration-300"
-                    >
-                      <UserCog className="w-4 h-4" />
-                      <span>User</span>
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="kiosk"
-                      className="flex items-center space-x-2 text-sm data-[state=active]:bg-green-600 data-[state=active]:text-white transition-all duration-300"
-                    >
-                      <Heart className="w-4 h-4" />
-                      <span>Kiosk</span>
-                    </TabsTrigger>
-                  </TabsList>
-
-                  <div className="mt-4">
-                    <TabsContent value="kiosk" className="m-0">
-                      <KioskLoginContainer onLogin={onLogin} />
-                    </TabsContent>
-
-                    <TabsContent value="admin" className="m-0">
-                      <AdminLoginContainer onLogin={onLogin} />
-                    </TabsContent>
+            <div className="space-y-6">
+              <div className="rounded-3xl border border-[#e3e6e2] bg-white p-6 shadow-[0_18px_35px_-28px_rgba(15,23,42,0.45)]">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eef5f1] text-[#2f5b47]">
+                    <Shield className="h-6 w-6" />
                   </div>
-                </Tabs>
-
-                <div className="pt-3 border-t border-green-100 text-center space-y-2 relative z-10">
-                  <p className="text-xs sm:text-sm text-gray-600">Need assistance?</p>
-                  <div className="flex flex-col sm:flex-row items-center justify-center sm:space-x-4 space-y-1 sm:space-y-0 text-xs sm:text-sm">
-                    <a
-                      href="mailto:swiftcauseweb@gmail.com"
-                      className="text-green-600 hover:text-green-700 font-medium transition-colors hover:underline"
-                    >
-                      swiftcauseweb@gmail.com
-                    </a>
-                    <span className="hidden sm:inline text-gray-300">|</span>
-                    <span className="text-gray-600">24/7 Support</span>
-                  </div>
-
-                  <div className="flex items-center justify-center space-x-2 text-xs text-gray-500 pt-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span>Secure - Encrypted - Verified</span>
+                  <div className="flex-1">
+                    <p className="text-base font-semibold text-[#1f2937]">Organization Admin</p>
+                    <p className="text-sm text-[#6b7280]">
+                      Manage campaigns, kiosks, and view analytics.
+                    </p>
                   </div>
                 </div>
-              </CardContent>
-            </GlassMorphCard>
+                <div className="mt-5">
+                  <div
+                    className={`overflow-hidden transition-[max-height,opacity] duration-600 ease-out ${
+                      openCard === 'admin' ? 'max-h-[520px] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
+                    }`}
+                  >
+                    <AdminLoginContainer
+                      onLogin={onLogin}
+                      variant="panel"
+                      buttonLabel="Login as Admin"
+                      buttonClassName="!h-12 !rounded-2xl !bg-none !bg-[#2f4f43] !text-white !shadow-none hover:!bg-[#273f35]"
+                    />
+                  </div>
+                  <div className="h-12">
+                    <button
+                      type="button"
+                      onClick={() => setOpenCard('admin')}
+                      className={`h-12 w-full rounded-2xl bg-[#2f4f43] text-sm font-semibold text-white transition hover:bg-[#273f35] ${
+                        showAdminButton ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                      }`}
+                    >
+                      Login as Admin
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-3xl border border-[#e3e6e2] bg-white p-6 shadow-[0_18px_35px_-28px_rgba(15,23,42,0.45)]">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f0f2f5] text-[#6b7280]">
+                    <Monitor className="h-6 w-6" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-base font-semibold text-[#1f2937]">Kiosk Terminal</p>
+                    <p className="text-sm text-[#6b7280]">
+                      Connect a physical device to your organization.
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-5">
+                  <div
+                    className={`overflow-hidden transition-[max-height,opacity] duration-600 ease-out ${
+                      openCard === 'kiosk' ? 'max-h-[520px] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
+                    }`}
+                  >
+                    <KioskLoginContainer
+                      onLogin={onLogin}
+                      variant="panel"
+                      buttonLabel="Login as Kiosk"
+                      buttonClassName="!h-12 !rounded-2xl !bg-none !bg-white !text-[#2f4f43] !shadow-none !border !border-[#d7ded9] hover:!bg-[#f4f7f4]"
+                    />
+                  </div>
+                  <div className="h-12">
+                    <button
+                      type="button"
+                      onClick={() => setOpenCard('kiosk')}
+                      className={`h-12 w-full rounded-2xl border border-[#d7ded9] bg-white text-sm font-semibold text-[#2f4f43] transition hover:bg-[#f4f7f4] ${
+                        showKioskButton ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                      }`}
+                    >
+                      Login as Kiosk
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-center text-sm text-[#6b7280]">
+                Don't have an account?{' '}
+                <a href="/signup" className="font-semibold text-[#2f4f43] hover:underline">
+                  Sign up
+                </a>
+              </p>
+            </div>
           </div>
-        </div>
+        </section>
       </div>
     </div>
   );
