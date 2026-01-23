@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Shield, Monitor } from 'lucide-react';
+import {
+  Shield,
+  Monitor,
+  Globe,
+  Zap,
+  ShieldCheck,
+  ChevronRight,
+} from 'lucide-react';
 import { UserRole, KioskSession, AdminSession } from '../../shared/types';
 import { KioskLoginContainer } from '../../features/auth-by-kiosk';
 import { AdminLoginContainer } from '../../features/auth-by-email';
@@ -13,6 +20,7 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
   const [openCard, setOpenCard] = useState<'admin' | 'kiosk' | null>(null);
   const [showAdminButton, setShowAdminButton] = useState(true);
   const [showKioskButton, setShowKioskButton] = useState(true);
+  const [openPrinciple, setOpenPrinciple] = useState<string | null>(null);
 
   useEffect(() => {
     if (openCard === 'admin') {
@@ -37,31 +45,112 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
   return (
     <div className="min-h-screen bg-[#f5f3ef] font-(--font-lexend)">
       <div className="grid min-h-screen lg:grid-cols-[0.75fr_1fr]">
-        <section className="relative hidden flex-col justify-between bg-linear-to-br from-[#6e8f7f] via-[#7e9e8f] to-[#6a8879] px-10 py-12 text-white lg:flex">
+        <section className="relative hidden flex-col justify-between overflow-hidden bg-linear-to-br from-[#0b1b16] via-[#10241e] to-[#0b1a14] px-10 py-12 text-white lg:flex">
+          <div className="pointer-events-none absolute -top-40 right-0 h-80 w-80 rounded-full bg-emerald-500/20 blur-3xl" />
+          <div className="pointer-events-none absolute bottom-0 left-0 h-72 w-72 rounded-full bg-emerald-300/10 blur-3xl" />
+
           <button
             onClick={onGoBackToHome}
-            className="flex items-center gap-2 text-left text-white/90 transition hover:text-white"
+            className="relative z-10 flex items-center gap-4 text-left text-white/90 transition hover:text-white"
           >
-            <span className="flex h-16 w-16 items-center justify-center">
-              <img src="/logo.png" alt="SwiftCause Logo" className="h-12 w-12" />
+            <span className="flex h-12 w-12 items-center justify-center">
+              <img src="/logo.png" alt="SwiftCause Logo" className="h-10 w-10" />
             </span>
-            <span className="text-3xl font-semibold tracking-tight">
+            <span className="font-(--font-lexend) text-2xl font-bold tracking-tight text-white">
               SwiftCause
             </span>
           </button>
 
-          <div className="mt-4 flex flex-1 flex-col justify-center gap-12">
-            <div className="flex justify-center">
-              <div className="relative flex h-64 w-64 items-center justify-center rounded-[36px] border border-white/25 bg-white/15 shadow-[0_30px_60px_-40px_rgba(15,23,42,0.7)]">
-                <div className="flex h-20 w-28 items-center justify-center rounded-2xl bg-white text-[#6b877c] shadow-lg">
-                  <Monitor className="h-8 w-8" />
-                </div>
-                <div className="absolute -right-4 -bottom-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#3ba871] text-white shadow-lg">
-                  <Shield className="h-6 w-6" />
-                </div>
+          <div className="relative z-10 mt-4 flex flex-1 flex-col justify-center gap-12">
+            <div className="max-w-xl space-y-10">
+              <h1 className="font-(--font-lexend) text-5xl font-black leading-[1] tracking-tighter text-white">
+                <span className="block">Precision</span>
+                <span className="block">for</span>
+                <span className="block text-emerald-400">Humanity.</span>
+              </h1>
+
+              <p className="max-w-lg border-l-2 border-emerald-500/20 pl-8 text-xl font-medium leading-relaxed text-emerald-50/40">
+                Coordinate verified missions, deploy trusted kiosks, and scale
+                impact with a single secure network.
+              </p>
+
+              <div className="space-y-4 pt-10">
+                {[
+                  {
+                    title: 'Radical transparency for every mission',
+                    items: [
+                      'Real-time visibility into donations, campaigns, and outcomes',
+                      'Clear audit trails for every transaction and Gift Aid claim',
+                      'Data that builds trust with donors, partners, and regulators',
+                    ],
+                  },
+                  {
+                    title: 'Verified partners across the globe',
+                    items: [
+                      'Organizations verified before onboarding to the platform',
+                      'Trusted payment and compliance partners built into the system',
+                      'Designed to support local causes with global standards',
+                    ],
+                  },
+                  {
+                    title: 'Secure access for every operator',
+                    items: [
+                      'Role-based access for admins, volunteers, and kiosks',
+                      'Encrypted authentication and secure session handling',
+                      'Built on industry-grade security and payment infrastructure',
+                    ],
+                  },
+                ].map((principle) => {
+                  const isOpen = openPrinciple === principle.title;
+                  return (
+                    <div key={principle.title}>
+                      <button
+                        type="button"
+                        onClick={() => setOpenPrinciple(isOpen ? null : principle.title)}
+                        className="group flex w-full items-center gap-4 text-left"
+                      >
+                        <ChevronRight
+                          className={`h-5 w-5 text-emerald-500/40 transition-transform transition-colors duration-300 group-hover:text-emerald-400 ${
+                            isOpen ? 'rotate-90 text-emerald-400' : ''
+                          }`}
+                        />
+                        <span className="font-(--font-lexend) text-lg font-bold tracking-tight text-white/80 transition-colors group-hover:text-white md:text-xl">
+                          {principle.title}
+                        </span>
+                      </button>
+                      <div
+                        className={`mt-3 overflow-hidden transition-[max-height,opacity] duration-[450ms] ease-out ${
+                          isOpen ? 'max-h-[220px] opacity-100' : 'max-h-0 opacity-0'
+                        }`}
+                      >
+                        <ul className="space-y-2 pl-9 text-sm text-emerald-50/50 md:text-base">
+                          {principle.items.map((item) => (
+                            <li key={item} className="leading-relaxed">
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
+          </div>
 
+          <div className="relative z-10 flex flex-wrap gap-12 border-t border-white/5 pt-12 text-white/10">
+            <div className="flex items-center gap-3">
+              <Globe className="h-5 w-5" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.25em]">
+                Verified Global Network
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <ShieldCheck className="h-5 w-5" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.25em]">
+                End-to-End Encryption
+              </span>
+            </div>
           </div>
         </section>
 
