@@ -51,12 +51,16 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
 
           <button
             onClick={onGoBackToHome}
-            className="relative z-10 flex items-center gap-4 text-left text-white/90 transition hover:text-white"
+            className="group relative z-10 flex items-center gap-2 text-left text-white/90 transition hover:text-white"
           >
             <span className="flex h-12 w-12 items-center justify-center">
-              <img src="/logo.png" alt="SwiftCause Logo" className="h-10 w-10" />
+              <img
+                src="/logo.png"
+                alt="SwiftCause Logo"
+                className="h-10 w-10 transition-transform duration-300 group-hover:scale-105"
+              />
             </span>
-            <span className="font-lexend text-2xl font-bold tracking-tight text-stone-50">
+            <span className="font-lexend text-2xl font-bold tracking-tight text-stone-50 transition-colors duration-300 group-hover:text-emerald-100/80">
               SwiftCause
             </span>
           </button>
