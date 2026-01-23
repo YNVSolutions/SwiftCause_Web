@@ -45,9 +45,9 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
   return (
     <div className="min-h-screen bg-[#f5f3ef] font-(--font-lexend)">
       <div className="grid min-h-screen lg:grid-cols-[0.75fr_1fr]">
-        <section className="relative hidden flex-col justify-between overflow-hidden bg-linear-to-br from-[#0b1b16] via-[#10241e] to-[#0b1a14] px-10 py-12 text-white lg:flex">
-          <div className="pointer-events-none absolute -top-40 right-0 h-80 w-80 rounded-full bg-emerald-500/20 blur-3xl" />
-          <div className="pointer-events-none absolute bottom-0 left-0 h-72 w-72 rounded-full bg-emerald-300/10 blur-3xl" />
+        <section className="relative hidden flex-col justify-between overflow-hidden bg-linear-to-b from-[#0f5132] to-[#064e3b] px-10 py-12 text-white lg:flex">
+          <div className="pointer-events-none absolute -top-40 right-0 h-80 w-80 rounded-full bg-emerald-400/6 blur-3xl" />
+          <div className="pointer-events-none absolute bottom-0 left-0 h-72 w-72 rounded-full bg-emerald-300/4 blur-3xl" />
 
           <button
             onClick={onGoBackToHome}
@@ -56,27 +56,28 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
             <span className="flex h-12 w-12 items-center justify-center">
               <img src="/logo.png" alt="SwiftCause Logo" className="h-10 w-10" />
             </span>
-            <span className="font-(--font-lexend) text-2xl font-bold tracking-tight text-white">
+            <span className="font-(--font-lexend) text-2xl font-bold tracking-tight text-stone-50">
               SwiftCause
             </span>
           </button>
 
           <div className="relative z-10 mt-4 flex flex-1 flex-col justify-center gap-12">
             <div className="max-w-xl space-y-10">
-              <h1 className="font-(--font-lexend) text-5xl font-black leading-[1] tracking-tighter text-white">
-                <span className="block">Precision</span>
-                <span className="block">for</span>
-                <span className="block text-emerald-400">Humanity.</span>
-              </h1>
+                  <h1 className="font-(--font-lexend) text-5xl font-black leading-[1] tracking-tighter text-emerald-100/80">
+                    <span className="block">Precision</span>
+                    <span className="block">for</span>
+                    <span className="block text-stone-50">Humanity.</span>
+                  </h1>
 
-              <p className="max-w-lg border-l-2 border-emerald-500/20 pl-8 text-xl font-medium leading-relaxed text-emerald-50/40">
-                Coordinate verified missions, deploy trusted kiosks, and scale
-                impact with a single secure network.
-              </p>
+                  <p className="max-w-lg border-l-2 border-emerald-200/60 pl-8 text-xl font-medium leading-relaxed text-emerald-50/85">
+                    Coordinate verified missions, deploy trusted kiosks, and scale
+                    impact with a single secure network.
+                  </p>
 
               <div className="space-y-4 pt-10">
                 {[
                   {
+                    // Radical transparency list item (requested marker).
                     title: 'Radical transparency for every mission',
                     items: [
                       'Real-time visibility into donations, campaigns, and outcomes',
@@ -109,24 +110,24 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
                         onClick={() => setOpenPrinciple(isOpen ? null : principle.title)}
                         className="group flex w-full items-center gap-4 text-left"
                       >
-                        <ChevronRight
-                          className={`h-5 w-5 text-emerald-500/40 transition-transform transition-colors duration-300 group-hover:text-emerald-400 ${
-                            isOpen ? 'rotate-90 text-emerald-400' : ''
-                          }`}
-                        />
-                        <span className="font-(--font-lexend) text-lg font-bold tracking-tight text-white/80 transition-colors group-hover:text-white md:text-xl">
-                          {principle.title}
-                        </span>
-                      </button>
+                            <ChevronRight
+                              className={`h-5 w-5 text-emerald-500/70 transition-transform transition-colors duration-300 group-hover:text-emerald-500 ${
+                                isOpen ? 'rotate-90 text-emerald-500' : ''
+                              }`}
+                            />
+                            <span className="font-(--font-lexend) text-lg font-bold tracking-tight text-stone-50 transition-colors group-hover:text-stone-50 md:text-xl">
+                              {principle.title}
+                            </span>
+                          </button>
                       <div
                         className={`mt-3 overflow-hidden transition-[max-height,opacity] duration-[450ms] ease-out ${
                           isOpen ? 'max-h-[220px] opacity-100' : 'max-h-0 opacity-0'
                         }`}
                       >
-                        <ul className="space-y-2 pl-9 text-sm text-emerald-50/50 md:text-base">
-                          {principle.items.map((item) => (
-                            <li key={item} className="leading-relaxed">
-                              {item}
+                            <ul className="space-y-2 pl-9 text-sm text-emerald-50/85 md:text-base">
+                              {principle.items.map((item) => (
+                                <li key={item} className="leading-relaxed">
+                                  {item}
                             </li>
                           ))}
                         </ul>
@@ -138,15 +139,15 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
             </div>
           </div>
 
-          <div className="relative z-10 flex flex-wrap gap-12 border-t border-white/5 pt-12 text-white/10">
+          <div className="relative z-10 flex flex-wrap gap-12 border-t border-white/10 pt-12 text-stone-50/70">
             <div className="flex items-center gap-3">
-              <Globe className="h-5 w-5" />
+              <Globe className="h-5 w-5 text-emerald-600/80" />
               <span className="text-[10px] font-bold uppercase tracking-[0.25em]">
                 Verified Global Network
               </span>
             </div>
             <div className="flex items-center gap-3">
-              <ShieldCheck className="h-5 w-5" />
+              <ShieldCheck className="h-5 w-5 text-emerald-600/80" />
               <span className="text-[10px] font-bold uppercase tracking-[0.25em]">
                 End-to-End Encryption
               </span>
