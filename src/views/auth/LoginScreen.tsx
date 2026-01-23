@@ -43,7 +43,7 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
   }, [openCard]);
 
   return (
-    <div className="min-h-screen bg-[#f5f3ef] font-(--font-lexend)">
+    <div className="min-h-screen bg-[#F3F1EA] font-lexend">
       <div className="grid min-h-screen lg:grid-cols-[0.75fr_1fr]">
         <section className="relative hidden flex-col justify-between overflow-hidden bg-linear-to-b from-[#0f5132] to-[#064e3b] px-10 py-12 text-white lg:flex">
           <div className="pointer-events-none absolute -top-40 right-0 h-80 w-80 rounded-full bg-emerald-400/6 blur-3xl" />
@@ -56,14 +56,14 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
             <span className="flex h-12 w-12 items-center justify-center">
               <img src="/logo.png" alt="SwiftCause Logo" className="h-10 w-10" />
             </span>
-            <span className="font-(--font-lexend) text-2xl font-bold tracking-tight text-stone-50">
+            <span className="font-lexend text-2xl font-bold tracking-tight text-stone-50">
               SwiftCause
             </span>
           </button>
 
           <div className="relative z-10 mt-4 flex flex-1 flex-col justify-center gap-12">
             <div className="max-w-xl space-y-10">
-                  <h1 className="font-(--font-lexend) text-5xl font-black leading-[1] tracking-tighter text-emerald-100/80">
+                  <h1 className="font-lexend text-5xl font-black leading-none tracking-tighter text-emerald-100/80">
                     <span className="block">Precision</span>
                     <span className="block">for</span>
                     <span className="block text-stone-50">Humanity.</span>
@@ -111,16 +111,16 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
                         className="group flex w-full items-center gap-4 text-left"
                       >
                             <ChevronRight
-                              className={`h-5 w-5 text-emerald-500/70 transition-transform transition-colors duration-300 group-hover:text-emerald-500 ${
+                              className={`h-5 w-5 text-emerald-500/70 transition-[transform,color] duration-300 group-hover:text-emerald-500 ${
                                 isOpen ? 'rotate-90 text-emerald-500' : ''
                               }`}
                             />
-                            <span className="font-(--font-lexend) text-lg font-bold tracking-tight text-stone-50 transition-colors group-hover:text-stone-50 md:text-xl">
+                            <span className="font-lexend text-lg font-bold tracking-tight text-stone-50 transition-colors group-hover:text-stone-50 md:text-xl">
                               {principle.title}
                             </span>
                           </button>
                       <div
-                        className={`mt-3 overflow-hidden transition-[max-height,opacity] duration-[450ms] ease-out ${
+                        className={`mt-3 overflow-hidden transition-[max-height,opacity] duration-450 ease-out ${
                           isOpen ? 'max-h-[220px] opacity-100' : 'max-h-0 opacity-0'
                         }`}
                       >
@@ -155,42 +155,42 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
           </div>
         </section>
 
-        <section className="flex items-start justify-center bg-[#fbfaf7] px-4 py-10 sm:items-center sm:px-6 sm:py-12">
+        <section className="flex items-start justify-center bg-[#F3F1EA] px-4 py-10 sm:items-center sm:px-6 sm:py-12">
           <div className="w-full max-w-lg">
-            <div className="mb-10 flex items-center justify-start bg-[#fbfaf7] py-3 lg:hidden sticky top-0 z-10 -mx-4 px-4 sm:static sm:mx-0 sm:px-0 sm:py-0">
+            <div className="mb-10 flex items-center justify-start bg-[#F3F1EA] py-3 lg:hidden sticky top-0 z-10 -mx-4 px-4 sm:static sm:mx-0 sm:px-0 sm:py-0">
               <button
                 onClick={onGoBackToHome}
-                className="flex items-center gap-2 text-left text-[#1f2937] transition hover:text-[#0f172a]"
+                className="flex items-center gap-2 text-left text-slate-800 transition hover:text-slate-900"
               >
                 <span className="flex h-9 w-9 items-center justify-center sm:h-10 sm:w-10">
                   <img src="/logo.png" alt="SwiftCause Logo" className="h-8 w-8 sm:h-9 sm:w-9" />
                 </span>
-                <span className="text-lg font-semibold tracking-tight sm:text-2xl">
+                <span className="text-lg font-semibold tracking-tight text-[#064e3b] sm:text-2xl">
                   SwiftCause
                 </span>
               </button>
             </div>
             <div className="mb-10 text-center">
-              <p className="text-[10px] uppercase tracking-[0.3em] text-[#9aa09b] sm:text-xs sm:tracking-[0.35em]">
+              <p className="text-[10px] uppercase tracking-[0.3em] text-slate-400/60 sm:text-xs sm:tracking-[0.35em]">
                 Secure access
               </p>
-              <h1 className="mt-2 text-2xl font-semibold text-[#1f2937] sm:mt-3 sm:text-4xl">
+              <h1 className="mt-2 text-2xl font-semibold text-slate-800 sm:mt-3 sm:text-4xl">
                 Log in to SwiftCause
               </h1>
-              <p className="mt-2 text-sm text-[#6b7280]">
+              <p className="mt-2 text-sm text-slate-500">
                 Choose your access method below to continue.
               </p>
             </div>
 
             <div className="space-y-5 sm:space-y-6">
-              <div className="rounded-3xl border border-[#e3e6e2] bg-white p-5 sm:p-6 shadow-[0_18px_35px_-28px_rgba(15,23,42,0.45)]">
+              <div className="rounded-3xl border border-[#F3F1EA]/60 bg-[#F7F6F2] p-5 shadow-[0_18px_35px_-28px_rgba(15,23,42,0.25)] sm:p-6">
                 <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eef5f1] text-[#2f5b47]">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-400/10 text-emerald-600/80">
                     <Shield className="h-6 w-6" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-base font-semibold text-[#1f2937]">Organization Admin</p>
-                    <p className="text-sm text-[#6b7280]">
+                    <p className="text-base font-semibold text-slate-800">Organization Admin</p>
+                    <p className="text-sm text-slate-500">
                       Manage campaigns, kiosks, and view analytics.
                     </p>
                   </div>
@@ -205,14 +205,14 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
                       onLogin={onLogin}
                       variant="panel"
                       buttonLabel="Login as Admin"
-                      buttonClassName="!h-12 !rounded-2xl !bg-none !bg-[#2f4f43] !text-white !shadow-none hover:!bg-[#273f35]"
+                      buttonClassName="!h-12 !rounded-2xl !bg-none !bg-[#064e3b] !text-stone-50 !shadow-[0_6px_18px_-10px_rgba(6,78,59,0.5)] hover:!bg-[#0f5132]"
                     />
                   </div>
                   <div className="h-12">
                     <button
                       type="button"
                       onClick={() => setOpenCard('admin')}
-                      className={`h-12 w-full rounded-2xl bg-[#2f4f43] text-sm font-semibold text-white transition hover:bg-[#273f35] ${
+                      className={`h-12 w-full rounded-2xl bg-[#064e3b] text-sm font-semibold text-stone-50 shadow-[0_6px_18px_-10px_rgba(6,78,59,0.5)] transition hover:bg-[#0f5132] ${
                         showAdminButton ? 'opacity-100' : 'opacity-0 pointer-events-none'
                       }`}
                     >
@@ -222,21 +222,21 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-[#e3e6e2] bg-white p-5 sm:p-6 shadow-[0_18px_35px_-28px_rgba(15,23,42,0.45)]">
+              <div className="rounded-3xl border border-[#F3F1EA]/60 bg-[#F7F6F2] p-5 shadow-[0_18px_35px_-28px_rgba(15,23,42,0.25)] sm:p-6">
                 <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f0f2f5] text-[#6b7280]">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100/80 text-emerald-600/80">
                     <Monitor className="h-6 w-6" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-base font-semibold text-[#1f2937]">Kiosk Terminal</p>
-                    <p className="text-sm text-[#6b7280]">
+                    <p className="text-base font-semibold text-slate-800">Kiosk Terminal</p>
+                    <p className="text-sm text-slate-500">
                       Connect a physical device to your organization.
                     </p>
                   </div>
                 </div>
                 <div className="mt-4 sm:mt-5">
                   <div
-                    className={`overflow-hidden transition-[max-height,opacity] duration-[600ms] ease-out ${
+                    className={`overflow-hidden transition-[max-height,opacity] duration-600 ease-out ${
                       openCard === 'kiosk' ? 'max-h-[520px] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
                     }`}
                   >
@@ -244,14 +244,14 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
                       onLogin={onLogin}
                       variant="panel"
                       buttonLabel="Login as Kiosk"
-                      buttonClassName="!h-12 !rounded-2xl !bg-none !bg-white !text-[#2f4f43] !shadow-none !border !border-[#d7ded9] hover:!bg-[#f4f7f4]"
+                      buttonClassName="!h-12 !rounded-2xl !bg-none !bg-transparent !text-[#064e3b] !shadow-none !border !border-[#064e3b] hover:!bg-[#F3F1EA]"
                     />
                   </div>
                   <div className="h-12">
                     <button
                       type="button"
                       onClick={() => setOpenCard('kiosk')}
-                      className={`h-12 w-full rounded-2xl border border-[#d7ded9] bg-white text-sm font-semibold text-[#2f4f43] transition hover:bg-[#f4f7f4] ${
+                      className={`h-12 w-full rounded-2xl border border-[#064e3b] bg-transparent text-sm font-semibold text-[#064e3b] transition hover:bg-[#F3F1EA] ${
                         showKioskButton ? 'opacity-100' : 'opacity-0 pointer-events-none'
                       }`}
                     >
@@ -261,9 +261,9 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
                 </div>
               </div>
 
-              <p className="text-center text-xs text-[#6b7280] sm:text-sm">
+              <p className="text-center text-xs text-slate-500 sm:text-sm">
                 Don't have an account?{' '}
-                <a href="/signup" className="font-semibold text-[#2f4f43] hover:underline">
+                <a href="/signup" className="font-semibold text-[#064e3b] hover:underline">
                   Sign up
                 </a>
               </p>
