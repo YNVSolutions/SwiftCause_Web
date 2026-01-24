@@ -77,6 +77,7 @@ import {
   Zap,
   MoreVertical,
   Pencil,
+  Gift,
 } from "lucide-react";
 import {
   Dialog,
@@ -105,18 +106,24 @@ import {
   Activity,
   Alert,
 } from "../../shared/lib/hooks/useDashboardData";
-import { OrganizationSwitcher } from "./OrganizationSwitcher";
 import { useOrganization } from "../../shared/lib/hooks/useOrganization";
 import { auth } from "../../shared/lib/firebase";
 
 import { AdminLayout } from "./AdminLayout";
+import { OrganizationSwitcher } from "./OrganizationSwitcher";
 import { useStripeOnboarding, StripeOnboardingDialog } from "../../features/stripe-onboarding";
 import { useToast } from "../../shared/ui/ToastProvider";
 import { FundraisingEfficiencyGauge, PerformanceDetailDialog } from "../../widgets/campaign-performance";
 import { CampaignProgressBars, CampaignProgressDialog, transformCampaignsToProgress } from "../../widgets/campaign-progress";
-import { DonationDistributionChart, DonationDistributionDialog } from "../../widgets/donation-distribution";
+import { DonationDistributionDialog } from "../../widgets/donation-distribution";
 import { KioskForm, KioskFormData } from "./components/KioskForm";
 import { CampaignForm, CampaignFormData } from "./components/CampaignForm";
+import { KpiCard } from "./components/KpiCard";
+import { RevenueGrowthChart } from "./components/RevenueGrowthChart";
+import { DonationDistributionDonut } from "./components/DonationDistributionDonut";
+import { TopPerformingCampaigns } from "./components/TopPerformingCampaigns";
+import { DonorActivityHeatmap } from "./components/DonorActivityHeatmap";
+import { AlertsSection } from "./components/AlertsSection";
 
 interface AdminDashboardProps {
   onNavigate: (screen: Screen) => void;
@@ -126,18 +133,18 @@ interface AdminDashboardProps {
   onOrganizationSwitch: (organizationId: string) => void;
 }
 
-// Professional color palette
+// Category-specific color palette for donation distribution
 const CHART_COLORS = [
-  "#4F46E5", // Indigo-600 (Primary)
-  "#10B981", // Emerald-500 (Secondary)
-  "#8B5CF6", // Violet-500
-  "#F59E0B", // Amber-500
-  "#06B6D4", // Cyan-500
-  "#EC4899", // Pink-500
-  "#F97316", // Orange-500
-  "#84CC16", // Lime-500
-  "#14B8A6", // Teal-500
-  "#64748B"  // Slate-500
+  "#2F6B4F", // Forest Green - Environment (Natural, trustworthy, aligns with sustainability)
+  "#5B7C99", // Muted Blue - Education (Calm, intellectual, enterprise-safe)
+  "#3A7F7A", // Muted Teal - Health (Clean, medical, non-alarming)
+  "#D9B36A", // Muted Amber - Crisis Relief (Attention without panic)
+  "#8FCFB3", // Soft Mint - Welfare/Social (Human, positive, supportive)
+  "#B6B8BC", // Warm Gray - Uncategorized/Other (Neutral fallback)
+  "#2F6B4F", // Forest Green (repeat for additional categories)
+  "#5B7C99", // Muted Blue (repeat)
+  "#3A7F7A", // Muted Teal (repeat)
+  "#D9B36A"  // Muted Amber (repeat)
 ]
 
 // Custom Tooltip Component for Charts
@@ -184,6 +191,12 @@ export function AdminDashboard({
   const [categoryData, setCategoryData] = useState<any[]>([]);
   const [showFeatures, setShowFeatures] = useState(false);
   const [isLegendExpanded, setIsLegendExpanded] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  // Fix hydration issues by ensuring client-side rendering
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
   const [stripeStatusMessage, setStripeStatusMessage] = useState<{ type: 'success' | 'error' | 'warning', message: string } | null>(null);
   const [showStripeStatusDialog, setShowStripeStatusDialog] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
@@ -271,7 +284,17 @@ export function AdminDashboard({
   const { isStripeOnboarded, needsOnboarding } = useStripeOnboarding(organization);
   const { showToast } = useToast();
   const [showOnboardingPopup, setShowOnboardingPopup] = useState(false);
-  const [showSmallPopup, setShowSmallPopup] = useState(false);
+
+  // Reusable function to fetch campaigns by organization ID
+  const fetchCampaignsByOrganization = async (organizationId: string): Promise<Campaign[]> => {
+    const campaignsRef = collection(db, "campaigns");
+    const q = query(
+      campaignsRef,
+      where("organizationId", "==", organizationId)
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Campaign));
+  };
 
   // Handle return from Stripe onboarding
 
@@ -302,33 +325,10 @@ export function AdminDashboard({
     }
   }, [showToast]);
 
-  // Auto-open Stripe onboarding popup on mount if not onboarded
-  useEffect(() => {
-    if (!orgLoading && organization && needsOnboarding) {
-      // Show small popup after a short delay for better UX
-      const timer = setTimeout(() => {
-        setShowSmallPopup(true);
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [orgLoading, organization, needsOnboarding]);
-
-
-
   const fetchChartData = useCallback(async () => {
     if (!userSession.user.organizationId) return;
     try {
-      const campaignsRef = collection(db, "campaigns");
-      const orgQuery = where("organizationId", "==", userSession.user.organizationId);
-
-      const topListQuery = query(
-        campaignsRef,
-        orgQuery
-      );
-      const topListSnapshot = await getDocs(topListQuery);
-      const allCampaigns = topListSnapshot.docs.map(
-        (doc) => ({ id: doc.id, ...doc.data() } as Campaign)
-      );
+      const allCampaigns = await fetchCampaignsByOrganization(userSession.user.organizationId);
       
       // Store all campaigns for performance widget
       setAllCampaignsForPerformance(allCampaigns);
@@ -351,46 +351,38 @@ export function AdminDashboard({
         
         setTopCampaigns(sortedByPercentage);
 
-        const topChartQuery = query(
-          campaignsRef,
-          orgQuery,
-          orderBy("raised", "desc"),
-          limit(5)
-        );
-        const topChartSnapshot = await getDocs(topChartQuery);
-        const comparisonData = topChartSnapshot.docs.map((doc) => {
-          const data = doc.data() as Campaign;
-          return {
-            name: data.title,
-            Collected: data.raised || 0,
-            Goal: data.goal || 0,
-          };
-        });
+        // Get top 5 campaigns by raised amount for chart
+        const topCampaignsForChart = allCampaigns
+          .sort((a, b) => (b.raised || 0) - (a.raised || 0))
+          .slice(0, 5);
+        
+        const comparisonData = topCampaignsForChart.map((campaign) => ({
+          name: campaign.title,
+          Collected: campaign.raised || 0,
+          Goal: campaign.goal || 0,
+        }));
         setGoalComparisonData(comparisonData);
 
-        const allCampaignsQuery = query(campaignsRef, orgQuery);
-        const allCampaignsSnapshot = await getDocs(allCampaignsQuery);
-
+        // Calculate average donations for category data
         const averageDonation: { [key: string]: number } = {};
         let average = 0;
-        allCampaignsSnapshot.forEach((doc) => {
-          const raisedAmount = (doc.data() as Campaign).raised;
-          const donationCount = (doc.data() as Campaign).donationCount;
+        allCampaigns.forEach((campaign) => {
+          const raisedAmount = campaign.raised;
+          const donationCount = campaign.donationCount;
 
           if (raisedAmount > 0) {
             const average = raisedAmount / (donationCount || 1);
-            averageDonation[doc.id] = average;
+            averageDonation[campaign.id] = average;
           }
         });
         // Build categoryData from per-campaign average donation values so the
         // pie chart shows the relative average donation per campaign.
         const averages: { id: string; name: string; avg: number }[] = [];
-        allCampaignsSnapshot.forEach((doc) => {
-          const data = doc.data() as Campaign;
-          const raised = data.raised || 0;
-          const count = data.donationCount || 0;
+        allCampaigns.forEach((campaign) => {
+          const raised = campaign.raised || 0;
+          const count = campaign.donationCount || 0;
           const avgValue = count > 0 ? raised / count : 0;
-          averages.push({ id: doc.id, name: data.title || `Campaign ${doc.id}`, avg: avgValue });
+          averages.push({ id: campaign.id, name: campaign.title || `Campaign ${campaign.id}`, avg: avgValue });
         });
 
         // Only include campaigns with non-zero averages
@@ -416,7 +408,7 @@ export function AdminDashboard({
       } catch (error) {
         console.error("Error fetching chart data: ", error);
       }
-    }, [userSession.user.organizationId, showOnboarding]);
+    }, [userSession.user.organizationId, showOnboarding, fetchCampaignsByOrganization]);
 
   useEffect(() => {
     fetchChartData();
@@ -430,13 +422,13 @@ export function AdminDashboard({
   const handleCreateCampaign = async () => {
     // Validate all required fields
     if (!newCampaign.title || !newCampaign.description || !newCampaign.category || !newCampaign.status || !newCampaign.startDate || !newCampaign.endDate || !userSession) {
-      alert("Please fill in all required fields");
+      showToast("Please fill in all required fields", "error", 4000);
       return;
     }
     
     // Validate goal is a positive number
     if (!newCampaign.goal || newCampaign.goal <= 0) {
-      alert("Fundraising goal must be greater than 0");
+      showToast("Fundraising goal must be greater than 0", "error", 4000);
       return;
     }
     
@@ -445,7 +437,7 @@ export function AdminDashboard({
     const endDate = new Date(newCampaign.endDate);
     
     if (endDate <= startDate) {
-      alert("End date must be after start date");
+      showToast("End date must be after start date", "error", 4000);
       return;
     }
     
@@ -474,13 +466,11 @@ export function AdminDashboard({
       // Save the created campaign ID
       setCreatedCampaignId(docRef.id);
       
-      console.log("Campaign created successfully with ID:", docRef.id);
-      
       // Move to kiosk form
       setShowKioskForm(true);
     } catch (error) {
       console.error("Error creating campaign: ", error);
-      alert("Failed to create campaign. Please try again.");
+      showToast("Failed to create campaign. Please try again.", "error", 4000);
     } finally {
       setIsCreatingCampaign(false);
     }
@@ -491,7 +481,7 @@ export function AdminDashboard({
     
     // Validate access code
     if (!newKiosk.accessCode || newKiosk.accessCode.length < 4) {
-      alert("Access code must be at least 4 characters");
+      showToast("Access code must be at least 4 characters", "error", 4000);
       return;
     }
     
@@ -520,14 +510,11 @@ export function AdminDashboard({
       // Save the created kiosk ID
       setCreatedKioskId(docRef.id);
       
-      // Show success message
-      console.log("Kiosk created successfully with ID:", docRef.id);
-      
       // Move to linking form
       setShowLinkingForm(true);
     } catch (error) {
       console.error("Error adding kiosk: ", error);
-      alert("Failed to create kiosk. Please try again.");
+      showToast("Failed to create kiosk. Please try again.", "error", 4000);
     } finally {
       setIsCreatingKiosk(false);
     }
@@ -535,7 +522,7 @@ export function AdminDashboard({
 
   const handleLinkCampaignToKiosk = async (campaignId: string) => {
     if (!campaignId || !createdKioskId) {
-      alert("Campaign or Kiosk ID is missing");
+      showToast("Campaign or Kiosk ID is missing", "error", 4000);
       return;
     }
     
@@ -557,11 +544,9 @@ export function AdminDashboard({
       
       // Update local state
       setAssignedCampaignIds(updatedAssignedCampaigns);
-      
-      console.log("Campaign linked to kiosk successfully!");
     } catch (error) {
       console.error("Error linking campaign to kiosk: ", error);
-      alert("Failed to link campaign. Please try again.");
+      showToast("Failed to link campaign. Please try again.", "error", 4000);
     } finally {
       setLinkingCampaignId(null);
     }
@@ -572,7 +557,7 @@ export function AdminDashboard({
     if (!kioskFormData.name || !kioskFormData.location || !userSession) return;
     
     if (!kioskFormData.accessCode || kioskFormData.accessCode.length < 4) {
-      alert("Access code must be at least 4 characters");
+      showToast("Access code must be at least 4 characters", "error", 4000);
       return;
     }
     
@@ -610,11 +595,9 @@ export function AdminDashboard({
         displayLayout: 'grid'
       });
       setShowCreateKioskModal(false);
-      
-      console.log("Kiosk created successfully with ID:", docRef.id);
     } catch (error) {
       console.error("Error adding kiosk: ", error);
-      alert("Failed to create kiosk. Please try again.");
+      showToast("Failed to create kiosk. Please try again.", "error", 4000);
     } finally {
       setIsCreatingKiosk(false);
     }
@@ -637,13 +620,24 @@ export function AdminDashboard({
   // Campaign Form Handler for Get a Tour flow
   const handleCampaignFormSubmit = async () => {
     if (!campaignFormData.title || !campaignFormData.description || !userSession) {
-      alert("Please fill in all required fields");
+      showToast("Please fill in all required fields", "error", 4000);
       return;
     }
     
     if (!campaignFormData.goal || campaignFormData.goal <= 0) {
-      alert("Fundraising goal must be greater than 0");
+      showToast("Fundraising goal must be greater than 0", "error", 4000);
       return;
+    }
+    
+    // Date validation
+    if (campaignFormData.startDate && campaignFormData.endDate) {
+      const startDate = new Date(campaignFormData.startDate);
+      const endDate = new Date(campaignFormData.endDate);
+      
+      if (endDate <= startDate) {
+        showToast("End date must be after start date", "error", 4000);
+        return;
+      }
     }
     
     setIsCreatingCampaign(true);
@@ -668,18 +662,8 @@ export function AdminDashboard({
         });
         
         // Refresh campaigns list
-        const campaignsRef = collection(db, "campaigns");
-        const q = query(
-          campaignsRef,
-          where("organizationId", "==", userSession.user.organizationId)
-        );
-        const snapshot = await getDocs(q);
-        const campaigns = snapshot.docs.map(
-          (d) => ({ id: d.id, ...d.data() } as Campaign)
-        );
+        const campaigns = await fetchCampaignsByOrganization(userSession.user.organizationId!);
         setAllCampaigns(campaigns);
-        
-        console.log("Campaign updated successfully:", editingCampaignInTour.id);
       } else {
         // Create new campaign
         const campaignData = {
@@ -703,15 +687,7 @@ export function AdminDashboard({
         setCreatedCampaignId(docRef.id);
         
         // Refresh campaigns list
-        const campaignsRef = collection(db, "campaigns");
-        const q = query(
-          campaignsRef,
-          where("organizationId", "==", userSession.user.organizationId)
-        );
-        const snapshot = await getDocs(q);
-        const campaigns = snapshot.docs.map(
-          (d) => ({ id: d.id, ...d.data() } as Campaign)
-        );
+        const campaigns = await fetchCampaignsByOrganization(userSession.user.organizationId!);
         setAllCampaigns(campaigns);
         
         // Set the newly created campaign as selected
@@ -752,7 +728,7 @@ export function AdminDashboard({
       
     } catch (error) {
       console.error("Error saving campaign: ", error);
-      alert("Failed to save campaign. Please try again.");
+      showToast("Failed to save campaign. Please try again.", "error", 4000);
     } finally {
       setIsCreatingCampaign(false);
     }
@@ -764,15 +740,7 @@ export function AdminDashboard({
       if ((!showLinkingForm && !showCampaignForm) || !userSession.user.organizationId) return;
       
       try {
-        const campaignsRef = collection(db, "campaigns");
-        const q = query(
-          campaignsRef,
-          where("organizationId", "==", userSession.user.organizationId)
-        );
-        const snapshot = await getDocs(q);
-        const campaigns = snapshot.docs.map(
-          (doc) => ({ id: doc.id, ...doc.data() } as Campaign)
-        );
+        const campaigns = await fetchCampaignsByOrganization(userSession.user.organizationId!);
         setAllCampaigns(campaigns);
       } catch (error) {
         console.error("Error fetching campaigns: ", error);
@@ -985,6 +953,27 @@ export function AdminDashboard({
     );
   }
 
+  // Prevent hydration mismatch by ensuring client-side rendering
+  if (!isClient) {
+    return (
+      <AdminLayout 
+        onNavigate={onNavigate} 
+        onLogout={onLogout} 
+        userSession={userSession} 
+        hasPermission={hasPermission}
+        activeScreen="admin"
+      >
+        <div className="flex items-center justify-center h-screen">
+          <div className="animate-pulse">
+            <div className="w-12 h-12 bg-gray-300 rounded-full mx-auto mb-3"></div>
+            <div className="h-4 bg-gray-300 rounded w-32 mx-auto mb-2"></div>
+            <div className="h-3 bg-gray-300 rounded w-48 mx-auto"></div>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
     <AdminLayout 
       onNavigate={onNavigate} 
@@ -1007,6 +996,12 @@ export function AdminDashboard({
       )}
       headerActions={(
         <div className="flex items-center gap-2 flex-nowrap ml-auto">
+          {hasPermission("system_admin") && (
+            <OrganizationSwitcher 
+              userSession={userSession}
+              onOrganizationChange={onOrganizationSwitch}
+            />
+          )}
           {organization && organization.stripe && (
             <div className="relative">
               <Button
@@ -1022,45 +1017,6 @@ export function AdminDashboard({
               >
                 <CreditCard className="h-4 w-4" />
               </Button>
-              {needsOnboarding && (
-                <div className="absolute -bottom-2 -right-2 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse" />
-              )}
-
-              {showSmallPopup && needsOnboarding && (
-                <div className="fixed sm:absolute top-16 sm:top-full right-2 sm:right-0 mt-2 w-[calc(100vw-1rem)] sm:w-80 max-w-sm bg-white rounded-lg shadow-xl border-2 border-yellow-400 p-3 sm:p-4 z-50 animate-in slide-in-from-top-2">
-                  <button
-                    onClick={() => setShowSmallPopup(false)}
-                    className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 z-10"
-                    aria-label="Close notification"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                  <div className="flex items-start space-x-2 sm:space-x-3">
-                    <div className="flex-shrink-0">
-                      <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600" />
-                    </div>
-                    <div className="flex-1 min-w-0 pr-6">
-                      <h4 className="text-xs sm:text-sm font-semibold text-gray-900 mb-1">
-                        Complete Stripe Onboarding
-                      </h4>
-                      <p className="text-[10px] sm:text-xs text-gray-600 mb-2 sm:mb-3">
-                        You need to onboard with Stripe to accept donations and create campaigns.
-                      </p>
-                      <Button
-                        size="sm"
-                        onClick={() => {
-                          setShowSmallPopup(false);
-                          setShowStripeStatusDialog(true);
-                        }}
-                        className="bg-yellow-600 hover:bg-yellow-700 text-xs h-7 sm:h-8 w-full sm:w-auto"
-                      >
-                        <CreditCard className="w-3 h-3 mr-1" />
-                        Onboard Now
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           )}
           <Button 
@@ -1068,7 +1024,7 @@ export function AdminDashboard({
             size="sm" 
             onClick={handleRefresh} 
             disabled={loading} 
-            className="rounded-lg border-gray-300 hover:bg-gray-50"
+            className="rounded-2xl border-[#064e3b] bg-transparent text-[#064e3b] hover:bg-[#064e3b] hover:text-stone-50 transition-all duration-300 px-6 py-3 font-semibold"
             aria-label="Refresh Dashboard"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
@@ -1631,7 +1587,7 @@ export function AdminDashboard({
                                 console.log(`Campaign ${selectedCampaignInTour.id} assigned to ${assignedKioskIds.length} kiosk(s)`);
                               } catch (error) {
                                 console.error("Error assigning campaign to kiosks:", error);
-                                alert("Failed to assign campaign to kiosks. Please try again.");
+                                showToast("Failed to assign campaign to kiosks. Please try again.", "error", 4000);
                                 return;
                               }
                             }
@@ -1850,7 +1806,8 @@ export function AdminDashboard({
         </div>
       ) : campaignCountChecked && !showOnboarding ? (
         <>
-        <div className="px-2 sm:px-6 lg:px-8 pb-4 sm:pb-8">
+        <div className="min-h-screen bg-[#F3F1EA] font-['Helvetica',sans-serif] transition-all duration-500 ease-in-out" suppressHydrationWarning>
+          <div className="px-6 lg:px-8 pt-12 pb-8 max-w-7xl mx-auto space-y-12 transition-all duration-500 ease-in-out" suppressHydrationWarning>
 
         {stripeStatusMessage && (
           <Card className={`mb-6 ${stripeStatusMessage.type === 'success' ? 'border-green-400 bg-green-50 text-green-800' : stripeStatusMessage.type === 'warning' ? 'border-yellow-400 bg-yellow-50 text-yellow-800' : 'border-red-400 bg-red-50 text-red-800'}`}>
@@ -1868,501 +1825,174 @@ export function AdminDashboard({
           <p className="text-red-500">Error: {orgError}</p>
         ) : null}
         
-        {/* Organization Switcher for Super Admin */}
-        {userSession.user.role === 'super_admin' && (
-          <div className="mb-8">
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100 p-6">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                      <Building2 className="w-4 h-4 text-white" />
-                    </div>
-                    <h2 className="text-lg font-semibold text-gray-900">Organization View</h2>
-                  </div>
-                  <p className="text-sm text-gray-600 ml-10">
-                    Switch between organizations to manage their campaigns, kiosks, and view analytics
-                  </p>
-                </div>
-                <div className="sm:flex-shrink-0">
-                  <OrganizationSwitcher userSession={userSession} onOrganizationChange={onOrganizationSwitch} />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {/* Bento Grid Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
-          {/* Total Raised Card */}
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
-            <CardContent className="p-6 relative z-10">
-              <div className="flex items-start justify-between mb-4">
-                <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                  <DollarSign className="h-5 w-5" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-600">Total Raised</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {loading ? "..." : formatLargeCurrency(stats.totalRaised)}
-                </p>
-                <div className={`flex items-center text-sm ${
-                  loading ? "text-gray-500" : 
-                  stats.totalDonations > 0 ? "text-emerald-600" : "text-gray-400"
-                }`}>
-                  <span className="font-medium">
-                    {loading ? "..." : stats.totalDonations > 0 
-                      ? `Avg ${formatCurrency(stats.totalRaised / stats.totalDonations)} per donation`
-                      : "No donations yet"}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-            {/* Floating Background Icon */}
-            <div className="absolute -right-4 -bottom-4 opacity-[0.08] pointer-events-none">
-              <DollarSign className="h-32 w-32 text-emerald-600" />
-            </div>
-          </Card>
-
-          {/* Total Donations Card */}
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
-            <CardContent className="p-6 relative z-10">
-              <div className="flex items-start justify-between mb-4">
-                <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-                  <Heart className="h-5 w-5" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-600">Total Donations</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {loading ? "..." : formatNumber(stats.totalDonations)}
-                </p>
-                <div className={`flex items-center text-sm ${
-                  loading ? "text-gray-500" : 
-                  recentActivities.length > 0 ? "text-emerald-600" : "text-gray-400"
-                }`}>
-                  <span className="font-medium">
-                    {loading ? "..." : recentActivities.length > 0 
-                      ? `Latest: ${recentActivities[0].timeAgo}`
-                      : "No recent activity"}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-            {/* Floating Background Icon */}
-            <div className="absolute -right-4 -bottom-4 opacity-[0.08] pointer-events-none">
-              <Heart className="h-32 w-32 text-blue-600" />
-            </div>
-          </Card>
-
-          {/* Active Campaigns Card */}
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
-            <CardContent className="p-6 relative z-10">
-              <div className="flex items-start justify-between mb-4">
-                <div className="w-10 h-10 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
-                  <Globe className="h-5 w-5" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-600">Active Campaigns</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {loading ? "..." : stats.activeCampaigns}
-                </p>
-                <div className={`flex items-center text-sm ${
-                  loading ? "text-gray-500" : 
-                  topCampaigns.length > 0 
-                    ? (topCampaigns[0].raised || 0) / (topCampaigns[0].goal || 1) >= 0.75 
-                      ? "text-emerald-600" 
-                      : (topCampaigns[0].raised || 0) / (topCampaigns[0].goal || 1) >= 0.5
-                        ? "text-yellow-600"
-                        : "text-red-600"
-                    : "text-gray-400"
-                }`}>
-                  <span className="font-medium">
-                    {loading ? "..." : topCampaigns.length > 0 
-                      ? `Top: ${Math.round((topCampaigns[0].raised || 0) / (topCampaigns[0].goal || 1) * 100)}% funded`
-                      : "No campaigns yet"}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-            {/* Floating Background Icon */}
-            <div className="absolute -right-4 -bottom-4 opacity-[0.08] pointer-events-none">
-              <Globe className="h-32 w-32 text-purple-600" />
-            </div>
-          </Card>
-
-          {/* Active Kiosks Card */}
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
-            <CardContent className="p-6 relative z-10">
-              <div className="flex items-start justify-between mb-4">
-                <div className="w-10 h-10 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center">
-                  <Monitor className="h-5 w-5" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-600">Active Kiosks</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {loading ? "..." : stats.activeKiosks}
-                </p>
-                <div className={`flex items-center text-sm ${
-                  loading ? "text-gray-500" : 
-                  stats.activeKiosks > 0 ? "text-emerald-600" : "text-red-600"
-                }`}>
-                  <span className="font-medium">
-                    {loading ? "..." : stats.topLocations.length > 0 
-                      ? `Top: ${stats.topLocations[0].name}`
-                      : stats.activeKiosks === 0 
-                        ? "No active kiosks"
-                        : "No locations yet"}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-            {/* Floating Background Icon */}
-            <div className="absolute -right-4 -bottom-4 opacity-[0.08] pointer-events-none">
-              <Monitor className="h-32 w-32 text-orange-600" />
-            </div>
-          </Card>
-        </div>
-
         {/* Stripe Onboarding Alert Card */}
-        {needsOnboarding && organization && (
-          <Card className="mb-8 border-l-4 border-l-yellow-500 bg-gradient-to-r from-yellow-50 to-orange-50 shadow-lg hover:shadow-xl transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="flex items-start space-x-4 flex-1">
-                  <div className="flex-shrink-0">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-yellow-100 flex items-center justify-center animate-pulse">
-                      <CreditCard className="w-6 h-6 sm:w-7 sm:h-7 text-yellow-600" />
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-                      <AlertCircle className="w-5 h-5 text-yellow-600" />
-                      Complete Stripe Onboarding
-                    </h3>
-                    <p className="text-sm sm:text-base text-gray-700 mb-3">
-                      Your organization needs to connect with Stripe to accept donations and process payments. 
-                      <span className="hidden sm:inline"> This quick setup takes only 5-10 minutes.</span>
-                    </p>
-                    <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-gray-600">
-                      <div className="flex items-center gap-1.5">
-                        <Shield className="w-4 h-4 text-green-600" />
-                        <span>Secure</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <Zap className="w-4 h-4 text-purple-600" />
-                        <span>Fast Setup</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <TrendingUp className="w-4 h-4 text-blue-600" />
-                        <span>Accept Donations</span>
+        <div className={`transition-all duration-500 ease-in-out ${needsOnboarding && organization ? 'mb-8' : 'mb-0 h-0 overflow-hidden'}`}>
+          {needsOnboarding && organization && (
+            <Card className="border-l-4 border-l-yellow-500 bg-gradient-to-r from-yellow-50 to-orange-50 shadow-lg hover:shadow-xl transition-all duration-500 ease-in-out">
+              <CardContent className="p-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-start space-x-4 flex-1">
+                    <div className="flex-shrink-0">
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-yellow-100 flex items-center justify-center animate-pulse">
+                        <CreditCard className="w-6 h-6 sm:w-7 sm:h-7 text-yellow-600" />
                       </div>
                     </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                        <AlertCircle className="w-5 h-5 text-yellow-600" />
+                        Complete Stripe Onboarding
+                      </h3>
+                      <p className="text-sm sm:text-base text-gray-700 mb-3">
+                        Your organization needs to connect with Stripe to accept donations and process payments. 
+                        <span className="hidden sm:inline"> This quick setup takes only 5-10 minutes.</span>
+                      </p>
+                      <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-gray-600">
+                        <div className="flex items-center gap-1.5">
+                          <Shield className="w-4 h-4 text-green-600" />
+                          <span>Secure</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Zap className="w-4 h-4 text-purple-600" />
+                          <span>Fast Setup</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <TrendingUp className="w-4 h-4 text-blue-600" />
+                          <span>Accept Donations</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="w-full sm:w-auto flex-shrink-0">
-                  <Button
-                    onClick={() => setShowStripeStatusDialog(true)}
-                    className="w-full sm:w-auto bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all h-11 sm:h-12 px-6"
-                  >
-                    <CreditCard className="w-5 h-5 mr-2" />
-                    Start Onboarding
-                    <ArrowUpRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Bento Grid Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-          {/* Fundraising Efficiency Rating - Spans 2 columns */}
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm lg:col-span-2">
-            <CardHeader className="p-6 border-b border-gray-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mr-3">
-                      <Target className="w-4 h-4" />
-                    </div>
-                    Fundraising Efficiency Rating
-                  </CardTitle>
-                  <CardDescription className="text-sm text-gray-600 mt-1 ml-11">
-                    Overall performance across all campaigns
-                  </CardDescription>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowPerformanceDialog(true)}
-                  className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
-                >
-                  <ArrowUpRight className="w-4 h-4 mr-1" />
-                  View Details
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="p-6 cursor-pointer" onClick={() => setShowPerformanceDialog(true)}>
-              <FundraisingEfficiencyGauge 
-                value={
-                  loading ? 0 : 
-                  allCampaignsForPerformance.length > 0 
-                    ? (() => {
-                        const totalRaised = allCampaignsForPerformance.reduce((sum, c) => sum + (c.raised || 0), 0);
-                        const totalGoals = allCampaignsForPerformance.reduce((sum, c) => sum + (c.goal || 0), 0);
-                        return totalGoals > 0 ? Math.min(100, Math.round((totalRaised / totalGoals) * 100)) : 0;
-                      })()
-                    : 0
-                }
-                onDetailsClick={() => setShowPerformanceDialog(true)}
-                onRefresh={handleRefresh}
-              />
-            </CardContent>
-          </Card>
-
-          {/* Average Donation - Spans 2 columns */}
-          <Card className="flex flex-col bg-white rounded-xl border border-gray-200 shadow-sm lg:col-span-2">
-            <CardHeader className="p-6 border-b border-gray-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
-                    <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center mr-3">
-                      <TrendingUp className="w-4 h-4" />
-                    </div>
-                    Average Donation Per Campaign
-                  </CardTitle>
-                  <CardDescription className="text-sm text-gray-600 mt-1 ml-11">
-                    Analyze donation patterns across campaigns
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col p-6">
-              {loading ? (
-                <div className="space-y-4">
-                  <Skeleton className="h-[260px] sm:h-[300px] w-full mb-4" />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-3">
-                    {Array.from({ length: 4 }).map((_, i) => (
-                      <Skeleton key={i} className="h-5 w-full" />
-                    ))}
-                  </div>
-                </div>
-              ) : categoryData.length > 0 ? (
-                <div className="flex-1 flex items-end">
-                  <ResponsiveContainer width="100%" height={260}>
-                    <LineChart data={categoryData} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}>
-                      <CartesianGrid 
-                        vertical={false} 
-                        strokeDasharray="3 3" 
-                        stroke="#E5E7EB" 
-                      />
-                      <XAxis 
-                        dataKey="name" 
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fill: '#6B7280', fontSize: 12 }} 
-                      />
-                      <YAxis 
-                        tickFormatter={(value) => formatShortCurrency(value as number)}
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fill: '#6B7280', fontSize: 12 }}
-                      />
-                      <Tooltip content={<CustomChartTooltip />} />
-                      <Line 
-                        type="monotone" 
-                        dataKey="value" 
-                        stroke="#4F46E5" 
-                        strokeWidth={2} 
-                        dot={false}
-                        activeDot={{ r: 6, fill: '#4F46E5' }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              ) : (
-                <div className="text-center py-6 sm:py-8 text-gray-500">
-                  <TriangleAlert className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3" />
-                  <p className="text-base sm:text-lg font-medium mb-2">No Categories Yet</p>
-                  <p className="text-xs sm:text-sm mb-4 px-4">
-                      Start by creating your first fundraising campaign to track progress.
-                    </p>
-                    {hasPermission("create_campaign") && (
-                      <Button onClick={() => onNavigate("admin-campaigns")} size="sm" className="text-xs sm:text-sm">
-                        <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-2" /> Create New Campaign
-                      </Button>
-                    )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-       
-        {/* Donation Distribution and Recent Activity */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {/* Donation Distribution - Spans 2 columns */}
-          <Card 
-            className="bg-white rounded-xl border border-gray-200 shadow-sm md:col-span-2"
-          >
-            <CardHeader className="p-6 border-b border-gray-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
-                    <div className="w-8 h-8 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center mr-3">
-                      <DollarSign className="w-4 h-4" />
-                    </div>
-                    Donation Distribution by Amount
-                  </CardTitle>
-                  <CardDescription className="text-sm text-gray-600 mt-1 ml-11">
-                    Number of donations in different amount ranges
-                  </CardDescription>
-                </div>
-                {!loading && !stats.donationDistributionError && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowDonationDistributionDialog(true);
-                    }}
-                    className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
-                  >
-                    <ArrowUpRight className="w-4 h-4 mr-1" />
-                    View Details
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent 
-              className="p-6 cursor-pointer hover:bg-gray-50 transition-colors"
-              onClick={() => !loading && !stats.donationDistributionError && setShowDonationDistributionDialog(true)}
-            >
-              {loading ? (
-                <div className="space-y-4">
-                  <Skeleton className="h-[250px] sm:h-[300px] w-full" />
-                </div>
-              ) : stats.donationDistributionError ? (
-                <div className="text-center py-6 sm:py-8 text-red-500">
-                  <AlertCircle className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-red-400 mb-3" />
-                  <p className="text-base sm:text-lg font-medium mb-2">Error in fetching donation data</p>
-                  <p className="text-xs sm:text-sm mb-4 px-4">
-                    Unable to load donation distribution. Please try refreshing the page.
-                  </p>
-                </div>
-              ) : (
-                <DonationDistributionChart
-                  data={stats.donationDistribution}
-                  totalRaised={stats.totalRaised}
-                  formatCurrency={(amount) => `£${amount.toLocaleString()}`}
-                />
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Campaign Goal Comparison - Spans 2 columns */}
-          <Card 
-            className="bg-white rounded-xl border border-gray-200 shadow-sm md:col-span-2"
-          >
-            <CardHeader className="p-6 border-b border-gray-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
-                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mr-3">
-                      <BarChart3 className="w-4 h-4" />
-                    </div>
-                    Campaign Goal Comparison
-                  </CardTitle>
-                  <CardDescription className="text-sm text-gray-600 mt-1 ml-11">
-                    Track progress towards fundraising goals
-                  </CardDescription>
-                </div>
-                {!loading && goalComparisonData.length > 0 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowCampaignProgressDialog(true);
-                    }}
-                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                  >
-                    <ArrowUpRight className="w-4 h-4 mr-1" />
-                    View Details
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent 
-              className="p-6 cursor-pointer hover:bg-gray-50 transition-colors"
-              onClick={() => !loading && goalComparisonData.length > 0 && setShowCampaignProgressDialog(true)}
-            >
-              {loading ? (
-                <div className="space-y-3">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="space-y-2">
-                      <Skeleton className="h-4 w-3/4" />
-                      <Skeleton className="h-2 w-full" />
-                      <Skeleton className="h-3 w-1/2" />
-                    </div>
-                  ))}
-                </div>
-              ) : goalComparisonData.length > 0 ? (
-                <CampaignProgressBars
-                  campaigns={transformCampaignsToProgress(
-                    goalComparisonData.map((d, index) => ({
-                      id: `${d.name}-${index}`,
-                      title: d.name,
-                      raised: d.Collected,
-                      goal: d.Goal,
-                    } as any))
-                  )}
-                  formatCurrency={formatCurrency}
-                />
-              ) : (
-                <div className="text-center py-6 sm:py-8 text-gray-500">
-                  <Target className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3" />
-                  <p className="text-base sm:text-lg font-medium mb-2">No Campaigns Yet</p>
-                  <p className="text-xs sm:text-sm mb-4 px-4">
-                    Start by creating your first fundraising campaign to track progress.
-                  </p>
-                  {hasPermission("create_campaign") && (
-                    <Button onClick={() => onNavigate("admin-campaigns")} size="sm" className="text-xs sm:text-sm">
-                      <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-2" /> Create New Campaign
+                  <div className="w-full sm:w-auto flex-shrink-0">
+                    <Button
+                      onClick={() => setShowStripeStatusDialog(true)}
+                      className="w-full sm:w-auto bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all h-11 sm:h-12 px-6"
+                    >
+                      <CreditCard className="w-5 h-5 mr-2" />
+                      Start Onboarding
+                      <ArrowUpRight className="w-4 h-4 ml-2" />
                     </Button>
-                  )}
+                  </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
-        {/* Recent Activity */}
-        <div className="mb-8">
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm">
-            <CardHeader className="p-6 border-b border-gray-100">
-              <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
+        {/* Dashboard Content - Smoothly moves down when banner appears */}
+        <div className={`transition-transform duration-500 ease-in-out ${needsOnboarding && organization ? 'transform translate-y-0' : 'transform translate-y-0'}`}>
+          {/* ENTERPRISE DASHBOARD LAYOUT - Row 1: KPI Summary */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6 max-w-[1200px] mx-auto mb-12 transition-all duration-500 ease-in-out">
+          <KpiCard
+            title="Total Raised"
+            value={formatCurrency(stats.totalRaised)}
+            icon={DollarSign}
+            loading={loading}
+            isPrimary={true}
+          />
+          <KpiCard
+            title="Active Campaigns"
+            value={stats.activeCampaigns}
+            icon={Target}
+            loading={loading}
+          />
+          <KpiCard
+            title="Total Donations"
+            value={stats.totalDonations}
+            icon={Heart}
+            loading={loading}
+          />
+          <KpiCard
+            title="Active Kiosks"
+            value={stats.activeKiosks}
+            icon={Monitor}
+            loading={loading}
+          />
+          <KpiCard
+            title="Gift Aid Claimed"
+            value={formatCurrency(stats.totalGiftAid)}
+            icon={Gift}
+            loading={loading}
+            className="sm:col-span-2 lg:col-span-1"
+          />
+        </div>
+
+        {/* Row 2: Revenue Growth Chart - Full Width */}
+        <div className="mb-12 transition-all duration-500 ease-in-out">
+          <RevenueGrowthChart
+            data={stats.monthlyRevenue}
+            loading={loading}
+            formatCurrency={formatCurrency}
+          />
+        </div>
+
+        {/* Row 3: Alerts & Heatmap, Donation Distribution - Prioritized Heatmap Layout */}
+        <div className="grid grid-cols-[1.4fr_1fr] grid-rows-[auto_1fr] gap-6 mb-12 transition-all duration-500 ease-in-out">
+          {/* Left Column Top: Alerts & Notifications */}
+          <div className="row-start-1">
+            <AlertsSection
+              alerts={alerts}
+              loading={loading}
+              onDismissAlert={(alertId) => {
+                // Handle alert dismissal - could add to local storage or API call
+                console.log('Dismissing alert:', alertId);
+              }}
+            />
+          </div>
+          
+          {/* Left Column Bottom: Donor Activity Heatmap */}
+          <div className="row-start-2">
+            <DonorActivityHeatmap
+              data={stats.heatmapData}
+              loading={loading}
+            />
+          </div>
+          
+          {/* Right Column: Donation Distribution - Spans full height */}
+          <div className="row-span-2">
+            <DonationDistributionDonut
+              data={stats.categoryData}
+              loading={loading}
+              onViewDetails={() => setShowDonationDistributionDialog(true)}
+              className="h-full"
+            />
+          </div>
+        </div>
+
+        {/* Row 4: Split Section - Top Performing Campaigns & Recent Activity */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12 transition-all duration-500 ease-in-out">
+          <TopPerformingCampaigns
+            data={stats.topCampaigns}
+            loading={loading}
+            onViewDetails={() => setShowCampaignProgressDialog(true)}
+            formatCurrency={formatCurrency}
+          />
+          {/* Recent Activity - Moved to right column */}
+          <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
+            <CardHeader className="p-6 border-b-2 border-gray-200">
+              <CardTitle className="text-lg font-semibold text-gray-900 flex items-center">
                 <div className="w-8 h-8 rounded-lg bg-cyan-50 text-cyan-600 flex items-center justify-center mr-3">
                   <ActivityIcon className="w-4 h-4" />
                 </div>
                 Recent Activity
               </CardTitle>
-              <CardDescription className="text-sm text-gray-600 mt-1 ml-11">
+              <CardDescription className="text-sm text-gray-500 mt-1 ml-11">
                 Latest actions and updates
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-6">
-              <div className="max-h-[320px] overflow-y-auto space-y-3 sm:space-y-4">
+            <CardContent className="px-6 pb-6 pt-0">
+              <div 
+                className="max-h-[420px] overflow-y-auto force-hide-scrollbar space-y-4 pb-8"
+                style={{
+                  scrollbarWidth: 'none',
+                  msOverflowStyle: 'none'
+                }}
+              >
                 {loading ? (
                   Array.from({ length: 3 }).map((_, i) => (
-                    <div key={i} className="flex items-start space-x-2 sm:space-x-3">
-                      <Skeleton className="h-5 w-5 sm:h-6 sm:w-6 rounded-full flex-shrink-0" />
+                    <div key={i} className="flex items-start space-x-3 py-3 border-b border-gray-50 last:border-0">
+                      <Skeleton className="h-5 w-5 rounded-full flex-shrink-0 mt-0.5" />
                       <div className="flex-1 space-y-2 min-w-0">
-                        <Skeleton className="h-3 sm:h-4 w-3/4" />
+                        <Skeleton className="h-4 w-3/4" />
                         <Skeleton className="h-3 w-1/2" />
                       </div>
                     </div>
@@ -2371,50 +2001,53 @@ export function AdminDashboard({
                   recentActivities.map((activity: Activity) => (
                     <div 
                       key={activity.id} 
-                      className="flex items-start space-x-2 sm:space-x-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                      className="flex items-start space-x-3 py-3 border-b border-gray-50 last:border-0 hover:bg-gray-25 cursor-pointer transition-colors rounded-lg px-2 -mx-2"
                       onClick={() => {
                         setSelectedActivity(activity);
                         setShowActivityDialog(true);
                       }}
                     >
-                      <div className="flex-shrink-0 mt-0.5">
+                      <div className="flex-shrink-0 mt-1 opacity-70">
                         {getActivityIcon(activity.type)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs sm:text-sm text-gray-900 break-words">
+                        <p className="text-sm font-medium text-gray-900 break-words leading-relaxed">
                           {activity.message}
                         </p>
-                        <div className="flex items-center flex-wrap space-x-2 mt-1 gap-1">
-                          <p className="text-xs text-gray-500">
+                        <div className="flex items-center flex-wrap gap-2 mt-2">
+                          <p className="text-xs text-gray-500 font-medium">
                             {activity.timeAgo}
                           </p>
-                          {activity.kioskId &&(
-                            <Badge variant="secondary" className="text-xs">
-                              {activity.kioskId}
-                            </Badge>
+                          {activity.kioskId && (
+                            <>
+                              <span className="text-xs text-gray-300">·</span>
+                              <Badge variant="secondary" className="text-xs bg-gray-50 text-gray-600 border-0">
+                                {activity.kioskId}
+                              </Badge>
+                            </>
                           )}
                         </div>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div className="text-center py-6 sm:py-8 text-gray-500">
-                    <ActivityIcon className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3" />
-                    <p className="text-base sm:text-lg font-medium mb-2">No Recent Activity</p>
-                    <p className="text-xs sm:text-sm mb-4 px-4">
+                  <div className="text-center py-8 text-gray-500">
+                    <ActivityIcon className="mx-auto h-12 w-12 text-gray-300 mb-4" />
+                    <p className="text-base font-medium mb-2 text-gray-700">No Recent Activity</p>
+                    <p className="text-sm mb-4 px-4 text-gray-500 leading-relaxed">
                       Start by managing campaigns or configuring kiosks to see activity here.
                     </p>
                     <div className="flex flex-col sm:flex-row justify-center gap-2">
                       {hasPermission("create_campaign") && (
-                        <Button onClick={() => onNavigate("admin-campaigns")} size="sm" className="text-xs sm:text-sm">
-                          <Settings className="w-3 h-3 sm:w-4 sm:h-4 mr-2" /> 
+                        <Button onClick={() => onNavigate("admin-campaigns")} size="sm" className="text-xs">
+                          <Settings className="w-3 h-3 mr-2" /> 
                           <span className="hidden sm:inline">Manage Campaigns</span>
                           <span className="sm:hidden">Campaigns</span>
                         </Button>
                       )}
                       {hasPermission("create_kiosk") && (
-                        <Button onClick={() => onNavigate("admin-kiosks")} size="sm" variant="outline" className="text-xs sm:text-sm">
-                          <Monitor className="w-3 h-3 sm:w-4 sm:h-4 mr-2" /> 
+                        <Button onClick={() => onNavigate("admin-kiosks")} size="sm" variant="outline" className="text-xs">
+                          <Monitor className="w-3 h-3 mr-2" /> 
                           <span className="hidden sm:inline">Configure Kiosks</span>
                           <span className="sm:hidden">Kiosks</span>
                         </Button>
@@ -2426,8 +2059,13 @@ export function AdminDashboard({
             </CardContent>
           </Card>
         </div>
+        </div>
+        </div>
+        </div>
+        </>
+      ) : null}
 
-        {/* Donation Details Dialog */}
+      {/* Donation Details Dialog */}
       <Dialog open={showActivityDialog} onOpenChange={setShowActivityDialog}>
         <DialogContent className="sm:max-w-[500px] mx-4">
           <DialogHeader>
@@ -2613,9 +2251,8 @@ export function AdminDashboard({
         }}
         formatCurrency={formatCurrency}
       />
-      </div>
-      </>
-      ) : (
+
+      {loading && !showOnboarding && (
         <div className="flex items-center justify-center h-screen">
           <div className="text-center">
             <RefreshCw className="w-8 h-8 mx-auto animate-spin text-gray-400 mb-3" />

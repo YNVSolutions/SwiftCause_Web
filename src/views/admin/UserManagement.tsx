@@ -32,7 +32,7 @@ const allPermissions: Permission[] = [
     'view_dashboard', 'manage_permissions', 'create_user', 'edit_user', 'delete_user',
     'view_campaigns', 'create_campaign', 'edit_campaign', 'delete_campaign',
     'view_kiosks', 'create_kiosk', 'edit_kiosk', 'delete_kiosk', 'assign_campaigns',
-    'view_donations', 'export_donations', 'view_users'
+    'view_donations', 'export_donations', 'view_users', 'system_admin'
 ];
 
 interface UserManagementProps {
@@ -155,15 +155,14 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
             userSession={userSession}
             hasPermission={hasPermission}
             activeScreen="admin-users"
-            hideSidebarTrigger
         >
-        <div className="space-y-4 sm:space-y-6">
-            <main className="px-2 sm:px-4 lg:px-8 pb-4 sm:pb-8">
+        <div className="space-y-6 sm:space-y-8">
+            <main className="px-6 lg:px-8 pt-12 pb-8">
                 {/* Stat Cards Section */}
-                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-12">
                     <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Total Users</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{stats.total}</p></div><Users className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-blue-600" /></div></CardContent></Card>
                     <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Administrators</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{stats.admins}</p></div><UserCog className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-purple-600" /></div></CardContent></Card>
-                    <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Kiosk Users</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{stats.kiosks}</p></div><Shield className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-green-600" /></div></CardContent></Card>
+                    <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Kiosk Users</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{stats.kiosks}</p></div><Shield className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-[#064e3b]" /></div></CardContent></Card>
                     <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Active Users</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{stats.active}</p></div><Activity className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-orange-600" /></div></CardContent></Card>
                 </div>
 
@@ -259,7 +258,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 ring-1 ring-indigo-600/20 capitalize">
                                                     {user.role.replace('_', ' ')}
                                                 </span>
-                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 ring-1 ring-green-600/20">
+                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#064e3b]/10 text-[#064e3b] ring-1 ring-[#064e3b]/20">
                                                     Active
                                                 </span>
                                             </div>
@@ -350,7 +349,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                                                     </span>
                                                 </TableCell>
                                                 <TableCell className="px-6 py-4">
-                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 ring-1 ring-green-600/20">
+                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#064e3b]/10 text-[#064e3b] ring-1 ring-[#064e3b]/20">
                                                         Active
                                                     </span>
                                                 </TableCell>

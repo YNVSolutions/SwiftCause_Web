@@ -196,7 +196,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
     switch (status) {
       case 'success':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 ring-1 ring-green-600/20">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#064e3b]/10 text-[#064e3b] ring-1 ring-[#064e3b]/20">
             <CheckCircle className="w-3 h-3 mr-1" />
             Success
           </span>
@@ -254,15 +254,14 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
       userSession={userSession}
       hasPermission={hasPermission}
       activeScreen="admin-donations"
-      hideSidebarTrigger
     >
-      <div className="space-y-4 sm:space-y-6">
-        <main className="px-2 sm:px-4 lg:px-8 pb-4 sm:pb-8">
+      <div className="space-y-6 sm:space-y-8">
+        <main className="px-6 lg:px-8 pt-12 pb-8">
           {/* Stat Cards Section */}
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
-            <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Total Raised</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.totalAmount, summaryCurrency)}</p></div><DollarSign className="h-6 w-6 sm:h-7 sm:w-7 lg:w-8 lg:h-8 text-green-500" /></div></CardContent></Card>
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-12">
+            <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Total Raised</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.totalAmount, summaryCurrency)}</p></div><DollarSign className="h-6 w-6 sm:h-7 sm:w-7 lg:w-8 lg:h-8 text-[#064e3b]" /></div></CardContent></Card>
             <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Total Donations</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{totalStats.totalDonations}</p></div><Users className="h-6 w-6 sm:h-7 sm:w-7 lg:w-8 lg:h-8 text-indigo-500" /></div></CardContent></Card>
-            <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Completed</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{totalStats.completedDonations}</p></div><CheckCircle className="h-6 w-6 sm:h-7 sm:w-7 lg:w-8 lg:h-8 text-emerald-500" /></div></CardContent></Card>
+            <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Completed</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{totalStats.completedDonations}</p></div><CheckCircle className="h-6 w-6 sm:h-7 sm:w-7 lg:w-8 lg:h-8 text-[#064e3b]" /></div></CardContent></Card>
             <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Average Donation</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.avgDonation, summaryCurrency)}</p></div><TrendingUp className="h-6 w-6 sm:h-7 sm:w-7 lg:w-8 lg:h-8 text-orange-500" /></div></CardContent></Card>
           </div>
 

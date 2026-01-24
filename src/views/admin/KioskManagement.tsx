@@ -340,7 +340,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
     switch (status) {
       case 'online': 
         return (
-          <Badge className="bg-green-100 text-green-800 border-green-200">
+          <Badge className="bg-[#064e3b]/10 text-[#064e3b] border-[#064e3b]/20">
             Online
           </Badge>
         );
@@ -373,8 +373,6 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
         userSession={userSession}
         hasPermission={hasPermission}
         activeScreen="admin-kiosks"
-        hideHeaderDivider
-        hideSidebarTrigger
       >
         <div className="min-h-screen bg-gray-50">
           <div className="text-center py-12">
@@ -396,14 +394,13 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
       userSession={userSession}
       hasPermission={hasPermission}
       activeScreen="admin-kiosks"
-      hideSidebarTrigger
     >
       <div className="min-h-screen bg-gray-50">
-        <main className="px-2 sm:px-4 lg:px-8 pb-4 sm:pb-8">
+        <main className="px-6 lg:px-8 pt-12 pb-8">
           {/* Stat Cards Section */}
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
-            <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Total Kiosks</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{filteredKiosks.length}</p><div className="flex items-center space-x-2 sm:space-x-4 text-xs text-gray-500 mt-1"><span className="text-green-600">{totalStats.online} online</span><span className="text-red-600">{totalStats.offline} offline</span></div></div><Settings className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-blue-600" /></div></CardContent></Card>
-            <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Total Raised</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.totalRaised)}</p></div><DollarSign className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-green-600" /></div></CardContent></Card>
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-12">
+            <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Total Kiosks</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{filteredKiosks.length}</p><div className="flex items-center space-x-2 sm:space-x-4 text-xs text-gray-500 mt-1"><span className="text-[#064e3b]">{totalStats.online} online</span><span className="text-red-600">{totalStats.offline} offline</span></div></div><Settings className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-blue-600" /></div></CardContent></Card>
+            <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Total Raised</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.totalRaised)}</p></div><DollarSign className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-[#064e3b]" /></div></CardContent></Card>
             <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Total Donations</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{totalStats.totalDonations.toLocaleString()}</p></div><Users className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-purple-600" /></div></CardContent></Card>
             <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Maintenance</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{totalStats.maintenance}</p></div><Activity className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-orange-600" /></div></CardContent></Card>
           </div>

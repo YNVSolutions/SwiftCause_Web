@@ -228,7 +228,7 @@ export function GiftAidManagement({
       case "pending":
         return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200"><Clock className="w-3 h-3 mr-1" />Pending</Badge>;
       case "claimed":
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200"><CheckCircle className="w-3 h-3 mr-1" />Claimed</Badge>;
+        return <Badge variant="outline" className="bg-[#064e3b]/10 text-[#064e3b] border-[#064e3b]/20"><CheckCircle className="w-3 h-3 mr-1" />Claimed</Badge>;
       case "rejected":
         return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200"><AlertCircle className="w-3 h-3 mr-1" />Rejected</Badge>;
       default:
@@ -378,9 +378,8 @@ export function GiftAidManagement({
       userSession={userSession} 
       hasPermission={hasPermission}
       activeScreen="admin-gift-aid"
-      hideSidebarTrigger
     >
-      <div className="px-2 sm:px-4 lg:px-8 pb-4 sm:pb-8 space-y-4 sm:space-y-6">
+      <div className="px-6 lg:px-8 pt-12 pb-8 space-y-6 sm:space-y-8">
         {/* Error Alert */}
         {error && (
           <Card className="border-red-200 bg-red-50">
@@ -416,12 +415,12 @@ export function GiftAidManagement({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Total Gift Aid</p>
-                  <p className="text-xl sm:text-2xl font-bold text-green-600">
+                  <p className="text-xl sm:text-2xl font-bold text-[#064e3b]">
                     {loading ? "..." : formatCurrency(totalGiftAidClaimed)}
                   </p>
                 </div>
-                <div className="h-10 w-10 sm:h-12 sm:w-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
+                <div className="h-10 w-10 sm:h-12 sm:w-12 bg-[#064e3b]/10 rounded-lg flex items-center justify-center">
+                  <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-[#064e3b]" />
                 </div>
               </div>
             </CardContent>
@@ -461,7 +460,7 @@ export function GiftAidManagement({
               onClick={handleRefresh}
               disabled={loading}
               aria-label="Refresh"
-              className="border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800 hover:border-green-300"
+              className="border-[#064e3b]/20 text-[#064e3b] hover:bg-[#064e3b]/10 hover:text-[#064e3b] hover:border-[#064e3b]/30"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""} sm:mr-2`} />
               <span className="hidden sm:inline">Refresh</span>
@@ -519,7 +518,7 @@ export function GiftAidManagement({
                       className="w-[13%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
                     >
                       <div className="flex items-center justify-end gap-2">
-                        <Gift className="h-4 w-4 text-green-600 flex-shrink-0" />
+                        <Gift className="h-4 w-4 text-[#064e3b] flex-shrink-0" />
                         <span className="whitespace-nowrap">Gift Aid</span>
                       </div>
                     </SortableTableHeader>
@@ -589,8 +588,8 @@ export function GiftAidManagement({
                         </TableCell>
                         <TableCell className="py-4">
                           <div className="flex items-center gap-2">
-                            <Gift className="h-4 w-4 text-green-500 flex-shrink-0" />
-                            <p className="text-base font-bold text-green-700">{formatCurrency(donation.giftAidAmount || 0)}</p>
+                            <Gift className="h-4 w-4 text-[#064e3b] flex-shrink-0" />
+                            <p className="text-base font-bold text-[#064e3b]">{formatCurrency(donation.giftAidAmount || 0)}</p>
                           </div>
                         </TableCell>
                         <TableCell className="py-4">
@@ -667,7 +666,7 @@ export function GiftAidManagement({
                   </div>
                   <div>
                     <Label className="text-sm font-medium text-gray-700">Gift Aid Amount</Label>
-                    <p className="text-sm font-semibold text-green-600 mt-1">{formatCurrency(selectedDonation.giftAidAmount || 0)}</p>
+                    <p className="text-sm font-semibold text-[#064e3b] mt-1">{formatCurrency(selectedDonation.giftAidAmount || 0)}</p>
                   </div>
                 </div>
                 
@@ -706,7 +705,7 @@ export function GiftAidManagement({
                 
                 <div>
                   <Label className="text-sm font-medium text-gray-700">Transaction ID</Label>
-                  <p className="text-xs text-gray-700 font-mono mt-1 bg-green-50 px-2 py-1 rounded border border-green-100 inline-block">
+                  <p className="text-xs text-gray-700 font-mono mt-1 bg-[#064e3b]/10 px-2 py-1 rounded border border-[#064e3b]/20 inline-block">
                     {selectedDonation.transactionId || "N/A"}
                   </p>
                 </div>

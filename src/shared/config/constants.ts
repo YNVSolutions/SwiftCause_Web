@@ -244,6 +244,26 @@ export const CURRENCY_OPTIONS = [
 ] as const;
 
 export const DEFAULT_USER_PERMISSIONS = {
+  super_admin: [
+    'view_dashboard',
+    'view_campaigns',
+    'create_campaign',
+    'edit_campaign',
+    'delete_campaign',
+    'view_kiosks',
+    'create_kiosk',
+    'edit_kiosk',
+    'delete_kiosk',
+    'assign_campaigns',
+    'view_donations',
+    'export_donations',
+    'view_users',
+    'create_user',
+    'edit_user',
+    'delete_user',
+    'manage_permissions',
+    'system_admin'
+  ],
   admin: [
     'view_dashboard',
     'view_campaigns',

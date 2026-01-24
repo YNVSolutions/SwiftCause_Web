@@ -69,7 +69,7 @@ export function AdminPageHeader({
             value={value || 'all'} 
             onValueChange={(newValue) => onFilterChange(filter.key, newValue)}
           >
-            <SelectTrigger className="w-full sm:w-auto sm:min-w-[120px] h-8 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50">
+            <SelectTrigger className="w-full sm:w-auto sm:min-w-[120px] h-8 text-sm border border-[#F3F1EA]/60 rounded-2xl bg-[#F7F6F2] hover:bg-[#F3F1EA] transition-all duration-300">
               <SelectValue placeholder={filter.label} />
             </SelectTrigger>
             <SelectContent>
@@ -89,7 +89,7 @@ export function AdminPageHeader({
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className="w-full sm:w-auto sm:min-w-[120px] h-8 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 justify-start"
+                className="w-full sm:w-auto sm:min-w-[120px] h-8 text-sm border border-[#F3F1EA]/60 rounded-2xl bg-[#F7F6F2] hover:bg-[#F3F1EA] transition-all duration-300 justify-start"
               >
                 <CalendarIcon className="mr-2 h-3 w-3 flex-shrink-0" />
                 <span className="truncate">
@@ -129,14 +129,14 @@ export function AdminPageHeader({
   };
 
   return (
-    <Card className="mb-4 sm:mb-6">
-      <CardContent className="p-4 sm:p-6">
+    <Card className="mb-4 sm:mb-6 bg-[#F7F6F2] rounded-[2rem] border border-[#F3F1EA]/60 shadow-lg shadow-emerald-900/4">
+      <CardContent className="p-6 sm:p-8">
         {/* Header Row: Title/Subtitle on left, Actions on right (sm and above) */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4 sm:mb-6">
           {/* Page Title and Subtitle */}
           <div className="flex-1">
-            <h1 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 break-words">{title}</h1>
-            <p className="text-sm text-gray-600 mt-1 sm:mt-2">{subtitle}</p>
+            <h1 className="text-lg sm:text-xl lg:text-2xl font-semibold text-slate-800 break-words font-['Helvetica',sans-serif]">{title}</h1>
+            <p className="text-sm text-slate-600 mt-1 sm:mt-2 font-light">{subtitle}</p>
           </div>
 
           {/* Actions Row - sm and above: Top Right, Mobile: Hidden (shown at bottom) */}
@@ -145,7 +145,7 @@ export function AdminPageHeader({
               <Button
                 variant="outline"
                 size="sm"
-                className="hover:bg-gray-100 transition-colors"
+                className="hover:bg-[#F3F1EA] transition-all duration-300 rounded-2xl border-[#064e3b] text-[#064e3b] hover:text-stone-50 hover:bg-[#064e3b]"
                 onClick={handleExport}
                 aria-label="Export CSV"
               >
@@ -177,7 +177,7 @@ export function AdminPageHeader({
               placeholder={config.searchPlaceholder}
               value={searchValue}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="pl-10 w-full h-10 sm:h-11 border border-gray-300 rounded-full text-sm sm:text-base"
+              className="pl-10 w-full h-10 sm:h-11 border border-[#F3F1EA]/60 rounded-full text-sm sm:text-base bg-[#F7F6F2] focus:bg-white transition-all duration-300"
             />
           </div>
         </div>
@@ -187,7 +187,7 @@ export function AdminPageHeader({
           <div className="mb-4 sm:mb-6">
             {/* Mobile: Stacked Layout */}
             <div className="block sm:hidden space-y-3">
-              <span className="text-sm font-medium text-gray-700">Filters:</span>
+              <span className="text-sm font-medium text-slate-700">Filters:</span>
               <div className="grid grid-cols-1 gap-2">
                 {config.filters.map(renderFilter)}
               </div>
@@ -195,7 +195,7 @@ export function AdminPageHeader({
             
             {/* Desktop: Inline Layout */}
             <div className="hidden sm:flex sm:items-center sm:gap-3">
-              <span className="text-sm font-medium text-gray-700 flex-shrink-0">Filters:</span>
+              <span className="text-sm font-medium text-slate-700 flex-shrink-0">Filters:</span>
               <div className="flex flex-wrap items-center gap-2">
                 {config.filters.map(renderFilter)}
               </div>
@@ -205,7 +205,7 @@ export function AdminPageHeader({
 
         {/* Divider - Only show on mobile when actions exist */}
         {(actions || exportData || onExport) && (
-          <div className="border-t border-gray-200 mb-4 sm:mb-6 sm:hidden" />
+          <div className="border-t border-[#F3F1EA]/60 mb-4 sm:mb-6 sm:hidden" />
         )}
 
         {/* Actions Row - Mobile Only: Centered at Bottom */}
@@ -215,7 +215,7 @@ export function AdminPageHeader({
               <Button
                 variant="outline"
                 size="sm"
-                className="w-full hover:bg-gray-100 transition-colors justify-center"
+                className="w-full hover:bg-[#F3F1EA] transition-all duration-300 justify-center rounded-2xl border-[#064e3b] text-[#064e3b] hover:text-stone-50 hover:bg-[#064e3b]"
                 onClick={handleExport}
                 aria-label="Export CSV"
               >

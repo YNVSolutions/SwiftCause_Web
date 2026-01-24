@@ -19,7 +19,6 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
@@ -36,14 +35,7 @@ import {
   Users,
   Gift,
   LogOut,
-  X,
-  Mail,
-  Building2,
-  Shield,
-  Calendar,
   Wallet,
-  ChevronLeft,
-  ChevronRight,
   CreditCard,
   Loader2,
   AlertCircle,
@@ -74,7 +66,6 @@ interface AdminLayoutProps {
   onOpenStripeSetup?: () => void;
   headerTitle?: React.ReactNode;
   headerSubtitle?: React.ReactNode;
-  hideHeaderDivider?: boolean;
   headerActions?: React.ReactNode;
   hideSidebarTrigger?: boolean;
   hideHeader?: boolean;
@@ -90,6 +81,360 @@ const getInitials = (name: string) => {
     .slice(0, 2);
 };
 
+// AdminSidebar component that uses the SidebarProvider context
+function AdminSidebar({ 
+  onNavigate, 
+  onLogout, 
+  userSession, 
+  hasPermission, 
+  activeScreen, 
+  isActive, 
+  userInitials, 
+  handleStripeAccountClick, 
+  isLoadingStripe 
+}: {
+  onNavigate: (screen: Screen) => void;
+  onLogout: () => void;
+  userSession: AdminSession;
+  hasPermission: (permission: Permission) => boolean;
+  activeScreen: Screen;
+  isActive: (...screens: Screen[]) => boolean;
+  userInitials: string;
+  handleStripeAccountClick: () => void;
+  isLoadingStripe: boolean;
+}) {
+  const { state } = useSidebar();
+  const isCollapsed = state === "collapsed";
+
+  return (
+    <Sidebar 
+      collapsible="icon"
+      className="border-r-0"
+    >
+      <SidebarHeader 
+        className={`${isCollapsed ? 'justify-center p-4' : 'px-6 py-6'} border-b border-white/20`}
+      >
+        {!isCollapsed && (
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+              <img 
+                src="/logo.png" 
+                alt="SwiftCause Logo" 
+                className="w-5 h-5"
+              />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-white font-semibold text-base leading-tight">SwiftCause</span>
+              <span className="text-white/70 text-xs font-medium">Admin Portal</span>
+            </div>
+          </div>
+        )}
+        
+        {isCollapsed && (
+          <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+            <img 
+              src="/logo.png" 
+              alt="SwiftCause Logo" 
+              className="w-5 h-5"
+            />
+          </div>
+        )}
+      </SidebarHeader>
+
+      <SidebarContent className="flex flex-col justify-center px-3">
+        <SidebarGroup>
+          <SidebarMenu className="space-y-2">
+            {/* Dashboard */}
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={() => onNavigate("admin")}
+                className={`relative w-full flex items-center ${isCollapsed ? 'justify-center px-4 py-4' : 'px-4 py-3.5'} rounded-xl text-left transition-all duration-200 group ${
+                  isActive("admin", "admin-dashboard")
+                    ? "bg-[#0f5132] text-white font-medium shadow-lg"
+                    : "text-white/80 hover:text-white hover:bg-white/10"
+                }`}
+                title={isCollapsed ? "Dashboard" : ""}
+                aria-current={isActive("admin", "admin-dashboard") ? "page" : undefined}
+              >
+                {/* Subtle left accent indicator for active state */}
+                {isActive("admin", "admin-dashboard") && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white/30 rounded-r-full"></div>
+                )}
+                <LayoutDashboard className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} flex-shrink-0 ${
+                  isActive("admin", "admin-dashboard") ? 'text-white' : ''
+                }`} strokeWidth={1.5} />
+                {!isCollapsed && <span className="ml-3 text-base font-medium">Dashboard</span>}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            
+            {/* Campaigns */}
+            {hasPermission("view_campaigns") ? (
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={() => onNavigate("admin-campaigns")}
+                  className={`relative w-full flex items-center ${isCollapsed ? 'justify-center px-4 py-4' : 'px-4 py-3.5'} rounded-xl text-left transition-all duration-200 group ${
+                    isActive("admin-campaigns")
+                      ? "bg-[#0f5132] text-white font-medium shadow-lg"
+                      : "text-white/80 hover:text-white hover:bg-white/10"
+                  }`}
+                  title={isCollapsed ? "Campaigns" : ""}
+                  aria-current={isActive("admin-campaigns") ? "page" : undefined}
+                >
+                  {/* Subtle left accent indicator for active state */}
+                  {isActive("admin-campaigns") && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white/30 rounded-r-full"></div>
+                  )}
+                  <Settings className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} flex-shrink-0 ${
+                    isActive("admin-campaigns") ? 'text-white' : ''
+                  }`} strokeWidth={1.5} />
+                  {!isCollapsed && <span className="ml-3 text-base font-medium">Campaigns</span>}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ) : (
+              <SidebarMenuItem>
+                <div className={`relative w-full flex items-center ${isCollapsed ? 'justify-center px-4 py-4' : 'px-4 py-3.5'} rounded-xl opacity-50 cursor-not-allowed`}>
+                  <Settings className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} flex-shrink-0 text-white/40`} strokeWidth={1.5} />
+                  {!isCollapsed && <span className="ml-3 text-base font-medium text-white/40">Campaigns</span>}
+                </div>
+              </SidebarMenuItem>
+            )}
+            
+            {/* Donations */}
+            {hasPermission("view_donations") ? (
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={() => onNavigate("admin-donations")}
+                  className={`relative w-full flex items-center ${isCollapsed ? 'justify-center px-4 py-4' : 'px-4 py-3.5'} rounded-xl text-left transition-all duration-200 group ${
+                    isActive("admin-donations")
+                      ? "bg-[#0f5132] text-white font-medium shadow-lg"
+                      : "text-white/80 hover:text-white hover:bg-white/10"
+                  }`}
+                  title={isCollapsed ? "Donations" : ""}
+                  aria-current={isActive("admin-donations") ? "page" : undefined}
+                >
+                  {/* Subtle left accent indicator for active state */}
+                  {isActive("admin-donations") && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white/30 rounded-r-full"></div>
+                  )}
+                  <Database className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} flex-shrink-0 ${
+                    isActive("admin-donations") ? 'text-white' : ''
+                  }`} strokeWidth={1.5} />
+                  {!isCollapsed && <span className="ml-3 text-base font-medium">Donations</span>}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ) : (
+              <SidebarMenuItem>
+                <div className={`relative w-full flex items-center ${isCollapsed ? 'justify-center px-4 py-4' : 'px-4 py-3.5'} rounded-xl opacity-50 cursor-not-allowed`}>
+                  <Database className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} flex-shrink-0 text-white/40`} strokeWidth={1.5} />
+                  {!isCollapsed && <span className="ml-3 text-base font-medium text-white/40">Donations</span>}
+                </div>
+              </SidebarMenuItem>
+            )}
+
+            {/* Kiosks */}
+            {hasPermission("view_kiosks") ? (
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={() => onNavigate("admin-kiosks")}
+                  className={`relative w-full flex items-center ${isCollapsed ? 'justify-center px-4 py-4' : 'px-4 py-3.5'} rounded-xl text-left transition-all duration-200 group ${
+                    isActive("admin-kiosks")
+                      ? "bg-[#0f5132] text-white font-medium shadow-lg"
+                      : "text-white/80 hover:text-white hover:bg-white/10"
+                  }`}
+                  title={isCollapsed ? "Kiosks" : ""}
+                  aria-current={isActive("admin-kiosks") ? "page" : undefined}
+                >
+                  {/* Subtle left accent indicator for active state */}
+                  {isActive("admin-kiosks") && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white/30 rounded-r-full"></div>
+                  )}
+                  <Monitor className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} flex-shrink-0 ${
+                    isActive("admin-kiosks") ? 'text-white' : ''
+                  }`} strokeWidth={1.5} />
+                  {!isCollapsed && <span className="ml-3 text-base font-medium">Kiosks</span>}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ) : (
+              <SidebarMenuItem>
+                <div className={`relative w-full flex items-center ${isCollapsed ? 'justify-center px-4 py-4' : 'px-4 py-3.5'} rounded-xl opacity-50 cursor-not-allowed`}>
+                  <Monitor className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} flex-shrink-0 text-white/40`} strokeWidth={1.5} />
+                  {!isCollapsed && <span className="ml-3 text-base font-medium text-white/40">Kiosks</span>}
+                </div>
+              </SidebarMenuItem>
+            )}
+            
+            {/* Users */}
+            {hasPermission("view_users") ? (
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={() => onNavigate("admin-users")}
+                  className={`relative w-full flex items-center ${isCollapsed ? 'justify-center px-4 py-4' : 'px-4 py-3.5'} rounded-xl text-left transition-all duration-200 group ${
+                    isActive("admin-users")
+                      ? "bg-[#0f5132] text-white font-medium shadow-lg"
+                      : "text-white/80 hover:text-white hover:bg-white/10"
+                  }`}
+                  title={isCollapsed ? "Users" : ""}
+                  aria-current={isActive("admin-users") ? "page" : undefined}
+                >
+                  {/* Subtle left accent indicator for active state */}
+                  {isActive("admin-users") && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white/30 rounded-r-full"></div>
+                  )}
+                  <Users className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} flex-shrink-0 ${
+                    isActive("admin-users") ? 'text-white' : ''
+                  }`} strokeWidth={1.5} />
+                  {!isCollapsed && <span className="ml-3 text-base font-medium">Users</span>}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ) : (
+              <SidebarMenuItem>
+                <div className={`relative w-full flex items-center ${isCollapsed ? 'justify-center px-4 py-4' : 'px-4 py-3.5'} rounded-xl opacity-50 cursor-not-allowed`}>
+                  <Users className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} flex-shrink-0 text-white/40`} strokeWidth={1.5} />
+                  {!isCollapsed && <span className="ml-3 text-base font-medium text-white/40">Users</span>}
+                </div>
+              </SidebarMenuItem>
+            )}
+
+            {/* Gift Aid */}
+            {hasPermission("view_donations") ? (
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={() => onNavigate("admin-gift-aid")}
+                  className={`relative w-full flex items-center ${isCollapsed ? 'justify-center px-4 py-4' : 'px-4 py-3.5'} rounded-xl text-left transition-all duration-200 group ${
+                    isActive("admin-gift-aid")
+                      ? "bg-[#0f5132] text-white font-medium shadow-lg"
+                      : "text-white/80 hover:text-white hover:bg-white/10"
+                  }`}
+                  title={isCollapsed ? "Gift Aid" : ""}
+                  aria-current={isActive("admin-gift-aid") ? "page" : undefined}
+                >
+                  {/* Subtle left accent indicator for active state */}
+                  {isActive("admin-gift-aid") && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white/30 rounded-r-full"></div>
+                  )}
+                  <Gift className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} flex-shrink-0 ${
+                    isActive("admin-gift-aid") ? 'text-white' : ''
+                  }`} strokeWidth={1.5} />
+                  {!isCollapsed && <span className="ml-3 text-base font-medium">Gift Aid</span>}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ) : (
+              <SidebarMenuItem>
+                <div className={`relative w-full flex items-center ${isCollapsed ? 'justify-center px-4 py-4' : 'px-4 py-3.5'} rounded-xl opacity-50 cursor-not-allowed`}>
+                  <Gift className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} flex-shrink-0 text-white/40`} strokeWidth={1.5} />
+                  {!isCollapsed && <span className="ml-3 text-base font-medium text-white/40">Gift Aid</span>}
+                </div>
+              </SidebarMenuItem>
+            )}
+            
+            {/* Bank Details */}
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={() => onNavigate("admin-bank-details")}
+                className={`relative w-full flex items-center ${isCollapsed ? 'justify-center px-4 py-4' : 'px-4 py-3.5'} rounded-xl text-left transition-all duration-200 group ${
+                  isActive("admin-bank-details")
+                    ? "bg-[#0f5132] text-white font-medium shadow-lg"
+                    : "text-white/80 hover:text-white hover:bg-white/10"
+                }`}
+                title={isCollapsed ? "Bank Details" : ""}
+                aria-current={isActive("admin-bank-details") ? "page" : undefined}
+              >
+                {/* Subtle left accent indicator for active state */}
+                {isActive("admin-bank-details") && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white/30 rounded-r-full"></div>
+                )}
+                <Wallet className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} flex-shrink-0 ${
+                  isActive("admin-bank-details") ? 'text-white' : ''
+                }`} strokeWidth={1.5} />
+                {!isCollapsed && <span className="ml-3 text-base font-medium">Bank Details</span>}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            
+            {/* Stripe account */}
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={handleStripeAccountClick}
+                disabled={isLoadingStripe}
+                className={`relative w-full flex items-center ${isCollapsed ? 'justify-center px-4 py-4' : 'px-4 py-3.5'} rounded-xl text-left transition-all duration-200 group ${
+                  isActive("admin-stripe-account")
+                    ? "bg-[#0f5132] text-white font-medium shadow-lg"
+                    : "text-white/80 hover:text-white hover:bg-white/10"
+                } ${isLoadingStripe ? 'opacity-50 cursor-not-allowed' : ''}`}
+                title={isCollapsed ? "Stripe Account" : ""}
+                aria-current={isActive("admin-stripe-account") ? "page" : undefined}
+              >
+                {/* Subtle left accent indicator for active state */}
+                {isActive("admin-stripe-account") && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white/30 rounded-r-full"></div>
+                )}
+                {isLoadingStripe ? (
+                  <Loader2 className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} flex-shrink-0 animate-spin`} strokeWidth={1.5} />
+                ) : (
+                  <CreditCard className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} flex-shrink-0 ${
+                    isActive("admin-stripe-account") ? 'text-white' : ''
+                  }`} strokeWidth={1.5} />
+                )}
+                {!isCollapsed && <span className="ml-3 text-base font-medium">Stripe Account</span>}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+      </SidebarContent>
+      
+      <SidebarFooter className="p-4">
+        {!isCollapsed ? (
+          <div className="space-y-3">
+            {/* User Info */}
+            <div className="flex items-center gap-3 px-2 py-2">
+              <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                <Avatar className="w-7 h-7">
+                  <AvatarImage src={userSession.user.photoURL || undefined} />
+                  <AvatarFallback className="bg-white/30 text-white text-xs font-semibold">
+                    {userInitials}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white font-medium text-sm truncate">
+                  {userSession.user.username || 'Admin User'}
+                </p>
+                <p className="text-white/70 text-xs">System Administrator</p>
+              </div>
+            </div>
+            
+            {/* Logout Button */}
+            <button
+              onClick={onLogout}
+              className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-red-300 hover:text-red-200 hover:bg-red-500/20 transition-all duration-150 group"
+            >
+              <LogOut className="h-4 w-4 flex-shrink-0" strokeWidth={1.5} />
+              <span className="text-sm font-medium">Sign Out</span>
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+              <Avatar className="w-7 h-7">
+                <AvatarImage src={userSession.user.photoURL || undefined} />
+                <AvatarFallback className="bg-white/30 text-white text-xs font-semibold">
+                  {userInitials}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+            <button
+              onClick={onLogout}
+              className="flex items-center justify-center w-8 h-8 rounded-lg text-red-300 hover:text-red-200 hover:bg-red-500/20 transition-all duration-150"
+              title="Sign Out"
+            >
+              <LogOut className="h-4 w-4" strokeWidth={1.5} />
+            </button>
+          </div>
+        )}
+      </SidebarFooter>
+    </Sidebar>
+  );
+}
+
 export function AdminLayout({
   onNavigate,
   onLogout,
@@ -102,36 +447,13 @@ export function AdminLayout({
   headerTitle,
   headerSubtitle,
   headerActions,
-  hideHeaderDivider,
   hideSidebarTrigger,
   hideHeader,
 }: AdminLayoutProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [logoAnimating, setLogoAnimating] = useState(false);
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showStripeConfigDialog, setShowStripeConfigDialog] = useState(false);
   const [isLoadingStripe, setIsLoadingStripe] = useState(false);
   const [stripeError, setStripeError] = useState<{ title: string; message: string } | null>(null);
-
-  React.useEffect(() => {
-    const mediaQuery = window.matchMedia("(max-width: 1023px)");
-    const handleChange = () => setIsCollapsed(mediaQuery.matches);
-
-    handleChange();
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener("change", handleChange);
-    } else {
-      mediaQuery.addListener(handleChange);
-    }
-
-    return () => {
-      if (mediaQuery.removeEventListener) {
-        mediaQuery.removeEventListener("change", handleChange);
-      } else {
-        mediaQuery.removeListener(handleChange);
-      }
-    };
-  }, []);
 
   // Handle ESC key to close profile panel
   React.useEffect(() => {
@@ -146,20 +468,12 @@ export function AdminLayout({
       return () => document.removeEventListener("keydown", handleEscKey);
     }
   }, [showUserProfile]);
+  
   const isActive = (...screens: Screen[]) => screens.includes(activeScreen);
   const currentLabel = SCREEN_LABELS[activeScreen] ?? "Admin";
   const resolvedTitle = headerTitle ?? currentLabel;
   const resolvedSubtitle = headerSubtitle ?? undefined;
   const userInitials = getInitials(userSession.user.username || userSession.user.email || "U");
-
-  const toggleSidebar = () => {
-    setIsCollapsed(!isCollapsed);
-  };
-
-  const handleLogoClick = () => {
-    setLogoAnimating(true);
-    setTimeout(() => setLogoAnimating(false), 500); // Animation duration
-  };
 
   const handleStripeAccountClick = async () => {
     setIsLoadingStripe(true);
@@ -262,67 +576,6 @@ export function AdminLayout({
     }
   };
 
-  // Centralized navigation button attributes
-  const getNavButtonProps = (screen: Screen | Screen[], title: string) => {
-    const isActiveButton = Array.isArray(screen) ? isActive(...screen) : isActive(screen);
-    
-    return {
-      className: `
-        sidebar-item flex items-center w-full text-left group rounded-lg transition-all duration-300 ease-in-out hover:translate-x-1 hover:shadow-md
-        ${isCollapsed 
-          ? 'px-2 py-3 justify-center' 
-          : 'px-4 py-3 justify-between'
-        }
-        ${isActiveButton
-          ? "text-white sidebar-item-active"
-          : "text-white/90 hover:text-white"
-        }
-      `,
-      style: isActiveButton ? {
-        background: '#22C55E',
-        boxShadow: isCollapsed
-          ? 'inset 3px 0 0 rgba(255,255,255,0.7), 0 0 12px rgba(34,197,94,0.45), 0 2px 8px rgba(0,0,0,0.2)'
-          : 'inset 3px 0 0 rgba(255,255,255,0.7), 0 2px 10px rgba(34,197,94,0.35)'
-      } : {},
-      onMouseEnter: (e: React.MouseEvent<HTMLButtonElement>) => {
-        if (!isActiveButton) {
-          e.currentTarget.style.backgroundColor = isCollapsed
-            ? 'rgba(74, 222, 128, 0.28)'
-            : 'rgba(74, 222, 128, 0.22)';
-          e.currentTarget.style.boxShadow = '0 10px 24px rgba(22,163,74,0.2)';
-        }
-      },
-      onMouseLeave: (e: React.MouseEvent<HTMLButtonElement>) => {
-        if (!isActiveButton) {
-          e.currentTarget.style.backgroundColor = 'transparent';
-          e.currentTarget.style.boxShadow = 'none';
-        }
-      },
-      title: isCollapsed ? title : ""
-    };
-  };
-
-  // Centralized icon props
-  const getIconProps = () => ({
-    className: `flex-shrink-0 transition-transform duration-200 group-hover:scale-105 ${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'}`,
-    strokeWidth: isCollapsed ? 2.2 : 2
-  });
-
-  // Centralized text span props
-  const getTextSpanProps = () => ({
-    className: `font-medium ml-3 transition-colors duration-200 group-hover:text-white group-hover:font-semibold ${isCollapsed ? 'hidden' : 'block'}`
-  });
-
-  // Centralized arrow icon for active states
-  const renderActiveArrow = (screenToCheck: Screen | Screen[]) => {
-    const isActiveButton = Array.isArray(screenToCheck) ? isActive(...screenToCheck) : isActive(screenToCheck);
-    return !isCollapsed && isActiveButton && (
-      <svg className="h-4 w-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-      </svg>
-    );
-  };
-
   return (
     <SidebarProvider defaultOpen={true}>
       <style>{`
@@ -396,254 +649,108 @@ export function AdminLayout({
           background: rgba(255, 255, 255, 0.9);
           box-shadow: 0 0 12px rgba(255, 255, 255, 0.7);
         }
+        /* Force sidebar green background - Multiple selectors for maximum specificity */
+        [data-sidebar="sidebar"],
+        [data-slot="sidebar-inner"],
+        .bg-sidebar,
+        [data-sidebar="sidebar"] > *,
+        [data-slot="sidebar-inner"] > *,
+        div[data-sidebar="sidebar"],
+        div[data-slot="sidebar-inner"] {
+          background-color: #064e3b !important;
+          color: white !important;
+        }
+        
+        /* Force all sidebar elements to use white text */
+        [data-sidebar="sidebar"] *,
+        [data-slot="sidebar-inner"] * {
+          color: white !important;
+        }
+        
+        /* Force sidebar header and footer */
+        [data-sidebar="header"],
+        [data-sidebar="footer"],
+        [data-slot="sidebar-header"],
+        [data-slot="sidebar-footer"] {
+          background-color: #064e3b !important;
+          color: white !important;
+        }
+        
+        /* Force sidebar content */
+        [data-sidebar="content"],
+        [data-slot="sidebar-content"] {
+          background-color: #064e3b !important;
+          color: white !important;
+        }
+        
+        /* Force sidebar menu buttons hover states */
+        [data-sidebar="menu-button"]:hover {
+          background-color: rgba(255, 255, 255, 0.1) !important;
+          color: white !important;
+        }
+        
+        /* Force active state */
+        [data-sidebar="menu-button"][data-active="true"] {
+          background-color: #0f5132 !important;
+          color: white !important;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+        }
+        
+        /* Ultimate specificity - target by ID-like specificity */
+        html body div[data-sidebar="sidebar"],
+        html body div[data-slot="sidebar-inner"],
+        html body [data-sidebar="sidebar"],
+        html body [data-slot="sidebar-inner"] {
+          background-color: #064e3b !important;
+          color: white !important;
+        }
+        
+        /* Force sidebar wrapper background */
+        [data-slot="sidebar-wrapper"] [data-sidebar="sidebar"],
+        [data-slot="sidebar-container"] [data-sidebar="sidebar"],
+        .group\/sidebar-wrapper [data-sidebar="sidebar"] {
+          background-color: #064e3b !important;
+          color: white !important;
+        }
+        
+        /* Force sidebar menu spacing */
+        [data-sidebar="menu"] {
+          gap: 0.5rem !important;
+        }
+        
+        /* Force sidebar menu item styling */
+        [data-sidebar="menu-button"] {
+          border-radius: 0.75rem !important;
+          padding: 0.875rem 1rem !important;
+          font-size: 1rem !important;
+          font-weight: 500 !important;
+          min-height: 3rem !important;
+        }
+        
+        /* Force collapsed state styling */
+        .group-data-[collapsible=icon] [data-sidebar="menu-button"] {
+          padding: 1rem !important;
+          min-height: 3rem !important;
+          width: 3rem !important;
+        }
       `}</style>
-      <div className="relative h-screen w-full">
-        <div className={`flex h-full w-full transition-[filter] duration-300 ${showUserProfile ? "blur-sm" : ""}`}>
-          {/* Custom Green Gradient Sidebar */}
-          <div 
-            className={`${isCollapsed ? 'w-16' : 'w-80'} relative flex flex-col shadow-2xl border-r border-green-400/40 shrink-0 transition-all duration-300 ease-in-out overflow-hidden`}
-            style={{
-              background: 'linear-gradient(180deg, #1FBF55 0%, #3FD77B 100%)'
-            }}
-          >
-          <div className="pointer-events-none absolute -top-24 -right-20 h-72 w-72 rounded-full bg-white/15 blur-3xl"></div>
-          <div className="pointer-events-none absolute bottom-20 -left-24 h-64 w-64 rounded-full bg-emerald-200/20 blur-3xl"></div>
-          <div className="pointer-events-none absolute bottom-6 left-8 h-28 w-28 rounded-full bg-white/10 blur-2xl"></div>
-          {/* Header Card */}
-          <div 
-            className={`mb-4 overflow-hidden transition-all duration-300 ease-in-out ${isCollapsed ? 'p-2' : 'p-4'}`}
-            style={{
-              background: 'rgba(34, 197, 94, 0.18)',
-              borderRadius: '12px',
-              backdropFilter: 'blur(10px)'
-            }}
-          >
-            <div className="flex items-center justify-between">
-              {/* Logo Section */}
-              {!isCollapsed && (
-                <div className="flex items-center gap-3 flex-1">
-                  <img 
-                    src="/logo.png" 
-                    alt="SwiftCause Logo" 
-                    className={`w-10 h-10 rounded-lg logo-wobble cursor-pointer ${logoAnimating ? 'animate' : ''}`}
-                    onClick={handleLogoClick}
-                  />
-                  <div>
-                    <h1 className="text-white font-bold text-lg leading-tight">SwiftCause</h1>
-                    <p className="text-white/70 text-xs font-medium uppercase tracking-wide">ADMIN CONTROL</p>
-                  </div>
-                </div>
-              )}
-              
-              {/* Collapse/Expand Arrow Button */}
-              <button
-                onClick={toggleSidebar}
-                className="p-3 text-white/80 hover:text-white hover:bg-green-400/20 rounded-lg transition-colors duration-200 shrink-0 ml-auto"
-              >
-                {isCollapsed ? (
-                  <ChevronRight className="h-6 w-6" />
-                ) : (
-                  <ChevronLeft className="h-6 w-6" />
-                )}
-              </button>
-            </div>
-          </div>
+      <div className="relative h-screen w-full bg-[#F3F1EA]">
+        <div className={`flex h-full w-full transition-[filter] duration-300 bg-[#F3F1EA] ${showUserProfile ? "blur-sm" : ""}`}>
+          <AdminSidebar 
+            onNavigate={onNavigate}
+            onLogout={onLogout}
+            userSession={userSession}
+            hasPermission={hasPermission}
+            activeScreen={activeScreen}
+            isActive={isActive}
+            userInitials={userInitials}
+            handleStripeAccountClick={handleStripeAccountClick}
+            isLoadingStripe={isLoadingStripe}
+          />
 
-          {/* User Profile Card */}
-          {!isCollapsed && (
-            <div 
-              className="mb-4 rounded-2xl p-5 transition-all duration-300 ease-in-out shadow-[0_12px_26px_rgba(22,163,74,0.35)] border border-white/15 bg-[#16A34A]"
-              style={{
-                backdropFilter: 'blur(10px)'
-              }}
-            >
-              <div className="flex flex-col items-center text-center">
-                {/* User Profile Avatar */}
-                <div className="relative mb-4">
-                  <div 
-                    className="w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-all duration-300"
-                    style={{
-                      background: 'linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%)',
-                      border: '3px solid rgba(255,255,255,0.3)'
-                    }}
-                  >
-                    <Avatar className="w-12 h-12 transition-all duration-300">
-                      <AvatarImage src={userSession.user.photoURL || undefined} />
-                      <AvatarFallback className="bg-transparent text-green-500 text-lg font-bold transition-all duration-300">
-                        {getInitials(userSession.user.username || userSession.user.email || 'U')}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-                  {/* Online indicator */}
-                  <div className="absolute bottom-1 right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
-                </div>
-                
-                {/* User Info */}
-                <h2 className="text-white font-semibold text-lg mb-1">
-                  {userSession.user.username || 'Ayush Bhatia'}
-                </h2>
-                <p className="text-white/60 text-sm">System Administrator</p>
-              </div>
-            </div>
-          )}
-
-          {/* Navigation Menu */}
-          <div className="flex-1 overflow-y-auto">
-            <div className={`${isCollapsed ? 'space-y-2 px-1' : 'space-y-1 px-4'} transition-all duration-300 ease-in-out`}>
-              {/* Dashboard */}
-              <button
-                onClick={() => onNavigate("admin")}
-                {...getNavButtonProps(["admin", "admin-dashboard"], "Dashboard")}
-              >
-                <div className="flex items-center">
-                  <LayoutDashboard {...getIconProps()} />
-                  <span {...getTextSpanProps()}>Dashboard</span>
-                </div>
-                {renderActiveArrow(["admin", "admin-dashboard"])}
-              </button>
-              
-              {/* Campaigns */}
-              {hasPermission("view_campaigns") && (
-                <button
-                  onClick={() => onNavigate("admin-campaigns")}
-                  {...getNavButtonProps("admin-campaigns", "Campaigns")}
-                >
-                  <div className="flex items-center">
-                    <Settings {...getIconProps()} />
-                    <span {...getTextSpanProps()}>Campaigns</span>
-                  </div>
-                  {renderActiveArrow("admin-campaigns")}
-                </button>
-              )}
-              
-              {/* Kiosks */}
-              {hasPermission("view_kiosks") && (
-                <button
-                  onClick={() => onNavigate("admin-kiosks")}
-                  {...getNavButtonProps("admin-kiosks", "Kiosks")}
-                >
-                  <div className="flex items-center">
-                    <Monitor {...getIconProps()} />
-                    <span {...getTextSpanProps()}>Kiosks</span>
-                  </div>
-                  {renderActiveArrow("admin-kiosks")}
-                </button>
-              )}
-              
-              {/* Donations */}
-              {hasPermission("view_donations") && (
-                <button
-                  onClick={() => onNavigate("admin-donations")}
-                  {...getNavButtonProps("admin-donations", "Donations")}
-                >
-                  <div className="flex items-center">
-                    <Database {...getIconProps()} />
-                    <span {...getTextSpanProps()}>Donations</span>
-                  </div>
-                  {renderActiveArrow("admin-donations")}
-                </button>
-              )}
-              
-              {/* Gift Aid Donations */}
-              {hasPermission("view_donations") && (
-                <button
-                  onClick={() => onNavigate("admin-gift-aid")}
-                  {...getNavButtonProps("admin-gift-aid", "Gift Aid Donations")}
-                >
-                  <div className="flex items-center">
-                    <Gift {...getIconProps()} />
-                    <span {...getTextSpanProps()}>Gift Aid Donations</span>
-                  </div>
-                  {renderActiveArrow("admin-gift-aid")}
-                </button>
-              )}
-              
-              {/* Users */}
-              {hasPermission("view_users") && (
-                <button
-                  onClick={() => onNavigate("admin-users")}
-                  {...getNavButtonProps("admin-users", "Users")}
-                >
-                  <div className="flex items-center">
-                    <Users {...getIconProps()} />
-                    <span {...getTextSpanProps()}>Users</span>
-                  </div>
-                  {renderActiveArrow("admin-users")}
-                </button>
-              )}
-              
-              {/* Bank Details */}
-              <button
-                onClick={() => onNavigate("admin-bank-details")}
-                {...getNavButtonProps("admin-bank-details", "Bank Details")}
-              >
-                <div className="flex items-center">
-                  <Wallet {...getIconProps()} />
-                  <span {...getTextSpanProps()}>Bank Details</span>
-                </div>
-                {renderActiveArrow("admin-bank-details")}
-              </button>
-              
-              {/* Stripe account */}
-              <button
-                onClick={handleStripeAccountClick}
-                {...getNavButtonProps("admin-stripe-account", "Stripe account")}
-              >
-                <div className="flex items-center">
-                  <CreditCard {...getIconProps()} />
-                  <span {...getTextSpanProps()}>Stripe account</span>
-                </div>
-                {renderActiveArrow("admin-stripe-account")}
-              </button>
-            </div>
-          </div>
-          
-          {/* Footer */}
-          <div className={`mt-auto ${isCollapsed ? 'p-4 flex justify-center' : 'p-4'}`}>
-            {!isCollapsed ? (
-              <button
-                onClick={onLogout}
-                className="signout-btn w-full flex items-center justify-center px-4 py-4 rounded-xl text-white border border-red-900/30"
-                style={{
-                  background: '#7F1D1D'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#7F1D1D';
-                  e.currentTarget.style.borderColor = '#7F1D1D';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#B91C1C';
-                  e.currentTarget.style.borderColor = '#B91C1C';
-                }}
-              >
-                <LogOut className="signout-icon h-5 w-5 mr-3" />
-                <span className="font-medium text-base">Log Out</span>
-              </button>
-            ) : (
-              <button
-                onClick={onLogout}
-                className="signout-btn mx-auto flex h-12 w-12 items-center justify-center rounded-2xl text-white"
-                style={{
-                  background: '#7F1D1D'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#7F1D1D';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#B91C1C';
-                }}
-                title="Log Out"
-              >
-                <LogOut className="signout-icon h-6 w-6 text-white" strokeWidth={2.2} />
-              </button>
-            )}
-          </div>
-          </div>
-
-          {/* Main Content Area */}
-          <div className="flex-1 flex flex-col overflow-hidden">
+          <SidebarInset className="flex-1 flex flex-col overflow-hidden bg-[#F3F1EA]">
             {!hideHeader && (
-            <header className="px-4 sm:px-6 py-4 bg-slate-50">
+            <header className="bg-transparent">
               <AdminPageHeader
                 title={resolvedTitle}
                 subtitle={resolvedSubtitle}
@@ -660,7 +767,7 @@ export function AdminLayout({
                         variant="ghost"
                         size="sm"
                         onClick={() => setShowUserProfile(!showUserProfile)}
-                        className="group h-10 w-10 p-0 rounded-full border-0 bg-green-500 text-white shadow-md hover:bg-green-600 hover:shadow-lg transition-colors"
+                        className="group h-10 w-10 p-0 rounded-full border-0 bg-[#064e3b] text-white shadow-md hover:bg-[#0f5132] hover:shadow-lg transition-colors"
                         aria-label="Open profile"
                       >
                         <Avatar className="h-8 w-8 transition-transform duration-200 group-hover:scale-105">
@@ -671,7 +778,7 @@ export function AdminLayout({
                         </Avatar>
                       </Button>
                       {/* Online indicator */}
-                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white shadow-[0_0_6px_rgba(16,185,129,0.8)]"></div>
+                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-[#064e3b] rounded-full border-2 border-white shadow-[0_0_6px_rgba(6,78,59,0.8)]"></div>
                     </div>
                   </div>
                 )}
@@ -680,27 +787,27 @@ export function AdminLayout({
             )}
           
           <main
-            className="flex-1 w-full bg-slate-50 overflow-y-auto overflow-x-hidden"
+            className="flex-1 w-full bg-[#F3F1EA] overflow-y-auto overflow-x-hidden"
             style={{ scrollbarGutter: "stable" }}
             data-testid="main-content-area"
           >
             {children}
           </main>
-          </div>
+          </SidebarInset>
         </div>
 
         {showUserProfile && (
           <>
             <div
-              className="fixed inset-0 bg-black/30 z-50 transition-all duration-300"
+              className="fixed inset-0 bg-transparent z-50 transition-all duration-300"
               onClick={() => setShowUserProfile(false)}
             ></div>
 
-            <div className="fixed top-20 right-6 w-80 bg-white rounded-xl shadow-2xl z-[60] transform transition-all duration-300 ease-out border border-gray-100">
-              <div className="relative px-6 py-5 bg-linear-to-r from-green-600 to-emerald-600 rounded-t-xl">
+            <div className="fixed top-20 right-6 w-80 bg-white/15 backdrop-blur-xl rounded-xl shadow-sm z-[60] transform transition-all duration-300 ease-out border border-gray-200/10">
+              <div className="relative px-6 py-5 bg-gradient-to-r from-slate-50/10 to-gray-50/10 backdrop-blur-xl rounded-t-xl border-b border-gray-200/10">
                 <button
                   onClick={() => setShowUserProfile(false)}
-                  className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10"
+                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -708,66 +815,77 @@ export function AdminLayout({
                 </button>
 
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-2 border-white/30">
+                  <div className="w-14 h-14 rounded-full bg-gray-100/10 backdrop-blur-xl flex items-center justify-center border border-gray-200/10">
                     <Avatar className="w-12 h-12">
                       <AvatarImage src={userSession.user.photoURL || undefined} />
-                      <AvatarFallback className="bg-white text-green-600 text-lg font-bold">
+                      <AvatarFallback className="bg-white/15 text-gray-700 text-lg font-semibold border border-gray-200/10">
                         {userInitials}
                       </AvatarFallback>
                     </Avatar>
                   </div>
 
-                  <div className="text-white">
-                    <h3 className="font-semibold text-lg leading-tight">
-                      {userSession.user.username || "Ayush Bhatia"}
+                  <div className="text-gray-900">
+                    <h3 className="font-semibold text-lg leading-tight text-gray-900">
+                      {userSession.user.username || "Admin User"}
                     </h3>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="px-2 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-medium border border-white/30">
+                      <span className="px-2 py-1 bg-gray-100/10 backdrop-blur-xl rounded-full text-xs font-medium border border-gray-200/10 text-gray-600">
                         Administrator
                       </span>
-                      <div className="w-2 h-2 bg-green-400 rounded-full"></div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="p-6 max-h-96 overflow-y-auto">
-                <div className="space-y-3 mb-6">
+              <div 
+                className="p-6 max-h-96 overflow-y-auto scrollbar-hide" 
+                style={{
+                  scrollbarWidth: 'none',
+                  msOverflowStyle: 'none',
+                }}
+              >
+                <style jsx>{`
+                  .scrollbar-hide::-webkit-scrollbar {
+                    display: none;
+                  }
+                `}</style>
+                
+                <div className="space-y-4 mb-6">
                   <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Account Information</h4>
 
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <div className="flex items-center gap-3 text-sm">
-                      <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center shrink-0">
-                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="w-8 h-8 bg-slate-100/10 backdrop-blur-xl rounded-lg flex items-center justify-center shrink-0">
+                        <svg className="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                         </svg>
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-gray-500 text-xs">Email Address</p>
-                        <p className="text-gray-900 font-medium truncate">{userSession.user.email || "ayushbhatia590@gmail.com"}</p>
+                        <p className="text-gray-500 text-xs font-medium">Email Address</p>
+                        <p className="text-gray-900 font-medium truncate">{userSession.user.email || "admin@example.com"}</p>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-3 text-sm">
-                      <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center shrink-0">
-                        <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="w-8 h-8 bg-stone-100/10 backdrop-blur-xl rounded-lg flex items-center justify-center shrink-0">
+                        <svg className="w-4 h-4 text-stone-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                       </div>
                       <div>
-                        <p className="text-gray-500 text-xs">Role</p>
+                        <p className="text-gray-500 text-xs font-medium">Role</p>
                         <p className="text-gray-900 font-medium">Administrator</p>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-3 text-sm">
-                      <div className="w-8 h-8 bg-orange-50 rounded-lg flex items-center justify-center shrink-0">
-                        <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="w-8 h-8 bg-neutral-100/10 backdrop-blur-xl rounded-lg flex items-center justify-center shrink-0">
+                        <svg className="w-4 h-4 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a4 4 0 118 0v4m-4 8a2 2 0 100-4 2 2 0 000 4zm6 0a2 2 0 100-4 2 2 0 000 4z" />
                         </svg>
                       </div>
                       <div>
-                        <p className="text-gray-500 text-xs">Member Since</p>
+                        <p className="text-gray-500 text-xs font-medium">Member Since</p>
                         <p className="text-gray-900 font-medium">November 16, 2025</p>
                       </div>
                     </div>
@@ -775,92 +893,97 @@ export function AdminLayout({
                 </div>
 
                 <div className="mb-4">
-                  <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Permissions</h4>
+                  <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Permissions</h4>
 
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap gap-2">
                     {hasPermission("view_dashboard") && (
-                      <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-md">
+                      <span className="px-2.5 py-1 bg-slate-100/10 backdrop-blur-xl text-slate-700 text-xs font-medium rounded-md border border-slate-200/10">
                         view dashboard
                       </span>
                     )}
                     {hasPermission("view_campaigns") && (
-                      <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-md">
+                      <span className="px-2.5 py-1 bg-slate-100/10 backdrop-blur-xl text-slate-700 text-xs font-medium rounded-md border border-slate-200/10">
                         view campaigns
                       </span>
                     )}
                     {hasPermission("create_campaign") && (
-                      <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-md">
+                      <span className="px-2.5 py-1 bg-stone-100/10 backdrop-blur-xl text-stone-700 text-xs font-medium rounded-md border border-stone-200/10">
                         create campaign
                       </span>
                     )}
                     {hasPermission("edit_campaign") && (
-                      <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-md">
+                      <span className="px-2.5 py-1 bg-neutral-100/10 backdrop-blur-xl text-neutral-700 text-xs font-medium rounded-md border border-neutral-200/10">
                         edit campaign
                       </span>
                     )}
                     {hasPermission("delete_campaign") && (
-                      <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-md">
+                      <span className="px-2.5 py-1 bg-gray-100/10 backdrop-blur-xl text-gray-700 text-xs font-medium rounded-md border border-gray-200/10">
                         delete campaign
                       </span>
                     )}
                     {hasPermission("view_kiosks") && (
-                      <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-md">
+                      <span className="px-2.5 py-1 bg-slate-100/10 backdrop-blur-xl text-slate-700 text-xs font-medium rounded-md border border-slate-200/10">
                         view kiosks
                       </span>
                     )}
                     {hasPermission("create_kiosk") && (
-                      <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-md">
+                      <span className="px-2.5 py-1 bg-stone-100/10 backdrop-blur-xl text-stone-700 text-xs font-medium rounded-md border border-stone-200/10">
                         create kiosk
                       </span>
                     )}
                     {hasPermission("edit_kiosk") && (
-                      <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-md">
+                      <span className="px-2.5 py-1 bg-neutral-100/10 backdrop-blur-xl text-neutral-700 text-xs font-medium rounded-md border border-neutral-200/10">
                         edit kiosk
                       </span>
                     )}
                     {hasPermission("delete_kiosk") && (
-                      <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-md">
+                      <span className="px-2.5 py-1 bg-gray-100/10 backdrop-blur-xl text-gray-700 text-xs font-medium rounded-md border border-gray-200/10">
                         delete kiosk
                       </span>
                     )}
                     {hasPermission("assign_campaigns") && (
-                      <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-md">
+                      <span className="px-2.5 py-1 bg-zinc-100/10 backdrop-blur-xl text-zinc-700 text-xs font-medium rounded-md border border-zinc-200/10">
                         assign campaigns
                       </span>
                     )}
                     {hasPermission("view_donations") && (
-                      <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-md">
+                      <span className="px-2.5 py-1 bg-slate-100/10 backdrop-blur-xl text-slate-700 text-xs font-medium rounded-md border border-slate-200/10">
                         view donations
                       </span>
                     )}
                     {hasPermission("export_donations") && (
-                      <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-xs font-medium rounded-md">
+                      <span className="px-2.5 py-1 bg-stone-100/10 backdrop-blur-xl text-stone-700 text-xs font-medium rounded-md border border-stone-200/10">
                         export donations
                       </span>
                     )}
                     {hasPermission("view_users") && (
-                      <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-md">
+                      <span className="px-2.5 py-1 bg-slate-100/10 backdrop-blur-xl text-slate-700 text-xs font-medium rounded-md border border-slate-200/10">
                         view users
                       </span>
                     )}
                     {hasPermission("create_user") && (
-                      <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-md">
+                      <span className="px-2.5 py-1 bg-stone-100/10 backdrop-blur-xl text-stone-700 text-xs font-medium rounded-md border border-stone-200/10">
                         create user
                       </span>
                     )}
                     {hasPermission("edit_user") && (
-                      <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-md">
+                      <span className="px-2.5 py-1 bg-neutral-100/10 backdrop-blur-xl text-neutral-700 text-xs font-medium rounded-md border border-neutral-200/10">
                         edit user
                       </span>
                     )}
                     {hasPermission("delete_user") && (
-                      <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-md">
+                      <span className="px-2.5 py-1 bg-gray-100/10 backdrop-blur-xl text-gray-700 text-xs font-medium rounded-md border border-gray-200/10">
                         delete user
                       </span>
                     )}
                     {hasPermission("manage_permissions") && (
-                      <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-md">
+                      <span className="px-2.5 py-1 bg-zinc-100/10 backdrop-blur-xl text-zinc-700 text-xs font-medium rounded-md border border-zinc-200/10">
                         manage permissions
+                      </span>
+                    )}
+                    {hasPermission("system_admin") && (
+                      <span className="px-2.5 py-1 bg-gray-100/10 backdrop-blur-xl text-gray-700 text-xs font-medium rounded-md border border-gray-200/10">
+                        system admin
                       </span>
                     )}
                   </div>
@@ -872,7 +995,7 @@ export function AdminLayout({
                       setShowUserProfile(false);
                       onLogout();
                     }}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors font-medium text-sm border border-red-200"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-50 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors font-medium text-sm border border-gray-200 shadow-sm"
                   >
                     <LogOut className="w-4 h-4" />
                     Log Out
@@ -887,7 +1010,7 @@ export function AdminLayout({
         {isLoadingStripe && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center">
             <div className="bg-white rounded-xl shadow-2xl p-8 flex flex-col items-center gap-4 max-w-sm mx-4">
-              <Loader2 className="h-12 w-12 text-green-600 animate-spin" />
+              <Loader2 className="h-12 w-12 text-[#064e3b] animate-spin" />
               <div className="text-center">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
                   Loading Stripe Dashboard
@@ -928,7 +1051,7 @@ export function AdminLayout({
                     onNavigate("admin-dashboard");
                   }
                 }}
-                className="bg-green-600 hover:bg-green-700"
+                className="bg-[#064e3b] hover:bg-[#0f5132]"
               >
                 Go to Stripe Setup
               </Button>
