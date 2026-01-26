@@ -408,7 +408,7 @@ export function AdminDashboard({
       } catch (error) {
         console.error("Error fetching chart data: ", error);
       }
-    }, [userSession.user.organizationId, showOnboarding, fetchCampaignsByOrganization]);
+    }, [userSession.user.organizationId, showOnboarding, onboardingDismissed, fetchCampaignsByOrganization]);
 
   useEffect(() => {
     fetchChartData();
