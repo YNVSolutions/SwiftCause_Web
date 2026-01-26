@@ -1,6 +1,5 @@
 import React from 'react';
 import { formatCurrency } from '@/shared/lib/currencyFormatter';
-import { Heart, Calendar, CalendarClock, CalendarRange } from 'lucide-react';
 import { AmountSelectorProps } from '../types';
 
 export const AmountSelector: React.FC<AmountSelectorProps> = ({
@@ -8,14 +7,8 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
   selectedAmount,
   customAmount,
   currency,
-  enableRecurring,
-  recurringIntervals = ['monthly', 'quarterly', 'yearly'],
-  isRecurring,
-  recurringInterval,
   onSelectAmount,
   onCustomAmountChange,
-  onRecurringToggle,
-  onRecurringIntervalChange,
 }) => {
   // Format amount without decimals
   const formatAmount = (amount: number) => {
@@ -35,87 +28,11 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
     }
   };
 
-  const recurringLabel =
-    recurringInterval === 'monthly'
-      ? 'Monthly'
-      : recurringInterval === 'quarterly'
-        ? 'Quarterly'
-        : 'Yearly';
-
-  const recurringUnitLabel =
-    recurringInterval === 'monthly'
-      ? 'month'
-      : recurringInterval === 'quarterly'
-        ? 'quarter'
-        : 'year';
-
-  const defaultOrder: Array<'monthly' | 'quarterly' | 'yearly'> = ['monthly', 'quarterly', 'yearly'];
-  const normalizedIntervals =
-    recurringIntervals && recurringIntervals.length > 0
-      ? recurringIntervals
-      : defaultOrder;
-  const availableIntervals = defaultOrder.filter(
-    (interval) => normalizedIntervals.includes(interval) || interval === 'yearly'
-  );
-
   const getCurrencySymbol = () => {
     if (currency === 'GBP') return '\u00a3';
     if (currency === 'EUR') return '\u20ac';
     return '$';
   };
-
-  const getNextBillingDate = () => {
-    const next = new Date();
-    if (recurringInterval === 'monthly') {
-      next.setMonth(next.getMonth() + 1);
-    } else if (recurringInterval === 'quarterly') {
-      next.setMonth(next.getMonth() + 3);
-    } else {
-      next.setFullYear(next.getFullYear() + 1);
-    }
-    return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(next);
-  };
-
-  const effectiveAmount = customAmount ? parseFloat(customAmount) || 0 : selectedAmount || 0;
-  const annualAmount =
-    recurringInterval === 'monthly'
-      ? effectiveAmount * 12
-      : recurringInterval === 'quarterly'
-        ? effectiveAmount * 4
-        : effectiveAmount;
-
-  const frequencyOptions = [
-    {
-      key: 'one-time',
-      label: 'One-time',
-      sublabel: 'Give once',
-      icon: Calendar,
-      active: !isRecurring,
-      onSelect: () => {
-        onRecurringToggle(false);
-      }
-    },
-    ...availableIntervals.map((interval) => ({
-      key: interval,
-      label:
-        interval === 'monthly'
-          ? 'Monthly'
-          : interval === 'quarterly'
-            ? 'Quarterly'
-            : 'Yearly',
-      icon:
-        interval === 'monthly'
-          ? CalendarClock
-          : interval === 'quarterly'
-            ? CalendarRange
-            : Calendar,
-      active: isRecurring && recurringInterval === interval,
-      onSelect: () => {
-        onRecurringToggle(true);
-        onRecurringIntervalChange(interval);
-      }
-    }))
-  ];
 
   return (
     <div className="space-y-4">
