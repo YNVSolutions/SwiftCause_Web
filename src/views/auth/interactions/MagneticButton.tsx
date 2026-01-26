@@ -18,37 +18,10 @@ export function MagneticButton({
   className = '',
   loading = false
 }: MagneticButtonProps) {
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [isHovered, setIsHovered] = useState(false);
   const [ripples, setRipples] = useState<Array<{ x: number; y: number; id: number }>>([]);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  const handleMouseMove = (e: MouseEvent<HTMLButtonElement>) => {
-    if (!buttonRef.current || disabled) return;
-
-    const rect = buttonRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left - rect.width / 2;
-    const y = e.clientY - rect.top - rect.height / 2;
-
-    // Magnetic effect - pull button towards cursor
-    const distance = Math.sqrt(x * x + y * y);
-    const maxDistance = 50;
-    const strength = Math.min(distance / maxDistance, 1);
-    
-    setPosition({
-      x: x * strength * 0.3,
-      y: y * strength * 0.3,
-    });
-  };
-
-  const handleMouseLeave = () => {
-    setPosition({ x: 0, y: 0 });
-    setIsHovered(false);
-  };
-
-  const handleMouseEnter = () => {
-    setIsHovered(true);
-  };
+  const [isHovered, setIsHovered] = useState(false);
 
   const handleClick = (e: MouseEvent<HTMLButtonElement>) => {
     if (disabled || loading) return;
@@ -76,9 +49,8 @@ export function MagneticButton({
       type={type}
       disabled={disabled || loading}
       onClick={handleClick}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      onMouseEnter={handleMouseEnter}
+      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={() => setIsHovered(true)}
       className={`
         relative overflow-hidden
         bg-gradient-to-r from-green-600 via-emerald-600 to-green-600
@@ -90,9 +62,6 @@ export function MagneticButton({
         ${isHovered && !disabled ? 'bg-right scale-105' : 'bg-left'}
         ${className}
       `}
-      style={{
-        transform: `translate(${position.x}px, ${position.y}px) ${isHovered ? 'scale(1.05)' : 'scale(1)'}`,
-      }}
     >
       {/* Ripple effects */}
       {ripples.map(ripple => (
