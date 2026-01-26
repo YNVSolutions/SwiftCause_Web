@@ -5,9 +5,12 @@ import { UserRole, KioskSession } from '../../../shared/types';
 
 interface KioskLoginContainerProps {
 	onLogin: (role: UserRole, sessionData?: KioskSession) => void;
+	variant?: 'classic' | 'panel';
+	buttonLabel?: string;
+	buttonClassName?: string;
 }
 
-export function KioskLoginContainer({ onLogin }: KioskLoginContainerProps) {
+export function KioskLoginContainer({ onLogin, variant, buttonLabel, buttonClassName }: KioskLoginContainerProps) {
 	const { kioskId, accessCode, setKioskId, setAccessCode, error, loading, handleSubmit } = useKioskLogin(onLogin);
 
 	return (
@@ -19,8 +22,10 @@ export function KioskLoginContainer({ onLogin }: KioskLoginContainerProps) {
 			onKioskIdChange={(e) => setKioskId(e.target.value)}
 			onAccessCodeChange={(e) => setAccessCode(e.target.value)}
 			onSubmit={handleSubmit}
+			variant={variant}
+			buttonLabel={buttonLabel}
+			buttonClassName={buttonClassName}
 		/>
 	);
 }
-
 

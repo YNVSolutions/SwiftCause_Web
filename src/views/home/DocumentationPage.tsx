@@ -11,9 +11,6 @@ import {
   Users,
   ArrowRight
 } from 'lucide-react';
-
-
-
 const userDocs = [
   {
     icon: <Rocket size={24} />,
@@ -89,7 +86,6 @@ const userDocs = [
   }
 ];
 
-
 const UserDocCard = ({ icon, title, description, details }: { 
   icon: React.ReactNode; 
   title: string; 
@@ -162,7 +158,6 @@ const UserDocCard = ({ icon, title, description, details }: {
     </DialogContent>
   </Dialog>
 );
-
 
 export function DocumentationPage({ onNavigate }: { onNavigate?: (screen: string) => void }) {
   return (
