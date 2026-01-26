@@ -748,7 +748,7 @@ export function AdminDashboard({
     };
 
     fetchAllCampaigns();
-  }, [showLinkingForm, showCampaignForm, userSession.user.organizationId]);
+  }, [showLinkingForm, showCampaignForm, userSession.user.organizationId, fetchCampaignsByOrganization]);
 
   // Fetch all kiosks when kiosk form is shown
   useEffect(() => {
