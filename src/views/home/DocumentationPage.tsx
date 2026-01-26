@@ -241,7 +241,7 @@ export function DocumentationPage({ onNavigate }: { onNavigate?: (screen: string
 
       <main>
      
-        <section className="relative py-20 sm:py-24 bg-linear-to-b from-green-50 to-gray-50 text-center">
+        <section className="relative py-20 sm:py-24 bg-gradient-to-b from-green-50 to-gray-50 text-center">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 tracking-tight">
               Help Center & Documentation
