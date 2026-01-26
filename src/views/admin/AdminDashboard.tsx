@@ -286,7 +286,7 @@ export function AdminDashboard({
   const [showOnboardingPopup, setShowOnboardingPopup] = useState(false);
 
   // Reusable function to fetch campaigns by organization ID
-  const fetchCampaignsByOrganization = async (organizationId: string): Promise<Campaign[]> => {
+  const fetchCampaignsByOrganization = useCallback(async (organizationId: string): Promise<Campaign[]> => {
     const campaignsRef = collection(db, "campaigns");
     const q = query(
       campaignsRef,
@@ -294,7 +294,7 @@ export function AdminDashboard({
     );
     const snapshot = await getDocs(q);
     return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Campaign));
-  };
+  }, []);
 
   // Handle return from Stripe onboarding
 
