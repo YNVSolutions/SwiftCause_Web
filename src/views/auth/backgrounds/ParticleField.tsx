@@ -44,6 +44,9 @@ export function ParticleField() {
     const initial = Array.from({ length: 8 }, generateParticle);
     setParticles(initial);
 
+    // Capture the current timeouts set for cleanup
+    const currentTimeouts = timeoutsRef.current;
+
     // Generate new particles
     intervalRef.current = setInterval(() => {
       const newParticle = generateParticle();
@@ -52,10 +55,10 @@ export function ParticleField() {
       // Schedule particle removal
       const timeout = setTimeout(() => {
         setParticles(prev => prev.filter(p => p.id !== newParticle.id));
-        timeoutsRef.current.delete(timeout);
+        currentTimeouts.delete(timeout);
       }, newParticle.duration * 1000);
       
-      timeoutsRef.current.add(timeout);
+      currentTimeouts.add(timeout);
     }, 1500);
 
     return () => {
@@ -64,9 +67,9 @@ export function ParticleField() {
         clearInterval(intervalRef.current);
       }
       
-      // Cleanup all timeouts
-      timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
-      timeoutsRef.current.clear();
+      // Cleanup all timeouts using the captured reference
+      currentTimeouts.forEach(timeout => clearTimeout(timeout));
+      currentTimeouts.clear();
     };
   }, [generateParticle]);
 
