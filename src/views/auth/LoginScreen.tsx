@@ -13,8 +13,6 @@ import { KioskLoginContainer } from '../../features/auth-by-kiosk';
 import { AdminLoginContainer } from '../../features/auth-by-email';
 
 // Phase 1-2 Creative Components
-import { DynamicGradientMesh } from './backgrounds/DynamicGradientMesh';
-import { ParticleField } from './backgrounds/ParticleField';
 import { GlassMorphCard } from './cards/GlassMorphCard';
 import { LiquidFillProgress } from './cards/LiquidFillProgress';
 import { FeaturedCampaign } from './components/FeaturedCampaign';
@@ -34,13 +32,7 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
   const { campaigns, loading, error } = useFeaturedCampaigns(3);
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Phase 1: Dynamic gradient background with time-of-day */}
-      <DynamicGradientMesh />
-
-      {/* Phase 1: Interactive particle field with physics */}
-      <ParticleField />
-
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
       <div className="flex min-h-screen relative z-10">
         {/* Left side - Stats and branding */}
         <div className="hidden lg:flex lg:w-1/2 xl:w-3/5 flex-col justify-center p-6 xl:p-12">
