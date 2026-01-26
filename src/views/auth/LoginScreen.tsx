@@ -75,7 +75,7 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
 
             {/* Professional greeting */}
             <h2 className="text-3xl xl:text-4xl font-bold text-gray-900 mb-4 leading-tight animate-fade-in">
-              Welcome back to <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600">Swift Cause</span>
+              Welcome back to <span className="text-transparent bg-clip-text bg-linear-to-r from-green-600 via-emerald-600 to-teal-600">Swift Cause</span>
             </h2>
 
             <p className="text-base xl:text-lg text-gray-600 mb-8 animate-fade-in-delay">
@@ -105,7 +105,7 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
             <div className="mt-8 animate-fade-in-delay-3">
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 shadow-sm">
                 {/* Accent line matching the green theme */}
-                <div className="w-12 h-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full mb-4" />
+                <div className="w-12 h-1 bg-linear-to-r from-green-500 to-emerald-500 rounded-full mb-4" />
 
                 {/* Quote text */}
                 <p className="text-gray-700 text-sm leading-relaxed mb-3">
@@ -126,7 +126,7 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
           <div className="w-full max-w-md animate-slide-in-right">
             {/* Mobile header */}
             <div className="lg:hidden text-center mb-6">
-              <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-green-600 to-emerald-600 shadow-lg">
+              <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-linear-to-br from-green-600 to-emerald-600 shadow-lg">
                 <Heart className="h-8 w-8 text-white" />
               </div>
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
@@ -141,7 +141,7 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
               <LiquidFillProgress progress={formProgress} />
 
               <CardHeader className="text-center space-y-1 pt-6 pb-4 relative z-10">
-                <CardTitle className="text-lg sm:text-xl lg:text-2xl bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                <CardTitle className="text-lg sm:text-xl lg:text-2xl bg-linear-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
                   Platform Access
                 </CardTitle>
                 <CardDescription className="text-xs sm:text-sm">

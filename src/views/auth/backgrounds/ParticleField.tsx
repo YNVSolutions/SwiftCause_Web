@@ -40,6 +40,8 @@ export function ParticleField() {
     // SSR safety check
     if (typeof window === 'undefined') return;
 
+    const timeouts = timeoutsRef.current;
+
     // Initial particles
     const initial = Array.from({ length: 8 }, generateParticle);
     setParticles(initial);
@@ -52,10 +54,10 @@ export function ParticleField() {
       // Schedule particle removal
       const timeout = setTimeout(() => {
         setParticles(prev => prev.filter(p => p.id !== newParticle.id));
-        timeoutsRef.current.delete(timeout);
+        timeouts.delete(timeout);
       }, newParticle.duration * 1000);
       
-      timeoutsRef.current.add(timeout);
+      timeouts.add(timeout);
     }, 1500);
 
     return () => {
@@ -65,8 +67,8 @@ export function ParticleField() {
       }
       
       // Cleanup all timeouts
-      timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
-      timeoutsRef.current.clear();
+      timeouts.forEach(timeout => clearTimeout(timeout));
+      timeouts.clear();
     };
   }, [generateParticle]);
 
