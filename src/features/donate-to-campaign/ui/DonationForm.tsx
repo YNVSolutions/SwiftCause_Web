@@ -124,6 +124,7 @@ export function DonationForm({
           </div>
 
           {/* Recurring Donation */}
+          {/*
           {enableRecurring && (
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
@@ -156,6 +157,7 @@ export function DonationForm({
               )}
             </div>
           )}
+          */}
 
           {/* Donor Information */}
           {!formData.isAnonymous && (

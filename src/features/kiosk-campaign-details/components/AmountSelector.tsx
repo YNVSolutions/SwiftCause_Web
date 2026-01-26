@@ -119,6 +119,7 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
 
   return (
     <div className="space-y-4">
+      {/*
       {enableRecurring && (
         <div
           className="grid grid-cols-2 sm:grid-cols-4 gap-2"
@@ -149,6 +150,7 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
           })}
         </div>
       )}
+      */}
 
       {/* Preset Amounts */}
       <div className="grid grid-cols-3 gap-3">
@@ -186,6 +188,7 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
         />
       </div>
 
+      {/*
       {enableRecurring && isRecurring && (
         <div className="rounded-lg bg-green-50/70 px-3 py-2 flex items-center justify-center gap-2 text-[15px] border border-green-100 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
           <span className="relative flex items-center justify-center w-8 h-8 shrink-0" aria-hidden="true">
@@ -198,7 +201,9 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
           </span>
         </div>
       )}
+      */}
 
+      {/*
       {isRecurring && effectiveAmount > 0 && (
         <div className="rounded-xl bg-green-50/70 border border-green-200 px-4 py-3 shadow-sm">
           <div className="flex justify-between items-center">
@@ -213,12 +218,15 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
           </p>
         </div>
       )}
+      */}
 
+      {/*
       {enableRecurring && isRecurring && (
         <p className="text-xs text-gray-600 text-center px-4">
           By enabling recurring donations, you agree to our subscription terms and can cancel anytime.
         </p>
       )}
+      */}
     </div>
   );
 };
