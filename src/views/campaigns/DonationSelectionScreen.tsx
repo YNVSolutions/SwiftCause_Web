@@ -349,7 +349,7 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
   ];
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br ${themeClasses.gradient}`}>
+    <div className={`min-h-screen bg-linear-to-br ${themeClasses.gradient}`}>
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-sm shadow-sm border-b">
         <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
@@ -364,7 +364,7 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
           {/* Campaign Info */}
           <Card className="lg:col-span-1">
-            <div className="aspect-[16/10] relative overflow-hidden rounded-t-lg">
+            <div className="aspect-16/10 relative overflow-hidden rounded-t-lg">
               <ImageWithFallback 
                 src={campaign.coverImageUrl}
                 alt={campaign.title}
@@ -509,6 +509,7 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
                 </div>
 
                 {/* Recurring Donation */}
+                {/*
                 {allowRecurring && (
                   <div className="space-y-4 p-4 border rounded-xl bg-white/70 shadow-sm">
                     <RecurringToggle
@@ -601,6 +602,7 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
                     )}
                   </div>
                 )}
+                */}
 
                 {/* Anonymous donation option only */}
                 {/* Gift Aid option */}
@@ -630,9 +632,9 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
                 {/* Summary */}
                 {isValidAmount() && (
                   <div className={`p-4 rounded-lg border-2 ${
-                    config.theme === 'vibrant' ? 'bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200' :
+                    config.theme === 'vibrant' ? 'bg-linear-to-r from-purple-50 to-pink-50 border-purple-200' :
                     config.theme === 'minimal' ? 'bg-gray-50 border-gray-200' :
-                    config.theme === 'elegant' ? 'bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200' :
+                    config.theme === 'elegant' ? 'bg-linear-to-r from-indigo-50 to-purple-50 border-indigo-200' :
                     'bg-blue-50 border-blue-200'
                   }`}>
                     <div className="flex justify-between items-center mb-2">

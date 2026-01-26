@@ -1,1 +1,0 @@
-export { getConnectionToken } from './getConnectionToken';

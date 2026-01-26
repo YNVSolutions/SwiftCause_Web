@@ -340,7 +340,7 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
             <DonateButton
               disabled={!hasValidAmount}
               onClick={onDonate}
-              label={isRecurring ? 'Subscribe' : 'Donate'}
+              label="Donate"
             />
 
             {/* Video Player */}
@@ -437,7 +437,7 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
         <DonateButton
           disabled={!hasValidAmount}
           onClick={onDonate}
-          label={isRecurring ? 'Subscribe' : 'Donate'}
+          label="Donate"
         />
       </div>
       </div>

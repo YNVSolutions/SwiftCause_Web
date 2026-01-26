@@ -3,8 +3,6 @@ import { Button } from '../../../shared/ui/button';
 import { Input } from '../../../shared/ui/input';
 import { Label } from '../../../shared/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../shared/ui/card';
-import { Switch } from '../../../shared/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../shared/ui/select';
 import { Checkbox } from '../../../shared/ui/checkbox';
 import { Textarea } from '../../../shared/ui/textarea';
 import { Campaign } from '../../../entities/campaign';
@@ -36,8 +34,6 @@ export function DonationForm({
   allowCustomAmount = true,
   minCustomAmount = 1,
   maxCustomAmount = 10000,
-  enableRecurring = false,
-  recurringIntervals = ["monthly", "quarterly", "yearly"],
   defaultRecurringInterval = "monthly",
   requiredFields = ["email"],
   optionalFields = ["name", "message"],
@@ -124,6 +120,7 @@ export function DonationForm({
           </div>
 
           {/* Recurring Donation */}
+          {/*
           {enableRecurring && (
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
@@ -156,6 +153,7 @@ export function DonationForm({
               )}
             </div>
           )}
+          */}
 
           {/* Donor Information */}
           {!formData.isAnonymous && (
