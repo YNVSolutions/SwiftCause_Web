@@ -124,8 +124,8 @@ const UserDocCard = ({ icon, title, description, details }: {
 }) => (
   <Dialog>
     <DialogTrigger asChild>
-      <div className="group block p-6 bg-white rounded-xl border border-gray-200 shadow-sm transition-all duration-300 ease-in-out hover:shadow-2xl hover:border-green-300 transform hover:-translate-y-2 cursor-pointer hover:bg-gradient-to-br hover:from-white hover:to-green-50/30">
-        <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-gradient-to-br from-green-50 to-green-100 text-green-600 mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+      <div className="group block p-6 bg-white rounded-xl border border-gray-200 shadow-sm transition-all duration-300 ease-in-out hover:shadow-2xl hover:border-green-300 transform hover:-translate-y-2 cursor-pointer hover:bg-linear-to-br hover:from-white hover:to-green-50/30">
+        <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-linear-to-br from-green-50 to-green-100 text-green-600 mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
           {icon}
         </div>
         <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-green-700 transition-colors duration-300">{title}</h3>
@@ -135,26 +135,26 @@ const UserDocCard = ({ icon, title, description, details }: {
         </div>
       </div>
     </DialogTrigger>
-    <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-white to-gray-50/50 border-0 shadow-2xl">
+    <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-linear-to-br from-white to-gray-50/50 border-0 shadow-2xl">
       <DialogHeader className="space-y-4 pb-6 border-b border-gray-100">
         <DialogTitle className="flex items-center gap-4 text-2xl font-bold text-gray-900">
-          <div className="flex items-center justify-center h-14 w-14 rounded-2xl bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg">
+          <div className="flex items-center justify-center h-14 w-14 rounded-2xl bg-linear-to-br from-green-500 to-green-600 text-white shadow-lg">
             {icon}
           </div>
-          <span className="bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+          <span className="bg-linear-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
             {title}
           </span>
         </DialogTitle>
       </DialogHeader>
       
       <div className="mt-6 space-y-6">
-        <div className="p-4 bg-gradient-to-r from-green-50 to-green-50 rounded-xl border border-green-100">
+        <div className="p-4 bg-linear-to-r from-green-50 to-green-50 rounded-xl border border-green-100">
           <p className="text-gray-700 text-base leading-relaxed font-medium">{description}</p>
         </div>
         
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <div className="h-1 w-8 bg-gradient-to-r from-green-500 to-green-500 rounded-full"></div>
+            <div className="h-1 w-8 bg-linear-to-r from-green-500 to-green-500 rounded-full"></div>
             <h4 className="text-lg font-bold text-gray-900">Key Features</h4>
           </div>
           
@@ -164,8 +164,8 @@ const UserDocCard = ({ icon, title, description, details }: {
                 key={index} 
                 className="group/item flex items-start gap-3 p-4 bg-white rounded-xl border border-gray-100 hover:border-indigo-200 hover:shadow-md transition-all duration-300"
               >
-                <div className="flex-shrink-0 mt-1">
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold group-hover/item:scale-110 transition-transform duration-300">
+                <div className="shrink-0 mt-1">
+                  <div className="w-6 h-6 rounded-full bg-linear-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold group-hover/item:scale-110 transition-transform duration-300">
                     {index + 1}
                   </div>
                 </div>
@@ -174,7 +174,7 @@ const UserDocCard = ({ icon, title, description, details }: {
                     {detail}
                   </span>
                 </div>
-                <div className="flex-shrink-0 opacity-0 group-hover/item:opacity-100 transition-opacity duration-300">
+                <div className="shrink-0 opacity-0 group-hover/item:opacity-100 transition-opacity duration-300">
                   <ArrowRight className="h-4 w-4 text-indigo-500" />
                 </div>
               </div>
@@ -202,9 +202,9 @@ const LegalDocCard = ({ icon, title, description, page, onNavigate }: {
 }) => (
   <div 
     onClick={() => onNavigate && onNavigate(page)}
-    className="group block p-6 bg-white rounded-xl border border-gray-200 shadow-sm transition-all duration-300 ease-in-out hover:shadow-2xl hover:border-indigo-300 transform hover:-translate-y-2 cursor-pointer hover:bg-gradient-to-br hover:from-white hover:to-indigo-50/30"
+    className="group block p-6 bg-white rounded-xl border border-gray-200 shadow-sm transition-all duration-300 ease-in-out hover:shadow-2xl hover:border-indigo-300 transform hover:-translate-y-2 cursor-pointer hover:bg-linear-to-br hover:from-white hover:to-indigo-50/30"
   >
-    <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-gradient-to-br from-indigo-50 to-indigo-100 text-indigo-600 mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+    <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-linear-to-br from-indigo-50 to-indigo-100 text-indigo-600 mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
       {icon}
     </div>
     <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-indigo-700 transition-colors duration-300">{title}</h3>
