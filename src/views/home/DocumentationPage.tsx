@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '../../shared/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../shared/ui/dialog';
 import { 
@@ -9,15 +9,8 @@ import {
   Smartphone, 
   Gift, 
   Users,
-  BookUser,
-  Shield,
-  HelpCircle,
-  Gavel,
-  FileText,
   ArrowRight
 } from 'lucide-react';
-import { Footer } from '../../shared/ui/Footer';
-
 
 const userDocs = [
   {
@@ -94,28 +87,6 @@ const userDocs = [
   }
 ];
 
-const legalDocs = [
-  {
-    icon: <HelpCircle size={24} />,
-    title: "Contact & Support",
-    description: "Get in touch with our support team, find our office details, and send us your questions.",
-    page: "contact" 
-  },
-  {
-    icon: <Gavel size={24} />,
-    title: "Terms of Service",
-    description: "Read our comprehensive legal terms covering platform usage, user responsibilities, and service agreements.",
-    page: "terms" 
-  },
-  {
-    icon: <Shield size={24} />,
-    title: "About Swift Cause",
-    description: "Learn about our mission, story, impact, and how we're transforming fundraising for organizations worldwide.",
-    page: "about" 
-  }
-];
-
-
 const UserDocCard = ({ icon, title, description, details }: { 
   icon: React.ReactNode; 
   title: string; 
@@ -124,68 +95,64 @@ const UserDocCard = ({ icon, title, description, details }: {
 }) => (
   <Dialog>
     <DialogTrigger asChild>
-      <div className="group block p-6 bg-white rounded-xl border border-gray-200 shadow-sm transition-all duration-300 ease-in-out hover:shadow-2xl hover:border-green-300 transform hover:-translate-y-2 cursor-pointer hover:bg-linear-to-br hover:from-white hover:to-green-50/30">
-        <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-linear-to-br from-green-50 to-green-100 text-green-600 mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+      <div className="group block p-8 bg-[#F7F6F2] rounded-[2rem] border border-[#F3F1EA]/60 shadow-lg shadow-slate-200/20 transition-all duration-300 ease-in-out hover:shadow-xl hover:shadow-slate-200/30 transform hover:-translate-y-2 cursor-pointer hover:bg-[#F3F1EA]/50">
+        <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-[#064e3b]/10 text-[#064e3b] mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
           {icon}
         </div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-green-700 transition-colors duration-300">{title}</h3>
-        <p className="text-gray-600 text-sm mb-4 leading-relaxed">{description}</p>
-        <div className="flex items-center text-sm font-semibold text-green-600 group-hover:text-green-700 transition-all duration-300">
-          Read More <ArrowRight className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
+        <h3 className="text-lg font-medium text-slate-800 mb-3 group-hover:text-[#064e3b] transition-colors duration-300 tracking-tight">{title}</h3>
+        <p className="text-slate-600 text-sm mb-4 leading-relaxed font-normal tracking-wide">{description}</p>
+        <div className="flex items-center text-sm font-medium text-[#064e3b] group-hover:text-[#064e3b] transition-all duration-300 tracking-wide">
+          Read More <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
         </div>
       </div>
     </DialogTrigger>
-    <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-linear-to-br from-white to-gray-50/50 border-0 shadow-2xl">
-      <DialogHeader className="space-y-4 pb-6 border-b border-gray-100">
-        <DialogTitle className="flex items-center gap-4 text-2xl font-bold text-gray-900">
-          <div className="flex items-center justify-center h-14 w-14 rounded-2xl bg-linear-to-br from-green-500 to-green-600 text-white shadow-lg">
-            {icon}
-          </div>
-          <span className="bg-linear-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-            {title}
-          </span>
-        </DialogTitle>
-      </DialogHeader>
-      
-      <div className="mt-6 space-y-6">
-        <div className="p-4 bg-linear-to-r from-green-50 to-green-50 rounded-xl border border-green-100">
-          <p className="text-gray-700 text-base leading-relaxed font-medium">{description}</p>
-        </div>
+    <DialogContent className="max-w-4xl w-[90vw] h-[85vh] bg-[#F7F6F2] border-0 shadow-2xl rounded-[2rem] p-0 overflow-hidden [&>button]:hidden">
+      <div className="h-full flex flex-col">
+        <DialogHeader className="flex-shrink-0 p-8 pb-6 border-b border-slate-200/50">
+          <DialogTitle className="flex items-center gap-4 text-2xl font-medium text-slate-800 tracking-tight">
+            <div className="flex items-center justify-center h-14 w-14 rounded-2xl bg-[#064e3b]/10 text-[#064e3b] shadow-lg">
+              {icon}
+            </div>
+            <span className="text-slate-800">
+              {title}
+            </span>
+          </DialogTitle>
+        </DialogHeader>
         
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <div className="h-1 w-8 bg-linear-to-r from-green-500 to-green-500 rounded-full"></div>
-            <h4 className="text-lg font-bold text-gray-900">Key Features</h4>
-          </div>
-          
-          <div className="grid gap-3">
-            {details.map((detail, index) => (
-              <div 
-                key={index} 
-                className="group/item flex items-start gap-3 p-4 bg-white rounded-xl border border-gray-100 hover:border-indigo-200 hover:shadow-md transition-all duration-300"
-              >
-                <div className="shrink-0 mt-1">
-                  <div className="w-6 h-6 rounded-full bg-linear-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold group-hover/item:scale-110 transition-transform duration-300">
-                    {index + 1}
-                  </div>
-                </div>
-                <div className="flex-1">
-                  <span className="text-gray-700 leading-relaxed group-hover/item:text-gray-900 transition-colors duration-300">
-                    {detail}
-                  </span>
-                </div>
-                <div className="shrink-0 opacity-0 group-hover/item:opacity-100 transition-opacity duration-300">
-                  <ArrowRight className="h-4 w-4 text-indigo-500" />
+        <div className="flex-1 p-8 pt-6 overflow-hidden">
+          <div className="h-full flex flex-col space-y-6">
+            <div className="flex-shrink-0 p-4 bg-[#064e3b]/5 rounded-2xl border border-[#064e3b]/10">
+              <p className="text-slate-700 text-base leading-relaxed font-normal tracking-wide">{description}</p>
+            </div>
+            
+            <div className="flex-1 min-h-0 flex flex-col">
+              <div className="flex-shrink-0 flex items-center gap-2 mb-4">
+                <div className="h-1 w-8 bg-[#064e3b] rounded-full"></div>
+                <h4 className="text-lg font-medium text-slate-800 tracking-tight">Key Features</h4>
+              </div>
+              
+              <div className="flex-1 min-h-0">
+                <div className="h-full grid grid-cols-1 gap-3 content-start">
+                  {details.map((detail, index) => (
+                    <div 
+                      key={index} 
+                      className="group/item flex items-start gap-3 p-4 bg-[#F3F1EA] rounded-2xl border border-slate-200/50 hover:border-[#064e3b]/20 hover:shadow-md transition-all duration-300"
+                    >
+                      <div className="flex-shrink-0 mt-1">
+                        <div className="w-6 h-6 rounded-full bg-[#064e3b] flex items-center justify-center text-white text-xs font-semibold group-hover/item:scale-110 transition-transform duration-300">
+                          {index + 1}
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-slate-700 leading-relaxed group-hover/item:text-slate-800 transition-colors duration-300 font-normal text-sm tracking-wide">
+                          {detail}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-        
-        <div className="pt-4 border-t border-gray-100">
-          <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
-            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-            <span>Ready to get started? Contact our support team for assistance.</span>
+            </div>
           </div>
         </div>
       </div>
@@ -193,97 +160,68 @@ const UserDocCard = ({ icon, title, description, details }: {
   </Dialog>
 );
 
-const LegalDocCard = ({ icon, title, description, page, onNavigate }: { 
-  icon: React.ReactNode; 
-  title: string; 
-  description: string; 
-  page: string;
-  onNavigate?: (screen: string) => void;
-}) => (
-  <div 
-    onClick={() => onNavigate && onNavigate(page)}
-    className="group block p-6 bg-white rounded-xl border border-gray-200 shadow-sm transition-all duration-300 ease-in-out hover:shadow-2xl hover:border-indigo-300 transform hover:-translate-y-2 cursor-pointer hover:bg-linear-to-br hover:from-white hover:to-indigo-50/30"
-  >
-    <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-linear-to-br from-indigo-50 to-indigo-100 text-indigo-600 mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
-      {icon}
-    </div>
-    <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-indigo-700 transition-colors duration-300">{title}</h3>
-    <p className="text-gray-600 text-sm mb-4 leading-relaxed">{description}</p>
-    <div className="flex items-center text-sm font-semibold text-indigo-600 group-hover:text-indigo-700 transition-all duration-300">
-      Read More <ArrowRight className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
-    </div>
-  </div>
-);
-
 export function DocumentationPage({ onNavigate }: { onNavigate?: (screen: string) => void }) {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="sticky top-0 z-40 bg-white/80 backdrop-blur border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="h-9 w-9">
-              <img 
-                src="/logo.png" 
-                alt="Swift Cause Logo" 
-                className="w-full h-full object-contain"
-              />
-            </div>
-            <div>
-              <h1 className="text-lg font-semibold text-gray-900">Swift Cause</h1>
-            </div>
+    <div className="min-h-screen bg-[#F3F1EA] font-['Helvetica',sans-serif] text-slate-700 antialiased">
+      <style jsx>{`
+        .glass-card {
+          background: rgba(255, 255, 255, 0.85);
+          backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        * {
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+          text-rendering: optimizeLegibility;
+        }
+      `}</style>
+      
+      {/* Header */}
+      <nav className="fixed top-0 w-full z-50">
+        <div className="max-w-[1400px] mx-auto flex items-center justify-between py-5 glass-card px-4 rounded-b-2xl">
+          <div className="flex items-center gap-3">
+            <img src="/logo.png" alt="SwiftCause" className="w-8 h-8" />
+            <span className="font-bold text-xl tracking-tight text-[#064e3b]">SwiftCause</span>
           </div>
           
-          <Button variant="ghost" onClick={() => onNavigate && onNavigate('home')} className="flex items-center text-gray-600 hover:text-gray-900">
+          <Button 
+            variant="ghost" 
+            onClick={() => onNavigate && onNavigate('home')} 
+            className="flex items-center text-slate-600 hover:text-[#064e3b] px-6 py-3 rounded-2xl hover:bg-[#064e3b]/5 transition-all duration-300"
+          >
             <ArrowLeft className="h-5 w-5 mr-2" /> Back
           </Button>
         </div>
-      </div>
+      </nav>
 
-      <main>
-     
-        <section className="relative py-20 sm:py-24 bg-gradient-to-b from-green-50 to-gray-50 text-center">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 tracking-tight">
+      <main className="pt-32">
+        {/* Hero Section */}
+        <section className="pb-8 px-4">
+          <div className="max-w-[1400px] mx-auto text-center">
+            <h1 className="text-4xl md:text-5xl font-medium text-slate-800 leading-tight mb-6 tracking-tight">
               Help Center & Documentation
             </h1>
-            <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="text-slate-600 text-lg leading-relaxed font-normal max-w-3xl mx-auto tracking-wide">
               Everything you need to get started, manage your campaigns, and find answers to your questions.
             </p>
           </div>
         </section>
 
-        <div className="py-16 sm:py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+        {/* Content Sections */}
+        <div className="px-4 pb-12">
+          <div className="max-w-[1400px] mx-auto space-y-12">
            
+            {/* User Documentation Section */}
             <div>
-              <div className="flex items-center mb-8">
-                <BookUser className="h-8 w-8 text-green-600 mr-3" />
-                <h2 className="text-3xl font-bold text-gray-900">User Documentation (For Nonprofits)</h2>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {userDocs.map((doc, i) => (
                   <UserDocCard key={i} icon={doc.icon} title={doc.title} description={doc.description} details={doc.details} />
-                ))}
-              </div>
-            </div>
-
-        
-            <div>
-              <div className="flex items-center mb-8">
-                <FileText className="h-8 w-8 text-green-600 mr-3" />
-                <h2 className="text-3xl font-bold text-gray-900">General & Legal Documentation</h2>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {legalDocs.map((doc, i) => (
-                  <LegalDocCard key={i} icon={doc.icon} title={doc.title} description={doc.description} page={doc.page} onNavigate={onNavigate} />
                 ))}
               </div>
             </div>
           </div>
         </div>
       </main>
-      
-      <Footer onNavigate={onNavigate} />
     </div>
   );
 }

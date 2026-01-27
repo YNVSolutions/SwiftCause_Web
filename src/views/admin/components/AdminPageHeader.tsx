@@ -64,14 +64,17 @@ export function AdminPageHeader({
       timeoutIds.current.push(burstId);
     }
 
+    // Capture the current timeoutIds array for cleanup
+    const currentTimeoutIds = timeoutIds.current;
+
     const intervalId = window.setInterval(() => {
       generateParticle();
     }, 1500);
 
     return () => {
       window.clearInterval(intervalId);
-      timeoutIds.current.forEach((id) => window.clearTimeout(id));
-      timeoutIds.current = [];
+      currentTimeoutIds.forEach((id) => window.clearTimeout(id));
+      currentTimeoutIds.length = 0; // Clear the array
     };
   }, []);
 
