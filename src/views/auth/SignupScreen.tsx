@@ -18,7 +18,8 @@ import {
   AlertCircle,
   TrendingUp,
   Lock,
-  DollarSign
+  DollarSign,
+  Home
 } from 'lucide-react';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
@@ -471,7 +472,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
               </div>
 
               {/* Footer */}
-              <footer className="relative z-10 pt-6 border-t border-white/10">
+              <footer className="relative z-10 pt-8 mt-6 border-t border-white/10">
                 <p className="text-emerald-100/40 text-sm">
                   Trust and transparency are at the core of our platform architecture.
                 </p>
@@ -483,20 +484,27 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
         {/* Right side - Form */}
         <div className="flex flex-col p-6 md:p-8 lg:p-12 bg-[#fcf9f1] min-h-screen">
           {/* Header */}
-          <div className="flex items-center justify-between lg:justify-end mb-6">
-            {/* Mobile logo */}
-            <div className="flex lg:hidden items-center gap-2">
-              <div className="w-8 h-8 bg-[#064e3b] rounded-lg flex items-center justify-center">
-                <Heart className="text-white w-4 h-4" />
-              </div>
+          <div className="flex items-center justify-between mb-6">
+            {/* Home button */}
+            <button
+              onClick={onBack}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 text-slate-600 hover:text-[#064e3b] hover:border-[#064e3b] hover:bg-green-50 transition-all group"
+            >
+              <Home className="w-4 h-4" />
+              <span className="text-sm font-medium">Home</span>
+            </button>
+
+            {/* Mobile logo - center on mobile */}
+            <div className="flex lg:hidden items-center gap-2 absolute left-1/2 transform -translate-x-1/2">
+              <Image src="/logo.png" alt="Swift Cause Logo" width={32} height={32} className="rounded-lg" />
               <span className="font-bold text-xl tracking-tight text-[#064e3b] uppercase">
-                Swift Cause
+                SwiftCause
               </span>
             </div>
 
             {/* Login link */}
             <div className="text-sm text-slate-500">
-              Already have an account?{' '}
+              <span className="hidden sm:inline">Already have an account?{' '}</span>
               <button onClick={onLogin} className="text-[#064e3b] font-semibold hover:underline">
                 Log in
               </button>
@@ -652,12 +660,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                 By continuing, you agree to our{' '}
                 <button onClick={onViewTerms} className="underline hover:text-slate-600 text-slate-500">
                   Terms of Service
-                </button>{' '}
-                and{' '}
-                <button onClick={onViewTerms} className="underline hover:text-slate-600 text-slate-500">
-                  Privacy Policy
-                </button>
-                .
+                </button>{' '}.
               </p>
             )}
 
