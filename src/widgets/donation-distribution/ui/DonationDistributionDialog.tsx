@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { X, DollarSign, TrendingUp, Award, Download, ArrowUpDown } from 'lucide-react';
+import { X, DollarSign, TrendingUp, Award, ArrowUpDown } from 'lucide-react';
 import {
   calculateDistributionSummary,
   getHoverColor,
   estimateRangeTotal,
-  DonationRange,
 } from '../lib/distributionCalculations';
 
 interface DonationDistributionDialogProps {
@@ -28,6 +27,7 @@ export const DonationDistributionDialog: React.FC<DonationDistributionDialogProp
   if (!isOpen) return null;
 
   const summary = calculateDistributionSummary(data, totalRaised);
+  
   const maxCount = Math.max(...summary.ranges.map((r) => r.count));
 
   // Sort ranges based on selected criteria
@@ -38,8 +38,9 @@ export const DonationDistributionDialog: React.FC<DonationDistributionDialogProp
       case 'percentage':
         return b.percentage - a.percentage;
       case 'range':
+        return a.range.localeCompare(b.range);
       default:
-        return 0; // Keep original order for range
+        return 0;
     }
   });
 
@@ -84,47 +85,47 @@ export const DonationDistributionDialog: React.FC<DonationDistributionDialogProp
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           <div className="space-y-6">
             {/* Summary Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl p-5 border border-blue-200">
+              <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-blue-600 text-white flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-lg bg-gray-600 text-white flex items-center justify-center">
                     <DollarSign className="w-5 h-5" />
                   </div>
-                  <span className="text-sm font-medium text-blue-900">Total Donations</span>
+                  <span className="text-sm font-medium text-gray-700">Total Donations</span>
                 </div>
-                <p className="text-3xl font-bold text-blue-900 mb-1">{summary.totalDonations.toLocaleString()}</p>
-                <p className="text-sm text-blue-700">
+                <p className="text-3xl font-bold text-gray-900 mb-1">{summary.totalDonations.toLocaleString()}</p>
+                <p className="text-sm text-gray-600">
                   {formatCurrency(totalRaised)} raised
                 </p>
               </div>
 
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl p-5 border border-purple-200">
+              <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-purple-600 text-white flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-lg bg-slate-600 text-white flex items-center justify-center">
                     <Award className="w-5 h-5" />
                   </div>
-                  <span className="text-sm font-medium text-purple-900">Most Popular</span>
+                  <span className="text-sm font-medium text-gray-700">Most Popular</span>
                 </div>
-                <p className="text-3xl font-bold text-purple-900 mb-1">{summary.mostPopularRange}</p>
-                <p className="text-sm text-purple-700">
+                <p className="text-3xl font-bold text-gray-900 mb-1">{summary.mostPopularRange}</p>
+                <p className="text-sm text-gray-600">
                   {summary.mostPopularCount} donations ({Math.round((summary.mostPopularCount / summary.totalDonations) * 100)}%)
                 </p>
               </div>
 
-              <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-xl p-5 border border-emerald-200">
+              <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-emerald-600 text-white flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-lg bg-stone-600 text-white flex items-center justify-center">
                     <TrendingUp className="w-5 h-5" />
                   </div>
-                  <span className="text-sm font-medium text-emerald-900">Average Donation</span>
+                  <span className="text-sm font-medium text-gray-700">Average Donation</span>
                 </div>
-                <p className="text-3xl font-bold text-emerald-900 mb-1">
+                <p className="text-3xl font-bold text-gray-900 mb-1">
                   {formatCurrency(Math.round(summary.averageDonation))}
                 </p>
-                <p className="text-sm text-emerald-700">
+                <p className="text-sm text-gray-600">
                   per transaction
                 </p>
               </div>
@@ -146,7 +147,10 @@ export const DonationDistributionDialog: React.FC<DonationDistributionDialogProp
               <div className="relative">
                 <div className="flex items-end justify-between gap-3 h-80 px-2">
                   {sortedRanges.map((range, index) => {
-                    const heightPercentage = maxCount > 0 ? (range.count / maxCount) * 100 : 0;
+                    // Calculate height in pixels relative to the 320px (h-80) container
+                    const chartHeight = 320; // h-80 = 320px
+                    const heightInPixels = (range.percentage / 100) * chartHeight;
+                    
                     const estimatedTotal = estimateRangeTotal(range.range, range.count);
                     const isHovered = hoveredBar === index;
 
@@ -183,14 +187,14 @@ export const DonationDistributionDialog: React.FC<DonationDistributionDialogProp
 
                         {/* Bar */}
                         <div
-                          className={`w-full ${range.color} ${getHoverColor(range.color)} rounded-t-lg transition-all duration-300 cursor-pointer relative overflow-hidden ${
+                          className={`w-full rounded-t-lg transition-all duration-300 cursor-pointer relative overflow-hidden ${
                             isHovered ? 'opacity-100 scale-105' : 'opacity-90'
-                          }`}
-                          style={{ height: `${heightPercentage}%`, minHeight: range.count > 0 ? '12px' : '0px' }}
+                          } ${range.color} ${isHovered ? getHoverColor(range.color) : ''}`}
+                          style={{ height: `${heightInPixels}px`, minHeight: range.count > 0 ? '4px' : '0px' }}
                         >
                           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
                           
-                          {range.count > 0 && heightPercentage > 20 && (
+                          {range.count > 0 && heightInPixels > 30 && (
                             <div className="absolute top-3 left-1/2 -translate-x-1/2 text-white font-bold text-sm">
                               {range.count}
                             </div>
@@ -214,7 +218,7 @@ export const DonationDistributionDialog: React.FC<DonationDistributionDialogProp
                 {/* Y-axis label */}
                 <div className="absolute left-0 top-0 -translate-x-full pr-3 h-full flex items-center">
                   <div className="text-sm text-gray-600 font-medium -rotate-90 whitespace-nowrap">
-                    Number of Donations
+                    Share of Donations (%)
                   </div>
                 </div>
               </div>

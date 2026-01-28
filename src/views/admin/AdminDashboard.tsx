@@ -1,4 +1,7 @@
+'use client';
+
 import { useState, useEffect, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { Button } from "../../shared/ui/button";
 import { Input } from "../../shared/ui/input";
 import { Label } from "../../shared/ui/label";
@@ -18,21 +21,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "../../shared/ui/collapsible";
-import {
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts";
 import {
   DollarSign,
   Users,
@@ -77,6 +65,7 @@ import {
   Zap,
   MoreVertical,
   Pencil,
+  Gift,
 } from "lucide-react";
 import {
   Dialog,
@@ -105,18 +94,26 @@ import {
   Activity,
   Alert,
 } from "../../shared/lib/hooks/useDashboardData";
-import { OrganizationSwitcher } from "./OrganizationSwitcher";
 import { useOrganization } from "../../shared/lib/hooks/useOrganization";
 import { auth } from "../../shared/lib/firebase";
 
 import { AdminLayout } from "./AdminLayout";
+import { OrganizationSwitcher } from "./OrganizationSwitcher";
 import { useStripeOnboarding, StripeOnboardingDialog } from "../../features/stripe-onboarding";
 import { useToast } from "../../shared/ui/ToastProvider";
 import { FundraisingEfficiencyGauge, PerformanceDetailDialog } from "../../widgets/campaign-performance";
 import { CampaignProgressBars, CampaignProgressDialog, transformCampaignsToProgress } from "../../widgets/campaign-progress";
-import { DonationDistributionChart, DonationDistributionDialog } from "../../widgets/donation-distribution";
+import { DonationDistributionDialog } from "../../widgets/donation-distribution";
 import { KioskForm, KioskFormData } from "./components/KioskForm";
 import { CampaignForm, CampaignFormData } from "./components/CampaignForm";
+import { KpiCard } from "./components/KpiCard";
+
+// Dynamic imports for chart components to avoid SSR issues
+const RevenueGrowthChart = dynamic(() => import("./components/RevenueGrowthChart").then(mod => ({ default: mod.RevenueGrowthChart })), { ssr: false });
+const DonationDistributionDonut = dynamic(() => import("./components/DonationDistributionDonut").then(mod => ({ default: mod.DonationDistributionDonut })), { ssr: false });
+const TopPerformingCampaigns = dynamic(() => import("./components/TopPerformingCampaigns").then(mod => ({ default: mod.TopPerformingCampaigns })), { ssr: false });
+const DonorActivityHeatmap = dynamic(() => import("./components/DonorActivityHeatmap").then(mod => ({ default: mod.DonorActivityHeatmap })), { ssr: false });
+import { AlertsSection } from "./components/AlertsSection";
 
 interface AdminDashboardProps {
   onNavigate: (screen: Screen) => void;
@@ -126,45 +123,19 @@ interface AdminDashboardProps {
   onOrganizationSwitch: (organizationId: string) => void;
 }
 
-// Professional color palette
+// Category-specific color palette for donation distribution
 const CHART_COLORS = [
-  "#4F46E5", // Indigo-600 (Primary)
-  "#10B981", // Emerald-500 (Secondary)
-  "#8B5CF6", // Violet-500
-  "#F59E0B", // Amber-500
-  "#06B6D4", // Cyan-500
-  "#EC4899", // Pink-500
-  "#F97316", // Orange-500
-  "#84CC16", // Lime-500
-  "#14B8A6", // Teal-500
-  "#64748B"  // Slate-500
+  "#2F6B4F", // Forest Green - Environment (Natural, trustworthy, aligns with sustainability)
+  "#5B7C99", // Muted Blue - Education (Calm, intellectual, enterprise-safe)
+  "#3A7F7A", // Muted Teal - Health (Clean, medical, non-alarming)
+  "#D9B36A", // Muted Amber - Crisis Relief (Attention without panic)
+  "#8FCFB3", // Soft Mint - Welfare/Social (Human, positive, supportive)
+  "#B6B8BC", // Warm Gray - Uncategorized/Other (Neutral fallback)
+  "#2F6B4F", // Forest Green (repeat for additional categories)
+  "#5B7C99", // Muted Blue (repeat)
+  "#3A7F7A", // Muted Teal (repeat)
+  "#D9B36A"  // Muted Amber (repeat)
 ]
-
-// Custom Tooltip Component for Charts
-const CustomChartTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-white p-3 border border-gray-100 shadow-lg rounded-lg text-sm">
-        {label && <p className="font-semibold text-gray-900 mb-2">{label}</p>}
-        {payload.map((entry: any, index: number) => (
-          <div key={index} className="flex items-center justify-between gap-4 mb-1 last:mb-0">
-            <div className="flex items-center gap-2">
-              <span 
-                className="w-3 h-3 rounded-sm" 
-                style={{ backgroundColor: entry.color }}
-              />
-              <span className="text-gray-600">{entry.name}:</span>
-            </div>
-            <span className="font-semibold text-gray-900">
-              {typeof entry.value === 'number' ? `£${entry.value.toLocaleString('en-GB')}` : entry.value}
-            </span>
-          </div>
-        ))}
-      </div>
-    );
-  }
-  return null;
-}
 
 export function AdminDashboard({
   onNavigate,
@@ -178,100 +149,119 @@ export function AdminDashboard({
   
   const { deviceDistribution } = stats;
 
-  const [topCampaigns, setTopCampaigns] = useState<Campaign[]>([]);
-  const [allCampaignsForPerformance, setAllCampaignsForPerformance] = useState<Campaign[]>([]);
-  const [goalComparisonData, setGoalComparisonData] = useState<any[]>([]);
-  const [categoryData, setCategoryData] = useState<any[]>([]);
-  const [showFeatures, setShowFeatures] = useState(false);
-  const [isLegendExpanded, setIsLegendExpanded] = useState(false);
-  const [stripeStatusMessage, setStripeStatusMessage] = useState<{ type: 'success' | 'error' | 'warning', message: string } | null>(null);
-  const [showStripeStatusDialog, setShowStripeStatusDialog] = useState(false);
-  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
-  const [showActivityDialog, setShowActivityDialog] = useState(false);
-  const [showPerformanceDialog, setShowPerformanceDialog] = useState(false);
-  const [showDonationDistributionDialog, setShowDonationDistributionDialog] = useState(false);
-  const [showCampaignProgressDialog, setShowCampaignProgressDialog] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  
-  // Initialize onboardingDismissed from sessionStorage
-  const [onboardingDismissed, setOnboardingDismissed] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return sessionStorage.getItem('onboardingDismissed') === 'true';
-    }
-    return false;
+  const [dashboardData, setDashboardData] = useState({
+    topCampaigns: [] as Campaign[],
+    allCampaignsForPerformance: [] as Campaign[],
+    goalComparisonData: [] as any[],
+    categoryData: [] as any[],
+    showFeatures: false,
+    isLegendExpanded: false
   });
-  
-  const [showKioskForm, setShowKioskForm] = useState(false);
-  const [showLinkingForm, setShowLinkingForm] = useState(false);
-  const [allCampaigns, setAllCampaigns] = useState<Campaign[]>([]);
-  const [assignedCampaignIds, setAssignedCampaignIds] = useState<string[]>([]);
-  const [allKiosks, setAllKiosks] = useState<Kiosk[]>([]);
-  const [assignedKioskIds, setAssignedKioskIds] = useState<string[]>([]);
-  const [isGlobalCampaign, setIsGlobalCampaign] = useState(false);
-  const [showCreateKioskModal, setShowCreateKioskModal] = useState(false);
-  const [newKiosk, setNewKiosk] = useState({ name: '', location: '', accessCode: '' });
-  const [kioskFormData, setKioskFormData] = useState<KioskFormData>({
-    name: '',
-    location: '',
-    accessCode: '',
-    status: 'online',
-    assignedCampaigns: [],
-    displayLayout: 'grid'
+
+  const [onboardingFlow, setOnboardingFlow] = useState({
+    showOnboarding: false,
+    onboardingDismissed: sessionStorage.getItem('onboardingDismissed') === 'true',
+    showCampaignForm: false,
+    showKioskForm: false,
+    showLinkingForm: false,
+    showStripeStep: false,
+    isTourActive: false,
+    campaignCountChecked: false
   });
-  const [campaignFormData, setCampaignFormData] = useState<CampaignFormData>({
-    title: '',
-    briefOverview: '',
-    description: '',
-    goal: 0,
-    category: '',
-    status: 'active',
-    coverImageUrl: '',
-    videoUrl: '',
-    galleryImages: [],
-    predefinedAmounts: [10, 25, 50],
-    startDate: '',
-    endDate: '',
-    enableRecurring: false,
-    recurringIntervals: [],
-    tags: [],
-    isGlobal: false,
-    assignedKiosks: []
+
+  const [campaignCreation, setCampaignCreation] = useState({
+    formData: {
+      title: '',
+      briefOverview: '',
+      description: '',
+      goal: 0,
+      category: '',
+      status: 'active',
+      coverImageUrl: '',
+      videoUrl: '',
+      galleryImages: [],
+      predefinedAmounts: [10, 25, 50],
+      startDate: '',
+      endDate: '',
+      enableRecurring: false,
+      recurringIntervals: [],
+      tags: [],
+      isGlobal: false,
+      assignedKiosks: []
+    } as CampaignFormData,
+    newCampaign: { 
+      title: '', 
+      description: '', 
+      goal: 0, 
+      status: 'active',
+      startDate: '',
+      endDate: '',
+      tags: [] as string[],
+      coverImageUrl: '',
+      category: '',
+      isGlobal: false
+    },
+    allCampaigns: [] as Campaign[],
+    assignedCampaignIds: [] as string[],
+    editingCampaignInTour: null as Campaign | null,
+    selectedCampaignInTour: null as Campaign | null,
+    selectedImageFile: null as File | null,
+    isCreating: false,
+    createdId: '',
+    linkingId: null as string | null
   });
-  const [showCampaignFormDialog, setShowCampaignFormDialog] = useState(false);
-  const [selectedCampaignImageFile, setSelectedCampaignImageFile] = useState<File | null>(null);
-  const [editingCampaignInTour, setEditingCampaignInTour] = useState<Campaign | null>(null);
-  const [selectedCampaignInTour, setSelectedCampaignInTour] = useState<Campaign | null>(null);
-  const [isCreatingCampaign, setIsCreatingCampaign] = useState(false);
-  const [isCreatingKiosk, setIsCreatingKiosk] = useState(false);
-  const [linkingCampaignId, setLinkingCampaignId] = useState<string | null>(null);
-  const [createdCampaignId, setCreatedCampaignId] = useState<string>('');
-  const [createdKioskId, setCreatedKioskId] = useState<string>('');
-  const [campaignCountChecked, setCampaignCountChecked] = useState(false);
-  const [showCampaignForm, setShowCampaignForm] = useState(false);
-  const [showStripeStep, setShowStripeStep] = useState(false);
-  const [isTourActive, setIsTourActive] = useState(false);
-  const [newCampaign, setNewCampaign] = useState({ 
-    title: '', 
-    description: '', 
-    goal: 0, 
-    status: 'active',
-    startDate: '',
-    endDate: '',
-    tags: [] as string[],
-    coverImageUrl: '',
-    category: '',
-    isGlobal: false
+
+  const [kioskCreation, setKioskCreation] = useState({
+    formData: {
+      name: '',
+      location: '',
+      accessCode: '',
+      status: 'online',
+      assignedCampaigns: [],
+      displayLayout: 'grid'
+    } as KioskFormData,
+    newKiosk: { name: '', location: '', accessCode: '' },
+    allKiosks: [] as Kiosk[],
+    assignedKioskIds: [] as string[],
+    isGlobalCampaign: false,
+    isCreating: false,
+    createdId: ''
+  });
+
+  const [stripeOnboarding, setStripeOnboarding] = useState({
+    statusMessage: null as { type: 'success' | 'error' | 'warning', message: string } | null,
+    isOnboarding: false
+  });
+
+  const [dialogVisibility, setDialogVisibility] = useState({
+    showStripeStatusDialog: false,
+    showActivityDialog: false,
+    showPerformanceDialog: false,
+    showDonationDistributionDialog: false,
+    showCampaignProgressDialog: false,
+    showCampaignFormDialog: false,
+    showCreateKioskModal: false,
+    showOnboardingPopup: false,
+    selectedActivity: null as Activity | null
   });
 
   const { organization, loading: orgLoading, error: orgError } = useOrganization(
     userSession.user.organizationId ?? null
   );
 
-
   const { isStripeOnboarded, needsOnboarding } = useStripeOnboarding(organization);
   const { showToast } = useToast();
-  const [showOnboardingPopup, setShowOnboardingPopup] = useState(false);
-  const [showSmallPopup, setShowSmallPopup] = useState(false);
+
+  // Reusable function to fetch campaigns by organization ID
+  const fetchCampaignsByOrganization = useCallback(async (organizationId: string): Promise<Campaign[]> => {
+    const campaignsRef = collection(db, "campaigns");
+    const q = query(
+      campaignsRef,
+      where("organizationId", "==", organizationId)
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Campaign));
+  }, []);
 
   // Handle return from Stripe onboarding
 
@@ -281,18 +271,23 @@ export function AdminDashboard({
     const stripeStatus = params.get("stripe_status");
 
     if (stripeStatus === "success") {
-      setStripeStatusMessage({
-        type: "success",
-        message:
-          "Stripe onboarding complete! Your account is being reviewed and will be payout-ready shortly.",
-      });
+      setStripeOnboarding(prev => ({
+        ...prev,
+        statusMessage: {
+          type: "success",
+          message: "Stripe onboarding complete! Your account is being reviewed and will be payout-ready shortly.",
+        }
+      }));
       showToast("Stripe onboarding completed successfully!", "success", 3000);
       // Organization data will auto-refresh via Firestore listener
     } else if (stripeStatus === "refresh") {
-      setStripeStatusMessage({
-        type: "warning",
-        message: "Stripe onboarding session expired or was cancelled. Please try again.",
-      });
+      setStripeOnboarding(prev => ({
+        ...prev,
+        statusMessage: {
+          type: "warning",
+          message: "Stripe onboarding session expired or was cancelled. Please try again.",
+        }
+      }));
       showToast("Stripe onboarding was cancelled. Please try again.", "warning", 3000);
     }
 
@@ -302,42 +297,19 @@ export function AdminDashboard({
     }
   }, [showToast]);
 
-  // Auto-open Stripe onboarding popup on mount if not onboarded
-  useEffect(() => {
-    if (!orgLoading && organization && needsOnboarding) {
-      // Show small popup after a short delay for better UX
-      const timer = setTimeout(() => {
-        setShowSmallPopup(true);
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [orgLoading, organization, needsOnboarding]);
-
-
-
   const fetchChartData = useCallback(async () => {
     if (!userSession.user.organizationId) return;
     try {
-      const campaignsRef = collection(db, "campaigns");
-      const orgQuery = where("organizationId", "==", userSession.user.organizationId);
-
-      const topListQuery = query(
-        campaignsRef,
-        orgQuery
-      );
-      const topListSnapshot = await getDocs(topListQuery);
-      const allCampaigns = topListSnapshot.docs.map(
-        (doc) => ({ id: doc.id, ...doc.data() } as Campaign)
-      );
+      const allCampaigns = await fetchCampaignsByOrganization(userSession.user.organizationId);
       
       // Store all campaigns for performance widget
-      setAllCampaignsForPerformance(allCampaigns);
+      setDashboardData(prev => ({ ...prev, allCampaignsForPerformance: allCampaigns }));
         
         // Check if there are no campaigns and show onboarding (only if not previously dismissed)
-        if (allCampaigns.length === 0 && !showOnboarding && !onboardingDismissed) {
-          setShowOnboarding(true);
+        if (allCampaigns.length === 0 && !onboardingFlow.showOnboarding && !onboardingFlow.onboardingDismissed) {
+          setOnboardingFlow(prev => ({ ...prev, showOnboarding: true }));
         }
-        setCampaignCountChecked(true);
+        setOnboardingFlow(prev => ({ ...prev, campaignCountChecked: true }));
         
         // Sort by percentage of goal completion
         const sortedByPercentage = allCampaigns
@@ -349,48 +321,40 @@ export function AdminDashboard({
           })
           .slice(0, 4);
         
-        setTopCampaigns(sortedByPercentage);
+        setDashboardData(prev => ({ ...prev, topCampaigns: sortedByPercentage }));
 
-        const topChartQuery = query(
-          campaignsRef,
-          orgQuery,
-          orderBy("raised", "desc"),
-          limit(5)
-        );
-        const topChartSnapshot = await getDocs(topChartQuery);
-        const comparisonData = topChartSnapshot.docs.map((doc) => {
-          const data = doc.data() as Campaign;
-          return {
-            name: data.title,
-            Collected: data.raised || 0,
-            Goal: data.goal || 0,
-          };
-        });
-        setGoalComparisonData(comparisonData);
+        // Get top 5 campaigns by raised amount for chart
+        const topCampaignsForChart = allCampaigns
+          .sort((a, b) => (b.raised || 0) - (a.raised || 0))
+          .slice(0, 5);
+        
+        const comparisonData = topCampaignsForChart.map((campaign) => ({
+          name: campaign.title,
+          Collected: campaign.raised || 0,
+          Goal: campaign.goal || 0,
+        }));
+        setDashboardData(prev => ({ ...prev, goalComparisonData: comparisonData }));
 
-        const allCampaignsQuery = query(campaignsRef, orgQuery);
-        const allCampaignsSnapshot = await getDocs(allCampaignsQuery);
-
+        // Calculate average donations for category data
         const averageDonation: { [key: string]: number } = {};
         let average = 0;
-        allCampaignsSnapshot.forEach((doc) => {
-          const raisedAmount = (doc.data() as Campaign).raised;
-          const donationCount = (doc.data() as Campaign).donationCount;
+        allCampaigns.forEach((campaign) => {
+          const raisedAmount = campaign.raised;
+          const donationCount = campaign.donationCount;
 
           if (raisedAmount > 0) {
             const average = raisedAmount / (donationCount || 1);
-            averageDonation[doc.id] = average;
+            averageDonation[campaign.id] = average;
           }
         });
         // Build categoryData from per-campaign average donation values so the
         // pie chart shows the relative average donation per campaign.
         const averages: { id: string; name: string; avg: number }[] = [];
-        allCampaignsSnapshot.forEach((doc) => {
-          const data = doc.data() as Campaign;
-          const raised = data.raised || 0;
-          const count = data.donationCount || 0;
+        allCampaigns.forEach((campaign) => {
+          const raised = campaign.raised || 0;
+          const count = campaign.donationCount || 0;
           const avgValue = count > 0 ? raised / count : 0;
-          averages.push({ id: doc.id, name: data.title || `Campaign ${doc.id}`, avg: avgValue });
+          averages.push({ id: campaign.id, name: campaign.title || `Campaign ${campaign.id}`, avg: avgValue });
         });
 
         // Only include campaigns with non-zero averages
@@ -409,14 +373,14 @@ export function AdminDashboard({
           // Sort descending by value so the chart displays largest -> smallest
           formattedCategoryData = formattedCategoryData.sort((a, b) => b.value - a.value);
 
-          setCategoryData(formattedCategoryData);
+          setDashboardData(prev => ({ ...prev, categoryData: formattedCategoryData }));
         } else {
-          setCategoryData([]);
+          setDashboardData(prev => ({ ...prev, categoryData: [] }));
         }
       } catch (error) {
         console.error("Error fetching chart data: ", error);
       }
-    }, [userSession.user.organizationId, showOnboarding]);
+    }, [userSession.user.organizationId, onboardingFlow.showOnboarding, onboardingFlow.onboardingDismissed, fetchCampaignsByOrganization]);
 
   useEffect(() => {
     fetchChartData();
@@ -429,34 +393,34 @@ export function AdminDashboard({
 
   const handleCreateCampaign = async () => {
     // Validate all required fields
-    if (!newCampaign.title || !newCampaign.description || !newCampaign.category || !newCampaign.status || !newCampaign.startDate || !newCampaign.endDate || !userSession) {
-      alert("Please fill in all required fields");
+    if (!campaignCreation.newCampaign.title || !campaignCreation.newCampaign.description || !campaignCreation.newCampaign.category || !campaignCreation.newCampaign.status || !campaignCreation.newCampaign.startDate || !campaignCreation.newCampaign.endDate || !userSession) {
+      showToast("Please fill in all required fields", "error", 4000);
       return;
     }
     
     // Validate goal is a positive number
-    if (!newCampaign.goal || newCampaign.goal <= 0) {
-      alert("Fundraising goal must be greater than 0");
+    if (!campaignCreation.newCampaign.goal || campaignCreation.newCampaign.goal <= 0) {
+      showToast("Fundraising goal must be greater than 0", "error", 4000);
       return;
     }
     
     // Validate dates
-    const startDate = new Date(newCampaign.startDate);
-    const endDate = new Date(newCampaign.endDate);
+    const startDate = new Date(campaignCreation.newCampaign.startDate);
+    const endDate = new Date(campaignCreation.newCampaign.endDate);
     
     if (endDate <= startDate) {
-      alert("End date must be after start date");
+      showToast("End date must be after start date", "error", 4000);
       return;
     }
     
-    setIsCreatingCampaign(true);
+    setCampaignCreation(prev => ({ ...prev, isCreating: true }));
     try {
       // Save the campaign to database
       const campaignData = {
-        title: newCampaign.title,
-        description: newCampaign.description,
-        goal: Number(newCampaign.goal),
-        status: newCampaign.status,
+        title: campaignCreation.newCampaign.title,
+        description: campaignCreation.newCampaign.description,
+        goal: Number(campaignCreation.newCampaign.goal),
+        status: campaignCreation.newCampaign.status,
         startDate: startDate,
         endDate: endDate,
         organizationId: userSession.user.organizationId,
@@ -464,44 +428,42 @@ export function AdminDashboard({
         donationCount: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
-        isGlobal: newCampaign.isGlobal || false,
-        tags: newCampaign.tags || [],
-        coverImageUrl: newCampaign.coverImageUrl || '',
-        category: newCampaign.category,
+        isGlobal: campaignCreation.newCampaign.isGlobal || false,
+        tags: campaignCreation.newCampaign.tags || [],
+        coverImageUrl: campaignCreation.newCampaign.coverImageUrl || '',
+        category: campaignCreation.newCampaign.category,
       };
       const docRef = await addDoc(collection(db, 'campaigns'), campaignData);
       
       // Save the created campaign ID
-      setCreatedCampaignId(docRef.id);
-      
-      console.log("Campaign created successfully with ID:", docRef.id);
+      setCampaignCreation(prev => ({ ...prev, createdId: docRef.id }));
       
       // Move to kiosk form
-      setShowKioskForm(true);
+      setOnboardingFlow(prev => ({ ...prev, showKioskForm: true }));
     } catch (error) {
       console.error("Error creating campaign: ", error);
-      alert("Failed to create campaign. Please try again.");
+      showToast("Failed to create campaign. Please try again.", "error", 4000);
     } finally {
-      setIsCreatingCampaign(false);
+      setCampaignCreation(prev => ({ ...prev, isCreating: false }));
     }
   };
 
   const handleCreateKiosk = async () => {
-    if (!newKiosk.name || !newKiosk.location || !userSession) return;
+    if (!kioskCreation.newKiosk.name || !kioskCreation.newKiosk.location || !userSession) return;
     
     // Validate access code
-    if (!newKiosk.accessCode || newKiosk.accessCode.length < 4) {
-      alert("Access code must be at least 4 characters");
+    if (!kioskCreation.newKiosk.accessCode || kioskCreation.newKiosk.accessCode.length < 4) {
+      showToast("Access code must be at least 4 characters", "error", 4000);
       return;
     }
     
-    setIsCreatingKiosk(true);
+    setKioskCreation(prev => ({ ...prev, isCreating: true }));
     try {
       // Create the kiosk (campaign was already created in previous step)
       const newKioskData = {
-        name: newKiosk.name,
-        location: newKiosk.location,
-        accessCode: newKiosk.accessCode,
+        name: kioskCreation.newKiosk.name,
+        location: kioskCreation.newKiosk.location,
+        accessCode: kioskCreation.newKiosk.accessCode,
         status: 'offline',
         lastActive: new Date().toISOString(),
         totalDonations: 0,
@@ -518,36 +480,33 @@ export function AdminDashboard({
       const docRef = await addDoc(collection(db, 'kiosks'), newKioskData);
       
       // Save the created kiosk ID
-      setCreatedKioskId(docRef.id);
-      
-      // Show success message
-      console.log("Kiosk created successfully with ID:", docRef.id);
+      setKioskCreation(prev => ({ ...prev, createdId: docRef.id }));
       
       // Move to linking form
-      setShowLinkingForm(true);
+      setOnboardingFlow(prev => ({ ...prev, showLinkingForm: true }));
     } catch (error) {
       console.error("Error adding kiosk: ", error);
-      alert("Failed to create kiosk. Please try again.");
+      showToast("Failed to create kiosk. Please try again.", "error", 4000);
     } finally {
-      setIsCreatingKiosk(false);
+      setKioskCreation(prev => ({ ...prev, isCreating: false }));
     }
   };
 
   const handleLinkCampaignToKiosk = async (campaignId: string) => {
-    if (!campaignId || !createdKioskId) {
-      alert("Campaign or Kiosk ID is missing");
+    if (!campaignId || !kioskCreation.createdId) {
+      showToast("Campaign or Kiosk ID is missing", "error", 4000);
       return;
     }
     
-    setLinkingCampaignId(campaignId);
+    setCampaignCreation(prev => ({ ...prev, linkingId: campaignId }));
     try {
       // Update kiosk with the campaign assignment
-      const kioskRef = doc(db, 'kiosks', createdKioskId);
+      const kioskRef = doc(db, 'kiosks', kioskCreation.createdId);
       
       // Add campaign to assigned campaigns if not already assigned
-      const updatedAssignedCampaigns = assignedCampaignIds.includes(campaignId)
-        ? assignedCampaignIds
-        : [...assignedCampaignIds, campaignId];
+      const updatedAssignedCampaigns = campaignCreation.assignedCampaignIds.includes(campaignId)
+        ? campaignCreation.assignedCampaignIds
+        : [...campaignCreation.assignedCampaignIds, campaignId];
       
       await updateDoc(kioskRef, {
         assignedCampaigns: updatedAssignedCampaigns,
@@ -556,41 +515,39 @@ export function AdminDashboard({
       });
       
       // Update local state
-      setAssignedCampaignIds(updatedAssignedCampaigns);
-      
-      console.log("Campaign linked to kiosk successfully!");
+      setCampaignCreation(prev => ({ ...prev, assignedCampaignIds: updatedAssignedCampaigns }));
     } catch (error) {
       console.error("Error linking campaign to kiosk: ", error);
-      alert("Failed to link campaign. Please try again.");
+      showToast("Failed to link campaign. Please try again.", "error", 4000);
     } finally {
-      setLinkingCampaignId(null);
+      setCampaignCreation(prev => ({ ...prev, linkingId: null }));
     }
   };
 
   // Kiosk Form Handlers
   const handleKioskFormSubmit = async () => {
-    if (!kioskFormData.name || !kioskFormData.location || !userSession) return;
+    if (!kioskCreation.formData.name || !kioskCreation.formData.location || !userSession) return;
     
-    if (!kioskFormData.accessCode || kioskFormData.accessCode.length < 4) {
-      alert("Access code must be at least 4 characters");
+    if (!kioskCreation.formData.accessCode || kioskCreation.formData.accessCode.length < 4) {
+      showToast("Access code must be at least 4 characters", "error", 4000);
       return;
     }
     
-    setIsCreatingKiosk(true);
+    setKioskCreation(prev => ({ ...prev, isCreating: true }));
     try {
       const newKioskData = {
-        name: kioskFormData.name,
-        location: kioskFormData.location,
-        accessCode: kioskFormData.accessCode,
-        status: kioskFormData.status,
+        name: kioskCreation.formData.name,
+        location: kioskCreation.formData.location,
+        accessCode: kioskCreation.formData.accessCode,
+        status: kioskCreation.formData.status,
         lastActive: new Date().toISOString(),
         totalDonations: 0,
         totalRaised: 0,
-        assignedCampaigns: kioskFormData.assignedCampaigns,
-        defaultCampaign: kioskFormData.assignedCampaigns[0] || '',
+        assignedCampaigns: kioskCreation.formData.assignedCampaigns,
+        defaultCampaign: kioskCreation.formData.assignedCampaigns[0] || '',
         deviceInfo: {},
         operatingHours: {},
-        settings: { displayMode: kioskFormData.displayLayout, showAllCampaigns: true, maxCampaignsDisplay: 6, autoRotateCampaigns: false },
+        settings: { displayMode: kioskCreation.formData.displayLayout, showAllCampaigns: true, maxCampaignsDisplay: 6, autoRotateCampaigns: false },
         organizationId: userSession.user.organizationId,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -598,194 +555,188 @@ export function AdminDashboard({
       const docRef = await addDoc(collection(db, 'kiosks'), newKioskData);
       
       // Add the new kiosk to the list
-      setAllKiosks(prev => [...prev, { id: docRef.id, ...newKioskData } as Kiosk]);
+      setKioskCreation(prev => ({ 
+        ...prev, 
+        allKiosks: [...prev.allKiosks, { id: docRef.id, ...newKioskData } as Kiosk],
+        formData: {
+          name: '',
+          location: '',
+          accessCode: '',
+          status: 'online',
+          assignedCampaigns: [],
+          displayLayout: 'grid'
+        }
+      }));
       
-      // Reset form and close modal
-      setKioskFormData({
-        name: '',
-        location: '',
-        accessCode: '',
-        status: 'online',
-        assignedCampaigns: [],
-        displayLayout: 'grid'
-      });
-      setShowCreateKioskModal(false);
-      
-      console.log("Kiosk created successfully with ID:", docRef.id);
+      // Close modal
+      setDialogVisibility(prev => ({ ...prev, showCreateKioskModal: false }));
     } catch (error) {
       console.error("Error adding kiosk: ", error);
-      alert("Failed to create kiosk. Please try again.");
+      showToast("Failed to create kiosk. Please try again.", "error", 4000);
     } finally {
-      setIsCreatingKiosk(false);
+      setKioskCreation(prev => ({ ...prev, isCreating: false }));
     }
   };
 
   const handleKioskFormAssignCampaign = (campaignId: string) => {
-    setKioskFormData(prev => ({
+    setKioskCreation(prev => ({
       ...prev,
-      assignedCampaigns: [...prev.assignedCampaigns, campaignId]
+      formData: {
+        ...prev.formData,
+        assignedCampaigns: [...prev.formData.assignedCampaigns, campaignId]
+      }
     }));
   };
 
   const handleKioskFormUnassignCampaign = (campaignId: string) => {
-    setKioskFormData(prev => ({
+    setKioskCreation(prev => ({
       ...prev,
-      assignedCampaigns: prev.assignedCampaigns.filter(id => id !== campaignId)
+      formData: {
+        ...prev.formData,
+        assignedCampaigns: prev.formData.assignedCampaigns.filter(id => id !== campaignId)
+      }
     }));
   };
 
   // Campaign Form Handler for Get a Tour flow
   const handleCampaignFormSubmit = async () => {
-    if (!campaignFormData.title || !campaignFormData.description || !userSession) {
-      alert("Please fill in all required fields");
+    if (!campaignCreation.formData.title || !campaignCreation.formData.description || !userSession) {
+      showToast("Please fill in all required fields", "error", 4000);
       return;
     }
     
-    if (!campaignFormData.goal || campaignFormData.goal <= 0) {
-      alert("Fundraising goal must be greater than 0");
+    if (!campaignCreation.formData.goal || campaignCreation.formData.goal <= 0) {
+      showToast("Fundraising goal must be greater than 0", "error", 4000);
       return;
     }
     
-    setIsCreatingCampaign(true);
-    try {
-      const startDate = campaignFormData.startDate ? new Date(campaignFormData.startDate) : new Date();
-      const endDate = campaignFormData.endDate ? new Date(campaignFormData.endDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    // Date validation
+    if (campaignCreation.formData.startDate && campaignCreation.formData.endDate) {
+      const startDate = new Date(campaignCreation.formData.startDate);
+      const endDate = new Date(campaignCreation.formData.endDate);
       
-      if (editingCampaignInTour) {
+      if (endDate <= startDate) {
+        showToast("End date must be after start date", "error", 4000);
+        return;
+      }
+    }
+    
+    setCampaignCreation(prev => ({ ...prev, isCreating: true }));
+    try {
+      const startDate = campaignCreation.formData.startDate ? new Date(campaignCreation.formData.startDate) : new Date();
+      const endDate = campaignCreation.formData.endDate ? new Date(campaignCreation.formData.endDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      
+      if (campaignCreation.editingCampaignInTour) {
         // Update existing campaign
-        const campaignRef = doc(db, 'campaigns', editingCampaignInTour.id);
+        const campaignRef = doc(db, 'campaigns', campaignCreation.editingCampaignInTour.id);
         await updateDoc(campaignRef, {
-          title: campaignFormData.title,
-          description: campaignFormData.description,
-          goal: Number(campaignFormData.goal),
-          status: campaignFormData.status || 'active',
+          title: campaignCreation.formData.title,
+          description: campaignCreation.formData.description,
+          goal: Number(campaignCreation.formData.goal),
+          status: campaignCreation.formData.status || 'active',
           startDate: startDate,
           endDate: endDate,
           updatedAt: new Date(),
-          tags: campaignFormData.tags || [],
-          coverImageUrl: campaignFormData.coverImageUrl || '',
-          category: campaignFormData.category || 'General',
+          tags: campaignCreation.formData.tags || [],
+          coverImageUrl: campaignCreation.formData.coverImageUrl || '',
+          category: campaignCreation.formData.category || 'General',
         });
         
         // Refresh campaigns list
-        const campaignsRef = collection(db, "campaigns");
-        const q = query(
-          campaignsRef,
-          where("organizationId", "==", userSession.user.organizationId)
-        );
-        const snapshot = await getDocs(q);
-        const campaigns = snapshot.docs.map(
-          (d) => ({ id: d.id, ...d.data() } as Campaign)
-        );
-        setAllCampaigns(campaigns);
-        
-        console.log("Campaign updated successfully:", editingCampaignInTour.id);
+        const campaigns = await fetchCampaignsByOrganization(userSession.user.organizationId!);
+        setCampaignCreation(prev => ({ ...prev, allCampaigns: campaigns }));
       } else {
         // Create new campaign
         const campaignData = {
-          title: campaignFormData.title,
-          description: campaignFormData.description,
-          goal: Number(campaignFormData.goal),
+          title: campaignCreation.formData.title,
+          description: campaignCreation.formData.description,
+          goal: Number(campaignCreation.formData.goal),
           raised: 0,
-          status: campaignFormData.status || 'active',
+          status: campaignCreation.formData.status || 'active',
           startDate: startDate,
           endDate: endDate,
           organizationId: userSession.user.organizationId,
           createdAt: new Date(),
           updatedAt: new Date(),
           isGlobal: false,
-          tags: campaignFormData.tags || [],
-          coverImageUrl: campaignFormData.coverImageUrl || '',
-          category: campaignFormData.category || 'General',
+          tags: campaignCreation.formData.tags || [],
+          coverImageUrl: campaignCreation.formData.coverImageUrl || '',
+          category: campaignCreation.formData.category || 'General',
         };
         
         const docRef = await addDoc(collection(db, 'campaigns'), campaignData);
-        setCreatedCampaignId(docRef.id);
+        setCampaignCreation(prev => ({ ...prev, createdId: docRef.id }));
         
         // Refresh campaigns list
-        const campaignsRef = collection(db, "campaigns");
-        const q = query(
-          campaignsRef,
-          where("organizationId", "==", userSession.user.organizationId)
-        );
-        const snapshot = await getDocs(q);
-        const campaigns = snapshot.docs.map(
-          (d) => ({ id: d.id, ...d.data() } as Campaign)
-        );
-        setAllCampaigns(campaigns);
+        const campaigns = await fetchCampaignsByOrganization(userSession.user.organizationId!);
+        setCampaignCreation(prev => ({ ...prev, allCampaigns: campaigns }));
         
         // Set the newly created campaign as selected
         const newlyCreatedCampaign = campaigns.find(c => c.id === docRef.id);
         if (newlyCreatedCampaign) {
-          setSelectedCampaignInTour(newlyCreatedCampaign);
+          setCampaignCreation(prev => ({ ...prev, selectedCampaignInTour: newlyCreatedCampaign }));
         }
         
         // Move to next step only when creating new
-        setShowCampaignForm(false);
-        setShowKioskForm(true);
+        setOnboardingFlow(prev => ({ ...prev, showCampaignForm: false, showKioskForm: true }));
         
         console.log("Campaign created successfully with ID:", docRef.id);
       }
       
       // Reset form and close dialog
-      setCampaignFormData({
-        title: '',
-        briefOverview: '',
-        description: '',
-        goal: 0,
-        category: '',
-        status: 'active',
-        coverImageUrl: '',
-        videoUrl: '',
-        galleryImages: [],
-        predefinedAmounts: [10, 25, 50],
-        startDate: '',
-        endDate: '',
-        enableRecurring: false,
-        recurringIntervals: [],
-        tags: [],
-        isGlobal: false,
-        assignedKiosks: []
-      });
-      setShowCampaignFormDialog(false);
-      setEditingCampaignInTour(null);
+      setCampaignCreation(prev => ({
+        ...prev,
+        formData: {
+          title: '',
+          briefOverview: '',
+          description: '',
+          goal: 0,
+          category: '',
+          status: 'active',
+          coverImageUrl: '',
+          videoUrl: '',
+          galleryImages: [],
+          predefinedAmounts: [10, 25, 50],
+          startDate: '',
+          endDate: '',
+          enableRecurring: false,
+          recurringIntervals: [],
+          tags: [],
+          isGlobal: false,
+          assignedKiosks: []
+        },
+        editingCampaignInTour: null
+      }));
+      setDialogVisibility(prev => ({ ...prev, showCampaignFormDialog: false }));
       
     } catch (error) {
       console.error("Error saving campaign: ", error);
-      alert("Failed to save campaign. Please try again.");
+      showToast("Failed to save campaign. Please try again.", "error", 4000);
     } finally {
-      setIsCreatingCampaign(false);
+      setCampaignCreation(prev => ({ ...prev, isCreating: false }));
     }
   };
 
   // Fetch all campaigns when linking form or campaign form is shown
   useEffect(() => {
     const fetchAllCampaigns = async () => {
-      if ((!showLinkingForm && !showCampaignForm) || !userSession.user.organizationId) return;
+      if ((!onboardingFlow.showLinkingForm && !onboardingFlow.showCampaignForm) || !userSession.user.organizationId) return;
       
       try {
-        const campaignsRef = collection(db, "campaigns");
-        const q = query(
-          campaignsRef,
-          where("organizationId", "==", userSession.user.organizationId)
-        );
-        const snapshot = await getDocs(q);
-        const campaigns = snapshot.docs.map(
-          (doc) => ({ id: doc.id, ...doc.data() } as Campaign)
-        );
-        setAllCampaigns(campaigns);
+        const campaigns = await fetchCampaignsByOrganization(userSession.user.organizationId!);
+        setCampaignCreation(prev => ({ ...prev, allCampaigns: campaigns }));
       } catch (error) {
         console.error("Error fetching campaigns: ", error);
       }
     };
 
     fetchAllCampaigns();
-  }, [showLinkingForm, showCampaignForm, userSession.user.organizationId]);
+  }, [onboardingFlow.showLinkingForm, onboardingFlow.showCampaignForm, userSession.user.organizationId, fetchCampaignsByOrganization]);
 
   // Fetch all kiosks when kiosk form is shown
   useEffect(() => {
     const fetchAllKiosks = async () => {
-      if (!showKioskForm || !userSession.user.organizationId) return;
+      if (!onboardingFlow.showKioskForm || !userSession.user.organizationId) return;
       
       try {
         const kiosksRef = collection(db, "kiosks");
@@ -797,14 +748,14 @@ export function AdminDashboard({
         const kiosks = snapshot.docs.map(
           (doc) => ({ id: doc.id, ...doc.data() } as Kiosk)
         );
-        setAllKiosks(kiosks);
+        setKioskCreation(prev => ({ ...prev, allKiosks: kiosks }));
       } catch (error) {
         console.error("Error fetching kiosks: ", error);
       }
     };
 
     fetchAllKiosks();
-  }, [showKioskForm, userSession.user.organizationId]);
+  }, [onboardingFlow.showKioskForm, userSession.user.organizationId]);
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat("en-GB", {
@@ -876,43 +827,49 @@ export function AdminDashboard({
     }
   };
 
-  const displayedCategories = isLegendExpanded
-    ? categoryData
-    : categoryData.slice(0, 6);
+  const displayedCategories = dashboardData.isLegendExpanded
+    ? dashboardData.categoryData
+    : dashboardData.categoryData.slice(0, 6);
 
   const handleStartTour = () => {
     // Reset all form states
-    setNewCampaign({ 
-      title: '', 
-      description: '', 
-      goal: 0, 
-      status: 'active',
-      startDate: '',
-      endDate: '',
-      tags: [],
-      coverImageUrl: '',
-      category: '',
-      isGlobal: false
-    });
-    setNewKiosk({ name: '', location: '', accessCode: '' });
-    setCreatedCampaignId('');
-    setCreatedKioskId('');
+    setCampaignCreation(prev => ({
+      ...prev,
+      newCampaign: { 
+        title: '', 
+        description: '', 
+        goal: 0, 
+        status: 'active',
+        startDate: '',
+        endDate: '',
+        tags: [],
+        coverImageUrl: '',
+        category: '',
+        isGlobal: false
+      },
+      createdId: ''
+    }));
+    setKioskCreation(prev => ({
+      ...prev,
+      newKiosk: { name: '', location: '', accessCode: '' },
+      createdId: ''
+    }));
     
     // Start the tour by showing onboarding
-    setIsTourActive(true);
-    setShowOnboarding(true);
-    setOnboardingDismissed(false); // Reset dismissed flag when starting tour
+    setOnboardingFlow(prev => ({
+      ...prev,
+      isTourActive: true,
+      showOnboarding: true,
+      onboardingDismissed: false,
+      showCampaignForm: false,
+      showKioskForm: false,
+      showLinkingForm: false,
+      showStripeStep: false
+    }));
+    
     // Clear sessionStorage when manually starting tour
-    if (typeof window !== 'undefined') {
-      sessionStorage.removeItem('onboardingDismissed');
-    }
-    setShowCampaignForm(false);
-    setShowKioskForm(false);
-    setShowLinkingForm(false);
-    setShowStripeStep(false);
+    sessionStorage.removeItem('onboardingDismissed');
   };
-
-  const [isOnboardingStripe, setIsOnboardingStripe] = useState(false);
 
   const handleDirectStripeOnboarding = async () => {
     if (!organization?.id) {
@@ -926,7 +883,7 @@ export function AdminDashboard({
     }
 
     try {
-      setIsOnboardingStripe(true);
+      setStripeOnboarding(prev => ({ ...prev, isOnboarding: true }));
       const idToken = await auth.currentUser.getIdToken();
 
       const controller = new AbortController();
@@ -972,7 +929,7 @@ export function AdminDashboard({
           4000
         );
       }
-      setIsOnboardingStripe(false);
+      setStripeOnboarding(prev => ({ ...prev, isOnboarding: false }));
     }
   };
 
@@ -992,7 +949,7 @@ export function AdminDashboard({
       userSession={userSession} 
       hasPermission={hasPermission}
       onStartTour={handleStartTour}
-      onOpenStripeSetup={() => setShowStripeStatusDialog(true)}
+      onOpenStripeSetup={() => setDialogVisibility(prev => ({ ...prev, showStripeStatusDialog: true }))}
       headerTitle={(
         <div className="flex flex-col">
           <div className="flex items-center gap-3 flex-wrap">
@@ -1007,12 +964,18 @@ export function AdminDashboard({
       )}
       headerActions={(
         <div className="flex items-center gap-2 flex-nowrap ml-auto">
+          {hasPermission("system_admin") && (
+            <OrganizationSwitcher 
+              userSession={userSession}
+              onOrganizationChange={onOrganizationSwitch}
+            />
+          )}
           {organization && organization.stripe && (
             <div className="relative">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setShowStripeStatusDialog(true)}
+                onClick={() => setDialogVisibility(prev => ({ ...prev, showStripeStatusDialog: true }))}
                 className={`relative rounded-lg
                   ${!organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled
                     ? 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100 animate-pulse'
@@ -1022,45 +985,6 @@ export function AdminDashboard({
               >
                 <CreditCard className="h-4 w-4" />
               </Button>
-              {needsOnboarding && (
-                <div className="absolute -bottom-2 -right-2 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse" />
-              )}
-
-              {showSmallPopup && needsOnboarding && (
-                <div className="fixed sm:absolute top-16 sm:top-full right-2 sm:right-0 mt-2 w-[calc(100vw-1rem)] sm:w-80 max-w-sm bg-white rounded-lg shadow-xl border-2 border-yellow-400 p-3 sm:p-4 z-50 animate-in slide-in-from-top-2">
-                  <button
-                    onClick={() => setShowSmallPopup(false)}
-                    className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 z-10"
-                    aria-label="Close notification"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                  <div className="flex items-start space-x-2 sm:space-x-3">
-                    <div className="flex-shrink-0">
-                      <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600" />
-                    </div>
-                    <div className="flex-1 min-w-0 pr-6">
-                      <h4 className="text-xs sm:text-sm font-semibold text-gray-900 mb-1">
-                        Complete Stripe Onboarding
-                      </h4>
-                      <p className="text-[10px] sm:text-xs text-gray-600 mb-2 sm:mb-3">
-                        You need to onboard with Stripe to accept donations and create campaigns.
-                      </p>
-                      <Button
-                        size="sm"
-                        onClick={() => {
-                          setShowSmallPopup(false);
-                          setShowStripeStatusDialog(true);
-                        }}
-                        className="bg-yellow-600 hover:bg-yellow-700 text-xs h-7 sm:h-8 w-full sm:w-auto"
-                      >
-                        <CreditCard className="w-3 h-3 mr-1" />
-                        Onboard Now
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           )}
           <Button 
@@ -1068,7 +992,7 @@ export function AdminDashboard({
             size="sm" 
             onClick={handleRefresh} 
             disabled={loading} 
-            className="rounded-lg border-gray-300 hover:bg-gray-50"
+            className="rounded-2xl border-[#064e3b] bg-transparent text-[#064e3b] hover:bg-[#064e3b] hover:text-stone-50 transition-all duration-300 px-6 py-3 font-semibold"
             aria-label="Refresh Dashboard"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
@@ -1077,13 +1001,13 @@ export function AdminDashboard({
         </div>
       )}
       hideSidebarTrigger={false}
-      hideHeader={showOnboarding}
+      hideHeader={onboardingFlow.showOnboarding}
     >
       {/* Onboarding Flow with Sliding Animation */}
-      {showOnboarding && !loading && campaignCountChecked ? (
+      {onboardingFlow.showOnboarding && !loading && onboardingFlow.campaignCountChecked ? (
         <div className="h-full bg-white overflow-hidden">
           <div className="flex h-full transition-transform duration-700 ease-in-out" style={{
-            transform: showStripeStep ? 'translateX(-300%)' : showKioskForm ? 'translateX(-200%)' : showCampaignForm ? 'translateX(-100%)' : 'translateX(0)'
+            transform: onboardingFlow.showStripeStep ? 'translateX(-300%)' : onboardingFlow.showKioskForm ? 'translateX(-200%)' : onboardingFlow.showCampaignForm ? 'translateX(-100%)' : 'translateX(0)'
           }}>
             {/* Step 1: Welcome Screen */}
             <div className="min-w-full h-full flex items-center justify-center p-4 sm:p-6 lg:p-8">
@@ -1112,7 +1036,7 @@ export function AdminDashboard({
                     {/* Action Buttons */}
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
                       <Button
-                        onClick={() => setShowCampaignForm(true)}
+                        onClick={() => setOnboardingFlow(prev => ({ ...prev, showCampaignForm: true }))}
                         size="lg"
                         className="bg-gray-900 hover:bg-gray-800 text-white px-8 py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all w-full sm:w-auto"
                       >
@@ -1121,12 +1045,9 @@ export function AdminDashboard({
                       </Button>
                       <Button
                         onClick={() => {
-                          setShowOnboarding(false);
-                          setOnboardingDismissed(true);
+                          setOnboardingFlow(prev => ({ ...prev, showOnboarding: false, onboardingDismissed: true }));
                           // Persist to sessionStorage so it stays dismissed during the session
-                          if (typeof window !== 'undefined') {
-                            sessionStorage.setItem('onboardingDismissed', 'true');
-                          }
+                          sessionStorage.setItem('onboardingDismissed', 'true');
                         }}
                         variant="ghost"
                         size="lg"
@@ -1257,17 +1178,20 @@ export function AdminDashboard({
                       </div>
 
                       {/* Existing Campaigns List */}
-                      {allCampaigns.length > 0 && (
+                      {campaignCreation.allCampaigns.length > 0 && (
                         <div className="mb-6">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-4">Existing Campaigns ({allCampaigns.length})</h3>
+                          <h3 className="text-lg font-semibold text-gray-900 mb-4">Existing Campaigns ({campaignCreation.allCampaigns.length})</h3>
                           <p className="text-sm text-gray-500 mb-3">Click on a campaign to select it, or create a new one below.</p>
                           <div className="space-y-3 max-h-64 overflow-y-auto">
-                            {allCampaigns.map((campaign) => (
+                            {campaignCreation.allCampaigns.map((campaign) => (
                               <div
                                 key={campaign.id}
-                                onClick={() => setSelectedCampaignInTour(selectedCampaignInTour?.id === campaign.id ? null : campaign)}
+                                onClick={() => setCampaignCreation(prev => ({ 
+                                  ...prev, 
+                                  selectedCampaignInTour: prev.selectedCampaignInTour?.id === campaign.id ? null : campaign 
+                                }))}
                                 className={`flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                                  selectedCampaignInTour?.id === campaign.id
+                                  campaignCreation.selectedCampaignInTour?.id === campaign.id
                                     ? 'bg-green-50 border-green-500'
                                     : 'bg-gray-50 border-gray-200 hover:border-gray-300'
                                 }`}
@@ -1275,11 +1199,11 @@ export function AdminDashboard({
                                 <div className="flex items-center gap-3 flex-1 min-w-0">
                                   {/* Selection indicator */}
                                   <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                                    selectedCampaignInTour?.id === campaign.id
+                                    campaignCreation.selectedCampaignInTour?.id === campaign.id
                                       ? 'border-green-500 bg-green-500'
                                       : 'border-gray-300'
                                   }`}>
-                                    {selectedCampaignInTour?.id === campaign.id && (
+                                    {campaignCreation.selectedCampaignInTour?.id === campaign.id && (
                                       <CheckCircle className="w-4 h-4 text-white" />
                                     )}
                                   </div>
@@ -1311,7 +1235,7 @@ export function AdminDashboard({
                                     className="p-1 hover:bg-gray-200 rounded-md transition-colors"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      setEditingCampaignInTour(campaign);
+                                      setCampaignCreation(prev => ({ ...prev, editingCampaignInTour: campaign }));
                                       // Handle date conversion safely
                                       let startDateStr = '';
                                       let endDateStr = '';
@@ -1325,26 +1249,29 @@ export function AdminDashboard({
                                         const endDateObj = ed.seconds ? new Date(ed.seconds * 1000) : new Date(ed);
                                         endDateStr = endDateObj.toISOString().split('T')[0];
                                       }
-                                      setCampaignFormData({
-                                        title: campaign.title || '',
-                                        briefOverview: '', // Campaign type doesn't have briefOverview, so use empty string
-                                        description: campaign.description || '',
-                                        goal: campaign.goal || 0,
-                                        category: campaign.category || '',
-                                        status: campaign.status || 'active',
-                                        coverImageUrl: campaign.coverImageUrl || '',
-                                        videoUrl: campaign.videoUrl || '',
-                                        galleryImages: campaign.galleryImages || [],
-                                        predefinedAmounts: campaign.configuration?.predefinedAmounts || [10, 25, 50],
-                                        startDate: startDateStr,
-                                        endDate: endDateStr,
-                                        enableRecurring: campaign.configuration?.enableRecurring || false,
-                                        recurringIntervals: campaign.configuration?.recurringIntervals || [],
-                                        tags: campaign.tags || [],
-                                        isGlobal: campaign.isGlobal || false,
-                                        assignedKiosks: campaign.assignedKiosks || []
-                                      });
-                                      setShowCampaignFormDialog(true);
+                                      setCampaignCreation(prev => ({
+                                        ...prev,
+                                        formData: {
+                                          title: campaign.title || '',
+                                          briefOverview: '', // Campaign type doesn't have briefOverview, so use empty string
+                                          description: campaign.description || '',
+                                          goal: campaign.goal || 0,
+                                          category: campaign.category || '',
+                                          status: campaign.status || 'active',
+                                          coverImageUrl: campaign.coverImageUrl || '',
+                                          videoUrl: campaign.videoUrl || '',
+                                          galleryImages: campaign.galleryImages || [],
+                                          predefinedAmounts: campaign.configuration?.predefinedAmounts || [10, 25, 50],
+                                          startDate: startDateStr,
+                                          endDate: endDateStr,
+                                          enableRecurring: campaign.configuration?.enableRecurring || false,
+                                          recurringIntervals: campaign.configuration?.recurringIntervals || [],
+                                          tags: campaign.tags || [],
+                                          isGlobal: campaign.isGlobal || false,
+                                          assignedKiosks: campaign.assignedKiosks || []
+                                        }
+                                      }));
+                                      setDialogVisibility(prev => ({ ...prev, showCampaignFormDialog: true }));
                                     }}
                                   >
                                     <Pencil className="w-5 h-5 text-gray-500" />
@@ -1359,7 +1286,7 @@ export function AdminDashboard({
                       {/* Create Campaign Button */}
                       <div className="py-4">
                         <button
-                          onClick={() => setShowCampaignFormDialog(true)}
+                          onClick={() => setDialogVisibility(prev => ({ ...prev, showCampaignFormDialog: true }))}
                           className="w-full py-5 border-2 border-dashed border-gray-300 rounded-xl text-gray-700 font-semibold text-lg hover:border-gray-400 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
                         >
                           <Plus className="w-6 h-6" />
@@ -1372,7 +1299,7 @@ export function AdminDashboard({
                         <Button
                           variant="outline"
                           onClick={() => {
-                            setShowCampaignForm(false);
+                            setOnboardingFlow(prev => ({ ...prev, showCampaignForm: false }));
                           }}
                           className="px-6"
                         >
@@ -1382,11 +1309,10 @@ export function AdminDashboard({
                         <Button
                           onClick={() => {
                             // If a campaign is selected, use it for the next step
-                            if (selectedCampaignInTour) {
-                              setCreatedCampaignId(selectedCampaignInTour.id);
+                            if (campaignCreation.selectedCampaignInTour) {
+                              setCampaignCreation(prev => ({ ...prev, createdId: prev.selectedCampaignInTour!.id }));
                             }
-                            setShowCampaignForm(false);
-                            setShowKioskForm(true);
+                            setOnboardingFlow(prev => ({ ...prev, showCampaignForm: false, showKioskForm: true }));
                           }}
                           className="bg-gray-900 hover:bg-gray-800 px-6"
                         >
@@ -1401,27 +1327,33 @@ export function AdminDashboard({
 
               {/* Campaign Form Dialog */}
               <CampaignForm
-                open={showCampaignFormDialog}
+                open={dialogVisibility.showCampaignFormDialog}
                 onOpenChange={(open) => {
-                  setShowCampaignFormDialog(open);
+                  setDialogVisibility(prev => ({ ...prev, showCampaignFormDialog: open }));
                   if (!open) {
-                    setEditingCampaignInTour(null);
+                    setCampaignCreation(prev => ({ ...prev, editingCampaignInTour: null }));
                   }
                 }}
-                editingCampaign={editingCampaignInTour}
-                campaignData={campaignFormData}
-                setCampaignData={setCampaignFormData}
+                editingCampaign={campaignCreation.editingCampaignInTour}
+                campaignData={campaignCreation.formData}
+                setCampaignData={useCallback((data: CampaignFormData | ((prev: CampaignFormData) => CampaignFormData)) => {
+                  if (typeof data === 'function') {
+                    setCampaignCreation(prev => ({ ...prev, formData: data(prev.formData) }));
+                  } else {
+                    setCampaignCreation(prev => ({ ...prev, formData: data }));
+                  }
+                }, [])}
                 onSubmit={handleCampaignFormSubmit}
                 onSaveDraft={() => {
                   // Handle save draft functionality if needed
                   console.log('Save draft clicked');
                 }}
                 onCancel={() => {
-                  setShowCampaignFormDialog(false);
-                  setEditingCampaignInTour(null);
+                  setDialogVisibility(prev => ({ ...prev, showCampaignFormDialog: false }));
+                  setCampaignCreation(prev => ({ ...prev, editingCampaignInTour: null }));
                 }}
                 formatCurrency={formatCurrency}
-                onImageFileSelect={setSelectedCampaignImageFile}
+                onImageFileSelect={(file) => setCampaignCreation(prev => ({ ...prev, selectedImageFile: file }))}
               />
             </div>
 
@@ -1477,8 +1409,7 @@ export function AdminDashboard({
                         </div>
                         <Button
                           onClick={() => {
-                            setShowKioskForm(false);
-                            setShowStripeStep(true);
+                            setOnboardingFlow(prev => ({ ...prev, showKioskForm: false, showStripeStep: true }));
                           }}
                           className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium ml-4"
                         >
@@ -1487,46 +1418,52 @@ export function AdminDashboard({
                       </div>
 
                       {/* Make Campaign Global Button - Only show if there are kiosks */}
-                      {allKiosks.length > 0 && (
+                      {kioskCreation.allKiosks.length > 0 && (
                         <button
                           type="button"
                           onClick={() => {
-                            if (isGlobalCampaign) {
+                            if (kioskCreation.isGlobalCampaign) {
                               // If already global, turn off and unassign all
-                              setIsGlobalCampaign(false);
-                              setAssignedKioskIds([]);
+                              setKioskCreation(prev => ({ 
+                                ...prev, 
+                                isGlobalCampaign: false,
+                                assignedKioskIds: []
+                              }));
                             } else {
                               // Make global - assign all kiosks
-                              setIsGlobalCampaign(true);
-                              setAssignedKioskIds(allKiosks.map(k => k.id));
+                              setKioskCreation(prev => ({ 
+                                ...prev, 
+                                isGlobalCampaign: true,
+                                assignedKioskIds: prev.allKiosks.map(k => k.id)
+                              }));
                             }
                           }}
-                          disabled={!createdCampaignId}
+                          disabled={!campaignCreation.createdId}
                           className={`w-full py-4 px-6 rounded-lg font-semibold text-lg transition-all duration-200 mb-6 flex items-center justify-center gap-3 ${
-                            !createdCampaignId
+                            !campaignCreation.createdId
                               ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                              : isGlobalCampaign
+                              : kioskCreation.isGlobalCampaign
                               ? 'bg-green-500 hover:bg-green-600 text-white'
                               : 'bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-300'
                           }`}
                         >
                           <Globe className="w-6 h-6" />
-                          {isGlobalCampaign ? 'Your Campaign is now Global' : 'Make this Campaign Global'}
+                          {kioskCreation.isGlobalCampaign ? 'Your Campaign is now Global' : 'Make this Campaign Global'}
                         </button>
                       )}
 
                       {/* Kiosk List */}
                       <div className="space-y-3 mb-6">
                         <h3 className="text-sm font-medium text-gray-700 mb-3">Organization Kiosks</h3>
-                        {allKiosks.length === 0 ? (
+                        {kioskCreation.allKiosks.length === 0 ? (
                           <div className="text-center py-8 text-gray-500">
                             <Monitor className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                             <p className="text-sm">No kiosks found in your organization</p>
                           </div>
                         ) : (
                           <div className="space-y-2 max-h-64 overflow-y-auto">
-                            {allKiosks.map((kiosk) => {
-                              const isAssigned = assignedKioskIds.includes(kiosk.id);
+                            {kioskCreation.allKiosks.map((kiosk) => {
+                              const isAssigned = kioskCreation.assignedKioskIds.includes(kiosk.id);
                               return (
                                 <div
                                   key={kiosk.id}
@@ -1546,25 +1483,25 @@ export function AdminDashboard({
                                     onClick={() => {
                                       if (isAssigned) {
                                         // Unassign this kiosk
-                                        const newAssignedIds = assignedKioskIds.filter(id => id !== kiosk.id);
-                                        setAssignedKioskIds(newAssignedIds);
+                                        const newAssignedIds = kioskCreation.assignedKioskIds.filter(id => id !== kiosk.id);
+                                        setKioskCreation(prev => ({ ...prev, assignedKioskIds: newAssignedIds }));
                                         // If not all kiosks are assigned anymore, turn off global
-                                        if (newAssignedIds.length < allKiosks.length) {
-                                          setIsGlobalCampaign(false);
+                                        if (newAssignedIds.length < kioskCreation.allKiosks.length) {
+                                          setKioskCreation(prev => ({ ...prev, isGlobalCampaign: false }));
                                         }
                                       } else {
                                         // Assign this kiosk
-                                        const newAssignedIds = [...assignedKioskIds, kiosk.id];
-                                        setAssignedKioskIds(newAssignedIds);
+                                        const newAssignedIds = [...kioskCreation.assignedKioskIds, kiosk.id];
+                                        setKioskCreation(prev => ({ ...prev, assignedKioskIds: newAssignedIds }));
                                         // If all kiosks are now assigned, turn on global
-                                        if (newAssignedIds.length === allKiosks.length) {
-                                          setIsGlobalCampaign(true);
+                                        if (newAssignedIds.length === kioskCreation.allKiosks.length) {
+                                          setKioskCreation(prev => ({ ...prev, isGlobalCampaign: true }));
                                         }
                                       }
                                     }}
-                                    disabled={!createdCampaignId}
+                                    disabled={!campaignCreation.createdId}
                                     className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
-                                      !createdCampaignId
+                                      !campaignCreation.createdId
                                         ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                         : isAssigned
                                         ? 'bg-green-500 hover:bg-green-600 text-white'
@@ -1583,7 +1520,7 @@ export function AdminDashboard({
                       {/* Create New Kiosk Button */}
                       <button
                         type="button"
-                        onClick={() => setShowCreateKioskModal(true)}
+                        onClick={() => setDialogVisibility(prev => ({ ...prev, showCreateKioskModal: true }))}
                         className="w-full py-4 px-6 rounded-lg font-medium text-gray-600 border-2 border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 flex items-center justify-center gap-2"
                       >
                         <Plus className="w-5 h-5" />
@@ -1595,8 +1532,7 @@ export function AdminDashboard({
                         <Button
                           variant="outline"
                           onClick={() => {
-                            setShowKioskForm(false);
-                            setShowCampaignForm(true);
+                            setOnboardingFlow(prev => ({ ...prev, showKioskForm: false, showCampaignForm: true }));
                           }}
                           className="px-6"
                         >
@@ -1606,18 +1542,18 @@ export function AdminDashboard({
                         <Button
                           onClick={async () => {
                             // Assign selected campaign to assigned kiosks
-                            if (selectedCampaignInTour && assignedKioskIds.length > 0) {
+                            if (campaignCreation.selectedCampaignInTour && kioskCreation.assignedKioskIds.length > 0) {
                               try {
                                 // Update each assigned kiosk with the campaign
-                                const updatePromises = assignedKioskIds.map(async (kioskId) => {
+                                const updatePromises = kioskCreation.assignedKioskIds.map(async (kioskId) => {
                                   const kioskRef = doc(db, 'kiosks', kioskId);
-                                  const kiosk = allKiosks.find(k => k.id === kioskId);
+                                  const kiosk = kioskCreation.allKiosks.find(k => k.id === kioskId);
                                   
                                   if (kiosk) {
                                     const currentAssignedCampaigns = kiosk.assignedCampaigns || [];
                                     // Add campaign if not already assigned
-                                    if (!currentAssignedCampaigns.includes(selectedCampaignInTour.id)) {
-                                      const updatedCampaigns = [...currentAssignedCampaigns, selectedCampaignInTour.id];
+                                    if (!currentAssignedCampaigns.includes(campaignCreation.selectedCampaignInTour!.id)) {
+                                      const updatedCampaigns = [...currentAssignedCampaigns, campaignCreation.selectedCampaignInTour!.id];
                                       await updateDoc(kioskRef, {
                                         assignedCampaigns: updatedCampaigns,
                                         defaultCampaign: updatedCampaigns[0],
@@ -1628,16 +1564,15 @@ export function AdminDashboard({
                                 });
                                 
                                 await Promise.all(updatePromises);
-                                console.log(`Campaign ${selectedCampaignInTour.id} assigned to ${assignedKioskIds.length} kiosk(s)`);
+                                console.log(`Campaign ${campaignCreation.selectedCampaignInTour.id} assigned to ${kioskCreation.assignedKioskIds.length} kiosk(s)`);
                               } catch (error) {
                                 console.error("Error assigning campaign to kiosks:", error);
-                                alert("Failed to assign campaign to kiosks. Please try again.");
+                                showToast("Failed to assign campaign to kiosks. Please try again.", "error", 4000);
                                 return;
                               }
                             }
                             
-                            setShowKioskForm(false);
-                            setShowStripeStep(true);
+                            setOnboardingFlow(prev => ({ ...prev, showKioskForm: false, showStripeStep: true }));
                           }}
                           className="bg-gray-900 hover:bg-gray-800 px-6"
                         >
@@ -1703,18 +1638,36 @@ export function AdminDashboard({
                         </div>
                         <Button
                           onClick={() => {
-                          setNewKiosk({ name: '', location: '', accessCode: '' });
-                          setNewCampaign({ title: '', description: '', goal: 0, status: 'active', startDate: '', endDate: '', tags: [], coverImageUrl: '', category: '', isGlobal: false });
-                          setShowStripeStep(false);
-                          setShowCampaignForm(false);
-                          setShowKioskForm(false);
-                          setShowLinkingForm(false);
-                          setShowOnboarding(false);
-                          setOnboardingDismissed(true);
+                          setKioskCreation(prev => ({ 
+                            ...prev, 
+                            newKiosk: { name: '', location: '', accessCode: '' }
+                          }));
+                          setCampaignCreation(prev => ({ 
+                            ...prev, 
+                            newCampaign: { 
+                              title: '', 
+                              description: '', 
+                              goal: 0, 
+                              status: 'active', 
+                              startDate: '', 
+                              endDate: '', 
+                              tags: [], 
+                              coverImageUrl: '', 
+                              category: '', 
+                              isGlobal: false 
+                            }
+                          }));
+                          setOnboardingFlow(prev => ({ 
+                            ...prev, 
+                            showStripeStep: false,
+                            showCampaignForm: false,
+                            showKioskForm: false,
+                            showLinkingForm: false,
+                            showOnboarding: false,
+                            onboardingDismissed: true
+                          }));
                           // Persist to sessionStorage so it stays dismissed during the session
-                          if (typeof window !== 'undefined') {
-                            sessionStorage.setItem('onboardingDismissed', 'true');
-                          }
+                          sessionStorage.setItem('onboardingDismissed', 'true');
                           // Refresh dashboard data
                           refreshDashboard();
                           // Navigate to dashboard to see the new data
@@ -1752,10 +1705,10 @@ export function AdminDashboard({
                           </div>
                           <Button
                             onClick={handleDirectStripeOnboarding}
-                            disabled={isOnboardingStripe}
+                            disabled={stripeOnboarding.isOnboarding}
                             className="w-full bg-yellow-600 hover:bg-yellow-700 h-12 text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            {isOnboardingStripe ? (
+                            {stripeOnboarding.isOnboarding ? (
                               <>
                                 <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
                                 Redirecting...
@@ -1799,17 +1752,35 @@ export function AdminDashboard({
                     <div className="flex justify-end gap-3 mt-8">
                       <Button
                         onClick={() => {
-                          setNewKiosk({ name: '', location: '', accessCode: '' });
-                          setNewCampaign({ title: '', description: '', goal: 0, status: 'active', startDate: '', endDate: '', tags: [], coverImageUrl: '', category: '', isGlobal: false });
-                          setShowStripeStep(false);
-                          setShowCampaignForm(false);
-                          setShowKioskForm(false);
-                          setShowOnboarding(false);
-                          setOnboardingDismissed(true);
+                          setKioskCreation(prev => ({ 
+                            ...prev, 
+                            newKiosk: { name: '', location: '', accessCode: '' }
+                          }));
+                          setCampaignCreation(prev => ({ 
+                            ...prev, 
+                            newCampaign: { 
+                              title: '', 
+                              description: '', 
+                              goal: 0, 
+                              status: 'active', 
+                              startDate: '', 
+                              endDate: '', 
+                              tags: [], 
+                              coverImageUrl: '', 
+                              category: '', 
+                              isGlobal: false 
+                            }
+                          }));
+                          setOnboardingFlow(prev => ({ 
+                            ...prev, 
+                            showStripeStep: false,
+                            showCampaignForm: false,
+                            showKioskForm: false,
+                            showOnboarding: false,
+                            onboardingDismissed: true
+                          }));
                           // Persist to sessionStorage so it stays dismissed during the session
-                          if (typeof window !== 'undefined') {
-                            sessionStorage.setItem('onboardingDismissed', 'true');
-                          }
+                          sessionStorage.setItem('onboardingDismissed', 'true');
                           // Refresh dashboard data
                           refreshDashboard();
                           // Navigate to dashboard to see the new data
@@ -1829,12 +1800,18 @@ export function AdminDashboard({
 
           {/* Kiosk Form Dialog - Inside Onboarding */}
           <KioskForm
-            open={showCreateKioskModal}
-            onOpenChange={setShowCreateKioskModal}
+            open={dialogVisibility.showCreateKioskModal}
+            onOpenChange={(open) => setDialogVisibility(prev => ({ ...prev, showCreateKioskModal: open }))}
             editingKiosk={null}
-            kioskData={kioskFormData}
-            setKioskData={setKioskFormData}
-            campaigns={allCampaigns.map(c => ({
+            kioskData={kioskCreation.formData}
+            setKioskData={useCallback((data: KioskFormData | ((prev: KioskFormData) => KioskFormData)) => {
+              if (typeof data === 'function') {
+                setKioskCreation(prev => ({ ...prev, formData: data(prev.formData) }));
+              } else {
+                setKioskCreation(prev => ({ ...prev, formData: data }));
+              }
+            }, [])}
+            campaigns={campaignCreation.allCampaigns.map(c => ({
               id: c.id,
               title: c.title,
               raised: c.raised || 0,
@@ -1842,23 +1819,24 @@ export function AdminDashboard({
               coverImageUrl: c.coverImageUrl
             }))}
             onSubmit={handleKioskFormSubmit}
-            onCancel={() => setShowCreateKioskModal(false)}
+            onCancel={() => setDialogVisibility(prev => ({ ...prev, showCreateKioskModal: false }))}
             onAssignCampaign={handleKioskFormAssignCampaign}
             onUnassignCampaign={handleKioskFormUnassignCampaign}
             formatCurrency={formatCurrency}
           />
         </div>
-      ) : campaignCountChecked && !showOnboarding ? (
+      ) : onboardingFlow.campaignCountChecked && !onboardingFlow.showOnboarding ? (
         <>
-        <div className="px-2 sm:px-6 lg:px-8 pb-4 sm:pb-8">
+        <div className="min-h-screen bg-[#F3F1EA] font-['Helvetica',sans-serif] transition-all duration-500 ease-in-out">
+          <div className="px-6 lg:px-8 pt-12 pb-8 max-w-7xl mx-auto space-y-12 transition-all duration-500 ease-in-out">
 
-        {stripeStatusMessage && (
-          <Card className={`mb-6 ${stripeStatusMessage.type === 'success' ? 'border-green-400 bg-green-50 text-green-800' : stripeStatusMessage.type === 'warning' ? 'border-yellow-400 bg-yellow-50 text-yellow-800' : 'border-red-400 bg-red-50 text-red-800'}`}>
+        {stripeOnboarding.statusMessage && (
+          <Card className={`mb-6 ${stripeOnboarding.statusMessage.type === 'success' ? 'border-green-400 bg-green-50 text-green-800' : stripeOnboarding.statusMessage.type === 'warning' ? 'border-yellow-400 bg-yellow-50 text-yellow-800' : 'border-red-400 bg-red-50 text-red-800'}`}>
             <CardContent className="flex items-center space-x-2 sm:space-x-3 p-3 sm:p-4">
-              {stripeStatusMessage.type === 'success' && <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />}
-              {stripeStatusMessage.type === 'warning' && <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />}
-              {stripeStatusMessage.type === 'error' && <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />}
-              <p className="font-medium text-xs sm:text-sm break-words">{stripeStatusMessage.message}</p>
+              {stripeOnboarding.statusMessage.type === 'success' && <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />}
+              {stripeOnboarding.statusMessage.type === 'warning' && <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />}
+              {stripeOnboarding.statusMessage.type === 'error' && <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />}
+              <p className="font-medium text-xs sm:text-sm break-words">{stripeOnboarding.statusMessage.message}</p>
             </CardContent>
           </Card>
         )}
@@ -1868,501 +1846,174 @@ export function AdminDashboard({
           <p className="text-red-500">Error: {orgError}</p>
         ) : null}
         
-        {/* Organization Switcher for Super Admin */}
-        {userSession.user.role === 'super_admin' && (
-          <div className="mb-8">
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100 p-6">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                      <Building2 className="w-4 h-4 text-white" />
-                    </div>
-                    <h2 className="text-lg font-semibold text-gray-900">Organization View</h2>
-                  </div>
-                  <p className="text-sm text-gray-600 ml-10">
-                    Switch between organizations to manage their campaigns, kiosks, and view analytics
-                  </p>
-                </div>
-                <div className="sm:flex-shrink-0">
-                  <OrganizationSwitcher userSession={userSession} onOrganizationChange={onOrganizationSwitch} />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {/* Bento Grid Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
-          {/* Total Raised Card */}
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
-            <CardContent className="p-6 relative z-10">
-              <div className="flex items-start justify-between mb-4">
-                <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                  <DollarSign className="h-5 w-5" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-600">Total Raised</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {loading ? "..." : formatLargeCurrency(stats.totalRaised)}
-                </p>
-                <div className={`flex items-center text-sm ${
-                  loading ? "text-gray-500" : 
-                  stats.totalDonations > 0 ? "text-emerald-600" : "text-gray-400"
-                }`}>
-                  <span className="font-medium">
-                    {loading ? "..." : stats.totalDonations > 0 
-                      ? `Avg ${formatCurrency(stats.totalRaised / stats.totalDonations)} per donation`
-                      : "No donations yet"}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-            {/* Floating Background Icon */}
-            <div className="absolute -right-4 -bottom-4 opacity-[0.08] pointer-events-none">
-              <DollarSign className="h-32 w-32 text-emerald-600" />
-            </div>
-          </Card>
-
-          {/* Total Donations Card */}
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
-            <CardContent className="p-6 relative z-10">
-              <div className="flex items-start justify-between mb-4">
-                <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-                  <Heart className="h-5 w-5" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-600">Total Donations</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {loading ? "..." : formatNumber(stats.totalDonations)}
-                </p>
-                <div className={`flex items-center text-sm ${
-                  loading ? "text-gray-500" : 
-                  recentActivities.length > 0 ? "text-emerald-600" : "text-gray-400"
-                }`}>
-                  <span className="font-medium">
-                    {loading ? "..." : recentActivities.length > 0 
-                      ? `Latest: ${recentActivities[0].timeAgo}`
-                      : "No recent activity"}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-            {/* Floating Background Icon */}
-            <div className="absolute -right-4 -bottom-4 opacity-[0.08] pointer-events-none">
-              <Heart className="h-32 w-32 text-blue-600" />
-            </div>
-          </Card>
-
-          {/* Active Campaigns Card */}
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
-            <CardContent className="p-6 relative z-10">
-              <div className="flex items-start justify-between mb-4">
-                <div className="w-10 h-10 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
-                  <Globe className="h-5 w-5" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-600">Active Campaigns</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {loading ? "..." : stats.activeCampaigns}
-                </p>
-                <div className={`flex items-center text-sm ${
-                  loading ? "text-gray-500" : 
-                  topCampaigns.length > 0 
-                    ? (topCampaigns[0].raised || 0) / (topCampaigns[0].goal || 1) >= 0.75 
-                      ? "text-emerald-600" 
-                      : (topCampaigns[0].raised || 0) / (topCampaigns[0].goal || 1) >= 0.5
-                        ? "text-yellow-600"
-                        : "text-red-600"
-                    : "text-gray-400"
-                }`}>
-                  <span className="font-medium">
-                    {loading ? "..." : topCampaigns.length > 0 
-                      ? `Top: ${Math.round((topCampaigns[0].raised || 0) / (topCampaigns[0].goal || 1) * 100)}% funded`
-                      : "No campaigns yet"}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-            {/* Floating Background Icon */}
-            <div className="absolute -right-4 -bottom-4 opacity-[0.08] pointer-events-none">
-              <Globe className="h-32 w-32 text-purple-600" />
-            </div>
-          </Card>
-
-          {/* Active Kiosks Card */}
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
-            <CardContent className="p-6 relative z-10">
-              <div className="flex items-start justify-between mb-4">
-                <div className="w-10 h-10 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center">
-                  <Monitor className="h-5 w-5" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-600">Active Kiosks</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {loading ? "..." : stats.activeKiosks}
-                </p>
-                <div className={`flex items-center text-sm ${
-                  loading ? "text-gray-500" : 
-                  stats.activeKiosks > 0 ? "text-emerald-600" : "text-red-600"
-                }`}>
-                  <span className="font-medium">
-                    {loading ? "..." : stats.topLocations.length > 0 
-                      ? `Top: ${stats.topLocations[0].name}`
-                      : stats.activeKiosks === 0 
-                        ? "No active kiosks"
-                        : "No locations yet"}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-            {/* Floating Background Icon */}
-            <div className="absolute -right-4 -bottom-4 opacity-[0.08] pointer-events-none">
-              <Monitor className="h-32 w-32 text-orange-600" />
-            </div>
-          </Card>
-        </div>
-
         {/* Stripe Onboarding Alert Card */}
-        {needsOnboarding && organization && (
-          <Card className="mb-8 border-l-4 border-l-yellow-500 bg-gradient-to-r from-yellow-50 to-orange-50 shadow-lg hover:shadow-xl transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="flex items-start space-x-4 flex-1">
-                  <div className="flex-shrink-0">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-yellow-100 flex items-center justify-center animate-pulse">
-                      <CreditCard className="w-6 h-6 sm:w-7 sm:h-7 text-yellow-600" />
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-                      <AlertCircle className="w-5 h-5 text-yellow-600" />
-                      Complete Stripe Onboarding
-                    </h3>
-                    <p className="text-sm sm:text-base text-gray-700 mb-3">
-                      Your organization needs to connect with Stripe to accept donations and process payments. 
-                      <span className="hidden sm:inline"> This quick setup takes only 5-10 minutes.</span>
-                    </p>
-                    <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-gray-600">
-                      <div className="flex items-center gap-1.5">
-                        <Shield className="w-4 h-4 text-green-600" />
-                        <span>Secure</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <Zap className="w-4 h-4 text-purple-600" />
-                        <span>Fast Setup</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <TrendingUp className="w-4 h-4 text-blue-600" />
-                        <span>Accept Donations</span>
+        <div className={`transition-all duration-500 ease-in-out ${needsOnboarding && organization ? 'mb-8' : 'mb-0 h-0 overflow-hidden'}`}>
+          {needsOnboarding && organization && (
+            <Card className="border-l-4 border-l-yellow-500 bg-gradient-to-r from-yellow-50 to-orange-50 shadow-lg hover:shadow-xl transition-all duration-500 ease-in-out">
+              <CardContent className="p-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-start space-x-4 flex-1">
+                    <div className="flex-shrink-0">
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-yellow-100 flex items-center justify-center animate-pulse">
+                        <CreditCard className="w-6 h-6 sm:w-7 sm:h-7 text-yellow-600" />
                       </div>
                     </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                        <AlertCircle className="w-5 h-5 text-yellow-600" />
+                        Complete Stripe Onboarding
+                      </h3>
+                      <p className="text-sm sm:text-base text-gray-700 mb-3">
+                        Your organization needs to connect with Stripe to accept donations and process payments. 
+                        <span className="hidden sm:inline"> This quick setup takes only 5-10 minutes.</span>
+                      </p>
+                      <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-gray-600">
+                        <div className="flex items-center gap-1.5">
+                          <Shield className="w-4 h-4 text-green-600" />
+                          <span>Secure</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Zap className="w-4 h-4 text-purple-600" />
+                          <span>Fast Setup</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <TrendingUp className="w-4 h-4 text-blue-600" />
+                          <span>Accept Donations</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="w-full sm:w-auto flex-shrink-0">
-                  <Button
-                    onClick={() => setShowStripeStatusDialog(true)}
-                    className="w-full sm:w-auto bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all h-11 sm:h-12 px-6"
-                  >
-                    <CreditCard className="w-5 h-5 mr-2" />
-                    Start Onboarding
-                    <ArrowUpRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Bento Grid Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-          {/* Fundraising Efficiency Rating - Spans 2 columns */}
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm lg:col-span-2">
-            <CardHeader className="p-6 border-b border-gray-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mr-3">
-                      <Target className="w-4 h-4" />
-                    </div>
-                    Fundraising Efficiency Rating
-                  </CardTitle>
-                  <CardDescription className="text-sm text-gray-600 mt-1 ml-11">
-                    Overall performance across all campaigns
-                  </CardDescription>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowPerformanceDialog(true)}
-                  className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
-                >
-                  <ArrowUpRight className="w-4 h-4 mr-1" />
-                  View Details
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="p-6 cursor-pointer" onClick={() => setShowPerformanceDialog(true)}>
-              <FundraisingEfficiencyGauge 
-                value={
-                  loading ? 0 : 
-                  allCampaignsForPerformance.length > 0 
-                    ? (() => {
-                        const totalRaised = allCampaignsForPerformance.reduce((sum, c) => sum + (c.raised || 0), 0);
-                        const totalGoals = allCampaignsForPerformance.reduce((sum, c) => sum + (c.goal || 0), 0);
-                        return totalGoals > 0 ? Math.min(100, Math.round((totalRaised / totalGoals) * 100)) : 0;
-                      })()
-                    : 0
-                }
-                onDetailsClick={() => setShowPerformanceDialog(true)}
-                onRefresh={handleRefresh}
-              />
-            </CardContent>
-          </Card>
-
-          {/* Average Donation - Spans 2 columns */}
-          <Card className="flex flex-col bg-white rounded-xl border border-gray-200 shadow-sm lg:col-span-2">
-            <CardHeader className="p-6 border-b border-gray-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
-                    <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center mr-3">
-                      <TrendingUp className="w-4 h-4" />
-                    </div>
-                    Average Donation Per Campaign
-                  </CardTitle>
-                  <CardDescription className="text-sm text-gray-600 mt-1 ml-11">
-                    Analyze donation patterns across campaigns
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col p-6">
-              {loading ? (
-                <div className="space-y-4">
-                  <Skeleton className="h-[260px] sm:h-[300px] w-full mb-4" />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-3">
-                    {Array.from({ length: 4 }).map((_, i) => (
-                      <Skeleton key={i} className="h-5 w-full" />
-                    ))}
-                  </div>
-                </div>
-              ) : categoryData.length > 0 ? (
-                <div className="flex-1 flex items-end">
-                  <ResponsiveContainer width="100%" height={260}>
-                    <LineChart data={categoryData} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}>
-                      <CartesianGrid 
-                        vertical={false} 
-                        strokeDasharray="3 3" 
-                        stroke="#E5E7EB" 
-                      />
-                      <XAxis 
-                        dataKey="name" 
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fill: '#6B7280', fontSize: 12 }} 
-                      />
-                      <YAxis 
-                        tickFormatter={(value) => formatShortCurrency(value as number)}
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fill: '#6B7280', fontSize: 12 }}
-                      />
-                      <Tooltip content={<CustomChartTooltip />} />
-                      <Line 
-                        type="monotone" 
-                        dataKey="value" 
-                        stroke="#4F46E5" 
-                        strokeWidth={2} 
-                        dot={false}
-                        activeDot={{ r: 6, fill: '#4F46E5' }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              ) : (
-                <div className="text-center py-6 sm:py-8 text-gray-500">
-                  <TriangleAlert className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3" />
-                  <p className="text-base sm:text-lg font-medium mb-2">No Categories Yet</p>
-                  <p className="text-xs sm:text-sm mb-4 px-4">
-                      Start by creating your first fundraising campaign to track progress.
-                    </p>
-                    {hasPermission("create_campaign") && (
-                      <Button onClick={() => onNavigate("admin-campaigns")} size="sm" className="text-xs sm:text-sm">
-                        <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-2" /> Create New Campaign
-                      </Button>
-                    )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-       
-        {/* Donation Distribution and Recent Activity */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {/* Donation Distribution - Spans 2 columns */}
-          <Card 
-            className="bg-white rounded-xl border border-gray-200 shadow-sm md:col-span-2"
-          >
-            <CardHeader className="p-6 border-b border-gray-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
-                    <div className="w-8 h-8 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center mr-3">
-                      <DollarSign className="w-4 h-4" />
-                    </div>
-                    Donation Distribution by Amount
-                  </CardTitle>
-                  <CardDescription className="text-sm text-gray-600 mt-1 ml-11">
-                    Number of donations in different amount ranges
-                  </CardDescription>
-                </div>
-                {!loading && !stats.donationDistributionError && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowDonationDistributionDialog(true);
-                    }}
-                    className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
-                  >
-                    <ArrowUpRight className="w-4 h-4 mr-1" />
-                    View Details
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent 
-              className="p-6 cursor-pointer hover:bg-gray-50 transition-colors"
-              onClick={() => !loading && !stats.donationDistributionError && setShowDonationDistributionDialog(true)}
-            >
-              {loading ? (
-                <div className="space-y-4">
-                  <Skeleton className="h-[250px] sm:h-[300px] w-full" />
-                </div>
-              ) : stats.donationDistributionError ? (
-                <div className="text-center py-6 sm:py-8 text-red-500">
-                  <AlertCircle className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-red-400 mb-3" />
-                  <p className="text-base sm:text-lg font-medium mb-2">Error in fetching donation data</p>
-                  <p className="text-xs sm:text-sm mb-4 px-4">
-                    Unable to load donation distribution. Please try refreshing the page.
-                  </p>
-                </div>
-              ) : (
-                <DonationDistributionChart
-                  data={stats.donationDistribution}
-                  totalRaised={stats.totalRaised}
-                  formatCurrency={(amount) => `£${amount.toLocaleString()}`}
-                />
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Campaign Goal Comparison - Spans 2 columns */}
-          <Card 
-            className="bg-white rounded-xl border border-gray-200 shadow-sm md:col-span-2"
-          >
-            <CardHeader className="p-6 border-b border-gray-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
-                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mr-3">
-                      <BarChart3 className="w-4 h-4" />
-                    </div>
-                    Campaign Goal Comparison
-                  </CardTitle>
-                  <CardDescription className="text-sm text-gray-600 mt-1 ml-11">
-                    Track progress towards fundraising goals
-                  </CardDescription>
-                </div>
-                {!loading && goalComparisonData.length > 0 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowCampaignProgressDialog(true);
-                    }}
-                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                  >
-                    <ArrowUpRight className="w-4 h-4 mr-1" />
-                    View Details
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent 
-              className="p-6 cursor-pointer hover:bg-gray-50 transition-colors"
-              onClick={() => !loading && goalComparisonData.length > 0 && setShowCampaignProgressDialog(true)}
-            >
-              {loading ? (
-                <div className="space-y-3">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="space-y-2">
-                      <Skeleton className="h-4 w-3/4" />
-                      <Skeleton className="h-2 w-full" />
-                      <Skeleton className="h-3 w-1/2" />
-                    </div>
-                  ))}
-                </div>
-              ) : goalComparisonData.length > 0 ? (
-                <CampaignProgressBars
-                  campaigns={transformCampaignsToProgress(
-                    goalComparisonData.map((d, index) => ({
-                      id: `${d.name}-${index}`,
-                      title: d.name,
-                      raised: d.Collected,
-                      goal: d.Goal,
-                    } as any))
-                  )}
-                  formatCurrency={formatCurrency}
-                />
-              ) : (
-                <div className="text-center py-6 sm:py-8 text-gray-500">
-                  <Target className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3" />
-                  <p className="text-base sm:text-lg font-medium mb-2">No Campaigns Yet</p>
-                  <p className="text-xs sm:text-sm mb-4 px-4">
-                    Start by creating your first fundraising campaign to track progress.
-                  </p>
-                  {hasPermission("create_campaign") && (
-                    <Button onClick={() => onNavigate("admin-campaigns")} size="sm" className="text-xs sm:text-sm">
-                      <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-2" /> Create New Campaign
+                  <div className="w-full sm:w-auto flex-shrink-0">
+                    <Button
+                      onClick={() => setDialogVisibility(prev => ({ ...prev, showStripeStatusDialog: true }))}
+                      className="w-full sm:w-auto bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all h-11 sm:h-12 px-6"
+                    >
+                      <CreditCard className="w-5 h-5 mr-2" />
+                      Start Onboarding
+                      <ArrowUpRight className="w-4 h-4 ml-2" />
                     </Button>
-                  )}
+                  </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
-        {/* Recent Activity */}
-        <div className="mb-8">
-          <Card className="bg-white rounded-xl border border-gray-200 shadow-sm">
-            <CardHeader className="p-6 border-b border-gray-100">
-              <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
+        {/* Dashboard Content - Smoothly moves down when banner appears */}
+        <div className={`transition-transform duration-500 ease-in-out ${needsOnboarding && organization ? 'transform translate-y-0' : 'transform translate-y-0'}`}>
+          {/* ENTERPRISE DASHBOARD LAYOUT - Row 1: KPI Summary */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6 max-w-[1200px] mx-auto mb-12 transition-all duration-500 ease-in-out">
+          <KpiCard
+            title="Total Raised"
+            value={formatCurrency(stats.totalRaised)}
+            icon={DollarSign}
+            loading={loading}
+            isPrimary={true}
+          />
+          <KpiCard
+            title="Active Campaigns"
+            value={stats.activeCampaigns}
+            icon={Target}
+            loading={loading}
+          />
+          <KpiCard
+            title="Total Donations"
+            value={stats.totalDonations}
+            icon={Heart}
+            loading={loading}
+          />
+          <KpiCard
+            title="Active Kiosks"
+            value={stats.activeKiosks}
+            icon={Monitor}
+            loading={loading}
+          />
+          <KpiCard
+            title="Gift Aid Claimed"
+            value={formatCurrency(stats.totalGiftAid)}
+            icon={Gift}
+            loading={loading}
+            className="sm:col-span-2 lg:col-span-1"
+          />
+        </div>
+
+        {/* Row 2: Revenue Growth Chart - Full Width */}
+        <div className="mb-12 transition-all duration-500 ease-in-out">
+          <RevenueGrowthChart
+            data={stats.monthlyRevenue}
+            loading={loading}
+            formatCurrency={formatCurrency}
+          />
+        </div>
+
+        {/* Row 3: Alerts & Heatmap, Donation Distribution - Prioritized Heatmap Layout */}
+        <div className="grid grid-cols-[1.4fr_1fr] grid-rows-[auto_1fr] gap-6 mb-12 transition-all duration-500 ease-in-out">
+          {/* Left Column Top: Alerts & Notifications */}
+          <div className="row-start-1">
+            <AlertsSection
+              alerts={alerts}
+              loading={loading}
+              onDismissAlert={(alertId) => {
+                // Handle alert dismissal - could add to local storage or API call
+                console.log('Dismissing alert:', alertId);
+              }}
+            />
+          </div>
+          
+          {/* Left Column Bottom: Donor Activity Heatmap */}
+          <div className="row-start-2">
+            <DonorActivityHeatmap
+              data={stats.heatmapData}
+              loading={loading}
+            />
+          </div>
+          
+          {/* Right Column: Donation Distribution - Spans full height */}
+          <div className="row-span-2">
+            <DonationDistributionDonut
+              data={stats.categoryData}
+              loading={loading}
+              onViewDetails={() => setDialogVisibility(prev => ({ ...prev, showDonationDistributionDialog: true }))}
+              className="h-full"
+            />
+          </div>
+        </div>
+
+        {/* Row 4: Split Section - Top Performing Campaigns & Recent Activity */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12 transition-all duration-500 ease-in-out">
+          <TopPerformingCampaigns
+            data={stats.topCampaigns}
+            loading={loading}
+            onViewDetails={() => setDialogVisibility(prev => ({ ...prev, showCampaignProgressDialog: true }))}
+            formatCurrency={formatCurrency}
+          />
+          {/* Recent Activity - Moved to right column */}
+          <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
+            <CardHeader className="p-6 border-b-2 border-gray-200">
+              <CardTitle className="text-lg font-semibold text-gray-900 flex items-center">
                 <div className="w-8 h-8 rounded-lg bg-cyan-50 text-cyan-600 flex items-center justify-center mr-3">
                   <ActivityIcon className="w-4 h-4" />
                 </div>
                 Recent Activity
               </CardTitle>
-              <CardDescription className="text-sm text-gray-600 mt-1 ml-11">
+              <CardDescription className="text-sm text-gray-500 mt-1 ml-11">
                 Latest actions and updates
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-6">
-              <div className="max-h-[320px] overflow-y-auto space-y-3 sm:space-y-4">
+            <CardContent className="px-6 pb-6 pt-0">
+              <div 
+                className="max-h-[420px] overflow-y-auto force-hide-scrollbar space-y-4 pb-8"
+                style={{
+                  scrollbarWidth: 'none',
+                  msOverflowStyle: 'none'
+                }}
+              >
                 {loading ? (
                   Array.from({ length: 3 }).map((_, i) => (
-                    <div key={i} className="flex items-start space-x-2 sm:space-x-3">
-                      <Skeleton className="h-5 w-5 sm:h-6 sm:w-6 rounded-full flex-shrink-0" />
+                    <div key={i} className="flex items-start space-x-3 py-3 border-b border-gray-50 last:border-0">
+                      <Skeleton className="h-5 w-5 rounded-full flex-shrink-0 mt-0.5" />
                       <div className="flex-1 space-y-2 min-w-0">
-                        <Skeleton className="h-3 sm:h-4 w-3/4" />
+                        <Skeleton className="h-4 w-3/4" />
                         <Skeleton className="h-3 w-1/2" />
                       </div>
                     </div>
@@ -2371,50 +2022,56 @@ export function AdminDashboard({
                   recentActivities.map((activity: Activity) => (
                     <div 
                       key={activity.id} 
-                      className="flex items-start space-x-2 sm:space-x-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                      className="flex items-start space-x-3 py-3 border-b border-gray-50 last:border-0 hover:bg-gray-25 cursor-pointer transition-colors rounded-lg px-2 -mx-2"
                       onClick={() => {
-                        setSelectedActivity(activity);
-                        setShowActivityDialog(true);
+                        setDialogVisibility(prev => ({ 
+                          ...prev, 
+                          selectedActivity: activity,
+                          showActivityDialog: true
+                        }));
                       }}
                     >
-                      <div className="flex-shrink-0 mt-0.5">
+                      <div className="flex-shrink-0 mt-1 opacity-70">
                         {getActivityIcon(activity.type)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs sm:text-sm text-gray-900 break-words">
+                        <p className="text-sm font-medium text-gray-900 break-words leading-relaxed">
                           {activity.message}
                         </p>
-                        <div className="flex items-center flex-wrap space-x-2 mt-1 gap-1">
-                          <p className="text-xs text-gray-500">
+                        <div className="flex items-center flex-wrap gap-2 mt-2">
+                          <p className="text-xs text-gray-500 font-medium">
                             {activity.timeAgo}
                           </p>
-                          {activity.kioskId &&(
-                            <Badge variant="secondary" className="text-xs">
-                              {activity.kioskId}
-                            </Badge>
+                          {activity.kioskId && (
+                            <>
+                              <span className="text-xs text-gray-300">·</span>
+                              <Badge variant="secondary" className="text-xs bg-gray-50 text-gray-600 border-0">
+                                {activity.kioskId}
+                              </Badge>
+                            </>
                           )}
                         </div>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div className="text-center py-6 sm:py-8 text-gray-500">
-                    <ActivityIcon className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3" />
-                    <p className="text-base sm:text-lg font-medium mb-2">No Recent Activity</p>
-                    <p className="text-xs sm:text-sm mb-4 px-4">
+                  <div className="text-center py-8 text-gray-500">
+                    <ActivityIcon className="mx-auto h-12 w-12 text-gray-300 mb-4" />
+                    <p className="text-base font-medium mb-2 text-gray-700">No Recent Activity</p>
+                    <p className="text-sm mb-4 px-4 text-gray-500 leading-relaxed">
                       Start by managing campaigns or configuring kiosks to see activity here.
                     </p>
                     <div className="flex flex-col sm:flex-row justify-center gap-2">
                       {hasPermission("create_campaign") && (
-                        <Button onClick={() => onNavigate("admin-campaigns")} size="sm" className="text-xs sm:text-sm">
-                          <Settings className="w-3 h-3 sm:w-4 sm:h-4 mr-2" /> 
+                        <Button onClick={() => onNavigate("admin-campaigns")} size="sm" className="text-xs">
+                          <Settings className="w-3 h-3 mr-2" /> 
                           <span className="hidden sm:inline">Manage Campaigns</span>
                           <span className="sm:hidden">Campaigns</span>
                         </Button>
                       )}
                       {hasPermission("create_kiosk") && (
-                        <Button onClick={() => onNavigate("admin-kiosks")} size="sm" variant="outline" className="text-xs sm:text-sm">
-                          <Monitor className="w-3 h-3 sm:w-4 sm:h-4 mr-2" /> 
+                        <Button onClick={() => onNavigate("admin-kiosks")} size="sm" variant="outline" className="text-xs">
+                          <Monitor className="w-3 h-3 mr-2" /> 
                           <span className="hidden sm:inline">Configure Kiosks</span>
                           <span className="sm:hidden">Kiosks</span>
                         </Button>
@@ -2426,9 +2083,14 @@ export function AdminDashboard({
             </CardContent>
           </Card>
         </div>
+        </div>
+        </div>
+        </div>
+        </>
+      ) : null}
 
-        {/* Donation Details Dialog */}
-      <Dialog open={showActivityDialog} onOpenChange={setShowActivityDialog}>
+      {/* Donation Details Dialog */}
+      <Dialog open={dialogVisibility.showActivityDialog} onOpenChange={(open) => setDialogVisibility(prev => ({ ...prev, showActivityDialog: open }))}>
         <DialogContent className="sm:max-w-[500px] mx-4">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2 text-base sm:text-lg">
@@ -2440,52 +2102,52 @@ export function AdminDashboard({
             </DialogDescription>
           </DialogHeader>
           
-          {selectedActivity && selectedActivity.donationData && (
+          {dialogVisibility.selectedActivity && dialogVisibility.selectedActivity.donationData && (
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-3 items-center gap-4">
                 <span className="text-sm font-medium text-gray-700">Amount:</span>
                 <span className="col-span-2 text-sm font-semibold text-green-600">
-                  ${selectedActivity.donationData.amount}
+                  ${dialogVisibility.selectedActivity.donationData.amount}
                 </span>
               </div>
               
               <div className="grid grid-cols-3 items-center gap-4">
                 <span className="text-sm font-medium text-gray-700">Campaign:</span>
                 <span className="col-span-2 text-sm text-gray-900">
-                  {selectedActivity.campaignName || 'N/A'}
+                  {dialogVisibility.selectedActivity.campaignName || 'N/A'}
                 </span>
               </div>
               
               <div className="grid grid-cols-3 items-center gap-4">
                 <span className="text-sm font-medium text-gray-700">Date & Time:</span>
                 <span className="col-span-2 text-sm text-gray-900">
-                  {selectedActivity.displayTime}
+                  {dialogVisibility.selectedActivity.displayTime}
                 </span>
               </div>
               
-              {selectedActivity.donationData.donorName && (
+              {dialogVisibility.selectedActivity.donationData.donorName && (
                 <div className="grid grid-cols-3 items-center gap-4">
                   <span className="text-sm font-medium text-gray-700">Donor Name:</span>
                   <span className="col-span-2 text-sm text-gray-900">
-                    {selectedActivity.donationData.donorName}
+                    {dialogVisibility.selectedActivity.donationData.donorName}
                   </span>
                 </div>
               )}
               
-              {selectedActivity.donationData.donorEmail && (
+              {dialogVisibility.selectedActivity.donationData.donorEmail && (
                 <div className="grid grid-cols-3 items-center gap-4">
                   <span className="text-sm font-medium text-gray-700">Email:</span>
                   <span className="col-span-2 text-sm text-gray-900 break-all">
-                    {selectedActivity.donationData.donorEmail}
+                    {dialogVisibility.selectedActivity.donationData.donorEmail}
                   </span>
                 </div>
               )}
               
-              {selectedActivity.donationData.donorPhone && (
+              {dialogVisibility.selectedActivity.donationData.donorPhone && (
                 <div className="grid grid-cols-3 items-center gap-4">
                   <span className="text-sm font-medium text-gray-700">Phone:</span>
                   <span className="col-span-2 text-sm text-gray-900">
-                    {selectedActivity.donationData.donorPhone}
+                    {dialogVisibility.selectedActivity.donationData.donorPhone}
                   </span>
                 </div>
               )}
@@ -2493,9 +2155,9 @@ export function AdminDashboard({
               <div className="grid grid-cols-3 items-center gap-4">
                 <span className="text-sm font-medium text-gray-700">Type:</span>
                 <span className="col-span-2 text-sm">
-                  {selectedActivity.donationData.isRecurring ? (
+                  {dialogVisibility.selectedActivity.donationData.isRecurring ? (
                     <Badge variant="default" className="bg-blue-600">
-                      Recurring ({selectedActivity.donationData.recurringInterval})
+                      Recurring ({dialogVisibility.selectedActivity.donationData.recurringInterval})
                     </Badge>
                   ) : (
                     <Badge variant="secondary">One-time</Badge>
@@ -2503,7 +2165,7 @@ export function AdminDashboard({
                 </span>
               </div>
               
-              {selectedActivity.donationData.isAnonymous && (
+              {dialogVisibility.selectedActivity.donationData.isAnonymous && (
                 <div className="grid grid-cols-3 items-center gap-4">
                   <span className="text-sm font-medium text-gray-700">Anonymous:</span>
                   <span className="col-span-2 text-sm">
@@ -2512,7 +2174,7 @@ export function AdminDashboard({
                 </div>
               )}
               
-              {selectedActivity.donationData.isGiftAid && (
+              {dialogVisibility.selectedActivity.donationData.isGiftAid && (
                 <div className="grid grid-cols-3 items-center gap-4">
                   <span className="text-sm font-medium text-gray-700">Gift Aid:</span>
                   <span className="col-span-2 text-sm">
@@ -2523,29 +2185,29 @@ export function AdminDashboard({
                 </div>
               )}
               
-              {selectedActivity.kioskId && (
+              {dialogVisibility.selectedActivity.kioskId && (
                 <div className="grid grid-cols-3 items-center gap-4">
                   <span className="text-sm font-medium text-gray-700">Platform:</span>
                   <span className="col-span-2 text-sm text-gray-900">
-                    {selectedActivity.kioskId}
+                    {dialogVisibility.selectedActivity.kioskId}
                   </span>
                 </div>
               )}
               
-              {selectedActivity.donationData.transactionId && (
+              {dialogVisibility.selectedActivity.donationData.transactionId && (
                 <div className="grid grid-cols-3 items-center gap-4">
                   <span className="text-sm font-medium text-gray-700">Transaction ID:</span>
                   <span className="col-span-2 text-xs text-gray-600 font-mono break-all">
-                    {selectedActivity.donationData.transactionId}
+                    {dialogVisibility.selectedActivity.donationData.transactionId}
                   </span>
                 </div>
               )}
               
-              {selectedActivity.donationData.donorMessage && (
+              {dialogVisibility.selectedActivity.donationData.donorMessage && (
                 <div className="grid grid-cols-3 items-start gap-4">
                   <span className="text-sm font-medium text-gray-700">Message:</span>
                   <span className="col-span-2 text-sm text-gray-900 italic">
-                    "{selectedActivity.donationData.donorMessage}"
+                    "{dialogVisibility.selectedActivity.donationData.donorMessage}"
                   </span>
                 </div>
               )}
@@ -2564,32 +2226,32 @@ export function AdminDashboard({
 
       {/* Centralized Stripe Onboarding Dialog - New Redesigned Version */}
       <StripeOnboardingDialog
-        open={showStripeStatusDialog}
-        onOpenChange={setShowStripeStatusDialog}
+        open={dialogVisibility.showStripeStatusDialog}
+        onOpenChange={(open) => setDialogVisibility(prev => ({ ...prev, showStripeStatusDialog: open }))}
         organization={organization}
         loading={orgLoading}
       />
 
       {/* Additional Onboarding Dialog for other triggers */}
       <StripeOnboardingDialog
-        open={showOnboardingPopup}
-        onOpenChange={setShowOnboardingPopup}
+        open={dialogVisibility.showOnboardingPopup}
+        onOpenChange={(open) => setDialogVisibility(prev => ({ ...prev, showOnboardingPopup: open }))}
         organization={organization}
         loading={orgLoading}
       />
 
       {/* Performance Detail Dialog */}
       <PerformanceDetailDialog
-        isOpen={showPerformanceDialog}
-        onClose={() => setShowPerformanceDialog(false)}
-        campaigns={allCampaignsForPerformance}
+        isOpen={dialogVisibility.showPerformanceDialog}
+        onClose={() => setDialogVisibility(prev => ({ ...prev, showPerformanceDialog: false }))}
+        campaigns={dashboardData.allCampaignsForPerformance}
         stats={stats}
       />
 
       {/* Donation Distribution Dialog */}
       <DonationDistributionDialog
-        isOpen={showDonationDistributionDialog}
-        onClose={() => setShowDonationDistributionDialog(false)}
+        isOpen={dialogVisibility.showDonationDistributionDialog}
+        onClose={() => setDialogVisibility(prev => ({ ...prev, showDonationDistributionDialog: false }))}
         data={stats.donationDistribution}
         totalRaised={stats.totalRaised}
         formatCurrency={formatCurrency}
@@ -2597,10 +2259,10 @@ export function AdminDashboard({
 
       {/* Campaign Progress Dialog */}
       <CampaignProgressDialog
-        isOpen={showCampaignProgressDialog}
-        onClose={() => setShowCampaignProgressDialog(false)}
+        isOpen={dialogVisibility.showCampaignProgressDialog}
+        onClose={() => setDialogVisibility(prev => ({ ...prev, showCampaignProgressDialog: false }))}
         campaigns={transformCampaignsToProgress(
-          goalComparisonData.map((d, index) => ({
+          dashboardData.goalComparisonData.map((d, index) => ({
             id: `${d.name}-${index}`,
             title: d.name,
             raised: d.Collected,
@@ -2608,14 +2270,13 @@ export function AdminDashboard({
           } as any))
         )}
         onCampaignClick={(id) => {
-          setShowCampaignProgressDialog(false);
+          setDialogVisibility(prev => ({ ...prev, showCampaignProgressDialog: false }));
           onNavigate("admin-campaigns");
         }}
         formatCurrency={formatCurrency}
       />
-      </div>
-      </>
-      ) : (
+
+      {loading && !onboardingFlow.showOnboarding && (
         <div className="flex items-center justify-center h-screen">
           <div className="text-center">
             <RefreshCw className="w-8 h-8 mx-auto animate-spin text-gray-400 mb-3" />

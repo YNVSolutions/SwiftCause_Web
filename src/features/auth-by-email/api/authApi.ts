@@ -106,6 +106,7 @@ export const authApi = {
           'edit_user',
           'delete_user',
           'manage_permissions',
+          'system_admin',
         ],
         isActive: true,
         emailVerified: false,

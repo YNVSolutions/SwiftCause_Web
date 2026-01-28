@@ -49,7 +49,7 @@ export const CampaignListPage: React.FC<CampaignListPageProps> = ({
         logoAlt="SwiftCause"
         brandPrimary="Choose a "
         brandAccent="cause"
-        accentColor="#16A34A"
+        accentColor="#064e3b"
         actionButton={
           <button
             onClick={onLogout}

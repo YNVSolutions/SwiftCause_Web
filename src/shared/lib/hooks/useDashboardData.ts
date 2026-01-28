@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { getKiosks, getRecentDonations, getCampaigns } from '../../api/firestoreService';
-import { getCountFromServer, collection, query, where } from 'firebase/firestore';
+import { collection, query, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Campaign } from '../../types';
 import { Kiosk, Donation } from '../../types';
@@ -25,10 +25,15 @@ interface DashboardStats {
   totalDonations: number;
   activeCampaigns: number;
   activeKiosks: number;
+  totalGiftAid: number;
   topLocations: Array<{ name: string; totalRaised: number }>;
   deviceDistribution: Array<{ name: string; value: number }>;
   donationDistribution: Array<{ range: string; count: number }>;
   donationDistributionError?: string;
+  monthlyRevenue: Array<{ month: string; donationRevenue: number; totalRevenue: number }>;
+  heatmapData: Array<{ day: string; hour: number; value: number; donations: number }>;
+  categoryData: Array<{ name: string; value: number; percentage: number; color: string }>;
+  topCampaigns: Array<{ id: string; name: string; raised: number; goal: number; percentage: number; donationCount: number }>;
 }
 
 type FirestoreTimestamp = { seconds: number; nanoseconds: number };
@@ -58,9 +63,14 @@ export function useDashboardData(organizationId?: string) {
     totalDonations: 0,
     activeCampaigns: 0,
     activeKiosks: 0,
+    totalGiftAid: 0,
     topLocations: [],
     deviceDistribution: [],
     donationDistribution: [],
+    monthlyRevenue: [],
+    heatmapData: [],
+    categoryData: [],
+    topCampaigns: [],
   });
   const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
@@ -74,6 +84,8 @@ export function useDashboardData(organizationId?: string) {
       setError("Invalid organization ID.");
       return;
     }
+
+    console.log('fetchDashboardData called with organizationId:', organizationId);
 
     setLoading(true);
     setError(null);
@@ -90,6 +102,9 @@ export function useDashboardData(organizationId?: string) {
 
       const activeCampaigns = campaignsData.filter((c: Campaign) => c.status === 'active').length;
       const activeKiosks = kiosksData.filter((k: Kiosk) => k.status === 'online').length;
+
+      // Initialize Gift Aid total
+      let totalGiftAid = 0;
 
 
       const locationGroups: { [key: string]: number } = {};
@@ -127,22 +142,25 @@ export function useDashboardData(organizationId?: string) {
         .map(([name, value]) => ({ name, value }))
         .sort((a, b) => b.value - a.value);
 
-      // Fetch donation distribution - using client-side counting to avoid index requirements
+      // Fetch donation distribution by category - using client-side counting to avoid index requirements
       let donationDistribution: Array<{ range: string; count: number }> = [];
       let donationDistributionError: string | undefined;
       
+      // Declare categoryTotals outside try block so it's accessible in catch block
+      let categoryTotals: { [category: string]: { count: number; amount: number } } = {};
+      
+      // Declare monthlyRevenue outside try block so it's accessible in catch block
+      let monthlyRevenue: Array<{ month: string; donationRevenue: number; totalRevenue: number }> = [];
+      
+      // Declare heatmapData outside try block so it's accessible in catch block
+      let heatmapData: Array<{ day: string; hour: number; value: number; donations: number }> = [];
+      
+      // Declare categoryData and topCampaigns outside try block so they're accessible in catch block
+      let categoryData: Array<{ name: string; value: number; percentage: number; color: string }> = [];
+      let topCampaigns: Array<{ id: string; name: string; raised: number; goal: number; percentage: number; donationCount: number }> = [];
+      
       try {
-        // Define amount ranges
-        const ranges = [
-          { min: 0, max: 100, label: '£0-£100', isLast: false },
-          { min: 100, max: 200, label: '£100-£200', isLast: false },
-          { min: 200, max: 300, label: '£200-£300', isLast: false },
-          { min: 300, max: 400, label: '£300-£400', isLast: false },
-          { min: 400, max: 500, label: '£400-£500', isLast: false },
-          { min: 500, max: 10000, label: '£500+', isLast: true }
-        ];
-
-        console.log('Fetching donations for distribution analysis, organization:', organizationId);
+        console.log('Fetching donations for category distribution analysis, organization:', organizationId);
 
         // Fetch all donations for this organization (client-side counting approach)
         const { getDocs } = await import('firebase/firestore');
@@ -150,19 +168,65 @@ export function useDashboardData(organizationId?: string) {
           collection(db, 'donations'),
           where("organizationId", "==", organizationId)
         );
+        
         const donationsSnapshot = await getDocs(donationsQuery);
         
         console.log(`Total donations fetched: ${donationsSnapshot.size}`);
 
-        // Initialize counts for each range
-        donationDistribution = ranges.map(range => ({
-          range: range.label,
-          count: 0
-        }));
+        // Create a map of campaign ID to category using existing campaigns data
+        const campaignCategoryMap: { [campaignId: string]: string } = {};
+        campaignsData.forEach((campaign: Campaign) => {
+          if (campaign.id && campaign.category) {
+            campaignCategoryMap[campaign.id] = campaign.category;
+          }
+        });
 
-        // Count donations in each range
+        // Count donations by category
+        let totalDonationAmount = 0;
+        let totalDonationCount = 0;
+
         donationsSnapshot.forEach((doc) => {
           const donation = doc.data();
+          const campaignId = donation.campaignId;
+          
+          console.log('Processing donation:', {
+            id: doc.id,
+            campaignId: campaignId,
+            amount: donation.amount,
+            category: donation.category, // Check if category is directly on donation
+            isGiftAid: donation.isGiftAid,
+            donationData: donation
+          });
+          
+          // Calculate Gift Aid (25% of donation if eligible)
+          if (donation.isGiftAid && donation.amount) {
+            totalGiftAid += donation.amount * 0.25;
+          }
+          
+          // First try to get category directly from donation
+          let category = donation.category;
+          
+          // If no direct category, try to get from campaign mapping
+          if (!category && campaignId) {
+            category = campaignCategoryMap[campaignId];
+          }
+          
+          // If still no category but it's a Gift Aid donation, use "Gift Aid" as category
+          if (!category && donation.isGiftAid) {
+            category = "Gift Aid";
+          }
+          
+          // If still no category, use "Uncategorized" as fallback
+          if (!category) {
+            category = "Uncategorized";
+            console.warn('Donation categorized as Uncategorized:', {
+              donationId: doc.id,
+              campaignId: campaignId,
+              availableCampaigns: Object.keys(campaignCategoryMap),
+              donationFields: Object.keys(donation)
+            });
+          }
+
           let amount = donation.amount;
           
           // Handle string amounts
@@ -176,32 +240,231 @@ export function useDashboardData(organizationId?: string) {
             return;
           }
 
-          // Find which range this donation belongs to
-          for (let i = 0; i < ranges.length; i++) {
-            const range = ranges[i];
-            if (range.isLast) {
-              // Last range: amount >= min
-              if (amount >= range.min) {
-                donationDistribution[i].count++;
-                break;
-              }
-            } else {
-              // Other ranges: min <= amount < max
-              if (amount >= range.min && amount < range.max) {
-                donationDistribution[i].count++;
-                break;
-              }
-            }
+          // Initialize category if not exists
+          if (!categoryTotals[category]) {
+            categoryTotals[category] = { count: 0, amount: 0 };
+          }
+
+          // Add to category totals
+          categoryTotals[category].count++;
+          categoryTotals[category].amount += amount;
+          totalDonationCount++;
+          totalDonationAmount += amount;
+          
+          console.log('Donation processed successfully:', {
+            category: category,
+            count: categoryTotals[category].count,
+            amount: categoryTotals[category].amount
+          });
+        });
+
+        // Convert to the expected format with percentages
+        donationDistribution = Object.entries(categoryTotals)
+          .map(([category, data]) => ({
+            range: category, // Using 'range' field to maintain compatibility with existing chart component
+            count: data.count
+          }))
+          .sort((a, b) => b.count - a.count); // Sort by count descending
+        
+        console.log('Donation distribution by category calculated:', donationDistribution);
+
+        // Compute monthly revenue data
+        const monthlyRevenueMap: { [month: string]: { donationRevenue: number; giftAidAmount: number } } = {};
+        
+        // Process donations again for monthly revenue calculation
+        donationsSnapshot.forEach((doc) => {
+          const donation = doc.data();
+          let amount = donation.amount;
+          
+          // Handle string amounts
+          if (typeof amount === 'string') {
+            amount = parseFloat(amount);
+          }
+          
+          // Skip invalid amounts
+          if (typeof amount !== 'number' || isNaN(amount)) {
+            return;
+          }
+
+          // Get donation timestamp
+          const timestamp = donation.timestamp;
+          let donationDate: Date;
+          
+          if (isFirestoreTimestamp(timestamp)) {
+            donationDate = new Date(timestamp.seconds * 1000);
+          } else {
+            donationDate = new Date(timestamp);
+          }
+          
+          // Skip invalid dates
+          if (isNaN(donationDate.getTime())) {
+            return;
+          }
+
+          // Get month key (e.g., "2024-01")
+          const monthKey = `${donationDate.getFullYear()}-${String(donationDate.getMonth() + 1).padStart(2, '0')}`;
+          
+          // Initialize month if not exists
+          if (!monthlyRevenueMap[monthKey]) {
+            monthlyRevenueMap[monthKey] = { donationRevenue: 0, giftAidAmount: 0 };
+          }
+          
+          // Add to donation revenue
+          monthlyRevenueMap[monthKey].donationRevenue += amount;
+          
+          // Add Gift Aid amount (25% of donation if eligible)
+          if (donation.isGiftAid) {
+            monthlyRevenueMap[monthKey].giftAidAmount += amount * 0.25;
+          }
+        });
+
+        // Convert to array format for chart, showing last 6 months
+        monthlyRevenue = [];
+        const currentDate = new Date();
+        
+        for (let i = 5; i >= 0; i--) {
+          const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+          const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+          const monthName = date.toLocaleDateString('en-US', { month: 'short' });
+          
+          const monthData = monthlyRevenueMap[monthKey] || { donationRevenue: 0, giftAidAmount: 0 };
+          
+          monthlyRevenue.push({
+            month: monthName,
+            donationRevenue: monthData.donationRevenue,
+            totalRevenue: monthData.donationRevenue + monthData.giftAidAmount
+          });
+        }
+        
+        console.log('Monthly revenue calculated:', monthlyRevenue);
+
+        // Compute heatmap data from donations
+        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        const heatmapMatrix: { [key: string]: number } = {};
+        
+        // Initialize 7x24 matrix with zeros
+        days.forEach(day => {
+          for (let hour = 0; hour < 24; hour++) {
+            heatmapMatrix[`${day}-${hour}`] = 0;
           }
         });
         
-        console.log('Donation distribution calculated:', donationDistribution);
+        // Process donations for heatmap
+        donationsSnapshot.forEach((doc) => {
+          const donation = doc.data();
+          const timestamp = donation.timestamp;
+          let donationDate: Date;
+          
+          if (isFirestoreTimestamp(timestamp)) {
+            donationDate = new Date(timestamp.seconds * 1000);
+          } else {
+            donationDate = new Date(timestamp);
+          }
+          
+          // Skip invalid dates
+          if (isNaN(donationDate.getTime())) {
+            return;
+          }
+
+          // Get day of week (0 = Sunday, 1 = Monday, etc.)
+          const dayOfWeek = donationDate.getDay();
+          // Convert to our format (Monday = 0, Sunday = 6)
+          const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+          const day = days[dayIndex];
+          const hour = donationDate.getHours();
+          
+          const key = `${day}-${hour}`;
+          heatmapMatrix[key]++;
+        });
+
+        // Find maximum count for normalization
+        const maxCount = Math.max(...Object.values(heatmapMatrix), 1);
+        
+        // Convert to heatmap data format with normalization
+        heatmapData = [];
+        days.forEach(day => {
+          for (let hour = 0; hour < 24; hour++) {
+            const key = `${day}-${hour}`;
+            const donations = heatmapMatrix[key];
+            const value = donations / maxCount; // Normalize to 0-1 scale
+            
+            heatmapData.push({
+              day,
+              hour,
+              value,
+              donations
+            });
+          }
+        });
+        
+        console.log('Heatmap data calculated:', heatmapData.slice(0, 10), '... (showing first 10 entries)');
+
+        // Transform donation distribution for donut chart
+        const colors = ['#4F46E5', '#10B981', '#F59E0B', '#8B5CF6', '#06B6D4', '#EC4899', '#F97316', '#84CC16'];
+        const totalDonations = donationDistribution.reduce((sum, item) => sum + item.count, 0);
+        
+        categoryData = donationDistribution.map((item, index) => ({
+          name: item.range,
+          value: item.count,
+          percentage: totalDonations > 0 ? Math.round((item.count / totalDonations) * 100) : 0,
+          color: colors[index % colors.length]
+        }));
+
+        // Transform campaigns data for top performing campaigns
+        topCampaigns = campaignsData
+          .filter((campaign: Campaign) => campaign.goal && campaign.goal > 0)
+          .map((campaign: Campaign) => ({
+            id: campaign.id,
+            name: campaign.title || 'Untitled Campaign',
+            raised: campaign.raised || 0,
+            goal: campaign.goal || 0,
+            percentage: Math.round(((campaign.raised || 0) / (campaign.goal || 1)) * 100),
+            donationCount: campaign.donationCount || 0
+          }))
+          .sort((a, b) => b.percentage - a.percentage)
+          .slice(0, 5);
+        
+        console.log('Category data calculated:', categoryData);
+        console.log('Top campaigns calculated:', topCampaigns);
       } catch (error) {
         console.error('Donation distribution query failed:', error);
         const details = toErrorDetails(error);
         console.error('Error details:', details);
         donationDistribution = [];
         donationDistributionError = 'Error in fetching donation data';
+        
+        // Set default empty monthly revenue data
+        monthlyRevenue = [];
+        const currentDate = new Date();
+        
+        for (let i = 5; i >= 0; i--) {
+          const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+          const monthName = date.toLocaleDateString('en-US', { month: 'short' });
+          
+          monthlyRevenue.push({
+            month: monthName,
+            donationRevenue: 0,
+            totalRevenue: 0
+          });
+        }
+        
+        // Set default empty heatmap data
+        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        heatmapData = [];
+        days.forEach(day => {
+          for (let hour = 0; hour < 24; hour++) {
+            heatmapData.push({
+              day,
+              hour,
+              value: 0,
+              donations: 0
+            });
+          }
+        });
+        
+        // Set default empty category and campaign data
+        categoryData = [];
+        topCampaigns = [];
       }
 
       setStats({
@@ -209,10 +472,15 @@ export function useDashboardData(organizationId?: string) {
         totalDonations,
         activeCampaigns,
         activeKiosks,
+        totalGiftAid,
         topLocations,
         deviceDistribution,
         donationDistribution,
-        donationDistributionError
+        donationDistributionError,
+        monthlyRevenue,
+        heatmapData,
+        categoryData,
+        topCampaigns
       });
 
       const formattedActivities = recentDonationsData.map((donation: Donation): Activity => {

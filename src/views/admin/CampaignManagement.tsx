@@ -1511,6 +1511,17 @@ const CampaignManagement = ({
       return;
     }
 
+    // Date validation
+    if (newCampaignFormData.startDate && newCampaignFormData.endDate) {
+      const startDate = new Date(newCampaignFormData.startDate);
+      const endDate = new Date(newCampaignFormData.endDate);
+      
+      if (endDate <= startDate) {
+        alert("End date must be after start date");
+        return;
+      }
+    }
+
     setIsSubmittingNewCampaign(true);
     
     try {
@@ -1851,6 +1862,17 @@ const CampaignManagement = ({
       return;
     }
 
+    // Date validation
+    if (editCampaignFormData.startDate && editCampaignFormData.endDate) {
+      const startDate = new Date(editCampaignFormData.startDate);
+      const endDate = new Date(editCampaignFormData.endDate);
+      
+      if (endDate <= startDate) {
+        alert("End date must be after start date");
+        return;
+      }
+    }
+
     setIsSubmittingEditCampaign(true);
     
     try {
@@ -2118,10 +2140,9 @@ const CampaignManagement = ({
       userSession={userSession}
       hasPermission={hasPermission}
       activeScreen="admin-campaigns"
-      hideSidebarTrigger
     >
-      <div className="space-y-4 sm:space-y-6">
-        <main className="px-2 sm:px-4 lg:px-8 pb-4 sm:pb-8">
+      <div className="space-y-6 sm:space-y-8">
+        <main className="px-6 lg:px-8 pt-12 pb-8">
           <AdminSearchFilterHeader
             title={`Campaigns (${filteredAndSortedCampaigns.length})`}
             subtitle="Manage your donation campaigns"

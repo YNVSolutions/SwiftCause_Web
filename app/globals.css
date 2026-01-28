@@ -32,14 +32,14 @@
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: #030213;
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: #064e3b !important;
+  --sidebar-foreground: #ffffff !important;
+  --sidebar-primary: #064e3b !important;
+  --sidebar-primary-foreground: #ffffff !important;
+  --sidebar-accent: #0f5132 !important;
+  --sidebar-accent-foreground: #ffffff !important;
+  --sidebar-border: rgba(6, 78, 59, 0.2) !important;
+  --sidebar-ring: #064e3b !important;
 }
 
 .dark {
@@ -67,14 +67,14 @@
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+  --sidebar: #064e3b !important;
+  --sidebar-foreground: #ffffff !important;
+  --sidebar-primary: #0f5132 !important;
+  --sidebar-primary-foreground: #ffffff !important;
+  --sidebar-accent: #0f5132 !important;
+  --sidebar-accent-foreground: #ffffff !important;
+  --sidebar-border: rgba(6, 78, 59, 0.3) !important;
+  --sidebar-ring: #064e3b !important;
 }
 
 /* Custom Theme Mapping */
@@ -260,18 +260,6 @@ input:-webkit-autofill:focus {
 }
 
 /* Custom Animations for Login Page */
-@keyframes blob {
-  0%, 100% {
-    transform: translate(0, 0) scale(1);
-  }
-  33% {
-    transform: translate(30px, -50px) scale(1.1);
-  }
-  66% {
-    transform: translate(-20px, 20px) scale(0.9);
-  }
-}
-
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -334,18 +322,6 @@ input:-webkit-autofill:focus {
   100% {
     background-position: 100% 50%;
   }
-}
-
-.animate-blob {
-  animation: blob 7s infinite;
-}
-
-.animation-delay-2000 {
-  animation-delay: 2s;
-}
-
-.animation-delay-4000 {
-  animation-delay: 4s;
 }
 
 .animate-fade-in {
@@ -415,32 +391,6 @@ input:-webkit-autofill:focus {
   animation: float-up 8s ease-in-out forwards;
 }
 
-/* Floating Heart Particles Animation */
-@keyframes float-particle {
-  0% {
-    transform: translateY(0) translateX(0) rotate(0deg) scale(0.5);
-    opacity: 0;
-  }
-  10% {
-    opacity: 0.6;
-  }
-  50% {
-    transform: translateY(-50vh) translateX(20px) rotate(180deg) scale(1);
-    opacity: 0.8;
-  }
-  90% {
-    opacity: 0.6;
-  }
-  100% {
-    transform: translateY(-100vh) translateX(-20px) rotate(360deg) scale(0.5);
-    opacity: 0;
-  }
-}
-
-.animate-float-particle {
-  animation: float-particle 10s ease-in-out forwards;
-}
-
 /* Donation Cards Floating from Map */
 @keyframes float-from-map {
   0% {
@@ -476,37 +426,6 @@ input:-webkit-autofill:focus {
 
 .animate-shimmer {
   animation: shimmer 2s infinite;
-}
-
-/* Login Page Animations */
-@keyframes aurora {
-  0%, 100% {
-    transform: translateY(0) scaleY(1);
-    opacity: 0.3;
-  }
-  50% {
-    transform: translateY(-20px) scaleY(1.1);
-    opacity: 0.5;
-  }
-}
-
-.animate-aurora {
-  animation: aurora 8s ease-in-out infinite;
-}
-
-@keyframes twinkle {
-  0%, 100% {
-    opacity: 0.3;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.5);
-  }
-}
-
-.animate-twinkle {
-  animation: twinkle 3s ease-in-out infinite;
 }
 
 @keyframes success-wave {
@@ -649,4 +568,121 @@ input:-webkit-autofill:focus {
 
 .animate-shine {
   animation: shine 1.5s ease-in-out;
+}
+
+/* Force sidebar colors to match homepage green */
+[data-sidebar="sidebar"],
+[data-slot="sidebar-inner"],
+.bg-sidebar {
+  background-color: #064e3b !important;
+  color: #ffffff !important;
+}
+
+/* Sidebar menu items */
+[data-sidebar="menu-button"] {
+  color: #ffffff !important;
+}
+
+[data-sidebar="menu-button"]:hover {
+  background-color: #0f5132 !important;
+  color: #ffffff !important;
+}
+
+/* Sidebar header and footer */
+[data-sidebar="header"],
+[data-sidebar="footer"] {
+  background-color: #064e3b !important;
+  color: #ffffff !important;
+}
+
+/* Additional specificity for sidebar wrapper and container */
+div[data-sidebar="sidebar"],
+div[data-slot="sidebar-inner"],
+.group\/sidebar-wrapper [data-sidebar="sidebar"],
+.group\/sidebar-wrapper [data-slot="sidebar-inner"] {
+  background-color: #064e3b !important;
+  color: #ffffff !important;
+}
+
+/* Force all nested elements in sidebar */
+[data-sidebar="sidebar"] *,
+[data-slot="sidebar-inner"] *,
+[data-sidebar="header"] *,
+[data-sidebar="footer"] *,
+[data-sidebar="content"] * {
+  color: #ffffff !important;
+}
+
+/* Sidebar container with highest specificity */
+[data-slot="sidebar-container"] [data-sidebar="sidebar"],
+[data-slot="sidebar-container"] [data-slot="sidebar-inner"] {
+  background-color: #064e3b !important;
+  color: #ffffff !important;
+}
+
+/* Enhanced shadows without rounded corners */
+[data-sidebar="sidebar"],
+[data-slot="sidebar-inner"] {
+  box-shadow: 
+    0 10px 25px -5px rgba(0, 0, 0, 0.1),
+    0 8px 10px -6px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Smooth hover effects for sidebar */
+[data-sidebar="sidebar"]:hover {
+  box-shadow: 
+    0 20px 40px -10px rgba(0, 0, 0, 0.15),
+    0 15px 20px -8px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Ensure container has no rounded corners */
+[data-slot="sidebar-container"] {
+  overflow: hidden !important;
+}
+
+/* Hide scrollbar utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Safari and Chrome */
+}
+
+/* Additional scrollbar hiding with higher specificity */
+.scrollbar-none {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Force hide scrollbar on specific containers */
+.force-hide-scrollbar {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.force-hide-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0px !important;
+  height: 0px !important;
+  background: transparent !important;
+}
+/* Scrollbar hiding utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Safari and Chrome */
 }

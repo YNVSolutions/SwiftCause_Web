@@ -24,7 +24,7 @@ export function ResultScreen({ result, onEmailConfirmation, onReturnToStart, onR
               gap: 10px;
               font-weight: 700;
               letter-spacing: -0.02em;
-              background: linear-gradient(90deg, #16A34A, #22C55E, #0EA5E9);
+              background: linear-gradient(90deg, #064e3b, #0f5132, #0EA5E9);
               background-size: 200% 100%;
               -webkit-background-clip: text;
               background-clip: text;
