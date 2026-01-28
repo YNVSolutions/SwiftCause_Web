@@ -67,6 +67,9 @@ interface AdminLayoutProps {
   headerTitle?: React.ReactNode;
   headerSubtitle?: React.ReactNode;
   headerActions?: React.ReactNode;
+  headerSearchPlaceholder?: string;
+  headerSearchValue?: string;
+  onHeaderSearchChange?: (value: string) => void;
   hideSidebarTrigger?: boolean;
   hideHeader?: boolean;
 }
@@ -160,7 +163,7 @@ function AdminSidebar({
                 {isActive("admin", "admin-dashboard") && (
                   <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white/30 rounded-r-full"></div>
                 )}
-                <LayoutDashboard className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} flex-shrink-0 ${
+                <LayoutDashboard className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} shrink-0 ${
                   isActive("admin", "admin-dashboard") ? 'text-white' : ''
                 }`} strokeWidth={1.5} />
                 {!isCollapsed && <span className="ml-3 text-base font-medium">Dashboard</span>}
@@ -184,7 +187,7 @@ function AdminSidebar({
                   {isActive("admin-campaigns") && (
                     <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white/30 rounded-r-full"></div>
                   )}
-                  <Settings className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} flex-shrink-0 ${
+                  <Settings className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} shrink-0 ${
                     isActive("admin-campaigns") ? 'text-white' : ''
                   }`} strokeWidth={1.5} />
                   {!isCollapsed && <span className="ml-3 text-base font-medium">Campaigns</span>}
@@ -193,7 +196,7 @@ function AdminSidebar({
             ) : (
               <SidebarMenuItem>
                 <div className={`relative w-full flex items-center ${isCollapsed ? 'justify-center px-4 py-4' : 'px-4 py-3.5'} rounded-xl opacity-50 cursor-not-allowed`}>
-                  <Settings className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} flex-shrink-0 text-white/40`} strokeWidth={1.5} />
+                  <Settings className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} shrink-0 text-white/40`} strokeWidth={1.5} />
                   {!isCollapsed && <span className="ml-3 text-base font-medium text-white/40">Campaigns</span>}
                 </div>
               </SidebarMenuItem>
@@ -216,7 +219,7 @@ function AdminSidebar({
                   {isActive("admin-donations") && (
                     <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white/30 rounded-r-full"></div>
                   )}
-                  <Database className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} flex-shrink-0 ${
+                  <Database className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} shrink-0 ${
                     isActive("admin-donations") ? 'text-white' : ''
                   }`} strokeWidth={1.5} />
                   {!isCollapsed && <span className="ml-3 text-base font-medium">Donations</span>}
@@ -225,7 +228,7 @@ function AdminSidebar({
             ) : (
               <SidebarMenuItem>
                 <div className={`relative w-full flex items-center ${isCollapsed ? 'justify-center px-4 py-4' : 'px-4 py-3.5'} rounded-xl opacity-50 cursor-not-allowed`}>
-                  <Database className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} flex-shrink-0 text-white/40`} strokeWidth={1.5} />
+                  <Database className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} shrink-0 text-white/40`} strokeWidth={1.5} />
                   {!isCollapsed && <span className="ml-3 text-base font-medium text-white/40">Donations</span>}
                 </div>
               </SidebarMenuItem>
@@ -248,7 +251,7 @@ function AdminSidebar({
                   {isActive("admin-kiosks") && (
                     <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white/30 rounded-r-full"></div>
                   )}
-                  <Monitor className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} flex-shrink-0 ${
+                  <Monitor className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} shrink-0 ${
                     isActive("admin-kiosks") ? 'text-white' : ''
                   }`} strokeWidth={1.5} />
                   {!isCollapsed && <span className="ml-3 text-base font-medium">Kiosks</span>}
@@ -257,7 +260,7 @@ function AdminSidebar({
             ) : (
               <SidebarMenuItem>
                 <div className={`relative w-full flex items-center ${isCollapsed ? 'justify-center px-4 py-4' : 'px-4 py-3.5'} rounded-xl opacity-50 cursor-not-allowed`}>
-                  <Monitor className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} flex-shrink-0 text-white/40`} strokeWidth={1.5} />
+                  <Monitor className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} shrink-0 text-white/40`} strokeWidth={1.5} />
                   {!isCollapsed && <span className="ml-3 text-base font-medium text-white/40">Kiosks</span>}
                 </div>
               </SidebarMenuItem>
@@ -280,7 +283,7 @@ function AdminSidebar({
                   {isActive("admin-users") && (
                     <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white/30 rounded-r-full"></div>
                   )}
-                  <Users className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} flex-shrink-0 ${
+                  <Users className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} shrink-0 ${
                     isActive("admin-users") ? 'text-white' : ''
                   }`} strokeWidth={1.5} />
                   {!isCollapsed && <span className="ml-3 text-base font-medium">Users</span>}
@@ -289,7 +292,7 @@ function AdminSidebar({
             ) : (
               <SidebarMenuItem>
                 <div className={`relative w-full flex items-center ${isCollapsed ? 'justify-center px-4 py-4' : 'px-4 py-3.5'} rounded-xl opacity-50 cursor-not-allowed`}>
-                  <Users className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} flex-shrink-0 text-white/40`} strokeWidth={1.5} />
+                  <Users className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} shrink-0 text-white/40`} strokeWidth={1.5} />
                   {!isCollapsed && <span className="ml-3 text-base font-medium text-white/40">Users</span>}
                 </div>
               </SidebarMenuItem>
@@ -312,7 +315,7 @@ function AdminSidebar({
                   {isActive("admin-gift-aid") && (
                     <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white/30 rounded-r-full"></div>
                   )}
-                  <Gift className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} flex-shrink-0 ${
+                  <Gift className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} shrink-0 ${
                     isActive("admin-gift-aid") ? 'text-white' : ''
                   }`} strokeWidth={1.5} />
                   {!isCollapsed && <span className="ml-3 text-base font-medium">Gift Aid</span>}
@@ -321,7 +324,7 @@ function AdminSidebar({
             ) : (
               <SidebarMenuItem>
                 <div className={`relative w-full flex items-center ${isCollapsed ? 'justify-center px-4 py-4' : 'px-4 py-3.5'} rounded-xl opacity-50 cursor-not-allowed`}>
-                  <Gift className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} flex-shrink-0 text-white/40`} strokeWidth={1.5} />
+                  <Gift className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} shrink-0 text-white/40`} strokeWidth={1.5} />
                   {!isCollapsed && <span className="ml-3 text-base font-medium text-white/40">Gift Aid</span>}
                 </div>
               </SidebarMenuItem>
@@ -343,7 +346,7 @@ function AdminSidebar({
                 {isActive("admin-bank-details") && (
                   <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white/30 rounded-r-full"></div>
                 )}
-                <Wallet className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} flex-shrink-0 ${
+                <Wallet className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} shrink-0 ${
                   isActive("admin-bank-details") ? 'text-white' : ''
                 }`} strokeWidth={1.5} />
                 {!isCollapsed && <span className="ml-3 text-base font-medium">Bank Details</span>}
@@ -368,9 +371,9 @@ function AdminSidebar({
                   <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white/30 rounded-r-full"></div>
                 )}
                 {isLoadingStripe ? (
-                  <Loader2 className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} flex-shrink-0 animate-spin`} strokeWidth={1.5} />
+                  <Loader2 className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} shrink-0 animate-spin`} strokeWidth={1.5} />
                 ) : (
-                  <CreditCard className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} flex-shrink-0 ${
+                  <CreditCard className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} shrink-0 ${
                     isActive("admin-stripe-account") ? 'text-white' : ''
                   }`} strokeWidth={1.5} />
                 )}
@@ -407,7 +410,7 @@ function AdminSidebar({
               onClick={onLogout}
               className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-red-300 hover:text-red-200 hover:bg-red-500/20 transition-all duration-150 group"
             >
-              <LogOut className="h-4 w-4 flex-shrink-0" strokeWidth={1.5} />
+              <LogOut className="h-4 w-4 shrink-0" strokeWidth={1.5} />
               <span className="text-sm font-medium">Sign Out</span>
             </button>
           </div>
@@ -447,6 +450,9 @@ export function AdminLayout({
   headerTitle,
   headerSubtitle,
   headerActions,
+  headerSearchPlaceholder,
+  headerSearchValue,
+  onHeaderSearchChange,
   hideSidebarTrigger,
   hideHeader,
 }: AdminLayoutProps) {
@@ -474,6 +480,14 @@ export function AdminLayout({
   const resolvedTitle = headerTitle ?? currentLabel;
   const resolvedSubtitle = headerSubtitle ?? undefined;
   const userInitials = getInitials(userSession.user.username || userSession.user.email || "U");
+  const headerSearch =
+    headerSearchValue !== undefined && onHeaderSearchChange
+      ? {
+          placeholder: headerSearchPlaceholder,
+          value: headerSearchValue,
+          onChange: onHeaderSearchChange,
+        }
+      : undefined;
 
   const handleStripeAccountClick = async () => {
     setIsLoadingStripe(true);
@@ -755,13 +769,14 @@ export function AdminLayout({
                 title={resolvedTitle}
                 subtitle={resolvedSubtitle}
                 actions={headerActions}
+                search={headerSearch}
                 showSidebarTrigger={!hideSidebarTrigger}
                 onStartTour={onStartTour}
                 onProfileClick={() => setShowUserProfile(!showUserProfile)}
                 userPhotoUrl={userSession.user.photoURL || undefined}
                 userInitials={userInitials}
                 profileSlot={(
-                  <div className="flex items-center gap-3 ml-4 relative">
+                  <div className="flex items-center gap-3 ml-2 relative">
                     <div className="relative">
                       <Button
                         variant="ghost"
@@ -803,8 +818,8 @@ export function AdminLayout({
               onClick={() => setShowUserProfile(false)}
             ></div>
 
-            <div className="fixed top-20 right-6 w-80 bg-white/15 backdrop-blur-xl rounded-xl shadow-sm z-[60] transform transition-all duration-300 ease-out border border-gray-200/10">
-              <div className="relative px-6 py-5 bg-gradient-to-r from-slate-50/10 to-gray-50/10 backdrop-blur-xl rounded-t-xl border-b border-gray-200/10">
+            <div className="fixed top-20 right-6 w-80 bg-white/15 backdrop-blur-xl rounded-xl shadow-sm z-60 transform transition-all duration-300 ease-out border border-gray-200/10">
+              <div className="relative px-6 py-5 bg-linear-to-r from-slate-50/10 to-gray-50/10 backdrop-blur-xl rounded-t-xl border-b border-gray-200/10">
                 <button
                   onClick={() => setShowUserProfile(false)}
                   className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100"
@@ -1008,7 +1023,7 @@ export function AdminLayout({
 
         {/* Loading Overlay for Stripe */}
         {isLoadingStripe && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-100 flex items-center justify-center">
             <div className="bg-white rounded-xl shadow-2xl p-8 flex flex-col items-center gap-4 max-w-sm mx-4">
               <Loader2 className="h-12 w-12 text-[#064e3b] animate-spin" />
               <div className="text-center">

@@ -2,14 +2,20 @@
 
 import React from "react";
 import { Button } from "../../../shared/ui/button";
+import { Input } from "../../../shared/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "../../../shared/ui/avatar";
 import { SidebarTrigger } from "../../../shared/ui/sidebar";
-import { Compass } from "lucide-react";
+import { Compass, Search } from "lucide-react";
 
 interface AdminPageHeaderProps {
   title: React.ReactNode | null;
   subtitle?: React.ReactNode;
   actions?: React.ReactNode;
+  search?: {
+    placeholder?: string;
+    value: string;
+    onChange: (value: string) => void;
+  };
   showSidebarTrigger?: boolean;
   onStartTour?: () => void;
   onProfileClick: () => void;
@@ -22,6 +28,7 @@ export function AdminPageHeader({
   title,
   subtitle,
   actions,
+  search,
   showSidebarTrigger = true,
   onStartTour,
   onProfileClick,
@@ -50,7 +57,7 @@ export function AdminPageHeader({
   };
 
   return (
-    <div className="flex w-full items-center justify-between gap-4 px-6 py-5 glass-card border-b border-[#F3F1EA]/60">
+    <div className="flex w-full flex-col gap-4 px-6 py-5 glass-card border-b border-[#F3F1EA]/60 lg:flex-row lg:items-center lg:justify-between">
       <style jsx>{`
         .glass-card {
           background: rgba(255, 255, 255, 0.65);
@@ -58,7 +65,7 @@ export function AdminPageHeader({
           border: 1px solid rgba(255, 255, 255, 0.3);
         }
       `}</style>
-      <div className="flex items-center gap-4 min-w-0">
+      <div className="flex flex-1 flex-col gap-3 min-w-0 sm:flex-row sm:items-center sm:gap-4">
         {showSidebarTrigger && (
           <SidebarTrigger className="h-10 w-10 rounded-2xl border border-[#F3F1EA]/60 bg-[#F7F6F2] text-slate-600 hover:bg-[#F3F1EA] hover:text-slate-800 transition-all duration-300 shadow-sm hover:shadow-md" />
         )}
@@ -66,9 +73,20 @@ export function AdminPageHeader({
           {renderTitle()}
           {renderSubtitle()}
         </div>
+        {search && (
+          <div className="relative w-full sm:max-w-md sm:ml-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 shrink-0" />
+            <Input
+              placeholder={search.placeholder ?? "Search..."}
+              value={search.value}
+              onChange={(e) => search.onChange(e.target.value)}
+              className="pl-10 w-full h-10 sm:h-11 border border-black rounded-full text-sm sm:text-base bg-white/70 focus:bg-white transition-all duration-300"
+            />
+          </div>
+        )}
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-1">
         {actions && (
           <div className="flex items-center gap-2">
             {actions}

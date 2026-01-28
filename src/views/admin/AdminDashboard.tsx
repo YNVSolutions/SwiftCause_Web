@@ -1016,6 +1016,7 @@ export function AdminDashboard({
           </div>
         </div>
       )}
+      headerSubtitle="Real-time view of fundraising activity"
       headerActions={(
         <div className="flex items-center gap-2 flex-nowrap ml-auto">
           {hasPermission("system_admin") && (

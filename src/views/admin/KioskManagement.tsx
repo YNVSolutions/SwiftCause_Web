@@ -134,7 +134,6 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
 
   // Configuration for AdminSearchFilterHeader
   const searchFilterConfig: AdminSearchFilterConfig = {
-    searchPlaceholder: "Search kiosks...",
     filters: [
       {
         key: "statusFilter",
@@ -394,6 +393,33 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
       userSession={userSession}
       hasPermission={hasPermission}
       activeScreen="admin-kiosks"
+      headerSubtitle="Configure and monitor donation kiosks"
+      headerSearchPlaceholder="Search kiosks..."
+      headerSearchValue={searchTerm}
+      onHeaderSearchChange={setSearchTerm}
+      headerActions={(
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-2xl border-[#064e3b] bg-transparent text-[#064e3b] hover:bg-[#064e3b] hover:text-stone-50 transition-all duration-300 px-5"
+            onClick={handleExportKiosks}
+          >
+            Export
+          </Button>
+          {hasPermission('create_kiosk') ? (
+            <Button
+              onClick={() => {
+                setIsCreateDialogOpen(true);
+              }}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 h-10"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Kiosk
+            </Button>
+          ) : null}
+        </div>
+      )}
     >
       <div className="min-h-screen bg-gray-50">
         <main className="px-6 lg:px-8 pt-12 pb-8">
@@ -407,28 +433,9 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
 
           {/* Unified Header Component */}
           <AdminSearchFilterHeader
-            title={`Kiosks (${filteredKiosks.length})`}
-            subtitle="Configure and monitor donation kiosks"
             config={searchFilterConfig}
-            searchValue={searchTerm}
-            onSearchChange={setSearchTerm}
             filterValues={filterValues}
             onFilterChange={handleFilterChange}
-            exportData={filteredKiosks}
-            onExport={handleExportKiosks}
-            actions={
-              hasPermission('create_kiosk') ? (
-                <Button
-                  onClick={() => {
-                    setIsCreateDialogOpen(true);
-                  }}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 h-10"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Kiosk
-                </Button>
-              ) : undefined
-            }
           />
           
           {/* Modern Table Container */}

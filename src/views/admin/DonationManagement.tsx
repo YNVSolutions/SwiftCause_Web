@@ -110,10 +110,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
   }, [campaigns]);
 
   // Configuration for AdminSearchFilterHeader
-  const [showCalendar, setShowCalendar] = useState<Record<string, boolean>>({});
-
   const searchFilterConfig: AdminSearchFilterConfig = {
-    searchPlaceholder: "Search donations...",
     filters: [
       {
         key: "statusFilter",
@@ -158,12 +155,6 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
         break;
     }
   };
-
-  const handleCalendarToggle = (key: string, open: boolean) => {
-    setShowCalendar(prev => ({ ...prev, [key]: open }));
-  };
-
-
 
 
   // Filter donations first
@@ -254,6 +245,20 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
       userSession={userSession}
       hasPermission={hasPermission}
       activeScreen="admin-donations"
+      headerSubtitle="Track and analyze donation transactions"
+      headerSearchPlaceholder="Search donations..."
+      headerSearchValue={searchTerm}
+      onHeaderSearchChange={setSearchTerm}
+      headerActions={(
+        <Button
+          variant="outline"
+          size="sm"
+          className="rounded-2xl border-[#064e3b] bg-transparent text-[#064e3b] hover:bg-[#064e3b] hover:text-stone-50 transition-all duration-300 px-5"
+          onClick={handleExportDonations}
+        >
+          Export
+        </Button>
+      )}
     >
       <div className="space-y-6 sm:space-y-8">
         <main className="px-6 lg:px-8 pt-12 pb-8">
@@ -267,17 +272,9 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
 
           {/* Unified Header Component */}
           <AdminSearchFilterHeader
-            title={`Donations (${filteredDonations.length})`}
-            subtitle="Track and analyze donation transactions"
             config={searchFilterConfig}
-            searchValue={searchTerm}
-            onSearchChange={setSearchTerm}
             filterValues={filterValues}
             onFilterChange={handleFilterChange}
-            showCalendar={showCalendar}
-            onCalendarToggle={handleCalendarToggle}
-            exportData={filteredDonations}
-            onExport={handleExportDonations}
           />
 
           {/* Modern Table Container */}
