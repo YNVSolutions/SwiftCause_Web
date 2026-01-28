@@ -5,7 +5,7 @@ const admin = require("firebase-admin");
 admin.initializeApp();
 
 // Import handlers
-const {createUser, deleteUser} = require("./handlers/users");
+const {createUser, updateUser, deleteUser} = require("./handlers/users");
 const {
   handleAccountUpdatedStripeWebhook,
   handlePaymentCompletedStripeWebhook,
@@ -20,6 +20,7 @@ const {createStripeAccountForNewOrg} = require("./handlers/triggers");
 
 // Export all functions (backwards compatible)
 exports.createUser = functions.https.onRequest(createUser);
+exports.updateUser = functions.https.onRequest(updateUser);
 exports.deleteUser = functions.https.onRequest(deleteUser);
 exports.handleAccountUpdatedStripeWebhook = functions.https.onRequest(
     handleAccountUpdatedStripeWebhook,

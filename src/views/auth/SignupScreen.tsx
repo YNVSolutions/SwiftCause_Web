@@ -7,7 +7,7 @@ import { Badge } from '../../shared/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
 import { Checkbox } from '../../shared/ui/checkbox';
 import { Progress } from '../../shared/ui/progress';
-import { submitCurrencyRequest, checkEmailExists } from '../../shared/api/firestoreService';
+import { submitCurrencyRequest, checkEmailExists, checkOrganizationNameExists } from '../../shared/api/firestoreService';
 import { 
   Heart,
   Shield,
@@ -101,6 +101,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
   const [requestedCurrency, setRequestedCurrency] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+  const [isCheckingOrgName, setIsCheckingOrgName] = useState(false);
   
   const [formData, setFormData] = useState<SignupFormData>({
     firstName: '',
@@ -192,6 +193,36 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
     }
   };
 
+  const handleOrganizationNameBlur = async () => {
+    // First validate organization name is not empty
+    if (!formData.organizationName.trim()) {
+      return; // Don't check if empty
+    }
+
+    // Check if organization name already exists
+    setIsCheckingOrgName(true);
+    try {
+      const exists = await checkOrganizationNameExists(formData.organizationName);
+      if (exists) {
+        setErrors(prev => ({
+          ...prev,
+          organizationName: 'This organization name already exists. Please use a different name.'
+        }));
+      } else {
+        // Clear organization name error if it was set
+        setErrors(prev => ({
+          ...prev,
+          organizationName: undefined
+        }));
+      }
+    } catch (error) {
+      console.error('Error checking organization name:', error);
+      // Don't block user if check fails
+    } finally {
+      setIsCheckingOrgName(false);
+    }
+  };
+
   const validateStep = async (step: number): Promise<boolean> => {
     const newErrors: SignupFormErrors = {};
 
@@ -214,7 +245,20 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
         }
       }
     } else if (step === 2) {
-      if (!formData.organizationName.trim()) newErrors.organizationName = 'Organization name is required';
+      if (!formData.organizationName.trim()) {
+        newErrors.organizationName = 'Organization name is required';
+      } else {
+        // Check if organization name already exists
+        try {
+          const exists = await checkOrganizationNameExists(formData.organizationName);
+          if (exists) {
+            newErrors.organizationName = 'This organization name already exists. Please use a different name.';
+          }
+        } catch (error) {
+          console.error('Error checking organization name:', error);
+          // Don't block if check fails
+        }
+      }
       if (!formData.organizationType) newErrors.organizationType = 'Organization type is required';
       if (!formData.organizationSize) newErrors.organizationSize = 'Organization size is required';
     }  else if (step === 3) {
@@ -594,14 +638,26 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                             id="organizationName"
                             value={formData.organizationName}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData('organizationName', e.target.value)}
-                            className={`pl-10 ${errors.organizationName ? 'border-red-500' : ''}`}
+                            onBlur={handleOrganizationNameBlur}
+                            className={`pl-10 ${errors.organizationName ? 'border-red-500' : ''} ${isCheckingOrgName ? 'opacity-50' : ''}`}
                             placeholder="Your Organization Name"
+                            disabled={isCheckingOrgName}
                           />
+                          {isCheckingOrgName && (
+                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                              <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                            </div>
+                          )}
                         </div>
                         {errors.organizationName && (
                           <p className="text-xs text-red-600 flex items-center">
                             <AlertCircle className="w-3 h-3 mr-1" />
                             {errors.organizationName}
+                          </p>
+                        )}
+                        {isCheckingOrgName && (
+                          <p className="text-xs text-gray-500 flex items-center mt-1">
+                            Checking organization name availability...
                           </p>
                         )}
                       </div>

@@ -252,3 +252,14 @@ export async function checkEmailExists(email: string): Promise<boolean> {
   }
 }
 
+export async function checkOrganizationNameExists(organizationName: string): Promise<boolean> {
+  try {
+    const orgsRef = collection(db, 'organizations');
+    const q = query(orgsRef, where('name', '==', organizationName));
+    const snapshot = await getDocs(q);
+    return !snapshot.empty;
+  } catch (error) {
+    console.error('Error checking organization name existence:', error);
+    throw error;
+  }
+}
