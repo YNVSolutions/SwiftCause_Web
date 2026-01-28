@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { getAuth, onAuthStateChanged, User as FirebaseAuthUser, sendEmailVerification } from 'firebase/auth'
+import { getAuth, onAuthStateChanged, User as FirebaseAuthUser, sendEmailVerification, signOut } from 'firebase/auth'
 import { doc, getDoc, db } from './firebase'
 import {
   UserRole,
@@ -184,6 +184,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }
 
   const handleLogout = () => {
+    signOut(auth).catch((error) => {
+      console.error('Error signing out:', error)
+    })
+
     setUserRole(null)
     setCurrentKioskSession(null)
     setCurrentAdminSession(null)
