@@ -382,6 +382,28 @@ export function AdminDashboard({
       }
     }, [userSession.user.organizationId, onboardingFlow.showOnboarding, onboardingFlow.onboardingDismissed, fetchCampaignsByOrganization]);
 
+  const setCampaignFormData = useCallback(
+    (data: CampaignFormData | ((prev: CampaignFormData) => CampaignFormData)) => {
+      if (typeof data === "function") {
+        setCampaignCreation(prev => ({ ...prev, formData: data(prev.formData) }));
+      } else {
+        setCampaignCreation(prev => ({ ...prev, formData: data }));
+      }
+    },
+    []
+  );
+
+  const setKioskFormData = useCallback(
+    (data: KioskFormData | ((prev: KioskFormData) => KioskFormData)) => {
+      if (typeof data === "function") {
+        setKioskCreation(prev => ({ ...prev, formData: data(prev.formData) }));
+      } else {
+        setKioskCreation(prev => ({ ...prev, formData: data }));
+      }
+    },
+    []
+  );
+
   useEffect(() => {
     fetchChartData();
   }, [fetchChartData]);
@@ -869,7 +891,39 @@ export function AdminDashboard({
     
     // Clear sessionStorage when manually starting tour
     sessionStorage.removeItem('onboardingDismissed');
+
+    // Add a history entry so browser back exits the tour instead of leaving the dashboard
+    if (typeof window !== "undefined") {
+      window.history.pushState({ tour: true }, "", window.location.href);
+    }
   };
+
+  useEffect(() => {
+    const handlePopState = () => {
+      if (!onboardingFlow.showOnboarding) return;
+
+      setOnboardingFlow(prev => ({
+        ...prev,
+        showOnboarding: false,
+        isTourActive: false,
+        showCampaignForm: false,
+        showKioskForm: false,
+        showLinkingForm: false,
+        showStripeStep: false,
+      }));
+
+      if (typeof window !== "undefined") {
+        window.history.pushState({ tour: false }, "", window.location.href);
+      }
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("popstate", handlePopState);
+      return () => window.removeEventListener("popstate", handlePopState);
+    }
+
+    return;
+  }, [onboardingFlow.showOnboarding]);
 
   const handleDirectStripeOnboarding = async () => {
     if (!organization?.id) {
@@ -1336,13 +1390,7 @@ export function AdminDashboard({
                 }}
                 editingCampaign={campaignCreation.editingCampaignInTour}
                 campaignData={campaignCreation.formData}
-                setCampaignData={useCallback((data: CampaignFormData | ((prev: CampaignFormData) => CampaignFormData)) => {
-                  if (typeof data === 'function') {
-                    setCampaignCreation(prev => ({ ...prev, formData: data(prev.formData) }));
-                  } else {
-                    setCampaignCreation(prev => ({ ...prev, formData: data }));
-                  }
-                }, [])}
+                setCampaignData={setCampaignFormData}
                 onSubmit={handleCampaignFormSubmit}
                 onSaveDraft={() => {
                   // Handle save draft functionality if needed
@@ -1804,13 +1852,7 @@ export function AdminDashboard({
             onOpenChange={(open) => setDialogVisibility(prev => ({ ...prev, showCreateKioskModal: open }))}
             editingKiosk={null}
             kioskData={kioskCreation.formData}
-            setKioskData={useCallback((data: KioskFormData | ((prev: KioskFormData) => KioskFormData)) => {
-              if (typeof data === 'function') {
-                setKioskCreation(prev => ({ ...prev, formData: data(prev.formData) }));
-              } else {
-                setKioskCreation(prev => ({ ...prev, formData: data }));
-              }
-            }, [])}
+            setKioskData={setKioskFormData}
             campaigns={campaignCreation.allCampaigns.map(c => ({
               id: c.id,
               title: c.title,
