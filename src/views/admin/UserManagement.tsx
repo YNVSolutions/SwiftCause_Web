@@ -158,7 +158,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
             headerSearchPlaceholder="Search users..."
             headerSearchValue={searchTerm}
             onHeaderSearchChange={setSearchTerm}
-            headerActions={
+            headerInlineActions={
                 hasPermission('create_user') ? (
                     <Button
                         className="bg-indigo-600 text-white"
@@ -285,7 +285,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                             <div className="hidden md:block overflow-hidden">
                                 <Table className="w-full table-fixed">
                                     <TableHeader>
-                                        <TableRow className="bg-gray-100 border-b-2 border-gray-300">
+                                        <TableRow className="bg-gray-100 border-b-2 border-gray-300 text-gray-700">
                                             <SortableTableHeader 
                                                 sortKey="username" 
                                                 currentSortKey={sortKey} 

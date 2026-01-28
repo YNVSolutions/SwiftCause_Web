@@ -381,14 +381,15 @@ export function GiftAidManagement({
       headerSearchPlaceholder="Search by donor name or campaign..."
       headerSearchValue={searchTerm}
       onHeaderSearchChange={setSearchTerm}
-      headerActions={(
+      headerTopRightActions={(
         <Button
           variant="outline"
           size="sm"
           className="rounded-2xl border-[#064e3b] bg-transparent text-[#064e3b] hover:bg-[#064e3b] hover:text-stone-50 transition-all duration-300 px-5"
           onClick={handleExportData}
         >
-          Export
+          <Download className="h-4 w-4 sm:hidden" />
+          <span className="hidden sm:inline">Export</span>
         </Button>
       )}
     >
@@ -480,7 +481,7 @@ export function GiftAidManagement({
           <CardContent className="p-0">
             <Table className="w-full table-fixed">
                 <TableHeader>
-                  <TableRow className="bg-gray-100 border-b-2 border-gray-300">
+                  <TableRow className="bg-gray-100 border-b-2 border-gray-300 text-gray-700">
                     <SortableTableHeader 
                       sortKey="donorName" 
                       currentSortKey={sortKey} 

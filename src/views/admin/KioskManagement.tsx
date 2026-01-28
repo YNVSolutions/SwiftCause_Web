@@ -397,29 +397,30 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
       headerSearchPlaceholder="Search kiosks..."
       headerSearchValue={searchTerm}
       onHeaderSearchChange={setSearchTerm}
-      headerActions={(
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="rounded-2xl border-[#064e3b] bg-transparent text-[#064e3b] hover:bg-[#064e3b] hover:text-stone-50 transition-all duration-300 px-5"
-            onClick={handleExportKiosks}
-          >
-            Export
-          </Button>
-          {hasPermission('create_kiosk') ? (
-            <Button
-              onClick={() => {
-                setIsCreateDialogOpen(true);
-              }}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 h-10"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Kiosk
-            </Button>
-          ) : null}
-        </div>
+      headerTopRightActions={(
+        <Button
+          variant="outline"
+          size="sm"
+          className="rounded-2xl border-[#064e3b] bg-transparent text-[#064e3b] hover:bg-[#064e3b] hover:text-stone-50 transition-all duration-300 px-5"
+          onClick={handleExportKiosks}
+        >
+          <Download className="h-4 w-4 sm:hidden" />
+          <span className="hidden sm:inline">Export</span>
+        </Button>
       )}
+      headerInlineActions={
+        hasPermission('create_kiosk') ? (
+          <Button
+            onClick={() => {
+              setIsCreateDialogOpen(true);
+            }}
+            className="h-10 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white px-5"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add New Kiosk
+          </Button>
+        ) : null
+      }
     >
       <div className="min-h-screen bg-gray-50">
         <main className="px-6 lg:px-8 pt-12 pb-8">
@@ -570,7 +571,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                   <div className="hidden md:block overflow-hidden">
                     <Table className="w-full table-fixed">
                       <TableHeader>
-                        <TableRow className="bg-gray-100 border-b-2 border-gray-300">
+                        <TableRow className="bg-gray-100 border-b-2 border-gray-300 text-gray-700">
                           <SortableTableHeader 
                             sortKey="name" 
                             currentSortKey={sortKey} 

@@ -66,7 +66,8 @@ interface AdminLayoutProps {
   onOpenStripeSetup?: () => void;
   headerTitle?: React.ReactNode;
   headerSubtitle?: React.ReactNode;
-  headerActions?: React.ReactNode;
+  headerTopRightActions?: React.ReactNode;
+  headerInlineActions?: React.ReactNode;
   headerSearchPlaceholder?: string;
   headerSearchValue?: string;
   onHeaderSearchChange?: (value: string) => void;
@@ -144,7 +145,7 @@ function AdminSidebar({
         )}
       </SidebarHeader>
 
-      <SidebarContent className="flex flex-col justify-center px-3">
+      <SidebarContent className="flex flex-col px-3">
         <SidebarGroup>
           <SidebarMenu className="space-y-2">
             {/* Dashboard */}
@@ -449,7 +450,8 @@ export function AdminLayout({
   onOpenStripeSetup,
   headerTitle,
   headerSubtitle,
-  headerActions,
+  headerTopRightActions,
+  headerInlineActions,
   headerSearchPlaceholder,
   headerSearchValue,
   onHeaderSearchChange,
@@ -768,7 +770,8 @@ export function AdminLayout({
               <AdminPageHeader
                 title={resolvedTitle}
                 subtitle={resolvedSubtitle}
-                actions={headerActions}
+                topRightActions={headerTopRightActions}
+                inlineActions={headerInlineActions}
                 search={headerSearch}
                 showSidebarTrigger={!hideSidebarTrigger}
                 onStartTour={onStartTour}

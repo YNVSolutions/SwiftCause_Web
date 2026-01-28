@@ -51,6 +51,7 @@ import {
   TrendingUp,
   Rocket,
   Wallet,
+  Download,
 } from "lucide-react";
 import { Calendar } from "../../shared/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "../../shared/ui/popover";
@@ -100,6 +101,7 @@ import { useTableSort } from "../../shared/lib/hooks/useTableSort";
 import { CampaignForm, CampaignFormData } from "./components/CampaignForm";
 import { Campaign } from "../../shared/types";
 import { exportToCsv } from "../../shared/utils/csvExport";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "../../shared/ui/sheet";
 
 interface CampaignDialogProps {
   open: boolean;
@@ -1220,6 +1222,8 @@ const CampaignManagement = ({
   const [isNewCampaignFormOpen, setIsNewCampaignFormOpen] = useState(false);
   const [isEditCampaignFormOpen, setIsEditCampaignFormOpen] = useState(false);
   const [editingCampaignForNewForm, setEditingCampaignForNewForm] = useState<Campaign | null>(null);
+  const [isOverviewOpen, setIsOverviewOpen] = useState(false);
+  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   
   // Separate state for create and edit
   const [newCampaignFormData, setNewCampaignFormData] = useState<CampaignFormData>({
@@ -1373,6 +1377,39 @@ const CampaignManagement = ({
     setEditCampaignFormData(formData);
     setEditingCampaignForNewForm(campaign as Campaign);
     setIsEditCampaignFormOpen(true);
+  };
+
+  const handleOpenOverview = (campaign: Campaign) => {
+    setSelectedCampaign(campaign);
+    setIsOverviewOpen(true);
+  };
+
+  const handlePauseCampaign = async () => {
+    if (!selectedCampaign?.id) return;
+    try {
+      const updated = await updateWithImage(selectedCampaign.id, { status: "paused" });
+      setSelectedCampaign((prev) =>
+        prev
+          ? { ...prev, ...(updated as Campaign | undefined), status: "paused" }
+          : prev
+      );
+    } catch (error) {
+      console.error("Failed to pause campaign:", error);
+    }
+  };
+
+  const handleResumeCampaign = async () => {
+    if (!selectedCampaign?.id) return;
+    try {
+      const updated = await updateWithImage(selectedCampaign.id, { status: "active" });
+      setSelectedCampaign((prev) =>
+        prev
+          ? { ...prev, ...(updated as Campaign | undefined), status: "active" }
+          : prev
+      );
+    } catch (error) {
+      console.error("Failed to resume campaign:", error);
+    }
   };
 
   const handleSave = async (
@@ -2175,26 +2212,27 @@ const CampaignManagement = ({
       headerSearchPlaceholder="Search campaigns..."
       headerSearchValue={searchTerm}
       onHeaderSearchChange={setSearchTerm}
-      headerActions={(
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="rounded-2xl border-[#064e3b] bg-transparent text-[#064e3b] hover:bg-[#064e3b] hover:text-stone-50 transition-all duration-300 px-5"
-            onClick={() => exportToCsv(filteredAndSortedCampaigns, "campaigns")}
-          >
-            Export
-          </Button>
-          <Button
-            className="h-10 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white px-5"
-            onClick={() => {
-              setIsNewCampaignFormOpen(true);
-            }}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Create New Campaign
-          </Button>
-        </div>
+      headerTopRightActions={(
+        <Button
+          variant="outline"
+          size="sm"
+          className="rounded-2xl border-[#064e3b] bg-transparent text-[#064e3b] hover:bg-[#064e3b] hover:text-stone-50 transition-all duration-300 px-5"
+          onClick={() => exportToCsv(filteredAndSortedCampaigns, "campaigns")}
+        >
+          <Download className="h-4 w-4 sm:hidden" />
+          <span className="hidden sm:inline">Export</span>
+        </Button>
+      )}
+      headerInlineActions={(
+        <Button
+          className="h-10 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white px-5"
+          onClick={() => {
+            setIsNewCampaignFormOpen(true);
+          }}
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Create New Campaign
+        </Button>
       )}
     >
       <div className="space-y-6 sm:space-y-8">
@@ -2254,7 +2292,7 @@ const CampaignManagement = ({
               filterValues={filterValues}
               onFilterChange={handleFilterChange}
               actions={
-                <div className="flex items-center gap-2">
+                <div className="hidden sm:flex items-center gap-2">
                   <Button
                     variant="outline"
                     size="icon"
@@ -2321,7 +2359,18 @@ const CampaignManagement = ({
                           className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
                         >
                           <div className="flex items-start justify-between gap-3">
-                            <div className="flex items-center gap-3">
+                            <div
+                              className="flex items-center gap-3 cursor-pointer"
+                              onClick={() => handleOpenOverview(campaign as Campaign)}
+                              role="button"
+                              tabIndex={0}
+                              onKeyDown={(event) => {
+                                if (event.key === "Enter" || event.key === " ") {
+                                  event.preventDefault();
+                                  handleOpenOverview(campaign as Campaign);
+                                }
+                              }}
+                            >
                               <ImageWithFallback
                                 src={campaign.coverImageUrl}
                                 alt={campaign.title}
@@ -2411,25 +2460,31 @@ const CampaignManagement = ({
                   {viewMode === "table" && (
                     <Table className="hidden md:table w-full">
                       <TableHeader>
-                        <TableRow className="bg-gray-100 border-b-2 border-gray-200 grid grid-cols-[0.5rem_1.3fr_1fr_1.1fr_0.7fr_0.5fr] items-center">
-                          <TableHead className="px-2 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wide">
-                            <span className="sr-only">Status</span>
-                          </TableHead>
+                        <TableRow className="bg-gray-100 border-b-2 border-gray-200 text-gray-700 grid grid-cols-[1.3fr_0.7fr_1fr_1.1fr_0.7fr_0.5fr] items-center">
                           <SortableTableHeader
                             sortKey="title"
                             currentSortKey={sortKey}
                             currentSortDirection={sortDirection}
                             onSort={handleSort}
-                            className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wide"
+                            className="px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
                           >
                             Campaign Details
+                          </SortableTableHeader>
+                          <SortableTableHeader
+                            sortKey="status"
+                            currentSortKey={sortKey}
+                            currentSortDirection={sortDirection}
+                            onSort={handleSort}
+                            className="px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                          >
+                            Status
                           </SortableTableHeader>
                           <SortableTableHeader
                             sortKey="category"
                             currentSortKey={sortKey}
                             currentSortDirection={sortDirection}
                             onSort={handleSort}
-                            className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wide"
+                            className="px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
                           >
                             Category
                           </SortableTableHeader>
@@ -2439,7 +2494,7 @@ const CampaignManagement = ({
                             currentSortKey={sortKey}
                             currentSortDirection={sortDirection}
                             onSort={handleSort}
-                            className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wide"
+                            className="px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
                           >
                             Progress
                           </SortableTableHeader>
@@ -2448,9 +2503,9 @@ const CampaignManagement = ({
                             currentSortKey={sortKey}
                             currentSortDirection={sortDirection}
                             onSort={handleSort}
-                            className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wide text-center"
+                            className="px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center"
                           >
-                            Donors
+                            <div className="flex w-full items-center justify-center ">Donors</div>
                           </SortableTableHeader>
                           <SortableTableHeader
                             sortable={false}
@@ -2458,7 +2513,7 @@ const CampaignManagement = ({
                             currentSortKey={sortKey}
                             currentSortDirection={sortDirection}
                             onSort={handleSort}
-                            className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wide text-right"
+                            className="px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
                           >
                             Actions
                           </SortableTableHeader>
@@ -2478,26 +2533,34 @@ const CampaignManagement = ({
                               ? String(campaign.id)
                               : `CAM-${String(campaign.id).slice(0, 6).toUpperCase()}`
                             : "--";
-                          const status = (campaign.status ?? "inactive").toString().toLowerCase();
-                          const statusDot =
-                            status === "active"
-                              ? "bg-emerald-500"
-                              : status === "completed"
-                              ? "bg-blue-500"
-                              : "bg-red-500";
+                          const status = (campaign.status ?? "inactive").toString();
+                          const statusTone = status.toLowerCase();
+                          const statusClass =
+                            statusTone === "active"
+                              ? "bg-green-100 text-green-800"
+                              : statusTone === "paused"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : statusTone === "completed"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-gray-100 text-gray-700";
 
                           return (
                             <TableRow
                               key={campaign.id ?? campaign.title}
-                              className="border-b border-gray-100 hover:bg-gray-50 grid grid-cols-[0.5rem_1.3fr_1fr_1.1fr_0.7fr_0.5fr] items-center"
+                              className="border border-gray-100 hover:bg-gray-50 grid grid-cols-[1.3fr_0.7fr_1fr_1.1fr_0.7fr_0.5fr] items-center"
                             >
-                              <TableCell className="px-2 pr-8 py-3">
-                                <span
-                                  className={`inline-flex h-2.5 w-2.5 rounded-full ${statusDot}`}
-                                  aria-label={`Status ${status}`}
-                                />
-                              </TableCell>
-                              <TableCell className="px-4 py-3 whitespace-normal">
+                              <TableCell
+                                className="px-4 py-3 whitespace-normal cursor-pointer"
+                                onClick={() => handleOpenOverview(campaign as Campaign)}
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={(event) => {
+                                  if (event.key === "Enter" || event.key === " ") {
+                                    event.preventDefault();
+                                    handleOpenOverview(campaign as Campaign);
+                                  }
+                                }}
+                              >
                                 <div className="flex items-center gap-2">
                                   <ImageWithFallback
                                     src={campaign.coverImageUrl}
@@ -2510,8 +2573,31 @@ const CampaignManagement = ({
                                       {campaign.title}
                                     </p>
                                     <p className="text-[11px] text-gray-400">{campaignIdLabel}</p>
+                                    {Array.isArray(campaign.tags) && campaign.tags.length > 0 && (
+                                      <div className="mt-1 flex flex-wrap gap-1">
+                                        {campaign.tags.slice(0, 3).map((tag: string) => (
+                                          <Badge
+                                            key={`${campaign.id ?? campaign.title}-${tag}`}
+                                            variant="secondary"
+                                            className="text-[10px] uppercase tracking-wide whitespace-normal break-normal"
+                                          >
+                                            {tag}
+                                          </Badge>
+                                        ))}
+                                        {campaign.tags.length > 3 && (
+                                          <span className="text-[10px] text-gray-400">
+                                            +{campaign.tags.length - 3} more
+                                          </span>
+                                        )}
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
+                              </TableCell>
+                              <TableCell className="px-4 py-3">
+                                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wide ${statusClass}`}>
+                                  {status}
+                                </span>
                               </TableCell>
                               <TableCell className="px-4 py-3 whitespace-normal">
                                 {campaign.category ? (
@@ -2593,6 +2679,153 @@ const CampaignManagement = ({
           </div>
         </main>
       </div>
+
+      <Sheet open={isOverviewOpen} onOpenChange={setIsOverviewOpen}>
+      <SheetContent side="right" className="w-full sm:max-w-md md:max-w-lg gap-0 p-0 bg-[#F3F1EA]">
+          <div className="flex h-full flex-col">
+            <SheetHeader className="border-b border-gray-100 px-6 py-4 shadow-sm">
+              <SheetTitle className="text-lg font-semibold text-gray-900">
+                Campaign Overview
+              </SheetTitle>
+              <div className="text-xs text-gray-400">
+                ID:{" "}
+                {selectedCampaign?.id
+                  ? String(selectedCampaign.id).startsWith("CAM")
+                    ? String(selectedCampaign.id)
+                    : `CAM-${String(selectedCampaign.id).slice(0, 6).toUpperCase()}`
+                  : "--"}
+              </div>
+            </SheetHeader>
+
+            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+              <div className="rounded-2xl border border-gray-100 bg-gray-50/60 p-3">
+                <ImageWithFallback
+                  src={selectedCampaign?.coverImageUrl}
+                  alt={selectedCampaign?.title || "Campaign cover"}
+                  className="h-52 w-full rounded-xl object-cover bg-gray-100"
+                  fallbackSrc="/campaign-fallback.svg"
+                />
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge
+                  className={`text-xs px-2 py-1 rounded-full inline-flex items-center gap-1 ${getStatusColor(
+                    selectedCampaign?.status ?? "inactive"
+                  )}`}
+                >
+                  <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                  {selectedCampaign?.status ?? "Inactive"}
+                </Badge>
+                <Badge variant="secondary" className="text-xs uppercase tracking-wide">
+                  {selectedCampaign?.category || "Uncategorized"}
+                </Badge>
+              </div>
+
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900">
+                  {selectedCampaign?.title || "Untitled campaign"}
+                </h3>
+                <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+                  {selectedCampaign?.description ||
+                    "No description available for this campaign yet."}
+                </p>
+              </div>
+            </div>
+
+            <div className="border-t border-gray-100 px-6 py-4 space-y-4">
+              <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+                <div className="flex items-center justify-between text-sm font-medium text-gray-700">
+                  <span>Fundraising Progress</span>
+                  <span>
+                    {selectedCampaign?.goal
+                      ? Math.min(
+                          (Number(selectedCampaign?.raised || 0) /
+                            Number(selectedCampaign.goal)) *
+                            100,
+                          100
+                        ).toFixed(0)
+                      : 0}
+                    %
+                  </span>
+                </div>
+                <div className="mt-3 h-2 w-full rounded-full bg-gray-100 overflow-hidden">
+                  <div
+                    className={`h-full ${getProgressColor(
+                      selectedCampaign?.goal
+                        ? Math.min(
+                            (Number(selectedCampaign?.raised || 0) /
+                              Number(selectedCampaign.goal)) *
+                              100,
+                            100
+                          )
+                        : 0
+                    )}`}
+                    style={{
+                      width: `${
+                        selectedCampaign?.goal
+                          ? Math.min(
+                              (Number(selectedCampaign?.raised || 0) /
+                                Number(selectedCampaign.goal)) *
+                                100,
+                              100
+                            )
+                          : 0
+                      }%`,
+                    }}
+                  />
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-4 text-sm text-gray-500">
+                  <div>
+                    <div className="text-xs uppercase tracking-wide">Raised</div>
+                    <div className="text-base font-semibold text-gray-900">
+                      {formatCurrency(Number(selectedCampaign?.raised || 0))}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs uppercase tracking-wide">Goal</div>
+                    <div className="text-base font-semibold text-gray-900">
+                      {formatCurrency(Number(selectedCampaign?.goal || 0))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Button
+                  variant="outline"
+                  className="h-11 rounded-full"
+                  onClick={() => {
+                    if (!selectedCampaign) return;
+                    handleEditClick(selectedCampaign);
+                    setIsOverviewOpen(false);
+                  }}
+                >
+                  Edit Details
+                </Button>
+                {(() => {
+                  const status = (selectedCampaign?.status ?? "").toString().toLowerCase();
+                  const isCompleted = status === "completed";
+                  const isPaused = status === "paused";
+
+                  return (
+                    <Button
+                      className={`h-11 rounded-full text-white ${
+                        isPaused
+                          ? "bg-emerald-700 hover:bg-emerald-800"
+                          : "bg-red-500 hover:bg-red-600"
+                      }`}
+                      onClick={isPaused ? handleResumeCampaign : handlePauseCampaign}
+                      disabled={!selectedCampaign || isCompleted}
+                    >
+                      {isPaused ? "Continue Donations" : "Pause Donations"}
+                    </Button>
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
       {/* Dialogs remain after main content */}
       <CampaignDialog open={isEditDialogOpen} onOpenChange={open => { setIsEditDialogOpen(open); if(!open) setEditingCampaign(null); }} campaign={editingCampaign} organizationId={userSession.user.organizationId || ""} onSave={handleSave} />
       <CampaignDialog open={isAddDialogOpen} onOpenChange={open => { setIsAddDialogOpen(open); }} organizationId={userSession.user.organizationId || ""} onSave={(data, isNew) => handleSave(data, isNew, undefined)} />

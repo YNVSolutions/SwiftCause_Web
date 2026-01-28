@@ -41,7 +41,7 @@ export function AdminPageHeader({
             value={value || 'all'} 
             onValueChange={(newValue) => onFilterChange(filter.key, newValue)}
           >
-            <SelectTrigger className="w-full sm:w-auto sm:min-w-[120px] h-8 text-sm border border-[#F3F1EA]/60 rounded-2xl bg-[#F7F6F2] hover:bg-[#F3F1EA] transition-all duration-300">
+            <SelectTrigger className="w-full sm:w-auto sm:min-w-[120px] h-8 text-sm border border-black rounded-2xl bg-[#F7F6F2] hover:bg-[#F3F1EA] transition-all duration-300">
               <SelectValue placeholder={filter.label} />
             </SelectTrigger>
             <SelectContent>
@@ -61,7 +61,7 @@ export function AdminPageHeader({
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className="w-full sm:w-auto sm:min-w-[120px] h-8 text-sm border border-[#F3F1EA]/60 rounded-2xl bg-[#F7F6F2] hover:bg-[#F3F1EA] transition-all duration-300 justify-start"
+                className="w-full sm:w-auto sm:min-w-[120px] h-8 text-sm border border-black rounded-2xl bg-[#F7F6F2] hover:bg-[#F3F1EA] transition-all duration-300 justify-start"
               >
                 <CalendarIcon className="mr-2 h-3 w-3 shrink-0" />
                 <span className="truncate">
@@ -101,7 +101,7 @@ export function AdminPageHeader({
   };
 
   return (
-    <Card className="mb-4 sm:mb-6 bg-[#F7F6F2] rounded-4xl border border-[#F3F1EA]/60 shadow-lg shadow-emerald-900/4">
+    <Card className="mb-4 sm:mb-6 bg-[#F7F6F2] rounded-4xl border border-black shadow-lg shadow-emerald-900/4">
       <CardContent className="p-6 sm:p-8">
         {/* Filter Row with Label - Responsive Layout */}
         {config.filters.length > 0 && (
