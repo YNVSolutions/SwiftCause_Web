@@ -79,8 +79,11 @@ export const DonationDistributionDonut: React.FC<DonationDistributionDonutProps>
   // Ensure data uses muted colors
   const mutedData = data.map((item, index) => ({
     ...item,
-    color: item.color && !item.color.startsWith('#') ? MUTED_COLORS[index % MUTED_COLORS.length] : item.color || MUTED_COLORS[index % MUTED_COLORS.length]
+    color: item.color ?? MUTED_COLORS[index % MUTED_COLORS.length]
   }));
+
+  // Calculate most popular category by highest value
+  const mostPopular = mutedData.length > 0 ? [...mutedData].sort((a, b) => b.value - a.value)[0] : null;
 
   if (loading) {
     return (
@@ -145,7 +148,7 @@ export const DonationDistributionDonut: React.FC<DonationDistributionDonutProps>
                   {mutedData.reduce((sum, item) => sum + item.value, 0)}
                 </div>
                 <div className="text-xs text-slate-600">
-                  £{mutedData.reduce((sum, item) => sum + (item.value * 50), 0).toLocaleString()} raised
+                  donations received
                 </div>
               </div>
 
@@ -158,26 +161,26 @@ export const DonationDistributionDonut: React.FC<DonationDistributionDonutProps>
                   <span className="text-xs font-medium text-stone-700">Most<br/>Popular</span>
                 </div>
                 <div className="text-base font-bold text-stone-900 mb-1 truncate">
-                  {mutedData.length > 0 ? mutedData[0].name.toLowerCase() : 'N/A'}
+                  {mostPopular ? mostPopular.name.toLowerCase() : 'N/A'}
                 </div>
                 <div className="text-xs text-stone-600">
-                  {mutedData.length > 0 ? `${mutedData[0].value} donations (${mutedData[0].percentage}%)` : '0 donations'}
+                  {mostPopular ? `${mostPopular.value} donations (${mostPopular.percentage}%)` : '0 donations'}
                 </div>
               </div>
 
-              {/* Average Donation */}
+              {/* Category Count */}
               <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-6 h-6 rounded-lg bg-gray-500 flex items-center justify-center">
                     <span className="text-white font-bold text-xs">📈</span>
                   </div>
-                  <span className="text-xs font-medium text-gray-700">Average<br/>Donation</span>
+                  <span className="text-xs font-medium text-gray-700">Active<br/>Categories</span>
                 </div>
                 <div className="text-base font-bold text-gray-900 mb-1">
-                  £{mutedData.length > 0 ? Math.round(mutedData.reduce((sum, item) => sum + (item.value * 50), 0) / mutedData.reduce((sum, item) => sum + item.value, 0)).toLocaleString() : '0'}
+                  {mutedData.length}
                 </div>
                 <div className="text-xs text-gray-600">
-                  per transaction
+                  categories
                 </div>
               </div>
             </div>
