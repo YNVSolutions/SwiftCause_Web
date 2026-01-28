@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { X, DollarSign, TrendingUp, Award, Download, ArrowUpDown } from 'lucide-react';
+import { X, DollarSign, TrendingUp, Award, ArrowUpDown } from 'lucide-react';
 import {
   calculateDistributionSummary,
   getHoverColor,
   estimateRangeTotal,
-  DonationRange,
 } from '../lib/distributionCalculations';
 
 interface DonationDistributionDialogProps {
@@ -27,24 +26,9 @@ export const DonationDistributionDialog: React.FC<DonationDistributionDialogProp
 
   if (!isOpen) return null;
 
-  // Debug: Log the data being passed to the dialog
-  console.log('DonationDistributionDialog - Raw data:', data);
-  console.log('DonationDistributionDialog - Total raised:', totalRaised);
-
-  // Add fallback mock data if no data is provided (for testing)
-  const mockData = data.length === 0 ? [
-    { range: 'Gift Aid', count: 49 },
-    { range: 'Uncategorized', count: 44 },
-    { range: 'General', count: 11 },
-    { range: 'Environment', count: 8 },
-    { range: 'Education', count: 5 }
-  ] : data;
-
-  const summary = calculateDistributionSummary(mockData, totalRaised || 14573.94);
-  console.log('DonationDistributionDialog - Calculated summary:', summary);
+  const summary = calculateDistributionSummary(data, totalRaised);
   
   const maxCount = Math.max(...summary.ranges.map((r) => r.count));
-  console.log('DonationDistributionDialog - Max count:', maxCount);
 
   // Sort ranges based on selected criteria
   const sortedRanges = [...summary.ranges].sort((a, b) => {
@@ -54,8 +38,9 @@ export const DonationDistributionDialog: React.FC<DonationDistributionDialogProp
       case 'percentage':
         return b.percentage - a.percentage;
       case 'range':
+        return a.range.localeCompare(b.range);
       default:
-        return 0; // Keep original order for range
+        return 0;
     }
   });
 
@@ -165,7 +150,6 @@ export const DonationDistributionDialog: React.FC<DonationDistributionDialogProp
                     // Calculate height in pixels relative to the 320px (h-80) container
                     const chartHeight = 320; // h-80 = 320px
                     const heightInPixels = (range.percentage / 100) * chartHeight;
-                    console.log(`Bar ${index} (${range.range}): percentage=${range.percentage}%, height=${heightInPixels}px`);
                     
                     const estimatedTotal = estimateRangeTotal(range.range, range.count);
                     const isHovered = hoveredBar === index;
@@ -234,7 +218,7 @@ export const DonationDistributionDialog: React.FC<DonationDistributionDialogProp
                 {/* Y-axis label */}
                 <div className="absolute left-0 top-0 -translate-x-full pr-3 h-full flex items-center">
                   <div className="text-sm text-gray-600 font-medium -rotate-90 whitespace-nowrap">
-                    Number of Donations
+                    Share of Donations (%)
                   </div>
                 </div>
               </div>
