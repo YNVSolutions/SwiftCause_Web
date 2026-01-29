@@ -481,8 +481,8 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                                         <col style={{ width: '28%' }} />
                                         <col style={{ width: '18%' }} />
                                         <col style={{ width: '18%' }} />
-                                        <col style={{ width: '24%' }} />
-                                        <col style={{ width: '12%' }} />
+                                        <col style={{ width: '20%' }} />
+                                        <col style={{ width: '16%' }} />
                                     </colgroup>
                                     <TableHeader>
                                         <TableRow className="bg-gray-100 border-b-2 border-gray-300">
