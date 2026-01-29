@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import {
   Plus, Search, UserCog, Users, Shield, Activity,
   Loader2, AlertCircle, Pencil, Trash2, AlertTriangle, MoreVertical, X, Check,
-  LayoutDashboard, Megaphone, Monitor, DollarSign, Settings
+  LayoutDashboard, Megaphone, Monitor, DollarSign, Settings, Info
 } from 'lucide-react';
 import { Skeleton } from "../../shared/ui/skeleton";
 import { Ghost } from "lucide-react";
@@ -916,20 +916,25 @@ function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateU
                                 const campaignDisabled = isCampaignPermission && !hasViewCampaigns;
                                 
                                 // Kiosk permissions dependency
-                                const isKioskPermission = ['create_kiosk', 'edit_kiosk', 'delete_kiosk', 'assign_campaigns'].includes(p);
+                                const isKioskPermission = ['create_kiosk', 'edit_kiosk', 'delete_kiosk'].includes(p);
                                 const hasViewKiosks = newUser.permissions.includes('view_kiosks');
                                 const kioskDisabled = isKioskPermission && !hasViewKiosks;
+                                
+                                // Assign campaigns special logic - needs either view_campaigns OR view_kiosks
+                                const isAssignCampaigns = p === 'assign_campaigns';
+                                const assignDisabled = isAssignCampaigns && !hasViewCampaigns && !hasViewKiosks;
                                 
                                 // User permissions dependency
                                 const isUserPermission = ['create_user', 'edit_user', 'delete_user', 'manage_permissions'].includes(p);
                                 const hasViewUsers = newUser.permissions.includes('view_users');
                                 const userDisabled = isUserPermission && !hasViewUsers;
                                 
-                                const isDisabled = campaignDisabled || kioskDisabled || userDisabled;
+                                const isDisabled = campaignDisabled || assignDisabled || kioskDisabled || userDisabled;
                                 
                                 let tooltipMessage = '';
                                 if (campaignDisabled) tooltipMessage = 'View campaigns is mandatory to create/edit/delete campaigns';
-                                if (kioskDisabled) tooltipMessage = 'View kiosks is mandatory to create/edit/delete/assign kiosks';
+                                if (assignDisabled) tooltipMessage = 'Either select view campaigns or view kiosks to enable assign campaigns';
+                                if (kioskDisabled) tooltipMessage = 'View kiosks is mandatory to create/edit/delete kiosks';
                                 if (userDisabled) tooltipMessage = 'View users is mandatory to create/edit/delete users or manage permissions';
                                 
                                 return (
@@ -993,87 +998,334 @@ function EditUserDialog({ user, onUpdate, onClose, userSession }: { user: User, 
 
     return (
         <Dialog open={true} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader><DialogTitle>Edit User: {editedUser.username}</DialogTitle><DialogDescription>Update the user's role and permissions.</DialogDescription></DialogHeader>
-                <div className="grid gap-6 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="role" className="text-right">Role</Label>
-                        <div className="col-span-3">
-                            <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                                <Select value={editedUser.role} onValueChange={handleRoleChange}>
-                                    <SelectTrigger className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {isSuperAdmin && <SelectItem value="super_admin">Super Admin</SelectItem>}
-                                        <SelectItem value="admin">Admin</SelectItem>
-                                        <SelectItem value="manager">Manager</SelectItem>
-                                        <SelectItem value="operator">Operator</SelectItem>
-                                        <SelectItem value="viewer">Viewer</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
+            <DialogContent className="sm:max-w-2xl p-0 gap-0">
+                {/* Header */}
+                <div className="px-6 py-5 border-b border-slate-200">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-bold text-slate-900">
+                            Edit User: <span className="text-indigo-600">{editedUser.username}</span>
+                        </DialogTitle>
+                        <DialogDescription className="text-sm text-slate-500 mt-1">
+                            Update the user's role and individual permissions.
+                        </DialogDescription>
+                    </DialogHeader>
+                </div>
+
+                {/* Content */}
+                <div className="p-6 space-y-8">
+                    {/* Role Selection */}
+                    <div className="space-y-2">
+                        <Label htmlFor="role" className="text-sm font-semibold text-slate-700">
+                            Role
+                        </Label>
+                        <Select value={editedUser.role} onValueChange={handleRoleChange}>
+                            <SelectTrigger className="w-full h-11 bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {isSuperAdmin && <SelectItem value="super_admin">Super Admin</SelectItem>}
+                                <SelectItem value="admin">Admin</SelectItem>
+                                <SelectItem value="manager">Manager</SelectItem>
+                                <SelectItem value="operator">Operator</SelectItem>
+                                <SelectItem value="viewer">Viewer</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
-                    <div>
-                        <Label className="font-semibold">Permissions</Label>
-                        <div className="grid grid-cols-2 gap-2 mt-2 p-4 border border-gray-300 rounded-lg max-h-60 overflow-y-auto">
-                            {allPermissions.map((p) => {
-                                // Campaign permissions dependency
-                                const isCampaignPermission = ['create_campaign', 'edit_campaign', 'delete_campaign'].includes(p);
-                                const hasViewCampaigns = editedUser.permissions?.includes('view_campaigns');
-                                const campaignDisabled = isCampaignPermission && !hasViewCampaigns;
-                                
-                                // Kiosk permissions dependency
-                                const isKioskPermission = ['create_kiosk', 'edit_kiosk', 'delete_kiosk', 'assign_campaigns'].includes(p);
-                                const hasViewKiosks = editedUser.permissions?.includes('view_kiosks');
-                                const kioskDisabled = isKioskPermission && !hasViewKiosks;
-                                
-                                // User permissions dependency
-                                const isUserPermission = ['create_user', 'edit_user', 'delete_user', 'manage_permissions'].includes(p);
-                                const hasViewUsers = editedUser.permissions?.includes('view_users');
-                                const userDisabled = isUserPermission && !hasViewUsers;
-                                
-                                const isDisabled = campaignDisabled || kioskDisabled || userDisabled;
-                                
-                                let tooltipMessage = '';
-                                if (campaignDisabled) tooltipMessage = 'View campaigns is mandatory to create/edit/delete campaigns';
-                                if (kioskDisabled) tooltipMessage = 'View kiosks is mandatory to create/edit/delete/assign kiosks';
-                                if (userDisabled) tooltipMessage = 'View users is mandatory to create/edit/delete users or manage permissions';
-                                
-                                return (
-                                    <TooltipProvider key={p}>
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <div className={`flex items-center space-x-2 ${isDisabled ? 'opacity-50' : ''}`}>
-                                                    <Checkbox 
-                                                        id={`edit-${p}`} 
-                                                        checked={editedUser.permissions?.includes(p)} 
-                                                        onCheckedChange={(c) => handlePermissionChange(p, !!c)}
-                                                        disabled={isDisabled}
-                                                    />
-                                                    <Label 
-                                                        htmlFor={`edit-${p}`} 
-                                                        className={`text-sm font-normal capitalize ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
-                                                    >
-                                                        {p.replace(/_/g, ' ')}
-                                                    </Label>
-                                                </div>
-                                            </TooltipTrigger>
-                                            {isDisabled && (
-                                                <TooltipContent>
-                                                    <p className="text-xs">{tooltipMessage}</p>
-                                                </TooltipContent>
-                                            )}
-                                        </Tooltip>
-                                    </TooltipProvider>
-                                );
-                            })}
+
+                    {/* Permissions */}
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <Label className="text-sm font-semibold text-slate-700 uppercase tracking-wider">
+                                Permissions
+                            </Label>
+                            <span className="text-xs text-slate-400">
+                                {allPermissions.length} total available
+                            </span>
+                        </div>
+                        
+                        <div className="border border-slate-200 rounded-xl bg-slate-50/50">
+                            <div className="p-5 max-h-80 overflow-y-auto space-y-6">
+                                {/* Dashboard Permissions */}
+                                {(() => {
+                                    const dashboardPerms = allPermissions.filter(p => p.includes('dashboard'));
+                                    if (dashboardPerms.length === 0) return null;
+                                    return (
+                                        <div>
+                                            <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3">Dashboard</h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                                                {dashboardPerms.map((p) => (
+                                                    <div key={p} className="flex items-center justify-between">
+                                                        <div className="flex items-center space-x-3">
+                                                            <Checkbox 
+                                                                id={`edit-${p}`} 
+                                                                checked={editedUser.permissions?.includes(p)} 
+                                                                onCheckedChange={(c) => handlePermissionChange(p, !!c)}
+                                                                className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                                                            />
+                                                            <Label 
+                                                                htmlFor={`edit-${p}`} 
+                                                                className="text-sm text-slate-700 font-medium cursor-pointer"
+                                                            >
+                                                                {p.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                            </Label>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+
+                                {/* User Permissions */}
+                                {(() => {
+                                    const userPerms = allPermissions.filter(p => p.includes('user') || p.includes('permission'));
+                                    if (userPerms.length === 0) return null;
+                                    const hasViewUsers = editedUser.permissions?.includes('view_users');
+                                    
+                                    return (
+                                        <div>
+                                            <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3">Users</h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                                                {userPerms.map((p) => {
+                                                    const isUserPermission = ['create_user', 'edit_user', 'delete_user', 'manage_permissions'].includes(p);
+                                                    const userDisabled = isUserPermission && !hasViewUsers;
+                                                    return (
+                                                        <div key={p} className="flex items-center justify-between">
+                                                            <div className={`flex items-center space-x-3 ${userDisabled ? 'opacity-50' : ''}`}>
+                                                                <Checkbox 
+                                                                    id={`edit-${p}`} 
+                                                                    checked={editedUser.permissions?.includes(p)} 
+                                                                    onCheckedChange={(c) => handlePermissionChange(p, !!c)}
+                                                                    disabled={userDisabled}
+                                                                    className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                                                                />
+                                                                <Label 
+                                                                    htmlFor={`edit-${p}`} 
+                                                                    className={`text-sm text-slate-700 font-medium ${userDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                                                                >
+                                                                    {p.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                                </Label>
+                                                            </div>
+                                                            {userDisabled && (
+                                                                <TooltipProvider>
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <button type="button" className="text-slate-400 hover:text-indigo-600">
+                                                                                <Info className="w-4 h-4" />
+                                                                            </button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>
+                                                                            <p className="text-xs">View users is mandatory to create/edit/delete users or manage permissions</p>
+                                                                        </TooltipContent>
+                                                                    </Tooltip>
+                                                                </TooltipProvider>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+
+                                {/* Campaign Permissions */}
+                                {(() => {
+                                    const campaignPerms = allPermissions.filter(p => p.includes('campaign') || p === 'assign_campaigns');
+                                    if (campaignPerms.length === 0) return null;
+                                    const hasViewCampaigns = editedUser.permissions?.includes('view_campaigns');
+                                    const hasViewKiosks = editedUser.permissions?.includes('view_kiosks');
+                                    
+                                    return (
+                                        <div>
+                                            <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3">Campaigns</h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                                                {campaignPerms.map((p) => {
+                                                    const isCampaignPermission = ['create_campaign', 'edit_campaign', 'delete_campaign'].includes(p);
+                                                    const isAssignCampaigns = p === 'assign_campaigns';
+                                                    
+                                                    const campaignDisabled = isCampaignPermission && !hasViewCampaigns;
+                                                    const assignDisabled = isAssignCampaigns && !hasViewCampaigns && !hasViewKiosks;
+                                                    const isDisabled = campaignDisabled || assignDisabled;
+                                                    
+                                                    let tooltipMessage = '';
+                                                    if (campaignDisabled) {
+                                                        tooltipMessage = 'View campaigns is mandatory to create/edit/delete campaigns';
+                                                    } else if (assignDisabled) {
+                                                        tooltipMessage = 'Either select view campaigns or view kiosks to enable assign campaigns';
+                                                    }
+                                                    return (
+                                                        <div key={p} className="flex items-center justify-between">
+                                                            <div className={`flex items-center space-x-3 ${isDisabled ? 'opacity-50' : ''}`}>
+                                                                <Checkbox 
+                                                                    id={`edit-${p}`} 
+                                                                    checked={editedUser.permissions?.includes(p)} 
+                                                                    onCheckedChange={(c) => handlePermissionChange(p, !!c)}
+                                                                    disabled={isDisabled}
+                                                                    className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                                                                />
+                                                                <Label 
+                                                                    htmlFor={`edit-${p}`} 
+                                                                    className={`text-sm text-slate-700 font-medium ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                                                                >
+                                                                    {p.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                                </Label>
+                                                            </div>
+                                                            {isDisabled && (
+                                                                <TooltipProvider>
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <button type="button" className="text-slate-400 hover:text-indigo-600">
+                                                                                <Info className="w-4 h-4" />
+                                                                            </button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>
+                                                                            <p className="text-xs">{tooltipMessage}</p>
+                                                                        </TooltipContent>
+                                                                    </Tooltip>
+                                                                </TooltipProvider>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+
+                                {/* Kiosk Permissions */}
+                                {(() => {
+                                    const kioskPerms = allPermissions.filter(p => p.includes('kiosk'));
+                                    if (kioskPerms.length === 0) return null;
+                                    const hasViewKiosks = editedUser.permissions?.includes('view_kiosks');
+                                    
+                                    return (
+                                        <div>
+                                            <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3">Kiosks</h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                                                {kioskPerms.map((p) => {
+                                                    const isKioskPermission = ['create_kiosk', 'edit_kiosk', 'delete_kiosk'].includes(p);
+                                                    const kioskDisabled = isKioskPermission && !hasViewKiosks;
+                                                    return (
+                                                        <div key={p} className="flex items-center justify-between">
+                                                            <div className={`flex items-center space-x-3 ${kioskDisabled ? 'opacity-50' : ''}`}>
+                                                                <Checkbox 
+                                                                    id={`edit-${p}`} 
+                                                                    checked={editedUser.permissions?.includes(p)} 
+                                                                    onCheckedChange={(c) => handlePermissionChange(p, !!c)}
+                                                                    disabled={kioskDisabled}
+                                                                    className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                                                                />
+                                                                <Label 
+                                                                    htmlFor={`edit-${p}`} 
+                                                                    className={`text-sm text-slate-700 font-medium ${kioskDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                                                                >
+                                                                    {p.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                                </Label>
+                                                            </div>
+                                                            {kioskDisabled && (
+                                                                <TooltipProvider>
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <button type="button" className="text-slate-400 hover:text-indigo-600">
+                                                                                <Info className="w-4 h-4" />
+                                                                            </button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>
+                                                                            <p className="text-xs">View kiosks is mandatory to create/edit/delete kiosks</p>
+                                                                        </TooltipContent>
+                                                                    </Tooltip>
+                                                                </TooltipProvider>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+
+                                {/* Donation Permissions */}
+                                {(() => {
+                                    const donationPerms = allPermissions.filter(p => p.includes('donation'));
+                                    if (donationPerms.length === 0) return null;
+                                    return (
+                                        <div>
+                                            <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3">Donations</h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                                                {donationPerms.map((p) => (
+                                                    <div key={p} className="flex items-center justify-between">
+                                                        <div className="flex items-center space-x-3">
+                                                            <Checkbox 
+                                                                id={`edit-${p}`} 
+                                                                checked={editedUser.permissions?.includes(p)} 
+                                                                onCheckedChange={(c) => handlePermissionChange(p, !!c)}
+                                                                className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                                                            />
+                                                            <Label 
+                                                                htmlFor={`edit-${p}`} 
+                                                                className="text-sm text-slate-700 font-medium cursor-pointer"
+                                                            >
+                                                                {p.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                            </Label>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+
+                                {/* System Permissions */}
+                                {(() => {
+                                    const systemPerms = allPermissions.filter(p => p === 'system_admin');
+                                    if (systemPerms.length === 0) return null;
+                                    return (
+                                        <div>
+                                            <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3">System</h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                                                {systemPerms.map((p) => (
+                                                    <div key={p} className="flex items-center justify-between">
+                                                        <div className="flex items-center space-x-3">
+                                                            <Checkbox 
+                                                                id={`edit-${p}`} 
+                                                                checked={editedUser.permissions?.includes(p)} 
+                                                                onCheckedChange={(c) => handlePermissionChange(p, !!c)}
+                                                                className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                                                            />
+                                                            <Label 
+                                                                htmlFor={`edit-${p}`} 
+                                                                className="text-sm text-slate-700 font-medium cursor-pointer"
+                                                            >
+                                                                {p.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                            </Label>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <DialogFooter><Button variant="outline" onClick={onClose}>Cancel</Button><Button onClick={() => onUpdate(editedUser.id, { role: editedUser.role, permissions: editedUser.permissions })}>Save Changes</Button></DialogFooter>
+                {/* Footer */}
+                <div className="px-6 py-5 bg-slate-50 flex justify-end space-x-3 border-t border-slate-100">
+                    <Button 
+                        variant="ghost" 
+                        onClick={onClose}
+                        className="px-5 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900"
+                    >
+                        Cancel
+                    </Button>
+                    <Button 
+                        onClick={() => onUpdate(editedUser.id, { role: editedUser.role, permissions: editedUser.permissions })}
+                        className="px-6 py-2 bg-slate-900 text-white text-sm font-semibold rounded-lg hover:opacity-90 shadow-lg"
+                    >
+                        Save Changes
+                    </Button>
+                </div>
             </DialogContent>
         </Dialog>
     );               
