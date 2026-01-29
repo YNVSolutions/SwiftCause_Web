@@ -920,10 +920,22 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                           </p>
                         </div>
                         <div className="flex gap-1 h-1.5">
-                          <div className={`flex-1 rounded-full ${formData.password.length >= 8 ? 'bg-[#11d452]' : 'bg-[#cfe7d3]'}`}></div>
-                          <div className={`flex-1 rounded-full ${/[A-Z]/.test(formData.password) ? 'bg-[#11d452]' : 'bg-[#cfe7d3]'}`}></div>
-                          <div className={`flex-1 rounded-full ${/[0-9]/.test(formData.password) ? 'bg-[#11d452]' : 'bg-[#cfe7d3]'}`}></div>
-                          <div className={`flex-1 rounded-full ${/[!@#$%^&*(),.?":{}|<>]/.test(formData.password) ? 'bg-[#11d452]' : 'bg-[#cfe7d3]'}`}></div>
+                          {(() => {
+                            const checks = [
+                              formData.password.length >= 8,
+                              /[A-Z]/.test(formData.password),
+                              /[0-9]/.test(formData.password),
+                              /[!@#$%^&*(),.?":{}|<>]/.test(formData.password)
+                            ];
+                            const passedCount = checks.filter(Boolean).length;
+                            
+                            return [0, 1, 2, 3].map((index) => (
+                              <div 
+                                key={index}
+                                className={`flex-1 rounded-full ${index < passedCount ? 'bg-[#11d452]' : 'bg-[#cfe7d3]'}`}
+                              ></div>
+                            ));
+                          })()}
                         </div>
                       </div>
 
