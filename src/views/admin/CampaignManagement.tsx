@@ -2551,24 +2551,6 @@ const CampaignManagement = ({
                                     <p className="font-medium text-gray-900 text-sm whitespace-normal break-normal">
                                       {campaign.title}
                                     </p>
-                                    {Array.isArray(campaign.tags) && campaign.tags.length > 0 && (
-                                      <div className="mt-1 flex flex-wrap gap-1">
-                                        {campaign.tags.slice(0, 3).map((tag: string) => (
-                                          <Badge
-                                            key={`${campaign.id ?? campaign.title}-${tag}`}
-                                            variant="secondary"
-                                            className="text-[10px] uppercase tracking-wide whitespace-normal break-normal"
-                                          >
-                                            {tag}
-                                          </Badge>
-                                        ))}
-                                        {campaign.tags.length > 3 && (
-                                          <span className="text-[10px] text-gray-400">
-                                            +{campaign.tags.length - 3} more
-                                          </span>
-                                        )}
-                                      </div>
-                                    )}
                                   </div>
                                 </div>
                               </TableCell>
