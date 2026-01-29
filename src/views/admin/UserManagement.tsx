@@ -175,6 +175,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
     // Delete confirmation dialog state
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [userToDelete, setUserToDelete] = useState<User | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const handleUserClick = (user: User) => {
         setSelectedUser(user);
@@ -211,14 +212,15 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
     const confirmDeleteUser = async () => {
         if (!userToDelete) return;
         
+        setIsDeleting(true);
         try {
             await deleteUser(userToDelete.id);
             setIsDeleteDialogOpen(false);
             setUserToDelete(null);
         } catch (err) {
             setDialogMessage(`Error: ${(err as Error).message}`);
-            setIsDeleteDialogOpen(false);
-            setUserToDelete(null);
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -657,15 +659,24 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                             <Button 
                                 variant="outline" 
                                 onClick={() => setIsDeleteDialogOpen(false)}
+                                disabled={isDeleting}
                                 className="flex-1 h-11 border-gray-300 text-gray-700 hover:bg-gray-50"
                             >
                                 Cancel
                             </Button>
                             <Button 
                                 onClick={confirmDeleteUser}
+                                disabled={isDeleting}
                                 className="flex-1 h-11 bg-red-500 hover:bg-red-600 text-white border-0"
                             >
-                                Delete
+                                {isDeleting ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        Deleting...
+                                    </>
+                                ) : (
+                                    'Delete'
+                                )}
                             </Button>
                         </div>
                     </div>
