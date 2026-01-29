@@ -904,14 +904,26 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                         <div className="flex justify-between items-center">
                           <p className="text-[#4c9a59] text-xs font-medium">Password strength</p>
                           <p className="text-[#11d452] text-xs font-bold">
-                            {formData.password.length >= 8 ? 'Good' : 'Weak'}
+                            {(() => {
+                              const checks = [
+                                formData.password.length >= 8,
+                                /[A-Z]/.test(formData.password),
+                                /[0-9]/.test(formData.password),
+                                /[!@#$%^&*(),.?":{}|<>]/.test(formData.password)
+                              ];
+                              const passedChecks = checks.filter(Boolean).length;
+                              if (passedChecks === 0) return 'Weak';
+                              if (passedChecks <= 2) return 'Fair';
+                              if (passedChecks === 3) return 'Good';
+                              return 'Strong';
+                            })()}
                           </p>
                         </div>
                         <div className="flex gap-1 h-1.5">
-                          <div className={`flex-1 rounded-full ${formData.password.length >= 2 ? 'bg-[#11d452]' : 'bg-[#cfe7d3]'}`}></div>
-                          <div className={`flex-1 rounded-full ${formData.password.length >= 4 ? 'bg-[#11d452]' : 'bg-[#cfe7d3]'}`}></div>
-                          <div className={`flex-1 rounded-full ${formData.password.length >= 6 ? 'bg-[#11d452]' : 'bg-[#cfe7d3]'}`}></div>
                           <div className={`flex-1 rounded-full ${formData.password.length >= 8 ? 'bg-[#11d452]' : 'bg-[#cfe7d3]'}`}></div>
+                          <div className={`flex-1 rounded-full ${/[A-Z]/.test(formData.password) ? 'bg-[#11d452]' : 'bg-[#cfe7d3]'}`}></div>
+                          <div className={`flex-1 rounded-full ${/[0-9]/.test(formData.password) ? 'bg-[#11d452]' : 'bg-[#cfe7d3]'}`}></div>
+                          <div className={`flex-1 rounded-full ${/[!@#$%^&*(),.?":{}|<>]/.test(formData.password) ? 'bg-[#11d452]' : 'bg-[#cfe7d3]'}`}></div>
                         </div>
                       </div>
 
