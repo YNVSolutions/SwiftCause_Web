@@ -130,10 +130,7 @@ export const EmailVerificationSuccessScreen: React.FC<EmailVerificationSuccessSc
           </div>
         </div>
 
-        {/* Footer */}
-        <p className="text-center text-slate-500 text-sm mt-6">
-          © 2024 SwiftCause. All rights reserved.
-        </p>
+        
       </div>
     </div>
   )

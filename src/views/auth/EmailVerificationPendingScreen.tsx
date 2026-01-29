@@ -159,10 +159,7 @@ export const EmailVerificationPendingScreen: React.FC<EmailVerificationPendingSc
           </button>
         </p>
 
-        {/* Copyright */}
-        <p className="text-center text-slate-500 text-sm mt-4">
-          © 2024 SwiftCause. All rights reserved.
-        </p>
+        
       </div>
     </div>
   )

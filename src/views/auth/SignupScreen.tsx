@@ -450,9 +450,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                 </div>
               </div>
 
-              <div className="relative z-10 text-emerald-100/40 text-sm">
-                © 2024 Swift Cause. All rights reserved.
-              </div>
+              
             </>
           )}
 
