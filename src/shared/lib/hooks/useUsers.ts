@@ -20,8 +20,8 @@ export function useUsers(organizationId?: string) {
       const usersData = await fetchAllUsers(organizationId);
       const formattedUsers = usersData.map((user: any) => ({
         ...user,
-        createdAt: user.createdAt?.toDate ? user.createdAt.toDate().toLocaleDateString() : 'N/A',
-        lastLogin: user.lastLogin?.toDate ? user.lastLogin.toDate().toLocaleString() : 'N/A',
+        createdAt: user.createdAt?.toDate ? user.createdAt.toDate().toISOString() : user.createdAt,
+        lastLogin: user.lastLogin?.toDate ? user.lastLogin.toDate().toISOString() : user.lastLogin,
         permissions: Array.isArray(user.permissions) ? user.permissions : [],
       })) as User[];
       setUsers(formattedUsers);

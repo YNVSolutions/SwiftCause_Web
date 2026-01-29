@@ -2,9 +2,15 @@ import React from 'react';
 import { Button } from '../../../shared/ui/button';
 import { Badge } from '../../../shared/ui/badge';
 import { TableCell, TableRow } from '../../../shared/ui/table';
-import { Edit, Trash2, Users, Shield, Key } from 'lucide-react';
+import { Edit, Trash2, Users, MoreVertical } from 'lucide-react';
 import { User } from '../../../shared/types';
 import { formatDate, getRoleBadge, getLastLoginStatus } from '../../../shared/lib/userManagementHelpers';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../../../shared/ui/dropdown-menu';
 
 interface UserTableRowProps {
   user: User;
@@ -56,26 +62,30 @@ export function UserTableRow({ user, onEdit, onDelete }: UserTableRowProps) {
       
 
       <TableCell>
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onEdit(user)}
-            title="Edit user"
-          >
-            <Edit className="w-4 h-4" />
-          </Button>
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onDelete(user.id)}
-            className="text-red-600 hover:text-red-700"
-            title="Delete user"
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+            >
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => onEdit(user)}>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => onDelete(user.id)}
+              className="text-red-600 focus:text-red-600"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </TableCell>
     </TableRow>
   );

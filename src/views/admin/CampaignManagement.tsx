@@ -100,6 +100,7 @@ interface CampaignDialogProps {
   onOpenChange: (open: boolean) => void;
   campaign?: DocumentData | null; // Optional campaign for editing
   organizationId: string; // Add organizationId prop
+  hasPermission: (permission: Permission) => boolean; // Add hasPermission prop
   onSave: (
     data: DocumentData,
     isNew: boolean,
@@ -177,6 +178,7 @@ const CampaignDialog = ({
   onOpenChange,
   campaign,
   organizationId,
+  hasPermission,
   onSave,
 }: CampaignDialogProps) => {
   const [formData, setFormData] = useState<DocumentData>(getInitialFormData());
@@ -750,20 +752,22 @@ const CampaignDialog = ({
                 Funding Details
               </button>
               
-              <button
-                onClick={() => setActiveTab("kiosk-distribution")}
-                style={{
-                  backgroundColor: activeTab === "kiosk-distribution" ? '#03AC13' : 'transparent',
-                  color: activeTab === "kiosk-distribution" ? 'white' : '#374151'
-                }}
-                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                  activeTab === "kiosk-distribution"
-                    ? "shadow-md hover:shadow-lg"
-                    : "hover:bg-gray-200 hover:text-gray-900"
-                }`}
-              >
-                Kiosk Distribution
-              </button>
+              {hasPermission('assign_campaigns') && (
+                <button
+                  onClick={() => setActiveTab("kiosk-distribution")}
+                  style={{
+                    backgroundColor: activeTab === "kiosk-distribution" ? '#03AC13' : 'transparent',
+                    color: activeTab === "kiosk-distribution" ? 'white' : '#374151'
+                  }}
+                  className={`w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                    activeTab === "kiosk-distribution"
+                      ? "shadow-md hover:shadow-lg"
+                      : "hover:bg-gray-200 hover:text-gray-900"
+                  }`}
+                >
+                  Kiosk Distribution
+                </button>
+              )}
             </div>
           </div>
 
@@ -1052,7 +1056,7 @@ const CampaignDialog = ({
               )}
 
               {/* Kiosk Distribution Tab */}
-              {activeTab === "kiosk-distribution" && (
+              {hasPermission('assign_campaigns') && activeTab === "kiosk-distribution" && (
                 <div data-section="kiosk-distribution" className="space-y-6">
                   <h2 className="text-2xl font-bold text-gray-900">Kiosk Distribution</h2>
 
@@ -2155,15 +2159,17 @@ const CampaignManagement = ({
             onCalendarToggle={handleCalendarToggle}
             exportData={filteredAndSortedCampaigns}
             actions={
-              <Button
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 h-10"
-                onClick={() => {
-                  setIsNewCampaignFormOpen(true);
-                }}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Campaign
-              </Button>
+              hasPermission('create_campaign') ? (
+                <Button
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 h-10"
+                  onClick={() => {
+                    setIsNewCampaignFormOpen(true);
+                  }}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Campaign
+                </Button>
+              ) : undefined
             }
           />
 
@@ -2232,20 +2238,24 @@ const CampaignManagement = ({
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onSelect={() => handleEditClick(campaign)}
-                                className="flex items-center gap-2"
-                              >
-                                <FaEdit className="h-4 w-4" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onSelect={() => handleDeleteClick(campaign)}
-                                className="flex items-center gap-2 text-red-600 focus:text-red-600"
-                              >
-                                <FaTrashAlt className="h-4 w-4" />
-                                Delete
-                              </DropdownMenuItem>
+                              {hasPermission('edit_campaign') && (
+                                <DropdownMenuItem
+                                  onSelect={() => handleEditClick(campaign)}
+                                  className="flex items-center gap-2"
+                                >
+                                  <FaEdit className="h-4 w-4" />
+                                  Edit
+                                </DropdownMenuItem>
+                              )}
+                              {hasPermission('delete_campaign') && (
+                                <DropdownMenuItem
+                                  onSelect={() => handleDeleteClick(campaign)}
+                                  className="flex items-center gap-2 text-red-600 focus:text-red-600"
+                                >
+                                  <FaTrashAlt className="h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
@@ -2468,23 +2478,27 @@ const CampaignManagement = ({
                             </TableCell>
                             <TableCell className="px-4 py-3 text-center">
                               <div className="inline-flex items-center gap-2">
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                  onClick={() => handleEditClick(campaign)}
-                                >
-                                  <FaEdit className="h-3 w-3" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 hover:bg-red-50 hover:text-red-600"
-                                  onClick={() => handleDeleteClick(campaign)}
-                                  title="Delete campaign"
-                                >
-                                  <FaTrashAlt className="h-3.5 w-3.5" />
-                                </Button>
+                                {hasPermission('edit_campaign') && (
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    onClick={() => handleEditClick(campaign)}
+                                  >
+                                    <FaEdit className="h-3 w-3" />
+                                  </Button>
+                                )}
+                                {hasPermission('delete_campaign') && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 hover:bg-red-50 hover:text-red-600"
+                                    onClick={() => handleDeleteClick(campaign)}
+                                    title="Delete campaign"
+                                  >
+                                    <FaTrashAlt className="h-3.5 w-3.5" />
+                                  </Button>
+                                )}
                               </div>
                             </TableCell>
                           </TableRow>
@@ -2505,8 +2519,8 @@ const CampaignManagement = ({
         </main>
       </div>
       {/* Dialogs remain after main content */}
-      <CampaignDialog open={isEditDialogOpen} onOpenChange={open => { setIsEditDialogOpen(open); if(!open) setEditingCampaign(null); }} campaign={editingCampaign} organizationId={userSession.user.organizationId || ""} onSave={handleSave} />
-      <CampaignDialog open={isAddDialogOpen} onOpenChange={open => { setIsAddDialogOpen(open); }} organizationId={userSession.user.organizationId || ""} onSave={(data, isNew) => handleSave(data, isNew, undefined)} />
+      <CampaignDialog open={isEditDialogOpen} onOpenChange={open => { setIsEditDialogOpen(open); if(!open) setEditingCampaign(null); }} campaign={editingCampaign} organizationId={userSession.user.organizationId || ""} hasPermission={hasPermission} onSave={handleSave} />
+      <CampaignDialog open={isAddDialogOpen} onOpenChange={open => { setIsAddDialogOpen(open); }} organizationId={userSession.user.organizationId || ""} hasPermission={hasPermission} onSave={(data, isNew) => handleSave(data, isNew, undefined)} />
       
       {/* New CampaignForm Component */}
       <CampaignForm
