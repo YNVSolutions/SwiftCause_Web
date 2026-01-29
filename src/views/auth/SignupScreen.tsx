@@ -3,7 +3,7 @@ import ReCAPTCHA from 'react-google-recaptcha';
 import { Input } from '../../shared/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
 import { Checkbox } from '../../shared/ui/checkbox';
-import { checkEmailExists } from '../../shared/api/firestoreService';
+import { checkEmailExists, checkOrganizationIdExists } from '../../shared/api/firestoreService';
 import Image from "next/image"
 import { 
   Heart,
@@ -79,6 +79,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
   const [errors, setErrors] = useState<SignupFormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+  const [isCheckingOrganization, setIsCheckingOrganization] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const recaptchaRef = useRef<ReCAPTCHA>(null);
@@ -145,6 +146,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
 
   const handleEmailBlur = async () => {
     if (!formData.email.trim()) {
+      return;
     }
     
     if (!/\S+@\S+\.\S+/.test(formData.email)) {
@@ -176,6 +178,38 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
     }
   };
 
+  const generateOrganizationId = (name: string): string => {
+    return name.replace(/\s+/g, '-').toLowerCase();
+  };
+
+  const handleOrganizationNameBlur = async () => {
+    if (!formData.organizationName.trim()) {
+      return;
+    }
+
+    const organizationId = generateOrganizationId(formData.organizationName);
+    
+    setIsCheckingOrganization(true);
+    try {
+      const exists = await checkOrganizationIdExists(organizationId);
+      if (exists) {
+        setErrors(prev => ({
+          ...prev,
+          organizationName: 'An organization with this name already exists. Please choose a different name.'
+        }));
+      } else {
+        setErrors(prev => ({
+          ...prev,
+          organizationName: undefined
+        }));
+      }
+    } catch (error) {
+      console.error('Error checking organization name:', error);
+    } finally {
+      setIsCheckingOrganization(false);
+    }
+  };
+
   const validateStep = async (step: number): Promise<boolean> => {
     const newErrors: SignupFormErrors = {};
 
@@ -196,7 +230,20 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
         }
       }
     } else if (step === 2) {
-      if (!formData.organizationName.trim()) newErrors.organizationName = 'Organization name is required';
+      if (!formData.organizationName.trim()) {
+        newErrors.organizationName = 'Organization name is required';
+      } else {
+        // Check if organization ID already exists
+        const organizationId = generateOrganizationId(formData.organizationName);
+        try {
+          const exists = await checkOrganizationIdExists(organizationId);
+          if (exists) {
+            newErrors.organizationName = 'An organization with this name already exists. Please choose a different name.';
+          }
+        } catch (error) {
+          console.error('Error checking organization name:', error);
+        }
+      }
       if (!formData.organizationType) newErrors.organizationType = 'Organization type is required';
     } else if (step === 3) {
       if (!formData.password) {
@@ -253,7 +300,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
       try {
         await onSignup({
           ...formData,
-          organizationId: formData.organizationName.replace(/\s+/g, '-').toLowerCase(),
+          organizationId: generateOrganizationId(formData.organizationName),
           stripe: {
             accountId: '',
             chargesEnabled: false,
@@ -682,19 +729,33 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                   <label className="text-[#0a2e16] text-base font-medium" htmlFor="organizationName">
                     Organization Name
                   </label>
-                  <Input
-                    id="organizationName"
-                    value={formData.organizationName}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData('organizationName', e.target.value)}
-                    className={`w-full rounded-lg border !bg-white text-[#0a2e16] h-14 px-4 text-base placeholder:text-gray-400 focus:border-[#11d452] focus:ring-0 ${
-                      errors.organizationName ? 'border-red-500' : 'border-gray-200'
-                    }`}
-                    placeholder="Enter your organization's legal name"
-                  />
+                  <div className="relative">
+                    <Input
+                      id="organizationName"
+                      value={formData.organizationName}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData('organizationName', e.target.value)}
+                      onBlur={handleOrganizationNameBlur}
+                      className={`w-full rounded-lg border !bg-white text-[#0a2e16] h-14 px-4 text-base placeholder:text-gray-400 focus:border-[#11d452] focus:ring-0 ${
+                        errors.organizationName ? 'border-red-500' : 'border-gray-200'
+                      } ${isCheckingOrganization ? 'opacity-50' : ''}`}
+                      placeholder="Enter your organization's legal name"
+                      disabled={isCheckingOrganization}
+                    />
+                    {isCheckingOrganization && (
+                      <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                        <div className="w-4 h-4 border-2 border-[#064e3b] border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    )}
+                  </div>
                   {errors.organizationName && (
                     <p className="text-xs text-red-600 flex items-center">
                       <AlertCircle className="w-3 h-3 mr-1" />
                       {errors.organizationName}
+                    </p>
+                  )}
+                  {isCheckingOrganization && (
+                    <p className="text-xs text-slate-500 flex items-center">
+                      Checking organization name availability...
                     </p>
                   )}
                 </div>
@@ -754,7 +815,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                   </button>
                   <button
                     type="submit"
-                    disabled={isValidating}
+                    disabled={isValidating || isCheckingOrganization}
                     className="flex items-center justify-center min-w-[140px] px-8 py-3 bg-[#064e3b] text-white font-bold text-sm rounded-lg hover:shadow-lg hover:shadow-[#11d452]/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isValidating ? (
