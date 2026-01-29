@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { Skeleton } from "../../shared/ui/skeleton";
 import { Ghost } from "lucide-react";
-import { Screen, User, UserRole, AdminSession, Permission } from '../../shared/types';
+import { Screen, User, UserRole, AdminSession, Permission } from '../../shared/types'; 
 import { DEFAULT_USER_PERMISSIONS } from '../../shared/config/constants';
 import { calculateUserStats } from '../../shared/lib/userManagementHelpers';
 import { useUsers } from '../../shared/lib/hooks/useUsers';
