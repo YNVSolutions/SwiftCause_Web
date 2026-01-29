@@ -2347,11 +2347,6 @@ const CampaignManagement = ({
                         goalAmount > 0
                           ? Math.min((raisedAmount / goalAmount) * 100, 100)
                           : 0;
-                      const campaignIdLabel = campaign.id
-                        ? String(campaign.id).startsWith("CAM")
-                          ? String(campaign.id)
-                          : `CAM-${String(campaign.id).slice(0, 6).toUpperCase()}`
-                        : "--";
 
                       return (
                         <div
@@ -2381,7 +2376,6 @@ const CampaignManagement = ({
                                 <div className="text-sm font-semibold text-gray-900">
                                   {campaign.title}
                                 </div>
-                                <div className="text-xs text-gray-400">{campaignIdLabel}</div>
                               </div>
                             </div>
                             <DropdownMenu>
@@ -2460,7 +2454,7 @@ const CampaignManagement = ({
                   {viewMode === "table" && (
                     <Table className="hidden md:table w-full">
                       <TableHeader>
-                        <TableRow className="bg-gray-100 border-b-2 border-gray-200 text-gray-700 grid grid-cols-[1.3fr_0.7fr_1fr_1.1fr_0.7fr_0.5fr] items-center">
+                        <TableRow className="bg-gray-100 border-b-2 border-gray-200 text-gray-700 grid grid-cols-[1.3fr_0.7fr_1fr_1.1fr_0.5fr] items-center">
                           <SortableTableHeader
                             sortKey="title"
                             currentSortKey={sortKey}
@@ -2475,7 +2469,7 @@ const CampaignManagement = ({
                             currentSortKey={sortKey}
                             currentSortDirection={sortDirection}
                             onSort={handleSort}
-                            className="px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                            className="px-4 py-3 pl-6 text-xs font-semibold text-gray-700 uppercase tracking-wide"
                           >
                             Status
                           </SortableTableHeader>
@@ -2499,15 +2493,6 @@ const CampaignManagement = ({
                             Progress
                           </SortableTableHeader>
                           <SortableTableHeader
-                            sortKey="donationCount"
-                            currentSortKey={sortKey}
-                            currentSortDirection={sortDirection}
-                            onSort={handleSort}
-                            className="px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center"
-                          >
-                            <div className="flex w-full items-center justify-center ">Donors</div>
-                          </SortableTableHeader>
-                          <SortableTableHeader
                             sortable={false}
                             sortKey="actions"
                             currentSortKey={sortKey}
@@ -2523,16 +2508,10 @@ const CampaignManagement = ({
                         {filteredAndSortedCampaigns.map((campaign: any) => {
                           const raisedAmount = Number(campaign.raised) || 0;
                           const goalAmount = Number(campaign.goal) || 0;
-                          const donationCount = Number(campaign.donationCount) || 0;
                           const progress =
                             goalAmount > 0
                               ? Math.min((raisedAmount / goalAmount) * 100, 100)
                               : 0;
-                          const campaignIdLabel = campaign.id
-                            ? String(campaign.id).startsWith("CAM")
-                              ? String(campaign.id)
-                              : `CAM-${String(campaign.id).slice(0, 6).toUpperCase()}`
-                            : "--";
                           const status = (campaign.status ?? "inactive").toString();
                           const statusTone = status.toLowerCase();
                           const statusClass =
@@ -2547,7 +2526,7 @@ const CampaignManagement = ({
                           return (
                             <TableRow
                               key={campaign.id ?? campaign.title}
-                              className="border border-gray-100 hover:bg-gray-50 grid grid-cols-[1.3fr_0.7fr_1fr_1.1fr_0.7fr_0.5fr] items-center"
+                              className="border border-gray-100 hover:bg-gray-50 grid grid-cols-[1.3fr_0.7fr_1fr_1.1fr_0.5fr] items-center"
                             >
                               <TableCell
                                 className="px-4 py-3 whitespace-normal cursor-pointer"
@@ -2572,7 +2551,6 @@ const CampaignManagement = ({
                                     <p className="font-medium text-gray-900 text-sm whitespace-normal break-normal">
                                       {campaign.title}
                                     </p>
-                                    <p className="text-[11px] text-gray-400">{campaignIdLabel}</p>
                                     {Array.isArray(campaign.tags) && campaign.tags.length > 0 && (
                                       <div className="mt-1 flex flex-wrap gap-1">
                                         {campaign.tags.slice(0, 3).map((tag: string) => (
@@ -2594,7 +2572,7 @@ const CampaignManagement = ({
                                   </div>
                                 </div>
                               </TableCell>
-                              <TableCell className="px-4 py-3">
+                              <TableCell className="px-4 py-3 pl-6">
                                 <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wide ${statusClass}`}>
                                   {status}
                                 </span>
@@ -2623,11 +2601,6 @@ const CampaignManagement = ({
                                     />
                                   </div>
                                 </div>
-                              </TableCell>
-                              <TableCell className="px-4 py-3 text-center">
-                                <span className="text-sm font-semibold text-gray-900">
-                                  {donationCount.toLocaleString()}
-                                </span>
                               </TableCell>
                               <TableCell className="px-4 py-3 text-right">
                                 <DropdownMenu>
@@ -2687,14 +2660,6 @@ const CampaignManagement = ({
               <SheetTitle className="text-lg font-semibold text-gray-900">
                 Campaign Overview
               </SheetTitle>
-              <div className="text-xs text-gray-400">
-                ID:{" "}
-                {selectedCampaign?.id
-                  ? String(selectedCampaign.id).startsWith("CAM")
-                    ? String(selectedCampaign.id)
-                    : `CAM-${String(selectedCampaign.id).slice(0, 6).toUpperCase()}`
-                  : "--"}
-              </div>
             </SheetHeader>
 
             <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
@@ -2788,6 +2753,13 @@ const CampaignManagement = ({
                     </div>
                   </div>
                 </div>
+              </div>
+
+              <div className="text-xs text-gray-500">
+                Donors:{" "}
+                <span className="font-semibold text-gray-900">
+                  {Number(selectedCampaign?.donationCount || 0).toLocaleString()}
+                </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
