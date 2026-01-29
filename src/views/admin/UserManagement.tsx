@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../shared/ui/table';
 import {
-  Plus, Search, UserCog, Users, Shield, Activity,
+  Plus, UserCog, Users, Shield, Activity,
   Loader2, AlertCircle, Pencil, Trash2, AlertTriangle, MoreVertical
 } from 'lucide-react';
 import { Skeleton } from "../../shared/ui/skeleton";
@@ -122,7 +122,6 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
 
     // Configuration for AdminSearchFilterHeader
     const searchFilterConfig: AdminSearchFilterConfig = {
-        searchPlaceholder: "Search users...",
         filters: [
             {
                 key: "roleFilter",
@@ -155,6 +154,20 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
             userSession={userSession}
             hasPermission={hasPermission}
             activeScreen="admin-users"
+            headerSubtitle="Manage platform users and permissions"
+            headerSearchPlaceholder="Search users..."
+            headerSearchValue={searchTerm}
+            onHeaderSearchChange={setSearchTerm}
+            headerInlineActions={
+                hasPermission('create_user') ? (
+                    <Button
+                        className="bg-indigo-600 text-white"
+                        onClick={() => setCreateDialogOpen(true)}
+                    >
+                        <Plus className="w-4 h-4 mr-2" />Add User
+                    </Button>
+                ) : undefined
+            }
         >
         <div className="space-y-6 sm:space-y-8">
             <main className="px-6 lg:px-8 pt-12 pb-8">
@@ -168,23 +181,9 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
 
                 {/* Unified Header Component */}
                 <AdminSearchFilterHeader
-                    title={`Users (${filteredUsers.length})`}
-                    subtitle="Manage platform users and permissions"
                     config={searchFilterConfig}
-                    searchValue={searchTerm}
-                    onSearchChange={setSearchTerm}
                     filterValues={filterValues}
                     onFilterChange={handleFilterChange}
-                    actions={
-                        hasPermission('create_user') ? (
-                            <Button
-                                className="bg-indigo-600 text-white"
-                                onClick={() => setCreateDialogOpen(true)}
-                            >
-                                <Plus className="w-4 h-4 mr-2" />Add User
-                            </Button>
-                        ) : undefined
-                    }
                 />
 
                 {/* Modern Table Container */}
@@ -286,7 +285,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                             <div className="hidden md:block overflow-hidden">
                                 <Table className="w-full table-fixed">
                                     <TableHeader>
-                                        <TableRow className="bg-gray-100 border-b-2 border-gray-300">
+                                        <TableRow className="bg-gray-100 border-b-2 border-gray-300 text-gray-700">
                                             <SortableTableHeader 
                                                 sortKey="username" 
                                                 currentSortKey={sortKey} 
