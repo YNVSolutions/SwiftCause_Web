@@ -203,6 +203,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const handleSignup = async (signupData: SignupFormData): Promise<string> => {
     try {
+      // Verify reCAPTCHA with backend first
+      if ((signupData as any).recaptchaToken) {
+        const verifyResponse = await fetch(
+          'https://verifysignuprecaptcha-j2f5w4qwxq-uc.a.run.app',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              recaptchaToken: (signupData as any).recaptchaToken,
+              email: signupData.email,
+            }),
+          }
+        );
+
+        if (!verifyResponse.ok) {
+          const errorData = await verifyResponse.json();
+          throw new Error(errorData.error || 'reCAPTCHA verification failed');
+        }
+      }
+
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         signupData.email,

@@ -1,5 +1,5 @@
 const admin = require("firebase-admin");
-const {stripe} = require("../services/stripe");
+const {stripe, ensureStripeInitialized} = require("../services/stripe");
 const {onDocumentCreated} = require("firebase-functions/v2/firestore");
 
 /**
@@ -12,7 +12,15 @@ const createStripeAccountForNewOrg = onDocumentCreated(
       console.log(`Creating Stripe account for new organization: ${orgId}`);
 
       try {
-        const account = await stripe.accounts.create({
+        // Check if Stripe is initialized
+        if (!stripe) {
+          console.warn(`Stripe not initialized. Skipping account creation for ${orgId}`);
+          return;
+        }
+        
+        const stripeClient = ensureStripeInitialized();
+        
+        const account = await stripeClient.accounts.create({
           type: "express",
           metadata: {orgId},
         });

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import ReCAPTCHA from 'react-google-recaptcha';
 import { Input } from '../../shared/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
 import { Checkbox } from '../../shared/ui/checkbox';
@@ -79,6 +80,8 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
   
   const [formData, setFormData] = useState<SignupFormData>({
     firstName: '',
@@ -236,20 +239,35 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
 
   const handleSubmit = async () => {
     const isValid = await validateStep(currentStep);
+    
+    if (!recaptchaToken) {
+      setErrors(prev => ({
+        ...prev,
+        agreeToTerms: 'Please complete the reCAPTCHA verification'
+      }));
+      return;
+    }
+    
     if (isValid && !isSubmitting) {
       setIsSubmitting(true)
       try {
         await onSignup({
           ...formData,
-          organizationId: formData.organizationName.replace(/\s+/g, '-').toLowerCase(), // Generate organizationId
+          organizationId: formData.organizationName.replace(/\s+/g, '-').toLowerCase(),
           stripe: {
             accountId: '',
             chargesEnabled: false,
             payoutsEnabled: false,
           },
-        })
+          recaptchaToken, // Include the token for backend verification
+        } as any)
       } catch (error) {
         setIsSubmitting(false)
+        // Reset reCAPTCHA on error
+        if (recaptchaRef.current) {
+          recaptchaRef.current.reset();
+          setRecaptchaToken(null);
+        }
       }
     }
   };
@@ -654,15 +672,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
               </form>
             )}
 
-            {/* Terms text */}
-            {currentStep === 1 && (
-              <p className="mt-6 text-sm text-slate-400 leading-relaxed text-left">
-                By continuing, you agree to our{' '}
-                <button onClick={onViewTerms} className="underline hover:text-slate-600 text-slate-500">
-                  Terms of Service
-                </button>{' '}.
-              </p>
-            )}
+            
 
             {/* Step 2: Organization Information */}
             {currentStep === 2 && (
@@ -780,7 +790,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                             className={`w-full px-4 py-3 rounded-lg border !bg-white text-[#0d1b10] focus:ring-2 focus:ring-[#11d452] focus:border-transparent outline-none transition-all ${
                               errors.password ? 'border-red-500' : 'border-[#cfe7d3]'
                             }`}
-                            placeholder="••••••••"
+                            placeholder="Enter your password"
                           />
                           <button
                             type="button"
@@ -812,7 +822,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                             className={`w-full px-4 py-3 rounded-lg border !bg-white text-[#0d1b10] focus:ring-2 focus:ring-[#11d452] focus:border-transparent outline-none transition-all ${
                               errors.confirmPassword ? 'border-red-500' : 'border-[#cfe7d3]'
                             }`}
-                            placeholder="••••••••"
+                            placeholder="Confirm your password"
                           />
                           <button
                             type="button"
@@ -914,6 +924,26 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                         </div>
                       </div>
 
+                      {/* reCAPTCHA */}
+                      <div className="flex justify-center pt-4">
+                        <ReCAPTCHA
+                          ref={recaptchaRef}
+                          sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ''}
+                          onChange={(token: string | null) => {
+                            setRecaptchaToken(token);
+                            // Clear any previous captcha errors
+                            if (errors.agreeToTerms?.includes('reCAPTCHA')) {
+                              setErrors(prev => ({
+                                ...prev,
+                                agreeToTerms: undefined
+                              }));
+                            }
+                          }}
+                          onExpired={() => setRecaptchaToken(null)}
+                          onErrored={() => setRecaptchaToken(null)}
+                        />
+                      </div>
+
                       {/* Action Buttons */}
                       <div className="flex items-center justify-between pt-8 gap-5">
                        
@@ -930,10 +960,10 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
 
                          <button
                           type="submit"
-                          disabled={isSubmitting || !formData.agreeToTerms || !isPasswordValid(formData.password) || formData.password !== formData.confirmPassword}
+                          disabled={isSubmitting || !formData.agreeToTerms || !isPasswordValid(formData.password) || formData.password !== formData.confirmPassword || !recaptchaToken}
                           className="flex items-center justify-center min-w-[140px] px-8 py-3 bg-[#064e3b] text-white font-bold text-sm rounded-lg hover:shadow-lg hover:shadow-[#11d452]/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
                         >
-                          <span>{isSubmitting ? 'Creating Account...' : 'Create Password'}</span>
+                          <span>{isSubmitting ? 'Creating Account...' : 'Create Account'}</span>
                           <ArrowRight className="w-5 h-5" />
                         </button>
                       </div>
