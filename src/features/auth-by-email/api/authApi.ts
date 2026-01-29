@@ -40,6 +40,12 @@ export const authApi = {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const userDocRef = doc(db, 'users', userCredential.user.uid);
+      
+      // Update lastLogin timestamp
+      await updateDoc(userDocRef, {
+        lastLogin: new Date().toISOString()
+      });
+      
       const userDocSnap = await getDoc(userDocRef);
       
       if (userDocSnap.exists()) {
