@@ -49,10 +49,10 @@ export function AdminLogin({
 		<>
 			{!isPanel && (
 				<div className="text-center mb-4 animate-fade-in">
-					<div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-linear-to-br from-green-100 to-emerald-100 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-110">
+					<div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-110">
 						<UserCog className="h-7 w-7 text-green-600" />
 					</div>
-					<h3 className="text-lg font-semibold bg-linear-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+					<h3 className="text-lg font-semibold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
 						User Access
 					</h3>
 					<p className="text-sm text-gray-600 mt-1">For platform management and analytics</p>
@@ -118,3 +118,4 @@ export function AdminLogin({
 		</>
 	);
 }
+

@@ -11,7 +11,7 @@ interface ResultScreenProps {
 export function ResultScreen({ result, onEmailConfirmation, onReturnToStart, onRetry }: ResultScreenProps) {
   if (result.success) {
     return (
-      <div className="min-h-screen flex flex-col bg-linear-to-b from-green-50 via-white to-emerald-50/70 relative overflow-hidden">
+      <div className="min-h-screen flex flex-col bg-gradient-to-b from-green-50 via-white to-emerald-50/70 relative overflow-hidden">
         <div className="absolute -top-24 right-0 h-80 w-80 rounded-full bg-green-100 blur-3xl opacity-70" />
         <div className="absolute top-1/3 -left-24 h-72 w-72 rounded-full bg-emerald-100 blur-3xl opacity-60" />
         <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full bg-green-50 blur-3xl opacity-90" />
@@ -55,7 +55,7 @@ export function ResultScreen({ result, onEmailConfirmation, onReturnToStart, onR
           <div className="w-full max-w-xl">
             <div className="bg-white/90 rounded-3xl border border-green-100 shadow-xl overflow-hidden">
               {/* Success Header */}
-              <div className="bg-linear-to-r from-green-600 to-emerald-600 text-white px-6 py-5 text-center">
+              <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-5 text-center">
                 <div className="flex justify-center mb-3">
                   <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center shadow-lg">
                     <CheckCircle className="w-10 h-10" />
@@ -86,7 +86,7 @@ export function ResultScreen({ result, onEmailConfirmation, onReturnToStart, onR
                   {onEmailConfirmation && (
                     <button
                       onClick={onEmailConfirmation}
-                      className="w-full h-14 rounded-xl font-medium text-white flex items-center justify-center gap-2 transition-all bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-200/70"
+                      className="w-full h-14 rounded-xl font-medium text-white flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-200/70"
                     >
                       <Mail className="w-5 h-5" />
                       Send Receipt to Email
@@ -118,7 +118,7 @@ export function ResultScreen({ result, onEmailConfirmation, onReturnToStart, onR
 
   // Failed state
   return (
-    <div className="min-h-screen flex flex-col bg-linear-to-b from-green-50 via-white to-emerald-50/70 relative overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-green-50 via-white to-emerald-50/70 relative overflow-hidden">
       <div className="absolute -top-24 right-0 h-80 w-80 rounded-full bg-green-100 blur-3xl opacity-70" />
       <div className="absolute top-1/3 -left-24 h-72 w-72 rounded-full bg-emerald-100 blur-3xl opacity-60" />
       <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full bg-green-50 blur-3xl opacity-90" />
@@ -127,7 +127,7 @@ export function ResultScreen({ result, onEmailConfirmation, onReturnToStart, onR
         <div className="w-full max-w-xl">
           <div className="bg-white/90 rounded-3xl border border-green-100 shadow-xl overflow-hidden">
             {/* Error Header */}
-            <div className="bg-linear-to-r from-red-500 to-rose-500 text-white px-6 py-5 text-center">
+            <div className="bg-gradient-to-r from-red-500 to-rose-500 text-white px-6 py-5 text-center">
               <div className="flex justify-center mb-3">
                 <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center shadow-lg">
                   <XCircle className="w-10 h-10" />
@@ -172,7 +172,7 @@ export function ResultScreen({ result, onEmailConfirmation, onReturnToStart, onR
               <div className="space-y-4">
                 <button
                   onClick={onRetry || onReturnToStart}
-                  className="w-full max-w-md mx-auto h-14 rounded-xl font-medium text-white flex items-center justify-center gap-2 transition-all bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-200/70"
+                  className="w-full max-w-md mx-auto h-14 rounded-xl font-medium text-white flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-200/70"
                 >
                   <RefreshCw className="w-5 h-5" />
                   Try Again
@@ -200,3 +200,4 @@ export function ResultScreen({ result, onEmailConfirmation, onReturnToStart, onR
     </div>
   );
 }
+

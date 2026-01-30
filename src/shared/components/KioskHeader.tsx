@@ -287,7 +287,7 @@ export const KioskHeader: React.FC<KioskHeaderProps> = ({
                     ) : null}
                     <div>
                       {hasTitle ? (
-                        <h1 className="kiosk-hero-title text-transparent bg-clip-text bg-linear-to-r from-green-700 via-emerald-600 to-green-500">
+                        <h1 className="kiosk-hero-title text-transparent bg-clip-text bg-gradient-to-r from-green-700 via-emerald-600 to-green-500">
                           <span className="kiosk-hero-title-text">{title}</span>
                         </h1>
                       ) : null}
@@ -344,7 +344,7 @@ export const KioskHeader: React.FC<KioskHeaderProps> = ({
                   {(hasTitle || hasSubtitle) ? (
                     <div className={hasTitle ? 'mt-3' : 'mt-2'}>
                       {hasTitle ? (
-                        <h1 className="kiosk-hero-title text-transparent bg-clip-text bg-linear-to-r from-green-700 via-emerald-600 to-green-500">
+                        <h1 className="kiosk-hero-title text-transparent bg-clip-text bg-gradient-to-r from-green-700 via-emerald-600 to-green-500">
                           <span className="kiosk-hero-title-text">{title}</span>
                         </h1>
                       ) : null}
@@ -401,3 +401,4 @@ export const KioskHeader: React.FC<KioskHeaderProps> = ({
     </div>
   );
 };
+
