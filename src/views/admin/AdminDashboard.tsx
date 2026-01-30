@@ -104,8 +104,8 @@ import { useToast } from "../../shared/ui/ToastProvider";
 import { FundraisingEfficiencyGauge, PerformanceDetailDialog } from "../../widgets/campaign-performance";
 import { CampaignProgressBars, CampaignProgressDialog, transformCampaignsToProgress } from "../../widgets/campaign-progress";
 import { DonationDistributionDialog } from "../../widgets/donation-distribution";
-import { KioskForm, KioskFormData } from "./components/KioskForm";
-import { CampaignForm, CampaignFormData } from "./components/CampaignForm";
+import { KioskForm } from "./components/KioskForm";
+import { CampaignForm } from "./components/CampaignForm";
 import { KpiCard } from "./components/KpiCard";
 
 // Dynamic imports for chart components to avoid SSR issues
@@ -114,6 +114,9 @@ const DonationDistributionDonut = dynamic(() => import("./components/DonationDis
 const TopPerformingCampaigns = dynamic(() => import("./components/TopPerformingCampaigns").then(mod => ({ default: mod.TopPerformingCampaigns })), { ssr: false });
 const DonorActivityHeatmap = dynamic(() => import("./components/DonorActivityHeatmap").then(mod => ({ default: mod.DonorActivityHeatmap })), { ssr: false });
 import { AlertsSection } from "./components/AlertsSection";
+import { useCampaignCreation } from "./hooks/useCampaignCreation";
+import { useKioskCreation } from "./hooks/useKioskCreation";
+import { useTourNavigation } from "./hooks/useTourNavigation";
 
 interface AdminDashboardProps {
   onNavigate: (screen: Screen) => void;
@@ -165,30 +168,22 @@ export function AdminDashboard({
     showKioskForm: false,
     showLinkingForm: false,
     showStripeStep: false,
-    isTourActive: false,
     campaignCountChecked: false
   });
 
+  const {
+    formData: campaignFormData,
+    setFormData: setCampaignFormData,
+    resetFormData: resetCampaignFormData,
+  } = useCampaignCreation();
+
+  const {
+    formData: kioskFormData,
+    setFormData: setKioskFormData,
+    resetFormData: resetKioskFormData,
+  } = useKioskCreation();
+
   const [campaignCreation, setCampaignCreation] = useState({
-    formData: {
-      title: '',
-      briefOverview: '',
-      description: '',
-      goal: 0,
-      category: '',
-      status: 'active',
-      coverImageUrl: '',
-      videoUrl: '',
-      galleryImages: [],
-      predefinedAmounts: [10, 25, 50],
-      startDate: '',
-      endDate: '',
-      enableRecurring: false,
-      recurringIntervals: [],
-      tags: [],
-      isGlobal: false,
-      assignedKiosks: []
-    } as CampaignFormData,
     newCampaign: { 
       title: '', 
       description: '', 
@@ -212,14 +207,6 @@ export function AdminDashboard({
   });
 
   const [kioskCreation, setKioskCreation] = useState({
-    formData: {
-      name: '',
-      location: '',
-      accessCode: '',
-      status: 'online',
-      assignedCampaigns: [],
-      displayLayout: 'grid'
-    } as KioskFormData,
     newKiosk: { name: '', location: '', accessCode: '' },
     allKiosks: [] as Kiosk[],
     assignedKioskIds: [] as string[],
@@ -251,6 +238,19 @@ export function AdminDashboard({
 
   const { isStripeOnboarded, needsOnboarding } = useStripeOnboarding(organization);
   const { showToast } = useToast();
+  const { startTour, stopTour } = useTourNavigation({
+    isTourOpen: onboardingFlow.showOnboarding,
+    onPopStateExit: () => {
+      setOnboardingFlow(prev => ({
+        ...prev,
+        showOnboarding: false,
+        showCampaignForm: false,
+        showKioskForm: false,
+        showLinkingForm: false,
+        showStripeStep: false,
+      }));
+    },
+  });
 
   // Reusable function to fetch campaigns by organization ID
   const fetchCampaignsByOrganization = useCallback(async (organizationId: string): Promise<Campaign[]> => {
@@ -381,28 +381,6 @@ export function AdminDashboard({
         console.error("Error fetching chart data: ", error);
       }
     }, [userSession.user.organizationId, onboardingFlow.showOnboarding, onboardingFlow.onboardingDismissed, fetchCampaignsByOrganization]);
-
-  const setCampaignFormData = useCallback(
-    (data: CampaignFormData | ((prev: CampaignFormData) => CampaignFormData)) => {
-      if (typeof data === "function") {
-        setCampaignCreation(prev => ({ ...prev, formData: data(prev.formData) }));
-      } else {
-        setCampaignCreation(prev => ({ ...prev, formData: data }));
-      }
-    },
-    []
-  );
-
-  const setKioskFormData = useCallback(
-    (data: KioskFormData | ((prev: KioskFormData) => KioskFormData)) => {
-      if (typeof data === "function") {
-        setKioskCreation(prev => ({ ...prev, formData: data(prev.formData) }));
-      } else {
-        setKioskCreation(prev => ({ ...prev, formData: data }));
-      }
-    },
-    []
-  );
 
   useEffect(() => {
     fetchChartData();
@@ -548,9 +526,9 @@ export function AdminDashboard({
 
   // Kiosk Form Handlers
   const handleKioskFormSubmit = async () => {
-    if (!kioskCreation.formData.name || !kioskCreation.formData.location || !userSession) return;
+    if (!kioskFormData.name || !kioskFormData.location || !userSession) return;
     
-    if (!kioskCreation.formData.accessCode || kioskCreation.formData.accessCode.length < 4) {
+    if (!kioskFormData.accessCode || kioskFormData.accessCode.length < 4) {
       showToast("Access code must be at least 4 characters", "error", 4000);
       return;
     }
@@ -558,18 +536,18 @@ export function AdminDashboard({
     setKioskCreation(prev => ({ ...prev, isCreating: true }));
     try {
       const newKioskData = {
-        name: kioskCreation.formData.name,
-        location: kioskCreation.formData.location,
-        accessCode: kioskCreation.formData.accessCode,
-        status: kioskCreation.formData.status,
+        name: kioskFormData.name,
+        location: kioskFormData.location,
+        accessCode: kioskFormData.accessCode,
+        status: kioskFormData.status,
         lastActive: new Date().toISOString(),
         totalDonations: 0,
         totalRaised: 0,
-        assignedCampaigns: kioskCreation.formData.assignedCampaigns,
-        defaultCampaign: kioskCreation.formData.assignedCampaigns[0] || '',
+        assignedCampaigns: kioskFormData.assignedCampaigns,
+        defaultCampaign: kioskFormData.assignedCampaigns[0] || '',
         deviceInfo: {},
         operatingHours: {},
-        settings: { displayMode: kioskCreation.formData.displayLayout, showAllCampaigns: true, maxCampaignsDisplay: 6, autoRotateCampaigns: false },
+        settings: { displayMode: kioskFormData.displayLayout, showAllCampaigns: true, maxCampaignsDisplay: 6, autoRotateCampaigns: false },
         organizationId: userSession.user.organizationId,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -579,16 +557,9 @@ export function AdminDashboard({
       // Add the new kiosk to the list
       setKioskCreation(prev => ({ 
         ...prev, 
-        allKiosks: [...prev.allKiosks, { id: docRef.id, ...newKioskData } as Kiosk],
-        formData: {
-          name: '',
-          location: '',
-          accessCode: '',
-          status: 'online',
-          assignedCampaigns: [],
-          displayLayout: 'grid'
-        }
+        allKiosks: [...prev.allKiosks, { id: docRef.id, ...newKioskData } as Kiosk]
       }));
+      resetKioskFormData();
       
       // Close modal
       setDialogVisibility(prev => ({ ...prev, showCreateKioskModal: false }));
@@ -601,41 +572,35 @@ export function AdminDashboard({
   };
 
   const handleKioskFormAssignCampaign = (campaignId: string) => {
-    setKioskCreation(prev => ({
+    setKioskFormData(prev => ({
       ...prev,
-      formData: {
-        ...prev.formData,
-        assignedCampaigns: [...prev.formData.assignedCampaigns, campaignId]
-      }
+      assignedCampaigns: [...prev.assignedCampaigns, campaignId]
     }));
   };
 
   const handleKioskFormUnassignCampaign = (campaignId: string) => {
-    setKioskCreation(prev => ({
+    setKioskFormData(prev => ({
       ...prev,
-      formData: {
-        ...prev.formData,
-        assignedCampaigns: prev.formData.assignedCampaigns.filter(id => id !== campaignId)
-      }
+      assignedCampaigns: prev.assignedCampaigns.filter(id => id !== campaignId)
     }));
   };
 
   // Campaign Form Handler for Get a Tour flow
   const handleCampaignFormSubmit = async () => {
-    if (!campaignCreation.formData.title || !campaignCreation.formData.description || !userSession) {
+    if (!campaignFormData.title || !campaignFormData.description || !userSession) {
       showToast("Please fill in all required fields", "error", 4000);
       return;
     }
     
-    if (!campaignCreation.formData.goal || campaignCreation.formData.goal <= 0) {
+    if (!campaignFormData.goal || campaignFormData.goal <= 0) {
       showToast("Fundraising goal must be greater than 0", "error", 4000);
       return;
     }
     
     // Date validation
-    if (campaignCreation.formData.startDate && campaignCreation.formData.endDate) {
-      const startDate = new Date(campaignCreation.formData.startDate);
-      const endDate = new Date(campaignCreation.formData.endDate);
+    if (campaignFormData.startDate && campaignFormData.endDate) {
+      const startDate = new Date(campaignFormData.startDate);
+      const endDate = new Date(campaignFormData.endDate);
       
       if (endDate <= startDate) {
         showToast("End date must be after start date", "error", 4000);
@@ -645,23 +610,23 @@ export function AdminDashboard({
     
     setCampaignCreation(prev => ({ ...prev, isCreating: true }));
     try {
-      const startDate = campaignCreation.formData.startDate ? new Date(campaignCreation.formData.startDate) : new Date();
-      const endDate = campaignCreation.formData.endDate ? new Date(campaignCreation.formData.endDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      const startDate = campaignFormData.startDate ? new Date(campaignFormData.startDate) : new Date();
+      const endDate = campaignFormData.endDate ? new Date(campaignFormData.endDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
       
       if (campaignCreation.editingCampaignInTour) {
         // Update existing campaign
         const campaignRef = doc(db, 'campaigns', campaignCreation.editingCampaignInTour.id);
         await updateDoc(campaignRef, {
-          title: campaignCreation.formData.title,
-          description: campaignCreation.formData.description,
-          goal: Number(campaignCreation.formData.goal),
-          status: campaignCreation.formData.status || 'active',
+          title: campaignFormData.title,
+          description: campaignFormData.description,
+          goal: Number(campaignFormData.goal),
+          status: campaignFormData.status || 'active',
           startDate: startDate,
           endDate: endDate,
           updatedAt: new Date(),
-          tags: campaignCreation.formData.tags || [],
-          coverImageUrl: campaignCreation.formData.coverImageUrl || '',
-          category: campaignCreation.formData.category || 'General',
+          tags: campaignFormData.tags || [],
+          coverImageUrl: campaignFormData.coverImageUrl || '',
+          category: campaignFormData.category || 'General',
         });
         
         // Refresh campaigns list
@@ -670,20 +635,20 @@ export function AdminDashboard({
       } else {
         // Create new campaign
         const campaignData = {
-          title: campaignCreation.formData.title,
-          description: campaignCreation.formData.description,
-          goal: Number(campaignCreation.formData.goal),
+          title: campaignFormData.title,
+          description: campaignFormData.description,
+          goal: Number(campaignFormData.goal),
           raised: 0,
-          status: campaignCreation.formData.status || 'active',
+          status: campaignFormData.status || 'active',
           startDate: startDate,
           endDate: endDate,
           organizationId: userSession.user.organizationId,
           createdAt: new Date(),
           updatedAt: new Date(),
           isGlobal: false,
-          tags: campaignCreation.formData.tags || [],
-          coverImageUrl: campaignCreation.formData.coverImageUrl || '',
-          category: campaignCreation.formData.category || 'General',
+          tags: campaignFormData.tags || [],
+          coverImageUrl: campaignFormData.coverImageUrl || '',
+          category: campaignFormData.category || 'General',
         };
         
         const docRef = await addDoc(collection(db, 'campaigns'), campaignData);
@@ -708,27 +673,9 @@ export function AdminDashboard({
       // Reset form and close dialog
       setCampaignCreation(prev => ({
         ...prev,
-        formData: {
-          title: '',
-          briefOverview: '',
-          description: '',
-          goal: 0,
-          category: '',
-          status: 'active',
-          coverImageUrl: '',
-          videoUrl: '',
-          galleryImages: [],
-          predefinedAmounts: [10, 25, 50],
-          startDate: '',
-          endDate: '',
-          enableRecurring: false,
-          recurringIntervals: [],
-          tags: [],
-          isGlobal: false,
-          assignedKiosks: []
-        },
         editingCampaignInTour: null
       }));
+      resetCampaignFormData();
       setDialogVisibility(prev => ({ ...prev, showCampaignFormDialog: false }));
       
     } catch (error) {
@@ -880,7 +827,6 @@ export function AdminDashboard({
     // Start the tour by showing onboarding
     setOnboardingFlow(prev => ({
       ...prev,
-      isTourActive: true,
       showOnboarding: true,
       onboardingDismissed: false,
       showCampaignForm: false,
@@ -888,42 +834,11 @@ export function AdminDashboard({
       showLinkingForm: false,
       showStripeStep: false
     }));
-    
+
     // Clear sessionStorage when manually starting tour
     sessionStorage.removeItem('onboardingDismissed');
-
-    // Add a history entry so browser back exits the tour instead of leaving the dashboard
-    if (typeof window !== "undefined") {
-      window.history.pushState({ tour: true }, "", window.location.href);
-    }
+    startTour();
   };
-
-  useEffect(() => {
-    const handlePopState = () => {
-      if (!onboardingFlow.showOnboarding) return;
-
-      setOnboardingFlow(prev => ({
-        ...prev,
-        showOnboarding: false,
-        isTourActive: false,
-        showCampaignForm: false,
-        showKioskForm: false,
-        showLinkingForm: false,
-        showStripeStep: false,
-      }));
-
-      if (typeof window !== "undefined") {
-        window.history.pushState({ tour: false }, "", window.location.href);
-      }
-    };
-
-    if (typeof window !== "undefined") {
-      window.addEventListener("popstate", handlePopState);
-      return () => window.removeEventListener("popstate", handlePopState);
-    }
-
-    return;
-  }, [onboardingFlow.showOnboarding]);
 
   const handleDirectStripeOnboarding = async () => {
     if (!organization?.id) {
@@ -1103,6 +1018,7 @@ export function AdminDashboard({
                           setOnboardingFlow(prev => ({ ...prev, showOnboarding: false, onboardingDismissed: true }));
                           // Persist to sessionStorage so it stays dismissed during the session
                           sessionStorage.setItem('onboardingDismissed', 'true');
+                          stopTour();
                         }}
                         variant="ghost"
                         size="lg"
@@ -1304,28 +1220,25 @@ export function AdminDashboard({
                                         const endDateObj = ed.seconds ? new Date(ed.seconds * 1000) : new Date(ed);
                                         endDateStr = endDateObj.toISOString().split('T')[0];
                                       }
-                                      setCampaignCreation(prev => ({
-                                        ...prev,
-                                        formData: {
-                                          title: campaign.title || '',
-                                          briefOverview: '', // Campaign type doesn't have briefOverview, so use empty string
-                                          description: campaign.description || '',
-                                          goal: campaign.goal || 0,
-                                          category: campaign.category || '',
-                                          status: campaign.status || 'active',
-                                          coverImageUrl: campaign.coverImageUrl || '',
-                                          videoUrl: campaign.videoUrl || '',
-                                          galleryImages: campaign.galleryImages || [],
-                                          predefinedAmounts: campaign.configuration?.predefinedAmounts || [10, 25, 50],
-                                          startDate: startDateStr,
-                                          endDate: endDateStr,
-                                          enableRecurring: campaign.configuration?.enableRecurring || false,
-                                          recurringIntervals: campaign.configuration?.recurringIntervals || [],
-                                          tags: campaign.tags || [],
-                                          isGlobal: campaign.isGlobal || false,
-                                          assignedKiosks: campaign.assignedKiosks || []
-                                        }
-                                      }));
+                                      setCampaignFormData({
+                                        title: campaign.title || '',
+                                        briefOverview: '', // Campaign type doesn't have briefOverview, so use empty string
+                                        description: campaign.description || '',
+                                        goal: campaign.goal || 0,
+                                        category: campaign.category || '',
+                                        status: campaign.status || 'active',
+                                        coverImageUrl: campaign.coverImageUrl || '',
+                                        videoUrl: campaign.videoUrl || '',
+                                        galleryImages: campaign.galleryImages || [],
+                                        predefinedAmounts: campaign.configuration?.predefinedAmounts || [10, 25, 50],
+                                        startDate: startDateStr,
+                                        endDate: endDateStr,
+                                        enableRecurring: campaign.configuration?.enableRecurring || false,
+                                        recurringIntervals: campaign.configuration?.recurringIntervals || [],
+                                        tags: campaign.tags || [],
+                                        isGlobal: campaign.isGlobal || false,
+                                        assignedKiosks: campaign.assignedKiosks || []
+                                      });
                                       setDialogVisibility(prev => ({ ...prev, showCampaignFormDialog: true }));
                                     }}
                                   >
@@ -1390,7 +1303,7 @@ export function AdminDashboard({
                   }
                 }}
                 editingCampaign={campaignCreation.editingCampaignInTour}
-                campaignData={campaignCreation.formData}
+                campaignData={campaignFormData}
                 setCampaignData={setCampaignFormData}
                 onSubmit={handleCampaignFormSubmit}
                 onSaveDraft={() => {
@@ -1402,6 +1315,7 @@ export function AdminDashboard({
                   setCampaignCreation(prev => ({ ...prev, editingCampaignInTour: null }));
                 }}
                 formatCurrency={formatCurrency}
+                isSubmitting={campaignCreation.isCreating}
                 onImageFileSelect={(file) => setCampaignCreation(prev => ({ ...prev, selectedImageFile: file }))}
               />
             </div>
@@ -1717,6 +1631,7 @@ export function AdminDashboard({
                           }));
                           // Persist to sessionStorage so it stays dismissed during the session
                           sessionStorage.setItem('onboardingDismissed', 'true');
+                          stopTour();
                           // Refresh dashboard data
                           refreshDashboard();
                           // Navigate to dashboard to see the new data
@@ -1830,6 +1745,7 @@ export function AdminDashboard({
                           }));
                           // Persist to sessionStorage so it stays dismissed during the session
                           sessionStorage.setItem('onboardingDismissed', 'true');
+                          stopTour();
                           // Refresh dashboard data
                           refreshDashboard();
                           // Navigate to dashboard to see the new data
@@ -1852,7 +1768,7 @@ export function AdminDashboard({
             open={dialogVisibility.showCreateKioskModal}
             onOpenChange={(open) => setDialogVisibility(prev => ({ ...prev, showCreateKioskModal: open }))}
             editingKiosk={null}
-            kioskData={kioskCreation.formData}
+            kioskData={kioskFormData}
             setKioskData={setKioskFormData}
             campaigns={campaignCreation.allCampaigns.map(c => ({
               id: c.id,

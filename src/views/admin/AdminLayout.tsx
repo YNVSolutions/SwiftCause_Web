@@ -822,7 +822,7 @@ export function AdminLayout({
             ></div>
 
             <div className="fixed top-20 right-6 w-80 bg-white/15 backdrop-blur-xl rounded-xl shadow-sm z-60 transform transition-all duration-300 ease-out border border-gray-200/10">
-              <div className="relative px-6 py-5 bg-linear-to-r from-slate-50/10 to-gray-50/10 backdrop-blur-xl rounded-t-xl border-b border-gray-200/10">
+              <div className="relative px-6 py-5 bg-gradient-to-r from-slate-50/10 to-gray-50/10 backdrop-blur-xl rounded-t-xl border-b border-gray-200/10">
                 <button
                   onClick={() => setShowUserProfile(false)}
                   className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100"
@@ -1103,3 +1103,4 @@ export function AdminLayout({
     </SidebarProvider>
   );
 }
+

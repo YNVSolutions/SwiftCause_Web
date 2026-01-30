@@ -173,7 +173,7 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
     (customAmount && parseFloat(customAmount) > 0);
 
   return (
-    <div className="min-h-screen flex flex-col bg-linear-to-b from-green-50 via-white to-emerald-50/70 relative">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-green-50 via-white to-emerald-50/70 relative">
       <style>{`
         .kiosk-progress-bar {
           background-size: 200% 100%;
@@ -314,7 +314,7 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
               </div>
               <div className="w-full bg-green-100 rounded-full h-2">
                 <div
-                  className="kiosk-progress-bar bg-linear-to-r from-green-600 to-emerald-600 h-2 rounded-full transition-all duration-300"
+                  className="kiosk-progress-bar bg-gradient-to-r from-green-600 to-emerald-600 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -390,7 +390,7 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
             </div>
             <div className="w-full bg-green-100 rounded-full h-2">
               <div
-                className="kiosk-progress-bar bg-linear-to-r from-green-600 to-emerald-600 h-2 rounded-full transition-all duration-300"
+                className="kiosk-progress-bar bg-gradient-to-r from-green-600 to-emerald-600 h-2 rounded-full transition-all duration-300"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -444,3 +444,4 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
     </div>
   );
 };
+

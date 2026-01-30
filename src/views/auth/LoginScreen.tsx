@@ -45,7 +45,7 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
   return (
     <div className="min-h-screen bg-[#F3F1EA] font-lexend">
       <div className="grid min-h-screen lg:grid-cols-[0.75fr_1fr]">
-        <section className="relative hidden flex-col justify-between overflow-hidden bg-linear-to-b from-[#0f5132] to-[#064e3b] px-10 py-12 text-white lg:flex">
+        <section className="relative hidden flex-col justify-between overflow-hidden bg-gradient-to-b from-[#0f5132] to-[#064e3b] px-10 py-12 text-white lg:flex">
           <div className="pointer-events-none absolute -top-40 right-0 h-80 w-80 rounded-full bg-emerald-400/6 blur-3xl" />
           <div className="pointer-events-none absolute bottom-0 left-0 h-72 w-72 rounded-full bg-emerald-300/4 blur-3xl" />
 
@@ -278,3 +278,4 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
     </div>
   );
 }
+

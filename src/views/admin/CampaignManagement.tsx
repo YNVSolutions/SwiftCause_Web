@@ -706,7 +706,7 @@ const CampaignDialog = ({
           `}</style>
 
           {/* Left Sidebar - Sticky Navigation */}
-          <div className="w-56 border-r border-gray-200 bg-linear-to-b from-white to-gray-50 shadow-sm sticky top-0 h-fit">
+          <div className="w-56 border-r border-gray-200 bg-gradient-to-b from-white to-gray-50 shadow-sm sticky top-0 h-fit">
             <div className="p-5 space-y-3">
               <div className="mb-6">
                 <h3 className="text-xs font-bold text-gray-700 uppercase tracking-widest">Configuration</h3>
@@ -2891,3 +2891,4 @@ const CampaignManagement = ({
 };
 
 export default CampaignManagement;
+
