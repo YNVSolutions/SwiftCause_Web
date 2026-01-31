@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { ArrowUp, Sparkles } from 'lucide-react';
 import { formatCurrency } from '@/shared/lib/currencyFormatter';
 

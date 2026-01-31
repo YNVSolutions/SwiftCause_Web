@@ -60,7 +60,13 @@ export default function PaymentPage({ params }: { params: Promise<{ campaignId: 
         const completeGiftAidData = sessionStorage.getItem('completeGiftAidData');
         if (completeGiftAidData) {
           const giftAidData = JSON.parse(completeGiftAidData);
-          await storeGiftAidDeclaration(giftAidData, result.transactionId);
+          const { submitGiftAidDeclaration } = await import('@/entities/giftAid');
+          await submitGiftAidDeclaration(
+            giftAidData,
+            result.transactionId,
+            campaignId,
+            campaign?.title || 'Unknown Campaign'
+          );
           
           // Clean up session storage after successful storage
           sessionStorage.removeItem('completeGiftAidData');

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { User, MapPin, ArrowRight, Check, CheckCircle, Shield } from 'lucide-react';
 import { formatCurrency } from '@/shared/lib/currencyFormatter';
-import { GiftAidDetails } from '@/shared/types';
+import { GiftAidDetails } from '@/entities/giftAid/model/types';
+import { HMRC_DECLARATION_TEXT } from '@/shared/config/constants';
 
 interface GiftAidDetailsPanelProps {
   amount: number;
@@ -21,19 +22,21 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
   onBack,
 }) => {
   const [fullName, setFullName] = useState('');
+  const [houseNumber, setHouseNumber] = useState('');
+  const [addressLine1, setAddressLine1] = useState('');
+  const [addressLine2, setAddressLine2] = useState('');
+  const [town, setTown] = useState('');
   const [postcode, setPostcode] = useState('');
   
-  // New form fields for the redesign
-  const [addressLine1, setAddressLine1] = useState(''); // giftAid.donorDetails.addressLine1
-  const [addressLine2, setAddressLine2] = useState(''); // giftAid.donorDetails.addressLine2
-  const [country] = useState('United Kingdom'); // giftAid.donorDetails.country (UK only)
-  
-  const [declarationAccepted, setDeclarationAccepted] = useState(false); // giftAid.declarationAccepted (required for Gift Aid)
+  const [declarationAccepted, setDeclarationAccepted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   
   const [errors, setErrors] = useState<{
     fullName?: string;
-    postcode?: string;
+    houseNumber?: string;
     addressLine1?: string;
+    town?: string;
+    postcode?: string;
     consent?: string;
   }>({});
 
@@ -58,14 +61,25 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
       }
     }
 
+    if (!houseNumber.trim()) {
+      newErrors.houseNumber = 'House number is required';
+    }
+
     if (!addressLine1.trim()) {
       newErrors.addressLine1 = 'Address Line 1 is required';
     }
 
+    if (!town.trim()) {
+      newErrors.town = 'Town/City is required';
+    }
+
     if (!postcode.trim()) {
       newErrors.postcode = 'Postcode is required';
-    } else if (!/^[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}$/i.test(postcode.trim())) {
-      newErrors.postcode = 'Please enter a valid UK postcode';
+    } else {
+      const normalizedPostcode = postcode.trim().toUpperCase();
+      if (!/^[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}$/i.test(normalizedPostcode)) {
+        newErrors.postcode = 'Please enter a valid UK postcode';
+      }
     }
 
     if (!declarationAccepted) {
@@ -80,6 +94,8 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
     e.preventDefault();
     if (!validateForm()) return;
 
+    setSubmitting(true);
+
     const currentDate = new Date().toISOString();
     const currentYear = new Date().getFullYear();
     const taxYear = `${currentYear}-${(currentYear + 1).toString().slice(-2)}`;
@@ -88,27 +104,34 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
     const firstName = nameParts[0] || '';
     const surname = nameParts.slice(1).join(' ') || '';
 
+    // Normalize postcode before storage
+    const normalizedPostcode = postcode.trim().toUpperCase();
+
     const giftAidDetails: GiftAidDetails = {
       firstName,
       surname,
-      houseNumber: '',
-      address: addressLine1.trim(),
-      town: addressLine2.trim(),
-      postcode: postcode.trim().toUpperCase(),
+      houseNumber: houseNumber.trim(),
+      addressLine1: addressLine1.trim(),
+      addressLine2: addressLine2.trim() || undefined,
+      town: town.trim(),
+      postcode: normalizedPostcode,
       giftAidConsent: declarationAccepted,
       ukTaxpayerConfirmation: declarationAccepted,
-      declarationText:
-        'I am a UK taxpayer and understand that if I pay less Income Tax and/or Capital Gains Tax than the amount of Gift Aid claimed on all my donations in this tax year, it is my responsibility to pay any difference.',
+      declarationText: HMRC_DECLARATION_TEXT,
       declarationDate: currentDate,
-      donationAmount: amount,
+      donationAmount: Math.round(amount * 100), // Convert GBP pounds to pence for HMRC compliance
       donationDate: currentDate,
       organizationId,
-      donationId: '',
+      donationId: '', // Intentionally empty: populated after donation creation to enforce 1:1 Gift Aid ↔ Donation mapping
       timestamp: currentDate,
       taxYear,
     };
 
-    onSubmit(giftAidDetails);
+    try {
+      onSubmit(giftAidDetails);
+    } catch (error) {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -166,11 +189,32 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
               {errors.fullName && <p className="text-red-500 text-xs mt-0.5">{errors.fullName}</p>}
             </div>
 
-            {/* Address Line 1 and Address Line 2 - side by side */}
+            {/* House Number and Address Line 1 - side by side */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="block text-sm font-medium text-gray-600">
-                  Address Line 1 *
+                  House Number *
+                </label>
+                <input
+                  type="text"
+                  value={houseNumber}
+                  onChange={(e) => {
+                    setHouseNumber(e.target.value);
+                    if (errors.houseNumber) setErrors((prev) => ({ ...prev, houseNumber: undefined }));
+                  }}
+                  className={`w-full h-11 px-4 rounded-lg border-2 text-sm focus:outline-none transition-all bg-white ${
+                    errors.houseNumber
+                      ? 'border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-100'
+                      : 'border-green-200 focus:border-green-500 focus:ring-2 focus:ring-green-100'
+                  }`}
+                  placeholder="e.g. 123"
+                />
+                {errors.houseNumber && <p className="text-red-500 text-xs mt-0.5">{errors.houseNumber}</p>}
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-600">
+                  Street Address *
                 </label>
                 <input
                   type="text"
@@ -184,11 +228,14 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
                       ? 'border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-100'
                       : 'border-green-200 focus:border-green-500 focus:ring-2 focus:ring-green-100'
                   }`}
-                  placeholder="House number and street"
+                  placeholder="e.g. Main Street"
                 />
                 {errors.addressLine1 && <p className="text-red-500 text-xs mt-0.5">{errors.addressLine1}</p>}
               </div>
+            </div>
 
+            {/* Address Line 2 and Town - side by side */}
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="block text-sm font-medium text-gray-600">
                   Address Line 2 (Optional)
@@ -201,9 +248,30 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
                   placeholder="Apartment, suite, etc."
                 />
               </div>
+
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-600">
+                  Town/City *
+                </label>
+                <input
+                  type="text"
+                  value={town}
+                  onChange={(e) => {
+                    setTown(e.target.value);
+                    if (errors.town) setErrors((prev) => ({ ...prev, town: undefined }));
+                  }}
+                  className={`w-full h-11 px-4 rounded-lg border-2 text-sm focus:outline-none transition-all bg-white ${
+                    errors.town
+                      ? 'border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-100'
+                      : 'border-green-200 focus:border-green-500 focus:ring-2 focus:ring-green-100'
+                  }`}
+                  placeholder="e.g. London"
+                />
+                {errors.town && <p className="text-red-500 text-xs mt-0.5">{errors.town}</p>}
+              </div>
             </div>
 
-            {/* UK Postcode and Country */}
+            {/* UK Postcode */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-600">
@@ -214,7 +282,8 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
                   type="text"
                   value={postcode}
                   onChange={(e) => {
-                    setPostcode(e.target.value.toUpperCase());
+                    const normalizedPostcode = e.target.value.trim().toUpperCase();
+                    setPostcode(normalizedPostcode);
                     if (errors.postcode) setErrors((prev) => ({ ...prev, postcode: undefined }));
                   }}
                   className={`w-full h-11 px-4 rounded-lg border-2 text-sm uppercase focus:outline-none transition-all bg-white ${
@@ -234,7 +303,7 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
                 </label>
                 <input
                   type="text"
-                  value={country}
+                  value="United Kingdom"
                   disabled
                   className="w-full h-11 px-4 rounded-lg border-2 border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed text-sm"
                 />
@@ -275,9 +344,7 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
               </div>
               <div className="ml-4 flex-1">
                 <span className="text-sm text-gray-700 leading-relaxed block">
-                  I am a UK taxpayer and understand that if I pay less Income Tax and/or Capital Gains
-                  Tax than the amount of Gift Aid claimed on all my donations in this tax year, it is my
-                  responsibility to pay any difference.
+                  {HMRC_DECLARATION_TEXT}
                 </span>
               </div>
             </div>
@@ -289,11 +356,11 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
         <div className="mt-5 space-y-3">
           <button
             type="submit"
-            disabled={!declarationAccepted}
+            disabled={submitting || !declarationAccepted}
             className="w-full h-12 rounded-lg font-semibold text-sm text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-200/50 hover:shadow-green-300/60"
           >
             <ArrowRight className="w-4 h-4 mr-2" />
-            Continue to Payment
+            {submitting ? 'Processing...' : 'Continue to Payment'}
           </button>
 
           <button
