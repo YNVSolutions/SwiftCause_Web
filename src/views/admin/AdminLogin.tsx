@@ -1,5 +1,5 @@
 import React from 'react';
-import { UserCog, ArrowRight, AlertCircle } from 'lucide-react';
+import { UserCog, ArrowRight } from 'lucide-react';
 import { ProfessionalEmailField } from '../auth/interactions/ProfessionalEmailField';
 import { ProfessionalPasswordField } from '../auth/interactions/ProfessionalPasswordField';
 import { MagneticButton } from '../auth/interactions/MagneticButton';
@@ -11,8 +11,6 @@ interface AdminLoginProps {
 	emailError?: string | null;
 	passwordError?: string | null;
 	loading: boolean;
-	emailVerificationError?: string;
-	isCheckingEmail?: boolean;
 	onEmailChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 	onPasswordChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 	onEmailBlur?: () => void;
@@ -30,8 +28,6 @@ export function AdminLogin({
 	emailError, 
 	passwordError, 
 	loading, 
-	emailVerificationError,
-	isCheckingEmail,
 	onEmailChange, 
 	onPasswordChange, 
 	onEmailBlur, 
@@ -41,7 +37,6 @@ export function AdminLogin({
 	buttonLabel,
 	buttonClassName
 }: AdminLoginProps) {
-	const hasVerificationError = !!emailVerificationError;
 	const isPanel = variant === 'panel';
 	const resolvedButtonLabel = buttonLabel ?? (isPanel ? 'Login as Admin' : 'Access Dashboard');
 	
@@ -60,25 +55,13 @@ export function AdminLogin({
 			)}
 
 			<form onSubmit={onSubmit} className={`space-y-4 ${isPanel ? '' : 'animate-fade-in-delay'}`}>
-				<div>
-					<ProfessionalEmailField
-						id="email"
-						value={email}
-						onChange={onEmailChange}
-						onBlur={onEmailBlur}
-						error={emailError || error}
-						isChecking={isCheckingEmail}
-					/>
-					
-					{!isCheckingEmail && hasVerificationError && (
-						<div className="flex items-start gap-2 mt-2 p-3 bg-red-50 border border-red-200 rounded-lg animate-fade-in">
-							<AlertCircle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
-							<p className="text-sm text-red-800">
-								{emailVerificationError}
-							</p>
-						</div>
-					)}
-				</div>
+				<ProfessionalEmailField
+					id="email"
+					value={email}
+					onChange={onEmailChange}
+					onBlur={onEmailBlur}
+					error={emailError || error}
+				/>
 
 				<ProfessionalPasswordField
 					id="password"
@@ -91,7 +74,7 @@ export function AdminLogin({
 				<MagneticButton
 					type="submit"
 					loading={loading}
-					disabled={loading || hasVerificationError || isCheckingEmail}
+					disabled={loading}
 					className={`w-full h-12 text-base font-semibold ${buttonClassName ?? ''}`}
 				>
 					{!loading && (

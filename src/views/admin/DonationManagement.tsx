@@ -40,6 +40,10 @@ import { getAllCampaigns } from '../../shared/api';
 import { AdminLayout } from './AdminLayout';
 import { exportToCsv } from '../../shared/utils/csvExport';
 import { useOrganization } from "../../shared/lib/hooks/useOrganization";
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '../../shared/lib/firebase';
+import { Kiosk } from '../../shared/types';
+
 interface FetchedDonation extends Omit<Donation, 'timestamp'> {
   id: string;
   amount: number;
@@ -52,6 +56,7 @@ interface FetchedDonation extends Omit<Donation, 'timestamp'> {
   platform: string;
   stripePaymentIntentId: string;
   timestamp: string;
+  kioskId?: string;
 }
 
 interface Campaign {
@@ -69,6 +74,7 @@ interface DonationManagementProps {
 export function DonationManagement({ onNavigate, onLogout, userSession, hasPermission }: DonationManagementProps) {
   const [donations, setDonations] = useState<FetchedDonation[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [kiosks, setKiosks] = useState<Kiosk[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -89,12 +95,22 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
       try {
         setLoading(true);
        
+        // Fetch kiosks
+        const kiosksRef = collection(db, 'kiosks');
+        const kiosksQuery = query(kiosksRef, where('organizationId', '==', userSession.user.organizationId || ''));
+        const kiosksSnapshot = await getDocs(kiosksQuery);
+        const kiosksData = kiosksSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Kiosk[];
+
         const [donationData, campaignData] = await Promise.all([
           getDonations(userSession.user.organizationId || ''),
           getAllCampaigns(userSession.user.organizationId || '')
         ]);
         setDonations(donationData as FetchedDonation[]);
         setCampaigns(campaignData as Campaign[]);
+        setKiosks(kiosksData);
         setError(null);
       } catch (err) {
         setError("Failed to load data. Please try again.");
@@ -112,6 +128,13 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
         return acc;
     }, {} as Record<string, string>);
   }, [campaigns]);
+
+  const kioskMap = useMemo(() => {
+    return kiosks.reduce((acc, kiosk) => {
+        acc[kiosk.id] = kiosk;
+        return acc;
+    }, {} as Record<string, Kiosk>);
+  }, [kiosks]);
 
   // Configuration for AdminSearchFilterHeader
   const searchFilterConfig: AdminSearchFilterConfig = {
@@ -191,28 +214,25 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
     switch (status) {
       case 'success':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#064e3b]/10 text-[#064e3b] ring-1 ring-[#064e3b]/20">
-            <CheckCircle className="w-3 h-3 mr-1" />
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wide bg-green-100 text-green-800">
             Success
           </span>
         );
       case 'pending':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-50 text-yellow-700 ring-1 ring-yellow-600/20">
-            <Clock className="w-3 h-3 mr-1" />
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wide bg-yellow-100 text-yellow-800">
             Pending
           </span>
         );
       case 'failed':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700 ring-1 ring-red-600/20">
-            <AlertCircle className="w-3 h-3 mr-1" />
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wide bg-red-100 text-red-800">
             Failed
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-50 text-gray-700 ring-1 ring-gray-600/20">
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wide bg-gray-100 text-gray-700">
             {status}
           </span>
         );
@@ -268,11 +288,62 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
       <div className="space-y-6 sm:space-y-8">
         <main className="px-6 lg:px-8 pt-12 pb-8">
           {/* Stat Cards Section */}
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-12">
-            <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Total Raised</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.totalAmount, summaryCurrency)}</p></div><DollarSign className="h-6 w-6 sm:h-7 sm:w-7 lg:w-8 lg:h-8 text-[#064e3b]" /></div></CardContent></Card>
-            <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Total Donations</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{totalStats.totalDonations}</p></div><Users className="h-6 w-6 sm:h-7 sm:w-7 lg:w-8 lg:h-8 text-indigo-500" /></div></CardContent></Card>
-            <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Completed</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{totalStats.completedDonations}</p></div><CheckCircle className="h-6 w-6 sm:h-7 sm:w-7 lg:w-8 lg:h-8 text-[#064e3b]" /></div></CardContent></Card>
-            <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Average Donation</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.avgDonation, summaryCurrency)}</p></div><TrendingUp className="h-6 w-6 sm:h-7 sm:w-7 lg:w-8 lg:h-8 text-orange-500" /></div></CardContent></Card>
+          <div className="grid gap-4 md:grid-cols-4 mb-6">
+            <Card className="rounded-3xl border border-gray-100 shadow-sm">
+              <CardContent className="p-5 flex items-center gap-4">
+                <div className="h-12 w-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                  <DollarSign className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-widest text-gray-400">Total Raised</p>
+                  <div className="mt-2">
+                    <span className="text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.totalAmount, summaryCurrency)}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-3xl border border-gray-100 shadow-sm">
+              <CardContent className="p-5 flex items-center gap-4">
+                <div className="h-12 w-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                  <Users className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-widest text-gray-400">Total Donations</p>
+                  <div className="mt-2">
+                    <span className="text-2xl font-semibold text-gray-900">{totalStats.totalDonations}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-3xl border border-gray-100 shadow-sm">
+              <CardContent className="p-5 flex items-center gap-4">
+                <div className="h-12 w-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                  <CheckCircle className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-widest text-gray-400">Completed</p>
+                  <div className="mt-2">
+                    <span className="text-2xl font-semibold text-gray-900">{totalStats.completedDonations}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-3xl border border-gray-100 shadow-sm">
+              <CardContent className="p-5 flex items-center gap-4">
+                <div className="h-12 w-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                  <TrendingUp className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-widest text-gray-400">Average Donation</p>
+                  <div className="mt-2">
+                    <span className="text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.avgDonation, summaryCurrency)}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Unified Header Component */}
@@ -283,13 +354,14 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
           />
 
           {/* Modern Table Container */}
-          <Card className="overflow-hidden">
+          <Card className="overflow-hidden rounded-3xl border border-gray-100 shadow-sm mt-6">
             <CardContent className="p-0">
               {loading ? (
                 <div className="space-y-4 p-6">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <div key={i} className="grid grid-cols-6 gap-4 py-4 border-b border-gray-100">
-                      <Skeleton className="h-10 w-full col-span-2" />
+                      <Skeleton className="h-10 w-full col-span-1" />
+                      <Skeleton className="h-10 w-full col-span-1" />
                       <Skeleton className="h-10 w-full col-span-1" />
                       <Skeleton className="h-10 w-full col-span-1" />
                       <Skeleton className="h-10 w-full col-span-1" />
@@ -336,23 +408,23 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                           currentSortKey={sortKey} 
                           currentSortDirection={sortDirection} 
                           onSort={handleSort}
-                          className="w-[12%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
+                          className="w-[14%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center"
                         >
-                          <div className="flex items-center justify-end gap-2">
+                          <div className="flex items-center justify-center gap-2">
                             <Banknote className="h-4 w-4 text-gray-500 shrink-0" />
                             <span className="whitespace-nowrap">Amount</span>
                           </div>
                         </SortableTableHeader>
                         <SortableTableHeader 
-                          sortKey="paymentMethod" 
+                          sortKey="kioskId" 
                           currentSortKey={sortKey} 
                           currentSortDirection={sortDirection} 
                           onSort={handleSort}
-                          className="w-[16%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                          className="w-[18%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
                         >
                           <div className="flex items-center gap-2">
-                            <CreditCard className="h-4 w-4 text-gray-500 shrink-0" />
-                            <span className="whitespace-nowrap">Payment</span>
+                            <MapPin className="h-4 w-4 text-gray-500 shrink-0" />
+                            <span className="whitespace-nowrap">Kiosk</span>
                           </div>
                         </SortableTableHeader>
                         <SortableTableHeader 
@@ -379,98 +451,72 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                             <span className="whitespace-nowrap">Date</span>
                           </div>
                         </SortableTableHeader>
-                        <SortableTableHeader 
-                          sortable={false}
-                          sortKey="actions" 
-                          currentSortKey={sortKey} 
-                          currentSortDirection={sortDirection} 
-                          onSort={handleSort}
-                          className="w-[8%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center"
-                        >
-                          <div className="flex items-center justify-center gap-2">
-                            <Eye className="h-4 w-4 text-gray-500" />
-                            <span className="whitespace-nowrap">Actions</span>
-                          </div>
-                        </SortableTableHeader>
                       </TableRow>
                     </TableHeader>
                   <TableBody>
-                    {filteredDonations.map((donation) => (
-                      <TableRow 
-                        key={donation.id} 
-                        className="cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
-                        onClick={() => handleViewDetails(donation)}
-                      >
-                        <TableCell className="px-6 py-4">
-                          <div className="space-y-1">
-                            <div className="flex items-center space-x-2">
-                              <Users className="w-4 h-4 text-gray-400" />
-                              <span className="text-sm font-medium text-gray-900">{donation.donorName || 'Anonymous'}</span>
-                            </div>
-                            <p className="text-sm text-gray-500">{donation.donorId}</p>
-                            <p className="text-xs font-mono text-gray-400">{donation.stripePaymentIntentId}</p>
-                          </div>
-                        </TableCell>
-
-                        <TableCell className="px-6 py-4">
-                          <div className="space-y-1">
-                            <p className="text-sm font-medium text-gray-900">
-                              {campaignMap[donation.campaignId] || donation.campaignId}
-                            </p>
-                            {donation.isGiftAid && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-50 text-purple-700 ring-1 ring-purple-600/20">
-                                Gift Aid
+                    {filteredDonations.map((donation) => {
+                      const kiosk = donation.kioskId ? kioskMap[donation.kioskId] : null;
+                      return (
+                        <TableRow 
+                          key={donation.id} 
+                          className="cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
+                          onClick={() => handleViewDetails(donation)}
+                        >
+                          <TableCell className="px-4 py-3">
+                            <div className="space-y-1 min-w-0">
+                              <span className="text-sm font-medium text-gray-900 block truncate" title={donation.donorName || 'Anonymous'}>
+                                {donation.donorName || 'Anonymous'}
                               </span>
-                            )}
-                          </div>
-                        </TableCell>
-
-                        <TableCell className="px-6 py-4">
-                          <p className="text-lg font-semibold text-gray-900">
-                            {formatCurrency(donation.amount, donation.currency)}
-                          </p>
-                        </TableCell>
-
-                        <TableCell className="px-6 py-4">
-                          <div className="flex items-center space-x-2">
-                            <CreditCard className="w-4 h-4 text-gray-400" />
-                            <span className="text-sm text-gray-500">{donation.platform}</span>
-                          </div>
-                        </TableCell>
-
-                        <TableCell className="px-6 py-4">{getStatusBadge(donation.paymentStatus)}</TableCell>
-
-                        <TableCell className="px-6 py-4">
-                          <div className="space-y-1">
-                            <div className="flex items-center space-x-2">
-                              <Clock className="w-3 h-3 text-gray-400" />
-                              <span className="text-sm text-gray-500">{donation.timestamp}</span>
+                              <p className="text-xs font-mono text-gray-400 truncate" title={donation.stripePaymentIntentId}>
+                                {donation.stripePaymentIntentId}
+                              </p>
                             </div>
-                            <div className="flex items-center space-x-2">
-                              <MapPin className="w-3 h-3 text-gray-400" />
-                              <Badge variant="secondary" className="text-xs">
-                                {donation.platform}
-                              </Badge>
-                            </div>
-                          </div>
-                        </TableCell>
+                          </TableCell>
 
-                        <TableCell className="px-6 py-4">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleViewDetails(donation);
-                            }}
-                            className="hover:bg-gray-100"
-                            title="View donation details"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                          <TableCell className="px-4 py-3">
+                            <div className="space-y-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 truncate" title={campaignMap[donation.campaignId] || donation.campaignId}>
+                                {campaignMap[donation.campaignId] || donation.campaignId}
+                              </p>
+                              {donation.isGiftAid && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-50 text-purple-700 ring-1 ring-purple-600/20">
+                                  Gift Aid
+                                </span>
+                              )}
+                            </div>
+                          </TableCell>
+
+                          <TableCell className="px-4 py-3 text-center">
+                            <p className="text-sm font-semibold text-gray-900">
+                              {formatCurrency(donation.amount, donation.currency)}
+                            </p>
+                          </TableCell>
+
+                          <TableCell className="px-4 py-3">
+                            <div className="space-y-1 min-w-0">
+                              {kiosk ? (
+                                <>
+                                  <span className="text-sm font-medium text-gray-900 block truncate" title={kiosk.name}>
+                                    {kiosk.name}
+                                  </span>
+                                  <p className="text-xs text-gray-500 truncate" title={kiosk.location}>
+                                    {kiosk.location}
+                                  </p>
+                                </>
+                              ) : (
+                                <span className="text-sm text-gray-500">Online</span>
+                              )}
+                            </div>
+                          </TableCell>
+
+                          <TableCell className="px-4 py-3 pl-6">{getStatusBadge(donation.paymentStatus)}</TableCell>
+
+                          <TableCell className="px-4 py-3">
+                            <span className="text-sm text-gray-500">{donation.timestamp}</span>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
                 </div>
