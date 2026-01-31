@@ -1,11 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   Shield,
   Monitor,
-  Globe,
-  Zap,
-  ShieldCheck,
-  ChevronRight,
 } from 'lucide-react';
 import { UserRole, KioskSession, AdminSession } from '../../shared/types';
 import { KioskLoginContainer } from '../../features/auth-by-kiosk';
@@ -17,30 +13,7 @@ interface LoginScreenProps {
 }
 
 export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
-  const [openCard, setOpenCard] = useState<'admin' | 'kiosk' | null>(null);
-  const [showAdminButton, setShowAdminButton] = useState(true);
-  const [showKioskButton, setShowKioskButton] = useState(true);
-  const [openPrinciple, setOpenPrinciple] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (openCard === 'admin') {
-      setShowAdminButton(false);
-      return;
-    }
-
-    const timer = setTimeout(() => setShowAdminButton(true), 600);
-    return () => clearTimeout(timer);
-  }, [openCard]);
-
-  useEffect(() => {
-    if (openCard === 'kiosk') {
-      setShowKioskButton(false);
-      return;
-    }
-
-    const timer = setTimeout(() => setShowKioskButton(true), 600);
-    return () => clearTimeout(timer);
-  }, [openCard]);
+  const [openCard, setOpenCard] = useState<'admin' | 'kiosk' | null>('admin');
 
   return (
     <div className="min-h-screen bg-[#F3F1EA] font-lexend">
@@ -57,105 +30,57 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
               <img
                 src="/logo.png"
                 alt="SwiftCause Logo"
-                className="h-10 w-10 transition-transform duration-300 group-hover:scale-105"
+                className="h-10 w-10 rounded-lg transition-transform duration-300 group-hover:scale-105"
               />
             </span>
-            <span className="font-lexend text-2xl font-bold tracking-tight text-stone-50 transition-colors duration-300 group-hover:text-emerald-100/80">
+            <span className="font-lexend text-2xl font-bold tracking-tight text-stone-50">
               SwiftCause
             </span>
           </button>
 
           <div className="relative z-10 mt-4 flex flex-1 flex-col justify-center gap-12">
             <div className="max-w-xl space-y-10">
-                  <h1 className="font-lexend text-5xl font-black leading-none tracking-tighter text-emerald-100/80">
-                    <span className="block">Precision</span>
-                    <span className="block">for</span>
-                    <span className="block text-stone-50">Humanity.</span>
-                  </h1>
-
-                  <p className="max-w-lg border-l-2 border-emerald-200/60 pl-8 text-xl font-medium leading-relaxed text-emerald-50/85">
-                    Coordinate verified missions, deploy trusted kiosks, and scale
-                    impact with a single secure network.
-                  </p>
-
-              <div className="space-y-4 pt-10">
-                {[
-                  {
-                    // Radical transparency list item (requested marker).
-                    title: 'Radical transparency for every mission',
-                    items: [
-                      'Real-time visibility into donations, campaigns, and outcomes',
-                      'Clear audit trails for every transaction and Gift Aid claim',
-                      'Data that builds trust with donors, partners, and regulators',
-                    ],
-                  },
-                  {
-                    title: 'Verified partners across the globe',
-                    items: [
-                      'Organizations verified before onboarding to the platform',
-                      'Trusted payment and compliance partners built into the system',
-                      'Designed to support local causes with global standards',
-                    ],
-                  },
-                  {
-                    title: 'Secure access for every operator',
-                    items: [
-                      'Role-based access for admins, volunteers, and kiosks',
-                      'Encrypted authentication and secure session handling',
-                      'Built on industry-grade security and payment infrastructure',
-                    ],
-                  },
-                ].map((principle) => {
-                  const isOpen = openPrinciple === principle.title;
-                  return (
-                    <div key={principle.title}>
-                      <button
-                        type="button"
-                        onClick={() => setOpenPrinciple(isOpen ? null : principle.title)}
-                        className="group flex w-full items-center gap-4 text-left"
-                      >
-                            <ChevronRight
-                              className={`h-5 w-5 text-emerald-500/70 transition-[transform,color] duration-300 group-hover:text-emerald-500 ${
-                                isOpen ? 'rotate-90 text-emerald-500' : ''
-                              }`}
-                            />
-                            <span className="font-lexend text-lg font-bold tracking-tight text-stone-50 transition-colors group-hover:text-stone-50 md:text-xl">
-                              {principle.title}
-                            </span>
-                          </button>
-                      <div
-                        className={`mt-3 overflow-hidden transition-[max-height,opacity] duration-450 ease-out ${
-                          isOpen ? 'max-h-[220px] opacity-100' : 'max-h-0 opacity-0'
-                        }`}
-                      >
-                            <ul className="space-y-2 pl-9 text-sm text-emerald-50/85 md:text-base">
-                              {principle.items.map((item) => (
-                                <li key={item} className="leading-relaxed">
-                                  {item}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
+              <div>
+                <h1 className="font-lexend text-7xl font-black leading-tight tracking-tighter md:text-8xl">
+                  <span className="block text-emerald-100/80">Welcome</span>
+                  <span className="block text-stone-50">back</span>
+                </h1>
+                <div className="mt-16 ml-2 space-y-6">
+                  <div className="flex items-start gap-4">
+                    <div className="mt-1.5 flex h-8 w-8 items-center justify-center rounded-full bg-emerald-400/20">
+                      <Shield className="h-4.5 w-4.5 text-emerald-300" />
                     </div>
-                  );
-                })}
+                    <div>
+                      <p className="text-xl font-bold text-stone-50 md:text-2xl">Admin Login</p>
+                      <p className="mt-1 text-base leading-relaxed text-emerald-50/80 md:text-lg">
+                        Access analytics, campaigns, and organization settings.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <div className="mt-1.5 flex h-8 w-8 items-center justify-center rounded-full bg-emerald-400/20">
+                      <Monitor className="h-4.5 w-4.5 text-emerald-300" />
+                    </div>
+                    <div>
+                      <p className="text-xl font-bold text-stone-50 md:text-2xl">Kiosk Mode</p>
+                      <p className="mt-1 text-base leading-relaxed text-emerald-50/80 md:text-lg">
+                        Start accepting walk-in donations on this device.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="relative z-10 flex flex-wrap gap-12 border-t border-white/10 pt-12 text-stone-50/70">
-            <div className="flex items-center gap-3">
-              <Globe className="h-5 w-5 text-emerald-600/80" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.25em]">
-                Verified Global Network
-              </span>
+          <div className="relative z-10 flex items-center justify-between border-t border-white/10 pt-8 text-sm text-emerald-50/70">
+            <div className="flex items-center gap-2">
+              <span>Need help?</span>
+              <a href="/contact" className="font-semibold text-stone-50 hover:text-emerald-100 transition-colors">
+                Contact Support
+              </a>
             </div>
-            <div className="flex items-center gap-3">
-              <ShieldCheck className="h-5 w-5 text-emerald-600/80" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.25em]">
-                End-to-End Encryption
-              </span>
-            </div>
+            <span className="text-xs text-emerald-50/50">v1.0.0</span>
           </div>
         </section>
 
@@ -167,7 +92,7 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
                 className="flex items-center gap-2 text-left text-slate-800 transition hover:text-slate-900"
               >
                 <span className="flex h-9 w-9 items-center justify-center sm:h-10 sm:w-10">
-                  <img src="/logo.png" alt="SwiftCause Logo" className="h-8 w-8 sm:h-9 sm:w-9" />
+                  <img src="/logo.png" alt="SwiftCause Logo" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg" />
                 </span>
                 <span className="text-lg font-semibold tracking-tight text-[#064e3b] sm:text-2xl">
                   SwiftCause
@@ -187,24 +112,27 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
             </div>
 
             <div className="space-y-5 sm:space-y-6">
-              <div className="rounded-3xl border border-[#F3F1EA]/60 bg-[#F7F6F2] p-5 shadow-[0_18px_35px_-28px_rgba(15,23,42,0.25)] sm:p-6">
+              <div 
+                className={`rounded-3xl border bg-white shadow-[0_18px_35px_-28px_rgba(15,23,42,0.25)] transition-all ${
+                  openCard === 'admin' 
+                    ? 'border-[#F3F1EA]/60 p-6 sm:p-8' 
+                    : 'border-[#F3F1EA]/60 cursor-pointer hover:border-slate-300 hover:shadow-[0_20px_40px_-15px_rgba(15,23,42,0.3)] p-6 sm:p-8'
+                }`}
+                onClick={() => openCard !== 'admin' && setOpenCard('admin')}
+              >
                 <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-400/10 text-emerald-600/80">
-                    <Shield className="h-6 w-6" />
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+                    <Shield className="h-7 w-7" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-base font-semibold text-slate-800">Organization Admin</p>
-                    <p className="text-sm text-slate-500">
+                    <p className="text-lg font-semibold text-slate-900">Organization Admin</p>
+                    <p className="text-base text-slate-600">
                       Manage campaigns, kiosks, and view analytics.
                     </p>
                   </div>
                 </div>
-                <div className="mt-4 sm:mt-5">
-                  <div
-                    className={`overflow-hidden transition-[max-height,opacity] duration-600 ease-out ${
-                      openCard === 'admin' ? 'max-h-[520px] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
-                    }`}
-                  >
+                {openCard === 'admin' && (
+                  <div className="mt-4 sm:mt-5 animate-fade-in">
                     <AdminLoginContainer
                       onLogin={onLogin}
                       variant="panel"
@@ -212,57 +140,38 @@ export function LoginScreen({ onLogin, onGoBackToHome }: LoginScreenProps) {
                       buttonClassName="!h-12 !rounded-2xl !bg-none !bg-[#064e3b] !text-stone-50 !shadow-[0_6px_18px_-10px_rgba(6,78,59,0.5)] hover:!bg-[#0f5132]"
                     />
                   </div>
-                  <div className="h-12">
-                    <button
-                      type="button"
-                      onClick={() => setOpenCard('admin')}
-                      className={`h-12 w-full rounded-2xl bg-[#064e3b] text-sm font-semibold text-stone-50 shadow-[0_6px_18px_-10px_rgba(6,78,59,0.5)] transition hover:bg-[#0f5132] ${
-                        showAdminButton ? 'opacity-100' : 'opacity-0 pointer-events-none'
-                      }`}
-                    >
-                      Login as Admin
-                    </button>
-                  </div>
-                </div>
+                )}
               </div>
 
-              <div className="rounded-3xl border border-[#F3F1EA]/60 bg-[#F7F6F2] p-5 shadow-[0_18px_35px_-28px_rgba(15,23,42,0.25)] sm:p-6">
+              <div 
+                className={`rounded-3xl border bg-white shadow-[0_18px_35px_-28px_rgba(15,23,42,0.25)] transition-all ${
+                  openCard === 'kiosk' 
+                    ? 'border-[#F3F1EA]/60 p-6 sm:p-8' 
+                    : 'border-[#F3F1EA]/60 cursor-pointer hover:border-slate-300 hover:shadow-[0_20px_40px_-15px_rgba(15,23,42,0.3)] p-6 sm:p-8'
+                }`}
+                onClick={() => openCard !== 'kiosk' && setOpenCard('kiosk')}
+              >
                 <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100/80 text-emerald-600/80">
-                    <Monitor className="h-6 w-6" />
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+                    <Monitor className="h-7 w-7" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-base font-semibold text-slate-800">Kiosk Terminal</p>
-                    <p className="text-sm text-slate-500">
+                    <p className="text-lg font-semibold text-slate-900">Kiosk Terminal</p>
+                    <p className="text-base text-slate-600">
                       Connect a physical device to your organization.
                     </p>
                   </div>
                 </div>
-                <div className="mt-4 sm:mt-5">
-                  <div
-                    className={`overflow-hidden transition-[max-height,opacity] duration-600 ease-out ${
-                      openCard === 'kiosk' ? 'max-h-[520px] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
-                    }`}
-                  >
+                {openCard === 'kiosk' && (
+                  <div className="mt-4 sm:mt-5 animate-fade-in">
                     <KioskLoginContainer
                       onLogin={onLogin}
                       variant="panel"
                       buttonLabel="Login as Kiosk"
-                      buttonClassName="!h-12 !rounded-2xl !bg-none !bg-transparent !text-[#064e3b] !shadow-none !border !border-[#064e3b] hover:!bg-[#F3F1EA]"
+                      buttonClassName="!h-12 !rounded-2xl !bg-none !bg-transparent !text-[#064e3b] !shadow-none !border-2 !border-[#064e3b] hover:!bg-emerald-50"
                     />
                   </div>
-                  <div className="h-12">
-                    <button
-                      type="button"
-                      onClick={() => setOpenCard('kiosk')}
-                      className={`h-12 w-full rounded-2xl border border-[#064e3b] bg-transparent text-sm font-semibold text-[#064e3b] transition hover:bg-[#F3F1EA] ${
-                        showKioskButton ? 'opacity-100' : 'opacity-0 pointer-events-none'
-                      }`}
-                    >
-                      Login as Kiosk
-                    </button>
-                  </div>
-                </div>
+                )}
               </div>
 
               <p className="text-center text-xs text-slate-500 sm:text-sm">
