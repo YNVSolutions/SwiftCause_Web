@@ -59,7 +59,7 @@ export function MagneticButton({
         transition-all duration-300
         bg-[length:200%_100%]
         disabled:opacity-100 disabled:from-green-600 disabled:via-emerald-600 disabled:to-green-600
-        ${isHovered && !disabled ? 'bg-right scale-105' : 'bg-left'}
+        ${isHovered && !disabled ? 'bg-right' : 'bg-left'}
         ${className}
       `}
     >
