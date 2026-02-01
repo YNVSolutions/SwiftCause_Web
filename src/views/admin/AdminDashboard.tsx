@@ -1662,7 +1662,8 @@ export function AdminDashboard({
                         ) : (
                           <div className="space-y-2 max-h-64 overflow-y-auto">
                             {kioskCreation.allKiosks.map((kiosk) => {
-                              const isAssigned = kioskCreation.assignedKioskIds.includes(kiosk.id);
+                              // If campaign is global, all kiosks are assigned
+                              const isAssigned = kioskCreation.isGlobalCampaign || kioskCreation.assignedKioskIds.includes(kiosk.id);
                               return (
                                 <div
                                   key={kiosk.id}
