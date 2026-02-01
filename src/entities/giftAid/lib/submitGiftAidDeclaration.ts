@@ -10,9 +10,9 @@ export async function submitGiftAidDeclaration(
   const mappedDeclaration: Omit<GiftAidDeclaration, 'id' | 'createdAt' | 'updatedAt'> = {
     donorFirstName: giftAidDetails.firstName,
     donorSurname: giftAidDetails.surname,
-    donorHouseNumber: giftAidDetails.houseNumber,
+    donorHouseNumber: giftAidDetails.houseNumber || '',
     donorAddressLine1: giftAidDetails.addressLine1,
-    donorAddressLine2: giftAidDetails.addressLine2 ?? undefined,
+    donorAddressLine2: giftAidDetails.addressLine2 || '',
     donorTown: giftAidDetails.town,
     donorPostcode: giftAidDetails.postcode,
     

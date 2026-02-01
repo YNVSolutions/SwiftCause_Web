@@ -61,10 +61,6 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
       }
     }
 
-    if (!houseNumber.trim()) {
-      newErrors.houseNumber = 'House number is required';
-    }
-
     if (!addressLine1.trim()) {
       newErrors.addressLine1 = 'Address Line 1 is required';
     }
@@ -193,7 +189,7 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="block text-sm font-medium text-gray-600">
-                  House Number *
+                  House Number
                 </label>
                 <input
                   type="text"
