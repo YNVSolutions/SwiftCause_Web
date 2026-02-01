@@ -18,9 +18,6 @@ export function AdminLoginContainer({ onLogin, variant, buttonLabel, buttonClass
 		setPassword, 
 		error, 
 		loading, 
-		emailVerificationError,
-		isCheckingEmail,
-		checkEmailVerification,
 		handleSubmit 
 	} = useAdminLogin(onLogin);
 
@@ -30,11 +27,8 @@ export function AdminLoginContainer({ onLogin, variant, buttonLabel, buttonClass
 			password={password}
 			error={error}
 			loading={loading}
-			emailVerificationError={emailVerificationError}
-			isCheckingEmail={isCheckingEmail}
 			onEmailChange={(e) => setEmail(e.target.value)}
 			onPasswordChange={(e) => setPassword(e.target.value)}
-			onEmailBlur={checkEmailVerification}
 			onSubmit={handleSubmit}
 			variant={variant}
 			buttonLabel={buttonLabel}
