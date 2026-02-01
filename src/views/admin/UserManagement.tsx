@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import {
   Plus, Search, UserCog, Users, Shield, Activity,
   Loader2, AlertCircle, Pencil, Trash2, AlertTriangle, MoreVertical, X, Check,
-  LayoutDashboard, Megaphone, Monitor, DollarSign, Settings, Info
+  LayoutDashboard, Megaphone, Monitor, DollarSign, Settings, Info   
 } from 'lucide-react';
 import { Skeleton } from "../../shared/ui/skeleton";
 import { Ghost } from "lucide-react";
@@ -232,6 +232,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
             const errorMessage = (err as Error).message || "Failed to update user.";
             console.error('Update user error:', err);
             setDialogMessage(`Error: ${errorMessage}`);
+            throw err; // Re-throw to let the EditUserDialog handle it
         }
     };
 
@@ -254,7 +255,6 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
 
     // Configuration for AdminSearchFilterHeader
     const searchFilterConfig: AdminSearchFilterConfig = {
-        searchPlaceholder: "Search users...",
         filters: [
             {
                 key: "roleFilter",
@@ -287,6 +287,20 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
             userSession={userSession}
             hasPermission={hasPermission}
             activeScreen="admin-users"
+            headerSubtitle="Manage platform users and permissions"
+            headerSearchPlaceholder="Search users..."
+            headerSearchValue={searchTerm}
+            onHeaderSearchChange={setSearchTerm}
+            headerInlineActions={
+                hasPermission('create_user') ? (
+                    <Button
+                        className="bg-indigo-600 text-white"
+                        onClick={() => setCreateDialogOpen(true)}
+                    >
+                        <Plus className="w-4 h-4 mr-2" />Add User
+                    </Button>
+                ) : undefined
+            }
         >
         <div className="space-y-6 sm:space-y-8">
             <main className="px-6 lg:px-8 pt-12 pb-8">
@@ -355,23 +369,9 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
 
                 {/* Unified Header Component */}
                 <AdminSearchFilterHeader
-                    title={`Users (${filteredUsers.length})`}
-                    subtitle="Manage platform users and permissions"
                     config={searchFilterConfig}
-                    searchValue={searchTerm}
-                    onSearchChange={setSearchTerm}
                     filterValues={filterValues}
                     onFilterChange={handleFilterChange}
-                    actions={
-                        hasPermission('create_user') ? (
-                            <Button
-                                className="bg-indigo-600 text-white"
-                                onClick={() => setCreateDialogOpen(true)}
-                            >
-                                <Plus className="w-4 h-4 mr-2" />Add User
-                            </Button>
-                        ) : undefined
-                    }
                 />
 
                 {/* Modern Table Container */}
@@ -487,7 +487,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                                         <col style={{ width: '16%' }} />
                                     </colgroup>
                                     <TableHeader>
-                                        <TableRow className="bg-gray-100 border-b-2 border-gray-300">
+                                        <TableRow className="bg-gray-100 border-b-2 border-gray-300 text-gray-700">
                                             <SortableTableHeader 
                                                 sortKey="username" 
                                                 currentSortKey={sortKey} 
@@ -985,8 +985,9 @@ function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateU
     );
 }
 
-function EditUserDialog({ user, onUpdate, onClose, userSession }: { user: User, onUpdate: (userId: string, updates: Partial<User>) => void, onClose: () => void, userSession: AdminSession }) {
+function EditUserDialog({ user, onUpdate, onClose, userSession }: { user: User, onUpdate: (userId: string, updates: Partial<User>) => Promise<void>, onClose: () => void, userSession: AdminSession }) {
     const [editedUser, setEditedUser] = useState(user);
+    const [isSaving, setIsSaving] = useState(false);
     useEffect(() => { setEditedUser(user); }, [user]);
 
     const handlePermissionChange = (permission: Permission, checked: boolean) => {
@@ -1003,6 +1004,17 @@ function EditUserDialog({ user, onUpdate, onClose, userSession }: { user: User, 
             role: role,
             permissions: [...defaultPermissions] // Set default permissions for the role
         }));
+    };
+
+    const handleSaveChanges = async () => {
+        setIsSaving(true);
+        try {
+            await onUpdate(editedUser.id, { role: editedUser.role, permissions: editedUser.permissions });
+        } catch (error) {
+            console.error('Error saving user changes:', error);
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const isSuperAdmin = userSession?.user?.role === 'super_admin';
@@ -1326,15 +1338,24 @@ function EditUserDialog({ user, onUpdate, onClose, userSession }: { user: User, 
                     <Button 
                         variant="ghost" 
                         onClick={onClose}
+                        disabled={isSaving}
                         className="px-5 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900"
                     >
                         Cancel
                     </Button>
                     <Button 
-                        onClick={() => onUpdate(editedUser.id, { role: editedUser.role, permissions: editedUser.permissions })}
-                        className="px-6 py-2 bg-slate-900 text-white text-sm font-semibold rounded-lg hover:opacity-90 shadow-lg"
+                        onClick={handleSaveChanges}
+                        disabled={isSaving}
+                        className="px-6 py-2 bg-slate-900 text-white text-sm font-semibold rounded-lg hover:opacity-90 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        Save Changes
+                        {isSaving ? (
+                            <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Saving...
+                            </>
+                        ) : (
+                            'Save Changes'
+                        )}
                     </Button>
                 </div>
             </DialogContent>

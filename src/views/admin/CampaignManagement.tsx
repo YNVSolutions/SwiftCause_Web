@@ -38,14 +38,21 @@ import { Badge } from "../../shared/ui/badge";
 import { X, Check, ChevronsUpDown, Trash2, Save } from "lucide-react";
 import {
   FaEdit,
-  FaSearch,
-  FaEllipsisV,
   FaUpload,
   FaImage,
   FaTrashAlt, // Added FaTrashAlt
-  FaPlus, // Import FaPlus
 } from "react-icons/fa";
-import { Plus, Settings, Download, RefreshCw, MoreVertical } from "lucide-react";
+import {
+  Plus,
+  RefreshCw,
+  MoreVertical,
+  LayoutGrid,
+  List,
+  TrendingUp,
+  Rocket,
+  Wallet,
+  Download,
+} from "lucide-react";
 import { Calendar } from "../../shared/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "../../shared/ui/popover";
 import { AlertTriangle } from "lucide-react"; // Import AlertTriangle
@@ -64,7 +71,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../../shared/ui/alert-dialog";
-import { Calendar as CalendarIcon } from "lucide-react";
 import { AdminLayout } from "./AdminLayout";
 import {
   Card,
@@ -94,13 +100,14 @@ import { SortableTableHeader } from "./components/SortableTableHeader";
 import { useTableSort } from "../../shared/lib/hooks/useTableSort";
 import { CampaignForm, CampaignFormData } from "./components/CampaignForm";
 import { Campaign } from "../../shared/types";
+import { exportToCsv } from "../../shared/utils/csvExport";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "../../shared/ui/sheet";
 
 interface CampaignDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   campaign?: DocumentData | null; // Optional campaign for editing
   organizationId: string; // Add organizationId prop
-  hasPermission: (permission: Permission) => boolean; // Add hasPermission prop
   onSave: (
     data: DocumentData,
     isNew: boolean,
@@ -178,7 +185,6 @@ const CampaignDialog = ({
   onOpenChange,
   campaign,
   organizationId,
-  hasPermission,
   onSave,
 }: CampaignDialogProps) => {
   const [formData, setFormData] = useState<DocumentData>(getInitialFormData());
@@ -700,7 +706,7 @@ const CampaignDialog = ({
           `}</style>
 
           {/* Left Sidebar - Sticky Navigation */}
-          <div className="w-56 border-r border-gray-200 bg-gradient-to-b from-white to-gray-50 shadow-sm sticky top-0 h-fit">
+          <div className="w-56 border-r border-gray-200 bg-linear-to-b from-white to-gray-50 shadow-sm sticky top-0 h-fit">
             <div className="p-5 space-y-3">
               <div className="mb-6">
                 <h3 className="text-xs font-bold text-gray-700 uppercase tracking-widest">Configuration</h3>
@@ -752,22 +758,20 @@ const CampaignDialog = ({
                 Funding Details
               </button>
               
-              {hasPermission('assign_campaigns') && (
-                <button
-                  onClick={() => setActiveTab("kiosk-distribution")}
-                  style={{
-                    backgroundColor: activeTab === "kiosk-distribution" ? '#03AC13' : 'transparent',
-                    color: activeTab === "kiosk-distribution" ? 'white' : '#374151'
-                  }}
-                  className={`w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                    activeTab === "kiosk-distribution"
-                      ? "shadow-md hover:shadow-lg"
-                      : "hover:bg-gray-200 hover:text-gray-900"
-                  }`}
-                >
-                  Kiosk Distribution
-                </button>
-              )}
+              <button
+                onClick={() => setActiveTab("kiosk-distribution")}
+                style={{
+                  backgroundColor: activeTab === "kiosk-distribution" ? '#03AC13' : 'transparent',
+                  color: activeTab === "kiosk-distribution" ? 'white' : '#374151'
+                }}
+                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                  activeTab === "kiosk-distribution"
+                    ? "shadow-md hover:shadow-lg"
+                    : "hover:bg-gray-200 hover:text-gray-900"
+                }`}
+              >
+                Kiosk Distribution
+              </button>
             </div>
           </div>
 
@@ -1056,7 +1060,7 @@ const CampaignDialog = ({
               )}
 
               {/* Kiosk Distribution Tab */}
-              {hasPermission('assign_campaigns') && activeTab === "kiosk-distribution" && (
+              {activeTab === "kiosk-distribution" && (
                 <div data-section="kiosk-distribution" className="space-y-6">
                   <h2 className="text-2xl font-bold text-gray-900">Kiosk Distribution</h2>
 
@@ -1207,6 +1211,7 @@ const CampaignManagement = ({
   hasPermission,
 }: CampaignManagementProps) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<DocumentData | null>(
@@ -1217,6 +1222,8 @@ const CampaignManagement = ({
   const [isNewCampaignFormOpen, setIsNewCampaignFormOpen] = useState(false);
   const [isEditCampaignFormOpen, setIsEditCampaignFormOpen] = useState(false);
   const [editingCampaignForNewForm, setEditingCampaignForNewForm] = useState<Campaign | null>(null);
+  const [isOverviewOpen, setIsOverviewOpen] = useState(false);
+  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   
   // Separate state for create and edit
   const [newCampaignFormData, setNewCampaignFormData] = useState<CampaignFormData>({
@@ -1272,8 +1279,7 @@ const CampaignManagement = ({
 
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
-  const [showCalendar, setShowCalendar] = useState<Record<string, boolean>>({});
+  const [dateRange, setDateRange] = useState("last30");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [campaignToDelete, setCampaignToDelete] = useState<DocumentData | null>(null);
   const [confirmDeleteInput, setConfirmDeleteInput] = useState("");
@@ -1371,6 +1377,39 @@ const CampaignManagement = ({
     setEditCampaignFormData(formData);
     setEditingCampaignForNewForm(campaign as Campaign);
     setIsEditCampaignFormOpen(true);
+  };
+
+  const handleOpenOverview = (campaign: Campaign) => {
+    setSelectedCampaign(campaign);
+    setIsOverviewOpen(true);
+  };
+
+  const handlePauseCampaign = async () => {
+    if (!selectedCampaign?.id) return;
+    try {
+      const updated = await updateWithImage(selectedCampaign.id, { status: "paused" });
+      setSelectedCampaign((prev) =>
+        prev
+          ? { ...prev, ...(updated as Campaign | undefined), status: "paused" }
+          : prev
+      );
+    } catch (error) {
+      console.error("Failed to pause campaign:", error);
+    }
+  };
+
+  const handleResumeCampaign = async () => {
+    if (!selectedCampaign?.id) return;
+    try {
+      const updated = await updateWithImage(selectedCampaign.id, { status: "active" });
+      setSelectedCampaign((prev) =>
+        prev
+          ? { ...prev, ...(updated as Campaign | undefined), status: "active" }
+          : prev
+      );
+    } catch (error) {
+      console.error("Failed to resume campaign:", error);
+    }
   };
 
   const handleSave = async (
@@ -2020,20 +2059,17 @@ const CampaignManagement = ({
         return "bg-yellow-100 text-yellow-800";
       case "completed":
         return "bg-blue-100 text-blue-800";
+      case "draft":
+        return "bg-slate-100 text-slate-700";
       default:
         return "bg-gray-100 text-gray-800";
     }
   };
 
   const getProgressColor = (progress: number) => {
-    if (progress >= 75) return "bg-green-500";
-    if (progress >= 50) return "bg-yellow-500";
-    return "bg-blue-500";
-  };
-
-  const formatDate = (timestamp?: { seconds?: number }) => {
-    if (!timestamp?.seconds) return "—";
-    return new Date(timestamp.seconds * 1000).toLocaleDateString();
+    if (progress >= 85) return "bg-emerald-700";
+    if (progress >= 60) return "bg-emerald-600";
+    return "bg-emerald-500";
   };
 
   const uniqueCategories: string[] = Array.from(
@@ -2044,9 +2080,50 @@ const CampaignManagement = ({
     )
   );
 
-  // Configuration for AdminSearchFilterHeader
+  const totalCampaigns = campaigns.length;
+  const activeCampaigns = campaigns.filter((campaign: any) => campaign.status === "active").length;
+  const totalRaised = campaigns.reduce(
+    (sum: number, campaign: any) => sum + (Number(campaign.raised) || 0),
+    0
+  );
+  const progressValues = campaigns
+    .filter((campaign: any) => campaign.goal && campaign.raised)
+    .map((campaign: any) =>
+      Math.min((Number(campaign.raised) / Number(campaign.goal)) * 100, 100)
+    );
+  const averageProgress =
+    progressValues.length > 0
+      ? Math.round(progressValues.reduce((sum, value) => sum + value, 0) / progressValues.length)
+      : 0;
+  const activeDelta = totalCampaigns > 0 ? Math.round((activeCampaigns / totalCampaigns) * 100) : 0;
+  const raisedDelta =
+    totalCampaigns > 0
+      ? Math.round((totalRaised / Math.max(1, totalCampaigns * 1000)) * 10) / 10
+      : 0;
+  const progressStatus =
+    averageProgress >= 70
+      ? { label: "On Track", className: "bg-emerald-100 text-emerald-700" }
+      : averageProgress >= 45
+      ? { label: "Needs Attention", className: "bg-amber-100 text-amber-700" }
+      : { label: "At Risk", className: "bg-red-100 text-red-700" };
+
+  const getDateRangeStart = (range: string) => {
+    const today = new Date();
+    switch (range) {
+      case "last30":
+        return new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+      case "last90":
+        return new Date(today.getTime() - 90 * 24 * 60 * 60 * 1000);
+      case "last365":
+        return new Date(today.getTime() - 365 * 24 * 60 * 60 * 1000);
+      default:
+        return null;
+    }
+  };
+
+  const dateRangeStart = getDateRangeStart(dateRange);
+
   const searchFilterConfig: AdminSearchFilterConfig = {
-    searchPlaceholder: "Search campaigns...",
     filters: [
       {
         key: "statusFilter",
@@ -2055,27 +2132,37 @@ const CampaignManagement = ({
         options: [
           { label: "Active", value: "active" },
           { label: "Paused", value: "paused" },
-          { label: "Completed", value: "completed" }
-        ]
+          { label: "Completed", value: "completed" },
+          { label: "Draft", value: "draft" },
+        ],
       },
       {
-        key: "categoryFilter", 
+        key: "categoryFilter",
         label: "Category",
         type: "select",
-        options: uniqueCategories.map(cat => ({ label: cat, value: cat }))
+        options: uniqueCategories.map((category) => ({
+          label: category,
+          value: category,
+        })),
       },
       {
-        key: "dateFilter",
-        label: "Filter by date",
-        type: "date"
-      }
-    ]
+        key: "dateRange",
+        label: "Date Range",
+        type: "select",
+        options: [
+          { label: "All time", value: "all" },
+          { label: "Last 30 Days", value: "last30" },
+          { label: "Last 90 Days", value: "last90" },
+          { label: "Last 12 Months", value: "last365" },
+        ],
+      },
+    ],
   };
 
   const filterValues = {
     statusFilter,
     categoryFilter,
-    dateFilter
+    dateRange,
   };
 
   const handleFilterChange = (key: string, value: any) => {
@@ -2086,14 +2173,10 @@ const CampaignManagement = ({
       case "categoryFilter":
         setCategoryFilter(value);
         break;
-      case "dateFilter":
-        setDateFilter(value);
+      case "dateRange":
+        setDateRange(value);
         break;
     }
-  };
-
-  const handleCalendarToggle = (key: string, open: boolean) => {
-    setShowCalendar(prev => ({ ...prev, [key]: open }));
   };
 
   // Filter campaigns first
@@ -2103,7 +2186,12 @@ const CampaignManagement = ({
       (Array.isArray(campaign.tags) && campaign.tags.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase())));
     const matchesStatus = statusFilter === "all" || campaign.status === statusFilter;
     const matchesCategory = categoryFilter === "all" || campaign.category === categoryFilter;
-    const matchesDate = !dateFilter || (campaign.endDate && new Date(campaign.endDate.seconds * 1000).toDateString() === dateFilter.toDateString());
+    const campaignEndDate = campaign.endDate?.seconds
+      ? new Date(campaign.endDate.seconds * 1000)
+      : campaign.endDate
+      ? new Date(campaign.endDate)
+      : null;
+    const matchesDate = !dateRangeStart || !campaignEndDate || campaignEndDate >= dateRangeStart;
     return matchesSearch && matchesStatus && matchesCategory && matchesDate;
   });
 
@@ -2112,31 +2200,6 @@ const CampaignManagement = ({
     data: filteredCampaigns
   });
 
-  const exportToCsv = (data: DocumentData[]) => {
-    if (data.length === 0) {
-      alert("No campaign data to export.");
-      return;
-    }
-
-    const headers = Object.keys(data[0]).join(',');
-    const csvContent = data.map(row => Object.values(row).map(value => {
-      const stringValue = String(value);
-      return `"${stringValue.replace(/"/g, '""')}"`;
-    }).join(',')).join('\n');
-
-    const csv = `${headers}\n${csvContent}`;
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `campaigns_${new Date().toISOString().slice(0, 10)}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   return (
     <AdminLayout
       onNavigate={onNavigate}
@@ -2144,37 +2207,115 @@ const CampaignManagement = ({
       userSession={userSession}
       hasPermission={hasPermission}
       activeScreen="admin-campaigns"
+      headerTitle={null}
+      headerSubtitle="Manage your donation campaigns"
+      headerSearchPlaceholder="Search campaigns..."
+      headerSearchValue={searchTerm}
+      onHeaderSearchChange={setSearchTerm}
+      headerTopRightActions={(
+        <Button
+          variant="outline"
+          size="sm"
+          className="rounded-2xl border-[#064e3b] bg-transparent text-[#064e3b] hover:bg-[#064e3b] hover:text-stone-50 transition-all duration-300 px-5"
+          onClick={() => exportToCsv(filteredAndSortedCampaigns, "campaigns")}
+        >
+          <Download className="h-4 w-4 sm:hidden" />
+          <span className="hidden sm:inline">Export</span>
+        </Button>
+      )}
+      headerInlineActions={(
+        <Button
+          className="h-10 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white px-5"
+          onClick={() => {
+            setIsNewCampaignFormOpen(true);
+          }}
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Create New Campaign
+        </Button>
+      )}
     >
       <div className="space-y-6 sm:space-y-8">
-        <main className="px-6 lg:px-8 pt-12 pb-8">
-          <AdminSearchFilterHeader
-            title={`Campaigns (${filteredAndSortedCampaigns.length})`}
-            subtitle="Manage your donation campaigns"
-            config={searchFilterConfig}
-            searchValue={searchTerm}
-            onSearchChange={setSearchTerm}
-            filterValues={filterValues}
-            onFilterChange={handleFilterChange}
-            showCalendar={showCalendar}
-            onCalendarToggle={handleCalendarToggle}
-            exportData={filteredAndSortedCampaigns}
-            actions={
-              hasPermission('create_campaign') ? (
-                <Button
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 h-10"
-                  onClick={() => {
-                    setIsNewCampaignFormOpen(true);
-                  }}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Campaign
-                </Button>
-              ) : undefined
-            }
-          />
+        <main className="px-6 lg:px-8 pt-10 pb-10">
+          <div className="space-y-6">
+            <div className="grid gap-4 md:grid-cols-3">
+              <Card className="rounded-3xl border border-gray-100 shadow-sm">
+                <CardContent className="p-5 flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                    <Rocket className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-widest text-gray-400">Total active campaigns</p>
+                    <div className="mt-2 flex items-center gap-3">
+                      <span className="text-2xl font-semibold text-gray-900">{activeCampaigns}</span>
+                      <span className="text-xs font-semibold text-emerald-600">+{activeDelta}%</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-          {/* Campaigns Table/List */}
-          <Card className="overflow-hidden">
+              <Card className="rounded-3xl border border-gray-100 shadow-sm">
+                <CardContent className="p-5 flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                    <Wallet className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-widest text-gray-400">Funds raised this month</p>
+                    <div className="mt-2 flex items-center gap-3">
+                      <span className="text-2xl font-semibold text-gray-900">{formatCurrency(totalRaised)}</span>
+                      <span className="text-xs font-semibold text-emerald-600">+{raisedDelta}%</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="rounded-3xl border border-gray-100 shadow-sm">
+                <CardContent className="p-5 flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                    <TrendingUp className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-widest text-gray-400">Average progress</p>
+                    <div className="mt-2 flex items-center gap-3">
+                      <span className="text-2xl font-semibold text-gray-900">{averageProgress}%</span>
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${progressStatus.className}`}>
+                        {progressStatus.label}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <AdminSearchFilterHeader
+              config={searchFilterConfig}
+              filterValues={filterValues}
+              onFilterChange={handleFilterChange}
+              actions={
+                <div className="hidden sm:flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className={`h-9 w-9 rounded-xl border-gray-200 ${viewMode === "table" ? "bg-emerald-50 text-emerald-700" : "bg-white text-gray-500"}`}
+                    onClick={() => setViewMode("table")}
+                    aria-label="Table view"
+                  >
+                    <List className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className={`h-9 w-9 rounded-xl border-gray-200 ${viewMode === "grid" ? "bg-emerald-50 text-emerald-700" : "bg-white text-gray-500"}`}
+                    onClick={() => setViewMode("grid")}
+                    aria-label="Grid view"
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                  </Button>
+                </div>
+              }
+            />
+            {/* Campaigns Table/List */}
+            <Card className="overflow-hidden rounded-3xl border border-gray-100 shadow-sm mt-6">
             <CardContent className="p-0">
               {loading ? (
                 <div className="space-y-4 p-6">
@@ -2190,55 +2331,65 @@ const CampaignManagement = ({
                 </div>
               ) : filteredAndSortedCampaigns.length > 0 ? (
                 <>
-                  {/* Mobile Card View */}
-                  <div className="md:hidden space-y-4 p-4">
-                  {filteredAndSortedCampaigns.map((campaign: any) => {
-                    const progress =
-                      campaign.goal && campaign.raised
-                        ? Math.min(
-                            (Number(campaign.raised) / Number(campaign.goal)) *
-                              100,
-                            100
-                          )
-                        : 0;
+                  {/* Card View (mobile default, optional desktop) */}
+                  <div
+                    className={`p-4 ${
+                      viewMode === "grid"
+                        ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
+                        : "space-y-4 md:hidden"
+                    }`}
+                  >
+                    {filteredAndSortedCampaigns.map((campaign: any) => {
+                      const raisedAmount = Number(campaign.raised) || 0;
+                      const goalAmount = Number(campaign.goal) || 0;
+                      const donationCount = Number(campaign.donationCount) || 0;
+                      const progress =
+                        goalAmount > 0
+                          ? Math.min((raisedAmount / goalAmount) * 100, 100)
+                          : 0;
 
-                    return (
-                      <div
-                        key={campaign.id ?? campaign.title}
-                        className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-center gap-3">
-                            <ImageWithFallback
-                              src={campaign.coverImageUrl}
-                              alt={campaign.title}
-                              className="h-12 w-12 rounded-xl border border-gray-200 object-cover bg-gray-100"
-                              fallbackSrc="/campaign-fallback.svg"
-                            />
-                            <div>
-                              <div className="text-sm font-semibold text-gray-900">
-                                {campaign.title}
-                              </div>
-                              {campaign.category && (
-                                <div className="text-xs text-gray-500">
-                                  {campaign.category}
+                      return (
+                        <div
+                          key={campaign.id ?? campaign.title}
+                          className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div
+                              className="flex items-center gap-3 cursor-pointer"
+                              onClick={() => handleOpenOverview(campaign as Campaign)}
+                              role="button"
+                              tabIndex={0}
+                              onKeyDown={(event) => {
+                                if (event.key === "Enter" || event.key === " ") {
+                                  event.preventDefault();
+                                  handleOpenOverview(campaign as Campaign);
+                                }
+                              }}
+                            >
+                              <ImageWithFallback
+                                src={campaign.coverImageUrl}
+                                alt={campaign.title}
+                                className="h-12 w-12 rounded-2xl border border-gray-200 object-cover bg-gray-100"
+                                fallbackSrc="/campaign-fallback.svg"
+                              />
+                              <div>
+                                <div className="text-sm font-semibold text-gray-900">
+                                  {campaign.title}
                                 </div>
-                              )}
+                              </div>
                             </div>
-                          </div>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-gray-500 hover:bg-gray-100"
-                                aria-label="Campaign actions"
-                              >
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              {hasPermission('edit_campaign') && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-gray-500 hover:bg-gray-100"
+                                  aria-label="Campaign actions"
+                                >
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
                                 <DropdownMenuItem
                                   onSelect={() => handleEditClick(campaign)}
                                   className="flex items-center gap-2"
@@ -2246,8 +2397,6 @@ const CampaignManagement = ({
                                   <FaEdit className="h-4 w-4" />
                                   Edit
                                 </DropdownMenuItem>
-                              )}
-                              {hasPermission('delete_campaign') && (
                                 <DropdownMenuItem
                                   onSelect={() => handleDeleteClick(campaign)}
                                   className="flex items-center gap-2 text-red-600 focus:text-red-600"
@@ -2255,257 +2404,223 @@ const CampaignManagement = ({
                                   <FaTrashAlt className="h-4 w-4" />
                                   Delete
                                 </DropdownMenuItem>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
 
-                        <div className="mt-3 flex flex-wrap items-center gap-2">
-                          <Badge
-                            className={`text-xs px-2 py-1 rounded-full ${getStatusColor(
-                              campaign.status ?? "unknown"
-                            )}`}
-                          >
-                            {campaign.status ?? "Unknown"}
-                          </Badge>
-                        </div>
+                          <div className="mt-3 flex flex-wrap items-center gap-2">
+                            <Badge
+                              className={`text-xs px-2 py-1 rounded-full inline-flex items-center gap-1 ${getStatusColor(
+                                campaign.status ?? "unknown"
+                              )}`}
+                            >
+                              <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                              {campaign.status ?? "Unknown"}
+                            </Badge>
+                            {campaign.category && (
+                              <Badge variant="secondary" className="text-xs uppercase tracking-wide">
+                                {campaign.category}
+                              </Badge>
+                            )}
+                          </div>
 
-                        {typeof progress === "number" && progress > 0 && (
-                          <div className="mt-3">
+                          <div className="mt-4">
                             <div className="flex items-center justify-between text-xs text-gray-500">
-                              <span>Progress</span>
+                              <span>
+                                {formatCurrency(raisedAmount)} / {formatCurrency(goalAmount)}
+                              </span>
                               <span>{progress.toFixed(0)}%</span>
                             </div>
-                            <div className="mt-1 h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
+                            <div className="mt-2 h-2 w-full rounded-full bg-gray-100 overflow-hidden">
                               <div
-                                className={`h-full ${getProgressColor(progress)}`}
+                                className={`h-full ${getProgressColor(progress)} transition-all duration-300`}
                                 style={{ width: `${progress}%` }}
                               />
                             </div>
                           </div>
-                        )}
 
-                        <div className="mt-4 border-t border-gray-100 pt-4 text-sm text-gray-600">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
-                              Goal
-                            </span>
-                            <span className="font-medium text-gray-900">
-                              {typeof campaign.goal === "number"
-                                ? campaign.goal.toLocaleString()
-                                : "—"}
-                            </span>
-                          </div>
-                          <div className="mt-2 flex items-center justify-between">
-                            <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
-                              End Date
-                            </span>
-                            <span className="font-medium text-gray-900">
-                              {formatDate(campaign.endDate)}
+                          <div className="mt-4 flex items-center justify-between text-xs text-gray-500">
+                            <span>Donors</span>
+                            <span className="text-sm font-semibold text-gray-900">
+                              {donationCount.toLocaleString()}
                             </span>
                           </div>
                         </div>
-
-                        {Array.isArray(campaign.tags) &&
-                          campaign.tags.length > 0 && (
-                            <div className="mt-4 flex flex-wrap gap-1">
-                              {campaign.tags.map((tag: string) => (
-                                <Badge
-                                  key={tag}
-                                  variant="secondary"
-                                  className="text-xs"
-                                >
-                                  {tag}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
                   </div>
 
                   {/* Desktop Table View */}
-                  <Table className="hidden md:table w-full">
-                    <colgroup>
-                      <col style={{ width: '40%' }} />
-                      <col style={{ width: '15%' }} />
-                      <col style={{ width: '15%' }} />
-                      <col style={{ width: '18%' }} />
-                      <col style={{ width: '12%' }} />
-                    </colgroup>
-                    <TableHeader>
-                      <TableRow className="bg-gray-100 border-b-2 border-gray-300">
-                        <SortableTableHeader 
-                          sortKey="title" 
-                          currentSortKey={sortKey} 
-                          currentSortDirection={sortDirection} 
-                          onSort={handleSort}
-                          className="px-4 py-2.5 text-xs font-semibold text-gray-700 uppercase tracking-wide"
-                        >
-                          Campaign
-                        </SortableTableHeader>
-                        <SortableTableHeader 
-                          sortKey="status" 
-                          currentSortKey={sortKey} 
-                          currentSortDirection={sortDirection} 
-                          onSort={handleSort}
-                          className="px-4 py-2.5 text-xs font-semibold text-gray-700 uppercase tracking-wide"
-                        >
-                          Status
-                        </SortableTableHeader>
-                        <SortableTableHeader 
-                          sortKey="goal" 
-                          currentSortKey={sortKey} 
-                          currentSortDirection={sortDirection} 
-                          onSort={handleSort}
-                          className="px-4 py-2.5 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
-                        >
-                          Goal
-                        </SortableTableHeader>
-                        <SortableTableHeader 
-                          sortKey="endDate" 
-                          currentSortKey={sortKey} 
-                          currentSortDirection={sortDirection} 
-                          onSort={handleSort}
-                          className="px-4 py-2.5 text-xs font-semibold text-gray-700 uppercase tracking-wide"
-                        >
-                          End Date
-                        </SortableTableHeader>
-                        <SortableTableHeader 
-                          sortable={false}
-                          sortKey="actions" 
-                          currentSortKey={sortKey} 
-                          currentSortDirection={sortDirection} 
-                          onSort={handleSort}
-                          className="px-4 py-2.5 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center"
-                        >
-                          Actions
-                        </SortableTableHeader>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredAndSortedCampaigns.map((campaign: any) => {
-                        const progress =
-                          campaign.goal && campaign.raised
-                            ? Math.min(
-                                (Number(campaign.raised) / Number(campaign.goal)) *
-                                  100,
-                                100
-                              )
-                            : 0;
+                  {viewMode === "table" && (
+                    <Table className="hidden md:table w-full">
+                      <TableHeader>
+                        <TableRow className="bg-gray-100 border-b-2 border-gray-200 text-gray-700 grid grid-cols-[1.3fr_0.7fr_1fr_1.1fr_0.5fr] items-center">
+                          <SortableTableHeader
+                            sortKey="title"
+                            currentSortKey={sortKey}
+                            currentSortDirection={sortDirection}
+                            onSort={handleSort}
+                            className="px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                          >
+                            Campaign Details
+                          </SortableTableHeader>
+                          <SortableTableHeader
+                            sortKey="status"
+                            currentSortKey={sortKey}
+                            currentSortDirection={sortDirection}
+                            onSort={handleSort}
+                            className="px-4 py-3 pl-6 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                          >
+                            Status
+                          </SortableTableHeader>
+                          <SortableTableHeader
+                            sortKey="category"
+                            currentSortKey={sortKey}
+                            currentSortDirection={sortDirection}
+                            onSort={handleSort}
+                            className="px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                          >
+                            Category
+                          </SortableTableHeader>
+                          <SortableTableHeader
+                            sortable={false}
+                            sortKey="progress"
+                            currentSortKey={sortKey}
+                            currentSortDirection={sortDirection}
+                            onSort={handleSort}
+                            className="px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                          >
+                            Progress
+                          </SortableTableHeader>
+                          <SortableTableHeader
+                            sortable={false}
+                            sortKey="actions"
+                            currentSortKey={sortKey}
+                            currentSortDirection={sortDirection}
+                            onSort={handleSort}
+                            className="px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
+                          >
+                            Actions
+                          </SortableTableHeader>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredAndSortedCampaigns.map((campaign: any) => {
+                          const raisedAmount = Number(campaign.raised) || 0;
+                          const goalAmount = Number(campaign.goal) || 0;
+                          const progress =
+                            goalAmount > 0
+                              ? Math.min((raisedAmount / goalAmount) * 100, 100)
+                              : 0;
+                          const status = (campaign.status ?? "inactive").toString();
+                          const statusTone = status.toLowerCase();
+                          const statusClass =
+                            statusTone === "active"
+                              ? "bg-green-100 text-green-800"
+                              : statusTone === "paused"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : statusTone === "completed"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-gray-100 text-gray-700";
 
-                        return (
-                          <TableRow key={campaign.id ?? campaign.title} className="border-b border-gray-100">
-                            <TableCell className="px-4 py-3">
-                              <div className="flex items-start gap-3">
-                                <ImageWithFallback
-                                  src={campaign.coverImageUrl}
-                                  alt={campaign.title}
-                                  className="w-14 h-14 object-cover rounded-lg border border-gray-200 shrink-0 bg-gray-100"
-                                  fallbackSrc="/campaign-fallback.svg"
-                                />
-                                <div className="space-y-1.5 flex-1 min-w-0">
-                                  <div className="flex items-start justify-between gap-2">
-                                    <div className="flex-1 min-w-0">
-                                      <p className="font-medium text-gray-900 text-sm truncate">
-                                        {campaign.title}
-                                      </p>
-                                      {campaign.category && (
-                                        <p className="text-xs text-gray-500">
-                                          {campaign.category}
-                                        </p>
-                                      )}
-                                    </div>
-                                    {typeof progress === "number" &&
-                                      progress > 0 && (
-                                        <div className="flex items-center gap-1.5 flex-shrink-0">
-                                          <span className="text-xs text-gray-500 font-medium">
-                                            {progress.toFixed(0)}%
-                                          </span>
-                                          <div className="h-1.5 w-20 bg-gray-100 rounded-full overflow-hidden">
-                                            {/* eslint-disable-next-line */}
-                                            <div
-                                              className={`h-full ${getProgressColor(
-                                                progress
-                                              )} transition-all duration-300`}
-                                              style={{ width: `${progress}%` }}
-                                            />
-                                          </div>
-                                        </div>
-                                      )}
-                                  </div>
-                                  {Array.isArray(campaign.tags) &&
-                                    campaign.tags.length > 0 && (
-                                      <div className="flex flex-wrap gap-1">
-                                        {campaign.tags.slice(0, 3).map((tag: string) => (
-                                          <Badge
-                                            key={tag}
-                                            variant="secondary"
-                                            className="text-xs px-1.5 py-0.5"
-                                          >
-                                            {tag}
-                                          </Badge>
-                                        ))}
-                                        {campaign.tags.length > 3 && (
-                                          <Badge variant="secondary" className="text-xs px-1.5 py-0.5">
-                                            +{campaign.tags.length - 3}
-                                          </Badge>
-                                        )}
-                                      </div>
-                                    )}
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell className="px-4 py-3">
-                              <Badge
-                                className={`text-xs px-2.5 py-0.5 rounded-full ${getStatusColor(
-                                  campaign.status ?? "unknown"
-                                )}`}
+                          return (
+                            <TableRow
+                              key={campaign.id ?? campaign.title}
+                              className="border border-gray-100 hover:bg-gray-50 grid grid-cols-[1.3fr_0.7fr_1fr_1.1fr_0.5fr] items-center"
+                            >
+                              <TableCell
+                                className="px-4 py-3 whitespace-normal cursor-pointer"
+                                onClick={() => handleOpenOverview(campaign as Campaign)}
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={(event) => {
+                                  if (event.key === "Enter" || event.key === " ") {
+                                    event.preventDefault();
+                                    handleOpenOverview(campaign as Campaign);
+                                  }
+                                }}
                               >
-                                {campaign.status ?? "Unknown"}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="px-4 py-3 text-right">
-                              <span className="font-medium text-sm">
-                                {typeof campaign.goal === "number"
-                                  ? campaign.goal.toLocaleString()
-                                  : "—"}
-                              </span>
-                            </TableCell>
-                            <TableCell className="px-4 py-3">
-                              <span className="text-sm text-gray-700">{formatDate(campaign.endDate)}</span>
-                            </TableCell>
-                            <TableCell className="px-4 py-3 text-center">
-                              <div className="inline-flex items-center gap-2">
-                                {hasPermission('edit_campaign') && (
-                                  <Button
-                                    variant="outline"
-                                    size="icon"
-                                    className="h-8 w-8"
-                                    onClick={() => handleEditClick(campaign)}
-                                  >
-                                    <FaEdit className="h-3 w-3" />
-                                  </Button>
+                                <div className="flex items-center gap-2">
+                                  <ImageWithFallback
+                                    src={campaign.coverImageUrl}
+                                    alt={campaign.title}
+                                    className="w-10 h-10 object-cover rounded-lg border border-gray-200 shrink-0 bg-gray-100"
+                                    fallbackSrc="/campaign-fallback.svg"
+                                  />
+                                  <div className="min-w-0">
+                                    <p className="font-medium text-gray-900 text-sm whitespace-normal break-normal">
+                                      {campaign.title}
+                                    </p>
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell className="px-4 py-3 pl-6">
+                                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wide ${statusClass}`}>
+                                  {status}
+                                </span>
+                              </TableCell>
+                              <TableCell className="px-4 py-3 whitespace-normal">
+                                {campaign.category ? (
+                                  <Badge variant="secondary" className="text-xs uppercase tracking-wide whitespace-normal break-normal text-left">
+                                    {campaign.category}
+                                  </Badge>
+                                ) : (
+                                  <span className="text-xs text-gray-400">--</span>
                                 )}
-                                {hasPermission('delete_campaign') && (
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 hover:bg-red-50 hover:text-red-600"
-                                    onClick={() => handleDeleteClick(campaign)}
-                                    title="Delete campaign"
-                                  >
-                                    <FaTrashAlt className="h-3.5 w-3.5" />
-                                  </Button>
-                                )}
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
+                              </TableCell>
+                              <TableCell className="px-4 py-3">
+                                <div className="w-[220px] max-w-full">
+                                  <div className="flex items-center justify-between text-xs text-gray-500">
+                                    <span>
+                                      {formatCurrency(raisedAmount)} / {formatCurrency(goalAmount)}
+                                    </span>
+                                    <span>{progress.toFixed(0)}%</span>
+                                  </div>
+                                  <div className="mt-2 h-2 w-full rounded-full bg-gray-100 overflow-hidden">
+                                    <div
+                                      className={`h-full ${getProgressColor(progress)} transition-all duration-300`}
+                                      style={{ width: `${progress}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell className="px-4 py-3 text-right">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 text-gray-500 hover:bg-gray-100"
+                                      aria-label="Campaign actions"
+                                    >
+                                      <MoreVertical className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem
+                                      onSelect={() => handleEditClick(campaign)}
+                                      className="flex items-center gap-2"
+                                    >
+                                      <FaEdit className="h-4 w-4" />
+                                      Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onSelect={() => handleDeleteClick(campaign)}
+                                      className="flex items-center gap-2 text-red-600 focus:text-red-600"
+                                    >
+                                      <FaTrashAlt className="h-4 w-4" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  )}
+
                 </>
               ) : (
                 <div className="text-center py-8 text-gray-500 p-6">
@@ -2515,12 +2630,159 @@ const CampaignManagement = ({
                 </div>
               )}
             </CardContent>
-          </Card>
+            </Card>
+          </div>
         </main>
       </div>
+
+      <Sheet open={isOverviewOpen} onOpenChange={setIsOverviewOpen}>
+      <SheetContent side="right" className="w-full sm:max-w-md md:max-w-lg gap-0 p-0 bg-[#F3F1EA]">
+          <div className="flex h-full flex-col">
+            <SheetHeader className="border-b border-gray-100 px-6 py-4 shadow-sm">
+              <SheetTitle className="text-lg font-semibold text-gray-900">
+                Campaign Overview
+              </SheetTitle>
+            </SheetHeader>
+
+            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+              <div className="rounded-2xl border border-gray-100 bg-gray-50/60 p-3">
+                <ImageWithFallback
+                  src={selectedCampaign?.coverImageUrl}
+                  alt={selectedCampaign?.title || "Campaign cover"}
+                  className="h-52 w-full rounded-xl object-cover bg-gray-100"
+                  fallbackSrc="/campaign-fallback.svg"
+                />
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge
+                  className={`text-xs px-2 py-1 rounded-full inline-flex items-center gap-1 ${getStatusColor(
+                    selectedCampaign?.status ?? "inactive"
+                  )}`}
+                >
+                  <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                  {selectedCampaign?.status ?? "Inactive"}
+                </Badge>
+                <Badge variant="secondary" className="text-xs uppercase tracking-wide">
+                  {selectedCampaign?.category || "Uncategorized"}
+                </Badge>
+              </div>
+
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900">
+                  {selectedCampaign?.title || "Untitled campaign"}
+                </h3>
+                <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+                  {selectedCampaign?.description ||
+                    "No description available for this campaign yet."}
+                </p>
+              </div>
+            </div>
+
+            <div className="border-t border-gray-100 px-6 py-4 space-y-4">
+              <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+                <div className="flex items-center justify-between text-sm font-medium text-gray-700">
+                  <span>Fundraising Progress</span>
+                  <span>
+                    {selectedCampaign?.goal
+                      ? Math.min(
+                          (Number(selectedCampaign?.raised || 0) /
+                            Number(selectedCampaign.goal)) *
+                            100,
+                          100
+                        ).toFixed(0)
+                      : 0}
+                    %
+                  </span>
+                </div>
+                <div className="mt-3 h-2 w-full rounded-full bg-gray-100 overflow-hidden">
+                  <div
+                    className={`h-full ${getProgressColor(
+                      selectedCampaign?.goal
+                        ? Math.min(
+                            (Number(selectedCampaign?.raised || 0) /
+                              Number(selectedCampaign.goal)) *
+                              100,
+                            100
+                          )
+                        : 0
+                    )}`}
+                    style={{
+                      width: `${
+                        selectedCampaign?.goal
+                          ? Math.min(
+                              (Number(selectedCampaign?.raised || 0) /
+                                Number(selectedCampaign.goal)) *
+                                100,
+                              100
+                            )
+                          : 0
+                      }%`,
+                    }}
+                  />
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-4 text-sm text-gray-500">
+                  <div>
+                    <div className="text-xs uppercase tracking-wide">Raised</div>
+                    <div className="text-base font-semibold text-gray-900">
+                      {formatCurrency(Number(selectedCampaign?.raised || 0))}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs uppercase tracking-wide">Goal</div>
+                    <div className="text-base font-semibold text-gray-900">
+                      {formatCurrency(Number(selectedCampaign?.goal || 0))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-xs text-gray-500">
+                Donors:{" "}
+                <span className="font-semibold text-gray-900">
+                  {Number(selectedCampaign?.donationCount || 0).toLocaleString()}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Button
+                  variant="outline"
+                  className="h-11 rounded-full"
+                  onClick={() => {
+                    if (!selectedCampaign) return;
+                    handleEditClick(selectedCampaign);
+                    setIsOverviewOpen(false);
+                  }}
+                >
+                  Edit Details
+                </Button>
+                {(() => {
+                  const status = (selectedCampaign?.status ?? "").toString().toLowerCase();
+                  const isCompleted = status === "completed";
+                  const isPaused = status === "paused";
+
+                  return (
+                    <Button
+                      className={`h-11 rounded-full text-white ${
+                        isPaused
+                          ? "bg-emerald-700 hover:bg-emerald-800"
+                          : "bg-red-500 hover:bg-red-600"
+                      }`}
+                      onClick={isPaused ? handleResumeCampaign : handlePauseCampaign}
+                      disabled={!selectedCampaign || isCompleted}
+                    >
+                      {isPaused ? "Continue Donations" : "Pause Donations"}
+                    </Button>
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
       {/* Dialogs remain after main content */}
-      <CampaignDialog open={isEditDialogOpen} onOpenChange={open => { setIsEditDialogOpen(open); if(!open) setEditingCampaign(null); }} campaign={editingCampaign} organizationId={userSession.user.organizationId || ""} hasPermission={hasPermission} onSave={handleSave} />
-      <CampaignDialog open={isAddDialogOpen} onOpenChange={open => { setIsAddDialogOpen(open); }} organizationId={userSession.user.organizationId || ""} hasPermission={hasPermission} onSave={(data, isNew) => handleSave(data, isNew, undefined)} />
+      <CampaignDialog open={isEditDialogOpen} onOpenChange={open => { setIsEditDialogOpen(open); if(!open) setEditingCampaign(null); }} campaign={editingCampaign} organizationId={userSession.user.organizationId || ""} onSave={handleSave} />
+      <CampaignDialog open={isAddDialogOpen} onOpenChange={open => { setIsAddDialogOpen(open); }} organizationId={userSession.user.organizationId || ""} onSave={(data, isNew) => handleSave(data, isNew, undefined)} />
       
       {/* New CampaignForm Component */}
       <CampaignForm

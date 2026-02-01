@@ -1,6 +1,6 @@
 import { Input } from '../../../shared/ui/input';
 import { Label } from '../../../shared/ui/label';
-import { Mail, AlertTriangle } from 'lucide-react';
+import { Mail, AlertTriangle, Loader2 } from 'lucide-react';
 
 interface ProfessionalEmailFieldProps {
   value: string;
@@ -8,6 +8,7 @@ interface ProfessionalEmailFieldProps {
   onBlur?: () => void;
   error?: string | null;
   id?: string;
+  isChecking?: boolean;
 }
 
 export function ProfessionalEmailField({ 
@@ -15,7 +16,8 @@ export function ProfessionalEmailField({
   onChange, 
   onBlur, 
   error, 
-  id = 'email' 
+  id = 'email',
+  isChecking = false
 }: ProfessionalEmailFieldProps) {
   return (
     <div className="space-y-2">
@@ -27,9 +29,9 @@ export function ProfessionalEmailField({
         <span>Email Address</span>
       </Label>
       
-      <div className="relative">
+      <div className="relative w-full">
         <div
-          className={`relative rounded-2xl border border-[#d7ded9] bg-[#f6f7f4] transition-colors duration-200 focus-within:border-[#2f4f43] focus-within:bg-white ${
+          className={`relative rounded-2xl border border-[#d7ded9] bg-[#f6f7f4] transition-colors duration-200 focus-within:border-[#2f4f43] focus-within:bg-white overflow-hidden ${
             error ? 'border-red-400 bg-[#fff5f5] focus-within:border-red-400' : ''
           }`}
         >
@@ -42,8 +44,14 @@ export function ProfessionalEmailField({
             onBlur={() => {
               onBlur?.();
             }}
-            className="h-12 px-4 bg-transparent text-sm text-[#1f2937] placeholder:text-[#9aa09b] outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
+            className="h-12 px-4 pr-10 bg-transparent text-sm text-[#1f2937] placeholder:text-[#9aa09b] outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent w-full"
           />
+          
+          {isChecking && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <Loader2 className="h-4 w-4 text-blue-600 animate-spin" />
+            </div>
+          )}
         </div>
       </div>
 

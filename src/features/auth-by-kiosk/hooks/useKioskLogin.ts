@@ -10,6 +10,7 @@ export function useKioskLogin(onLogin: OnLogin) {
 	const [kioskId, setKioskId] = useState('');
 	const [accessCode, setAccessCode] = useState('');
 	const [localError, setLocalError] = useState<string>('');
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	useEffect(() => {
 		if (kiosksError) setLocalError('Failed to load kiosks. Please try again.');
@@ -18,9 +19,11 @@ export function useKioskLogin(onLogin: OnLogin) {
 	const handleSubmit = useCallback(async (e: React.FormEvent) => {
 		e.preventDefault();
 		setLocalError('');
+		setIsSubmitting(true);
 
 		if (!kioskId || !accessCode) {
 			setLocalError('Please enter both Kiosk ID and Access Code.');
+			setIsSubmitting(false);
 			return;
 		}
 
@@ -28,6 +31,7 @@ export function useKioskLogin(onLogin: OnLogin) {
 			const kioskSession = await kioskAuthApi.authenticateKiosk(kioskId, accessCode);
 			if (!kioskSession) {
 				setLocalError('Invalid Kiosk ID or Access Code.');
+				setIsSubmitting(false);
 				return;
 			}
 
@@ -36,6 +40,7 @@ export function useKioskLogin(onLogin: OnLogin) {
 			const errorMessage =
 				err instanceof Error ? err.message : 'Authentication failed. Please try again.';
 			setLocalError(errorMessage);
+			setIsSubmitting(false);
 		}
 	}, [kioskId, accessCode, onLogin]);
 
@@ -47,7 +52,7 @@ export function useKioskLogin(onLogin: OnLogin) {
 		setKioskId,
 		setAccessCode,
 		error: errorMessage,
-		loading: kiosksLoading,
+		loading: isSubmitting,
 		handleSubmit
 	};
 }

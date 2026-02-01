@@ -252,14 +252,13 @@ export async function checkEmailExists(email: string): Promise<boolean> {
   }
 }
 
-export async function checkOrganizationNameExists(organizationName: string): Promise<boolean> {
+export async function checkOrganizationIdExists(organizationId: string): Promise<boolean> {
   try {
-    const orgsRef = collection(db, 'organizations');
-    const q = query(orgsRef, where('name', '==', organizationName));
-    const snapshot = await getDocs(q);
-    return !snapshot.empty;
+    const orgRef = doc(db, 'organizations', organizationId);
+    const orgSnap = await getDoc(orgRef);
+    return orgSnap.exists();
   } catch (error) {
-    console.error('Error checking organization name existence:', error);
+    console.error('Error checking organization ID existence:', error);
     throw error;
   }
 }

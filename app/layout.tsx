@@ -19,6 +19,11 @@ const lexend = Lexend({
 export const metadata: Metadata = {
   title: 'SwiftCause',
   description: 'SwiftCause - Donation Platform',
+  icons: {
+    icon: '/logo.png',
+    shortcut: '/logo.png',
+    apple: '/logo.png',
+  },
 }
 
 export default function RootLayout({

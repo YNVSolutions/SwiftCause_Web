@@ -182,7 +182,6 @@ export function GiftAidManagement({
 
   // Configuration for AdminSearchFilterHeader
   const searchFilterConfig: AdminSearchFilterConfig = {
-    searchPlaceholder: "Search by donor name or campaign...",
     filters: [
       {
         key: "statusFilter",
@@ -372,12 +371,27 @@ export function GiftAidManagement({
   }
 
   return (
-    <AdminLayout 
-      onNavigate={onNavigate} 
-      onLogout={onLogout} 
-      userSession={userSession} 
+    <AdminLayout
+      onNavigate={onNavigate}
+      onLogout={onLogout}
+      userSession={userSession}
       hasPermission={hasPermission}
       activeScreen="admin-gift-aid"
+      headerSubtitle="Manage and track Gift Aid eligible donations for tax reclaim"
+      headerSearchPlaceholder="Search by donor name or campaign..."
+      headerSearchValue={searchTerm}
+      onHeaderSearchChange={setSearchTerm}
+      headerTopRightActions={(
+        <Button
+          variant="outline"
+          size="sm"
+          className="rounded-2xl border-[#064e3b] bg-transparent text-[#064e3b] hover:bg-[#064e3b] hover:text-stone-50 transition-all duration-300 px-5"
+          onClick={handleExportData}
+        >
+          <Download className="h-4 w-4 sm:hidden" />
+          <span className="hidden sm:inline">Export</span>
+        </Button>
+      )}
     >
       <div className="px-6 lg:px-8 pt-12 pb-8 space-y-6 sm:space-y-8">
         {/* Error Alert */}
@@ -445,15 +459,9 @@ export function GiftAidManagement({
 
         {/* Unified Header Component */}
         <AdminSearchFilterHeader
-          title={`Gift Aid Donations (${filteredDonations.length})`}
-          subtitle="Manage and track Gift Aid eligible donations for tax reclaim"
           config={searchFilterConfig}
-          searchValue={searchTerm}
-          onSearchChange={setSearchTerm}
           filterValues={filterValues}
           onFilterChange={handleFilterChange}
-          exportData={filteredDonations}
-          onExport={handleExportData}
           actions={
             <Button
               variant="outline"
@@ -473,7 +481,7 @@ export function GiftAidManagement({
           <CardContent className="p-0">
             <Table className="w-full table-fixed">
                 <TableHeader>
-                  <TableRow className="bg-gray-100 border-b-2 border-gray-300">
+                  <TableRow className="bg-gray-100 border-b-2 border-gray-300 text-gray-700">
                     <SortableTableHeader 
                       sortKey="donorName" 
                       currentSortKey={sortKey} 
@@ -482,7 +490,7 @@ export function GiftAidManagement({
                       className="w-[22%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
                     >
                       <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                        <User className="h-4 w-4 text-gray-500 shrink-0" />
                         <span className="whitespace-nowrap">Donor</span>
                       </div>
                     </SortableTableHeader>
@@ -494,7 +502,7 @@ export function GiftAidManagement({
                       className="w-[22%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
                     >
                       <div className="flex items-center gap-2">
-                        <Target className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                        <Target className="h-4 w-4 text-gray-500 shrink-0" />
                         <span className="whitespace-nowrap">Campaign</span>
                       </div>
                     </SortableTableHeader>
@@ -506,7 +514,7 @@ export function GiftAidManagement({
                       className="w-[13%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
                     >
                       <div className="flex items-center justify-end gap-2">
-                        <Banknote className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                        <Banknote className="h-4 w-4 text-gray-500 shrink-0" />
                         <span className="whitespace-nowrap">Donation</span>
                       </div>
                     </SortableTableHeader>
@@ -518,7 +526,7 @@ export function GiftAidManagement({
                       className="w-[13%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
                     >
                       <div className="flex items-center justify-end gap-2">
-                        <Gift className="h-4 w-4 text-[#064e3b] flex-shrink-0" />
+                        <Gift className="h-4 w-4 text-[#064e3b] shrink-0" />
                         <span className="whitespace-nowrap">Gift Aid</span>
                       </div>
                     </SortableTableHeader>
@@ -530,7 +538,7 @@ export function GiftAidManagement({
                       className="w-[15%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
                     >
                       <div className="flex items-center gap-2">
-                        <CalendarDays className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                        <CalendarDays className="h-4 w-4 text-gray-500 shrink-0" />
                         <span className="whitespace-nowrap">Date</span>
                       </div>
                     </SortableTableHeader>
@@ -543,7 +551,7 @@ export function GiftAidManagement({
                       className="w-[10%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center"
                     >
                       <div className="flex items-center justify-center gap-2">
-                        <Eye className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                        <Eye className="h-4 w-4 text-gray-500 shrink-0" />
                         <span className="whitespace-nowrap">Actions</span>
                       </div>
                     </SortableTableHeader>
@@ -570,31 +578,31 @@ export function GiftAidManagement({
                       >
                         <TableCell className="py-4">
                           <div className="flex items-center gap-2">
-                            <User className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                            <User className="h-4 w-4 text-gray-400 shrink-0" />
                             <p className="text-base text-gray-900">{donation.donorName || "N/A"}</p>
                           </div>
                         </TableCell>
                         <TableCell className="py-4">
                           <div className="flex items-center gap-2">
-                            <Target className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                            <Target className="h-4 w-4 text-gray-400 shrink-0" />
                             <p className="text-base text-gray-800">{donation.campaignTitle || "N/A"}</p>
                           </div>
                         </TableCell>
                         <TableCell className="py-4">
                           <div className="flex items-center gap-2">
-                            <Banknote className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                            <Banknote className="h-4 w-4 text-gray-400 shrink-0" />
                             <p className="text-base font-bold text-gray-900">{formatCurrency(donation.amount || 0)}</p>
                           </div>
                         </TableCell>
                         <TableCell className="py-4">
                           <div className="flex items-center gap-2">
-                            <Gift className="h-4 w-4 text-[#064e3b] flex-shrink-0" />
+                            <Gift className="h-4 w-4 text-[#064e3b] shrink-0" />
                             <p className="text-base font-bold text-[#064e3b]">{formatCurrency(donation.giftAidAmount || 0)}</p>
                           </div>
                         </TableCell>
                         <TableCell className="py-4">
                           <div className="flex items-center gap-2">
-                            <CalendarDays className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                            <CalendarDays className="h-4 w-4 text-gray-400 shrink-0" />
                             <p className="text-base text-gray-700">{donation.donationDate && donation.donationDate !== "Unknown Date" ? new Date(donation.donationDate).toLocaleDateString() : "Unknown Date"}</p>
                           </div>
                         </TableCell>
