@@ -143,8 +143,6 @@ export function generateGiftAidCSV(declarations: GiftAidDeclaration[]): string {
   if (skippedDeclarations > 0) {
     console.warn(`Gift Aid CSV: ${skippedDeclarations} of ${totalDeclarations} declarations skipped due to invalid dates`);
   }
-  
-  console.log(`Gift Aid CSV: Exporting ${validDeclarations} valid declarations`);
 
   // Combine header and valid data rows only
   const allRows = [headers, ...validRows];

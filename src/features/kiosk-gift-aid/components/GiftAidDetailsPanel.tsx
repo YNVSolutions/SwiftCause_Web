@@ -125,7 +125,7 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
 
     try {
       onSubmit(giftAidDetails);
-    } catch (error) {
+    } catch {
       setSubmitting(false);
     }
   };

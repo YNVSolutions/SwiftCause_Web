@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { PaymentContainer } from '@/features/payment'
 import { useState, useEffect, use } from 'react'
 import { Campaign, Donation } from '@/shared/types'
-import { getCampaignById, storeGiftAidDeclaration } from '@/shared/api/firestoreService'
+import { getCampaignById } from '@/shared/api/firestoreService'
 import { KioskLoading } from '@/shared/ui/KioskLoading'
 
 export default function PaymentPage({ params }: { params: Promise<{ campaignId: string }> }) {
