@@ -87,16 +87,13 @@ export function generateGiftAidCSV(declarations: GiftAidDeclaration[]): string {
       }
 
       // Format date for HMRC (YYYY-MM-DD)
-      const yeard = donationDate.getFullYear();
-      const monthd = String(donationDate.getMonth() + 1).padStart(2, '0');
-      const dayd = String(donationDate.getDate()).padStart(2, '0');
-      normalizedDate = `${yeard}-${monthd}-${dayd}`;
-      
-      // HMRC-compliant tax year derivation (UK tax year: April 6 - April 5)
       const year = donationDate.getFullYear();
       const month = donationDate.getMonth() + 1; // getMonth() is 0-based
       const day = donationDate.getDate();
       
+      normalizedDate = donationDate.toISOString().split('T')[0];
+      
+      // HMRC-compliant tax year derivation (UK tax year: April 6 - April 5)
       // UK tax year starts April 6
       const taxYearStart = (month > 4 || (month === 4 && day >= 6)) ? year : year - 1;
       const taxYearEnd = taxYearStart + 1;
