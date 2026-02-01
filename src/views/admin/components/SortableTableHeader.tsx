@@ -36,8 +36,8 @@ export function SortableTableHeader({
   }
 
   return (
-    <TableHead 
-      className={`${className} cursor-pointer hover:bg-gray-200 transition-colors select-none`}
+    <TableHead
+      className={`${className} cursor-pointer select-none`}
       onClick={() => onSort(sortKey)}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {

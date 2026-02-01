@@ -30,9 +30,9 @@ export function ProfessionalAccessCodeField({
         <span>Access Code</span>
       </Label>
       
-      <div className="relative">
+      <div className="relative w-full">
         <div
-          className={`relative rounded-2xl border border-[#d7ded9] bg-[#f6f7f4] transition-colors duration-200 focus-within:border-[#2f4f43] focus-within:bg-white ${
+          className={`relative rounded-2xl border border-[#d7ded9] bg-[#f6f7f4] transition-colors duration-200 focus-within:border-[#2f4f43] focus-within:bg-white overflow-hidden ${
             error ? 'border-red-400 bg-[#fff5f5] focus-within:border-red-400' : ''
           }`}
         >
@@ -45,7 +45,7 @@ export function ProfessionalAccessCodeField({
             onBlur={() => {
               onBlur?.();
             }}
-            className="h-12 px-4 pr-12 bg-transparent text-sm text-[#1f2937] placeholder:text-[#9aa09b] outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
+            className="h-12 px-4 pr-12 bg-transparent text-sm text-[#1f2937] placeholder:text-[#9aa09b] outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent w-full"
           />
           
           <button

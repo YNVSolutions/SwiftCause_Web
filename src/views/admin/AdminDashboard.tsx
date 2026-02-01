@@ -1016,8 +1016,9 @@ export function AdminDashboard({
           </div>
         </div>
       )}
-      headerActions={(
-        <div className="flex items-center gap-2 flex-nowrap ml-auto">
+      headerSubtitle="Real-time view of fundraising activity"
+      headerTopRightActions={(
+        <div className="hidden sm:flex items-center gap-2 flex-nowrap ml-auto">
           {hasPermission("system_admin") && (
             <OrganizationSwitcher 
               userSession={userSession}

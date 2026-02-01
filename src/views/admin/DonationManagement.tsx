@@ -22,7 +22,11 @@ import {
   CreditCard,
   CheckCircle,
   AlertCircle,
-  Eye
+  Eye,
+  User,
+  Target,
+  Banknote,
+  CalendarDays
 } from 'lucide-react';
 import { Skeleton } from "../../shared/ui/skeleton"; // Import Skeleton
 import { Ghost } from "lucide-react"; // Import Ghost
@@ -110,10 +114,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
   }, [campaigns]);
 
   // Configuration for AdminSearchFilterHeader
-  const [showCalendar, setShowCalendar] = useState<Record<string, boolean>>({});
-
   const searchFilterConfig: AdminSearchFilterConfig = {
-    searchPlaceholder: "Search donations...",
     filters: [
       {
         key: "statusFilter",
@@ -158,12 +159,6 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
         break;
     }
   };
-
-  const handleCalendarToggle = (key: string, open: boolean) => {
-    setShowCalendar(prev => ({ ...prev, [key]: open }));
-  };
-
-
 
 
   // Filter donations first
@@ -254,6 +249,21 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
       userSession={userSession}
       hasPermission={hasPermission}
       activeScreen="admin-donations"
+      headerSubtitle="Track and analyze donation transactions"
+      headerSearchPlaceholder="Search donations..."
+      headerSearchValue={searchTerm}
+      onHeaderSearchChange={setSearchTerm}
+      headerTopRightActions={(
+        <Button
+          variant="outline"
+          size="sm"
+          className="rounded-2xl border-[#064e3b] bg-transparent text-[#064e3b] hover:bg-[#064e3b] hover:text-stone-50 transition-all duration-300 px-5"
+          onClick={handleExportDonations}
+        >
+          <Download className="h-4 w-4 sm:hidden" />
+          <span className="hidden sm:inline">Export</span>
+        </Button>
+      )}
     >
       <div className="space-y-6 sm:space-y-8">
         <main className="px-6 lg:px-8 pt-12 pb-8">
@@ -267,17 +277,9 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
 
           {/* Unified Header Component */}
           <AdminSearchFilterHeader
-            title={`Donations (${filteredDonations.length})`}
-            subtitle="Track and analyze donation transactions"
             config={searchFilterConfig}
-            searchValue={searchTerm}
-            onSearchChange={setSearchTerm}
             filterValues={filterValues}
             onFilterChange={handleFilterChange}
-            showCalendar={showCalendar}
-            onCalendarToggle={handleCalendarToggle}
-            exportData={filteredDonations}
-            onExport={handleExportDonations}
           />
 
           {/* Modern Table Container */}
@@ -302,71 +304,80 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                 </div>
               ) : filteredDonations.length > 0 ? (
                 <div className="overflow-hidden">
-                  <Table className="w-full">
-                    <colgroup>
-                      <col style={{ width: '20%' }} />
-                      <col style={{ width: '16%' }} />
-                      <col style={{ width: '11%' }} />
-                      <col style={{ width: '16%' }} />
-                      <col style={{ width: '10%' }} />
-                      <col style={{ width: '19%' }} />
-                      <col style={{ width: '8%' }} />
-                    </colgroup>
+                  <Table className="w-full table-fixed">
                     <TableHeader>
-                      <TableRow className="bg-gray-100 border-b-2 border-gray-300">
+                      <TableRow className="bg-gray-100 border-b-2 border-gray-300 text-gray-700">
                         <SortableTableHeader 
                           sortKey="donorName" 
                           currentSortKey={sortKey} 
                           currentSortDirection={sortDirection} 
                           onSort={handleSort}
-                          className="px-3 py-2.5 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                          className="w-[22%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
                         >
-                          Donor & Transaction
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-gray-500 shrink-0" />
+                            <span className="whitespace-nowrap">Donor</span>
+                          </div>
                         </SortableTableHeader>
                         <SortableTableHeader 
                           sortKey="campaignId" 
                           currentSortKey={sortKey} 
                           currentSortDirection={sortDirection} 
                           onSort={handleSort}
-                          className="px-3 py-2.5 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                          className="w-[20%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
                         >
-                          Campaign
+                          <div className="flex items-center gap-2">
+                            <Target className="h-4 w-4 text-gray-500 shrink-0" />
+                            <span className="whitespace-nowrap">Campaign</span>
+                          </div>
                         </SortableTableHeader>
                         <SortableTableHeader 
                           sortKey="amount" 
                           currentSortKey={sortKey} 
                           currentSortDirection={sortDirection} 
                           onSort={handleSort}
-                          className="px-3 py-2.5 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
+                          className="w-[12%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
                         >
-                          Amount
+                          <div className="flex items-center justify-end gap-2">
+                            <Banknote className="h-4 w-4 text-gray-500 shrink-0" />
+                            <span className="whitespace-nowrap">Amount</span>
+                          </div>
                         </SortableTableHeader>
                         <SortableTableHeader 
                           sortKey="paymentMethod" 
                           currentSortKey={sortKey} 
                           currentSortDirection={sortDirection} 
                           onSort={handleSort}
-                          className="px-3 py-2.5 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                          className="w-[16%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
                         >
-                          Payment Details
+                          <div className="flex items-center gap-2">
+                            <CreditCard className="h-4 w-4 text-gray-500 shrink-0" />
+                            <span className="whitespace-nowrap">Payment</span>
+                          </div>
                         </SortableTableHeader>
                         <SortableTableHeader 
                           sortKey="paymentStatus" 
                           currentSortKey={sortKey} 
                           currentSortDirection={sortDirection} 
                           onSort={handleSort}
-                          className="px-3 py-2.5 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                          className="w-[12%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
                         >
-                          Status
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="h-4 w-4 text-gray-500 shrink-0" />
+                            <span className="whitespace-nowrap">Status</span>
+                          </div>
                         </SortableTableHeader>
                         <SortableTableHeader 
                           sortKey="timestamp" 
                           currentSortKey={sortKey} 
                           currentSortDirection={sortDirection} 
                           onSort={handleSort}
-                          className="px-3 py-2.5 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                          className="w-[14%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
                         >
-                          Date & Platform
+                          <div className="flex items-center gap-2">
+                            <CalendarDays className="h-4 w-4 text-gray-500 shrink-0" />
+                            <span className="whitespace-nowrap">Date</span>
+                          </div>
                         </SortableTableHeader>
                         <SortableTableHeader 
                           sortable={false}
@@ -374,11 +385,11 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                           currentSortKey={sortKey} 
                           currentSortDirection={sortDirection} 
                           onSort={handleSort}
-                          className="px-3 py-2.5 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center"
+                          className="w-[8%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center"
                         >
                           <div className="flex items-center justify-center gap-2">
                             <Eye className="h-4 w-4 text-gray-500" />
-                            Actions
+                            <span className="whitespace-nowrap">Actions</span>
                           </div>
                         </SortableTableHeader>
                       </TableRow>

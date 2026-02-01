@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import ReCAPTCHA from 'react-google-recaptcha';
 import { Input } from '../../shared/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
 import { Checkbox } from '../../shared/ui/checkbox';
-import { checkEmailExists } from '../../shared/api/firestoreService';
+import { checkEmailExists, checkOrganizationIdExists } from '../../shared/api/firestoreService';
 import Image from "next/image"
 import { 
   Heart,
@@ -78,7 +79,10 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
   const [errors, setErrors] = useState<SignupFormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+  const [isCheckingOrganization, setIsCheckingOrganization] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
   
   const [formData, setFormData] = useState<SignupFormData>({
     firstName: '',
@@ -142,6 +146,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
 
   const handleEmailBlur = async () => {
     if (!formData.email.trim()) {
+      return;
     }
     
     if (!/\S+@\S+\.\S+/.test(formData.email)) {
@@ -173,6 +178,38 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
     }
   };
 
+  const generateOrganizationId = (name: string): string => {
+    return name.replace(/\s+/g, '-').toLowerCase();
+  };
+
+  const handleOrganizationNameBlur = async () => {
+    if (!formData.organizationName.trim()) {
+      return;
+    }
+
+    const organizationId = generateOrganizationId(formData.organizationName);
+    
+    setIsCheckingOrganization(true);
+    try {
+      const exists = await checkOrganizationIdExists(organizationId);
+      if (exists) {
+        setErrors(prev => ({
+          ...prev,
+          organizationName: 'An organization with this name already exists. Please choose a different name.'
+        }));
+      } else {
+        setErrors(prev => ({
+          ...prev,
+          organizationName: undefined
+        }));
+      }
+    } catch (error) {
+      console.error('Error checking organization name:', error);
+    } finally {
+      setIsCheckingOrganization(false);
+    }
+  };
+
   const validateStep = async (step: number): Promise<boolean> => {
     const newErrors: SignupFormErrors = {};
 
@@ -193,7 +230,20 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
         }
       }
     } else if (step === 2) {
-      if (!formData.organizationName.trim()) newErrors.organizationName = 'Organization name is required';
+      if (!formData.organizationName.trim()) {
+        newErrors.organizationName = 'Organization name is required';
+      } else {
+        // Check if organization ID already exists
+        const organizationId = generateOrganizationId(formData.organizationName);
+        try {
+          const exists = await checkOrganizationIdExists(organizationId);
+          if (exists) {
+            newErrors.organizationName = 'An organization with this name already exists. Please choose a different name.';
+          }
+        } catch (error) {
+          console.error('Error checking organization name:', error);
+        }
+      }
       if (!formData.organizationType) newErrors.organizationType = 'Organization type is required';
     } else if (step === 3) {
       if (!formData.password) {
@@ -236,20 +286,35 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
 
   const handleSubmit = async () => {
     const isValid = await validateStep(currentStep);
+    
+    if (!recaptchaToken) {
+      setErrors(prev => ({
+        ...prev,
+        agreeToTerms: 'Please complete the reCAPTCHA verification'
+      }));
+      return;
+    }
+    
     if (isValid && !isSubmitting) {
       setIsSubmitting(true)
       try {
         await onSignup({
           ...formData,
-          organizationId: formData.organizationName.replace(/\s+/g, '-').toLowerCase(), // Generate organizationId
+          organizationId: generateOrganizationId(formData.organizationName),
           stripe: {
             accountId: '',
             chargesEnabled: false,
             payoutsEnabled: false,
           },
-        })
+          recaptchaToken, // Include the token for backend verification
+        } as any)
       } catch (error) {
         setIsSubmitting(false)
+        // Reset reCAPTCHA on error
+        if (recaptchaRef.current) {
+          recaptchaRef.current.reset();
+          setRecaptchaToken(null);
+        }
       }
     }
   };
@@ -385,9 +450,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                 </div>
               </div>
 
-              <div className="relative z-10 text-emerald-100/40 text-sm">
-                © 2024 Swift Cause. All rights reserved.
-              </div>
+              
             </>
           )}
 
@@ -654,15 +717,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
               </form>
             )}
 
-            {/* Terms text */}
-            {currentStep === 1 && (
-              <p className="mt-6 text-sm text-slate-400 leading-relaxed text-left">
-                By continuing, you agree to our{' '}
-                <button onClick={onViewTerms} className="underline hover:text-slate-600 text-slate-500">
-                  Terms of Service
-                </button>{' '}.
-              </p>
-            )}
+            
 
             {/* Step 2: Organization Information */}
             {currentStep === 2 && (
@@ -672,19 +727,33 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                   <label className="text-[#0a2e16] text-base font-medium" htmlFor="organizationName">
                     Organization Name
                   </label>
-                  <Input
-                    id="organizationName"
-                    value={formData.organizationName}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData('organizationName', e.target.value)}
-                    className={`w-full rounded-lg border !bg-white text-[#0a2e16] h-14 px-4 text-base placeholder:text-gray-400 focus:border-[#11d452] focus:ring-0 ${
-                      errors.organizationName ? 'border-red-500' : 'border-gray-200'
-                    }`}
-                    placeholder="Enter your organization's legal name"
-                  />
+                  <div className="relative">
+                    <Input
+                      id="organizationName"
+                      value={formData.organizationName}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData('organizationName', e.target.value)}
+                      onBlur={handleOrganizationNameBlur}
+                      className={`w-full rounded-lg border !bg-white text-[#0a2e16] h-14 px-4 text-base placeholder:text-gray-400 focus:border-[#11d452] focus:ring-0 ${
+                        errors.organizationName ? 'border-red-500' : 'border-gray-200'
+                      } ${isCheckingOrganization ? 'opacity-50' : ''}`}
+                      placeholder="Enter your organization's legal name"
+                      disabled={isCheckingOrganization}
+                    />
+                    {isCheckingOrganization && (
+                      <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                        <div className="w-4 h-4 border-2 border-[#064e3b] border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    )}
+                  </div>
                   {errors.organizationName && (
                     <p className="text-xs text-red-600 flex items-center">
                       <AlertCircle className="w-3 h-3 mr-1" />
                       {errors.organizationName}
+                    </p>
+                  )}
+                  {isCheckingOrganization && (
+                    <p className="text-xs text-slate-500 flex items-center">
+                      Checking organization name availability...
                     </p>
                   )}
                 </div>
@@ -744,7 +813,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                   </button>
                   <button
                     type="submit"
-                    disabled={isValidating}
+                    disabled={isValidating || isCheckingOrganization}
                     className="flex items-center justify-center min-w-[140px] px-8 py-3 bg-[#064e3b] text-white font-bold text-sm rounded-lg hover:shadow-lg hover:shadow-[#11d452]/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isValidating ? (
@@ -780,7 +849,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                             className={`w-full px-4 py-3 rounded-lg border !bg-white text-[#0d1b10] focus:ring-2 focus:ring-[#11d452] focus:border-transparent outline-none transition-all ${
                               errors.password ? 'border-red-500' : 'border-[#cfe7d3]'
                             }`}
-                            placeholder="••••••••"
+                            placeholder="Enter your password"
                           />
                           <button
                             type="button"
@@ -812,7 +881,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                             className={`w-full px-4 py-3 rounded-lg border !bg-white text-[#0d1b10] focus:ring-2 focus:ring-[#11d452] focus:border-transparent outline-none transition-all ${
                               errors.confirmPassword ? 'border-red-500' : 'border-[#cfe7d3]'
                             }`}
-                            placeholder="••••••••"
+                            placeholder="Confirm your password"
                           />
                           <button
                             type="button"
@@ -835,14 +904,38 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                         <div className="flex justify-between items-center">
                           <p className="text-[#4c9a59] text-xs font-medium">Password strength</p>
                           <p className="text-[#11d452] text-xs font-bold">
-                            {formData.password.length >= 8 ? 'Good' : 'Weak'}
+                            {(() => {
+                              const checks = [
+                                formData.password.length >= 8,
+                                /[A-Z]/.test(formData.password),
+                                /[0-9]/.test(formData.password),
+                                /[!@#$%^&*(),.?":{}|<>]/.test(formData.password)
+                              ];
+                              const passedChecks = checks.filter(Boolean).length;
+                              if (passedChecks === 0) return 'Weak';
+                              if (passedChecks <= 2) return 'Fair';
+                              if (passedChecks === 3) return 'Good';
+                              return 'Strong';
+                            })()}
                           </p>
                         </div>
                         <div className="flex gap-1 h-1.5">
-                          <div className={`flex-1 rounded-full ${formData.password.length >= 2 ? 'bg-[#11d452]' : 'bg-[#cfe7d3]'}`}></div>
-                          <div className={`flex-1 rounded-full ${formData.password.length >= 4 ? 'bg-[#11d452]' : 'bg-[#cfe7d3]'}`}></div>
-                          <div className={`flex-1 rounded-full ${formData.password.length >= 6 ? 'bg-[#11d452]' : 'bg-[#cfe7d3]'}`}></div>
-                          <div className={`flex-1 rounded-full ${formData.password.length >= 8 ? 'bg-[#11d452]' : 'bg-[#cfe7d3]'}`}></div>
+                          {(() => {
+                            const checks = [
+                              formData.password.length >= 8,
+                              /[A-Z]/.test(formData.password),
+                              /[0-9]/.test(formData.password),
+                              /[!@#$%^&*(),.?":{}|<>]/.test(formData.password)
+                            ];
+                            const passedCount = checks.filter(Boolean).length;
+                            
+                            return [0, 1, 2, 3].map((index) => (
+                              <div 
+                                key={index}
+                                className={`flex-1 rounded-full ${index < passedCount ? 'bg-[#11d452]' : 'bg-[#cfe7d3]'}`}
+                              ></div>
+                            ));
+                          })()}
                         </div>
                       </div>
 
@@ -914,6 +1007,26 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                         </div>
                       </div>
 
+                      {/* reCAPTCHA */}
+                      <div className="flex justify-center pt-4">
+                        <ReCAPTCHA
+                          ref={recaptchaRef}
+                          sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ''}
+                          onChange={(token: string | null) => {
+                            setRecaptchaToken(token);
+                            // Clear any previous captcha errors
+                            if (errors.agreeToTerms?.includes('reCAPTCHA')) {
+                              setErrors(prev => ({
+                                ...prev,
+                                agreeToTerms: undefined
+                              }));
+                            }
+                          }}
+                          onExpired={() => setRecaptchaToken(null)}
+                          onErrored={() => setRecaptchaToken(null)}
+                        />
+                      </div>
+
                       {/* Action Buttons */}
                       <div className="flex items-center justify-between pt-8 gap-5">
                        
@@ -930,10 +1043,10 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
 
                          <button
                           type="submit"
-                          disabled={isSubmitting || !formData.agreeToTerms || !isPasswordValid(formData.password) || formData.password !== formData.confirmPassword}
+                          disabled={isSubmitting || !formData.agreeToTerms || !isPasswordValid(formData.password) || formData.password !== formData.confirmPassword || !recaptchaToken}
                           className="flex items-center justify-center min-w-[140px] px-8 py-3 bg-[#064e3b] text-white font-bold text-sm rounded-lg hover:shadow-lg hover:shadow-[#11d452]/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
                         >
-                          <span>{isSubmitting ? 'Creating Account...' : 'Create Password'}</span>
+                          <span>{isSubmitting ? 'Creating Account...' : 'Create Account'}</span>
                           <ArrowRight className="w-5 h-5" />
                         </button>
                       </div>
