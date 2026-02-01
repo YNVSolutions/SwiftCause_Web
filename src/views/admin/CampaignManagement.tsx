@@ -269,6 +269,7 @@ const CampaignDialog = ({
     handleImageSelect,
     handleImageUpload,
     clearImageSelection,
+    clearGallerySelection,
     setImagePreviewUrl,
     uploadFile, // Destructure the new uploadFile function
   } = useCampaignManagement();
@@ -420,6 +421,8 @@ const CampaignDialog = ({
       setFormData(getInitialFormData());
       setSelectedTags([]);
       setImagePreviewUrl(null);
+      clearImageSelection(); // Clear the hook's image state
+      clearGallerySelection(); // Clear the hook's gallery state
       // Clear advanced image selections/previews for add mode
       setSelectedOrganizationLogo(null);
       setOrganizationLogoPreview(null);
@@ -427,7 +430,7 @@ const CampaignDialog = ({
       setSelectedGalleryImages([]);
       setGalleryImagePreviews([]);
     }
-  }, [campaign, isEditMode, setImagePreviewUrl]);
+  }, [campaign, isEditMode, setImagePreviewUrl, clearImageSelection, clearGallerySelection]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -460,7 +463,7 @@ const CampaignDialog = ({
 
     if (files) {
       if (inputName === "coverImageUrl") {
-        handleImageSelect(files[0]);
+        handleImageSelect(e);
       } else if (inputName === "organizationInfoLogo") {
         const file = files[0];
         setSelectedOrganizationLogo(file);
@@ -648,6 +651,7 @@ const CampaignDialog = ({
 
   const handleDialogClose = () => {
     clearImageSelection();
+    clearGallerySelection();
     setFormData(getInitialFormData()); // Reset for add mode
     // Clear tags
     setSelectedTags([]);
@@ -1214,6 +1218,7 @@ const CampaignManagement = ({
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [addDialogKey, setAddDialogKey] = useState(0); // Key to force remount
   const [editingCampaign, setEditingCampaign] = useState<DocumentData | null>(
     null
   );
@@ -2782,7 +2787,19 @@ const CampaignManagement = ({
       </Sheet>
       {/* Dialogs remain after main content */}
       <CampaignDialog open={isEditDialogOpen} onOpenChange={open => { setIsEditDialogOpen(open); if(!open) setEditingCampaign(null); }} campaign={editingCampaign} organizationId={userSession.user.organizationId || ""} onSave={handleSave} />
-      <CampaignDialog open={isAddDialogOpen} onOpenChange={open => { setIsAddDialogOpen(open); }} organizationId={userSession.user.organizationId || ""} onSave={(data, isNew) => handleSave(data, isNew, undefined)} />
+      <CampaignDialog 
+        key={addDialogKey} 
+        open={isAddDialogOpen} 
+        onOpenChange={open => { 
+          setIsAddDialogOpen(open); 
+          if (open) {
+            // Increment key to force remount and clear all state
+            setAddDialogKey(prev => prev + 1);
+          }
+        }} 
+        organizationId={userSession.user.organizationId || ""} 
+        onSave={(data, isNew) => handleSave(data, isNew, undefined)} 
+      />
       
       {/* New CampaignForm Component */}
       <CampaignForm

@@ -138,12 +138,18 @@ export function CampaignForm({
         setGalleryPreviews([]);
         setSelectedGalleryFiles([]);
       }
+      // Load existing cover image preview
+      if (campaignData.coverImageUrl) {
+        setImagePreview(campaignData.coverImageUrl);
+      }
     } else if (open && !editingCampaign) {
       // Clear for new campaign
       setGalleryPreviews([]);
       setSelectedGalleryFiles([]);
+      setImagePreview(null); // ✅ Clear cover image preview
+      setSelectedImageFile(null); // ✅ Clear selected file
     }
-  }, [open, editingCampaign, campaignData.galleryImages]);
+  }, [open, editingCampaign, campaignData.galleryImages, campaignData.coverImageUrl]);
 
   useEffect(() => {
     if (open && organizationId) {

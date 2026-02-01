@@ -77,7 +77,7 @@ import {
   DialogClose,
 } from "../../shared/ui/dialog";
 import { Screen, AdminSession, Permission, Campaign, Kiosk } from "../../shared/types";
-import { db } from "../../shared/lib/firebase";
+import { db, storage } from "../../shared/lib/firebase";
 import {
   collection,
   query,
@@ -89,12 +89,14 @@ import {
   doc,
   updateDoc,
 } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import {
   useDashboardData,
   Activity,
   Alert,
 } from "../../shared/lib/hooks/useDashboardData";
 import { useOrganization } from "../../shared/lib/hooks/useOrganization";
+import { useCampaignManagement } from "../../shared/lib/hooks/useCampaignManagement";
 import { auth } from "../../shared/lib/firebase";
 
 import { AdminLayout } from "./AdminLayout";
@@ -148,6 +150,39 @@ export function AdminDashboard({
     useDashboardData(userSession.user.organizationId);
   
   const { deviceDistribution } = stats;
+
+  // Use the campaign management hook for image upload functionality
+  const {
+    handleImageSelect,
+    handleGalleryImagesSelect,
+    handleImageUpload,
+    handleGalleryImagesUpload,
+    selectedImage,
+    selectedGalleryImages,
+    uploadingImage,
+    uploadingGallery,
+    saveCampaign,
+    clearImageSelection,
+    clearGallerySelection,
+  } = useCampaignManagement(userSession.user.organizationId);
+
+  // Map CampaignForm fields to database schema
+  const mapFormDataToDatabase = useCallback((formData: CampaignFormData) => {
+    return {
+      title: formData.title,
+      description: formData.briefOverview || '',  // Brief overview goes to description
+      longDescription: formData.description || '', // Detailed story goes to longDescription
+      goal: Number(formData.goal),
+      status: formData.status || 'active',
+      category: formData.category || 'General',
+      tags: Array.isArray(formData.tags) ? formData.tags : [],
+      coverImageUrl: formData.coverImageUrl || '',
+      videoUrl: formData.videoUrl || '',
+      galleryImages: Array.isArray(formData.galleryImages) ? formData.galleryImages : [],
+      isGlobal: formData.isGlobal || false,
+      assignedKiosks: Array.isArray(formData.assignedKiosks) ? formData.assignedKiosks : [],
+    };
+  }, []);
 
   const [dashboardData, setDashboardData] = useState({
     topCampaigns: [] as Campaign[],
@@ -651,42 +686,75 @@ export function AdminDashboard({
       if (campaignCreation.editingCampaignInTour) {
         // Update existing campaign
         const campaignRef = doc(db, 'campaigns', campaignCreation.editingCampaignInTour.id);
-        await updateDoc(campaignRef, {
-          title: campaignCreation.formData.title,
-          description: campaignCreation.formData.description,
-          goal: Number(campaignCreation.formData.goal),
-          status: campaignCreation.formData.status || 'active',
+        
+        // Map form data to database schema
+        const mappedData = mapFormDataToDatabase(campaignCreation.formData);
+        
+        // Prepare campaign data
+        let campaignDataToUpdate = {
+          ...mappedData,
           startDate: startDate,
           endDate: endDate,
           updatedAt: new Date(),
-          tags: campaignCreation.formData.tags || [],
-          coverImageUrl: campaignCreation.formData.coverImageUrl || '',
-          category: campaignCreation.formData.category || 'General',
-        });
+        };
+        
+        // Upload cover image if selected, using the shared hook
+        if (selectedImage) {
+          const uploadedData = await handleImageUpload(campaignCreation.editingCampaignInTour.id, campaignDataToUpdate);
+          if (uploadedData?.coverImageUrl) {
+            campaignDataToUpdate.coverImageUrl = uploadedData.coverImageUrl;
+          }
+        }
+        
+        // Upload gallery images if selected, using the shared hook
+        const existingGalleryUrls = Array.isArray(campaignCreation.formData.galleryImages) 
+          ? campaignCreation.formData.galleryImages 
+          : [];
+        const finalGalleryUrls = await handleGalleryImagesUpload(campaignCreation.editingCampaignInTour.id, existingGalleryUrls);
+        campaignDataToUpdate.galleryImages = finalGalleryUrls;
+        
+        await updateDoc(campaignRef, campaignDataToUpdate);
         
         // Refresh campaigns list
         const campaigns = await fetchCampaignsByOrganization(userSession.user.organizationId!);
         setCampaignCreation(prev => ({ ...prev, allCampaigns: campaigns }));
       } else {
         // Create new campaign
+        // Map form data to database schema
+        const mappedData = mapFormDataToDatabase(campaignCreation.formData);
+        
         const campaignData = {
-          title: campaignCreation.formData.title,
-          description: campaignCreation.formData.description,
-          goal: Number(campaignCreation.formData.goal),
+          ...mappedData,
           raised: 0,
-          status: campaignCreation.formData.status || 'active',
           startDate: startDate,
           endDate: endDate,
           organizationId: userSession.user.organizationId,
           createdAt: new Date(),
           updatedAt: new Date(),
-          isGlobal: false,
-          tags: campaignCreation.formData.tags || [],
-          coverImageUrl: campaignCreation.formData.coverImageUrl || '',
-          category: campaignCreation.formData.category || 'General',
         };
         
         const docRef = await addDoc(collection(db, 'campaigns'), campaignData);
+        
+        // Upload cover image after campaign creation if selected, using the shared hook
+        let finalCoverImageUrl = campaignData.coverImageUrl;
+        if (selectedImage) {
+          const uploadedData = await handleImageUpload(docRef.id, campaignData);
+          if (uploadedData?.coverImageUrl) {
+            finalCoverImageUrl = uploadedData.coverImageUrl;
+          }
+        }
+        
+        // Upload gallery images after campaign creation if selected, using the shared hook
+        const finalGalleryUrls = await handleGalleryImagesUpload(docRef.id, []);
+        
+        // Update the campaign with the Firebase Storage URLs
+        if (finalCoverImageUrl !== campaignData.coverImageUrl || finalGalleryUrls.length > 0) {
+          await updateDoc(doc(db, 'campaigns', docRef.id), {
+            coverImageUrl: finalCoverImageUrl,
+            galleryImages: finalGalleryUrls
+          });
+        }
+        
         setCampaignCreation(prev => ({ ...prev, createdId: docRef.id }));
         
         // Refresh campaigns list
@@ -729,6 +797,11 @@ export function AdminDashboard({
         },
         editingCampaignInTour: null
       }));
+      
+      // Clear hook state after successful save
+      clearImageSelection();
+      clearGallerySelection();
+      
       setDialogVisibility(prev => ({ ...prev, showCampaignFormDialog: false }));
       
     } catch (error) {
@@ -748,12 +821,26 @@ export function AdminDashboard({
         const campaigns = await fetchCampaignsByOrganization(userSession.user.organizationId!);
         setCampaignCreation(prev => ({ ...prev, allCampaigns: campaigns }));
       } catch (error) {
-        console.error("Error fetching campaigns: ", error);
+        console.error("Error fetching campaigns:", error);
       }
     };
-
+    
     fetchAllCampaigns();
   }, [onboardingFlow.showLinkingForm, onboardingFlow.showCampaignForm, userSession.user.organizationId, fetchCampaignsByOrganization]);
+
+  // Sync kiosk assignments from campaign when moving to Step 2
+  useEffect(() => {
+    if (onboardingFlow.showKioskForm && campaignCreation.selectedCampaignInTour) {
+      const campaign = campaignCreation.selectedCampaignInTour;
+      
+      // Set the kiosk assignments from the campaign
+      setKioskCreation(prev => ({
+        ...prev,
+        isGlobalCampaign: campaign.isGlobal || false,
+        assignedKioskIds: campaign.assignedKiosks || []
+      }));
+    }
+  }, [onboardingFlow.showKioskForm, campaignCreation.selectedCampaignInTour]);
 
   // Fetch all kiosks when kiosk form is shown
   useEffect(() => {
@@ -1386,6 +1473,9 @@ export function AdminDashboard({
                 onOpenChange={(open) => {
                   setDialogVisibility(prev => ({ ...prev, showCampaignFormDialog: open }));
                   if (!open) {
+                    // Clear hook state when dialog closes
+                    clearImageSelection();
+                    clearGallerySelection();
                     setCampaignCreation(prev => ({ ...prev, editingCampaignInTour: null }));
                   }
                 }}
@@ -1398,11 +1488,42 @@ export function AdminDashboard({
                   console.log('Save draft clicked');
                 }}
                 onCancel={() => {
+                  // Clear hook state when canceling
+                  clearImageSelection();
+                  clearGallerySelection();
                   setDialogVisibility(prev => ({ ...prev, showCampaignFormDialog: false }));
                   setCampaignCreation(prev => ({ ...prev, editingCampaignInTour: null }));
                 }}
                 formatCurrency={formatCurrency}
-                onImageFileSelect={(file) => setCampaignCreation(prev => ({ ...prev, selectedImageFile: file }))}
+                onImageFileSelect={(file) => {
+                  if (file) {
+                    // Create a DataTransfer to properly create a FileList
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    const fakeEvent = {
+                      target: {
+                        files: dataTransfer.files
+                      }
+                    } as React.ChangeEvent<HTMLInputElement>;
+                    handleImageSelect(fakeEvent);
+                  }
+                  setCampaignCreation(prev => ({ ...prev, selectedImageFile: file }));
+                }}
+                onGalleryImagesSelect={(files) => {
+                  if (files && files.length > 0) {
+                    // Create a DataTransfer to properly create a FileList
+                    const dataTransfer = new DataTransfer();
+                    files.forEach(file => dataTransfer.items.add(file));
+                    const fakeEvent = {
+                      target: {
+                        files: dataTransfer.files
+                      }
+                    } as React.ChangeEvent<HTMLInputElement>;
+                    handleGalleryImagesSelect(fakeEvent);
+                  }
+                }}
+                organizationId={userSession.user.organizationId}
+                isSubmitting={campaignCreation.isCreating}
               />
             </div>
 
@@ -1470,7 +1591,7 @@ export function AdminDashboard({
                       {kioskCreation.allKiosks.length > 0 && (
                         <button
                           type="button"
-                          onClick={() => {
+                          onClick={async () => {
                             if (kioskCreation.isGlobalCampaign) {
                               // If already global, turn off and unassign all
                               setKioskCreation(prev => ({ 
@@ -1478,18 +1599,47 @@ export function AdminDashboard({
                                 isGlobalCampaign: false,
                                 assignedKioskIds: []
                               }));
+                              
+                              // Update campaign document
+                              if (campaignCreation.selectedCampaignInTour) {
+                                try {
+                                  const campaignRef = doc(db, 'campaigns', campaignCreation.selectedCampaignInTour.id);
+                                  await updateDoc(campaignRef, {
+                                    isGlobal: false,
+                                    assignedKiosks: [],
+                                    updatedAt: new Date()
+                                  });
+                                } catch (error) {
+                                  console.error("Error updating campaign:", error);
+                                }
+                              }
                             } else {
                               // Make global - assign all kiosks
+                              const allKioskIds = kioskCreation.allKiosks.map(k => k.id);
                               setKioskCreation(prev => ({ 
                                 ...prev, 
                                 isGlobalCampaign: true,
-                                assignedKioskIds: prev.allKiosks.map(k => k.id)
+                                assignedKioskIds: allKioskIds
                               }));
+                              
+                              // Update campaign document
+                              if (campaignCreation.selectedCampaignInTour) {
+                                try {
+                                  const campaignRef = doc(db, 'campaigns', campaignCreation.selectedCampaignInTour.id);
+                                  await updateDoc(campaignRef, {
+                                    isGlobal: true,
+                                    assignedKiosks: allKioskIds,
+                                    updatedAt: new Date()
+                                  });
+                                } catch (error) {
+                                  console.error("Error updating campaign:", error);
+                                }
+                              }
                             }
                           }}
-                          disabled={!campaignCreation.createdId}
+                          disabled={!campaignCreation.selectedCampaignInTour}
                           className={`w-full py-4 px-6 rounded-lg font-semibold text-lg transition-all duration-200 mb-6 flex items-center justify-center gap-3 ${
-                            !campaignCreation.createdId
+                            !campaignCreation.selectedCampaignInTour
                               ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                               : kioskCreation.isGlobalCampaign
                               ? 'bg-green-500 hover:bg-green-600 text-white'
@@ -1529,7 +1679,7 @@ export function AdminDashboard({
                                   </div>
                                   <button
                                     type="button"
-                                    onClick={() => {
+                                    onClick={async () => {
                                       if (isAssigned) {
                                         // Unassign this kiosk
                                         const newAssignedIds = kioskCreation.assignedKioskIds.filter(id => id !== kiosk.id);
@@ -1537,6 +1687,20 @@ export function AdminDashboard({
                                         // If not all kiosks are assigned anymore, turn off global
                                         if (newAssignedIds.length < kioskCreation.allKiosks.length) {
                                           setKioskCreation(prev => ({ ...prev, isGlobalCampaign: false }));
+                                        }
+                                        
+                                        // Update campaign document
+                                        if (campaignCreation.selectedCampaignInTour) {
+                                          try {
+                                            const campaignRef = doc(db, 'campaigns', campaignCreation.selectedCampaignInTour.id);
+                                            await updateDoc(campaignRef, {
+                                              assignedKiosks: newAssignedIds,
+                                              isGlobal: newAssignedIds.length === kioskCreation.allKiosks.length,
+                                              updatedAt: new Date()
+                                            });
+                                          } catch (error) {
+                                            console.error("Error updating campaign:", error);
+                                          }
                                         }
                                       } else {
                                         // Assign this kiosk
@@ -1546,11 +1710,25 @@ export function AdminDashboard({
                                         if (newAssignedIds.length === kioskCreation.allKiosks.length) {
                                           setKioskCreation(prev => ({ ...prev, isGlobalCampaign: true }));
                                         }
+                                        
+                                        // Update campaign document
+                                        if (campaignCreation.selectedCampaignInTour) {
+                                          try {
+                                            const campaignRef = doc(db, 'campaigns', campaignCreation.selectedCampaignInTour.id);
+                                            await updateDoc(campaignRef, {
+                                              assignedKiosks: newAssignedIds,
+                                              isGlobal: newAssignedIds.length === kioskCreation.allKiosks.length,
+                                              updatedAt: new Date()
+                                            });
+                                          } catch (error) {
+                                            console.error("Error updating campaign:", error);
+                                          }
+                                        }
                                       }
                                     }}
-                                    disabled={!campaignCreation.createdId}
+                                    disabled={!campaignCreation.selectedCampaignInTour}
                                     className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
-                                      !campaignCreation.createdId
+                                      !campaignCreation.selectedCampaignInTour
                                         ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                         : isAssigned
                                         ? 'bg-green-500 hover:bg-green-600 text-white'
@@ -2328,5 +2506,6 @@ export function AdminDashboard({
         </div>
       )}
     </AdminLayout>
-  );
+  )
 }
+ 
