@@ -138,12 +138,18 @@ export function CampaignForm({
         setGalleryPreviews([]);
         setSelectedGalleryFiles([]);
       }
+      // Load existing cover image preview
+      if (campaignData.coverImageUrl) {
+        setImagePreview(campaignData.coverImageUrl);
+      }
     } else if (open && !editingCampaign) {
       // Clear for new campaign
       setGalleryPreviews([]);
       setSelectedGalleryFiles([]);
+      setImagePreview(null); // ✅ Clear cover image preview
+      setSelectedImageFile(null); // ✅ Clear selected file
     }
-  }, [open, editingCampaign, campaignData.galleryImages]);
+  }, [open, editingCampaign, campaignData.galleryImages, campaignData.coverImageUrl]);
 
   useEffect(() => {
     if (open && organizationId) {
@@ -971,7 +977,24 @@ export function CampaignForm({
                           </div>
                           <Switch
                             checked={campaignData.isGlobal}
-                            onCheckedChange={(checked) => setCampaignData(p => ({ ...p, isGlobal: checked }))}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                // When enabling global, assign all kiosks
+                                const allKioskIds = kiosks.map(k => k.id);
+                                setCampaignData(p => ({ 
+                                  ...p, 
+                                  isGlobal: true,
+                                  assignedKiosks: allKioskIds
+                                }));
+                              } else {
+                                // When disabling global, clear all assignments
+                                setCampaignData(p => ({ 
+                                  ...p, 
+                                  isGlobal: false,
+                                  assignedKiosks: []
+                                }));
+                              }
+                            }}
                             className="ml-4"
                           />
                         </div>
@@ -1021,7 +1044,8 @@ export function CampaignForm({
                           ) : (
                             <div className="space-y-2 max-h-64 overflow-y-auto">
                               {kiosks.map((kiosk) => {
-                                const isAssigned = (campaignData.assignedKiosks || []).includes(kiosk.id);
+                                // If campaign is global, all kiosks are assigned
+                                const isAssigned = campaignData.isGlobal || (campaignData.assignedKiosks || []).includes(kiosk.id);
                                 const isDisabled = campaignData.isGlobal;
                                 
                                 return (
