@@ -12,12 +12,19 @@ export default function Terms() {
   const baseReturnTo = useReturnTo({ home: '/', signup: '/signup' }, '/')
   const returnTo = from === 'signup' && step ? `/signup?step=${step}` : baseReturnTo
 
+  const clearSignupDraft = () => {
+    if (from === 'signup') {
+      sessionStorage.removeItem('signupDraft')
+    }
+  }
+
   const handleBack = () => {
     router.push(returnTo)
   }
 
   const handleNavigate = (screen: string) => {
     if (screen === 'home') {
+      clearSignupDraft()
       router.push(returnTo)
     } else {
       router.push(`/${screen}`)

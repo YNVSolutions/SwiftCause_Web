@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Checkbox } from '../../shared/ui/checkbox';
 import { checkEmailExists, checkOrganizationIdExists } from '../../shared/api/firestoreService';
 import Image from "next/image"
+import { useSignupDraft } from '../../shared/lib/hooks/useSignupDraft';
 import { 
   Heart,
   Shield,
@@ -90,6 +91,11 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms, initialSt
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const recaptchaRef = useRef<ReCAPTCHA>(null);
 
+  const { draft, saveDraft, clearDraft, isHydrated } = useSignupDraft<{
+    formData: SignupFormData;
+    currentStep: number;
+  }>('signupDraft', 5 * 60 * 1000);
+
   useEffect(() => {
     if (initialStep && initialStep >= 1 && initialStep <= 3) {
       setCurrentStep(initialStep);
@@ -110,6 +116,25 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms, initialSt
     currency: 'GBP', 
     agreeToTerms: false
   });
+
+  useEffect(() => {
+    if (draft?.formData) {
+      setFormData(prev => {
+        const prevJson = JSON.stringify(prev);
+        const nextJson = JSON.stringify(draft.formData);
+        return prevJson === nextJson ? prev : draft.formData;
+      });
+    }
+    if (!initialStep && draft?.currentStep) {
+      setCurrentStep(prev => (prev === draft.currentStep ? prev : draft.currentStep));
+    }
+    setRecaptchaToken(null);
+  }, [draft, initialStep]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    saveDraft({ formData, currentStep });
+  }, [formData, currentStep, saveDraft, isHydrated]);
 
   const organizationTypes = ORGANIZATION_TYPES;
   const organizationSizes = ORGANIZATION_SIZES;
@@ -320,6 +345,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms, initialSt
           },
           recaptchaToken, // Include the token for backend verification
         } as any)
+        clearDraft();
       } catch (error) {
         setIsSubmitting(false)
         // Reset reCAPTCHA on error
@@ -561,8 +587,11 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms, initialSt
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             {/* Home button */}
-            <button
-              onClick={onBack}
+              <button
+                onClick={() => {
+                  clearDraft();
+                  onBack();
+                }}
               className="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 text-slate-600 hover:text-[#064e3b] hover:border-[#064e3b] hover:bg-green-50 transition-all group"
             >
               <Home className="w-4 h-4" />
@@ -580,7 +609,13 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms, initialSt
             {/* Login link */}
             <div className="text-sm text-slate-500">
               <span className="hidden sm:inline">Already have an account?{' '}</span>
-              <button onClick={onLogin} className="text-[#064e3b] font-semibold hover:underline">
+              <button
+                onClick={() => {
+                  clearDraft();
+                  onLogin();
+                }}
+                className="text-[#064e3b] font-semibold hover:underline"
+              >
                 Log in
               </button>
             </div>

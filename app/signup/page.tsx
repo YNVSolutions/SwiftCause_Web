@@ -11,8 +11,9 @@ export default function Signup() {
   const searchParams = useSearchParams()
   const { handleSignup } = useAuth()
   const { showToast } = useToast()
-  const stepParam = Number(searchParams.get('step'))
-  const initialStep = Number.isFinite(stepParam) ? Math.min(Math.max(stepParam, 1), 3) : 1
+  const stepParamRaw = searchParams.get('step')
+  const stepParam = stepParamRaw ? Number(stepParamRaw) : NaN
+  const initialStep = Number.isFinite(stepParam) ? Math.min(Math.max(stepParam, 1), 3) : undefined
 
   const handleSignupWithToast = async (signupData: SignupFormData) => {
     try {
