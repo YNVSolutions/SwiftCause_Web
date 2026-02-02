@@ -13,6 +13,32 @@ import { User } from '../../../entities/user';
 import { SignupCredentials } from '../model';
 
 export const authApi = {
+  async signInForVerificationCheck(email: string, password: string) {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      return userCredential;
+    } catch (error: unknown) {
+      const expectedErrors = [
+        'auth/invalid-email',
+        'auth/invalid-credential',
+        'auth/user-not-found',
+        'auth/wrong-password',
+        'auth/user-disabled',
+        'auth/too-many-requests'
+      ];
+      
+      const hasCode = (err: unknown): err is { code: string } => {
+        return typeof err === 'object' && err !== null && 'code' in err;
+      };
+      
+      if (!hasCode(error) || !expectedErrors.includes(error.code)) {
+        console.error('Unexpected error signing in:', error);
+      }
+      
+      throw error;
+    }
+  },
+
   // Check if email exists and is verified in Firestore
   async checkEmailVerification(email: string): Promise<{ exists: boolean; verified: boolean }> {
     try {
@@ -40,6 +66,12 @@ export const authApi = {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const userDocRef = doc(db, 'users', userCredential.user.uid);
+      
+      // Update lastLogin timestamp
+      await updateDoc(userDocRef, {
+        lastLogin: new Date().toISOString()
+      });
+      
       const userDocSnap = await getDoc(userDocRef);
       
       if (userDocSnap.exists()) {

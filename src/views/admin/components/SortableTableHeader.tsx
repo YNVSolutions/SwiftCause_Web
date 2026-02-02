@@ -53,7 +53,7 @@ export function SortableTableHeader({
           : 'none'
       }
     >
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center gap-2 pl-4">
         <span className="whitespace-nowrap">{children}</span>
         <div className="flex flex-col flex-shrink-0">
           <ChevronUp 

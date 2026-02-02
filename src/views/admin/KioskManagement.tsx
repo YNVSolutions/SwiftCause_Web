@@ -462,40 +462,54 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                                 {kiosk.location}
                               </div>
                             </div>
-                            {(hasPermission('edit_kiosk') || hasPermission('delete_kiosk')) && (
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 text-gray-500 hover:bg-gray-100"
-                                    aria-label="Kiosk actions"
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-gray-500 hover:bg-gray-100"
+                                  aria-label="Kiosk actions"
+                                >
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                {hasPermission('edit_kiosk') ? (
+                                  <DropdownMenuItem
+                                    onSelect={() => handleEditKiosk(kiosk)}
+                                    className="flex items-center gap-2"
                                   >
-                                    <MoreVertical className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  {hasPermission('edit_kiosk') && (
-                                    <DropdownMenuItem
-                                      onSelect={() => handleEditKiosk(kiosk)}
-                                      className="flex items-center gap-2"
-                                    >
-                                      <Edit className="h-4 w-4" />
-                                      Edit
-                                    </DropdownMenuItem>
-                                  )}
-                                  {hasPermission('delete_kiosk') && (
-                                    <DropdownMenuItem
-                                      onSelect={() => handleDeleteKiosk(kiosk)}
-                                      className="flex items-center gap-2 text-red-600 focus:text-red-600"
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                      Delete
-                                    </DropdownMenuItem>
-                                  )}
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            )}
+                                    <Edit className="h-4 w-4" />
+                                    Edit
+                                  </DropdownMenuItem>
+                                ) : (
+                                  <DropdownMenuItem
+                                    disabled
+                                    className="flex items-center gap-2 text-gray-400 cursor-not-allowed"
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                    Edit (No permission)
+                                  </DropdownMenuItem>
+                                )}
+                                {hasPermission('delete_kiosk') ? (
+                                  <DropdownMenuItem
+                                    onSelect={() => handleDeleteKiosk(kiosk)}
+                                    className="flex items-center gap-2 text-red-600 focus:text-red-600"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                ) : (
+                                  <DropdownMenuItem
+                                    disabled
+                                    className="flex items-center gap-2 text-gray-400 cursor-not-allowed"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                    Delete (No permission)
+                                  </DropdownMenuItem>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </div>
 
                           <div className="mt-4 space-y-3">
@@ -711,7 +725,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                             </TableCell>
                             <TableCell className="px-4 lg:px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center gap-2">
-                                {hasPermission('edit_kiosk') && (
+                                {hasPermission('edit_kiosk') ? (
                                   <Button
                                     variant="ghost"
                                     size="sm"
@@ -721,14 +735,34 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                                   >
                                     <Edit className="w-4 h-4" />
                                   </Button>
+                                ) : (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    disabled
+                                    className="h-8 w-8 p-0 text-gray-300 cursor-not-allowed"
+                                    title="No permission to edit kiosks"
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </Button>
                                 )}
-                                {hasPermission('delete_kiosk') && (
+                                {hasPermission('delete_kiosk') ? (
                                   <Button
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => handleDeleteKiosk(kiosk)}
                                     className="h-8 w-8 p-0 text-gray-400 hover:text-red-600"
                                     title="Delete Kiosk"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    disabled
+                                    className="h-8 w-8 p-0 text-gray-300 cursor-not-allowed"
+                                    title="No permission to delete kiosks"
                                   >
                                     <Trash2 className="w-4 h-4" />
                                   </Button>
@@ -765,6 +799,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
         kioskData={newKiosk}
         setKioskData={setNewKiosk}
         campaigns={campaigns}
+        hasPermission={hasPermission}
         onSubmit={handleCreateKiosk}
         onCancel={handleCancel}
         onAssignCampaign={handleAssignCampaign}

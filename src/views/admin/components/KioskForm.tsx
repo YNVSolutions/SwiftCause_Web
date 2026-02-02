@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { Kiosk } from '../../../shared/types';
+import { Kiosk, Permission } from '../../../shared/types';
 
 // UI Components
 import { Button } from '../../../shared/ui/button';
@@ -40,6 +40,7 @@ export interface KioskFormProps {
   kioskData: KioskFormData;
   setKioskData: React.Dispatch<React.SetStateAction<KioskFormData>>;
   campaigns: Campaign[];
+  hasPermission?: (permission: Permission) => boolean; // Add hasPermission prop
   onSubmit: () => void;
   onCancel: () => void;
   onAssignCampaign: (campaignId: string) => void;
@@ -56,6 +57,7 @@ export function KioskForm({
   kioskData,
   setKioskData,
   campaigns,
+  hasPermission,
   onSubmit,
   onCancel,
   onAssignCampaign,
@@ -85,7 +87,7 @@ export function KioskForm({
   
   const navigationItems = [
     { id: 'basic-info', label: 'BASIC INFO' },
-    { id: 'campaigns', label: 'CAMPAIGNS' },
+    ...(hasPermission?.('assign_campaigns') !== false ? [{ id: 'campaigns', label: 'CAMPAIGNS' }] : []),
     { id: 'display', label: 'DISPLAY' }
   ];
 
@@ -381,15 +383,16 @@ export function KioskForm({
               </section>
 
               {/* Campaigns Section */}
-              <section 
-                id="campaigns"
-                ref={sectionRefs['campaigns']}
-                className="p-4 sm:p-6 lg:p-8 border-b border-gray-100"
-              >
-                <div className="max-w-4xl">
-                  <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-6 sm:mb-8">
-                    Campaigns
-                  </h2>
+              {hasPermission?.('assign_campaigns') !== false && (
+                <section 
+                  id="campaigns"
+                  ref={sectionRefs['campaigns']}
+                  className="p-4 sm:p-6 lg:p-8 border-b border-gray-100"
+                >
+                  <div className="max-w-4xl">
+                    <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-6 sm:mb-8">
+                      Campaigns
+                    </h2>
                   
                   {/* Assigned Campaigns Section */}
                   <div className="mb-6 sm:mb-8">
@@ -564,6 +567,7 @@ export function KioskForm({
                   </div>
                 </div>
               </section>
+              )}
 
               {/* Display Section */}
               <section 

@@ -1,6 +1,6 @@
 import { Input } from '../../../shared/ui/input';
 import { Label } from '../../../shared/ui/label';
-import { Mail, AlertTriangle, Loader2 } from 'lucide-react';
+import { Mail, AlertTriangle } from 'lucide-react';
 
 interface ProfessionalEmailFieldProps {
   value: string;
@@ -8,7 +8,6 @@ interface ProfessionalEmailFieldProps {
   onBlur?: () => void;
   error?: string | null;
   id?: string;
-  isChecking?: boolean;
 }
 
 export function ProfessionalEmailField({ 
@@ -16,8 +15,7 @@ export function ProfessionalEmailField({
   onChange, 
   onBlur, 
   error, 
-  id = 'email',
-  isChecking = false
+  id = 'email'
 }: ProfessionalEmailFieldProps) {
   return (
     <div className="space-y-2">
@@ -44,14 +42,8 @@ export function ProfessionalEmailField({
             onBlur={() => {
               onBlur?.();
             }}
-            className="h-12 px-4 pr-10 bg-transparent text-sm text-[#1f2937] placeholder:text-[#9aa09b] outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent w-full"
+            className="h-12 px-4 bg-transparent text-sm text-[#1f2937] placeholder:text-[#9aa09b] outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent w-full"
           />
-          
-          {isChecking && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              <Loader2 className="h-4 w-4 text-blue-600 animate-spin" />
-            </div>
-          )}
         </div>
       </div>
 

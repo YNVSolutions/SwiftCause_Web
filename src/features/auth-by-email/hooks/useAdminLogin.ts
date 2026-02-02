@@ -11,41 +11,6 @@ export function useAdminLogin(onLogin: OnLogin) {
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 	const [localError, setLocalError] = useState<string>('');
-	const [emailVerificationError, setEmailVerificationError] = useState<string>('');
-	const [isCheckingEmail, setIsCheckingEmail] = useState(false);
-	const [emailVerified, setEmailVerified] = useState<boolean>(true);
-
-	const checkEmailVerification = useCallback(async () => {
-		if (!email || !email.includes('@')) {
-			setEmailVerificationError('');
-			setEmailVerified(true);
-			return;
-		}
-
-		setIsCheckingEmail(true);
-		setEmailVerificationError('');
-		
-		try {
-			const result = await authApi.checkEmailVerification(email);
-			
-			if (!result.exists) {
-				setEmailVerificationError('');
-				setEmailVerified(true);
-			} else if (!result.verified) {
-				setEmailVerificationError('This email is not verified yet. Please verify your email before logging in.');
-				setEmailVerified(false);
-			} else {
-				setEmailVerificationError('');
-				setEmailVerified(true);
-			}
-		} catch (err) {
-			console.error('Error checking email verification:', err);
-			setEmailVerificationError('');
-			setEmailVerified(true);
-		} finally {
-			setIsCheckingEmail(false);
-		}
-	}, [email]);
 
 	const handleSubmit = useCallback(async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -56,12 +21,17 @@ export function useAdminLogin(onLogin: OnLogin) {
 			return;
 		}
 
-		if (!emailVerified) {
-			setLocalError('Please verify your email before logging in.');
-			return;
-		}
-
 		try {
+			// sign in to get the Firebase Auth user
+			const userCredential = await authApi.signInForVerificationCheck(email, password);
+			
+			if (!userCredential.user.emailVerified) {
+				setLocalError('Please verify your email before logging in. Check your inbox for the verification link.');
+				// Sign out the user
+				await authApi.signOut();
+				return;
+			}
+
 			const profile = await login(email, password);
 			if (!profile) {
 				return;
@@ -90,10 +60,32 @@ export function useAdminLogin(onLogin: OnLogin) {
 
 			onLogin('admin', adminSession);
 		} catch (err: unknown) {
-			const errorMessage = err instanceof Error ? err.message : 'Authentication failed. Please try again.';
-			setLocalError(errorMessage);
+			if (err && typeof err === 'object' && 'code' in err) {
+				const firebaseError = err as { code: string; message: string };
+				switch (firebaseError.code) {
+					case 'auth/invalid-credential':
+					case 'auth/user-not-found':
+					case 'auth/wrong-password':
+						setLocalError('Invalid email or password. Please try again.');
+						break;
+					case 'auth/invalid-email':
+						setLocalError('Please enter a valid email address.');
+						break;
+					case 'auth/user-disabled':
+						setLocalError('This account has been disabled. Please contact support.');
+						break;
+					case 'auth/too-many-requests':
+						setLocalError('Too many failed login attempts. Please try again later.');
+						break;
+					default:
+						setLocalError('Authentication failed. Please try again.');
+				}
+			} else {
+				const errorMessage = err instanceof Error ? err.message : 'Authentication failed. Please try again.';
+				setLocalError(errorMessage);
+			}
 		}
-	}, [email, password, emailVerified, login, onLogin]);
+	}, [email, password, login, onLogin]);
 
 	const error = useMemo(() => localError || authError || '', [localError, authError]);
 
@@ -104,9 +96,6 @@ export function useAdminLogin(onLogin: OnLogin) {
 		setPassword,
 		error,
 		loading,
-		emailVerificationError,
-		isCheckingEmail,
-		checkEmailVerification,
 		handleSubmit
 	};
 }
