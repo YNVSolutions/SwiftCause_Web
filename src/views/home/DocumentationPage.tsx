@@ -184,26 +184,31 @@ export function DocumentationPage({ onNavigate, onBack }: { onNavigate?: (screen
         }
       `}</style>
       
-      {/* Header */}
-      <nav className="fixed top-0 w-full z-50">
-        <div className="max-w-[1400px] mx-auto flex items-center justify-between py-5 glass-card px-4 rounded-b-2xl">
-          <div className="flex items-center gap-3">
+      <header className="sticky top-0 z-50">
+        <div className="max-w-[1200px] mx-auto flex items-center justify-between py-4 glass-card px-4 rounded-b-2xl">
+          <button
+            onClick={() => onNavigate && onNavigate('home')}
+            className="flex items-center gap-3 text-left"
+            aria-label="Go to home"
+          >
             <img src="/logo.png" alt="SwiftCause" className="w-8 h-8" />
-            <span className="font-bold text-xl tracking-tight text-[#064e3b]">SwiftCause</span>
-          </div>
-          
-          <Button 
-            variant="ghost" 
-            onClick={() => (onBack ? onBack() : onNavigate && onNavigate('home'))} 
+            <div>
+              <span className="font-bold text-lg tracking-tight text-[#064e3b]">SwiftCause</span>
+              <p className="text-[11px] text-slate-500">Donation Platform</p>
+            </div>
+          </button>
+          <Button
+            variant="ghost"
+            onClick={() => (onBack ? onBack() : onNavigate && onNavigate('home'))}
             className="flex items-center gap-2 text-[#064e3b] border border-[#064e3b] px-4 py-2 rounded-2xl hover:bg-[#064e3b] hover:text-stone-50 transition-all duration-300"
           >
             <ArrowLeft className="h-4 w-4" />
             <span className="text-sm font-semibold">Back</span>
           </Button>
         </div>
-      </nav>
+      </header>
 
-      <main className="pt-32">
+      <main className="pt-10 sm:pt-14">
         {/* Hero Section */}
         <section className="pb-8 px-4">
           <div className="max-w-[1400px] mx-auto text-center">
