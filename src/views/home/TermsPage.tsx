@@ -4,7 +4,7 @@ import { ArrowLeft, AlertTriangle, FileText, CheckCircle, ExternalLink } from 'l
 import { Footer } from '../../shared/ui/Footer';
 import swiftCauseLogo from '../../shared/assets/logo.png';
 
-export function TermsPage({ onNavigate }: { onNavigate?: (screen: string) => void }) {
+export function TermsPage({ onNavigate, onBack }: { onNavigate?: (screen: string) => void; onBack?: () => void }) {
   const effectiveDate = 'September 28, 2025';
 
   const [isVisible, setIsVisible] = useState(false);
@@ -28,6 +28,15 @@ export function TermsPage({ onNavigate }: { onNavigate?: (screen: string) => voi
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
           <div className="flex items-center space-x-3">
+          <Button 
+            variant="ghost" 
+            onClick={() => (onBack ? onBack() : onNavigate && onNavigate('home'))} 
+            className="flex items-center text-gray-600 hover:text-gray-900 transition-colors duration-200"
+            aria-label="Go back to home page"
+          >
+              <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5 mr-2" /> 
+              <span className="text-sm sm:text-base">Back</span>
+            </Button>
             <div className="h-8 w-8 sm:h-10 sm:w-10">
               <img 
                 src={swiftCauseLogo.src} 
@@ -40,16 +49,6 @@ export function TermsPage({ onNavigate }: { onNavigate?: (screen: string) => voi
               <p className="text-xs text-gray-600">Donation Platform</p>
             </div>
           </div>
-          
-          <Button 
-            variant="ghost" 
-            onClick={() => onNavigate && onNavigate('home')} 
-            className="flex items-center text-gray-600 hover:text-gray-900 transition-colors duration-200"
-            aria-label="Go back to home page"
-          >
-            <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5 mr-2" /> 
-            <span className="text-sm sm:text-base">Back</span>
-          </Button>
         </div>
       </header>
 

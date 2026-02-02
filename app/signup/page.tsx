@@ -1,6 +1,6 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { SignupScreen } from '@/views/auth/SignupScreen'
 import { useAuth } from '@/shared/lib/auth-provider'
 import { useToast } from '@/shared/ui/ToastProvider'
@@ -8,8 +8,11 @@ import { SignupFormData } from '@/shared/types'
 
 export default function Signup() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { handleSignup } = useAuth()
   const { showToast } = useToast()
+  const stepParam = Number(searchParams.get('step'))
+  const initialStep = Number.isFinite(stepParam) ? Math.min(Math.max(stepParam, 1), 3) : 1
 
   const handleSignupWithToast = async (signupData: SignupFormData) => {
     try {
@@ -38,8 +41,9 @@ export default function Signup() {
     router.push('/login')
   }
 
-  const handleViewTerms = () => {
-    router.push('/terms')
+  const handleViewTerms = (step: number) => {
+    const safeStep = Math.min(Math.max(step, 1), 3)
+    router.push(`/terms?from=signup&step=${safeStep}`)
   }
 
   return (
@@ -48,6 +52,7 @@ export default function Signup() {
       onBack={handleBack}
       onLogin={handleLogin}
       onViewTerms={handleViewTerms}
+      initialStep={initialStep}
     />
   )
 }
