@@ -107,8 +107,8 @@ const UserDocCard = ({ icon, title, description, details }: {
         </div>
       </div>
     </DialogTrigger>
-    <DialogContent className="max-w-4xl w-[90vw] h-[85vh] bg-[#F7F6F2] border-0 shadow-2xl rounded-[2rem] p-0 overflow-hidden [&>button]:hidden">
-      <div className="h-full flex flex-col">
+    <DialogContent className="no-scrollbar scrollbar-none max-w-4xl w-[90vw] h-[85vh] bg-[#F7F6F2] border-0 shadow-2xl rounded-[2rem] p-0 overflow-y-auto [&>button]:hidden">
+      <div className="flex flex-col">
         <DialogHeader className="flex-shrink-0 p-8 pb-6 border-b border-slate-200/50">
           <DialogTitle className="flex items-center gap-4 text-2xl font-medium text-slate-800 tracking-tight">
             <div className="flex items-center justify-center h-14 w-14 rounded-2xl bg-[#064e3b]/10 text-[#064e3b] shadow-lg">
@@ -120,8 +120,8 @@ const UserDocCard = ({ icon, title, description, details }: {
           </DialogTitle>
         </DialogHeader>
         
-        <div className="flex-1 p-8 pt-6 overflow-hidden">
-          <div className="h-full flex flex-col space-y-6">
+        <div className="p-8 pt-6">
+          <div className="flex flex-col space-y-6">
             <div className="flex-shrink-0 p-4 bg-[#064e3b]/5 rounded-2xl border border-[#064e3b]/10">
               <p className="text-slate-700 text-base leading-relaxed font-normal tracking-wide">{description}</p>
             </div>
@@ -133,7 +133,7 @@ const UserDocCard = ({ icon, title, description, details }: {
               </div>
               
               <div className="flex-1 min-h-0">
-                <div className="h-full grid grid-cols-1 gap-3 content-start">
+                <div className="grid grid-cols-1 gap-3 content-start">
                   {details.map((detail, index) => (
                     <div 
                       key={index} 
@@ -169,6 +169,13 @@ export function DocumentationPage({ onNavigate, onBack }: { onNavigate?: (screen
           background: rgba(255, 255, 255, 0.85);
           backdrop-filter: blur(12px);
           border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .no-scrollbar {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
         }
         * {
           -webkit-font-smoothing: antialiased;
