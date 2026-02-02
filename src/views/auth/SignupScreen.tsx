@@ -20,8 +20,7 @@ import {
   AlertCircle,
   TrendingUp,
   Lock,
-  DollarSign,
-  Home
+  DollarSign
 } from 'lucide-react';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
@@ -399,7 +398,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms, initialSt
   }
 
   return (
-    <div className="min-h-screen bg-[#fcf9f1]">
+    <div className="min-h-screen bg-[#F3F1EA] font-lexend">
       {isSubmitting && (
         <div className="fixed inset-0 z-50 bg-white flex items-center justify-center">
           <div className="text-center space-y-4">
@@ -412,14 +411,23 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms, initialSt
         </div>
       )}
 
-      <main className="min-h-screen lg:grid lg:grid-cols-[43fr_57fr]">
+      <main className="min-h-screen lg:grid lg:grid-cols-[0.75fr_1fr]">
         {/* Left side - Green section */}
-        <div className="hidden lg:flex bg-[#0a2e16] relative overflow-hidden flex-col justify-between p-12 lg:p-20">
-          {/* Logo at top - visible on all steps */}
-          <div className="absolute top-8 left-12 z-20 flex items-center gap-3">
-            <Image src="/logo.png" alt="SwiftCause logo" width={40} height={40} className="rounded-xl opacity-80" />
-            <span className="font-bold text-xl tracking-tight text-white uppercase opacity-80">SwiftCause</span>
-          </div>
+        <div className="relative hidden flex-col justify-between overflow-hidden bg-linear-to-b from-[#0f5132] to-[#064e3b] px-10 py-12 text-white lg:flex">
+          <button
+            onClick={() => {
+              clearDraft();
+              onBack();
+            }}
+            className="group relative z-10 flex items-center gap-2 text-left text-white/90 transition hover:text-white"
+          >
+            <span className="flex h-12 w-12 items-center justify-center">
+              <Image src="/logo.png" alt="SwiftCause logo" width={40} height={40} className="rounded-xl transition-transform duration-300 group-hover:scale-105" />
+            </span>
+            <span className="font-lexend text-2xl font-bold tracking-tight text-stone-50">
+              SwiftCause
+            </span>
+          </button>
 
           <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-400/10 rounded-full blur-3xl -ml-10 -mb-10"></div>
@@ -583,49 +591,42 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms, initialSt
         </div>
 
         {/* Right side - Form */}
-        <div className="flex flex-col p-6 md:p-8 lg:p-12 bg-[#fcf9f1] min-h-screen">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            {/* Home button */}
-              <button
-                onClick={() => {
-                  clearDraft();
-                  onBack();
-                }}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 text-slate-600 hover:text-[#064e3b] hover:border-[#064e3b] hover:bg-green-50 transition-all group"
+        <div className="flex items-start justify-center bg-[#F3F1EA] px-4 py-10 sm:items-center sm:px-6 sm:py-12">
+          <div className="w-full max-w-2xl">
+          <div className="mb-8 flex items-center justify-start bg-[#F3F1EA] py-3 lg:hidden sticky top-0 z-10 -mx-4 px-4 sm:static sm:mx-0 sm:px-0 sm:py-0">
+            <button
+              onClick={() => {
+                clearDraft();
+                onBack();
+              }}
+              className="flex items-center gap-2 text-left text-slate-800 transition hover:text-slate-900"
             >
-              <Home className="w-4 h-4" />
-              <span className="text-sm font-medium">Home</span>
-            </button>
-
-            {/* Mobile logo - center on mobile */}
-            <div className="flex lg:hidden items-center gap-2 absolute left-1/2 transform -translate-x-1/2">
-              <Image src="/logo.png" alt="Swift Cause Logo" width={32} height={32} className="rounded-lg" />
-              <span className="font-bold text-xl tracking-tight text-[#064e3b] uppercase">
+              <span className="flex h-9 w-9 items-center justify-center sm:h-10 sm:w-10">
+                <img src="/logo.png" alt="SwiftCause Logo" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg" />
+              </span>
+              <span className="text-lg font-semibold tracking-tight text-[#064e3b] sm:text-2xl">
                 SwiftCause
               </span>
-            </div>
-
-            {/* Login link */}
-            <div className="text-sm text-slate-500">
-              <span className="hidden sm:inline">Already have an account?{' '}</span>
-              <button
-                onClick={() => {
-                  clearDraft();
-                  onLogin();
-                }}
-                className="text-[#064e3b] font-semibold hover:underline"
-              >
-                Log in
-              </button>
-            </div>
+            </button>
           </div>
 
-          {/* Form Container */}
-          <div className="max-w-md w-full mx-auto flex-1 flex flex-col justify-center overflow-y-auto">
-            {/* White background card for the form */}
-            <div className="bg-white rounded-2xl shadow-lg p-8">
-              {/* Progress indicator */}
+            <div className="mb-8 text-center">
+              <p className="text-[10px] uppercase tracking-[0.3em] text-slate-400/70 sm:text-xs sm:tracking-[0.35em]">
+                Secure access
+              </p>
+              <h2 className="mt-2 text-2xl font-semibold text-slate-800 sm:mt-3 sm:text-3xl">
+                Create your SwiftCause account
+              </h2>
+              <p className="mt-2 text-sm text-slate-500">
+                Complete the steps below to start fundraising.
+              </p>
+            </div>
+
+            {/* Form Container */}
+            <div className="max-w-md w-full mx-auto flex-1 flex flex-col justify-center overflow-y-auto">
+              {/* White background card for the form */}
+              <div className="bg-white rounded-2xl shadow-lg p-8">
+                {/* Progress indicator */}
               <div className="mb-6">
                 <div className="flex justify-between items-center mb-3">
                   <span className="text-sm font-bold text-[#064e3b] uppercase tracking-wider">
@@ -646,12 +647,12 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms, initialSt
               {/* Form title */}
               <div className="mb-6 text-left">
                 <h1 className="text-3xl font-bold text-slate-900 mb-2">
-                  {currentStep === 1 && 'Create your account'}
+                  {currentStep === 1 && 'Start with your contact details'}
                   {currentStep === 2 && 'Organization Details'}
                   {currentStep === 3 && 'Account Security'}
                 </h1>
                 <p className="text-base text-slate-500">
-                  {currentStep === 1 && 'Join a global movement of transparent giving and track your impact in real-time.'}
+                  {currentStep === 1 && 'Tell us who you are so we can set up your admin access.'}
                   {currentStep === 2 && 'Tell us about your organization'}
                   {currentStep === 3 && 'Secure your account'}
                 </p>
@@ -1101,8 +1102,21 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms, initialSt
                   )}
             </div>
             {/* End of white background card */}
+            <div className="mt-6 text-center text-sm text-slate-500">
+              <span>Already have an account? </span>
+              <button
+                onClick={() => {
+                  clearDraft();
+                  onLogin();
+                }}
+                className="text-[#064e3b] font-semibold hover:underline"
+              >
+                Log in
+              </button>
+            </div>
           </div>
         </div>
+      </div>
       </main>
     </div>
   );
