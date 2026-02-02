@@ -18,16 +18,22 @@ export default function Terms() {
     }
   }
 
+  const safePush = (path: string) => {
+    Promise.resolve(router.push(path)).catch(() => {
+      // Ignore dev-time navigation timeouts
+    })
+  }
+
   const handleBack = () => {
-    router.push(returnTo)
+    safePush(returnTo)
   }
 
   const handleNavigate = (screen: string) => {
     if (screen === 'home') {
       clearSignupDraft()
-      router.push(returnTo)
+      safePush(returnTo)
     } else {
-      router.push(`/${screen}`)
+      safePush(`/${screen}`)
     }
   }
 

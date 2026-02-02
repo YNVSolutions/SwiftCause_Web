@@ -2,7 +2,6 @@
 import { Button } from '../../shared/ui/button';
 import { Card, CardContent } from '../../shared/ui/card';
 import { ArrowLeft, Smartphone, Shield, BarChart3, QrCode, Target, UserCog, Heart, Award, Globe, CheckCircle } from 'lucide-react';
-import { Footer } from '../../shared/ui/Footer';
 
 
 export function AboutPage({ onNavigate }: { onNavigate?: (screen: string) => void }) {
@@ -204,7 +203,6 @@ export function AboutPage({ onNavigate }: { onNavigate?: (screen: string) => voi
         </div>
       </section>
       
-      <Footer onNavigate={onNavigate} />
     </div>
   );
 }
