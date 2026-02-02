@@ -180,9 +180,12 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
   });
 
   const formatCurrency = (amount: number, currency: string) => {
+      // Default to GBP if currency is undefined or empty
+      const safeCurrency = currency && currency.trim() ? currency.toUpperCase() : 'GBP';
+      
       return new Intl.NumberFormat('en-US', {
         style: 'currency',
-        currency: currency.toUpperCase(),
+        currency: safeCurrency,
         minimumFractionDigits: 2
       }).format(amount);
   };
