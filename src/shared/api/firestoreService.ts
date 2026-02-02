@@ -172,6 +172,22 @@ export async function submitFeedback(feedback: FeedbackData) {
   return { id: docRef.id, ...feedbackData };
 }
 
+export async function queueContactConfirmationEmail(feedback: FeedbackData) {
+  const mailRef = collection(db, 'mail');
+  const mailData = {
+    to: feedback.email,
+    message: {
+      subject: 'We received your message',
+      text: `Hi ${feedback.firstName || 'there'},\n\nThanks for contacting SwiftCause. We received your message and will get back to you shortly.\n\nMessage:\n${feedback.message}\n\n— SwiftCause Team`,
+      html: `<p>Hi ${feedback.firstName || 'there'},</p><p>Thanks for contacting SwiftCause. We received your message and will get back to you shortly.</p><p><strong>Message:</strong><br/>${String(feedback.message).replace(/\n/g, '<br/>')}</p><p>— SwiftCause Team</p>`
+    },
+    createdAt: Timestamp.now()
+  };
+
+  const docRef = await addDoc(mailRef, mailData);
+  return { id: docRef.id, ...mailData };
+}
+
 export async function storeGiftAidDeclaration(giftAidData: any, transactionId: string) {
   const giftAidRef = collection(db, 'giftAidDeclarations');
   const giftAidDeclaration = {

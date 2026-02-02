@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Button } from '../../shared/ui/button';
 import { ArrowLeft, Mail, Building, SendHorizontal, Loader2, CheckCircle, AlertCircle, Clock } from 'lucide-react';
-import { submitFeedback } from '../../shared/api/firestoreService';
+import { submitFeedback, queueContactConfirmationEmail } from '../../shared/api/firestoreService';
+import { useToast } from '../../shared/ui/ToastProvider';
 
 const ContactInfoItem = ({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) => (
   <div className="flex items-start gap-4 rounded-2xl border border-[#e6e2d8] bg-white/80 p-4 shadow-sm">
@@ -15,7 +16,8 @@ const ContactInfoItem = ({ icon, title, children }: { icon: React.ReactNode; tit
   </div>
 );
 
-export function ContactPage({ onNavigate }: { onNavigate?: (screen: string) => void }) {
+export function ContactPage({ onNavigate, onBack }: { onNavigate?: (screen: string) => void; onBack?: () => void }) {
+  const { showToast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +25,8 @@ export function ContactPage({ onNavigate }: { onNavigate?: (screen: string) => v
     firstName: '',
     lastName: '',
     email: '',
-    message: ''
+    message: '',
+    website: ''
   });
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -32,13 +35,25 @@ export function ContactPage({ onNavigate }: { onNavigate?: (screen: string) => v
     setError(null);
 
     try {
+      if (formData.website.trim()) {
+        setIsLoading(false);
+        setIsSubmitted(true);
+        return;
+      }
       await submitFeedback(formData);
+      try {
+        await queueContactConfirmationEmail(formData);
+      } catch (emailError) {
+        console.error('Error queueing confirmation email:', emailError);
+      }
       setIsLoading(false);
       setIsSubmitted(true);
+      showToast('Message sent! We will get back to you soon.', 'success', 3000);
     } catch (err) {
       console.error('Error submitting feedback:', err);
       setIsLoading(false);
       setError('Failed to send message. Please try again.');
+      showToast('Failed to send message. Please try again.', 'error', 4000);
     }
   };
 
@@ -78,7 +93,7 @@ export function ContactPage({ onNavigate }: { onNavigate?: (screen: string) => v
           </button>
           <Button
             variant="ghost"
-            onClick={() => onNavigate && onNavigate('home')}
+            onClick={() => (onBack ? onBack() : onNavigate && onNavigate('home'))}
             className="flex items-center gap-2 text-[#064e3b] border border-[#064e3b] px-4 py-2 rounded-2xl hover:bg-[#064e3b] hover:text-stone-50 transition-all duration-300"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -112,9 +127,6 @@ export function ContactPage({ onNavigate }: { onNavigate?: (screen: string) => v
                   </a>
                   <p className="text-xs text-slate-500">General & Support Inquiries</p>
                 </ContactInfoItem>
-                <ContactInfoItem icon={<Building size={22} />} title="Our Office">
-                  <p>Soon to be announced</p>
-                </ContactInfoItem>
                 <ContactInfoItem icon={<Clock size={22} />} title="Response Time">
                   <p>Typically within 24 hours on business days</p>
                 </ContactInfoItem>
@@ -132,6 +144,17 @@ export function ContactPage({ onNavigate }: { onNavigate?: (screen: string) => v
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="hidden" aria-hidden="true">
+                    <label htmlFor="website">Website</label>
+                    <input
+                      type="text"
+                      id="website"
+                      tabIndex={-1}
+                      autoComplete="off"
+                      value={formData.website}
+                      onChange={handleChange('website')}
+                    />
+                  </div>
                   <div>
                     <p className="text-[10px] uppercase tracking-[0.3em] text-slate-400/70">Send a message</p>
                     <h2 className="mt-2 text-2xl font-semibold text-slate-900">How can we help?</h2>

@@ -39,19 +39,19 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
               onClick={() => onNavigate('about')}
               className="px-7 py-3 bg-transparent text-[#064e3b] text-sm font-semibold rounded-2xl border-2 border-[#064e3b] hover:bg-[#064e3b] hover:text-stone-50 transition-all duration-300"
             >
-              About Us
+              About
             </button>
             <button
               onClick={() => onNavigate('contact')}
               className="px-7 py-3 bg-transparent text-[#064e3b] text-sm font-semibold rounded-2xl border-2 border-[#064e3b] hover:bg-[#064e3b] hover:text-stone-50 transition-all duration-300"
             >
-              Contact Us
+              Contact
             </button>
             <button 
               onClick={() => onNavigate('docs')}
-              className="px-8 py-3 bg-transparent text-[#064e3b] text-sm font-semibold rounded-2xl border-2 border-[#064e3b] hover:bg-[#064e3b] hover:text-stone-50 transition-all duration-300"
+              className="px-7 py-3 bg-transparent text-[#064e3b] text-sm font-semibold rounded-2xl border-2 border-[#064e3b] hover:bg-[#064e3b] hover:text-stone-50 transition-all duration-300"
             >
-              Documentation Hub
+              Guide
             </button>
             <button 
               onClick={onSignup}

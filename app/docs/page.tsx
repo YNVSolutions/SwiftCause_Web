@@ -1,10 +1,25 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { DocumentationPage } from '@/views/home/DocumentationPage'
+import { useReturnTo } from '@/shared/lib/hooks/useReturnTo'
 
 export default function Docs() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const from = searchParams.get('from')
+  const returnTo = useReturnTo(
+    { home: '/', terms: '/terms', about: '/about', contact: '/contact', signup: '/signup', login: '/login' },
+    '/'
+  )
+
+  const handleBack = () => {
+    if (from) {
+      router.push(returnTo)
+    } else {
+      router.back()
+    }
+  }
 
   const handleNavigate = (screen: string) => {
     if (screen === 'home') {
@@ -14,5 +29,5 @@ export default function Docs() {
     }
   }
 
-  return <DocumentationPage onNavigate={handleNavigate} />
+  return <DocumentationPage onNavigate={handleNavigate} onBack={handleBack} />
 }

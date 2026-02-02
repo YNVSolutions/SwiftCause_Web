@@ -30,6 +30,18 @@ export default function Home() {
       router.push('/')
       return
     }
+    if (screen === 'about') {
+      router.push('/about?from=home')
+      return
+    }
+    if (screen === 'contact') {
+      router.push('/contact?from=home')
+      return
+    }
+    if (screen === 'docs') {
+      router.push('/docs?from=home')
+      return
+    }
     if (screen === 'terms') {
       router.push('/terms?from=home')
       return

@@ -161,7 +161,7 @@ const UserDocCard = ({ icon, title, description, details }: {
   </Dialog>
 );
 
-export function DocumentationPage({ onNavigate }: { onNavigate?: (screen: string) => void }) {
+export function DocumentationPage({ onNavigate, onBack }: { onNavigate?: (screen: string) => void; onBack?: () => void }) {
   return (
     <div className="min-h-screen bg-[#F3F1EA] font-['Helvetica',sans-serif] text-slate-700 antialiased">
       <style jsx>{`
@@ -187,10 +187,11 @@ export function DocumentationPage({ onNavigate }: { onNavigate?: (screen: string
           
           <Button 
             variant="ghost" 
-            onClick={() => onNavigate && onNavigate('home')} 
-            className="flex items-center text-slate-600 hover:text-[#064e3b] px-6 py-3 rounded-2xl hover:bg-[#064e3b]/5 transition-all duration-300"
+            onClick={() => (onBack ? onBack() : onNavigate && onNavigate('home'))} 
+            className="flex items-center gap-2 text-[#064e3b] border border-[#064e3b] px-4 py-2 rounded-2xl hover:bg-[#064e3b] hover:text-stone-50 transition-all duration-300"
           >
-            <ArrowLeft className="h-5 w-5 mr-2" /> Back
+            <ArrowLeft className="h-4 w-4" />
+            <span className="text-sm font-semibold">Back</span>
           </Button>
         </div>
       </nav>
