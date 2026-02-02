@@ -36,13 +36,17 @@ export function TermsPage({ onNavigate, onBack }: { onNavigate?: (screen: string
       `}</style>
       <header className="sticky top-0 z-50">
         <div className="max-w-[1200px] mx-auto flex items-center justify-between py-4 glass-card px-4 rounded-b-2xl">
-          <div className="flex items-center gap-3">
+          <button
+            onClick={() => onNavigate && onNavigate('home')}
+            className="flex items-center gap-3 text-left"
+            aria-label="Go to home"
+          >
             <img src={swiftCauseLogo.src} alt="SwiftCause" className="w-8 h-8" />
             <div>
               <span className="font-bold text-lg tracking-tight text-[#064e3b]">SwiftCause</span>
               <p className="text-[11px] text-slate-500">Donation Platform</p>
             </div>
-          </div>
+          </button>
           <Button
             variant="ghost"
             onClick={() => (onBack ? onBack() : onNavigate && onNavigate('home'))}

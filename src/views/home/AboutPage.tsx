@@ -11,19 +11,23 @@ export function AboutPage({ onNavigate }: { onNavigate?: (screen: string) => voi
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-3">
-              <div className="h-10 w-10">
-                <img 
-                  src="/logo.png" 
-                  alt="Swift Cause Logo" 
-                  className="w-full h-full object-contain"
-                />
-              </div>
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900">Swift Cause</h1>
-                <p className="text-xs text-gray-600">Donation Platform</p>
-              </div>
-            </div>
+              <button
+                onClick={() => onNavigate && onNavigate('home')}
+                className="flex items-center space-x-3 text-left"
+                aria-label="Go to home"
+              >
+                <div className="h-10 w-10">
+                  <img 
+                    src="/logo.png" 
+                    alt="Swift Cause Logo" 
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                <div>
+                  <h1 className="text-xl font-semibold text-gray-900">Swift Cause</h1>
+                  <p className="text-xs text-gray-600">Donation Platform</p>
+                </div>
+              </button>
             
             <Button variant="ghost" onClick={() => onNavigate && onNavigate('home')} className="flex items-center text-gray-600 hover:text-gray-900">
               <ArrowLeft className="h-5 w-5 mr-2" /> Back to Home
@@ -60,7 +64,7 @@ export function AboutPage({ onNavigate }: { onNavigate?: (screen: string) => voi
                   size="lg" 
                   className="h-14 px-8 bg-green-600 hover:bg-green-700 text-white shadow-lg"
                 >
-                  Get Started
+                  Documentation Hub
                 </Button>
               </div>
             </div>

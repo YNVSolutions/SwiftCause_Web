@@ -25,23 +25,39 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
       {/* Header */}
       <nav className="fixed top-0 w-full z-50">
         <div className="max-w-[1400px] mx-auto flex items-center justify-between py-5 glass-card px-4 rounded-b-2xl">
-          <div className="flex items-center gap-3">
+          <button
+            onClick={() => onNavigate('home')}
+            className="flex items-center gap-3 text-left"
+            aria-label="Go to home"
+          >
             <img src="/logo.png" alt="SwiftCause" className="w-8 h-8" />
             <span className="font-bold text-xl tracking-tight text-[#064e3b]">SwiftCause</span>
-          </div>
+          </button>
           
           <div className="flex items-center gap-4">
-            <button 
-              onClick={onSignup}
-              className="px-10 py-4 bg-[#064e3b] text-stone-50 text-sm font-semibold rounded-2xl hover:bg-[#0f5132] transition-all duration-300 shadow-lg shadow-[#064e3b]/20 hover:shadow-xl hover:shadow-[#064e3b]/25"
+            <button
+              onClick={() => onNavigate('about')}
+              className="px-7 py-3 bg-transparent text-[#064e3b] text-sm font-semibold rounded-2xl border-2 border-[#064e3b] hover:bg-[#064e3b] hover:text-stone-50 transition-all duration-300"
             >
-              Sign Up
+              About Us
+            </button>
+            <button
+              onClick={() => onNavigate('contact')}
+              className="px-7 py-3 bg-transparent text-[#064e3b] text-sm font-semibold rounded-2xl border-2 border-[#064e3b] hover:bg-[#064e3b] hover:text-stone-50 transition-all duration-300"
+            >
+              Contact Us
             </button>
             <button 
               onClick={() => onNavigate('docs')}
               className="px-8 py-3 bg-transparent text-[#064e3b] text-sm font-semibold rounded-2xl border-2 border-[#064e3b] hover:bg-[#064e3b] hover:text-stone-50 transition-all duration-300"
             >
-              Get Started
+              Documentation Hub
+            </button>
+            <button 
+              onClick={onSignup}
+              className="px-10 py-4 bg-[#064e3b] text-stone-50 text-sm font-semibold rounded-2xl hover:bg-[#0f5132] transition-all duration-300 shadow-lg shadow-[#064e3b]/20 hover:shadow-xl hover:shadow-[#064e3b]/25"
+            >
+              Sign Up
             </button>
           </div>
         </div>
