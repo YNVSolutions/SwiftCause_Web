@@ -10,7 +10,7 @@ admin.initializeApp();
 const recaptchaSecretKey = defineSecret("RECAPTCHA_SECRET_KEY");
 
 // Import handlers
-const {createUser, deleteUser} = require("./handlers/users");
+const {createUser, updateUser, deleteUser} = require("./handlers/users");
 const {
   handleAccountUpdatedStripeWebhook,
   handlePaymentCompletedStripeWebhook,
@@ -26,6 +26,7 @@ const {verifySignupRecaptcha} = require("./handlers/signup");
 
 // Export all functions (backwards compatible)
 exports.createUser = functions.https.onRequest(createUser);
+exports.updateUser = functions.https.onRequest(updateUser);
 exports.deleteUser = functions.https.onRequest(deleteUser);
 exports.handleAccountUpdatedStripeWebhook = functions.https.onRequest(
     handleAccountUpdatedStripeWebhook,

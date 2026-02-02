@@ -5,17 +5,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../shared/ui/table';
 import {
-  Plus, UserCog, Users, Shield, Activity,
-  Loader2, AlertCircle, Pencil, Trash2, AlertTriangle, MoreVertical
+  Plus, Search, UserCog, Users, Shield, Activity,
+  Loader2, AlertCircle, Pencil, Trash2, AlertTriangle, MoreVertical, X, Check,
+  LayoutDashboard, Megaphone, Monitor, DollarSign, Settings, Info   
 } from 'lucide-react';
 import { Skeleton } from "../../shared/ui/skeleton";
 import { Ghost } from "lucide-react";
-import { Screen, User, UserRole, AdminSession, Permission } from '../../shared/types';
+import { Screen, User, UserRole, AdminSession, Permission } from '../../shared/types'; 
+import { DEFAULT_USER_PERMISSIONS } from '../../shared/config/constants';
 import { calculateUserStats } from '../../shared/lib/userManagementHelpers';
 import { useUsers } from '../../shared/lib/hooks/useUsers';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../../shared/ui/dialog';
 import { Label } from '../../shared/ui/label';
 import { Checkbox } from '../../shared/ui/checkbox';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../shared/ui/tooltip';
 import { DialogPortal } from '@radix-ui/react-dialog';
 import { AdminLayout } from './AdminLayout';
 import { AdminSearchFilterHeader, AdminSearchFilterConfig } from './components/AdminSearchFilterHeader';
@@ -27,6 +30,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../../shared/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from '../../shared/ui/avatar';
 
 const allPermissions: Permission[] = [
     'view_dashboard', 'manage_permissions', 'create_user', 'edit_user', 'delete_user',
@@ -34,6 +38,116 @@ const allPermissions: Permission[] = [
     'view_kiosks', 'create_kiosk', 'edit_kiosk', 'delete_kiosk', 'assign_campaigns',
     'view_donations', 'export_donations', 'view_users', 'system_admin'
 ];
+
+// Helper function to get initials from username
+const getInitials = (username: string): string => {
+  const parts = username.trim().split(' ');
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+  return username.slice(0, 2).toUpperCase();
+};
+
+// Helper function to generate consistent color from string
+const getAvatarColor = (username: string): { bg: string; text: string } => {
+  const colors = [
+    { bg: 'bg-red-500/20', text: 'text-red-700' },
+    { bg: 'bg-orange-500/20', text: 'text-orange-700' },
+    { bg: 'bg-amber-500/20', text: 'text-amber-700' },
+    { bg: 'bg-yellow-500/20', text: 'text-yellow-700' },
+    { bg: 'bg-lime-500/20', text: 'text-lime-700' },
+    { bg: 'bg-green-500/20', text: 'text-green-700' },
+    { bg: 'bg-emerald-500/20', text: 'text-emerald-700' },
+    { bg: 'bg-teal-500/20', text: 'text-teal-700' },
+    { bg: 'bg-cyan-500/20', text: 'text-cyan-700' },
+    { bg: 'bg-sky-500/20', text: 'text-sky-700' },
+    { bg: 'bg-blue-500/20', text: 'text-blue-700' },
+    { bg: 'bg-indigo-500/20', text: 'text-indigo-700' },
+    { bg: 'bg-violet-500/20', text: 'text-violet-700' },
+    { bg: 'bg-purple-500/20', text: 'text-purple-700' },
+    { bg: 'bg-fuchsia-500/20', text: 'text-fuchsia-700' },
+    { bg: 'bg-pink-500/20', text: 'text-pink-700' },
+    { bg: 'bg-rose-500/20', text: 'text-rose-700' },
+  ];
+  
+  let hash = 0;
+  for (let i = 0; i < username.length; i++) {
+    hash = username.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  
+  return colors[Math.abs(hash) % colors.length];
+};
+
+// Helper function to get role-specific colors
+const getRoleColors = (role: UserRole) => {
+  switch (role) {
+    case 'super_admin':
+      return 'bg-purple-100/70 text-purple-700 ring-purple-600/30 shadow-sm';
+    case 'admin':
+      return 'bg-red-100/70 text-red-700 ring-red-600/30 shadow-sm';
+    case 'manager':
+      return 'bg-blue-100/70 text-blue-700 ring-blue-600/30 shadow-sm';
+    case 'operator':
+      return 'bg-amber-100/70 text-amber-700 ring-amber-600/30 shadow-sm';
+    case 'viewer':
+      return 'bg-green-100/70 text-green-700 ring-green-600/30 shadow-sm';
+    case 'kiosk':
+      return 'bg-gray-100/70 text-gray-700 ring-gray-600/30 shadow-sm';
+    default:
+      return 'bg-indigo-100/70 text-indigo-700 ring-indigo-600/30 shadow-sm';
+  }
+};
+
+// Helper function to group permissions by category
+const groupPermissionsByCategory = (permissions: Permission[]) => {
+  const categories: Record<string, Permission[]> = {
+    'Dashboard': [],
+    'Users': [],
+    'Campaigns': [],
+    'Kiosks': [],
+    'Donations': [],
+    'System': []
+  };
+
+  permissions.forEach(permission => {
+    if (permission.includes('dashboard')) {
+      categories['Dashboard'].push(permission);
+    } else if (permission.includes('user') || permission.includes('permission')) {
+      categories['Users'].push(permission);
+    } else if (permission.includes('campaign')) {
+      categories['Campaigns'].push(permission);
+    } else if (permission.includes('kiosk')) {
+      categories['Kiosks'].push(permission);
+    } else if (permission.includes('donation')) {
+      categories['Donations'].push(permission);
+    } else {
+      categories['System'].push(permission);
+    }
+  });
+
+  // Filter out empty categories
+  return Object.entries(categories).filter(([_, perms]) => perms.length > 0);
+};
+
+// Helper function to get icon for each category
+const getCategoryIcon = (category: string) => {
+  switch (category) {
+    case 'Dashboard':
+      return <LayoutDashboard className="w-4 h-4 text-blue-600" />;
+    case 'Users':
+      return <Users className="w-4 h-4 text-purple-600" />;
+    case 'Campaigns':
+      return <Megaphone className="w-4 h-4 text-green-600" />;
+    case 'Kiosks':
+      return <Monitor className="w-4 h-4 text-orange-600" />;
+    case 'Donations':
+      return <DollarSign className="w-4 h-4 text-emerald-600" />;
+    case 'System':
+      return <Settings className="w-4 h-4 text-gray-600" />;
+    default:
+      return <Shield className="w-4 h-4 text-indigo-600" />;
+  }
+};
 
 interface UserManagementProps {
   onNavigate: (screen: Screen) => void;
@@ -52,12 +166,29 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
         username: '', email: '', password: '', role: 'viewer' as UserRole, permissions: [] as Permission[],
     });
     
+    // Sidebar state
+    const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const [dialogMessage, setDialogMessage] = useState<string | null>(null);
     
     // Delete confirmation dialog state
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [userToDelete, setUserToDelete] = useState<User | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const handleUserClick = (user: User) => {
+        setSelectedUser(user);
+        // Small delay to allow the DOM to render before animating
+        setTimeout(() => {
+            setIsSidebarOpen(true);
+        }, 10);
+    };
+
+    const closeSidebar = () => {
+        setIsSidebarOpen(false);
+        setTimeout(() => setSelectedUser(null), 500);
+    };
 
     const handleCreateUser = async () => {
         if (!newUser.email || !newUser.password || !newUser.username) {
@@ -81,14 +212,15 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
     const confirmDeleteUser = async () => {
         if (!userToDelete) return;
         
+        setIsDeleting(true);
         try {
             await deleteUser(userToDelete.id);
             setIsDeleteDialogOpen(false);
             setUserToDelete(null);
         } catch (err) {
             setDialogMessage(`Error: ${(err as Error).message}`);
-            setIsDeleteDialogOpen(false);
-            setUserToDelete(null);
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -100,6 +232,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
             const errorMessage = (err as Error).message || "Failed to update user.";
             console.error('Update user error:', err);
             setDialogMessage(`Error: ${errorMessage}`);
+            throw err; // Re-throw to let the EditUserDialog handle it
         }
     };
 
@@ -172,11 +305,66 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
         <div className="space-y-6 sm:space-y-8">
             <main className="px-6 lg:px-8 pt-12 pb-8">
                 {/* Stat Cards Section */}
-                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-12">
-                    <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Total Users</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{stats.total}</p></div><Users className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-blue-600" /></div></CardContent></Card>
-                    <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Administrators</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{stats.admins}</p></div><UserCog className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-purple-600" /></div></CardContent></Card>
-                    <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Kiosk Users</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{stats.kiosks}</p></div><Shield className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-[#064e3b]" /></div></CardContent></Card>
-                    <Card><CardContent className="p-3 sm:p-4 lg:p-6"><div className="flex items-center justify-between"><div><p className="text-xs sm:text-sm font-medium text-gray-600">Active Users</p><p className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">{stats.active}</p></div><Activity className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-orange-600" /></div></CardContent></Card>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                    {/* Total Users Card */}
+                    <Card className="border-0 shadow-sm bg-white">
+                        <CardContent className="p-6">
+                            <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
+                                        Total Users
+                                    </p>
+                                    <div className="flex items-baseline gap-2">
+                                        <p className="text-4xl font-bold text-gray-900">{stats.total}</p>
+                                    </div>
+                                </div>
+                                <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center">
+                                    <Users className="h-6 w-6 text-blue-600" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Administrators Card */}
+                    <Card className="border-0 shadow-sm bg-white">
+                        <CardContent className="p-6">
+                            <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
+                                        Administrators
+                                    </p>
+                                    <div className="flex items-baseline gap-2">
+                                        <p className="text-4xl font-bold text-gray-900">{stats.admins}</p>
+                                    </div>
+                                </div>
+                                <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center">
+                                    <UserCog className="h-6 w-6 text-purple-600" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Active Users Card */}
+                    <Card className="border-0 shadow-sm bg-white">
+                        <CardContent className="p-6">
+                            <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
+                                        Active Users
+                                    </p>
+                                    <div className="flex items-baseline gap-2">
+                                        <p className="text-4xl font-bold text-gray-900">{stats.active}</p>
+                                        <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded">
+                                            Last 7 Days
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center">
+                                    <Activity className="h-6 w-6 text-green-600" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
 
                 {/* Unified Header Component */}
@@ -208,12 +396,19 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                                             className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
                                         >
                                             <div className="flex items-start justify-between gap-3">
-                                                <div>
-                                                    <div className="text-sm font-semibold text-gray-900">
-                                                        {user.username}
-                                                    </div>
-                                                    <div className="text-xs text-gray-500">
-                                                        {user.email}
+                                                <div className="flex items-center gap-3">
+                                                    <Avatar className="h-10 w-10">
+                                                        <AvatarFallback className={`${getAvatarColor(user.username).bg} ${getAvatarColor(user.username).text} font-semibold text-sm`}>
+                                                            {getInitials(user.username)}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <div>
+                                                        <div className="text-sm font-semibold text-gray-900">
+                                                            {user.username}
+                                                        </div>
+                                                        <div className="text-xs text-gray-500">
+                                                            {user.email}
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 {(hasPermission('edit_user') ||
@@ -254,7 +449,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                                             </div>
 
                                             <div className="mt-4 flex flex-wrap items-center gap-2">
-                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 ring-1 ring-indigo-600/20 capitalize">
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ring-1 capitalize ${getRoleColors(user.role)}`}>
                                                     {user.role.replace('_', ' ')}
                                                 </span>
                                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#064e3b]/10 text-[#064e3b] ring-1 ring-[#064e3b]/20">
@@ -283,7 +478,14 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                                 )}
                             </div>
                             <div className="hidden md:block overflow-hidden">
-                                <Table className="w-full table-fixed">
+                                <Table className="w-full">
+                                    <colgroup>
+                                        <col style={{ width: '28%' }} />
+                                        <col style={{ width: '18%' }} />
+                                        <col style={{ width: '18%' }} />
+                                        <col style={{ width: '20%' }} />
+                                        <col style={{ width: '16%' }} />
+                                    </colgroup>
                                     <TableHeader>
                                         <TableRow className="bg-gray-100 border-b-2 border-gray-300 text-gray-700">
                                             <SortableTableHeader 
@@ -291,7 +493,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                                                 currentSortKey={sortKey} 
                                                 currentSortDirection={sortDirection} 
                                                 onSort={handleSort}
-                                                className="w-[30%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                                                className="px-6 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center"
                                             >
                                                 User Details
                                             </SortableTableHeader>
@@ -300,7 +502,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                                                 currentSortKey={sortKey} 
                                                 currentSortDirection={sortDirection} 
                                                 onSort={handleSort}
-                                                className="w-[15%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                                                className="px-6 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center"
                                             >
                                                 Role
                                             </SortableTableHeader>
@@ -309,7 +511,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                                                 currentSortKey={sortKey} 
                                                 currentSortDirection={sortDirection} 
                                                 onSort={handleSort}
-                                                className="w-[12%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                                                className="px-3 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-left"
                                             >
                                                 Status
                                             </SortableTableHeader>
@@ -319,7 +521,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                                                 currentSortKey={sortKey} 
                                                 currentSortDirection={sortDirection} 
                                                 onSort={handleSort}
-                                                className="w-[28%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                                                className="px-6 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-left"
                                             >
                                                 Permissions
                                             </SortableTableHeader>
@@ -329,7 +531,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                                                 currentSortKey={sortKey} 
                                                 currentSortDirection={sortDirection} 
                                                 onSort={handleSort}
-                                                className="w-[15%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
+                                                className="px-6 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center"
                                             >
                                                 Actions
                                             </SortableTableHeader>
@@ -337,13 +539,26 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                                     </TableHeader>
                                     <TableBody>
                                         {filteredUsers.map((user) => (
-                                            <TableRow key={user.id} className="hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0">
+                                            <TableRow 
+                                                key={user.id} 
+                                                className="hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0 cursor-pointer"
+                                                onClick={() => handleUserClick(user)}
+                                            >
                                                 <TableCell className="px-6 py-4">
-                                                    <div className="text-sm font-medium text-gray-900">{user.username}</div>
-                                                    <div className="text-sm text-gray-500">{user.email}</div>
+                                                    <div className="flex items-center gap-3">
+                                                        <Avatar className="h-10 w-10">
+                                                            <AvatarFallback className={`${getAvatarColor(user.username).bg} ${getAvatarColor(user.username).text} font-semibold text-sm`}>
+                                                                {getInitials(user.username)}
+                                                            </AvatarFallback>
+                                                        </Avatar>
+                                                        <div>
+                                                            <div className="text-sm font-medium text-gray-900">{user.username}</div>
+                                                            <div className="text-sm text-gray-500">{user.email}</div>
+                                                        </div>
+                                                    </div>
                                                 </TableCell>
                                                 <TableCell className="px-6 py-4">
-                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 ring-1 ring-indigo-600/20 capitalize">
+                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ring-1 capitalize ${getRoleColors(user.role)}`}>
                                                         {user.role.replace('_', ' ')}
                                                     </span>
                                                 </TableCell>
@@ -353,33 +568,47 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                                                     </span>
                                                 </TableCell>
                                                 <TableCell className="px-6 py-4">
-                                                    <div className="text-sm text-gray-500 truncate max-w-xs">
+                                                    <div className="text-sm text-gray-500">
                                                         {user.permissions?.length ? `${user.permissions.length} permissions` : 'None'}
                                                     </div>
                                                 </TableCell>
-                                                <TableCell className="px-6 py-4 text-right">
-                                                    <div className="flex items-center justify-end gap-2">
-                                                        {hasPermission('edit_user') && (
-                                                            <Button 
-                                                                variant="ghost" 
-                                                                size="icon" 
-                                                                onClick={() => setEditingUser(user)}
-                                                                className="h-8 w-8 hover:bg-indigo-50 hover:text-indigo-600"
-                                                            >
-                                                                <Pencil className="h-4 w-4" />
-                                                            </Button>
-                                                        )}
-                                                        {hasPermission('delete_user') && user.id !== userSession.user.id && (
-                                                            <Button 
-                                                                variant="ghost" 
-                                                                size="icon" 
-                                                                onClick={() => handleDeleteUser(user)}
-                                                                className="h-8 w-8 hover:bg-red-50 hover:text-red-600"
-                                                            >
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </Button>
-                                                        )}
-                                                    </div>
+                                                <TableCell className="px-6 py-4 text-center">
+                                                    {(hasPermission('edit_user') || (hasPermission('delete_user') && user.id !== userSession.user.id)) && (
+                                                        <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger asChild>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="h-8 w-8 text-gray-500 hover:bg-gray-100"
+                                                                        aria-label="User actions"
+                                                                    >
+                                                                        <MoreVertical className="h-4 w-4" />
+                                                                    </Button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent align="end">
+                                                                    {hasPermission('edit_user') && (
+                                                                        <DropdownMenuItem
+                                                                            onSelect={() => setEditingUser(user)}
+                                                                            className="flex items-center gap-2"
+                                                                        >
+                                                                            <Pencil className="h-4 w-4" />
+                                                                            Edit
+                                                                        </DropdownMenuItem>
+                                                                    )}
+                                                                    {hasPermission('delete_user') && user.id !== userSession.user.id && (
+                                                                        <DropdownMenuItem
+                                                                            onSelect={() => handleDeleteUser(user)}
+                                                                            className="flex items-center gap-2 text-red-600 focus:text-red-600"
+                                                                        >
+                                                                            <Trash2 className="h-4 w-4" />
+                                                                            Delete
+                                                                        </DropdownMenuItem>
+                                                                    )}
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+                                                        </div>
+                                                    )}
                                                 </TableCell>
                                             </TableRow>
                                         ))}
@@ -430,15 +659,24 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                             <Button 
                                 variant="outline" 
                                 onClick={() => setIsDeleteDialogOpen(false)}
+                                disabled={isDeleting}
                                 className="flex-1 h-11 border-gray-300 text-gray-700 hover:bg-gray-50"
                             >
                                 Cancel
                             </Button>
                             <Button 
                                 onClick={confirmDeleteUser}
+                                disabled={isDeleting}
                                 className="flex-1 h-11 bg-red-500 hover:bg-red-600 text-white border-0"
                             >
-                                Delete
+                                {isDeleting ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        Deleting...
+                                    </>
+                                ) : (
+                                    'Delete'
+                                )}
                             </Button>
                         </div>
                     </div>
@@ -461,6 +699,133 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                 </Dialog>
             )}
         </div>
+
+        {/* User Details Sidebar */}
+        {(selectedUser || isSidebarOpen) && (
+            <>
+                {/* Overlay */}
+                <div 
+                    className={`fixed inset-0 bg-black/50 z-40 transition-opacity duration-500 ${
+                        isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                    }`}
+                    onClick={closeSidebar}
+                />
+                
+                {/* Sidebar */}
+                <div 
+                    className={`fixed right-0 top-0 h-full w-[500px] shadow-2xl z-50 transform transition-all duration-500 ease-in-out overflow-hidden ${
+                        isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
+                    }`}
+                    style={{ backgroundColor: '#f3f1ea' }}
+                >
+                    {selectedUser && (
+                        <>
+                    {/* Header */}
+                    <div className="sticky top-0 border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10" style={{ backgroundColor: '#f3f1ea' }}>
+                        <h2 className="text-lg font-semibold text-gray-900">User Details</h2>
+                        <button
+                            onClick={closeSidebar}
+                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        >
+                            <X className="w-5 h-5 text-gray-500" />
+                        </button>
+                    </div>
+
+                    {/* Scrollable Content */}
+                    <div className="flex flex-col h-full">
+                        <div className="flex-1 overflow-y-auto p-6 space-y-6" style={{ paddingBottom: '180px' }}>
+                            {/* Avatar and Basic Info */}
+                            <div className="flex flex-col items-center text-center space-y-4">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">User ID:</p>
+                                    <p className="text-xs text-gray-900 font-mono">{selectedUser.id}</p>
+                                </div>
+                                <Avatar className="h-24 w-24">
+                                    <AvatarFallback className={`${getAvatarColor(selectedUser.username).bg} ${getAvatarColor(selectedUser.username).text} font-bold text-2xl`}>
+                                        {getInitials(selectedUser.username)}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <h3 className="text-xl font-semibold text-gray-900">{selectedUser.username}</h3>
+                                    <p className="text-sm text-gray-500 mt-1">{selectedUser.email}</p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ring-1 capitalize ${getRoleColors(selectedUser.role)}`}>
+                                        {selectedUser.role.replace('_', ' ')}
+                                    </span>
+                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#064e3b]/10 text-[#064e3b] ring-1 ring-[#064e3b]/20">
+                                        Active
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Permissions Section */}
+                            <div className="border-t border-gray-200 pt-6">
+                                <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4">
+                                    Permissions
+                                </h4>
+                                {selectedUser.permissions && selectedUser.permissions.length > 0 ? (
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {groupPermissionsByCategory(selectedUser.permissions).map(([category, perms]) => (
+                                            <div 
+                                                key={category}
+                                                className="border border-gray-200 rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
+                                            >
+                                                <h5 className="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                    {getCategoryIcon(category)}
+                                                    {category}
+                                                </h5>
+                                                <ul className="space-y-2">
+                                                    {perms.map((permission) => (
+                                                        <li key={permission} className="flex items-start gap-2 text-xs text-gray-700">
+                                                            <Check className="w-3.5 h-3.5 text-green-600 mt-0.5 flex-shrink-0" />
+                                                            <span className="capitalize leading-tight">{permission.replace(/_/g, ' ')}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-gray-500 italic">No permissions assigned</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Fixed Action Buttons */}
+                        <div className="absolute bottom-0 left-0 right-0 border-t border-gray-200 p-6 space-y-3" style={{ backgroundColor: '#f3f1ea' }}>
+                            {hasPermission('edit_user') && (
+                                <Button
+                                    onClick={() => {
+                                        setEditingUser(selectedUser);
+                                        closeSidebar();
+                                    }}
+                                    className="w-full text-white hover:bg-[#053d2f]"
+                                    style={{ backgroundColor: '#064e3b' }}
+                                >
+                                    <Pencil className="w-4 h-4 mr-2" />
+                                    Edit User
+                                </Button>
+                            )}
+                            {hasPermission('delete_user') && selectedUser.id !== userSession.user.id && (
+                                <Button
+                                    onClick={() => {
+                                        handleDeleteUser(selectedUser);
+                                        closeSidebar();
+                                    }}
+                                    className="w-full bg-red-100 text-red-700 hover:bg-red-200 border border-red-300"
+                                >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Delete User
+                                </Button>
+                            )}
+                        </div>
+                    </div>
+                    </>
+                    )}
+                </div>
+            </>
+        )}
         </AdminLayout>
     );
 }
@@ -470,6 +835,16 @@ function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateU
         const currentPermissions = newUser.permissions || [];
         const newPermissions = checked ? [...currentPermissions, permission] : currentPermissions.filter((p: Permission) => p !== permission);
         onUserChange({ ...newUser, permissions: newPermissions });
+    };
+
+    const handleRoleChange = (role: UserRole) => {
+        // Get default permissions for the selected role
+        const defaultPermissions = DEFAULT_USER_PERMISSIONS[role as keyof typeof DEFAULT_USER_PERMISSIONS] || [];
+        onUserChange({ 
+            ...newUser, 
+            role: role,
+            permissions: [...defaultPermissions] // Set default permissions for the role
+        });
     };
 
     const isSuperAdmin = userSession?.user?.role === 'super_admin';
@@ -545,18 +920,62 @@ function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateU
                     <div>
                         <Label className="font-semibold">Permissions</Label>
                         <div className="grid grid-cols-2 gap-2 mt-2 p-4 border border-gray-300 rounded-lg max-h-40 overflow-y-auto">
-                            {allPermissions.map((p) => (
-                                <div key={p} className="flex items-center space-x-2">
-                                    <Checkbox 
-                                        id={`create-${p}`} 
-                                        checked={newUser.permissions.includes(p)} 
-                                        onCheckedChange={(c) => onPermissionChange(p, !!c)} 
-                                    />
-                                    <Label htmlFor={`create-${p}`} className="text-sm font-normal capitalize">
-                                        {p.replace(/_/g, ' ')}
-                                    </Label>
-                                </div>
-                            ))}
+                            {allPermissions.map((p) => {
+                                // Campaign permissions dependency
+                                const isCampaignPermission = ['create_campaign', 'edit_campaign', 'delete_campaign'].includes(p);
+                                const hasViewCampaigns = newUser.permissions.includes('view_campaigns');
+                                const campaignDisabled = isCampaignPermission && !hasViewCampaigns;
+                                
+                                // Kiosk permissions dependency
+                                const isKioskPermission = ['create_kiosk', 'edit_kiosk', 'delete_kiosk'].includes(p);
+                                const hasViewKiosks = newUser.permissions.includes('view_kiosks');
+                                const kioskDisabled = isKioskPermission && !hasViewKiosks;
+                                
+                                // Assign campaigns special logic - needs either view_campaigns OR view_kiosks
+                                const isAssignCampaigns = p === 'assign_campaigns';
+                                const assignDisabled = isAssignCampaigns && !hasViewCampaigns && !hasViewKiosks;
+                                
+                                // User permissions dependency
+                                const isUserPermission = ['create_user', 'edit_user', 'delete_user', 'manage_permissions'].includes(p);
+                                const hasViewUsers = newUser.permissions.includes('view_users');
+                                const userDisabled = isUserPermission && !hasViewUsers;
+                                
+                                const isDisabled = campaignDisabled || assignDisabled || kioskDisabled || userDisabled;
+                                
+                                let tooltipMessage = '';
+                                if (campaignDisabled) tooltipMessage = 'View campaigns is mandatory to create/edit/delete campaigns';
+                                if (assignDisabled) tooltipMessage = 'Either select view campaigns or view kiosks to enable assign campaigns';
+                                if (kioskDisabled) tooltipMessage = 'View kiosks is mandatory to create/edit/delete kiosks';
+                                if (userDisabled) tooltipMessage = 'View users is mandatory to create/edit/delete users or manage permissions';
+                                
+                                return (
+                                    <TooltipProvider key={p}>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <div className={`flex items-center space-x-2 ${isDisabled ? 'opacity-50' : ''}`}>
+                                                    <Checkbox 
+                                                        id={`create-${p}`} 
+                                                        checked={newUser.permissions.includes(p)} 
+                                                        onCheckedChange={(c) => onPermissionChange(p, !!c)}
+                                                        disabled={isDisabled}
+                                                    />
+                                                    <Label 
+                                                        htmlFor={`create-${p}`} 
+                                                        className={`text-sm font-normal capitalize ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                                                    >
+                                                        {p.replace(/_/g, ' ')}
+                                                    </Label>
+                                                </div>
+                                            </TooltipTrigger>
+                                            {isDisabled && (
+                                                <TooltipContent>
+                                                    <p className="text-xs">{tooltipMessage}</p>
+                                                </TooltipContent>
+                                            )}
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                );
+                            })}
                         </div>
                     </div>
                 </div>
@@ -566,8 +985,9 @@ function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateU
     );
 }
 
-function EditUserDialog({ user, onUpdate, onClose, userSession }: { user: User, onUpdate: (userId: string, updates: Partial<User>) => void, onClose: () => void, userSession: AdminSession }) {
+function EditUserDialog({ user, onUpdate, onClose, userSession }: { user: User, onUpdate: (userId: string, updates: Partial<User>) => Promise<void>, onClose: () => void, userSession: AdminSession }) {
     const [editedUser, setEditedUser] = useState(user);
+    const [isSaving, setIsSaving] = useState(false);
     useEffect(() => { setEditedUser(user); }, [user]);
 
     const handlePermissionChange = (permission: Permission, checked: boolean) => {
@@ -576,52 +996,368 @@ function EditUserDialog({ user, onUpdate, onClose, userSession }: { user: User, 
         setEditedUser(prev => ({ ...prev, permissions: newPermissions }));
     };
 
+    const handleRoleChange = (role: UserRole) => {
+        // Get default permissions for the selected role
+        const defaultPermissions = DEFAULT_USER_PERMISSIONS[role as keyof typeof DEFAULT_USER_PERMISSIONS] || [];
+        setEditedUser(prev => ({ 
+            ...prev, 
+            role: role,
+            permissions: [...defaultPermissions] // Set default permissions for the role
+        }));
+    };
+
+    const handleSaveChanges = async () => {
+        setIsSaving(true);
+        try {
+            await onUpdate(editedUser.id, { role: editedUser.role, permissions: editedUser.permissions });
+        } catch (error) {
+            console.error('Error saving user changes:', error);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     const isSuperAdmin = userSession?.user?.role === 'super_admin';
 
     return (
         <Dialog open={true} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader><DialogTitle>Edit User: {editedUser.username}</DialogTitle><DialogDescription>Update the user's role and permissions.</DialogDescription></DialogHeader>
-                <div className="grid gap-6 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="role" className="text-right">Role</Label>
-                        <div className="col-span-3">
-                            <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                                <Select value={editedUser.role} onValueChange={(value: UserRole) => setEditedUser({ ...editedUser, role: value })}>
-                                    <SelectTrigger className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {isSuperAdmin && <SelectItem value="super_admin">Super Admin</SelectItem>}
-                                        <SelectItem value="admin">Admin</SelectItem>
-                                        <SelectItem value="manager">Manager</SelectItem>
-                                        <SelectItem value="operator">Operator</SelectItem>
-                                        <SelectItem value="viewer">Viewer</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
+            <DialogContent className="sm:max-w-2xl p-0 gap-0">
+                {/* Header */}
+                <div className="px-6 py-5 border-b border-slate-200">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-bold text-slate-900">
+                            Edit User: <span className="text-indigo-600">{editedUser.username}</span>
+                        </DialogTitle>
+                        <DialogDescription className="text-sm text-slate-500 mt-1">
+                            Update the user's role and individual permissions.
+                        </DialogDescription>
+                    </DialogHeader>
+                </div>
+
+                {/* Content */}
+                <div className="p-6 space-y-8">
+                    {/* Role Selection */}
+                    <div className="space-y-2">
+                        <Label htmlFor="role" className="text-sm font-semibold text-slate-700">
+                            Role
+                        </Label>
+                        <Select value={editedUser.role} onValueChange={handleRoleChange}>
+                            <SelectTrigger className="w-full h-11 bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {isSuperAdmin && <SelectItem value="super_admin">Super Admin</SelectItem>}
+                                <SelectItem value="admin">Admin</SelectItem>
+                                <SelectItem value="manager">Manager</SelectItem>
+                                <SelectItem value="operator">Operator</SelectItem>
+                                <SelectItem value="viewer">Viewer</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
-                    <div>
-                        <Label className="font-semibold">Permissions</Label>
-                        <div className="grid grid-cols-2 gap-2 mt-2 p-4 border border-gray-300 rounded-lg max-h-60 overflow-y-auto">
-                            {allPermissions.map((p) => (
-                                <div key={p} className="flex items-center space-x-2">
-                                    <Checkbox 
-                                        id={`edit-${p}`} 
-                                        checked={editedUser.permissions?.includes(p)} 
-                                        onCheckedChange={(c) => handlePermissionChange(p, !!c)} 
-                                    />
-                                    <Label htmlFor={`edit-${p}`} className="text-sm font-normal capitalize">
-                                        {p.replace(/_/g, ' ')}
-                                    </Label>
-                                </div>
-                            ))}
+
+                    {/* Permissions */}
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <Label className="text-sm font-semibold text-slate-700 uppercase tracking-wider">
+                                Permissions
+                            </Label>
+                            <span className="text-xs text-slate-400">
+                                {allPermissions.length} total available
+                            </span>
+                        </div>
+                        
+                        <div className="border border-slate-200 rounded-xl bg-slate-50/50">
+                            <div className="p-5 max-h-80 overflow-y-auto space-y-6">
+                                {/* Dashboard Permissions */}
+                                {(() => {
+                                    const dashboardPerms = allPermissions.filter(p => p.includes('dashboard'));
+                                    if (dashboardPerms.length === 0) return null;
+                                    return (
+                                        <div>
+                                            <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3">Dashboard</h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                                                {dashboardPerms.map((p) => (
+                                                    <div key={p} className="flex items-center justify-between">
+                                                        <div className="flex items-center space-x-3">
+                                                            <Checkbox 
+                                                                id={`edit-${p}`} 
+                                                                checked={editedUser.permissions?.includes(p)} 
+                                                                onCheckedChange={(c) => handlePermissionChange(p, !!c)}
+                                                                className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                                                            />
+                                                            <Label 
+                                                                htmlFor={`edit-${p}`} 
+                                                                className="text-sm text-slate-700 font-medium cursor-pointer"
+                                                            >
+                                                                {p.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                            </Label>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+
+                                {/* User Permissions */}
+                                {(() => {
+                                    const userPerms = allPermissions.filter(p => p.includes('user') || p.includes('permission'));
+                                    if (userPerms.length === 0) return null;
+                                    const hasViewUsers = editedUser.permissions?.includes('view_users');
+                                    
+                                    return (
+                                        <div>
+                                            <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3">Users</h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                                                {userPerms.map((p) => {
+                                                    const isUserPermission = ['create_user', 'edit_user', 'delete_user', 'manage_permissions'].includes(p);
+                                                    const userDisabled = isUserPermission && !hasViewUsers;
+                                                    return (
+                                                        <div key={p} className="flex items-center justify-between">
+                                                            <div className={`flex items-center space-x-3 ${userDisabled ? 'opacity-50' : ''}`}>
+                                                                <Checkbox 
+                                                                    id={`edit-${p}`} 
+                                                                    checked={editedUser.permissions?.includes(p)} 
+                                                                    onCheckedChange={(c) => handlePermissionChange(p, !!c)}
+                                                                    disabled={userDisabled}
+                                                                    className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                                                                />
+                                                                <Label 
+                                                                    htmlFor={`edit-${p}`} 
+                                                                    className={`text-sm text-slate-700 font-medium ${userDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                                                                >
+                                                                    {p.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                                </Label>
+                                                            </div>
+                                                            {userDisabled && (
+                                                                <TooltipProvider>
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <button type="button" className="text-slate-400 hover:text-indigo-600">
+                                                                                <Info className="w-4 h-4" />
+                                                                            </button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>
+                                                                            <p className="text-xs">View users is mandatory to create/edit/delete users or manage permissions</p>
+                                                                        </TooltipContent>
+                                                                    </Tooltip>
+                                                                </TooltipProvider>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+
+                                {/* Campaign Permissions */}
+                                {(() => {
+                                    const campaignPerms = allPermissions.filter(p => p.includes('campaign') || p === 'assign_campaigns');
+                                    if (campaignPerms.length === 0) return null;
+                                    const hasViewCampaigns = editedUser.permissions?.includes('view_campaigns');
+                                    const hasViewKiosks = editedUser.permissions?.includes('view_kiosks');
+                                    
+                                    return (
+                                        <div>
+                                            <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3">Campaigns</h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                                                {campaignPerms.map((p) => {
+                                                    const isCampaignPermission = ['create_campaign', 'edit_campaign', 'delete_campaign'].includes(p);
+                                                    const isAssignCampaigns = p === 'assign_campaigns';
+                                                    
+                                                    const campaignDisabled = isCampaignPermission && !hasViewCampaigns;
+                                                    const assignDisabled = isAssignCampaigns && !hasViewCampaigns && !hasViewKiosks;
+                                                    const isDisabled = campaignDisabled || assignDisabled;
+                                                    
+                                                    let tooltipMessage = '';
+                                                    if (campaignDisabled) {
+                                                        tooltipMessage = 'View campaigns is mandatory to create/edit/delete campaigns';
+                                                    } else if (assignDisabled) {
+                                                        tooltipMessage = 'Either select view campaigns or view kiosks to enable assign campaigns';
+                                                    }
+                                                    return (
+                                                        <div key={p} className="flex items-center justify-between">
+                                                            <div className={`flex items-center space-x-3 ${isDisabled ? 'opacity-50' : ''}`}>
+                                                                <Checkbox 
+                                                                    id={`edit-${p}`} 
+                                                                    checked={editedUser.permissions?.includes(p)} 
+                                                                    onCheckedChange={(c) => handlePermissionChange(p, !!c)}
+                                                                    disabled={isDisabled}
+                                                                    className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                                                                />
+                                                                <Label 
+                                                                    htmlFor={`edit-${p}`} 
+                                                                    className={`text-sm text-slate-700 font-medium ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                                                                >
+                                                                    {p.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                                </Label>
+                                                            </div>
+                                                            {isDisabled && (
+                                                                <TooltipProvider>
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <button type="button" className="text-slate-400 hover:text-indigo-600">
+                                                                                <Info className="w-4 h-4" />
+                                                                            </button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>
+                                                                            <p className="text-xs">{tooltipMessage}</p>
+                                                                        </TooltipContent>
+                                                                    </Tooltip>
+                                                                </TooltipProvider>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+
+                                {/* Kiosk Permissions */}
+                                {(() => {
+                                    const kioskPerms = allPermissions.filter(p => p.includes('kiosk'));
+                                    if (kioskPerms.length === 0) return null;
+                                    const hasViewKiosks = editedUser.permissions?.includes('view_kiosks');
+                                    
+                                    return (
+                                        <div>
+                                            <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3">Kiosks</h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                                                {kioskPerms.map((p) => {
+                                                    const isKioskPermission = ['create_kiosk', 'edit_kiosk', 'delete_kiosk'].includes(p);
+                                                    const kioskDisabled = isKioskPermission && !hasViewKiosks;
+                                                    return (
+                                                        <div key={p} className="flex items-center justify-between">
+                                                            <div className={`flex items-center space-x-3 ${kioskDisabled ? 'opacity-50' : ''}`}>
+                                                                <Checkbox 
+                                                                    id={`edit-${p}`} 
+                                                                    checked={editedUser.permissions?.includes(p)} 
+                                                                    onCheckedChange={(c) => handlePermissionChange(p, !!c)}
+                                                                    disabled={kioskDisabled}
+                                                                    className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                                                                />
+                                                                <Label 
+                                                                    htmlFor={`edit-${p}`} 
+                                                                    className={`text-sm text-slate-700 font-medium ${kioskDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                                                                >
+                                                                    {p.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                                </Label>
+                                                            </div>
+                                                            {kioskDisabled && (
+                                                                <TooltipProvider>
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <button type="button" className="text-slate-400 hover:text-indigo-600">
+                                                                                <Info className="w-4 h-4" />
+                                                                            </button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>
+                                                                            <p className="text-xs">View kiosks is mandatory to create/edit/delete kiosks</p>
+                                                                        </TooltipContent>
+                                                                    </Tooltip>
+                                                                </TooltipProvider>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+
+                                {/* Donation Permissions */}
+                                {(() => {
+                                    const donationPerms = allPermissions.filter(p => p.includes('donation'));
+                                    if (donationPerms.length === 0) return null;
+                                    return (
+                                        <div>
+                                            <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3">Donations</h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                                                {donationPerms.map((p) => (
+                                                    <div key={p} className="flex items-center justify-between">
+                                                        <div className="flex items-center space-x-3">
+                                                            <Checkbox 
+                                                                id={`edit-${p}`} 
+                                                                checked={editedUser.permissions?.includes(p)} 
+                                                                onCheckedChange={(c) => handlePermissionChange(p, !!c)}
+                                                                className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                                                            />
+                                                            <Label 
+                                                                htmlFor={`edit-${p}`} 
+                                                                className="text-sm text-slate-700 font-medium cursor-pointer"
+                                                            >
+                                                                {p.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                            </Label>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+
+                                {/* System Permissions */}
+                                {(() => {
+                                    const systemPerms = allPermissions.filter(p => p === 'system_admin');
+                                    if (systemPerms.length === 0) return null;
+                                    return (
+                                        <div>
+                                            <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3">System</h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                                                {systemPerms.map((p) => (
+                                                    <div key={p} className="flex items-center justify-between">
+                                                        <div className="flex items-center space-x-3">
+                                                            <Checkbox 
+                                                                id={`edit-${p}`} 
+                                                                checked={editedUser.permissions?.includes(p)} 
+                                                                onCheckedChange={(c) => handlePermissionChange(p, !!c)}
+                                                                className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                                                            />
+                                                            <Label 
+                                                                htmlFor={`edit-${p}`} 
+                                                                className="text-sm text-slate-700 font-medium cursor-pointer"
+                                                            >
+                                                                {p.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                            </Label>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <DialogFooter><Button variant="outline" onClick={onClose}>Cancel</Button><Button onClick={() => onUpdate(editedUser.id, { role: editedUser.role, permissions: editedUser.permissions })}>Save Changes</Button></DialogFooter>
+                {/* Footer */}
+                <div className="px-6 py-5 bg-slate-50 flex justify-end space-x-3 border-t border-slate-100">
+                    <Button 
+                        variant="ghost" 
+                        onClick={onClose}
+                        disabled={isSaving}
+                        className="px-5 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900"
+                    >
+                        Cancel
+                    </Button>
+                    <Button 
+                        onClick={handleSaveChanges}
+                        disabled={isSaving}
+                        className="px-6 py-2 bg-slate-900 text-white text-sm font-semibold rounded-lg hover:opacity-90 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {isSaving ? (
+                            <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Saving...
+                            </>
+                        ) : (
+                            'Save Changes'
+                        )}
+                    </Button>
+                </div>
             </DialogContent>
         </Dialog>
     );               
