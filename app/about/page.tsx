@@ -1,10 +1,11 @@
 'use client'
 
+import { Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { AboutPage } from '@/views/home/AboutPage'
 import { useReturnTo } from '@/shared/lib/hooks/useReturnTo'
 
-export default function About() {
+function AboutContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const from = searchParams.get('from')
@@ -40,4 +41,12 @@ export default function About() {
   }
 
   return <AboutPage onNavigate={handleNavigate} onBack={handleBack} />
+}
+
+export default function About() {
+  return (
+    <Suspense fallback={null}>
+      <AboutContent />
+    </Suspense>
+  )
 }
