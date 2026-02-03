@@ -303,9 +303,10 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
     e.preventDefault();
     if (!isValidAmount()) return;
 
+    const donationAmountPence = Math.round(getCurrentAmount() * 100);
     const donation: Donation = {
       campaignId: campaign.id,
-      amount: getCurrentAmount(),
+      amount: donationAmountPence,
       isRecurring,
       recurringInterval: isRecurring ? recurringInterval : undefined,
       isAnonymous: donorInfo.isAnonymous,

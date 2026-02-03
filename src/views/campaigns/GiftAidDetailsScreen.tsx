@@ -147,6 +147,7 @@ export function GiftAidDetailsScreen({
         const firstName = nameParts[0] || '';
         const surname = nameParts.slice(1).join(' ') || '';
         
+        const donationAmountPence = Math.round(amount * 100);
         const giftAidDetails: GiftAidDetails = {
           // Donor Information
           firstName: firstName,
@@ -163,7 +164,7 @@ export function GiftAidDetailsScreen({
           declarationDate: currentDate,
           
           // Donation Details
-          donationAmount: amount,
+          donationAmount: donationAmountPence,
           donationDate: currentDate,
           organizationId: campaign.organizationId || '',
           donationId: '', // Default empty string

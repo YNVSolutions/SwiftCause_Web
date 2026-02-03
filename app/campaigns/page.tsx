@@ -18,9 +18,10 @@ export default function CampaignsPage() {
         router.push(`/campaign/${campaign.id}?amount=${amount}&giftaid=true`);
       } else {
         // Gift Aid disabled - go directly to payment
+        const amountPence = Math.round(amount * 100);
         const donation = {
           campaignId: campaign.id,
-          amount: amount,
+          amount: amountPence,
           isGiftAid: false,
           giftAidAccepted: false, // Explicitly set to false when disabled
           isRecurring: false,

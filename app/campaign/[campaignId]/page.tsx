@@ -92,9 +92,10 @@ export default function CampaignPage({
       router.push(`/campaign/${campaignId}?amount=${amount}&giftaid=true&from=details${recurringQuery}`);
     } else {
       // Skip Gift Aid and go directly to payment
+      const amountPence = Math.round(amount * 100);
       const donation = {
         campaignId: _campaign.id,
-        amount: amount,
+        amount: amountPence,
         isGiftAid: false,
         giftAidAccepted: false, // Explicitly set to false when disabled
         isRecurring: options.isRecurring,
@@ -129,9 +130,10 @@ export default function CampaignPage({
 
   // Gift Aid declined - save donation and go to payment
   const handleDeclineGiftAid = (finalAmount: number) => {
+    const amountPence = Math.round(finalAmount * 100);
     const donation = {
       campaignId: campaign?.id,
-      amount: finalAmount,
+      amount: amountPence,
       isGiftAid: false,
       giftAidAccepted: false, // Explicitly set to false when declined
       isRecurring: isRecurringSelection,
@@ -158,9 +160,10 @@ export default function CampaignPage({
     // Check if Gift Aid is enabled for this campaign
     if (!campaign.configuration.giftAidEnabled) {
       // Gift Aid is disabled, redirect to payment directly
+      const amountPence = Math.round((initialAmount || 0) * 100);
       const donation = {
         campaignId: campaign.id,
-        amount: initialAmount || 0,
+        amount: amountPence,
         isGiftAid: false,
         giftAidAccepted: false, // Explicitly set to false when disabled
         isRecurring: isRecurringSelection,
