@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { UserCog, ArrowRight } from 'lucide-react';
 import { ProfessionalEmailField } from '../auth/interactions/ProfessionalEmailField';
 import { ProfessionalPasswordField } from '../auth/interactions/ProfessionalPasswordField';
@@ -19,6 +19,9 @@ interface AdminLoginProps {
 	variant?: 'classic' | 'panel';
 	buttonLabel?: string;
 	buttonClassName?: string;
+	needsVerification?: boolean;
+	resendingEmail?: boolean;
+	onResendVerification?: () => Promise<boolean>;
 }
 
 export function AdminLogin({ 
@@ -35,10 +38,24 @@ export function AdminLogin({
 	onSubmit,
 	variant = 'classic',
 	buttonLabel,
-	buttonClassName
+	buttonClassName,
+	needsVerification = false,
+	resendingEmail = false,
+	onResendVerification
 }: AdminLoginProps) {
 	const isPanel = variant === 'panel';
 	const resolvedButtonLabel = buttonLabel ?? (isPanel ? 'Login as Admin' : 'Access Dashboard');
+	const [resendSuccess, setResendSuccess] = useState(false);
+
+	const handleResendClick = async () => {
+		if (onResendVerification) {
+			const success = await onResendVerification();
+			if (success) {
+				setResendSuccess(true);
+				setTimeout(() => setResendSuccess(false), 5000);
+			}
+		}
+	};
 	
 	return (
 		<>
@@ -70,6 +87,28 @@ export function AdminLogin({
 					onBlur={onPasswordBlur}
 					error={passwordError}
 				/>
+
+				{needsVerification && onResendVerification && (
+					<div className="text-sm text-slate-600">
+						{resendSuccess ? (
+							<p className="text-green-700">
+								✓ Verification email sent! Check your inbox.
+							</p>
+						) : (
+							<p>
+								Didn't receive the email?{' '}
+								<button
+									type="button"
+									onClick={handleResendClick}
+									disabled={resendingEmail}
+									className="font-semibold text-[#064e3b] hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+								>
+									{resendingEmail ? 'Sending...' : 'Resend verification email'}
+								</button>
+							</p>
+						)}
+					</div>
+				)}
 
 				<MagneticButton
 					type="submit"
