@@ -1,5 +1,10 @@
 import DocsPageClient from './DocsPageClient'
 
-export default function Docs({ searchParams }: { searchParams?: { from?: string } }) {
-  return <DocsPageClient from={searchParams?.from} />
+export default async function Docs({
+  searchParams,
+}: {
+  searchParams?: Promise<{ from?: string }>
+}) {
+  const params = searchParams ? await searchParams : undefined
+  return <DocsPageClient from={params?.from} />
 }

@@ -1,5 +1,10 @@
 import SignupPageClient from './SignupPageClient'
 
-export default function Signup({ searchParams }: { searchParams?: { step?: string } }) {
-  return <SignupPageClient step={searchParams?.step} />
+export default async function Signup({
+  searchParams,
+}: {
+  searchParams?: Promise<{ step?: string }>
+}) {
+  const params = searchParams ? await searchParams : undefined
+  return <SignupPageClient step={params?.step} />
 }

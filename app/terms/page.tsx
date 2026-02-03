@@ -1,5 +1,10 @@
 import TermsPageClient from './TermsPageClient'
 
-export default function Terms({ searchParams }: { searchParams?: { from?: string; step?: string } }) {
-  return <TermsPageClient from={searchParams?.from} step={searchParams?.step} />
+export default async function Terms({
+  searchParams,
+}: {
+  searchParams?: Promise<{ from?: string; step?: string }>
+}) {
+  const params = searchParams ? await searchParams : undefined
+  return <TermsPageClient from={params?.from} step={params?.step} />
 }
