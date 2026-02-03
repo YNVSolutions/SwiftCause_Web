@@ -40,6 +40,7 @@ export interface CampaignFormData {
   tags: string[];
   isGlobal: boolean;
   assignedKiosks: string[];
+  giftAidEnabled: boolean;
 }
 
 export interface CampaignFormProps {
@@ -741,6 +742,25 @@ export function CampaignForm({
                           ))}
                         </div>
                       )}
+                    </div>
+
+                    {/* Gift Aid Toggle */}
+                    <div className="col-span-full">
+                      <div className="flex items-center justify-between p-4 rounded-lg bg-blue-50 border border-blue-200">
+                        <div className="flex-1">
+                          <Label className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-1 block">
+                            GIFT AID
+                          </Label>
+                          <p className="text-sm text-gray-600">
+                            Enable Gift Aid declarations for UK taxpayers to increase donations by 25%
+                          </p>
+                        </div>
+                        <Switch
+                          checked={campaignData.giftAidEnabled}
+                          onCheckedChange={(checked) => setCampaignData(p => ({ ...p, giftAidEnabled: checked }))}
+                          className="ml-4"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>

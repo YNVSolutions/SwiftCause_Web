@@ -1248,7 +1248,8 @@ const CampaignManagement = ({
     recurringIntervals: [],
     tags: [],
     isGlobal: false,
-    assignedKiosks: []
+    assignedKiosks: [],
+    giftAidEnabled: false
   });
   
   const [editCampaignFormData, setEditCampaignFormData] = useState<CampaignFormData>({
@@ -1268,7 +1269,8 @@ const CampaignManagement = ({
     recurringIntervals: [],
     tags: [],
     isGlobal: false,
-    assignedKiosks: []
+    assignedKiosks: [],
+    giftAidEnabled: false
   });
   
   const [selectedNewCampaignImageFile, setSelectedNewCampaignImageFile] = useState<File | null>(null);
@@ -1376,7 +1378,8 @@ const CampaignManagement = ({
         : [],
       tags: Array.isArray(campaign.tags) ? campaign.tags : [],
       isGlobal: campaign.isGlobal || false,
-      assignedKiosks: normalizeAssignments(campaign.assignedKiosks)
+      assignedKiosks: normalizeAssignments(campaign.assignedKiosks),
+      giftAidEnabled: campaign.configuration?.giftAidEnabled || false
     };
     
     setEditCampaignFormData(formData);
@@ -1619,6 +1622,7 @@ const CampaignManagement = ({
           predefinedAmounts: newCampaignFormData.predefinedAmounts.filter(a => a > 0),
           enableRecurring: newCampaignFormData.enableRecurring,
           recurringIntervals: newCampaignFormData.recurringIntervals,
+          giftAidEnabled: newCampaignFormData.giftAidEnabled,
         },
       };
 
@@ -1655,7 +1659,8 @@ const CampaignManagement = ({
         recurringIntervals: [],
         tags: [],
         isGlobal: false,
-        assignedKiosks: []
+        assignedKiosks: [],
+        giftAidEnabled: false
       });
     } catch (error) {
       console.error("Error creating campaign:", error);
@@ -1686,7 +1691,8 @@ const CampaignManagement = ({
       recurringIntervals: [],
       tags: [],
       isGlobal: false,
-      assignedKiosks: []
+      assignedKiosks: [],
+      giftAidEnabled: false
     });
   };
 
@@ -1746,6 +1752,7 @@ const CampaignManagement = ({
           predefinedAmounts: newCampaignFormData.predefinedAmounts.filter(a => a > 0),
           enableRecurring: newCampaignFormData.enableRecurring,
           recurringIntervals: newCampaignFormData.recurringIntervals,
+          giftAidEnabled: newCampaignFormData.giftAidEnabled,
         },
       };
 
@@ -1782,7 +1789,8 @@ const CampaignManagement = ({
         recurringIntervals: [],
         tags: [],
         isGlobal: false,
-        assignedKiosks: []
+        assignedKiosks: [],
+        giftAidEnabled: false
       });
     } catch (error) {
       console.error("Error saving campaign draft:", error);
@@ -1850,6 +1858,7 @@ const CampaignManagement = ({
           predefinedAmounts: editCampaignFormData.predefinedAmounts.filter(a => a > 0),
           enableRecurring: editCampaignFormData.enableRecurring,
           recurringIntervals: editCampaignFormData.recurringIntervals,
+          giftAidEnabled: editCampaignFormData.giftAidEnabled,
         },
       };
 
@@ -1891,7 +1900,8 @@ const CampaignManagement = ({
         recurringIntervals: [],
         tags: [],
         isGlobal: false,
-        assignedKiosks: []
+        assignedKiosks: [],
+        giftAidEnabled: false
       });
     } catch (error) {
       console.error("Error saving campaign draft:", error);
@@ -1970,6 +1980,7 @@ const CampaignManagement = ({
           predefinedAmounts: editCampaignFormData.predefinedAmounts.filter(a => a > 0),
           enableRecurring: editCampaignFormData.enableRecurring,
           recurringIntervals: editCampaignFormData.recurringIntervals,
+          giftAidEnabled: editCampaignFormData.giftAidEnabled,
         },
       };
 
@@ -2011,7 +2022,8 @@ const CampaignManagement = ({
         recurringIntervals: [],
         tags: [],
         isGlobal: false,
-        assignedKiosks: []
+        assignedKiosks: [],
+        giftAidEnabled: false
       });
     } catch (error) {
       console.error("Error updating campaign:", error);
@@ -2043,7 +2055,8 @@ const CampaignManagement = ({
       recurringIntervals: [],
       tags: [],
       isGlobal: false,
-      assignedKiosks: []
+      assignedKiosks: [],
+      giftAidEnabled: false
     });
   };
 
