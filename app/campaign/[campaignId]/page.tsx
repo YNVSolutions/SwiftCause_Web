@@ -78,14 +78,34 @@ export default function CampaignPage({
     }
   };
 
-  // Donate from details screen - add from=details param
+  // Donate from details screen - check giftAidEnabled before routing
   const handleDonate = (
     _campaign: Campaign,
     amount: number,
     options: { isRecurring: boolean; recurringInterval: 'monthly' | 'quarterly' | 'yearly' }
   ) => {
     const recurringQuery = options.isRecurring ? `&recurring=true&interval=${options.recurringInterval}` : '';
-    router.push(`/campaign/${campaignId}?amount=${amount}&giftaid=true&from=details${recurringQuery}`);
+    
+    // Check if Gift Aid is enabled for this campaign
+    if (_campaign.configuration.giftAidEnabled) {
+      // Route to Gift Aid flow
+      router.push(`/campaign/${campaignId}?amount=${amount}&giftaid=true&from=details${recurringQuery}`);
+    } else {
+      // Skip Gift Aid and go directly to payment
+      const donation = {
+        campaignId: _campaign.id,
+        amount: amount,
+        isGiftAid: false,
+        giftAidAccepted: false, // Explicitly set to false when disabled
+        isRecurring: options.isRecurring,
+        recurringInterval: options.isRecurring ? options.recurringInterval : undefined,
+        kioskId: currentKioskSession?.kioskId,
+        donorName: '',
+      };
+      sessionStorage.setItem('donation', JSON.stringify(donation));
+      sessionStorage.setItem('paymentBackPath', `/campaign/${campaignId}`);
+      router.push(`/payment/${campaignId}`);
+    }
   };
 
   // Gift Aid accepted - save details and go to payment
@@ -94,6 +114,7 @@ export default function CampaignPage({
       campaignId: campaign?.id,
       amount: details.donationAmount,
       isGiftAid: true,
+      giftAidAccepted: true, // Explicitly set to true when accepted
       isRecurring: isRecurringSelection,
       recurringInterval: isRecurringSelection ? recurringIntervalParam : undefined,
       giftAidDetails: details,
@@ -112,6 +133,7 @@ export default function CampaignPage({
       campaignId: campaign?.id,
       amount: finalAmount,
       isGiftAid: false,
+      giftAidAccepted: false, // Explicitly set to false when declined
       isRecurring: isRecurringSelection,
       recurringInterval: isRecurringSelection ? recurringIntervalParam : undefined,
       kioskId: currentKioskSession?.kioskId,
@@ -131,8 +153,27 @@ export default function CampaignPage({
     );
   }
 
-  // Show Gift Aid page (with sliding panels)
+  // Show Gift Aid page (with sliding panels) - only if Gift Aid is enabled
   if (showGiftAid && campaign) {
+    // Check if Gift Aid is enabled for this campaign
+    if (!campaign.configuration.giftAidEnabled) {
+      // Gift Aid is disabled, redirect to payment directly
+      const donation = {
+        campaignId: campaign.id,
+        amount: initialAmount || 0,
+        isGiftAid: false,
+        giftAidAccepted: false, // Explicitly set to false when disabled
+        isRecurring: isRecurringSelection,
+        recurringInterval: isRecurringSelection ? recurringIntervalParam : undefined,
+        kioskId: currentKioskSession?.kioskId,
+        donorName: '',
+      };
+      sessionStorage.setItem('donation', JSON.stringify(donation));
+      sessionStorage.setItem('paymentBackPath', fromDetails ? `/campaign/${campaignId}` : '/campaigns');
+      router.push(`/payment/${campaignId}`);
+      return null; // Prevent rendering while redirecting
+    }
+
     return (
       <GiftAidPage
         campaign={campaign}

@@ -41,6 +41,7 @@ export interface Donation {
   kioskId?: string;
   transactionId?: string;
   isGiftAid?: boolean;
+  giftAidAccepted?: boolean; // Explicit tracking of Gift Aid acceptance/decline
   giftAidDetails?: GiftAidDetails;
   organizationId?: string;
 }
