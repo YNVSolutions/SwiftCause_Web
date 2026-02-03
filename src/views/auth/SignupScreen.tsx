@@ -3,7 +3,7 @@ import ReCAPTCHA from 'react-google-recaptcha';
 import { Input } from '../../shared/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
 import { Checkbox } from '../../shared/ui/checkbox';
-import { checkEmailExists, checkOrganizationIdExists } from '../../shared/api/firestoreService';
+import { checkOrganizationIdExists } from '../../shared/api/firestoreService';
 import Image from "next/image"
 import { 
   Heart,
@@ -12,7 +12,6 @@ import {
   ArrowRight,
   ArrowLeft,
   Users,
-  Phone,
   Globe,
   Eye,
   EyeOff,
@@ -22,8 +21,6 @@ import {
   DollarSign,
   Home
 } from 'lucide-react';
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
-import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import { ORGANIZATION_TYPES, ORGANIZATION_SIZES } from '../../shared/config';
 
 interface SignupScreenProps {
@@ -68,9 +65,6 @@ interface SignupFormErrors {
   confirmPassword?: string;
   agreeToTerms?: string;
 }
-
-const auth = getAuth();
-const firestore = getFirestore();
 
 export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupScreenProps) {
   const [currentStep, setCurrentStep] = useState(1);
@@ -145,15 +139,11 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
   };
 
   const handleEmailBlur = async () => {
-    console.log('handleEmailBlur called with email:', formData.email);
-    
     if (!formData.email.trim()) {
-      console.log('Email is empty, skipping check');
       return;
     }
     
     if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      console.log('Email format is invalid');
       setErrors(prev => ({
         ...prev,
         email: 'Please enter a valid email address'
@@ -161,26 +151,20 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
       return;
     }
 
-    console.log('Starting email check...');
     setIsCheckingEmail(true);
     try {
       // Import the auth API
       const { authApi } = await import('../../features/auth-by-email/api/authApi');
       
-      console.log('Calling checkEmailExistsInAuth...');
       // Check Firebase Auth instead of Firestore
       const exists = await authApi.checkEmailExistsInAuth(formData.email);
       
-      console.log('Email exists result:', exists);
-      
       if (exists) {
-        console.log('Setting error: email already exists');
         setErrors(prev => ({
           ...prev,
           email: 'This email is already registered. Please use a different email or sign in.'
         }));
       } else {
-        console.log('Email is available, clearing error');
         setErrors(prev => ({
           ...prev,
           email: undefined
@@ -190,7 +174,6 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
       console.error('Error checking email:', error);
     } finally {
       setIsCheckingEmail(false);
-      console.log('Email check complete');
     }
   };
 

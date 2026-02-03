@@ -16,17 +16,12 @@ export const authApi = {
   // Check if email exists by querying Firestore users collection
   async checkEmailExistsInAuth(email: string): Promise<boolean> {
     try {
-      console.log('Checking email in Firestore:', email);
-      
       // Query Firestore users collection for this email
       const usersRef = collection(db, 'users');
       const q = query(usersRef, where('email', '==', email));
       const querySnapshot = await getDocs(q);
       
-      const exists = !querySnapshot.empty;
-      console.log('Email exists in Firestore:', exists);
-      
-      return exists;
+      return !querySnapshot.empty;
     } catch (error: unknown) {
       console.error('Error checking email:', error);
       // On error, return false to allow signup attempt (fail-open)
