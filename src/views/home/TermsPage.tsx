@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '../../shared/ui/button';
 import { ArrowLeft, AlertTriangle, FileText, CheckCircle } from 'lucide-react';
-import swiftCauseLogo from '../../shared/assets/logo.png';
 
 export function TermsPage({ onNavigate, onBack }: { onNavigate?: (screen: string) => void; onBack?: () => void }) {
   const effectiveDate = 'September 28, 2025';
@@ -41,7 +40,7 @@ export function TermsPage({ onNavigate, onBack }: { onNavigate?: (screen: string
             className="flex items-center gap-3 text-left"
             aria-label="Go to home"
           >
-            <img src={swiftCauseLogo.src} alt="SwiftCause" className="w-8 h-8" />
+            <img src="/logo.png" alt="SwiftCause" className="w-8 h-8" />
             <div>
               <span className="font-bold text-lg tracking-tight text-[#064e3b]">SwiftCause</span>
               <p className="text-[11px] text-slate-500">Donation Platform</p>
