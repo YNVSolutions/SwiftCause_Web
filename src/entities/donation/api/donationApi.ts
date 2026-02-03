@@ -73,16 +73,7 @@ export const donationApi = {
    */
   // Create new donation
   async createDonation(donation: Omit<Donation, 'id'>): Promise<string> {
-    try {
-      const docRef = await addDoc(collection(db, 'donations'), {
-        ...donation,
-        timestamp: new Date().toISOString()
-      });
-      return docRef.id;
-    } catch (error) {
-      console.error('Error creating donation:', error);
-      throw error;
-    }
+    throw new Error('Legacy donation creation disabled. Stripe webhooks must create donations.');
   },
 
   // Update donation
