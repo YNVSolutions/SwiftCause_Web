@@ -1,10 +1,11 @@
 'use client'
 
+import { Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ContactPage } from '@/views/home/ContactPage'
 import { useReturnTo } from '@/shared/lib/hooks/useReturnTo'
 
-export default function Contact() {
+function ContactContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const from = searchParams.get('from')
@@ -30,4 +31,12 @@ export default function Contact() {
   }
 
   return <ContactPage onNavigate={handleNavigate} onBack={handleBack} />
+}
+
+export default function Contact() {
+  return (
+    <Suspense fallback={null}>
+      <ContactContent />
+    </Suspense>
+  )
 }
