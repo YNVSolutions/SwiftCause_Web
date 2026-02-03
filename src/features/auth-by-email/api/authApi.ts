@@ -5,7 +5,6 @@ import {
   onAuthStateChanged,
   sendEmailVerification,
   applyActionCode,
-  fetchSignInMethodsForEmail,
   User as FirebaseAuthUser
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
@@ -14,31 +13,23 @@ import { User } from '../../../entities/user';
 import { SignupCredentials } from '../model';
 
 export const authApi = {
-  // Check if email exists in Firebase Authentication
+  // Check if email exists by querying Firestore users collection
   async checkEmailExistsInAuth(email: string): Promise<boolean> {
     try {
-      console.log('Checking email in Firebase Auth:', email);
-      const signInMethods = await fetchSignInMethodsForEmail(auth, email);
-      console.log('Sign-in methods found:', signInMethods);
-      const exists = signInMethods.length > 0;
-      console.log('Email exists:', exists);
+      console.log('Checking email in Firestore:', email);
+      
+      // Query Firestore users collection for this email
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('email', '==', email));
+      const querySnapshot = await getDocs(q);
+      
+      const exists = !querySnapshot.empty;
+      console.log('Email exists in Firestore:', exists);
+      
       return exists;
     } catch (error: unknown) {
-      // Type guard to check if error has a code property
-      const hasCode = (err: unknown): err is { code: string } => {
-        return typeof err === 'object' && err !== null && 'code' in err;
-      };
-      
-      console.error('Error checking email in Firebase Auth:', error);
-      
-      // If error is 'auth/invalid-email', email format is invalid (doesn't exist)
-      if (hasCode(error) && error.code === 'auth/invalid-email') {
-        console.log('Invalid email format, treating as not exists');
-        return false;
-      }
-      
-      // For other errors, log and return false to allow signup attempt
-      console.log('Unknown error, treating as not exists');
+      console.error('Error checking email:', error);
+      // On error, return false to allow signup attempt (fail-open)
       return false;
     }
   },
