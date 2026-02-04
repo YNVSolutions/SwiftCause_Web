@@ -83,11 +83,11 @@ export const RevenueGrowthChart: React.FC<RevenueGrowthChartProps> = ({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="p-6 pt-5">
+      <CardContent className="p-3 sm:p-6 pt-3 sm:pt-5">
         {data.length > 0 ? (
           <>
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <AreaChart data={data} margin={{ top: 10, right: 5, left: 10, bottom: 0 }}>
                 <defs>
                   <linearGradient id="donationRevenueGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#1E3A8A" stopOpacity={0.1}/>
@@ -103,13 +103,29 @@ export const RevenueGrowthChart: React.FC<RevenueGrowthChartProps> = ({
                   dataKey="month" 
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: '#9CA3AF', fontSize: 12 }}
+                  tick={{ fill: '#9CA3AF', fontSize: 11 }}
+                  interval="preserveStartEnd"
                 />
                 <YAxis 
-                  tickFormatter={(value) => formatCurrency(value)}
+                  tickFormatter={(value) => {
+                    // Compact format for mobile
+                    if (typeof window !== 'undefined' && window.innerWidth < 640) {
+                      if (value >= 1000000) return `£${(value / 1000000).toFixed(1)}M`;
+                      if (value >= 1000) return `£${(value / 1000).toFixed(0)}K`;
+                      return `£${value}`;
+                    }
+                    // Desktop format - ensure currency symbol is shown
+                    const formatted = formatCurrency(value);
+                    // If formatCurrency doesn't include £, add it
+                    if (!formatted.includes('£') && !formatted.includes('$')) {
+                      return `£${value.toLocaleString()}`;
+                    }
+                    return formatted;
+                  }}
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: '#9CA3AF', fontSize: 12 }}
+                  tick={{ fill: '#9CA3AF', fontSize: 10 }}
+                  width={55}
                 />
                 <Tooltip content={<CustomTooltip formatCurrency={formatCurrency} />} />
                 <Area
@@ -133,14 +149,14 @@ export const RevenueGrowthChart: React.FC<RevenueGrowthChartProps> = ({
             </ResponsiveContainer>
             
             {/* Refined Legend */}
-            <div className="flex items-center justify-center gap-8 mt-6 pt-4 border-t border-gray-50">
+            <div className="flex items-center justify-center gap-4 sm:gap-8 mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-gray-50">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-0.5 bg-blue-800" style={{ borderStyle: 'dashed', borderWidth: '1px 0' }}></div>
-                <span className="text-sm text-gray-600 font-medium">Donations</span>
+                <span className="text-xs sm:text-sm text-gray-600 font-medium">Donations</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-0.5 bg-green-800"></div>
-                <span className="text-sm text-gray-900 font-medium">Total Revenue</span>
+                <span className="text-xs sm:text-sm text-gray-900 font-medium">Total Revenue</span>
               </div>
             </div>
           </>

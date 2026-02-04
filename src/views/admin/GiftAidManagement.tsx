@@ -385,7 +385,7 @@ export function GiftAidManagement({
         <Button
           variant="outline"
           size="sm"
-          className="rounded-2xl border-[#064e3b] bg-transparent text-[#064e3b] hover:bg-[#064e3b] hover:text-stone-50 transition-all duration-300 px-5"
+          className="rounded-2xl border-[#064e3b] bg-transparent text-[#064e3b] hover:bg-[#064e3b] hover:text-gray-800 transition-all duration-300 px-5"
           onClick={handleExportData}
         >
           <Download className="h-4 w-4 sm:hidden" />
@@ -476,8 +476,8 @@ export function GiftAidManagement({
           }
         />
 
-        {/* Donations Table */}
-        <Card className="overflow-hidden">
+        {/* Donations Table - Desktop */}
+        <Card className="overflow-hidden hidden md:block">
           <CardContent className="p-0">
             <Table className="w-full table-fixed">
                 <TableHeader>
@@ -646,6 +646,93 @@ export function GiftAidManagement({
               </Table>
           </CardContent>
         </Card>
+
+        {/* Donations Cards - Mobile */}
+        <div className="md:hidden space-y-4">
+          {loading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <Card key={i} className="overflow-hidden">
+                <CardContent className="p-4">
+                  <Skeleton className="h-20 w-full" />
+                </CardContent>
+              </Card>
+            ))
+          ) : filteredDonations.length > 0 ? (
+            filteredDonations.map((donation) => (
+              <Card 
+                key={donation.id} 
+                className="overflow-hidden shadow-sm border border-slate-200 hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => handleViewDetails(donation)}
+              >
+                <div className="p-4 flex justify-between items-start border-b border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-[#064e3b]/10 flex items-center justify-center text-[#064e3b]">
+                      <User className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h2 className="font-semibold text-lg leading-tight text-slate-900">{donation.donorName || "N/A"}</h2>
+                      <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Donor</span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xl font-bold text-slate-900">{formatCurrency(donation.amount || 0)}</div>
+                    <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Amount</span>
+                  </div>
+                </div>
+                
+                <div className="p-4 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-slate-600">{donation.campaignTitle || "N/A"}</span>
+                      <div className="flex mt-1">
+                        <span className="bg-[#064e3b]/10 text-[#064e3b] text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide flex items-center gap-1">
+                          <Gift className="w-3 h-3" />
+                          {formatCurrency(donation.giftAidAmount || 0)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      {getStatusBadge(donation.giftAidStatus)}
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between items-center pt-2 border-t border-slate-100">
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                      <CalendarDays className="w-4 h-4" />
+                      {donation.donationDate && donation.donationDate !== "Unknown Date" 
+                        ? new Date(donation.donationDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                        : "N/A"}
+                    </div>
+                    <button 
+                      className="flex items-center gap-1 text-[#064e3b] text-sm font-semibold"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewDetails(donation);
+                      }}
+                    >
+                      View Details
+                      <Eye className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </Card>
+            ))
+          ) : (
+            <Card className="overflow-hidden">
+              <CardContent className="p-8">
+                <div className="flex flex-col items-center gap-2 text-center">
+                  <Gift className="h-12 w-12 text-gray-400" />
+                  <p className="text-xl font-bold text-gray-600">No Gift Aid donations found</p>
+                  <p className="text-base text-gray-500 mt-2">
+                    {searchTerm || statusFilter !== "all" 
+                      ? "Try adjusting your search or filters" 
+                      : "Gift Aid eligible donations will appear here when donors opt-in for Gift Aid"}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
 
         {/* Details Dialog */}
         <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>

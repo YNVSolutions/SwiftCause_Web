@@ -257,7 +257,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
         <Button
           variant="outline"
           size="sm"
-          className="rounded-2xl border-[#064e3b] bg-transparent text-[#064e3b] hover:bg-[#064e3b] hover:text-stone-50 transition-all duration-300 px-5"
+          className="rounded-2xl border-[#064e3b] bg-transparent text-[#064e3b] hover:bg-[#064e3b] hover:text-gray-800 transition-all duration-300 px-5"
           onClick={handleExportDonations}
         >
           <Download className="h-4 w-4 sm:hidden" />
@@ -282,8 +282,8 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
             onFilterChange={handleFilterChange}
           />
 
-          {/* Modern Table Container */}
-          <Card className="overflow-hidden">
+          {/* Modern Table Container - Desktop */}
+          <Card className="overflow-hidden hidden md:block">
             <CardContent className="p-0">
               {loading ? (
                 <div className="space-y-4 p-6">
@@ -441,17 +441,9 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                         <TableCell className="px-6 py-4">{getStatusBadge(donation.paymentStatus)}</TableCell>
 
                         <TableCell className="px-6 py-4">
-                          <div className="space-y-1">
-                            <div className="flex items-center space-x-2">
-                              <Clock className="w-3 h-3 text-gray-400" />
-                              <span className="text-sm text-gray-500">{donation.timestamp}</span>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <MapPin className="w-3 h-3 text-gray-400" />
-                              <Badge variant="secondary" className="text-xs">
-                                {donation.platform}
-                              </Badge>
-                            </div>
+                          <div className="flex items-center space-x-2">
+                            <Clock className="w-4 h-4 text-gray-400" />
+                            <span className="text-sm text-gray-500">{donation.timestamp}</span>
                           </div>
                         </TableCell>
 
@@ -483,6 +475,113 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
               )}
             </CardContent>
           </Card>
+
+          {/* Donations Cards - Mobile */}
+          <div className="md:hidden space-y-4">
+            {loading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <Card key={i} className="overflow-hidden">
+                  <CardContent className="p-4">
+                    <Skeleton className="h-20 w-full" />
+                  </CardContent>
+                </Card>
+              ))
+            ) : error ? (
+              <Card className="overflow-hidden border-red-200 bg-red-50">
+                <CardContent className="p-6">
+                  <div className="flex flex-col items-center justify-center text-center text-red-600">
+                    <AlertCircle className="h-10 w-10 text-red-500 mb-3" />
+                    <p className="text-lg">{error}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : filteredDonations.length > 0 ? (
+              filteredDonations.map((donation) => (
+                <Card 
+                  key={donation.id} 
+                  className="overflow-hidden shadow-sm border border-slate-200 hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => handleViewDetails(donation)}
+                >
+                  <div className="p-4 flex justify-between items-start border-b border-slate-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-[#064e3b]/10 flex items-center justify-center text-[#064e3b]">
+                        <User className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h2 className="font-semibold text-lg leading-tight text-slate-900">
+                          {donation.donorName || 'Anonymous'}
+                        </h2>
+                        <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Donor</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xl font-bold text-slate-900">
+                        {formatCurrency(donation.amount, donation.currency)}
+                      </div>
+                      <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Amount</span>
+                    </div>
+                  </div>
+                  
+                  <div className="p-4 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium text-slate-600">
+                          {campaignMap[donation.campaignId] || donation.campaignId}
+                        </span>
+                        <div className="flex gap-2 mt-1">
+                          <span className="bg-indigo-50 text-indigo-700 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide flex items-center gap-1">
+                            <CreditCard className="w-3 h-3" />
+                            {donation.platform}
+                          </span>
+                          {donation.isGiftAid && (
+                            <span className="bg-purple-50 text-purple-700 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide">
+                              Gift Aid
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        {getStatusBadge(donation.paymentStatus)}
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-between items-center pt-2 border-t border-slate-100">
+                      <div className="flex items-center gap-2 text-xs text-slate-500">
+                        <CalendarDays className="w-4 h-4" />
+                        {donation.timestamp 
+                          ? new Date(donation.timestamp).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                          : "N/A"}
+                      </div>
+                      <button 
+                        className="flex items-center gap-1 text-[#064e3b] text-sm font-semibold"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewDetails(donation);
+                        }}
+                      >
+                        View Details
+                        <Eye className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </Card>
+              ))
+            ) : (
+              <Card className="overflow-hidden">
+                <CardContent className="p-8">
+                  <div className="flex flex-col items-center gap-2 text-center">
+                    <Ghost className="h-12 w-12 text-gray-400" />
+                    <p className="text-xl font-bold text-gray-600">No Donations Found</p>
+                    <p className="text-base text-gray-500 mt-2">
+                      {searchTerm || statusFilter !== 'all' || campaignFilter !== 'all' || dateFilter
+                        ? "Try adjusting your search or filters" 
+                        : "No donations have been made to your organization yet."}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </main>
 
         {/* Donation Details Dialog */}

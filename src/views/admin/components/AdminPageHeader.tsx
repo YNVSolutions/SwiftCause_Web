@@ -71,7 +71,7 @@ export function AdminPageHeader({
         <div className="flex w-full items-start justify-between gap-4 lg:items-center">
           <div className="flex min-w-0 items-center gap-4 lg:flex-1">
             {showSidebarTrigger && (
-              <SidebarTrigger className="h-10 w-10 rounded-2xl border border-[#F3F1EA]/60 bg-[#F7F6F2] text-slate-600 hover:bg-[#F3F1EA] hover:text-slate-800 transition-all duration-300 shadow-sm hover:shadow-md" />
+              <SidebarTrigger className="h-10 w-10 rounded-2xl border border-[#F3F1EA]/60 bg-[#F7F6F2] text-slate-600 hover:bg-[#064e3b]/10 hover:text-[#064e3b] transition-all duration-300 shadow-sm hover:shadow-md" />
             )}
             <div className="flex flex-col min-w-0">
               {renderTitle()}
@@ -106,7 +106,7 @@ export function AdminPageHeader({
                 variant="outline"
                 size="sm"
                 onClick={onStartTour}
-                className="hidden sm:flex items-center gap-2 border-[#064e3b] bg-transparent text-[#064e3b] hover:bg-[#064e3b] hover:text-stone-50 transition-all duration-300 rounded-2xl px-6 py-3 font-semibold"
+                className="hidden sm:flex items-center gap-2 border-[#064e3b] bg-transparent text-[#064e3b] hover:text-blue-800 transition-all duration-300 rounded-2xl px-6 py-3 font-semibold"
               >
                 <Compass className="h-4 w-4" />
                 <span className="font-medium">Get a Tour</span>
@@ -119,7 +119,7 @@ export function AdminPageHeader({
                 variant="ghost"
                 size="icon"
                 onClick={onProfileClick}
-                className="h-10 w-10 rounded-full hover:bg-[#F3F1EA] transition-all duration-300"
+                className="h-10 w-10 rounded-full hover:bg-[#064e3b]/10 transition-all duration-300"
                 title="View Profile"
               >
                 <Avatar className="h-8 w-8 ring-2 ring-[#F3F1EA]/60">
