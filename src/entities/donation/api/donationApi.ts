@@ -72,7 +72,7 @@ export const donationApi = {
    * using paymentIntent.id as the Firestore document ID.
    */
   // Create new donation
-  async createDonation(donation: Omit<Donation, 'id'>): Promise<string> {
+  async createDonation(_donation: Omit<Donation, 'id'>): Promise<string> {
     throw new Error('Legacy donation creation disabled. Stripe webhooks must create donations.');
   },
 
