@@ -32,7 +32,7 @@ export default function TermsPageClient({ from, step }: { from?: string; step?: 
   const handleNavigate = (screen: string) => {
     if (screen === 'home') {
       clearSignupDraft()
-      safePush(returnTo)
+      safePush('/')
     } else {
       safePush(`/${screen}`)
     }
