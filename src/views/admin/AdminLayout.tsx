@@ -999,7 +999,7 @@ export function AdminLayout({
                         manage permissions
                       </span>
                     )}
-                    {hasPermission("system_admin") && (
+                    {hasPermission("system_admin") && userSession.user.role === 'super_admin' && (
                       <span className="px-2.5 py-1 bg-gray-100/10 backdrop-blur-xl text-gray-700 text-xs font-medium rounded-md border border-gray-200/10">
                         system admin
                       </span>

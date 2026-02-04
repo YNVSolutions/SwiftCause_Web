@@ -1106,7 +1106,7 @@ export function AdminDashboard({
       headerSubtitle="Real-time view of fundraising activity"
       headerTopRightActions={(
         <div className="hidden sm:flex items-center gap-2 flex-nowrap ml-auto">
-          {hasPermission("system_admin") && (
+          {hasPermission("system_admin") && userSession.user.role === 'super_admin' && (
             <OrganizationSwitcher 
               userSession={userSession}
               onOrganizationChange={onOrganizationSwitch}

@@ -33,10 +33,10 @@ import {
 import { Avatar, AvatarFallback } from '../../shared/ui/avatar';
 
 const allPermissions: Permission[] = [
-    'view_dashboard', 'manage_permissions', 'create_user', 'edit_user', 'delete_user',
+    'create_user', 'edit_user', 'delete_user',
     'view_campaigns', 'create_campaign', 'edit_campaign', 'delete_campaign',
     'view_kiosks', 'create_kiosk', 'edit_kiosk', 'delete_kiosk', 'assign_campaigns',
-    'view_donations', 'export_donations', 'view_users', 'system_admin'
+    'view_donations', 'export_donations', 'view_users'
 ];
 
 // Helper function to get initials from username
@@ -936,7 +936,7 @@ function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateU
                                 const assignDisabled = isAssignCampaigns && !hasViewCampaigns && !hasViewKiosks;
                                 
                                 // User permissions dependency
-                                const isUserPermission = ['create_user', 'edit_user', 'delete_user', 'manage_permissions'].includes(p);
+                                const isUserPermission = ['create_user', 'edit_user', 'delete_user'].includes(p);
                                 const hasViewUsers = newUser.permissions.includes('view_users');
                                 const userDisabled = isUserPermission && !hasViewUsers;
                                 
@@ -946,7 +946,7 @@ function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateU
                                 if (campaignDisabled) tooltipMessage = 'View campaigns is mandatory to create/edit/delete campaigns';
                                 if (assignDisabled) tooltipMessage = 'Either select view campaigns or view kiosks to enable assign campaigns';
                                 if (kioskDisabled) tooltipMessage = 'View kiosks is mandatory to create/edit/delete kiosks';
-                                if (userDisabled) tooltipMessage = 'View users is mandatory to create/edit/delete users or manage permissions';
+                                if (userDisabled) tooltipMessage = 'View users is mandatory to create/edit/delete users';
                                 
                                 return (
                                     <TooltipProvider key={p}>
@@ -1110,7 +1110,7 @@ function EditUserDialog({ user, onUpdate, onClose, userSession }: { user: User, 
                                             <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3">Users</h4>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
                                                 {userPerms.map((p) => {
-                                                    const isUserPermission = ['create_user', 'edit_user', 'delete_user', 'manage_permissions'].includes(p);
+                                                    const isUserPermission = ['create_user', 'edit_user', 'delete_user'].includes(p);
                                                     const userDisabled = isUserPermission && !hasViewUsers;
                                                     return (
                                                         <div key={p} className="flex items-center justify-between">
@@ -1138,7 +1138,7 @@ function EditUserDialog({ user, onUpdate, onClose, userSession }: { user: User, 
                                                                             </button>
                                                                         </TooltipTrigger>
                                                                         <TooltipContent>
-                                                                            <p className="text-xs">View users is mandatory to create/edit/delete users or manage permissions</p>
+                                                                            <p className="text-xs">View users is mandatory to create/edit/delete users</p>
                                                                         </TooltipContent>
                                                                     </Tooltip>
                                                                 </TooltipProvider>
