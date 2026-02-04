@@ -5,6 +5,7 @@ import {
   onAuthStateChanged,
   sendEmailVerification,
   applyActionCode,
+  fetchSignInMethodsForEmail,
   User as FirebaseAuthUser
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
@@ -13,17 +14,16 @@ import { User } from '../../../entities/user';
 import { SignupCredentials } from '../model';
 
 export const authApi = {
-  // Check if email exists by querying Firestore users collection
+  // Check if email exists in Firebase Authentication
   async checkEmailExistsInAuth(email: string): Promise<boolean> {
     try {
-      // Query Firestore users collection for this email
-      const usersRef = collection(db, 'users');
-      const q = query(usersRef, where('email', '==', email));
-      const querySnapshot = await getDocs(q);
+      // Check Firebase Authentication instead of Firestore
+      const signInMethods = await fetchSignInMethodsForEmail(auth, email);
       
-      return !querySnapshot.empty;
+      // If signInMethods array has items, the email is registered in Auth
+      return signInMethods.length > 0;
     } catch (error: unknown) {
-      console.error('Error checking email:', error);
+      console.error('Error checking email in Firebase Auth:', error);
       // On error, return false to allow signup attempt (fail-open)
       return false;
     }
