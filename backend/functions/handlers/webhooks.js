@@ -90,11 +90,20 @@ const handlePaymentCompletedStripeWebhook = async (req, res) => {
 
   if (event.type === "payment_intent.succeeded") {
     const paymentIntent = event.data.object;
-    const normalizedAmount = paymentIntent.amount / 100;
+
+    // Check if donation already exists (idempotency)
+    const donationRef = admin.firestore().collection("donations").doc(paymentIntent.id);
+    const existingDonation = await donationRef.get();
+    
+    if (existingDonation.exists) {
+      console.log("Webhook retry ignored - donation already exists:", paymentIntent.id);
+      res.status(200).send("OK");
+      return;
+    }
 
     const donationData = {
       campaignId: paymentIntent.metadata.campaignId || null,
-      amount: normalizedAmount,
+      amount: paymentIntent.amount,
       currency: paymentIntent.currency,
       donorName: paymentIntent.metadata.donorName || "Anonymous",
       donorEmail: paymentIntent.metadata.donorEmail || null,
@@ -112,7 +121,7 @@ const handlePaymentCompletedStripeWebhook = async (req, res) => {
       paymentStatus: "success",
     };
 
-    await admin.firestore().collection("donations").add(donationData);
+    await donationRef.set(donationData);
     console.log("Donation stored for:", paymentIntent.id);
 
     const campaignId = paymentIntent.metadata.campaignId;
@@ -122,7 +131,7 @@ const handlePaymentCompletedStripeWebhook = async (req, res) => {
           .collection("campaigns")
           .doc(campaignId);
       await campaignRef.update({
-        raised: admin.firestore.FieldValue.increment(normalizedAmount),
+        raised: admin.firestore.FieldValue.increment(paymentIntent.amount),
         donationCount: admin.firestore.FieldValue.increment(1),
         lastUpdated: admin.firestore.Timestamp.now(),
       });

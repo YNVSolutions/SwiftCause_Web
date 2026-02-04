@@ -205,7 +205,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
   const formatCurrency = (amount: number, currency: string) => {
       return new Intl.NumberFormat('en-US', {
         style: 'currency',
-        currency: currency.toUpperCase(),
+        currency: (currency || 'gbp').toUpperCase(),
         minimumFractionDigits: 2
       }).format(amount);
   };
@@ -240,7 +240,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
   };
 
   const totalStats = {
-    totalAmount: filteredDonations.reduce((sum, d) => sum + (d.paymentStatus === 'success' ? d.amount : 0), 0),
+    totalAmount: filteredDonations.reduce((sum, d) => sum + (d.paymentStatus === 'success' ? (d.amount || 0) / 100 : 0), 0),
     totalDonations: filteredDonations.length,
     completedDonations: filteredDonations.filter(d => d.paymentStatus === 'success').length,
     avgDonation: filteredDonations.length > 0 
@@ -488,7 +488,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
 
                           <TableCell className="px-4 py-3 text-center">
                             <p className="text-sm font-semibold text-gray-900">
-                              {formatCurrency(donation.amount, donation.currency)}
+                              {formatCurrency((donation.amount || 0) / 100, donation.currency)}
                             </p>
                           </TableCell>
 
@@ -558,7 +558,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                       {new Intl.NumberFormat('en-GB', {
                         style: 'currency',
                         currency: selectedDonation.currency || 'GBP',
-                      }).format(selectedDonation.amount || 0)}
+                      }).format((selectedDonation.amount || 0) / 100)}
                     </p>
                   </div>
                   <div>
