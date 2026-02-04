@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Screen, AdminSession, Permission } from "../../shared/types";
-import { GiftAidDeclaration } from "../../shared/types/donation";
+import { GiftAidDeclaration } from "@/entities/giftAid/model/types";
 import { AdminLayout } from "./AdminLayout";
 import { db } from "../../shared/lib/firebase";
 import {
@@ -9,7 +9,7 @@ import {
   where,
   getDocs,
 } from "firebase/firestore";
-import { exportToCsv } from "../../shared/utils/csvExport";
+import { generateGiftAidCSV } from "../../entities/giftAid/lib/giftAidCsv";
 import {
   Card,
   CardContent,
@@ -108,49 +108,36 @@ export function GiftAidManagement({
         const declarations: GiftAidDeclaration[] = querySnapshot.docs
           .map((doc) => {
             const data = doc.data();
-
-            
-            // Map Firebase fields to our interface
-            const donationAmount = data.donationAmount || 0;
-            const giftAidAmount = donationAmount * 0.25; // 25% Gift Aid rate
-            
-            // Determine status based on available fields
-            let giftAidStatus: "pending" | "claimed" | "rejected" = "pending";
-            
-            if (data.declarationAccepted && data.giftAidConsent && data.ukTaxpayerConfirmation && data.confirmationChecked) {
-              giftAidStatus = "pending"; // All requirements met, ready to be claimed
-            } else if (!data.declarationAccepted || !data.giftAidConsent || !data.ukTaxpayerConfirmation) {
-              giftAidStatus = "rejected"; // Missing required consents
-            }
-            
-            // If there's a specific status field in the future, use that
-            if (data.giftAidStatus) {
-              giftAidStatus = data.giftAidStatus;
-            }
             
             return {
               id: doc.id,
-              donationId: data.donationId || doc.id,
-              donorName: data.name || `${data.firstName || ""} ${data.lastName || ""}`.trim(),
-              donorAddress: data.address || `${data.houseNumber || ""} ${data.streetAddress || ""}, ${data.townCity || ""}, ${data.county || ""}`.trim(),
-              donorPostcode: data.postcode || "",
-              amount: donationAmount,
-              giftAidAmount: giftAidAmount,
-              campaignId: data.campaignId || "",
-              campaignTitle: data.campaignTitle || "Unknown Campaign",
-              donationDate: data.donationDate || data.date || data.createdAt || "Unknown Date",
-              giftAidStatus: giftAidStatus,
-              transactionId: data.transactionId || "",
-              taxYear: data.taxYear || "Unknown Year",
-              organizationId: data.organizationId || "",
-              createdAt: data.createdAt || data.timestamp,
-              updatedAt: data.updatedAt || data.timestamp,
+              donationId: data.donationId,
+              donorFirstName: data.donorFirstName,
+              donorSurname: data.donorSurname,
+              donorHouseNumber: data.donorHouseNumber,
+              donorAddressLine1: data.donorAddressLine1,
+              donorAddressLine2: data.donorAddressLine2,
+              donorTown: data.donorTown,
+              donorPostcode: data.donorPostcode,
+              declarationText: data.declarationText,
+              declarationDate: data.declarationDate,
+              ukTaxpayerConfirmation: data.ukTaxpayerConfirmation,
+              donationAmount: data.donationAmount,
+              giftAidAmount: data.giftAidAmount,
+              campaignId: data.campaignId,
+              campaignTitle: data.campaignTitle,
+              organizationId: data.organizationId,
+              donationDate: data.donationDate,
+              taxYear: data.taxYear,
+              giftAidStatus: data.giftAidStatus,
+              createdAt: data.createdAt,
+              updatedAt: data.updatedAt,
             } as GiftAidDeclaration;
           })
           .sort((a, b) => {
             // Sort by donation date, newest first
-            const dateA = a.donationDate === "Unknown Date" ? 0 : new Date(a.donationDate).getTime();
-            const dateB = b.donationDate === "Unknown Date" ? 0 : new Date(b.donationDate).getTime();
+            const dateA = a.donationDate ? new Date(a.donationDate).getTime() : 0;
+            const dateB = b.donationDate ? new Date(b.donationDate).getTime() : 0;
             return dateB - dateA;
           });
 
@@ -208,8 +195,9 @@ export function GiftAidManagement({
 
   // Filter donations first
   const filteredDonationsData = giftAidDonations.filter((donation) => {
+    const donorName = `${donation.donorFirstName} ${donation.donorSurname}`.trim();
     const matchesSearch = 
-      (donation.donorName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      donorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (donation.campaignTitle || "").toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === "all" || donation.giftAidStatus === statusFilter;
@@ -243,11 +231,11 @@ export function GiftAidManagement({
 
   // Total gift aid amount for donations shown in the table (filtered donations)
   const totalGiftAidPending = filteredDonations
-    .reduce((sum, d) => sum + (d.giftAidAmount || 0), 0);
+    .reduce((sum, d) => sum + ((d.giftAidAmount || 0) / 100), 0);
 
   // Total gift aid amount for all donations (regardless of status)
   const totalGiftAidClaimed = giftAidDonations
-    .reduce((sum, d) => sum + (d.giftAidAmount || 0), 0);
+    .reduce((sum, d) => sum + ((d.giftAidAmount || 0) / 100), 0);
 
   const handleViewDetails = (donation: GiftAidDeclaration) => {
     setSelectedDonation(donation);
@@ -255,21 +243,19 @@ export function GiftAidManagement({
   };
 
   const handleExportData = () => {
-    // Transform data for export with custom field names
-    const exportData = filteredDonations.map(donation => ({
-      "Donor Name": donation.donorName || "N/A",
-      "Address": donation.donorAddress || "N/A",
-      "Postcode": donation.donorPostcode || "N/A",
-      "Donation Amount": donation.amount || 0,
-      "Gift Aid Amount": donation.giftAidAmount || 0,
-      "Campaign": donation.campaignTitle || "N/A",
-      "Date": donation.donationDate || "N/A",
-      "Status": donation.giftAidStatus || "pending",
-      "Tax Year": donation.taxYear || "N/A",
-      "Transaction ID": donation.transactionId || "N/A"
-    }));
-
-    exportToCsv(exportData, "gift-aid-declarations");
+    // Use HMRC-compliant CSV generation
+    const csvContent = generateGiftAidCSV(filteredDonations);
+    
+    // Create and download the CSV file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'gift-aid-declarations.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleRefresh = async () => {
@@ -290,47 +276,35 @@ export function GiftAidManagement({
         .map((doc) => {
           const data = doc.data();
           
-          // Map Firebase fields to our interface
-          const donationAmount = data.donationAmount || 0;
-          const giftAidAmount = donationAmount * 0.25; // 25% Gift Aid rate
-          
-          // Determine status based on available fields
-          let giftAidStatus: "pending" | "claimed" | "rejected" = "pending";
-          
-          if (data.declarationAccepted && data.giftAidConsent && data.ukTaxpayerConfirmation && data.confirmationChecked) {
-            giftAidStatus = "pending"; // All requirements met, ready to be claimed
-          } else if (!data.declarationAccepted || !data.giftAidConsent || !data.ukTaxpayerConfirmation) {
-            giftAidStatus = "rejected"; // Missing required consents
-          }
-          
-          // If there's a specific status field in the future, use that
-          if (data.giftAidStatus) {
-            giftAidStatus = data.giftAidStatus;
-          }
-          
           return {
             id: doc.id,
-            donationId: data.donationId || doc.id,
-            donorName: data.name || `${data.firstName || ""} ${data.lastName || ""}`.trim(),
-            donorAddress: data.address || `${data.houseNumber || ""} ${data.streetAddress || ""}, ${data.townCity || ""}, ${data.county || ""}`.trim(),
-            donorPostcode: data.postcode || "",
-            amount: donationAmount,
-            giftAidAmount: giftAidAmount,
-            campaignId: data.campaignId || "",
-            campaignTitle: data.campaignTitle || "Unknown Campaign",
-            donationDate: data.donationDate || data.date || data.createdAt || "Unknown Date",
-            giftAidStatus: giftAidStatus,
-            transactionId: data.transactionId || "",
-            taxYear: data.taxYear || "2024-25",
-            organizationId: data.organizationId || "",
-            createdAt: data.createdAt || data.timestamp,
-            updatedAt: data.updatedAt || data.timestamp,
+            donationId: data.donationId,
+            donorFirstName: data.donorFirstName,
+            donorSurname: data.donorSurname,
+            donorHouseNumber: data.donorHouseNumber,
+            donorAddressLine1: data.donorAddressLine1,
+            donorAddressLine2: data.donorAddressLine2,
+            donorTown: data.donorTown,
+            donorPostcode: data.donorPostcode,
+            declarationText: data.declarationText,
+            declarationDate: data.declarationDate,
+            ukTaxpayerConfirmation: data.ukTaxpayerConfirmation,
+            donationAmount: data.donationAmount,
+            giftAidAmount: data.giftAidAmount,
+            campaignId: data.campaignId,
+            campaignTitle: data.campaignTitle,
+            organizationId: data.organizationId,
+            donationDate: data.donationDate,
+            taxYear: data.taxYear,
+            giftAidStatus: data.giftAidStatus,
+            createdAt: data.createdAt,
+            updatedAt: data.updatedAt,
           } as GiftAidDeclaration;
         })
         .sort((a, b) => {
           // Sort by donation date, newest first
-          const dateA = a.donationDate === "Unknown Date" ? 0 : new Date(a.donationDate).getTime();
-          const dateB = b.donationDate === "Unknown Date" ? 0 : new Date(b.donationDate).getTime();
+          const dateA = a.donationDate ? new Date(a.donationDate).getTime() : 0;
+          const dateB = b.donationDate ? new Date(b.donationDate).getTime() : 0;
           return dateB - dateA;
         });
 
@@ -579,31 +553,34 @@ export function GiftAidManagement({
                         <TableCell className="py-4">
                           <div className="flex items-center gap-2">
                             <User className="h-4 w-4 text-gray-400 shrink-0" />
-                            <p className="text-base text-gray-900">{donation.donorName || "N/A"}</p>
+                            <p className="text-base text-gray-900">{`${donation.donorFirstName} ${donation.donorSurname}`.trim()}</p>
                           </div>
                         </TableCell>
                         <TableCell className="py-4">
                           <div className="flex items-center gap-2">
                             <Target className="h-4 w-4 text-gray-400 shrink-0" />
-                            <p className="text-base text-gray-800">{donation.campaignTitle || "N/A"}</p>
+                            <p className="text-base text-gray-800">{donation.campaignTitle}</p>
                           </div>
                         </TableCell>
                         <TableCell className="py-4">
                           <div className="flex items-center gap-2">
                             <Banknote className="h-4 w-4 text-gray-400 shrink-0" />
-                            <p className="text-base font-bold text-gray-900">{formatCurrency(donation.amount || 0)}</p>
+                            <p className="text-base font-bold text-gray-900">{formatCurrency((donation.donationAmount || 0) / 100)}</p>
                           </div>
                         </TableCell>
                         <TableCell className="py-4">
                           <div className="flex items-center gap-2">
                             <Gift className="h-4 w-4 text-[#064e3b] shrink-0" />
-                            <p className="text-base font-bold text-[#064e3b]">{formatCurrency(donation.giftAidAmount || 0)}</p>
+                            <p className="text-base font-bold text-[#064e3b]">{formatCurrency((donation.giftAidAmount || 0) / 100)}</p>
                           </div>
                         </TableCell>
                         <TableCell className="py-4">
                           <div className="flex items-center gap-2">
                             <CalendarDays className="h-4 w-4 text-gray-400 shrink-0" />
-                            <p className="text-base text-gray-700">{donation.donationDate && donation.donationDate !== "Unknown Date" ? new Date(donation.donationDate).toLocaleDateString() : "Unknown Date"}</p>
+                            <p className="text-base text-gray-700">{donation.donationDate ? (() => {
+                              const date = new Date(donation.donationDate);
+                              return isNaN(date.getTime()) ? "Invalid Date" : date.toISOString().split('T')[0];
+                            })() : "N/A"}</p>
                           </div>
                         </TableCell>
                         <TableCell className="py-4 text-center">
@@ -664,45 +641,48 @@ export function GiftAidManagement({
               <div className="grid gap-4 py-4">
                 <div>
                   <Label className="text-sm font-medium text-gray-700">Donor Name</Label>
-                  <p className="text-sm text-gray-900 mt-1">{selectedDonation.donorName || "N/A"}</p>
+                  <p className="text-sm text-gray-900 mt-1">{`${selectedDonation.donorFirstName} ${selectedDonation.donorSurname}`.trim()}</p>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-sm font-medium text-gray-700">Donation Amount</Label>
-                    <p className="text-sm font-semibold text-gray-900 mt-1">{formatCurrency(selectedDonation.amount || 0)}</p>
+                    <p className="text-sm font-semibold text-gray-900 mt-1">{formatCurrency((selectedDonation.donationAmount || 0) / 100)}</p>
                   </div>
                   <div>
                     <Label className="text-sm font-medium text-gray-700">Gift Aid Amount</Label>
-                    <p className="text-sm font-semibold text-[#064e3b] mt-1">{formatCurrency(selectedDonation.giftAidAmount || 0)}</p>
+                    <p className="text-sm font-semibold text-[#064e3b] mt-1">{formatCurrency((selectedDonation.giftAidAmount || 0) / 100)}</p>
                   </div>
                 </div>
                 
                 <div>
                   <Label className="text-sm font-medium text-gray-700">Campaign</Label>
-                  <p className="text-sm text-gray-900 mt-1">{selectedDonation.campaignTitle || "N/A"}</p>
+                  <p className="text-sm text-gray-900 mt-1">{selectedDonation.campaignTitle}</p>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-sm font-medium text-gray-700">Donation Date</Label>
-                    <p className="text-sm text-gray-900 mt-1">{selectedDonation.donationDate && selectedDonation.donationDate !== "Unknown Date" ? new Date(selectedDonation.donationDate).toLocaleDateString() : "Unknown Date"}</p>
+                    <p className="text-sm text-gray-900 mt-1">{selectedDonation.donationDate ? (() => {
+                      const date = new Date(selectedDonation.donationDate);
+                      return isNaN(date.getTime()) ? "Invalid Date" : date.toISOString().split('T')[0];
+                    })() : "N/A"}</p>
                   </div>
                   <div>
                     <Label className="text-sm font-medium text-gray-700">Tax Year</Label>
-                    <p className="text-sm text-gray-900 mt-1">{selectedDonation.taxYear || "N/A"}</p>
+                    <p className="text-sm text-gray-900 mt-1">{selectedDonation.taxYear}</p>
                   </div>
                 </div>
                 
-                {selectedDonation.donorAddress && (
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700">Address</Label>
-                    <p className="text-sm text-gray-900 mt-1">{selectedDonation.donorAddress}</p>
-                    {selectedDonation.donorPostcode && (
-                      <p className="text-sm text-gray-900">{selectedDonation.donorPostcode}</p>
-                    )}
-                  </div>
-                )}
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Address</Label>
+                  <p className="text-sm text-gray-900 mt-1">{`${selectedDonation.donorHouseNumber}, ${selectedDonation.donorAddressLine1}, ${selectedDonation.donorTown}`}</p>
+                </div>
+                
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Postcode</Label>
+                  <p className="text-sm text-gray-900 mt-1">{selectedDonation.donorPostcode}</p>
+                </div>
                 
                 <div>
                   <Label className="text-sm font-medium text-gray-700">Status</Label>
@@ -714,7 +694,7 @@ export function GiftAidManagement({
                 <div>
                   <Label className="text-sm font-medium text-gray-700">Transaction ID</Label>
                   <p className="text-xs text-gray-700 font-mono mt-1 bg-[#064e3b]/10 px-2 py-1 rounded border border-[#064e3b]/20 inline-block">
-                    {selectedDonation.transactionId || "N/A"}
+                    {selectedDonation.donationId}
                   </p>
                 </div>
               </div>

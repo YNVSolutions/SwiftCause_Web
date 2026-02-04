@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Campaign, GiftAidDetails } from '@/shared/types';
+import { Campaign } from '@/shared/types';
+import { GiftAidDetails } from '@/entities/giftAid/model/types';
 import { GiftAidBoostPanel, GiftAidDetailsPanel } from '../components';
 
 interface GiftAidPageProps {

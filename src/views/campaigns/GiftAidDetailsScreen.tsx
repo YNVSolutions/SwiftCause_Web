@@ -6,7 +6,8 @@ import { Checkbox } from '../../shared/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '../../shared/ui/card';
 import { NavigationHeader } from '../../shared/ui/NavigationHeader';
 import { User, MapPin, ArrowRight } from 'lucide-react';
-import { Campaign, GiftAidDetails } from '../../shared/types';
+import { Campaign } from '../../shared/types';
+import { GiftAidDetails } from '../../entities/giftAid/model/types';
 import { formatCurrency } from '../../shared/lib/currencyFormatter';
 
 interface GiftAidDetailsScreenProps {
@@ -151,7 +152,7 @@ export function GiftAidDetailsScreen({
           firstName: firstName,
           surname: surname,
           houseNumber: '', // Default to empty string
-          address: '', // Default to empty string
+          addressLine1: '', // Default to empty string
           town: '', // Default to empty string
           postcode: postcode.trim().toUpperCase(),
           

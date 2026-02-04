@@ -319,3 +319,7 @@ export const PASSWORD_REQUIREMENTS = {
   requireNumbers: true,
   requireSpecialChars: false
 } as const;
+
+// HMRC-compliant Gift Aid declaration text
+// LEGAL REQUIREMENT - DO NOT MODIFY WITHOUT COMPLIANCE REVIEW
+export const HMRC_DECLARATION_TEXT = "I confirm that I am a UK taxpayer and understand that if I pay less Income Tax and/or Capital Gains Tax in the current tax year than the amount of Gift Aid claimed on all my donations, it is my responsibility to pay any difference." as const;

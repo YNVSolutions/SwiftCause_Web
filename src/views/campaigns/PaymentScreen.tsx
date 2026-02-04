@@ -31,7 +31,7 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
 
   // Format amount without decimals
   const formatAmount = (amount: number) => {
-    return formatCurrency(amount, organizationCurrency || 'GBP').replace(/\.00$/, '');
+    return formatCurrency((amount || 0) / 100, organizationCurrency || 'GBP').replace(/\.00$/, '');
   };
 
   const handleSubmit = async () => {
