@@ -5,7 +5,6 @@ import {
   onAuthStateChanged,
   sendEmailVerification,
   applyActionCode,
-  fetchSignInMethodsForEmail,
   User as FirebaseAuthUser
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
@@ -14,19 +13,15 @@ import { User } from '../../../entities/user';
 import { SignupCredentials } from '../model';
 
 export const authApi = {
-  // Check if email exists in Firebase Authentication
+  // Note: Email existence check is now handled by the backend Cloud Function
+  // during signup verification. This function is kept for backward compatibility
+  // but will always return false (fail-open) due to Firebase email enumeration protection.
   async checkEmailExistsInAuth(email: string): Promise<boolean> {
-    try {
-      // Check Firebase Authentication instead of Firestore
-      const signInMethods = await fetchSignInMethodsForEmail(auth, email);
-      
-      // If signInMethods array has items, the email is registered in Auth
-      return signInMethods.length > 0;
-    } catch (error: unknown) {
-      console.error('Error checking email in Firebase Auth:', error);
-      // On error, return false to allow signup attempt (fail-open)
-      return false;
-    }
+    // Email enumeration protection is enabled by default in Firebase projects
+    // created after September 15, 2023. The actual email check is performed
+    // by the backend Cloud Function using Firebase Admin SDK.
+    console.log('Email check will be performed by backend during signup verification');
+    return false; // Always fail-open, let backend handle the check
   },
 
   async signInForVerificationCheck(email: string, password: string) {
