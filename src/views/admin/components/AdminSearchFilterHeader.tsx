@@ -11,6 +11,7 @@ export interface FilterConfig {
   label: string;
   type: 'select' | 'date' | 'dateRange';
   options?: { label: string; value: string }[];
+  includeAllOption?: boolean;
 }
 
 export interface AdminSearchFilterConfig {
@@ -45,7 +46,9 @@ export function AdminPageHeader({
               <SelectValue placeholder={filter.label} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All {filter.label}</SelectItem>
+              {filter.includeAllOption !== false && (
+                <SelectItem value="all">All {filter.label}</SelectItem>
+              )}
               {filter.options?.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}

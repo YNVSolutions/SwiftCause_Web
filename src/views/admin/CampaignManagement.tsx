@@ -1286,7 +1286,7 @@ const CampaignManagement = ({
 
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const [dateRange, setDateRange] = useState("last30");
+  const [dateRange, setDateRange] = useState("all");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [campaignToDelete, setCampaignToDelete] = useState<DocumentData | null>(null);
   const [confirmDeleteInput, setConfirmDeleteInput] = useState("");
@@ -2167,6 +2167,7 @@ const CampaignManagement = ({
         key: "dateRange",
         label: "Date Range",
         type: "select",
+        includeAllOption: false,
         options: [
           { label: "All time", value: "all" },
           { label: "Last 30 Days", value: "last30" },
