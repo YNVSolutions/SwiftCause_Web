@@ -44,6 +44,7 @@ import {
   AlertTriangle,
   Download,
   Loader2,
+  Ghost,
 } from 'lucide-react';
 import { AdminLayout } from './AdminLayout';
 import { KioskForm, KioskFormData } from './components/KioskForm';
@@ -776,8 +777,10 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                   </div>
                 </>
               ) : (
-                <div className="text-center py-12 p-6">
-                  <p className="text-gray-500">No kiosks found matching your search criteria.</p>
+                <div className="text-center py-8 text-gray-500 p-6">
+                  <Ghost className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                  <p className="text-lg font-medium mb-2">No Kiosks Found</p>
+                  <p className="text-sm mb-4">No kiosks found matching your search criteria.</p>
                 </div>
               )}
             </CardContent>
