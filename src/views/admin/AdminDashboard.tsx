@@ -1093,6 +1093,14 @@ export function AdminDashboard({
       onOpenStripeSetup={() => setDialogVisibility(prev => ({ ...prev, showStripeStatusDialog: true }))}
       headerTitle={(
         <div className="flex flex-col">
+          {userSession.user.organizationName && (
+            <div className="flex items-center gap-1.5 mb-1">
+              <Building2 className="h-3.5 w-3.5 text-emerald-600" />
+              <span className="text-xs font-semibold text-emerald-700 tracking-wide">
+                {userSession.user.organizationName}
+              </span>
+            </div>
+          )}
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-3xl font-semibold text-gray-900">
               <span className="header-title-text">Dashboard</span>
@@ -1118,10 +1126,10 @@ export function AdminDashboard({
                 variant="outline"
                 size="sm"
                 onClick={() => setDialogVisibility(prev => ({ ...prev, showStripeStatusDialog: true }))}
-                className={`relative rounded-lg
+                className={`relative rounded-lg transition-all duration-300
                   ${!organization.stripe.chargesEnabled || !organization.stripe.payoutsEnabled
-                    ? 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100 animate-pulse'
-                    : 'border-green-200 bg-green-50 text-green-700 hover:bg-green-100'
+                    ? 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100 hover:shadow-md hover:shadow-red-900/10 hover:scale-105 animate-pulse'
+                    : 'border-green-200 bg-green-50 text-green-700 hover:bg-green-100 hover:shadow-md hover:shadow-green-900/10 hover:scale-105'
                   }`}
                 aria-label="Stripe Status"
               >
@@ -1134,7 +1142,7 @@ export function AdminDashboard({
             size="sm" 
             onClick={handleRefresh} 
             disabled={loading} 
-            className="rounded-2xl border-[#064e3b] bg-transparent text-[#064e3b] hover:bg-red-500 hover:text-blue-800 transition-all duration-300 px-6 py-3 font-semibold"
+            className="rounded-2xl border-[#064e3b] bg-transparent text-[#064e3b] hover:bg-emerald-50 hover:border-emerald-600 hover:shadow-md hover:shadow-emerald-900/10 hover:scale-105 transition-all duration-300 px-6 py-3 font-semibold disabled:opacity-50 disabled:hover:scale-100 disabled:hover:bg-transparent disabled:hover:border-[#064e3b]"
             aria-label="Refresh Dashboard"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
