@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { getAuth, onAuthStateChanged, User as FirebaseAuthUser, sendEmailVerification, signOut } from 'firebase/auth'
+import { getAuth, onAuthStateChanged, sendEmailVerification, signOut } from 'firebase/auth'
 import { doc, getDoc, db } from './firebase'
 import {
   UserRole,
@@ -61,7 +61,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const kioskRef = doc(db, 'kiosks', targetKioskId)
         const kioskSnap = await getDoc(kioskRef)
         if (kioskSnap.exists()) {
-          const kioskData = kioskSnap.data() as any
+          const kioskData = kioskSnap.data() as Record<string, unknown>
           
           setCurrentKioskSession((prev) => ({
             ...prev!,
@@ -88,7 +88,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       if (firebaseUser) {
         // Get ID token result to check custom claims
-        const idTokenResult = await firebaseUser.getIdToken(true);
+        await firebaseUser.getIdToken(true);
         const decodedToken = await firebaseUser.getIdTokenResult();
         
         // Check if this is a kiosk user (UID starts with "kiosk:")
@@ -174,7 +174,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       clearTimeout(timeout)
       unsubscribe()
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleLogin = async (role: UserRole, sessionData?: KioskSession | AdminSession) => {
@@ -205,7 +204,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const handleSignup = async (signupData: SignupFormData): Promise<string> => {
     try {
       // Verify reCAPTCHA with backend first
-      if ((signupData as any).recaptchaToken) {
+      const signupDataWithRecaptcha = signupData as SignupFormData & { recaptchaToken?: string };
+      if (signupDataWithRecaptcha.recaptchaToken) {
         const verifyResponse = await fetch(
           'https://verifysignuprecaptcha-j2f5w4qwxq-uc.a.run.app',
           {
@@ -214,7 +214,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              recaptchaToken: (signupData as any).recaptchaToken,
+              recaptchaToken: signupDataWithRecaptcha.recaptchaToken,
               email: signupData.email,
             }),
           }
