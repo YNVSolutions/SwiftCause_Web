@@ -107,8 +107,8 @@ const UserDocCard = ({ icon, title, description, details }: {
         </div>
       </div>
     </DialogTrigger>
-    <DialogContent className="max-w-4xl w-[90vw] h-[85vh] bg-[#F7F6F2] border-0 shadow-2xl rounded-[2rem] p-0 overflow-hidden [&>button]:hidden">
-      <div className="h-full flex flex-col">
+    <DialogContent className="no-scrollbar scrollbar-none max-w-4xl w-[90vw] h-[85vh] bg-[#F7F6F2] border-0 shadow-2xl rounded-[2rem] p-0 overflow-y-auto [&>button]:hidden">
+      <div className="flex flex-col">
         <DialogHeader className="flex-shrink-0 p-8 pb-6 border-b border-slate-200/50">
           <DialogTitle className="flex items-center gap-4 text-2xl font-medium text-slate-800 tracking-tight">
             <div className="flex items-center justify-center h-14 w-14 rounded-2xl bg-[#064e3b]/10 text-[#064e3b] shadow-lg">
@@ -120,8 +120,8 @@ const UserDocCard = ({ icon, title, description, details }: {
           </DialogTitle>
         </DialogHeader>
         
-        <div className="flex-1 p-8 pt-6 overflow-hidden">
-          <div className="h-full flex flex-col space-y-6">
+        <div className="p-8 pt-6">
+          <div className="flex flex-col space-y-6">
             <div className="flex-shrink-0 p-4 bg-[#064e3b]/5 rounded-2xl border border-[#064e3b]/10">
               <p className="text-slate-700 text-base leading-relaxed font-normal tracking-wide">{description}</p>
             </div>
@@ -133,7 +133,7 @@ const UserDocCard = ({ icon, title, description, details }: {
               </div>
               
               <div className="flex-1 min-h-0">
-                <div className="h-full grid grid-cols-1 gap-3 content-start">
+                <div className="grid grid-cols-1 gap-3 content-start">
                   {details.map((detail, index) => (
                     <div 
                       key={index} 
@@ -161,7 +161,7 @@ const UserDocCard = ({ icon, title, description, details }: {
   </Dialog>
 );
 
-export function DocumentationPage({ onNavigate }: { onNavigate?: (screen: string) => void }) {
+export function DocumentationPage({ onNavigate, onBack }: { onNavigate?: (screen: string) => void; onBack?: () => void }) {
   return (
     <div className="min-h-screen bg-[#F3F1EA] font-['Helvetica',sans-serif] text-slate-700 antialiased">
       <style jsx>{`
@@ -170,6 +170,13 @@ export function DocumentationPage({ onNavigate }: { onNavigate?: (screen: string
           backdrop-filter: blur(12px);
           border: 1px solid rgba(255, 255, 255, 0.3);
         }
+        .no-scrollbar {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
         * {
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
@@ -177,25 +184,31 @@ export function DocumentationPage({ onNavigate }: { onNavigate?: (screen: string
         }
       `}</style>
       
-      {/* Header */}
-      <nav className="fixed top-0 w-full z-50">
-        <div className="max-w-[1400px] mx-auto flex items-center justify-between py-5 glass-card px-4 rounded-b-2xl">
-          <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="SwiftCause" className="w-8 h-8" />
-            <span className="font-bold text-xl tracking-tight text-[#064e3b]">SwiftCause</span>
-          </div>
-          
-          <Button 
-            variant="ghost" 
-            onClick={() => onNavigate && onNavigate('home')} 
-            className="flex items-center text-slate-600 hover:text-[#064e3b] px-6 py-3 rounded-2xl hover:bg-[#064e3b]/5 transition-all duration-300"
+      <header className="sticky top-0 z-50">
+        <div className="max-w-[1200px] mx-auto flex items-center justify-between py-4 glass-card px-4 rounded-b-2xl">
+          <button
+            onClick={() => onNavigate && onNavigate('home')}
+            className="flex items-center gap-3 text-left"
+            aria-label="Go to home"
           >
-            <ArrowLeft className="h-5 w-5 mr-2" /> Back
+            <img src="/logo.png" alt="SwiftCause" className="w-8 h-8" />
+            <div>
+              <span className="font-bold text-lg tracking-tight text-[#064e3b]">SwiftCause</span>
+              <p className="text-[11px] text-slate-500">Donation Platform</p>
+            </div>
+          </button>
+          <Button
+            variant="ghost"
+            onClick={() => (onBack ? onBack() : onNavigate && onNavigate('home'))}
+            className="flex items-center gap-2 text-[#064e3b] border border-[#064e3b] px-4 py-2 rounded-2xl hover:bg-[#064e3b] hover:text-stone-50 transition-all duration-300"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span className="text-sm font-semibold">Back</span>
           </Button>
         </div>
-      </nav>
+      </header>
 
-      <main className="pt-32">
+      <main className="pt-10 sm:pt-14">
         {/* Hero Section */}
         <section className="pb-8 px-4">
           <div className="max-w-[1400px] mx-auto text-center">

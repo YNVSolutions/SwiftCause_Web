@@ -778,7 +778,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
                                                 <ul className="space-y-2">
                                                     {perms.map((permission) => (
                                                         <li key={permission} className="flex items-start gap-2 text-xs text-gray-700">
-                                                            <Check className="w-3.5 h-3.5 text-green-600 mt-0.5 flex-shrink-0" />
+                                                            <Check className="w-3.5 h-3.5 text-green-600 mt-0.5 shrink-0" />
                                                             <span className="capitalize leading-tight">{permission.replace(/_/g, ' ')}</span>
                                                         </li>
                                                     ))}
