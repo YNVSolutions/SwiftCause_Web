@@ -23,6 +23,7 @@ interface AdminPageHeaderProps {
   profileSlot?: React.ReactNode;
   userPhotoUrl?: string;
   userInitials: string;
+  organizationName?: string;
 }
 
 export function AdminPageHeader({
@@ -37,14 +38,22 @@ export function AdminPageHeader({
   profileSlot,
   userPhotoUrl,
   userInitials,
+  organizationName,
 }: AdminPageHeaderProps) {
   const renderTitle = () => {
     if (title === null) return null;
     if (typeof title === "string") {
       return (
-        <h1 className="text-2xl font-semibold text-slate-800 tracking-tight font-['Helvetica',sans-serif]">
-          {title}
-        </h1>
+        <div>
+          {organizationName && (
+            <p className="text-xs text-slate-500 mb-0.5 font-medium uppercase tracking-wide">
+              {organizationName}
+            </p>
+          )}
+          <h1 className="text-2xl font-semibold text-slate-800 tracking-tight font-['Helvetica',sans-serif]">
+            {title}
+          </h1>
+        </div>
       );
     }
     return title;
@@ -71,7 +80,7 @@ export function AdminPageHeader({
         <div className="flex w-full items-start justify-between gap-4 lg:items-center">
           <div className="flex min-w-0 items-center gap-4 lg:flex-1">
             {showSidebarTrigger && (
-              <SidebarTrigger className="h-10 w-10 rounded-2xl border border-[#F3F1EA]/60 bg-[#F7F6F2] text-slate-600 hover:bg-[#064e3b]/10 hover:text-[#064e3b] transition-all duration-300 shadow-sm hover:shadow-md" />
+              <SidebarTrigger className="h-10 w-10 rounded-2xl border border-[#F3F1EA]/60 bg-[#F7F6F2] text-slate-600 hover:bg-emerald-50 hover:text-[#064e3b] hover:border-emerald-200 hover:shadow-lg hover:shadow-emerald-900/10 hover:scale-105 transition-all duration-300 shadow-sm" />
             )}
             <div className="flex flex-col min-w-0">
               {renderTitle()}
@@ -106,7 +115,7 @@ export function AdminPageHeader({
                 variant="outline"
                 size="sm"
                 onClick={onStartTour}
-                className="hidden sm:flex items-center gap-2 border-[#064e3b] bg-transparent text-[#064e3b] hover:text-blue-800 transition-all duration-300 rounded-2xl px-6 py-3 font-semibold"
+                className="hidden sm:flex items-center gap-2 border-[#064e3b] bg-transparent text-[#064e3b] hover:bg-emerald-50 hover:border-emerald-600 hover:shadow-md hover:shadow-emerald-900/10 hover:scale-105 transition-all duration-300 rounded-2xl px-6 py-3 font-semibold"
               >
                 <Compass className="h-4 w-4" />
                 <span className="font-medium">Get a Tour</span>
@@ -119,12 +128,12 @@ export function AdminPageHeader({
                 variant="ghost"
                 size="icon"
                 onClick={onProfileClick}
-                className="h-10 w-10 rounded-full hover:bg-[#064e3b]/10 transition-all duration-300"
+                className="h-10 w-10 rounded-full hover:bg-emerald-50 hover:shadow-md hover:shadow-emerald-900/10 hover:scale-110 transition-all duration-300 group"
                 title="View Profile"
               >
-                <Avatar className="h-8 w-8 ring-2 ring-[#F3F1EA]/60">
+                <Avatar className="h-8 w-8 ring-2 ring-[#F3F1EA]/60 group-hover:ring-emerald-200 transition-all duration-300">
                   <AvatarImage src={userPhotoUrl || undefined} />
-                  <AvatarFallback className="bg-[#064e3b] text-white text-sm font-semibold">
+                  <AvatarFallback className="bg-[#064e3b] text-white text-sm font-semibold group-hover:bg-emerald-600 transition-all duration-300">
                     {userInitials}
                   </AvatarFallback>
                 </Avatar>
