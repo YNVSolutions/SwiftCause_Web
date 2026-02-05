@@ -1,4 +1,4 @@
-import { collection, query, where, getDocs, doc, addDoc, updateDoc, deleteDoc, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, orderBy } from 'firebase/firestore';
 import { db } from '../../../shared/lib/firebase';
 import { Donation } from '../model';
 
@@ -73,6 +73,7 @@ export const donationApi = {
    */
   // Create new donation
   async createDonation(_donation: Omit<Donation, 'id'>): Promise<string> {
+    void _donation;
     throw new Error('Legacy donation creation disabled. Stripe webhooks must create donations.');
   },
 
