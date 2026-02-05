@@ -461,7 +461,7 @@ export function GiftAidManagement({
                       currentSortKey={sortKey} 
                       currentSortDirection={sortDirection} 
                       onSort={handleSort}
-                      className="w-[22%] px-0 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                      className="w-[22%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
                     >
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4 text-gray-500 shrink-0" />
@@ -473,7 +473,7 @@ export function GiftAidManagement({
                       currentSortKey={sortKey} 
                       currentSortDirection={sortDirection} 
                       onSort={handleSort}
-                      className="w-[22%] px-0 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                      className="w-[22%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
                     >
                       <div className="flex items-center gap-2">
                         <Target className="h-4 w-4 text-gray-500 shrink-0" />
@@ -485,7 +485,7 @@ export function GiftAidManagement({
                       currentSortKey={sortKey} 
                       currentSortDirection={sortDirection} 
                       onSort={handleSort}
-                      className="w-[13%] px-0 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
+                      className="w-[13%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
                     >
                       <div className="flex items-center justify-end gap-2">
                         <Banknote className="h-4 w-4 text-gray-500 shrink-0" />
@@ -497,7 +497,7 @@ export function GiftAidManagement({
                       currentSortKey={sortKey} 
                       currentSortDirection={sortDirection} 
                       onSort={handleSort}
-                      className="w-[13%] px-0 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
+                      className="w-[13%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
                     >
                       <div className="flex items-center justify-end gap-2">
                         <Gift className="h-4 w-4 text-[#064e3b] shrink-0" />
@@ -509,7 +509,7 @@ export function GiftAidManagement({
                       currentSortKey={sortKey} 
                       currentSortDirection={sortDirection} 
                       onSort={handleSort}
-                      className="w-[15%] px-0 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                      className="w-[15%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
                     >
                       <div className="flex items-center gap-2">
                         <CalendarDays className="h-4 w-4 text-gray-500 shrink-0" />
@@ -522,7 +522,7 @@ export function GiftAidManagement({
                       currentSortKey={sortKey} 
                       currentSortDirection={sortDirection} 
                       onSort={handleSort}
-                      className="w-[10%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center"
+                      className="w-[10%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
                     >
                       <div className="flex items-center justify-center gap-2">
                         <Eye className="h-4 w-4 text-gray-500 shrink-0" />
@@ -550,40 +550,25 @@ export function GiftAidManagement({
                         className="cursor-pointer hover:bg-gray-50 transition-colors h-16"
                         onClick={() => handleViewDetails(donation)}
                       >
-                        <TableCell className="px-2 py-4">
-                          <div className="flex items-center gap-2">
-                            <User className="h-4 w-4 text-gray-400 shrink-0" />
-                            <p className="text-base text-gray-900">{`${donation.donorFirstName} ${donation.donorSurname}`.trim()}</p>
-                          </div>
+                        <TableCell className="px-4 py-4 text-center">
+                          <p className="text-base text-gray-900">{`${donation.donorFirstName} ${donation.donorSurname}`.trim()}</p>
                         </TableCell>
-                        <TableCell className="py-4">
-                          <div className="flex items-center gap-2">
-                            <Target className="h-4 w-4 text-gray-400 shrink-0" />
-                            <p className="text-base text-gray-800">{donation.campaignTitle}</p>
-                          </div>
+                        <TableCell className="px-4 py-4 text-center">
+                          <p className="text-base text-gray-800">{donation.campaignTitle}</p>
                         </TableCell>
-                        <TableCell className="py-4">
-                          <div className="flex items-center gap-2">
-                            <Banknote className="h-4 w-4 text-gray-400 shrink-0" />
-                            <p className="text-base font-bold text-gray-900">{formatCurrency((donation.donationAmount || 0) / 100)}</p>
-                          </div>
+                        <TableCell className="px-4 py-4 text-center">
+                          <p className="text-base font-bold text-gray-900">{formatCurrency((donation.donationAmount || 0) / 100)}</p>
                         </TableCell>
-                        <TableCell className="py-4">
-                          <div className="flex items-center gap-2">
-                            <Gift className="h-4 w-4 text-[#064e3b] shrink-0" />
-                            <p className="text-base font-bold text-[#064e3b]">{formatCurrency((donation.giftAidAmount || 0) / 100)}</p>
-                          </div>
+                        <TableCell className="px-4 py-4 text-center">
+                          <p className="text-base font-bold text-[#064e3b]">{formatCurrency((donation.giftAidAmount || 0) / 100)}</p>
                         </TableCell>
-                        <TableCell className="py-4">
-                          <div className="flex items-center gap-2">
-                            <CalendarDays className="h-4 w-4 text-gray-400 shrink-0" />
-                            <p className="text-base text-gray-700">{donation.donationDate ? (() => {
-                              const date = new Date(donation.donationDate);
-                              return isNaN(date.getTime()) ? "Invalid Date" : date.toISOString().split('T')[0];
-                            })() : "N/A"}</p>
-                          </div>
+                        <TableCell className="px-4 py-4 text-center">
+                          <p className="text-base text-gray-700">{donation.donationDate ? (() => {
+                            const date = new Date(donation.donationDate);
+                            return isNaN(date.getTime()) ? "Invalid Date" : date.toISOString().split('T')[0];
+                          })() : "N/A"}</p>
                         </TableCell>
-                        <TableCell className="py-4 text-center">
+                        <TableCell className="px-4 py-4 text-center">
                           <Button
                             variant="ghost"
                             size="sm"
