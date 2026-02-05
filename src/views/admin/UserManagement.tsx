@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import {
   Plus, Search, UserCog, Users, Shield, Activity,
   Loader2, AlertCircle, Pencil, Trash2, AlertTriangle, MoreVertical, X, Check,
-  LayoutDashboard, Megaphone, Monitor, DollarSign, Settings, Info   
+  LayoutDashboard, Megaphone, Monitor, DollarSign, Settings, Info, Building2   
 } from 'lucide-react';
 import { Skeleton } from "../../shared/ui/skeleton";
 import { Ghost } from "lucide-react";
@@ -287,6 +287,21 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
             userSession={userSession}
             hasPermission={hasPermission}
             activeScreen="admin-users"
+            headerTitle={(
+              <div className="flex flex-col">
+                {userSession.user.organizationName && (
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Building2 className="h-3.5 w-3.5 text-emerald-600" />
+                    <span className="text-xs font-semibold text-emerald-700 tracking-wide">
+                      {userSession.user.organizationName}
+                    </span>
+                  </div>
+                )}
+                <h1 className="text-2xl font-semibold text-slate-800 tracking-tight">
+                  Users
+                </h1>
+              </div>
+            )}
             headerSubtitle="Manage platform users and permissions"
             headerSearchPlaceholder="Search users..."
             headerSearchValue={searchTerm}

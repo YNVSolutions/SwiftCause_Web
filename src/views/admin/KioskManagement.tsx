@@ -44,6 +44,7 @@ import {
   AlertTriangle,
   Download,
   Loader2,
+  Building2,
 } from 'lucide-react';
 import { AdminLayout } from './AdminLayout';
 import { KioskForm, KioskFormData } from './components/KioskForm';
@@ -393,6 +394,21 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
       userSession={userSession}
       hasPermission={hasPermission}
       activeScreen="admin-kiosks"
+      headerTitle={(
+        <div className="flex flex-col">
+          {userSession.user.organizationName && (
+            <div className="flex items-center gap-1.5 mb-1">
+              <Building2 className="h-3.5 w-3.5 text-emerald-600" />
+              <span className="text-xs font-semibold text-emerald-700 tracking-wide">
+                {userSession.user.organizationName}
+              </span>
+            </div>
+          )}
+          <h1 className="text-2xl font-semibold text-slate-800 tracking-tight">
+            Kiosks
+          </h1>
+        </div>
+      )}
       headerSubtitle="Configure and monitor donation kiosks"
       headerSearchPlaceholder="Search kiosks..."
       headerSearchValue={searchTerm}
@@ -401,7 +417,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
         <Button
           variant="outline"
           size="sm"
-          className="rounded-2xl border-[#064e3b] bg-transparent text-[#064e3b] hover:bg-[#064e3b] hover:text-gray-800 transition-all duration-300 px-5"
+          className="rounded-2xl border-[#064e3b] bg-transparent text-[#064e3b] hover:bg-emerald-50 hover:border-emerald-600 hover:shadow-md hover:shadow-emerald-900/10 hover:scale-105 transition-all duration-300 px-5"
           onClick={handleExportKiosks}
         >
           <Download className="h-4 w-4 sm:hidden" />
