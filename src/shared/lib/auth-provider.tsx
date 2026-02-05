@@ -133,9 +133,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (userDocSnap.exists()) {
           const userData = userDocSnap.data() as User
           
+          // Fetch organization name if organizationId exists
+          let organizationName: string | undefined = undefined
+          if (userData.organizationId) {
+            try {
+              const orgDocRef = doc(db, 'organizations', userData.organizationId)
+              const orgDocSnap = await getDoc(orgDocRef)
+              if (orgDocSnap.exists()) {
+                const orgData = orgDocSnap.data()
+                organizationName = orgData.name || orgData.organizationName || userData.organizationId
+              }
+            } catch (error) {
+              console.error('Error fetching organization name:', error)
+            }
+          }
+          
           setUserRole(userData.role)
           setCurrentAdminSession({
-            user: userData,
+            user: {
+              ...userData,
+              organizationName: organizationName
+            },
             loginTime: new Date().toISOString(),
             permissions: userData.permissions || []
           })
