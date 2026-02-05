@@ -48,6 +48,13 @@ const createUser = (req, res) => {
             .send({error: "Missing required fields for user creation."});
       }
 
+      // Prevent non-super_admin users from creating super_admin users
+      if (role === "super_admin" && callerData?.role !== "super_admin") {
+        return res.status(403).send({
+          error: "Only super admins can create super admin users",
+        });
+      }
+
       const userRecord = await admin.auth().createUser({
         email,
         password,
@@ -132,6 +139,35 @@ const updateUser = (req, res) => {
         });
       }
 
+      // Get the target user's current data
+      const targetUserDoc = await admin
+          .firestore()
+          .collection("users")
+          .doc(userId)
+          .get();
+
+      if (!targetUserDoc.exists) {
+        return res.status(404).send({
+          error: "Target user not found",
+        });
+      }
+
+      const targetUserData = targetUserDoc.data();
+
+      // Prevent non-super_admin users from editing super_admin users
+      if (targetUserData?.role === "super_admin" && callerData?.role !== "super_admin") {
+        return res.status(403).send({
+          error: "Only super admins can edit super admin users",
+        });
+      }
+
+      // Prevent non-super_admin users from changing a user's role to super_admin
+      if (data.role === "super_admin" && callerData?.role !== "super_admin") {
+        return res.status(403).send({
+          error: "Only super admins can assign super admin role",
+        });
+      }
+
       // Prepare update data
       const updateData = {};
       if (data.role !== undefined) updateData.role = data.role;
@@ -209,6 +245,28 @@ const deleteUser = (req, res) => {
         return res
             .status(403)
             .send({error: "You cannot delete your own account."});
+      }
+
+      // Get the target user's data before deletion
+      const targetUserDoc = await admin
+          .firestore()
+          .collection("users")
+          .doc(userId)
+          .get();
+
+      if (!targetUserDoc.exists) {
+        return res.status(404).send({
+          error: "Target user not found",
+        });
+      }
+
+      const targetUserData = targetUserDoc.data();
+
+      // Prevent non-super_admin users from deleting super_admin users
+      if (targetUserData?.role === "super_admin" && callerData?.role !== "super_admin") {
+        return res.status(403).send({
+          error: "Only super admins can delete super admin users",
+        });
       }
 
       await admin.auth().deleteUser(userId);

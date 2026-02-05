@@ -15,13 +15,12 @@ interface DonorActivityHeatmapProps {
   className?: string;
 }
 
-// Fixed grid constants for stability
+// Responsive grid constants
 const GRID_COLS = 24;
-const CELL_SIZE = 14;
-const GAP = 6;
-
-// Calculate intrinsic grid width
-const GRID_WIDTH = GRID_COLS * CELL_SIZE + (GRID_COLS - 1) * GAP; // 474px
+const CELL_SIZE_MOBILE = 10; // Smaller cells for mobile
+const CELL_SIZE_DESKTOP = 14;
+const GAP_MOBILE = 3; // Smaller gap for mobile
+const GAP_DESKTOP = 6;
 
 // Enterprise-grade legend colors - softer, more muted
 const LEGEND_COLORS = [
@@ -113,26 +112,26 @@ export const DonorActivityHeatmap: React.FC<DonorActivityHeatmapProps> = ({
 
   return (
     <Card className={`bg-white rounded-xl border border-gray-100 shadow-sm ${className}`}>
-      <CardContent className="p-6">
-        <div className="space-y-5">
+      <CardContent className="p-3 sm:p-6">
+        <div className="space-y-3 sm:space-y-5">
           {/* Header */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">
               Donor Activity Heatmap
             </h3>
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-600 leading-relaxed">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
                 Weekly engagement patterns by hour and day
               </p>
               
-              {/* Enterprise Legend - Aligned right */}
+              {/* Enterprise Legend - Aligned right on desktop, below on mobile */}
               <div className="flex items-center gap-2 text-sm text-gray-500">
                 <span className="text-xs font-medium text-gray-400">LOW</span>
                 <div className="flex gap-1">
                   {LEGEND_COLORS.map((color, index) => (
                     <div
                       key={index}
-                      className={`w-3 h-3 rounded-sm ${color}`}
+                      className={`w-3 h-3 rounded-[2px] ${color}`}
                     />
                   ))}
                 </div>
@@ -141,75 +140,58 @@ export const DonorActivityHeatmap: React.FC<DonorActivityHeatmapProps> = ({
             </div>
           </div>
 
-          {/* Heatmap Container - Fixed Layout */}
-          <div className="relative">
-            {/* Hour labels - Aligned with grid */}
-            <div className="flex mb-3">
-              <div className="w-12 flex-shrink-0"></div>
-              <div style={{ width: GRID_WIDTH }}>
-                <div
-                  className="grid"
-                  style={{
-                    gridTemplateColumns: `repeat(${GRID_COLS}, ${CELL_SIZE}px)`,
-                    gap: `${GAP}px`,
-                  }}
-                >
-                  {hours.map(hour => (
-                    <div
-                      key={hour}
-                      className="text-[10px] text-gray-400 text-center font-medium"
-                    >
-                      {hour % 4 === 0 ? `${hour.toString().padStart(2, '0')}` : ''}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-            
-            {/* Fixed Grid: 7 rows × 24 columns - No layout shift */}
-            {days.map((day) => (
-              <div key={day} className="flex items-center mb-1">
-                {/* Day label - Fixed width, enterprise typography */}
-                <div className="w-12 flex-shrink-0 text-xs font-medium text-gray-500">
-                  {day.toUpperCase()}
-                </div>
-                
-                {/* Hour cells - Fixed width grid */}
-                <div style={{ width: GRID_WIDTH }}>
-                  <div
-                    className="grid"
-                    style={{
-                      gridTemplateColumns: `repeat(${GRID_COLS}, ${CELL_SIZE}px)`,
-                      gridAutoRows: `${CELL_SIZE}px`,
-                      gap: `${GAP}px`,
-                    }}
-                  >
-                    {hours.map(hour => {
-                      const cellData = getCellData(day, hour);
-                      const { count, intensity } = cellData;
-                      
-                      return (
-                        <div
-                          key={`${day}-${hour}`}
-                          className={`rounded-sm cursor-pointer ${getCellClass(intensity)}`}
-                          style={{
-                            width: CELL_SIZE,
-                            height: CELL_SIZE,
-                            minWidth: CELL_SIZE,
-                            minHeight: CELL_SIZE,
-                          }}
-                          title={
-                            count > 0
-                              ? `${day} ${hour}:00–${hour + 1}:00 — ${count} donations`
-                              : `${day} ${hour}:00–${hour + 1}:00 — No activity`
-                          }
-                        />
-                      );
-                    })}
+          {/* Heatmap Container - Responsive with horizontal scroll on mobile */}
+          <div className="relative overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
+            <div className="inline-block min-w-full">
+              {/* Hour labels - Responsive sizing */}
+              <div className="flex mb-2 sm:mb-3">
+                <div className="w-8 sm:w-12 flex-shrink-0"></div>
+                <div className="flex-1">
+                  <div className="grid grid-cols-24 gap-[3px] sm:gap-[6px]">
+                    {hours.map(hour => (
+                      <div
+                        key={hour}
+                        className="text-[9px] sm:text-[10px] text-gray-400 text-center font-medium"
+                      >
+                        {hour % 4 === 0 ? `${hour.toString().padStart(2, '0')}` : ''}
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
-            ))}
+              
+              {/* Responsive Grid: 7 rows × 24 columns */}
+              {days.map((day) => (
+                <div key={day} className="flex items-center mb-1">
+                  {/* Day label - Responsive width */}
+                  <div className="w-8 sm:w-12 flex-shrink-0 text-[10px] sm:text-xs font-medium text-gray-500">
+                    {day.toUpperCase()}
+                  </div>
+                  
+                  {/* Hour cells - Responsive grid */}
+                  <div className="flex-1">
+                    <div className="grid grid-cols-24 gap-[3px] sm:gap-[6px]">
+                      {hours.map(hour => {
+                        const cellData = getCellData(day, hour);
+                        const { count, intensity } = cellData;
+                        
+                        return (
+                          <div
+                            key={`${day}-${hour}`}
+                            className={`rounded-[2px] cursor-pointer aspect-square ${getCellClass(intensity)}`}
+                            title={
+                              count > 0
+                                ? `${day} ${hour}:00–${hour + 1}:00 — ${count} donations`
+                                : `${day} ${hour}:00–${hour + 1}:00 — No activity`
+                            }
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </CardContent>

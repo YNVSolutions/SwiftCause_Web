@@ -24,24 +24,39 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
       `}</style>
       {/* Header */}
       <nav className="fixed top-0 w-full z-50">
-        <div className="max-w-[1400px] mx-auto flex items-center justify-between py-5 glass-card px-4 rounded-b-2xl">
-          <div className="flex items-center gap-3">
+        <div className="max-w-[1400px] mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 py-4 sm:py-5 glass-card px-4 rounded-b-2xl">
+          <button
+            onClick={() => onNavigate('home')}
+            className="flex items-center gap-3 text-left"
+            aria-label="Go to home"
+          >
             <img src="/logo.png" alt="SwiftCause" className="w-8 h-8" />
             <span className="font-bold text-xl tracking-tight text-[#064e3b]">SwiftCause</span>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={onSignup}
-              className="px-10 py-4 bg-[#064e3b] text-stone-50 text-sm font-semibold rounded-2xl hover:bg-[#0f5132] transition-all duration-300 shadow-lg shadow-[#064e3b]/20 hover:shadow-xl hover:shadow-[#064e3b]/25"
+          </button>
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end justify-start">
+            <button
+              onClick={() => onNavigate('about')}
+              className="px-3 py-2 sm:px-6 sm:py-3 bg-transparent text-[#064e3b] text-xs sm:text-sm font-semibold rounded-xl sm:rounded-2xl border-2 border-[#064e3b] hover:bg-[#064e3b] hover:text-stone-50 transition-all duration-300"
             >
-              Sign Up
+              About
+            </button>
+            <button
+              onClick={() => onNavigate('contact')}
+              className="px-3 py-2 sm:px-6 sm:py-3 bg-transparent text-[#064e3b] text-xs sm:text-sm font-semibold rounded-xl sm:rounded-2xl border-2 border-[#064e3b] hover:bg-[#064e3b] hover:text-stone-50 transition-all duration-300"
+            >
+              Contact
             </button>
             <button 
               onClick={() => onNavigate('docs')}
-              className="px-8 py-3 bg-transparent text-[#064e3b] text-sm font-semibold rounded-2xl border-2 border-[#064e3b] hover:bg-[#064e3b] hover:text-stone-50 transition-all duration-300"
+              className="px-3 py-2 sm:px-6 sm:py-3 bg-transparent text-[#064e3b] text-xs sm:text-sm font-semibold rounded-xl sm:rounded-2xl border-2 border-[#064e3b] hover:bg-[#064e3b] hover:text-stone-50 transition-all duration-300"
             >
-              Get Started
+              Guide
+            </button>
+            <button 
+              onClick={onSignup}
+              className="px-3 py-2 sm:px-9 sm:py-3.5 bg-[#064e3b] text-stone-50 text-xs sm:text-sm font-semibold rounded-xl sm:rounded-2xl hover:bg-[#0f5132] transition-all duration-300 shadow-lg shadow-[#064e3b]/20 hover:shadow-xl hover:shadow-[#064e3b]/25"
+            >
+              Sign Up
             </button>
           </div>
         </div>
@@ -86,7 +101,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8 max-w-[1200px] mx-auto">
                   
                   {/* Payment Processing Status Tile */}
-                  <div className="stat-card bg-[#F7F6F2] p-6 rounded-[2rem] flex flex-col items-start text-left shadow-lg shadow-emerald-900/4 border border-[#F3F1EA]/60 min-h-[160px] hover:transform hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-900/6 transition-all duration-300">
+                  <div className="stat-card bg-[#F7F6F2] p-6 rounded-4xl flex flex-col items-start text-left shadow-lg shadow-emerald-900/4 border border-[#F3F1EA]/60 min-h-40 hover:transform hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-900/6 transition-all duration-300">
                     <div className="flex justify-between w-full items-start mb-5">
                       <div>
                         <span className="text-[9px] font-medium uppercase tracking-wider text-slate-400/60">Payment Processing</span>
@@ -142,7 +157,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
                   </div>
 
                   {/* Kiosk Management Tile */}
-                  <div className="stat-card bg-[#F7F6F2] p-6 rounded-[2rem] flex flex-col items-start text-left shadow-lg shadow-emerald-900/4 border border-[#F3F1EA]/60 min-h-[160px] relative overflow-hidden group hover:transform hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-900/6 transition-all duration-300">
+                  <div className="stat-card bg-[#F7F6F2] p-6 rounded-4xl flex flex-col items-start text-left shadow-lg shadow-emerald-900/4 border border-[#F3F1EA]/60 min-h-40 relative overflow-hidden group hover:transform hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-900/6 transition-all duration-300">
                     <span className="text-[9px] font-medium uppercase tracking-wider text-slate-400/80 mb-3">Kiosk Management</span>
                     <div className="mt-1 flex flex-col h-full w-full">
                       <div className="flex items-center mb-5">
@@ -175,7 +190,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
                   </div>
 
                   {/* Campaign Management Tile */}
-                  <div className="stat-card bg-[#F7F6F2] p-6 rounded-[2rem] flex flex-col items-center text-center shadow-lg shadow-emerald-900/4 border border-[#F3F1EA]/60 min-h-[160px] hover:transform hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-900/6 transition-all duration-300 relative">
+                  <div className="stat-card bg-[#F7F6F2] p-6 rounded-4xl flex flex-col items-center text-center shadow-lg shadow-emerald-900/4 border border-[#F3F1EA]/60 min-h-40 hover:transform hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-900/6 transition-all duration-300 relative">
                     <div className="flex justify-between w-full items-start mb-5">
                       <span className="text-[9px] font-medium uppercase tracking-wider text-slate-400/80">Campaign Management</span>
                       <div className="bg-emerald-100/80 text-emerald-700 text-[8px] font-semibold px-3 py-1.5 rounded-2xl">
@@ -186,7 +201,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
                     {/* Mini Campaign Card */}
                     <div className="w-full flex-1 flex flex-col items-center">
                       {/* Campaign Card Preview */}
-                      <div className="w-20 h-12 bg-gradient-to-b from-emerald-200 to-emerald-400 rounded-2xl mb-4 relative overflow-hidden">
+                      <div className="w-20 h-12 bg-linear-to-b from-emerald-200 to-emerald-400 rounded-2xl mb-4 relative overflow-hidden">
                         {/* Forest silhouette */}
                         <svg className="absolute bottom-0 w-full h-full" viewBox="0 0 80 48" fill="none">
                           {/* Back trees */}
@@ -230,7 +245,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
                   </div>
 
                   {/* System Analytics Tile - Visual Hero */}
-                  <div className="stat-card bg-[#F7F6F2] p-5 rounded-[2rem] flex flex-col text-left shadow-xl shadow-emerald-900/6 border border-[#F3F1EA]/60 min-h-[160px] hover:transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-emerald-900/8 transition-all duration-300 relative overflow-hidden">
+                  <div className="stat-card bg-[#F7F6F2] p-5 rounded-4xl flex flex-col text-left shadow-xl shadow-emerald-900/6 border border-[#F3F1EA]/60 min-h-40 hover:transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-emerald-900/8 transition-all duration-300 relative overflow-hidden">
                     <div className="flex justify-between items-center mb-3 relative z-10">
                       <span className="text-[9px] font-medium uppercase tracking-wider text-slate-400/80">System Analytics</span>
                       <div className="flex items-center">
@@ -241,7 +256,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
                     
                     {/* Large Analytics Chart - Hero Visual */}
                     <div className="flex-1 w-full relative">
-                      <div className="absolute inset-0 bg-gradient-to-br from-[#F3F1EA] to-[#F7F6F2] rounded-2xl overflow-hidden">
+                      <div className="absolute inset-0 bg-linear-to-br from-[#F3F1EA] to-[#F7F6F2] rounded-2xl overflow-hidden">
                         {/* Minimal sidebar indicator */}
                         <div className="absolute left-0 top-0 bottom-0 w-8 bg-[#064e3b] opacity-60 rounded-l-2xl"></div>
                         
@@ -342,7 +357,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
                 
                 {/* Step 1: Donation Kiosks */}
                 <div className="flex-1 max-w-[220px]">
-                  <div className="bg-[#F7F6F2] p-6 rounded-[2rem] shadow-lg shadow-slate-200/20 border border-white/60 text-center">
+                  <div className="bg-[#F7F6F2] p-6 rounded-4xl shadow-lg shadow-slate-200/20 border border-white/60 text-center">
                     <div className="w-12 h-12 bg-emerald-100/80 rounded-xl flex items-center justify-center mx-auto mb-4">
                       <svg className="w-6 h-6 text-emerald-600/80" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <rect x="2" y="4" width="20" height="16" rx="2"/>
@@ -355,7 +370,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
                 </div>
 
                 {/* Arrow 1 */}
-                <div className="flex-shrink-0 px-4">
+                <div className="shrink-0 px-4">
                   <svg className="w-8 h-6 text-emerald-500/60" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
                   </svg>
@@ -363,7 +378,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
 
                 {/* Step 2: Campaign Engine */}
                 <div className="flex-1 max-w-[220px]">
-                  <div className="bg-[#F7F6F2] p-6 rounded-[2rem] shadow-lg shadow-slate-200/20 border border-white/60 text-center">
+                  <div className="bg-[#F7F6F2] p-6 rounded-4xl shadow-lg shadow-slate-200/20 border border-white/60 text-center">
                     <div className="w-12 h-12 bg-emerald-100/80 rounded-xl flex items-center justify-center mx-auto mb-4">
                       <svg className="w-6 h-6 text-emerald-600/80" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path d="M12 2L2 7l10 5 10-5-10-5z"/>
@@ -377,7 +392,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
                 </div>
 
                 {/* Arrow 2 */}
-                <div className="flex-shrink-0 px-4">
+                <div className="shrink-0 px-4">
                   <svg className="w-8 h-6 text-emerald-500/60" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
                   </svg>
@@ -385,7 +400,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
 
                 {/* Step 3: Stripe Processing */}
                 <div className="flex-1 max-w-[220px]">
-                  <div className="bg-[#F7F6F2] p-6 rounded-[2rem] shadow-lg shadow-slate-200/20 border border-white/60 text-center">
+                  <div className="bg-[#F7F6F2] p-6 rounded-4xl shadow-lg shadow-slate-200/20 border border-white/60 text-center">
                     <div className="w-12 h-12 bg-emerald-100/80 rounded-xl flex items-center justify-center mx-auto mb-4">
                       <svg className="w-6 h-6 text-emerald-600/80" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
@@ -398,7 +413,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
                 </div>
 
                 {/* Arrow 3 */}
-                <div className="flex-shrink-0 px-4">
+                <div className="shrink-0 px-4">
                   <svg className="w-8 h-6 text-emerald-500/60" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
                   </svg>
@@ -406,7 +421,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
 
                 {/* Step 4: Transaction Logging */}
                 <div className="flex-1 max-w-[220px]">
-                  <div className="bg-[#F7F6F2] p-6 rounded-[2rem] shadow-lg shadow-slate-200/20 border border-white/60 text-center">
+                  <div className="bg-[#F7F6F2] p-6 rounded-4xl shadow-lg shadow-slate-200/20 border border-white/60 text-center">
                     <div className="w-12 h-12 bg-emerald-100/80 rounded-xl flex items-center justify-center mx-auto mb-4">
                       <svg className="w-6 h-6 text-emerald-600/80" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -422,7 +437,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
                 </div>
 
                 {/* Arrow 4 */}
-                <div className="flex-shrink-0 px-4">
+                <div className="shrink-0 px-4">
                   <svg className="w-8 h-6 text-emerald-500/60" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
                   </svg>
@@ -430,7 +445,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
 
                 {/* Step 5: Analytics */}
                 <div className="flex-1 max-w-[220px]">
-                  <div className="bg-[#F7F6F2] p-6 rounded-[2rem] shadow-lg shadow-slate-200/20 border border-white/60 text-center">
+                  <div className="bg-[#F7F6F2] p-6 rounded-4xl shadow-lg shadow-slate-200/20 border border-white/60 text-center">
                     <div className="w-12 h-12 bg-emerald-100/80 rounded-xl flex items-center justify-center mx-auto mb-4">
                       <svg className="w-6 h-6 text-emerald-600/80" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path d="M3 3v18h18"/>
@@ -449,7 +464,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
             <div className="lg:hidden space-y-6">
               
               {/* Step 1: Donation Kiosks */}
-              <div className="bg-[#F7F6F2] p-6 rounded-[2rem] shadow-lg shadow-slate-200/20 border border-white/60 text-center">
+              <div className="bg-[#F7F6F2] p-6 rounded-4xl shadow-lg shadow-slate-200/20 border border-white/60 text-center">
                 <div className="w-12 h-12 bg-emerald-100/80 rounded-xl flex items-center justify-center mx-auto mb-4">
                   <svg className="w-6 h-6 text-emerald-600/80" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <rect x="2" y="4" width="20" height="16" rx="2"/>
@@ -468,7 +483,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
               </div>
 
               {/* Step 2: Campaign Engine */}
-              <div className="bg-[#F7F6F2] p-6 rounded-[2rem] shadow-lg shadow-slate-200/20 border border-white/60 text-center">
+              <div className="bg-[#F7F6F2] p-6 rounded-4xl shadow-lg shadow-slate-200/20 border border-white/60 text-center">
                 <div className="w-12 h-12 bg-emerald-100/80 rounded-xl flex items-center justify-center mx-auto mb-4">
                   <svg className="w-6 h-6 text-emerald-600/80" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M12 2L2 7l10 5 10-5-10-5z"/>
@@ -488,7 +503,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
               </div>
 
               {/* Step 3: Stripe Processing */}
-              <div className="bg-[#F7F6F2] p-6 rounded-[2rem] shadow-lg shadow-slate-200/20 border border-white/60 text-center">
+              <div className="bg-[#F7F6F2] p-6 rounded-4xl shadow-lg shadow-slate-200/20 border border-white/60 text-center">
                 <div className="w-12 h-12 bg-emerald-100/80 rounded-xl flex items-center justify-center mx-auto mb-4">
                   <svg className="w-6 h-6 text-emerald-600/80" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
@@ -507,7 +522,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
               </div>
 
               {/* Step 4: Transaction Logging */}
-              <div className="bg-[#F7F6F2] p-6 rounded-[2rem] shadow-lg shadow-slate-200/20 border border-white/60 text-center">
+              <div className="bg-[#F7F6F2] p-6 rounded-4xl shadow-lg shadow-slate-200/20 border border-white/60 text-center">
                 <div className="w-12 h-12 bg-emerald-100/80 rounded-xl flex items-center justify-center mx-auto mb-4">
                   <svg className="w-6 h-6 text-emerald-600/80" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -529,7 +544,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
               </div>
 
               {/* Step 5: Analytics */}
-              <div className="bg-[#F7F6F2] p-6 rounded-[2rem] shadow-lg shadow-slate-200/20 border border-white/60 text-center">
+              <div className="bg-[#F7F6F2] p-6 rounded-4xl shadow-lg shadow-slate-200/20 border border-white/60 text-center">
                 <div className="w-12 h-12 bg-emerald-100/80 rounded-xl flex items-center justify-center mx-auto mb-4">
                   <svg className="w-6 h-6 text-emerald-600/80" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M3 3v18h18"/>
@@ -601,7 +616,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
             <div className="space-y-4">
               
               {/* Physical Kiosk Fleet */}
-              <div className="bg-[#F3F1EA] p-6 rounded-[2rem] shadow-lg shadow-slate-200/20 border border-[#F7F6F2]">
+              <div className="bg-[#F3F1EA] p-6 rounded-4xl shadow-lg shadow-slate-200/20 border border-[#F7F6F2]">
                 <div className="flex items-start justify-between mb-4">
                   <div className="w-10 h-10 bg-emerald-100/80 rounded-xl flex items-center justify-center">
                     <svg className="w-5 h-5 text-emerald-600/80" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -618,7 +633,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
               </div>
 
               {/* Dynamic Campaign Engine */}
-              <div className="bg-[#F3F1EA] p-6 rounded-[2rem] shadow-lg shadow-slate-200/20 border border-[#F7F6F2]">
+              <div className="bg-[#F3F1EA] p-6 rounded-4xl shadow-lg shadow-slate-200/20 border border-[#F7F6F2]">
                 <div className="flex items-start justify-between mb-4">
                   <div className="w-10 h-10 bg-emerald-100/80 rounded-xl flex items-center justify-center">
                     <svg className="w-5 h-5 text-emerald-600/80" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -636,7 +651,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
               </div>
 
               {/* Stripe-Integrated Processing */}
-              <div className="bg-[#F3F1EA] p-6 rounded-[2rem] shadow-lg shadow-slate-200/20 border border-[#F7F6F2]">
+              <div className="bg-[#F3F1EA] p-6 rounded-4xl shadow-lg shadow-slate-200/20 border border-[#F7F6F2]">
                 <div className="flex items-start justify-between mb-4">
                   <div className="w-10 h-10 bg-emerald-100/80 rounded-xl flex items-center justify-center">
                     <svg className="w-5 h-5 text-emerald-600/80" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -653,7 +668,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
               </div>
 
               {/* Real-time System Analytics */}
-              <div className="bg-[#F3F1EA] p-6 rounded-[2rem] shadow-lg shadow-slate-200/20 border border-[#F7F6F2]">
+              <div className="bg-[#F3F1EA] p-6 rounded-4xl shadow-lg shadow-slate-200/20 border border-[#F7F6F2]">
                 <div className="flex items-start justify-between mb-4">
                   <div className="w-10 h-10 bg-emerald-100/80 rounded-xl flex items-center justify-center">
                     <svg className="w-5 h-5 text-emerald-600/80" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -683,7 +698,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-16 max-w-[1200px] mx-auto">
             <div className="group p-16 bg-[#F7F6F2] rounded-[3rem] shadow-xl shadow-slate-200/20 hover:shadow-2xl hover:shadow-slate-200/30 transition-all duration-500 hover:transform hover:-translate-y-2">
-              <div className="w-20 h-20 bg-[#F3F1EA]/80 rounded-[2rem] flex items-center justify-center mb-10 group-hover:scale-110 transition-transform duration-500">
+              <div className="w-20 h-20 bg-[#F3F1EA]/80 rounded-4xl flex items-center justify-center mb-10 group-hover:scale-110 transition-transform duration-500">
                 <svg className="w-10 h-10 text-emerald-600/80" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
                 </svg>
@@ -692,7 +707,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
               <p className="text-slate-500/90 leading-relaxed font-light text-lg">Provides centralized oversight of kiosk networks and campaign performance. Real-time operational visibility enables administrators to monitor device status, transaction volumes, and campaign metrics across multiple locations.</p>
             </div>
             <div className="group p-16 bg-[#F7F6F2] rounded-[3rem] shadow-xl shadow-slate-200/20 hover:shadow-2xl hover:shadow-slate-200/30 transition-all duration-500 hover:transform hover:-translate-y-2">
-              <div className="w-20 h-20 bg-[#F3F1EA]/80 rounded-[2rem] flex items-center justify-center mb-10 group-hover:scale-110 transition-transform duration-500">
+              <div className="w-20 h-20 bg-[#F3F1EA]/80 rounded-4xl flex items-center justify-center mb-10 group-hover:scale-110 transition-transform duration-500">
                 <svg className="w-10 h-10 text-emerald-600/80" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
                 </svg>
@@ -701,7 +716,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
               <p className="text-slate-500/90 leading-relaxed font-light text-lg">Supports secure, PCI-compliant payment processing through Stripe's infrastructure. Card data is never stored on SwiftCause servers, and all transactions maintain full audit trails with encrypted logging for organizational compliance requirements.</p>
             </div>
             <div className="group p-16 bg-[#F7F6F2] rounded-[3rem] shadow-xl shadow-slate-200/20 hover:shadow-2xl hover:shadow-slate-200/30 transition-all duration-500 hover:transform hover:-translate-y-2">
-              <div className="w-20 h-20 bg-[#F3F1EA]/80 rounded-[2rem] flex items-center justify-center mb-10 group-hover:scale-110 transition-transform duration-500">
+              <div className="w-20 h-20 bg-[#F3F1EA]/80 rounded-4xl flex items-center justify-center mb-10 group-hover:scale-110 transition-transform duration-500">
                 <svg className="w-10 h-10 text-emerald-600/80" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
                 </svg>

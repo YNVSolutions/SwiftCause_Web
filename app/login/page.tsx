@@ -17,16 +17,6 @@ export default function Login() {
 
   const handleLoginWithToast = async (role: UserRole, sessionData?: KioskSession | AdminSession) => {
     try {
-      // Check email verification for admin users
-      if (role === 'admin' || role === 'super_admin' || role === 'manager' || role === 'operator' || role === 'viewer') {
-        const adminSession = sessionData as AdminSession
-        if (adminSession && adminSession.user.emailVerified === false) {
-          showToast('Please verify your email before logging in', 'error', 4000)
-          router.push(`/auth/verify-email?email=${encodeURIComponent(adminSession.user.email)}`)
-          return
-        }
-      }
-
       await handleLogin(role, sessionData)
       
       // Navigate based on role

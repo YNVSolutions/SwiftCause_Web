@@ -1,10 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { Input } from '../../shared/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
 import { Checkbox } from '../../shared/ui/checkbox';
 import { checkOrganizationIdExists } from '../../shared/api/firestoreService';
 import Image from "next/image"
+import { useSignupDraft } from '../../shared/lib/hooks/useSignupDraft';
 import { 
   Heart,
   Shield,
@@ -18,8 +19,7 @@ import {
   AlertCircle,
   TrendingUp,
   Lock,
-  DollarSign,
-  Home
+  DollarSign
 } from 'lucide-react';
 import { ORGANIZATION_TYPES, ORGANIZATION_SIZES } from '../../shared/config';
 
@@ -27,7 +27,8 @@ interface SignupScreenProps {
   onSignup: (data: SignupFormData) => Promise<void>;
   onBack: () => void;
   onLogin: () => void;
-  onViewTerms: () => void;
+  onViewTerms: (step: number) => void;
+  initialStep?: number;
 }
 
 interface SignupFormData {
@@ -66,8 +67,16 @@ interface SignupFormErrors {
   agreeToTerms?: string;
 }
 
-export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupScreenProps) {
-  const [currentStep, setCurrentStep] = useState(1);
+const auth = getAuth();
+const firestore = getFirestore();
+
+export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms, initialStep }: SignupScreenProps) {
+  const [currentStep, setCurrentStep] = useState(() => {
+    if (initialStep && initialStep >= 1 && initialStep <= 3) {
+      return initialStep;
+    }
+    return 1;
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<SignupFormErrors>({});
@@ -77,6 +86,17 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
   const [isValidating, setIsValidating] = useState(false);
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const recaptchaRef = useRef<ReCAPTCHA>(null);
+
+  const { draft, saveDraft, clearDraft, isHydrated } = useSignupDraft<{
+    formData: SignupFormData;
+    currentStep: number;
+  }>('signupDraft', 5 * 60 * 1000);
+
+  useEffect(() => {
+    if (initialStep && initialStep >= 1 && initialStep <= 3) {
+      setCurrentStep(initialStep);
+    }
+  }, [initialStep]);
   
   const [formData, setFormData] = useState<SignupFormData>({
     firstName: '',
@@ -92,6 +112,25 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
     currency: 'GBP', 
     agreeToTerms: false
   });
+
+  useEffect(() => {
+    if (draft?.formData) {
+      setFormData(prev => {
+        const prevJson = JSON.stringify(prev);
+        const nextJson = JSON.stringify(draft.formData);
+        return prevJson === nextJson ? prev : draft.formData;
+      });
+    }
+    if (!initialStep && draft?.currentStep) {
+      setCurrentStep(prev => (prev === draft.currentStep ? prev : draft.currentStep));
+    }
+    setRecaptchaToken(null);
+  }, [draft, initialStep]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    saveDraft({ formData, currentStep });
+  }, [formData, currentStep, saveDraft, isHydrated]);
 
   const organizationTypes = ORGANIZATION_TYPES;
   const organizationSizes = ORGANIZATION_SIZES;
@@ -294,6 +333,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
           },
           recaptchaToken, // Include the token for backend verification
         } as any)
+        clearDraft();
       } catch (error) {
         setIsSubmitting(false)
         // Reset reCAPTCHA on error
@@ -347,7 +387,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
   }
 
   return (
-    <div className="min-h-screen bg-[#fcf9f1]">
+    <div className="min-h-screen bg-[#F3F1EA] font-lexend">
       {isSubmitting && (
         <div className="fixed inset-0 z-50 bg-white flex items-center justify-center">
           <div className="text-center space-y-4">
@@ -360,14 +400,23 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
         </div>
       )}
 
-      <main className="min-h-screen lg:grid lg:grid-cols-[43fr_57fr]">
+      <main className="min-h-screen lg:grid lg:grid-cols-[0.75fr_1fr]">
         {/* Left side - Green section */}
-        <div className="hidden lg:flex bg-[#0a2e16] relative overflow-hidden flex-col justify-between p-12 lg:p-20">
-          {/* Logo at top - visible on all steps */}
-          <div className="absolute top-8 left-12 z-20 flex items-center gap-3">
-            <Image src="/logo.png" alt="SwiftCause logo" width={40} height={40} className="rounded-xl opacity-80" />
-            <span className="font-bold text-xl tracking-tight text-white uppercase opacity-80">SwiftCause</span>
-          </div>
+        <div className="relative hidden flex-col justify-between overflow-hidden bg-linear-to-b from-[#0f5132] to-[#064e3b] px-10 py-12 text-white lg:flex">
+          <button
+            onClick={() => {
+              clearDraft();
+              onBack();
+            }}
+            className="group relative z-10 flex items-center gap-2 text-left text-white/90 transition hover:text-white"
+          >
+            <span className="flex h-12 w-12 items-center justify-center">
+              <Image src="/logo.png" alt="SwiftCause logo" width={40} height={40} className="rounded-xl transition-transform duration-300 group-hover:scale-105" />
+            </span>
+            <span className="font-lexend text-2xl font-bold tracking-tight text-stone-50">
+              SwiftCause
+            </span>
+          </button>
 
           <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-400/10 rounded-full blur-3xl -ml-10 -mb-10"></div>
@@ -483,7 +532,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                 
                 <div className="w-full space-y-4">
                   <div className="flex items-start gap-3 p-3 rounded-xl border border-white/5 bg-white/5">
-                    <div className="bg-[#11d452]/20 p-2 rounded-lg flex-shrink-0">
+                    <div className="bg-[#11d452]/20 p-2 rounded-lg shrink-0">
                       <Lock className="text-[#11d452] w-5 h-5" />
                     </div>
                     <div>
@@ -495,7 +544,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                   </div>
 
                   <div className="flex items-start gap-4 p-4 rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm hover:bg-white/10 transition-all">
-                    <div className="bg-[#11d452]/20 p-3 rounded-lg flex-shrink-0">
+                    <div className="bg-[#11d452]/20 p-3 rounded-lg shrink-0">
                       <Users className="text-[#11d452] w-6 h-6" />
                     </div>
                     <div>
@@ -507,7 +556,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                   </div>
 
                   <div className="flex items-start gap-4 p-4 rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm hover:bg-white/10 transition-all">
-                    <div className="bg-[#11d452]/20 p-3 rounded-lg flex-shrink-0">
+                    <div className="bg-[#11d452]/20 p-3 rounded-lg shrink-0">
                       <CheckCircle className="text-[#11d452] w-6 h-6" />
                     </div>
                     <div>
@@ -531,40 +580,42 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
         </div>
 
         {/* Right side - Form */}
-        <div className="flex flex-col p-6 md:p-8 lg:p-12 bg-[#fcf9f1] min-h-screen">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            {/* Home button */}
+        <div className="flex items-start justify-center bg-[#F3F1EA] px-4 py-10 sm:items-center sm:px-6 sm:py-12">
+          <div className="w-full max-w-2xl">
+          <div className="mb-8 flex items-center justify-start bg-[#F3F1EA] py-3 lg:hidden sticky top-0 z-10 -mx-4 px-4 sm:static sm:mx-0 sm:px-0 sm:py-0">
             <button
-              onClick={onBack}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 text-slate-600 hover:text-[#064e3b] hover:border-[#064e3b] hover:bg-green-50 transition-all group"
+              onClick={() => {
+                clearDraft();
+                onBack();
+              }}
+              className="flex items-center gap-2 text-left text-slate-800 transition hover:text-slate-900"
             >
-              <Home className="w-4 h-4" />
-              <span className="text-sm font-medium">Home</span>
-            </button>
-
-            {/* Mobile logo - center on mobile */}
-            <div className="flex lg:hidden items-center gap-2 absolute left-1/2 transform -translate-x-1/2">
-              <Image src="/logo.png" alt="Swift Cause Logo" width={32} height={32} className="rounded-lg" />
-              <span className="font-bold text-xl tracking-tight text-[#064e3b] uppercase">
+              <span className="flex h-9 w-9 items-center justify-center sm:h-10 sm:w-10">
+                <img src="/logo.png" alt="SwiftCause Logo" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg" />
+              </span>
+              <span className="text-lg font-semibold tracking-tight text-[#064e3b] sm:text-2xl">
                 SwiftCause
               </span>
-            </div>
-
-            {/* Login link */}
-            <div className="text-sm text-slate-500">
-              <span className="hidden sm:inline">Already have an account?{' '}</span>
-              <button onClick={onLogin} className="text-[#064e3b] font-semibold hover:underline">
-                Log in
-              </button>
-            </div>
+            </button>
           </div>
 
-          {/* Form Container */}
-          <div className="max-w-md w-full mx-auto flex-1 flex flex-col justify-center overflow-y-auto">
-            {/* White background card for the form */}
-            <div className="bg-white rounded-2xl shadow-lg p-8">
-              {/* Progress indicator */}
+            <div className="mb-8 text-center">
+              <p className="text-[10px] uppercase tracking-[0.3em] text-slate-400/70 sm:text-xs sm:tracking-[0.35em]">
+                Secure access
+              </p>
+              <h2 className="mt-2 text-2xl font-semibold text-slate-800 sm:mt-3 sm:text-3xl">
+                Create your SwiftCause account
+              </h2>
+              <p className="mt-2 text-sm text-slate-500">
+                Complete the steps below to start fundraising.
+              </p>
+            </div>
+
+            {/* Form Container */}
+            <div className="max-w-md w-full mx-auto flex-1 flex flex-col justify-center overflow-y-auto">
+              {/* White background card for the form */}
+              <div className="bg-white rounded-2xl shadow-lg p-8">
+                {/* Progress indicator */}
               <div className="mb-6">
                 <div className="flex justify-between items-center mb-3">
                   <span className="text-sm font-bold text-[#064e3b] uppercase tracking-wider">
@@ -585,12 +636,12 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
               {/* Form title */}
               <div className="mb-6 text-left">
                 <h1 className="text-3xl font-bold text-slate-900 mb-2">
-                  {currentStep === 1 && 'Create your account'}
+                  {currentStep === 1 && 'Start with your contact details'}
                   {currentStep === 2 && 'Organization Details'}
                   {currentStep === 3 && 'Account Security'}
                 </h1>
                 <p className="text-base text-slate-500">
-                  {currentStep === 1 && 'Join a global movement of transparent giving and track your impact in real-time.'}
+                  {currentStep === 1 && 'Tell us who you are so we can set up your admin access.'}
                   {currentStep === 2 && 'Tell us about your organization'}
                   {currentStep === 3 && 'Secure your account'}
                 </p>
@@ -610,7 +661,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                       value={formData.email}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData('email', e.target.value)}
                       onBlur={handleEmailBlur}
-                      className={`w-full px-5 py-5 rounded-xl border !bg-white text-base focus:ring-0 focus:border-[#064e3b] transition-all outline-none h-14 ${
+                      className={`w-full px-5 py-5 rounded-xl border bg-white! text-base focus:ring-0 focus:border-[#064e3b] transition-all outline-none h-14 ${
                         errors.email ? 'border-red-500' : 'border-slate-300'
                       } ${isCheckingEmail ? 'opacity-50' : ''}`}
                       placeholder="name@example.com"
@@ -646,7 +697,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                       type="text"
                       value={formData.firstName}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData('firstName', e.target.value)}
-                      className={`w-full px-5 py-5 rounded-xl border !bg-white text-base focus:ring-0 focus:border-[#064e3b] transition-all outline-none h-14 ${
+                      className={`w-full px-5 py-5 rounded-xl border bg-white! text-base focus:ring-0 focus:border-[#064e3b] transition-all outline-none h-14 ${
                         errors.firstName ? 'border-red-500' : 'border-slate-300'
                       }`}
                       placeholder="First name"
@@ -668,7 +719,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                       type="text"
                       value={formData.lastName}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData('lastName', e.target.value)}
-                      className={`w-full px-5 py-5 rounded-xl border !bg-white text-base focus:ring-0 focus:border-[#064e3b]b] transition-all outline-none h-14 ${
+                      className={`w-full px-5 py-5 rounded-xl border bg-white! text-base focus:ring-0 focus:border-[#064e3b]b] transition-all outline-none h-14 ${
                         errors.lastName ? 'border-red-500' : 'border-slate-300'
                       }`}
                       placeholder="Last name"
@@ -719,7 +770,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                       value={formData.organizationName}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData('organizationName', e.target.value)}
                       onBlur={handleOrganizationNameBlur}
-                      className={`w-full rounded-lg border !bg-white text-[#0a2e16] h-14 px-4 text-base placeholder:text-gray-400 focus:border-[#11d452] focus:ring-0 ${
+                      className={`w-full rounded-lg border bg-white! text-[#0a2e16] h-14 px-4 text-base placeholder:text-gray-400 focus:border-[#11d452] focus:ring-0 ${
                         errors.organizationName ? 'border-red-500' : 'border-gray-200'
                       } ${isCheckingOrganization ? 'opacity-50' : ''}`}
                       placeholder="Enter your organization's legal name"
@@ -753,7 +804,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                     value={formData.organizationType} 
                     onValueChange={(value: string) => updateFormData('organizationType', value)}
                   >
-                    <SelectTrigger className={`w-full rounded-lg border !bg-white text-[#0a2e16] h-14 px-4 text-base focus:border-[#11d452] focus:ring-0 ${
+                    <SelectTrigger className={`w-full rounded-lg border bg-white! text-[#0a2e16] h-14 px-4 text-base focus:border-[#11d452] focus:ring-0 ${
                       errors.organizationType ? 'border-red-500' : 'border-gray-200'
                     }`}>
                       <SelectValue placeholder="Select organization type" />
@@ -782,7 +833,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                     type="url"
                     value={formData.website}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData('website', e.target.value)}
-                    className="w-full rounded-lg border border-gray-200 !bg-white text-[#0a2e16] h-14 px-4 text-base placeholder:text-gray-400 focus:border-[#11d452] focus:ring-0"
+                    className="w-full rounded-lg border border-gray-200 bg-white! text-[#0a2e16] h-14 px-4 text-base placeholder:text-gray-400 focus:border-[#11d452] focus:ring-0"
                     placeholder="https://example.com"
                   />
                 </div>
@@ -832,7 +883,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                             type={showPassword ? 'text' : 'password'}
                             value={formData.password}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData('password', e.target.value)}
-                            className={`w-full px-4 py-3 rounded-lg border !bg-white text-[#0d1b10] focus:ring-2 focus:ring-[#11d452] focus:border-transparent outline-none transition-all ${
+                            className={`w-full px-4 py-3 rounded-lg border bg-white! text-[#0d1b10] focus:ring-2 focus:ring-[#11d452] focus:border-transparent outline-none transition-all ${
                               errors.password ? 'border-red-500' : 'border-[#cfe7d3]'
                             }`}
                             placeholder="Enter your password"
@@ -864,7 +915,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                             type={showConfirmPassword ? 'text' : 'password'}
                             value={formData.confirmPassword}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData('confirmPassword', e.target.value)}
-                            className={`w-full px-4 py-3 rounded-lg border !bg-white text-[#0d1b10] focus:ring-2 focus:ring-[#11d452] focus:border-transparent outline-none transition-all ${
+                            className={`w-full px-4 py-3 rounded-lg border bg-white! text-[#0d1b10] focus:ring-2 focus:ring-[#11d452] focus:border-transparent outline-none transition-all ${
                               errors.confirmPassword ? 'border-red-500' : 'border-[#cfe7d3]'
                             }`}
                             placeholder="Confirm your password"
@@ -980,7 +1031,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                         <div className="text-sm">
                           <label htmlFor="agreeToTerms" className="cursor-pointer text-[#0d1b10]">
                             I agree to the{' '}
-                            <button type="button" className="text-[#4c9a59] hover:underline font-medium" onClick={onViewTerms}>
+                            <button type="button" className="text-[#4c9a59] hover:underline font-medium" onClick={() => onViewTerms(currentStep)}>
                               Terms of Service
                             </button>
                           </label>
@@ -1040,8 +1091,21 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
                   )}
             </div>
             {/* End of white background card */}
+            <div className="mt-6 text-center text-sm text-slate-500">
+              <span>Already have an account? </span>
+              <button
+                onClick={() => {
+                  clearDraft();
+                  onLogin();
+                }}
+                className="text-[#064e3b] font-semibold hover:underline"
+              >
+                Log in
+              </button>
+            </div>
           </div>
         </div>
+      </div>
       </main>
     </div>
   );

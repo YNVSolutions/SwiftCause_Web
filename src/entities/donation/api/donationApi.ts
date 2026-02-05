@@ -65,6 +65,12 @@ export const donationApi = {
     }
   },
 
+  /**
+   * ⚠️ LEGACY / NON-STRIPE ONLY
+   * DO NOT use for Stripe-backed payments.
+   * Stripe donations are created exclusively via webhooks
+   * using paymentIntent.id as the Firestore document ID.
+   */
   // Create new donation
   async createDonation(donation: Omit<Donation, 'id'>): Promise<string> {
     try {

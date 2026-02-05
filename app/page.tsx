@@ -26,6 +26,26 @@ export default function Home() {
   }
 
   const handleNavigate = (screen: string) => {
+    if (screen === 'home') {
+      router.push('/')
+      return
+    }
+    if (screen === 'about') {
+      router.push('/about?from=home')
+      return
+    }
+    if (screen === 'contact') {
+      router.push('/contact?from=home')
+      return
+    }
+    if (screen === 'docs') {
+      router.push('/docs?from=home')
+      return
+    }
+    if (screen === 'terms') {
+      router.push('/terms?from=home')
+      return
+    }
     router.push(`/${screen}`)
   }
 

@@ -1,210 +1,200 @@
 "use client";
 import { Button } from '../../shared/ui/button';
-import { Card, CardContent } from '../../shared/ui/card';
-import { ArrowLeft, Smartphone, Shield, BarChart3, QrCode, Target, UserCog, Heart, Award, Globe, CheckCircle } from 'lucide-react';
-import { Footer } from '../../shared/ui/Footer';
+import { ArrowLeft, Heart, Globe, Award, CheckCircle, Target, Shield, Users } from 'lucide-react';
 
+const ValueCard = ({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) => (
+  <div className="group rounded-3xl border border-[#F3F1EA]/60 bg-white p-6 shadow-[0_18px_35px_-28px_rgba(15,23,42,0.25)] transition-all hover:-translate-y-1 hover:shadow-[0_22px_40px_-18px_rgba(15,23,42,0.3)]">
+    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+      {icon}
+    </div>
+    <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
+    <p className="mt-2 text-sm text-slate-600 leading-relaxed">{description}</p>
+  </div>
+);
 
-export function AboutPage({ onNavigate }: { onNavigate?: (screen: string) => void }) {
+export function AboutPage({ onNavigate, onBack }: { onNavigate?: (screen: string) => void; onBack?: () => void }) {
   return (
-    <div className="min-h-screen bg-white">
-      {/* Navigation Header */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-3">
-              <div className="h-10 w-10">
-                <img 
-                  src="/logo.png" 
-                  alt="Swift Cause Logo" 
-                  className="w-full h-full object-contain"
-                />
-              </div>
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900">Swift Cause</h1>
-                <p className="text-xs text-gray-600">Donation Platform</p>
-              </div>
+    <div className="min-h-screen bg-[#F3F1EA] font-['Helvetica',sans-serif] text-slate-700">
+      <style jsx>{`
+        .glass-card {
+          background: rgba(255, 255, 255, 0.85);
+          backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .hero-gradient {
+          background: linear-gradient(180deg, #0f5132 0%, #064e3b 100%);
+        }
+      `}</style>
+
+      <header className="sticky top-0 z-50">
+        <div className="max-w-[1200px] mx-auto flex items-center justify-between py-4 glass-card px-4 rounded-b-2xl">
+          <button
+            onClick={() => onNavigate && onNavigate('home')}
+            className="flex items-center gap-3 text-left"
+            aria-label="Go to home"
+          >
+            <img src="/logo.png" alt="SwiftCause" className="w-8 h-8" />
+            <div>
+              <span className="font-bold text-lg tracking-tight text-[#064e3b]">SwiftCause</span>
+              <p className="text-[11px] text-slate-500">Donation Platform</p>
             </div>
-            
-            <Button variant="ghost" onClick={() => onNavigate && onNavigate('home')} className="flex items-center text-gray-600 hover:text-gray-900">
-              <ArrowLeft className="h-5 w-5 mr-2" /> Back to Home
-            </Button>
-          </div>
+          </button>
+          <Button
+            variant="ghost"
+            onClick={() => (onBack ? onBack() : onNavigate && onNavigate('home'))}
+            className="flex items-center gap-2 text-[#064e3b] border border-[#064e3b] px-4 py-2 rounded-2xl hover:bg-[#064e3b] hover:text-stone-50 transition-all duration-300"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span className="text-sm font-semibold">Back</span>
+          </Button>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-green-50 via-white to-emerald-50">
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8">
-              <div className="inline-flex items-center px-4 py-2 rounded-full bg-green-100 text-green-800 text-sm font-medium">
-                <Heart className="w-4 h-4 mr-2" />
-                Empowering organizations worldwide
-              </div>
-              
-              <div className="space-y-6">
-                <h1 className="text-4xl lg:text-6xl font-bold text-gray-900 leading-tight">
-                  About
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-600"> Swift Cause</span>
-                </h1>
-                
-                <p className="text-xl text-gray-600 leading-relaxed">
-                  We're on a mission to transform fundraising by making it simple, secure, and accessible for organizations of all sizes. 
-                  No technical expertise required.
-                </p>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button 
-                  onClick={() => onNavigate && onNavigate('signup')}
-                  size="lg" 
-                  className="h-14 px-8 bg-green-600 hover:bg-green-700 text-white shadow-lg"
+      <main className="py-10 sm:py-14">
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 space-y-14">
+          <section className="hero-gradient rounded-[2.5rem] overflow-hidden relative shadow-2xl shadow-green-900/10">
+            <div className="absolute top-0 right-0 w-72 h-72 bg-emerald-400/10 rounded-full blur-3xl -mr-24 -mt-16"></div>
+            <div className="absolute bottom-0 left-0 w-56 h-56 bg-emerald-300/10 rounded-full blur-3xl -ml-16 -mb-10"></div>
+            <div className="relative px-8 py-12 sm:py-14 text-left">
+              <p className="text-emerald-100/80 text-xs tracking-[0.3em] uppercase">About</p>
+              <h1 className="mt-3 text-4xl sm:text-5xl font-semibold text-white leading-tight">
+                Fundraising that scales with your mission.
+              </h1>
+              <p className="mt-4 text-sm sm:text-base text-emerald-50/85 leading-relaxed max-w-2xl">
+                SwiftCause helps organizations launch campaigns, accept donations anywhere, and deliver real-time visibility across impact.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-4">
+                <Button
+                  onClick={() => onNavigate && onNavigate('docs')}
+                  className="h-12 px-6 bg-white text-[#064e3b] hover:bg-[#F3F1EA] rounded-2xl font-semibold shadow-lg shadow-emerald-900/10"
                 >
-                  Get Started
+                  Guide
+                </Button>
+                <Button
+                  onClick={() => onNavigate && onNavigate('contact')}
+                  variant="outline"
+                  className="h-12 px-6 rounded-2xl border-white text-white bg-white/10 hover:bg-white/20 hover:border-white/80"
+                >
+                  Contact Us
                 </Button>
               </div>
             </div>
+          </section>
 
-            {/* About Section Image */}
-            <div className="relative">
-              <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-white p-8 hover:shadow-3xl transition-all duration-500 group">
-                <div className="aspect-square bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-8 flex flex-col justify-center items-center group-hover:scale-105 transition-transform duration-500">
-                  <div className="w-100 h-100 mb-6 group-hover:rotate-12 transition-transform duration-500">
-                    <img 
-                      src="/aboutSection.png" 
-                      alt="About Section" 
-                      className="w-full h-full object-contain rounded-lg drop-shadow-lg"
-                    />
-                  </div>
-                  <div className="text-center">
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-green-600 transition-colors duration-300">
-                      Swift Cause
-                    </h3>
-                    <p className="text-gray-600 group-hover:text-green-500 transition-colors duration-300">
-                      Donation Platform
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Our Story Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Our Story Section Image */}
-            <div className="relative order-2 lg:order-1">
-              <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-green-50 to-emerald-50 p-8 hover:shadow-3xl transition-all duration-500 group">
-                <div className="aspect-square bg-white rounded-xl p-8 flex flex-col justify-center items-center group-hover:scale-105 transition-transform duration-500">
-                  <div className="w-100 h-100 mb-6 group-hover:rotate-12 transition-transform duration-500">
-                    <img 
-                      src="/ourStory.png" 
-                      alt="Our Story" 
-                      className="w-full h-full object-contain rounded-lg drop-shadow-lg"
-                    />
-                  </div>
-                  <div className="text-center">
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-green-600 transition-colors duration-300">
-                      Our Journey
-                    </h3>
-                    <p className="text-gray-600 group-hover:text-green-500 transition-colors duration-300">
-                      Making fundraising accessible
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Story Content */}
-            <div className="space-y-8 order-1 lg:order-2">
+          <section className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-10 items-center">
+            <div className="space-y-6">
               <div>
-                <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-                  Our Story
+                <p className="text-[10px] uppercase tracking-[0.3em] text-slate-400/70">Our Story</p>
+                <h2 className="mt-2 text-3xl sm:text-4xl font-semibold text-slate-900">
+                  Built for teams who run high-impact campaigns.
                 </h2>
-                <p className="text-xl text-gray-600 mb-8">
-                  Born from a simple idea: fundraising should be easy for everyone
-                </p>
               </div>
-              
-              <div className="prose max-w-none text-lg text-gray-700">
-                <p className="mb-6">
-                  We noticed that many organizations struggle with outdated, expensive fundraising systems that require technical expertise to set up and maintain. 
-                  Small charities especially face barriers with complex software and costly hardware requirements.
-                </p>
-                <p className="mb-6">
-                  Swift Cause was created to change that. We built a platform that works on any smartphone or tablet - no special equipment needed. 
-                  Our goal is to make powerful fundraising tools accessible to every organization, regardless of their size or technical knowledge.
+              <div className="space-y-4 text-slate-600">
+                <p>
+                  We started SwiftCause after seeing how many organizations were forced to stitch together spreadsheets,
+                  outdated tools, and hardware-heavy setups just to accept donations.
                 </p>
                 <p>
-                  Today, we help hundreds of organizations around the world collect donations more effectively, 
-                  track their impact in real-time, and focus on what matters most - their cause.
+                  We built a platform that works anywhere, kiosk, web, or mobile, so teams can focus on campaigns instead of infrastructure.
+                </p>
+                <p>
+                  Today, SwiftCause supports organizations across multiple countries with enterprise-grade security and real-time reporting.
                 </p>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
+            <div className="rounded-[2rem] bg-white p-6 shadow-xl shadow-slate-200/30 border border-white/70">
+              <img src="/aboutSection.png" alt="SwiftCause platform" className="w-full h-full object-contain rounded-2xl" />
+            </div>
+          </section>
 
-      {/* Our Impact Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-            Our Impact
-          </h2>
-          <p className="text-xl text-gray-600 mb-12">
-            Helping organizations make a real difference
-          </p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="text-4xl font-bold text-green-600 mb-2">500+</div>
-              <div className="text-gray-600">Organizations Served</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-green-600 mb-2">£2M+</div>
-              <div className="text-gray-600">Raised for Good Causes</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-green-600 mb-2">50+</div>
-              <div className="text-gray-600">Countries Worldwide</div>
-            </div>
-          </div>
-        </div>
-      </section>
+          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-green-600 to-emerald-600">
-        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6">
-            Ready to Get Started?
-          </h2>
-          <p className="text-xl text-green-100 mb-8">
-            Join hundreds of organizations already using Swift Cause to maximize their impact
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              onClick={() => onNavigate && onNavigate('signup')}
-              size="lg" 
-              className="h-14 px-8 bg-white text-green-600 hover:bg-green-50 shadow-lg font-semibold"
-            >
-              Start Your Free Trial
-            </Button>
-            <Button  
-              size="lg" 
-             className="h-14 px-8 bg-transparent border-2 border-white text-white hover:bg-white hover:text-green-700 shadow-lg"
-              onClick={() => onNavigate && onNavigate('contact')}
-            >
-              Contact Us
-            </Button>
-          </div>
+          <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <ValueCard
+              icon={<Target className="h-6 w-6" />}
+              title="Mission-driven"
+              description="We build for organizations focused on measurable outcomes and transparent reporting."
+            />
+            <ValueCard
+              icon={<Shield className="h-6 w-6" />}
+              title="Secure by design"
+              description="Payments and data are protected with bank-grade security and compliance practices."
+            />
+            <ValueCard
+              icon={<Users className="h-6 w-6" />}
+              title="Built for teams"
+              description="Role-based access, shared dashboards, and collaboration across campaigns."
+            />
+          </section>
+
+          <section className="rounded-[2rem] bg-white border border-[#F3F1EA]/60 p-8 sm:p-10 shadow-xl shadow-slate-200/30">
+            <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-8 items-center">
+              <div className="space-y-4">
+                <p className="text-[10px] uppercase tracking-[0.3em] text-slate-400/70">Why SwiftCause</p>
+                <h2 className="text-3xl sm:text-4xl font-semibold text-slate-900">
+                  Everything you need to launch, manage, and grow campaigns.
+                </h2>
+                <div className="space-y-3 text-sm text-slate-600">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="mt-0.5 h-5 w-5 text-emerald-600" />
+                    <span>Unified dashboards for campaigns, kiosks, and payments.</span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="mt-0.5 h-5 w-5 text-emerald-600" />
+                    <span>Real-time analytics with exportable reports.</span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="mt-0.5 h-5 w-5 text-emerald-600" />
+                    <span>Flexible donation flows for events, kiosks, and online.</span>
+                  </div>
+                </div>
+              </div>
+              <div className="rounded-2xl bg-emerald-50 p-6 text-emerald-900">
+                <div className="flex items-center gap-3">
+                  <Globe className="h-6 w-6 text-emerald-700" />
+                  <span className="text-sm font-semibold uppercase tracking-[0.25em]">Global reach</span>
+                </div>
+                <p className="mt-3 text-sm text-emerald-800">
+                  Scale your impact with tools built for multi-location fundraising and international donors.
+                </p>
+                <div className="mt-6 flex items-center gap-3 text-sm text-emerald-700">
+                  <Award className="h-5 w-5" />
+                  Trusted by growing nonprofit teams.
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="rounded-[2rem] bg-gradient-to-r from-[#064e3b] to-[#0f5132] text-white p-10 text-center shadow-2xl shadow-emerald-900/20">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs tracking-[0.3em] uppercase">
+              <Heart className="h-4 w-4" />
+              Join the platform
+            </div>
+            <h2 className="mt-6 text-3xl sm:text-4xl font-semibold">
+              Ready to build your next campaign?
+            </h2>
+            <p className="mt-3 text-sm text-emerald-50/90">
+              We will help you launch faster, raise more, and deliver transparent impact.
+            </p>
+            <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center">
+              <Button
+                onClick={() => onNavigate && onNavigate('signup')}
+                className="h-12 px-6 bg-white text-[#064e3b] hover:bg-[#F3F1EA] rounded-2xl font-semibold"
+              >
+                Start Your Free Trial
+              </Button>
+              <Button
+                onClick={() => onNavigate && onNavigate('contact')}
+                variant="outline"
+                className="h-12 px-6 rounded-2xl border-white text-white bg-white/10 hover:bg-white/20 hover:border-white/80"
+              >
+                Contact Us
+              </Button>
+            </div>
+          </section>
         </div>
-      </section>
-      
-      <Footer onNavigate={onNavigate} />
+      </main>
     </div>
   );
 }
