@@ -139,6 +139,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
   };
 
   const handleEmailBlur = async () => {
+    // Only validate format on blur, don't check existence
     if (!formData.email.trim()) {
       return;
     }
@@ -150,31 +151,12 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
       }));
       return;
     }
-
-    setIsCheckingEmail(true);
-    try {
-      // Import the auth API
-      const { authApi } = await import('../../features/auth-by-email/api/authApi');
-      
-      // Check Firebase Auth instead of Firestore
-      const exists = await authApi.checkEmailExistsInAuth(formData.email);
-      
-      if (exists) {
-        setErrors(prev => ({
-          ...prev,
-          email: 'This email is already registered. Please use a different email or sign in.'
-        }));
-      } else {
-        setErrors(prev => ({
-          ...prev,
-          email: undefined
-        }));
-      }
-    } catch (error) {
-      console.error('Error checking email:', error);
-    } finally {
-      setIsCheckingEmail(false);
-    }
+    
+    // Clear any previous errors
+    setErrors(prev => ({
+      ...prev,
+      email: undefined
+    }));
   };
 
   const generateOrganizationId = (name: string): string => {

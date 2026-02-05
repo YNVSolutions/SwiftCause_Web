@@ -18,10 +18,9 @@ export const authApi = {
   async checkEmailExistsInAuth(email: string): Promise<boolean> {
     try {
       // Use fetchSignInMethodsForEmail to check Firebase Authentication
-      const signInMethods = await fetchSignInMethodsForEmail(auth, email);
-      
-      // If signInMethods array has items, the email is registered in Auth
-      return signInMethods.length > 0;
+      const methods = await fetchSignInMethodsForEmail(auth, email);
+      // If methods array has items, the email is registered in Auth
+      return methods.length > 0;
     } catch (error: unknown) {
       console.error('Error checking email in Firebase Auth:', error);
       // On error, return false to allow signup attempt (fail-open)
