@@ -125,25 +125,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       clearTimeout(timeout) // Clear timeout when auth state changes
       
       if (firebaseUser) {
+        // Only establish session if email is verified
+        if (!firebaseUser.emailVerified) {
+          console.warn('AuthProvider: User email not verified:', firebaseUser.email)
+          // Don't establish session, but keep user authenticated for resend functionality
+          setIsLoadingAuth(false)
+          return
+        }
+
         const userDocRef = doc(db, 'users', firebaseUser.uid)
         const userDocSnap = await getDoc(userDocRef)
 
         if (userDocSnap.exists()) {
           const userData = userDocSnap.data() as User
           
-          // Only establish session if email is verified
-          if (userData.emailVerified !== false) {
-            setUserRole(userData.role)
-            setCurrentAdminSession({
-              user: userData,
-              loginTime: new Date().toISOString(),
-              permissions: userData.permissions || []
-            })
-          } else {
-            // User exists but email not verified - don't establish session
-            // This allows them to resend verification email
-            console.warn('AuthProvider: User email not verified:', firebaseUser.email)
-          }
+          setUserRole(userData.role)
+          setCurrentAdminSession({
+            user: userData,
+            loginTime: new Date().toISOString(),
+            permissions: userData.permissions || []
+          })
         } else {
           console.warn('AuthProvider: User document not found for UID:', firebaseUser.uid)
           // Only logout if we don't have a kiosk session
@@ -257,7 +258,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           'system_admin',
         ] as Permission[],
         isActive: true,
-        emailVerified: false,
         createdAt: new Date().toISOString(),
         organizationId: signupData.organizationId,
       }
