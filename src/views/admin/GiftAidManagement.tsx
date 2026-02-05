@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Screen, AdminSession, Permission } from "../../shared/types";
-import { GiftAidDeclaration } from "@/entities/giftAid/model/types";
+import { GiftAidDeclaration } from "../../entities/giftAid/model/types";
 import { AdminLayout } from "./AdminLayout";
 import { db } from "../../shared/lib/firebase";
 import {
@@ -461,7 +461,7 @@ export function GiftAidManagement({
                       currentSortKey={sortKey} 
                       currentSortDirection={sortDirection} 
                       onSort={handleSort}
-                      className="w-[22%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                      className="w-[22%] px-0 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
                     >
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4 text-gray-500 shrink-0" />
@@ -473,7 +473,7 @@ export function GiftAidManagement({
                       currentSortKey={sortKey} 
                       currentSortDirection={sortDirection} 
                       onSort={handleSort}
-                      className="w-[22%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                      className="w-[22%] px-0 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
                     >
                       <div className="flex items-center gap-2">
                         <Target className="h-4 w-4 text-gray-500 shrink-0" />
@@ -485,7 +485,7 @@ export function GiftAidManagement({
                       currentSortKey={sortKey} 
                       currentSortDirection={sortDirection} 
                       onSort={handleSort}
-                      className="w-[13%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
+                      className="w-[13%] px-0 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
                     >
                       <div className="flex items-center justify-end gap-2">
                         <Banknote className="h-4 w-4 text-gray-500 shrink-0" />
@@ -497,7 +497,7 @@ export function GiftAidManagement({
                       currentSortKey={sortKey} 
                       currentSortDirection={sortDirection} 
                       onSort={handleSort}
-                      className="w-[13%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
+                      className="w-[13%] px-0 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-right"
                     >
                       <div className="flex items-center justify-end gap-2">
                         <Gift className="h-4 w-4 text-[#064e3b] shrink-0" />
@@ -509,7 +509,7 @@ export function GiftAidManagement({
                       currentSortKey={sortKey} 
                       currentSortDirection={sortDirection} 
                       onSort={handleSort}
-                      className="w-[15%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                      className="w-[15%] px-0 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
                     >
                       <div className="flex items-center gap-2">
                         <CalendarDays className="h-4 w-4 text-gray-500 shrink-0" />
@@ -550,7 +550,7 @@ export function GiftAidManagement({
                         className="cursor-pointer hover:bg-gray-50 transition-colors h-16"
                         onClick={() => handleViewDetails(donation)}
                       >
-                        <TableCell className="py-4">
+                        <TableCell className="px-2 py-4">
                           <div className="flex items-center gap-2">
                             <User className="h-4 w-4 text-gray-400 shrink-0" />
                             <p className="text-base text-gray-900">{`${donation.donorFirstName} ${donation.donorSurname}`.trim()}</p>
@@ -647,12 +647,16 @@ export function GiftAidManagement({
                       <User className="w-5 h-5" />
                     </div>
                     <div>
-                      <h2 className="font-semibold text-lg leading-tight text-slate-900">{donation.donorName || "N/A"}</h2>
+                      <h2 className="font-semibold text-lg leading-tight text-slate-900">
+                        {`${donation.donorFirstName} ${donation.donorSurname}`.trim() || "N/A"}
+                      </h2>
                       <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Donor</span>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-xl font-bold text-slate-900">{formatCurrency(donation.amount || 0)}</div>
+                    <div className="text-xl font-bold text-slate-900">
+                      {formatCurrency((donation.donationAmount || 0) / 100)}
+                    </div>
                     <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Amount</span>
                   </div>
                 </div>
@@ -664,7 +668,7 @@ export function GiftAidManagement({
                       <div className="flex mt-1">
                         <span className="bg-[#064e3b]/10 text-[#064e3b] text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide flex items-center gap-1">
                           <Gift className="w-3 h-3" />
-                          {formatCurrency(donation.giftAidAmount || 0)}
+                          {formatCurrency((donation.giftAidAmount || 0) / 100)}
                         </span>
                       </div>
                     </div>
