@@ -18,7 +18,10 @@ export function AdminLoginContainer({ onLogin, variant, buttonLabel, buttonClass
 		setPassword, 
 		error, 
 		loading, 
-		handleSubmit 
+		handleSubmit,
+		needsVerification,
+		resendingEmail,
+		handleResendVerification
 	} = useAdminLogin(onLogin);
 
 	return (
@@ -33,6 +36,9 @@ export function AdminLoginContainer({ onLogin, variant, buttonLabel, buttonClass
 			variant={variant}
 			buttonLabel={buttonLabel}
 			buttonClassName={buttonClassName}
+			needsVerification={needsVerification}
+			resendingEmail={resendingEmail}
+			onResendVerification={handleResendVerification}
 		/>
 	);
 }

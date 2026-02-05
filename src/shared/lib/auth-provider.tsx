@@ -76,44 +76,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }
 
-  // Load persisted kiosk session on mount
-  useEffect(() => {
-    const loadPersistedSession = async () => {
-      try {
-        const persistedKioskSession = localStorage.getItem('kioskSession')
-        const persistedUserRole = localStorage.getItem('userRole')
-
-        if (persistedKioskSession && persistedUserRole === 'kiosk') {
-          const kioskSession = JSON.parse(persistedKioskSession) as KioskSession
-          
-          setUserRole('kiosk')
-          setCurrentKioskSession(kioskSession)
-          // Refresh the session to get latest data
-          await refreshCurrentKioskSession(kioskSession.kioskId)
-        }
-      } catch (error) {
-        console.error('Error loading persisted session:', error)
-        // Clear corrupted data
-        localStorage.removeItem('kioskSession')
-        localStorage.removeItem('userRole')
-      }
-    }
-
-    loadPersistedSession()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  // Persist kiosk session changes to localStorage
-  useEffect(() => {
-    if (currentKioskSession) {
-      try {
-        localStorage.setItem('kioskSession', JSON.stringify(currentKioskSession))
-        localStorage.setItem('userRole', 'kiosk')
-      } catch (error) {
-        console.error('Error persisting kiosk session:', error)
-      }
-    }
-  }, [currentKioskSession])
 
   useEffect(() => {
     // Set a timeout to prevent infinite loading if Firebase is not configured
@@ -125,37 +87,67 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       clearTimeout(timeout) // Clear timeout when auth state changes
       
       if (firebaseUser) {
+        // Get ID token result to check custom claims
+        const idTokenResult = await firebaseUser.getIdToken(true);
+        const decodedToken = await firebaseUser.getIdTokenResult();
+        
+        // Check if this is a kiosk user (UID starts with "kiosk:")
+        if (firebaseUser.uid.startsWith('kiosk:')) {
+          const kioskId = firebaseUser.uid.replace('kiosk:', '');
+          const customClaims = decodedToken.claims;
+          
+          // Build kiosk session from custom claims
+          const kioskSession: KioskSession = {
+            kioskId: kioskId,
+            kioskName: customClaims.kioskName as string || kioskId,
+            startTime: new Date().toISOString(),
+            assignedCampaigns: customClaims.assignedCampaigns as string[] || [],
+            settings: customClaims.settings as KioskSession['settings'] || {
+              displayMode: 'grid',
+              showAllCampaigns: false,
+              maxCampaignsDisplay: 6,
+              autoRotateCampaigns: false
+            },
+            loginMethod: 'manual',
+            organizationId: customClaims.organizationId as string,
+            organizationCurrency: customClaims.organizationCurrency as string || 'GBP',
+          };
+          
+          setUserRole('kiosk');
+          setCurrentKioskSession(kioskSession);
+          setIsLoadingAuth(false);
+          return;
+        }
+        
+        // Only establish session if email is verified
+        if (!firebaseUser.emailVerified) {
+          console.warn('AuthProvider: User email not verified:', firebaseUser.email)
+          // Don't establish session, but keep user authenticated for resend functionality
+          setIsLoadingAuth(false)
+          return
+        }
+
         const userDocRef = doc(db, 'users', firebaseUser.uid)
         const userDocSnap = await getDoc(userDocRef)
 
         if (userDocSnap.exists()) {
           const userData = userDocSnap.data() as User
           
-          // Only establish session if email is verified
-          if (userData.emailVerified !== false) {
-            setUserRole(userData.role)
-            setCurrentAdminSession({
-              user: userData,
-              loginTime: new Date().toISOString(),
-              permissions: userData.permissions || []
-            })
-          } else {
-            // User exists but email not verified - don't establish session
-            // This allows them to resend verification email
-            console.warn('AuthProvider: User email not verified:', firebaseUser.email)
-          }
+          setUserRole(userData.role)
+          setCurrentAdminSession({
+            user: userData,
+            loginTime: new Date().toISOString(),
+            permissions: userData.permissions || []
+          })
         } else {
           console.warn('AuthProvider: User document not found for UID:', firebaseUser.uid)
-          // Only logout if we don't have a kiosk session
-          if (userRole !== 'kiosk') {
-            handleLogout()
-          }
-        }
-      } else {
-        // Only logout if we don't have a kiosk session
-        if (userRole !== 'kiosk' && !currentKioskSession) {
           handleLogout()
         }
+      } else {
+        // No Firebase user, clear all sessions
+        setUserRole(null)
+        setCurrentKioskSession(null)
+        setCurrentAdminSession(null)
       }
       setIsLoadingAuth(false)
     })
@@ -179,7 +171,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setCurrentAdminSession(sessionData as AdminSession)
     } else if (role === 'kiosk') {
       setCurrentKioskSession(sessionData as KioskSession)
-      await refreshCurrentKioskSession((sessionData as KioskSession).kioskId)
     }
   }
 
@@ -191,14 +182,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUserRole(null)
     setCurrentKioskSession(null)
     setCurrentAdminSession(null)
-    
-    // Clear persisted session data
-    try {
-      localStorage.removeItem('kioskSession')
-      localStorage.removeItem('userRole')
-    } catch (error) {
-      console.error('Error clearing persisted session:', error)
-    }
   }
 
   const handleSignup = async (signupData: SignupFormData): Promise<string> => {
@@ -257,7 +240,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           'system_admin',
         ] as Permission[],
         isActive: true,
-        emailVerified: false,
         createdAt: new Date().toISOString(),
         organizationId: signupData.organizationId,
       }

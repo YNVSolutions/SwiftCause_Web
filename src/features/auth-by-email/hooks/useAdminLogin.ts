@@ -11,10 +11,13 @@ export function useAdminLogin(onLogin: OnLogin) {
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 	const [localError, setLocalError] = useState<string>('');
+	const [needsVerification, setNeedsVerification] = useState(false);
+	const [resendingEmail, setResendingEmail] = useState(false);
 
 	const handleSubmit = useCallback(async (e: React.FormEvent) => {
 		e.preventDefault();
 		setLocalError('');
+		setNeedsVerification(false);
 
 		if (!email || !password) {
 			setLocalError('Please enter both email and password.');
@@ -27,8 +30,7 @@ export function useAdminLogin(onLogin: OnLogin) {
 			
 			if (!userCredential.user.emailVerified) {
 				setLocalError('Please verify your email before logging in. Check your inbox for the verification link.');
-				// Sign out the user
-				await authApi.signOut();
+				setNeedsVerification(true);
 				return;
 			}
 
@@ -60,6 +62,7 @@ export function useAdminLogin(onLogin: OnLogin) {
 
 			onLogin('admin', adminSession);
 		} catch (err: unknown) {
+			setNeedsVerification(false);
 			if (err && typeof err === 'object' && 'code' in err) {
 				const firebaseError = err as { code: string; message: string };
 				switch (firebaseError.code) {
@@ -87,6 +90,35 @@ export function useAdminLogin(onLogin: OnLogin) {
 		}
 	}, [email, password, login, onLogin]);
 
+	const handleResendVerification = useCallback(async (): Promise<boolean> => {
+		if (!email) {
+			setLocalError('Please enter your email address.');
+			return false;
+		}
+
+		setResendingEmail(true);
+		setLocalError('');
+
+		try {
+			await authApi.resendVerificationEmail(email);
+			setLocalError('');
+			return true;
+		} catch (err: unknown) {
+			if (err instanceof Error) {
+				if (err.message.includes('Session expired') || err.message.includes('No authenticated user')) {
+					setLocalError('Session expired. Please try logging in again to resend the verification email.');
+				} else {
+					setLocalError(`Failed to resend email: ${err.message}`);
+				}
+			} else {
+				setLocalError('Failed to resend verification email. Please try again.');
+			}
+			return false;
+		} finally {
+			setResendingEmail(false);
+		}
+	}, [email]);
+
 	const error = useMemo(() => localError || authError || '', [localError, authError]);
 
 	return {
@@ -96,7 +128,10 @@ export function useAdminLogin(onLogin: OnLogin) {
 		setPassword,
 		error,
 		loading,
-		handleSubmit
+		handleSubmit,
+		needsVerification,
+		resendingEmail,
+		handleResendVerification
 	};
 }
 

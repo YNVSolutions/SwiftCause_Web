@@ -687,6 +687,18 @@ div[data-slot="sidebar-inner"],
   display: none;  /* Safari and Chrome */
 }
 
+/* Hide scrollbar but allow scroll */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;  /* Safari and Chrome */
+  width: 0;
+  height: 0;
+}
+
 /* Hide browser's default password reveal button */
 input[type="password"]::-ms-reveal,
 input[type="password"]::-ms-clear {

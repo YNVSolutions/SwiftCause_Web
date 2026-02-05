@@ -2235,7 +2235,7 @@ const CampaignManagement = ({
         <Button
           variant="outline"
           size="sm"
-          className="rounded-2xl border-[#064e3b] bg-transparent text-[#064e3b] hover:bg-[#064e3b] hover:text-stone-50 transition-all duration-300 px-5"
+          className="rounded-2xl border-[#064e3b] bg-transparent text-[#064e3b] hover:bg-[#064e3b] hover:text-gray-800 transition-all duration-300 px-5"
           onClick={() => exportToCsv(filteredAndSortedCampaigns, "campaigns")}
         >
           <Download className="h-4 w-4 sm:hidden" />
