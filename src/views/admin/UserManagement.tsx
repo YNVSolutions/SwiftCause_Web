@@ -918,64 +918,216 @@ function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateU
                         </div>
                     </div>
                     <div>
-                        <Label className="font-semibold">Permissions</Label>
-                        <div className="grid grid-cols-2 gap-2 mt-2 p-4 border border-gray-300 rounded-lg max-h-40 overflow-y-auto">
-                            {allPermissions.map((p) => {
-                                // Campaign permissions dependency
-                                const isCampaignPermission = ['create_campaign', 'edit_campaign', 'delete_campaign'].includes(p);
-                                const hasViewCampaigns = newUser.permissions.includes('view_campaigns');
-                                const campaignDisabled = isCampaignPermission && !hasViewCampaigns;
-                                
-                                // Kiosk permissions dependency
-                                const isKioskPermission = ['create_kiosk', 'edit_kiosk', 'delete_kiosk'].includes(p);
-                                const hasViewKiosks = newUser.permissions.includes('view_kiosks');
-                                const kioskDisabled = isKioskPermission && !hasViewKiosks;
-                                
-                                // Assign campaigns special logic - needs either view_campaigns OR view_kiosks
-                                const isAssignCampaigns = p === 'assign_campaigns';
-                                const assignDisabled = isAssignCampaigns && !hasViewCampaigns && !hasViewKiosks;
-                                
-                                // User permissions dependency
-                                const isUserPermission = ['create_user', 'edit_user', 'delete_user'].includes(p);
-                                const hasViewUsers = newUser.permissions.includes('view_users');
-                                const userDisabled = isUserPermission && !hasViewUsers;
-                                
-                                const isDisabled = campaignDisabled || assignDisabled || kioskDisabled || userDisabled;
-                                
-                                let tooltipMessage = '';
-                                if (campaignDisabled) tooltipMessage = 'View campaigns is mandatory to create/edit/delete campaigns';
-                                if (assignDisabled) tooltipMessage = 'Either select view campaigns or view kiosks to enable assign campaigns';
-                                if (kioskDisabled) tooltipMessage = 'View kiosks is mandatory to create/edit/delete kiosks';
-                                if (userDisabled) tooltipMessage = 'View users is mandatory to create/edit/delete users';
-                                
-                                return (
-                                    <TooltipProvider key={p}>
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <div className={`flex items-center space-x-2 ${isDisabled ? 'opacity-50' : ''}`}>
-                                                    <Checkbox 
-                                                        id={`create-${p}`} 
-                                                        checked={newUser.permissions.includes(p)} 
-                                                        onCheckedChange={(c) => onPermissionChange(p, !!c)}
-                                                        disabled={isDisabled}
-                                                    />
-                                                    <Label 
-                                                        htmlFor={`create-${p}`} 
-                                                        className={`text-sm font-normal capitalize ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
-                                                    >
-                                                        {p.replace(/_/g, ' ')}
-                                                    </Label>
-                                                </div>
-                                            </TooltipTrigger>
-                                            {isDisabled && (
-                                                <TooltipContent>
-                                                    <p className="text-xs">{tooltipMessage}</p>
-                                                </TooltipContent>
-                                            )}
-                                        </Tooltip>
-                                    </TooltipProvider>
-                                );
-                            })}
+                        <div className="flex items-center justify-between mb-2">
+                            <Label className="text-sm font-semibold text-slate-700 uppercase tracking-wider">
+                                Permissions
+                            </Label>
+                            <span className="text-xs text-slate-400">
+                                {allPermissions.length} total available
+                            </span>
+                        </div>
+                        
+                        <div className="border border-slate-200 rounded-xl bg-slate-50/50">
+                            <div className="p-5 max-h-80 overflow-y-auto space-y-6">
+                                {/* User Permissions */}
+                                {(() => {
+                                    const userPerms = allPermissions.filter(p => p.includes('user') || p.includes('permission'));
+                                    if (userPerms.length === 0) return null;
+                                    const hasViewUsers = newUser.permissions.includes('view_users');
+                                    
+                                    return (
+                                        <div>
+                                            <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3">Users</h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                                                {userPerms.map((p) => {
+                                                    const isUserPermission = ['create_user', 'edit_user', 'delete_user'].includes(p);
+                                                    const userDisabled = isUserPermission && !hasViewUsers;
+                                                    return (
+                                                        <div key={p} className="flex items-center justify-between">
+                                                            <div className={`flex items-center space-x-3 ${userDisabled ? 'opacity-50' : ''}`}>
+                                                                <Checkbox 
+                                                                    id={`create-${p}`} 
+                                                                    checked={newUser.permissions.includes(p)} 
+                                                                    onCheckedChange={(c) => onPermissionChange(p, !!c)}
+                                                                    disabled={userDisabled}
+                                                                    className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                                                                />
+                                                                <Label 
+                                                                    htmlFor={`create-${p}`} 
+                                                                    className={`text-sm text-slate-700 font-medium ${userDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                                                                >
+                                                                    {p.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                                </Label>
+                                                            </div>
+                                                            {userDisabled && (
+                                                                <TooltipProvider>
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <button type="button" className="text-slate-400 hover:text-indigo-600">
+                                                                                <Info className="w-4 h-4" />
+                                                                            </button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>
+                                                                            <p className="text-xs">View users is mandatory to create/edit/delete users</p>
+                                                                        </TooltipContent>
+                                                                    </Tooltip>
+                                                                </TooltipProvider>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+
+                                {/* Campaign Permissions */}
+                                {(() => {
+                                    const campaignPerms = allPermissions.filter(p => p.includes('campaign') || p === 'assign_campaigns');
+                                    if (campaignPerms.length === 0) return null;
+                                    const hasViewCampaigns = newUser.permissions.includes('view_campaigns');
+                                    const hasViewKiosks = newUser.permissions.includes('view_kiosks');
+                                    
+                                    return (
+                                        <div>
+                                            <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3">Campaigns</h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                                                {campaignPerms.map((p) => {
+                                                    const isCampaignPermission = ['create_campaign', 'edit_campaign', 'delete_campaign'].includes(p);
+                                                    const isAssignCampaigns = p === 'assign_campaigns';
+                                                    
+                                                    const campaignDisabled = isCampaignPermission && !hasViewCampaigns;
+                                                    const assignDisabled = isAssignCampaigns && !hasViewCampaigns && !hasViewKiosks;
+                                                    const isDisabled = campaignDisabled || assignDisabled;
+                                                    
+                                                    let tooltipMessage = '';
+                                                    if (campaignDisabled) {
+                                                        tooltipMessage = 'View campaigns is mandatory to create/edit/delete campaigns';
+                                                    } else if (assignDisabled) {
+                                                        tooltipMessage = 'Either select view campaigns or view kiosks to enable assign campaigns';
+                                                    }
+                                                    return (
+                                                        <div key={p} className="flex items-center justify-between">
+                                                            <div className={`flex items-center space-x-3 ${isDisabled ? 'opacity-50' : ''}`}>
+                                                                <Checkbox 
+                                                                    id={`create-${p}`} 
+                                                                    checked={newUser.permissions.includes(p)} 
+                                                                    onCheckedChange={(c) => onPermissionChange(p, !!c)}
+                                                                    disabled={isDisabled}
+                                                                    className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                                                                />
+                                                                <Label 
+                                                                    htmlFor={`create-${p}`} 
+                                                                    className={`text-sm text-slate-700 font-medium ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                                                                >
+                                                                    {p.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                                </Label>
+                                                            </div>
+                                                            {isDisabled && (
+                                                                <TooltipProvider>
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <button type="button" className="text-slate-400 hover:text-indigo-600">
+                                                                                <Info className="w-4 h-4" />
+                                                                            </button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>
+                                                                            <p className="text-xs">{tooltipMessage}</p>
+                                                                        </TooltipContent>
+                                                                    </Tooltip>
+                                                                </TooltipProvider>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+
+                                {/* Kiosk Permissions */}
+                                {(() => {
+                                    const kioskPerms = allPermissions.filter(p => p.includes('kiosk'));
+                                    if (kioskPerms.length === 0) return null;
+                                    const hasViewKiosks = newUser.permissions.includes('view_kiosks');
+                                    
+                                    return (
+                                        <div>
+                                            <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3">Kiosks</h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                                                {kioskPerms.map((p) => {
+                                                    const isKioskPermission = ['create_kiosk', 'edit_kiosk', 'delete_kiosk'].includes(p);
+                                                    const kioskDisabled = isKioskPermission && !hasViewKiosks;
+                                                    return (
+                                                        <div key={p} className="flex items-center justify-between">
+                                                            <div className={`flex items-center space-x-3 ${kioskDisabled ? 'opacity-50' : ''}`}>
+                                                                <Checkbox 
+                                                                    id={`create-${p}`} 
+                                                                    checked={newUser.permissions.includes(p)} 
+                                                                    onCheckedChange={(c) => onPermissionChange(p, !!c)}
+                                                                    disabled={kioskDisabled}
+                                                                    className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                                                                />
+                                                                <Label 
+                                                                    htmlFor={`create-${p}`} 
+                                                                    className={`text-sm text-slate-700 font-medium ${kioskDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                                                                >
+                                                                    {p.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                                </Label>
+                                                            </div>
+                                                            {kioskDisabled && (
+                                                                <TooltipProvider>
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <button type="button" className="text-slate-400 hover:text-indigo-600">
+                                                                                <Info className="w-4 h-4" />
+                                                                            </button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>
+                                                                            <p className="text-xs">View kiosks is mandatory to create/edit/delete kiosks</p>
+                                                                        </TooltipContent>
+                                                                    </Tooltip>
+                                                                </TooltipProvider>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+
+                                {/* Donation Permissions */}
+                                {(() => {
+                                    const donationPerms = allPermissions.filter(p => p.includes('donation'));
+                                    if (donationPerms.length === 0) return null;
+                                    return (
+                                        <div>
+                                            <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3">Donations</h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                                                {donationPerms.map((p) => (
+                                                    <div key={p} className="flex items-center justify-between">
+                                                        <div className="flex items-center space-x-3">
+                                                            <Checkbox 
+                                                                id={`create-${p}`} 
+                                                                checked={newUser.permissions.includes(p)} 
+                                                                onCheckedChange={(c) => onPermissionChange(p, !!c)}
+                                                                className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                                                            />
+                                                            <Label 
+                                                                htmlFor={`create-${p}`} 
+                                                                className="text-sm text-slate-700 font-medium cursor-pointer"
+                                                            >
+                                                                {p.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                            </Label>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+                            </div>
                         </div>
                     </div>
                 </div>
