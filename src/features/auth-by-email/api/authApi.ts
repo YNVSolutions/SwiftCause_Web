@@ -39,25 +39,17 @@ export const authApi = {
     }
   },
 
-  // Check if email exists and is verified in Firestore
-  async checkEmailVerification(email: string): Promise<{ exists: boolean; verified: boolean }> {
+  // Check if email exists in Firestore
+  async checkEmailExists(email: string): Promise<boolean> {
     try {
       const usersRef = collection(db, 'users');
       const q = query(usersRef, where('email', '==', email));
       const querySnapshot = await getDocs(q);
       
-      if (querySnapshot.empty) {
-        return { exists: false, verified: false };
-      }
-      
-      const userData = querySnapshot.docs[0].data();
-      return { 
-        exists: true, 
-        verified: userData.emailVerified === true 
-      };
+      return !querySnapshot.empty;
     } catch (error: unknown) {
-      console.error('Error checking email verification:', error);
-      return { exists: false, verified: false };
+      console.error('Error checking email existence:', error);
+      return false;
     }
   },
 
@@ -141,7 +133,6 @@ export const authApi = {
           'system_admin',
         ],
         isActive: true,
-        emailVerified: false,
         createdAt: new Date().toISOString(),
         organizationId: credentials.organizationId,
       };
@@ -273,13 +264,10 @@ export const authApi = {
     try {
       await applyActionCode(auth, code);
       
-      // Update Firestore user document
+      // Reload user to get updated emailVerified status
       const user = auth.currentUser;
       if (user) {
-        const userDocRef = doc(db, 'users', user.uid);
-        await updateDoc(userDocRef, {
-          emailVerified: true
-        });
+        await user.reload();
       }
     } catch (error: unknown) {
       console.error('Error verifying email code:', error);

@@ -1,18 +1,10 @@
-'use client'
+import ContactPageClient from './ContactPageClient'
 
-import { useRouter } from 'next/navigation'
-import { ContactPage } from '@/views/home/ContactPage'
-
-export default function Contact() {
-  const router = useRouter()
-
-  const handleNavigate = (screen: string) => {
-    if (screen === 'home') {
-      router.push('/')
-    } else {
-      router.push(`/${screen}`)
-    }
-  }
-
-  return <ContactPage onNavigate={handleNavigate} />
+export default async function Contact({
+  searchParams,
+}: {
+  searchParams?: Promise<{ from?: string }>
+}) {
+  const params = searchParams ? await searchParams : undefined
+  return <ContactPageClient from={params?.from} />
 }

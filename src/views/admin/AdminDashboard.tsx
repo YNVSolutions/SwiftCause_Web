@@ -1134,7 +1134,7 @@ export function AdminDashboard({
             size="sm" 
             onClick={handleRefresh} 
             disabled={loading} 
-            className="rounded-2xl border-[#064e3b] bg-transparent text-[#064e3b] hover:bg-[#064e3b] hover:text-stone-50 transition-all duration-300 px-6 py-3 font-semibold"
+            className="rounded-2xl border-[#064e3b] bg-transparent text-[#064e3b] hover:bg-red-500 hover:text-blue-800 transition-all duration-300 px-6 py-3 font-semibold"
             aria-label="Refresh Dashboard"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
@@ -1955,7 +1955,7 @@ export function AdminDashboard({
                             <RefreshCw className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
                             <div>
                               <h3 className="font-semibold text-blue-900 mb-2">Under Review</h3>
-                              <p className="text-sm text-blue-800 leading-relaxed">
+                              <p className="text-sm text-gray-800 leading-relaxed">
                                 Your Stripe account is being reviewed. Payouts will be enabled shortly.
                               </p>
                             </div>
@@ -2124,7 +2124,7 @@ export function AdminDashboard({
         {/* Dashboard Content - Smoothly moves down when banner appears */}
         <div className={`transition-transform duration-500 ease-in-out ${needsOnboarding && organization ? 'transform translate-y-0' : 'transform translate-y-0'}`}>
           {/* ENTERPRISE DASHBOARD LAYOUT - Row 1: KPI Summary */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6 max-w-[1200px] mx-auto mb-12 transition-all duration-500 ease-in-out">
+          <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 max-w-[1200px] mx-auto mb-12 transition-all duration-500 ease-in-out">
           <KpiCard
             title="Total Raised"
             value={formatCurrency(stats.totalRaised)}
@@ -2155,7 +2155,6 @@ export function AdminDashboard({
             value={formatCurrency(stats.totalGiftAid)}
             icon={Gift}
             loading={loading}
-            className="sm:col-span-2 lg:col-span-1"
           />
         </div>
 
@@ -2169,9 +2168,9 @@ export function AdminDashboard({
         </div>
 
         {/* Row 3: Alerts & Heatmap, Donation Distribution - Prioritized Heatmap Layout */}
-        <div className="grid grid-cols-[1.4fr_1fr] grid-rows-[auto_1fr] gap-6 mb-12 transition-all duration-500 ease-in-out">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] lg:grid-rows-[auto_1fr] gap-6 mb-12 transition-all duration-500 ease-in-out">
           {/* Left Column Top: Alerts & Notifications */}
-          <div className="row-start-1">
+          <div className="lg:row-start-1">
             <AlertsSection
               alerts={alerts}
               loading={loading}
@@ -2183,7 +2182,7 @@ export function AdminDashboard({
           </div>
           
           {/* Left Column Bottom: Donor Activity Heatmap */}
-          <div className="row-start-2">
+          <div className="lg:row-start-2">
             <DonorActivityHeatmap
               data={stats.heatmapData}
               loading={loading}
@@ -2191,7 +2190,7 @@ export function AdminDashboard({
           </div>
           
           {/* Right Column: Donation Distribution - Spans full height */}
-          <div className="row-span-2">
+          <div className="lg:row-span-2">
             <DonationDistributionDonut
               data={stats.categoryData}
               loading={loading}

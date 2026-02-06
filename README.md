@@ -31,9 +31,7 @@ Based on the project structure, SwiftCause includes:
 
 ## 🚀 Live Demo
 
-A live version of the project is deployed:
-
-[**SwiftCause**](https://swiftcause--swiftcause-app.us-east4.hosted.app/)
+A live version of the project is deployed: [**SwiftCause**](https://swiftcause--swiftcause-app.us-east4.hosted.app/)
 
 ## 🛠️ Tech Stack
 
@@ -51,7 +49,6 @@ This project uses a modern architecture with a Next.js frontend and a Firebase b
 | **Notifications** | Sonner | ![Sonner](https://img.shields.io/badge/Sonner-87CEEB?logo=sonner&logoColor=white) |
 | **Backend** | Firebase 11 | ![Firebase](https://img.shields.io/badge/Firebase-FFCA28?logo=firebase&logoColor=black) |
 | **Payments** | Stripe | ![Stripe](https://img.shields.io/badge/Stripe-626CD9?logo=stripe&logoColor=white) |
-| **Deployment** | Vercel | ![Vercel](https://img.shields.io/badge/vercel-%23000000.svg?style=for-the-badge&logo=vercel&logoColor=white) |
 | **CI/CD** | GitHub Actions | ![GitHub Actions](https://img.shields.io/badge/github%20actions-%232671E5.svg?style=for-the-badge&logo=githubactions&logoColor=white) |
 
 
@@ -221,8 +218,9 @@ This project uses Tailwind CSS v4.0 for styling. The configuration is already se
 
 This project is distributed under the license found in the `LICENCE` file.
 
-## 👥 Authors
+## 👥 Contributors
 
-* [Dharmandra Singh](https://github.com/dp-singh)
-* [Yash Raghuvanshi](https://github.com/Yashraghuvans)
-* [Jitesh Singh](https://github.com/CodrJitesh)
+<a href="https://github.com/YNVSolutions/SwiftCause_Web/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=YNVSolutions/SwiftCause_Web" />
+</a>
+

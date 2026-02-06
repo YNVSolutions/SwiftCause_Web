@@ -23,6 +23,7 @@ const {
 } = require("./handlers/payments");
 const {createStripeAccountForNewOrg} = require("./handlers/triggers");
 const {verifySignupRecaptcha} = require("./handlers/signup");
+const {kioskLogin} = require("./handlers/kiosk");
 
 // Export all functions (backwards compatible)
 exports.createUser = functions.https.onRequest(createUser);
@@ -43,6 +44,7 @@ exports.createExpressDashboardLink = functions.https.onRequest(
     createExpressDashboardLink,
 );
 exports.createStripeAccountForNewOrg = createStripeAccountForNewOrg;
+exports.kioskLogin = functions.https.onRequest(kioskLogin);
 
 // Export v2 function with secret
 exports.verifySignupRecaptcha = onRequest(
