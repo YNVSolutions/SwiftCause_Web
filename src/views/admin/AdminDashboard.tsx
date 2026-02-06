@@ -222,7 +222,8 @@ export function AdminDashboard({
       recurringIntervals: [],
       tags: [],
       isGlobal: false,
-      assignedKiosks: []
+      assignedKiosks: [],
+      giftAidEnabled: false
     } as CampaignFormData,
     newCampaign: { 
       title: '', 
@@ -793,7 +794,8 @@ export function AdminDashboard({
           recurringIntervals: [],
           tags: [],
           isGlobal: false,
-          assignedKiosks: []
+          assignedKiosks: [],
+          giftAidEnabled: false
         },
         editingCampaignInTour: null
       }));
@@ -1410,7 +1412,8 @@ export function AdminDashboard({
                                           recurringIntervals: campaign.configuration?.recurringIntervals || [],
                                           tags: campaign.tags || [],
                                           isGlobal: campaign.isGlobal || false,
-                                          assignedKiosks: campaign.assignedKiosks || []
+                                          assignedKiosks: campaign.assignedKiosks || [],
+                                          giftAidEnabled: campaign.configuration?.giftAidEnabled || false
                                         }
                                       }));
                                       setDialogVisibility(prev => ({ ...prev, showCampaignFormDialog: true }));

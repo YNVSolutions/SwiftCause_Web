@@ -55,6 +55,7 @@ interface FetchedDonation extends Omit<Donation, 'timestamp'> {
   paymentStatus: string;
   platform: string;
   stripePaymentIntentId: string;
+  transactionId?: string;
   timestamp: string;
   kioskId?: string;
 }
@@ -189,6 +190,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
     const campaignName = campaignMap[donation.campaignId] || '';
     const matchesSearch = (donation.donorName && donation.donorName.toLowerCase().includes(searchTerm.toLowerCase())) ||
                          (donation.stripePaymentIntentId && donation.stripePaymentIntentId.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                         (donation.transactionId && donation.transactionId.toLowerCase().includes(searchTerm.toLowerCase())) ||
                          (campaignName.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = statusFilter === 'all' || donation.paymentStatus === statusFilter;
     const matchesCampaign = campaignFilter === 'all' || donation.campaignId === campaignFilter;
@@ -240,7 +242,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
   };
 
   const totalStats = {
-    totalAmount: filteredDonations.reduce((sum, d) => sum + (d.paymentStatus === 'success' ? (d.amount || 0) / 100 : 0), 0),
+    totalAmount: filteredDonations.reduce((sum, d) => sum + (d.paymentStatus === 'success' ? (d.amount || 0) : 0), 0),
     totalDonations: filteredDonations.length,
     completedDonations: filteredDonations.filter(d => d.paymentStatus === 'success').length,
     avgDonation: filteredDonations.length > 0 
@@ -468,7 +470,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                                 {donation.donorName || 'Anonymous'}
                               </span>
                               <p className="text-xs font-mono text-gray-400 truncate" title={donation.stripePaymentIntentId}>
-                                {donation.stripePaymentIntentId}
+                                {donation.stripePaymentIntentId || donation.transactionId || donation.id}
                               </p>
                             </div>
                           </TableCell>
@@ -488,7 +490,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
 
                           <TableCell className="px-4 py-3 text-center">
                             <p className="text-sm font-semibold text-gray-900">
-                              {formatCurrency((donation.amount || 0) / 100, donation.currency)}
+                              {formatCurrency((donation.amount || 0), donation.currency)}
                             </p>
                           </TableCell>
 
@@ -667,7 +669,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                       {new Intl.NumberFormat('en-GB', {
                         style: 'currency',
                         currency: selectedDonation.currency || 'GBP',
-                      }).format((selectedDonation.amount || 0) / 100)}
+                      }).format((selectedDonation.amount || 0))}
                     </p>
                   </div>
                   <div>
@@ -725,7 +727,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                 <div>
                   <Label className="text-sm font-medium text-gray-700">Transaction ID</Label>
                   <p className="text-xs text-gray-700 font-mono mt-1 bg-gray-50 px-2 py-1 rounded border border-gray-200 inline-block">
-                    {selectedDonation.stripePaymentIntentId || selectedDonation.id || "N/A"}
+                    {selectedDonation.stripePaymentIntentId || selectedDonation.transactionId || selectedDonation.id || "N/A"}
                   </p>
                 </div>
               </div>

@@ -1,4 +1,4 @@
-import { collection, query, where, getDocs, doc, addDoc, updateDoc, deleteDoc, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, orderBy } from 'firebase/firestore';
 import { db } from '../../../shared/lib/firebase';
 import { Donation } from '../model';
 
@@ -72,17 +72,9 @@ export const donationApi = {
    * using paymentIntent.id as the Firestore document ID.
    */
   // Create new donation
-  async createDonation(donation: Omit<Donation, 'id'>): Promise<string> {
-    try {
-      const docRef = await addDoc(collection(db, 'donations'), {
-        ...donation,
-        timestamp: new Date().toISOString()
-      });
-      return docRef.id;
-    } catch (error) {
-      console.error('Error creating donation:', error);
-      throw error;
-    }
+  async createDonation(_donation: Omit<Donation, 'id'>): Promise<string> {
+    void _donation;
+    throw new Error('Legacy donation creation disabled. Stripe webhooks must create donations.');
   },
 
   // Update donation

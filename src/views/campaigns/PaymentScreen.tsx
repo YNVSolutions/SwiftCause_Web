@@ -47,6 +47,7 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
       organizationId: campaign.organizationId,
       isRecurring: donation.isRecurring,
       isGiftAid: isGiftAid,
+      giftAidAccepted: donation.giftAidAccepted || false, // Include explicit Gift Aid acceptance status
       kioskId: donation.kioskId || null,
       // Add donor name if gift aid is provided, otherwise empty string
       donorName: isGiftAid && giftAidDetails ? `${giftAidDetails.firstName} ${giftAidDetails.surname}` : "",

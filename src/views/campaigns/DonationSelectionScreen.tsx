@@ -303,13 +303,14 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
     e.preventDefault();
     if (!isValidAmount()) return;
 
+    const donationAmountPence = Math.round(getCurrentAmount() * 100);
     const donation: Donation = {
       campaignId: campaign.id,
-      amount: getCurrentAmount(),
+      amount: donationAmountPence,
       isRecurring,
       recurringInterval: isRecurring ? recurringInterval : undefined,
       isAnonymous: donorInfo.isAnonymous,
-      isGiftAid: isGiftAid,
+      isGiftAid: campaign.configuration.giftAidEnabled ? isGiftAid : false, // Only allow Gift Aid if enabled
       donorName: "" // No gift aid details collected yet, so no donor name
     };
 
@@ -605,18 +606,20 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
                 */}
 
                 {/* Anonymous donation option only */}
-                {/* Gift Aid option */}
-                <div className="flex items-center space-x-2 p-3 bg-green-50/50 rounded-lg">
-                  <Checkbox
-                    id="giftAid"
-                    checked={isGiftAid}
-                    onCheckedChange={(checked: boolean) => setIsGiftAid(checked)}
-                  />
-                  <Label htmlFor="giftAid" className="text-sm flex-1">
-                    Yes, add Gift Aid. I am a UK taxpayer and understand that if I pay less Income Tax and/or Capital Gains Tax than the amount of Gift Aid claimed on all my donations in that tax year it is my responsibility to pay any difference.
-                  </Label>
-                  <Gift className="w-5 h-5 text-green-600" />
-                </div>
+                {/* Gift Aid option - only show if enabled in campaign configuration */}
+                {campaign.configuration.giftAidEnabled && (
+                  <div className="flex items-center space-x-2 p-3 bg-green-50/50 rounded-lg">
+                    <Checkbox
+                      id="giftAid"
+                      checked={isGiftAid}
+                      onCheckedChange={(checked: boolean) => setIsGiftAid(checked)}
+                    />
+                    <Label htmlFor="giftAid" className="text-sm flex-1">
+                      Yes, add Gift Aid. I am a UK taxpayer and understand that if I pay less Income Tax and/or Capital Gains Tax than the amount of Gift Aid claimed on all my donations in that tax year it is my responsibility to pay any difference.
+                    </Label>
+                    <Gift className="w-5 h-5 text-green-600" />
+                  </div>
+                )}
  
                 {config.enableAnonymousDonations && (
                   <div className="flex items-center justify-center space-x-2 p-3 bg-gray-50 rounded-lg">
@@ -667,7 +670,7 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
                       {donorInfo.isAnonymous && (
                         <Badge variant="secondary">Anonymous</Badge>
                       )}
-                      {isGiftAid && (
+                      {campaign.configuration.giftAidEnabled && isGiftAid && (
                         <Badge variant="secondary" className="flex items-center space-x-1 bg-green-100 text-green-800">
                           <Gift className="w-3 h-3" />
                           <span>Gift Aid</span>

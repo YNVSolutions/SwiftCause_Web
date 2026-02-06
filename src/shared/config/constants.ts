@@ -101,7 +101,8 @@ export const DEFAULT_CAMPAIGN_CONFIG = {
   enableAnonymousDonations: true,
   enableSocialSharing: true,
   enableDonorWall: true,
-  enableComments: false
+  enableComments: false,
+  giftAidEnabled: false
 } as const;
 
 export const DEFAULT_CAMPAIGN_VALUES = {

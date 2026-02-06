@@ -1,5 +1,6 @@
 import { giftAidApi } from '../api';
 import { GiftAidDetails, GiftAidDeclaration } from '../model/types';
+import { getCampaignById } from '../../../shared/api/firestoreService';
 
 export async function submitGiftAidDeclaration(
   giftAidDetails: GiftAidDetails,
@@ -7,6 +8,17 @@ export async function submitGiftAidDeclaration(
   campaignId: string,
   campaignTitle: string
 ): Promise<string> {
+  // VALIDATION: Check if Gift Aid is enabled for this campaign
+  try {
+    const campaign = await getCampaignById(campaignId);
+    if (!campaign || !campaign.configuration.giftAidEnabled) {
+      throw new Error(`Gift Aid is not enabled for campaign ${campaignId}. Cannot create Gift Aid declaration.`);
+    }
+  } catch (error) {
+    console.error('Error validating campaign Gift Aid status:', error);
+    throw new Error(`Failed to validate Gift Aid eligibility for campaign ${campaignId}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+
   const mappedDeclaration: Omit<GiftAidDeclaration, 'id' | 'createdAt' | 'updatedAt'> = {
     donorFirstName: giftAidDetails.firstName,
     donorSurname: giftAidDetails.surname,

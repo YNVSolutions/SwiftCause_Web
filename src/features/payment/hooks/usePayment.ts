@@ -15,7 +15,6 @@ export function usePayment(onPaymentComplete: (result: PaymentResult) => void): 
   const [error, setError] = useState<string | null>(null);
 
   const handlePaymentSubmit = useCallback(async (amount: number, metadata: Record<string, unknown>, currency: string) => {
-    console.log('usePayment - handlePaymentSubmit: received metadata', metadata);
     setIsProcessing(true);
     setError(null);
 
@@ -39,7 +38,7 @@ export function usePayment(onPaymentComplete: (result: PaymentResult) => void): 
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ amount: Math.round(amount * 100), metadata: metadata, currency: currency }),
+        body: JSON.stringify({ amount: amount, metadata: metadata, currency: currency }),
       });
 
       if (!response.ok) {

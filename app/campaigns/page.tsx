@@ -9,11 +9,29 @@ export default function CampaignsPage() {
   const router = useRouter();
   const { currentKioskSession, handleLogout, refreshCurrentKioskSession } = useAuth();
 
-  // Predefined amount click - go directly to gift aid with selected amount
+  // Predefined amount click - check giftAidEnabled before routing
   const handleSelectCampaign = (campaign: Campaign, amount?: number) => {
     if (amount) {
-      // Predefined amount selected - go straight to gift aid
-      router.push(`/campaign/${campaign.id}?amount=${amount}&giftaid=true`);
+      // Check if Gift Aid is enabled for this campaign
+      if (campaign.configuration.giftAidEnabled) {
+        // Predefined amount selected - go to gift aid with selected amount
+        router.push(`/campaign/${campaign.id}?amount=${amount}&giftaid=true`);
+      } else {
+        // Gift Aid disabled - go directly to payment
+        const amountPence = Math.round(amount * 100);
+        const donation = {
+          campaignId: campaign.id,
+          amount: amountPence,
+          isGiftAid: false,
+          giftAidAccepted: false, // Explicitly set to false when disabled
+          isRecurring: false,
+          kioskId: currentKioskSession?.kioskId,
+          donorName: '',
+        };
+        sessionStorage.setItem('donation', JSON.stringify(donation));
+        sessionStorage.setItem('paymentBackPath', '/campaigns');
+        router.push(`/payment/${campaign.id}`);
+      }
     } else {
       // No amount (donate button) - go to details page
       router.push(`/campaign/${campaign.id}`);
