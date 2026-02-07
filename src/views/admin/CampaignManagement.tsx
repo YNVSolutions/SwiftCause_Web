@@ -2773,37 +2773,39 @@ const CampaignManagement = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {hasPermission('edit_campaign') && (
-                  <Button
-                    variant="outline"
-                    className="h-11 rounded-full"
-                    onClick={() => {
-                      if (!selectedCampaign) return;
-                      handleEditClick(selectedCampaign);
-                      setIsOverviewOpen(false);
-                    }}
-                  >
-                    Edit Details
-                  </Button>
-                )}
-                {(() => {
-                  const status = (selectedCampaign?.status ?? "").toString().toLowerCase();
-                  const isCompleted = status === "completed";
-                  const isPaused = status === "paused";
-
-                  return (
+                  <>
                     <Button
-                      className={`h-11 rounded-full text-white ${
-                        isPaused
-                          ? "bg-emerald-700 hover:bg-emerald-800"
-                          : "bg-red-500 hover:bg-red-600"
-                      } ${!hasPermission('edit_campaign') ? 'col-span-2' : ''}`}
-                      onClick={isPaused ? handleResumeCampaign : handlePauseCampaign}
-                      disabled={!selectedCampaign || isCompleted}
+                      variant="outline"
+                      className="h-11 rounded-full"
+                      onClick={() => {
+                        if (!selectedCampaign) return;
+                        handleEditClick(selectedCampaign);
+                        setIsOverviewOpen(false);
+                      }}
                     >
-                      {isPaused ? "Continue Donations" : "Pause Donations"}
+                      Edit Details
                     </Button>
-                  );
-                })()}
+                    {(() => {
+                      const status = (selectedCampaign?.status ?? "").toString().toLowerCase();
+                      const isCompleted = status === "completed";
+                      const isPaused = status === "paused";
+
+                      return (
+                        <Button
+                          className={`h-11 rounded-full text-white ${
+                            isPaused
+                              ? "bg-emerald-700 hover:bg-emerald-800"
+                              : "bg-red-500 hover:bg-red-600"
+                          }`}
+                          onClick={isPaused ? handleResumeCampaign : handlePauseCampaign}
+                          disabled={!selectedCampaign || isCompleted}
+                        >
+                          {isPaused ? "Continue Donations" : "Pause Donations"}
+                        </Button>
+                      );
+                    })()}
+                  </>
+                )}
               </div>
             </div>
           </div>
