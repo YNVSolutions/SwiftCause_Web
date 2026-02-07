@@ -91,6 +91,23 @@ export function KioskForm({
     { id: 'display', label: 'DISPLAY' }
   ];
 
+  const assignedCampaignIds = useMemo(
+    () => Array.from(new Set((kioskData.assignedCampaigns || []).filter(Boolean))),
+    [kioskData.assignedCampaigns]
+  );
+
+  const assignedCampaigns = useMemo(
+    () => assignedCampaignIds
+      .map((campaignId) => campaigns.find((campaign) => campaign.id === campaignId))
+      .filter((campaign): campaign is Campaign => Boolean(campaign)),
+    [assignedCampaignIds, campaigns]
+  );
+
+  const unassignedCampaigns = useMemo(
+    () => campaigns.filter((campaign) => !assignedCampaignIds.includes(campaign.id)),
+    [campaigns, assignedCampaignIds]
+  );
+
   // IntersectionObserver for scroll-synced sidebar highlighting
   useEffect(() => {
     if (!open) return;
@@ -402,12 +419,12 @@ export function KioskForm({
                       </div>
                       <h3 className="text-base sm:text-lg font-medium text-gray-900">Assigned Campaigns</h3>
                       <Badge variant="secondary" className="bg-gray-100 text-gray-600 text-xs">
-                        {kioskData.assignedCampaigns.length}
+                        {assignedCampaigns.length}
                       </Badge>
                     </div>
                     
                     <div className="max-h-64 sm:max-h-80 overflow-y-auto">
-                      {kioskData.assignedCampaigns.length === 0 ? (
+                      {assignedCampaigns.length === 0 ? (
                         <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 sm:p-8 text-center">
                           <button
                             onClick={() => {
@@ -429,10 +446,7 @@ export function KioskForm({
                         </div>
                       ) : (
                         <div className="space-y-3">
-                          {kioskData.assignedCampaigns.map(campaignId => {
-                            const campaign = campaigns.find(c => c.id === campaignId);
-                            if (!campaign) return null;
-                            
+                          {assignedCampaigns.map(campaign => {
                             const fundingPercentage = Math.round((campaign.raised / campaign.goal) * 100);
                             
                             return (
@@ -495,15 +509,13 @@ export function KioskForm({
                       <Plus className="w-5 h-5 text-gray-400" />
                       <h3 className="text-base sm:text-lg font-medium text-gray-900">Available Campaigns</h3>
                       <Badge variant="secondary" className="bg-gray-100 text-gray-600 text-xs">
-                        {campaigns.filter(c => !kioskData.assignedCampaigns.includes(c.id)).length}
+                        {unassignedCampaigns.length}
                       </Badge>
                     </div>
                     
                     <div className="max-h-64 sm:max-h-80 overflow-y-auto">
                       <div className="space-y-3">
-                        {campaigns
-                          .filter(campaign => !kioskData.assignedCampaigns.includes(campaign.id))
-                          .map(campaign => {
+                        {unassignedCampaigns.map(campaign => {
                             const fundingPercentage = Math.round((campaign.raised / campaign.goal) * 100);
                             
                             return (
@@ -557,7 +569,7 @@ export function KioskForm({
                             );
                           })}
                         
-                        {campaigns.filter(c => !kioskData.assignedCampaigns.includes(c.id)).length === 0 && (
+                        {unassignedCampaigns.length === 0 && (
                           <div className="text-center py-6 sm:py-8 text-gray-500">
                             <p className="text-sm sm:text-base">All available campaigns have been assigned to this kiosk.</p>
                           </div>
