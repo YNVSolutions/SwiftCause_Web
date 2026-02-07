@@ -1843,7 +1843,7 @@ const CampaignManagement = ({
         title: editCampaignFormData.title,
         description: editCampaignFormData.briefOverview,
         longDescription: editCampaignFormData.description,
-        status: 'paused',
+        status: editCampaignFormData.status || editingCampaignForNewForm.status || 'paused',
         goal: Number(editCampaignFormData.goal),
         tags: Array.isArray(editCampaignFormData.tags) ? editCampaignFormData.tags.filter(t => t.trim().length > 0) : [],
         coverImageUrl: coverImageUrl || "",
@@ -1993,13 +1993,14 @@ const CampaignManagement = ({
 
       const finalDataToSave = removeUndefined(dataToSave);
       await updateWithImage(editingCampaignForNewForm.id, finalDataToSave);
-      
+    
       await syncKiosksForCampaign(
         editingCampaignForNewForm.id,
         normalizeAssignments(editCampaignFormData.assignedKiosks),
         normalizeAssignments(editingCampaignForNewForm.assignedKiosks)
       );
       
+  
       // Reset form and close
       setIsEditCampaignFormOpen(false);
       setEditingCampaignForNewForm(null);
@@ -2027,7 +2028,8 @@ const CampaignManagement = ({
       });
     } catch (error) {
       console.error("Error updating campaign:", error);
-      alert("Failed to update campaign. Please try again.");
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      alert(`Failed to update campaign: ${errorMessage}`);
     } finally {
       setIsSubmittingEditCampaign(false);
     }
