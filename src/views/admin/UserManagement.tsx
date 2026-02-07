@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import {
   Plus, Search, UserCog, Users, Shield, Activity,
   Loader2, AlertCircle, Pencil, Trash2, AlertTriangle, MoreVertical, X, Check,
-  LayoutDashboard, Megaphone, Monitor, DollarSign, Settings, Info   
+  LayoutDashboard, Megaphone, Monitor, DollarSign, Settings, Info, RefreshCw   
 } from 'lucide-react';
 import { Skeleton } from "../../shared/ui/skeleton";
 import { Ghost } from "lucide-react";
@@ -162,6 +162,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
     const [roleFilter, setRoleFilter] = useState('all');
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
+    const [isCreatingUser, setIsCreatingUser] = useState(false);
     const [newUser, setNewUser] = useState({
         username: '', email: '', password: '', role: 'viewer' as UserRole, permissions: [] as Permission[],
     });
@@ -195,12 +196,16 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
             setDialogMessage("Username, email, and password are required.");
             return;
         }
+        
+        setIsCreatingUser(true);
         try {
             await addUser({ ...newUser, organizationId: userSession.user.organizationId! });
             setCreateDialogOpen(false);
             setNewUser({ username: '', email: '', password: '', role: 'viewer', permissions: [] });
         } catch (err) {
             setDialogMessage(`Error: ${(err as Error).message}`);
+        } finally {
+            setIsCreatingUser(false);
         }
     };
 
@@ -621,7 +626,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
             </Card>
             </main>
 
-            <CreateUserDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} newUser={newUser} onUserChange={setNewUser} onCreateUser={handleCreateUser} userSession={userSession} />
+            <CreateUserDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} newUser={newUser} onUserChange={setNewUser} onCreateUser={handleCreateUser} userSession={userSession} isCreating={isCreatingUser} />
             {editingUser && <EditUserDialog user={editingUser} onUpdate={handleUpdateUser} onClose={() => setEditingUser(null)} userSession={userSession} />}
             
             {/* Delete Confirmation Dialog */}
@@ -830,7 +835,35 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
     );
 }
 
-function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateUser, userSession }: any) {
+function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateUser, userSession, isCreating }: any) {
+    const [errors, setErrors] = useState<{username?: string; email?: string; password?: string}>({});
+
+    const validateAndCreate = () => {
+        const newErrors: {username?: string; email?: string; password?: string} = {};
+        
+        if (!newUser.username || newUser.username.trim() === '') {
+            newErrors.username = 'Username is required';
+        }
+        
+        if (!newUser.email || newUser.email.trim() === '') {
+            newErrors.email = 'Email is required';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newUser.email)) {
+            newErrors.email = 'Please enter a valid email address';
+        }
+        
+        if (!newUser.password || newUser.password.trim() === '') {
+            newErrors.password = 'Password is required';
+        } else if (newUser.password.length < 6) {
+            newErrors.password = 'Password must be at least 6 characters';
+        }
+        
+        setErrors(newErrors);
+        
+        if (Object.keys(newErrors).length === 0) {
+            onCreateUser();
+        }
+    };
+
     const onPermissionChange = (permission: Permission, checked: boolean) => {
         const currentPermissions = newUser.permissions || [];
         const newPermissions = checked ? [...currentPermissions, permission] : currentPermissions.filter((p: Permission) => p !== permission);
@@ -854,48 +887,87 @@ function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateU
             <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader><DialogTitle>Create New User</DialogTitle><DialogDescription>Fill in the details to add a new user to your organization.</DialogDescription></DialogHeader>
                 <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="username" className="text-right">Username</Label>
+                    <div className="grid grid-cols-4 items-start gap-4">
+                        <Label htmlFor="username" className="text-right pt-3">Username</Label>
                         <div className="col-span-3">
-                            <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                            <div className={`border rounded-lg focus-within:ring-1 transition-colors ${
+                                errors.username 
+                                    ? 'border-red-500 focus-within:border-red-500 focus-within:ring-red-100' 
+                                    : 'border-gray-300 focus-within:border-indigo-500 focus-within:ring-indigo-100'
+                            }`}>
                                 <Input 
                                     id="username" 
                                     value={newUser.username} 
-                                    onChange={(e) => onUserChange({ ...newUser, username: e.target.value })} 
+                                    onChange={(e) => {
+                                        onUserChange({ ...newUser, username: e.target.value });
+                                        if (errors.username) setErrors({...errors, username: undefined});
+                                    }}
                                     className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
                                     placeholder="Enter username"
                                 />
                             </div>
+                            {errors.username && (
+                                <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                                    <AlertCircle className="w-3 h-3" />
+                                    {errors.username}
+                                </p>
+                            )}
                         </div>
                     </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="email" className="text-right">Email</Label>
+                    <div className="grid grid-cols-4 items-start gap-4">
+                        <Label htmlFor="email" className="text-right pt-3">Email</Label>
                         <div className="col-span-3">
-                            <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                            <div className={`border rounded-lg focus-within:ring-1 transition-colors ${
+                                errors.email 
+                                    ? 'border-red-500 focus-within:border-red-500 focus-within:ring-red-100' 
+                                    : 'border-gray-300 focus-within:border-indigo-500 focus-within:ring-indigo-100'
+                            }`}>
                                 <Input 
                                     id="email" 
                                     type="email" 
                                     value={newUser.email} 
-                                    onChange={(e) => onUserChange({ ...newUser, email: e.target.value })} 
+                                    onChange={(e) => {
+                                        onUserChange({ ...newUser, email: e.target.value });
+                                        if (errors.email) setErrors({...errors, email: undefined});
+                                    }}
                                     className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
                                     placeholder="Enter email address"
                                 />
                             </div>
+                            {errors.email && (
+                                <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                                    <AlertCircle className="w-3 h-3" />
+                                    {errors.email}
+                                </p>
+                            )}
                         </div>
                     </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="password" className="text-right">Password</Label>
+                    <div className="grid grid-cols-4 items-start gap-4">
+                        <Label htmlFor="password" className="text-right pt-3">Password</Label>
                         <div className="col-span-3">
-                            <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                            <div className={`border rounded-lg focus-within:ring-1 transition-colors ${
+                                errors.password 
+                                    ? 'border-red-500 focus-within:border-red-500 focus-within:ring-red-100' 
+                                    : 'border-gray-300 focus-within:border-indigo-500 focus-within:ring-indigo-100'
+                            }`}>
                                 <Input 
                                     id="password" 
                                     type="password" 
                                     value={newUser.password} 
-                                    onChange={(e) => onUserChange({ ...newUser, password: e.target.value })} 
+                                    onChange={(e) => {
+                                        onUserChange({ ...newUser, password: e.target.value });
+                                        if (errors.password) setErrors({...errors, password: undefined});
+                                    }}
                                     className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
                                     placeholder="Enter password"
                                 />
                             </div>
+                            {errors.password && (
+                                <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                                    <AlertCircle className="w-3 h-3" />
+                                    {errors.password}
+                                </p>
+                            )}
                         </div>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
@@ -1131,7 +1203,21 @@ function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateU
                         </div>
                     </div>
                 </div>
-                <DialogFooter><Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button><Button onClick={onCreateUser}>Create User</Button></DialogFooter>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isCreating}>
+                        Cancel
+                    </Button>
+                    <Button onClick={validateAndCreate} disabled={isCreating}>
+                        {isCreating ? (
+                            <>
+                                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                                Creating...
+                            </>
+                        ) : (
+                            'Create User'
+                        )}
+                    </Button>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     );

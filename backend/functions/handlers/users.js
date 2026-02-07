@@ -1,5 +1,5 @@
 const admin = require("firebase-admin");
-const {verifyAuth, ensureAdmin} = require("../middleware/auth");
+const {verifyAuth} = require("../middleware/auth");
 const cors = require("../middleware/cors");
 
 /**
@@ -59,7 +59,6 @@ const createUser = (req, res) => {
         email,
         password,
         displayName: username,
-        emailVerified: true,
       });
 
       const userDocData = {
