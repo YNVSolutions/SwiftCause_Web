@@ -13,6 +13,7 @@ import {
 import { FundraisingEfficiencyGauge } from './FundraisingEfficiencyGauge';
 import { Campaign } from '../../../shared/types';
 import { calculatePerformanceMetrics, calculateCampaignCompletion, isCampaignWon } from '../lib/calculateMetrics';
+import { formatCurrency, formatCurrencyFromMajor } from '../../../shared/lib/currencyFormatter';
 
 interface PerformanceDetailDialogProps {
   isOpen: boolean;
@@ -80,7 +81,7 @@ export const PerformanceDetailDialog: React.FC<PerformanceDetailDialogProps> = (
                       Aggregate Goal
                     </span>
                     <span className="text-lg font-black text-slate-950">
-                      £{metrics.aggregateGoal.toLocaleString()}
+                      {formatCurrency(metrics.aggregateGoal)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center p-5 bg-indigo-600/5 rounded-2xl">
@@ -88,7 +89,7 @@ export const PerformanceDetailDialog: React.FC<PerformanceDetailDialogProps> = (
                       Total Collected
                     </span>
                     <span className="text-lg font-black text-indigo-600">
-                      £{metrics.aggregateRaised.toLocaleString()}
+                      {formatCurrency(metrics.aggregateRaised)}
                     </span>
                   </div>
                 </div>
@@ -214,7 +215,7 @@ export const PerformanceDetailDialog: React.FC<PerformanceDetailDialogProps> = (
                                 {c.title}
                               </p>
                               <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                                £{(c.raised || 0).toLocaleString()} / £{(c.goal || 0).toLocaleString()}
+                                {formatCurrency(c.raised || 0)} / {formatCurrencyFromMajor(c.goal || 0)}
                               </p>
                             </div>
                           </div>

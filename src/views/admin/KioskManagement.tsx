@@ -16,6 +16,7 @@ import {
   getDoc,
 } from 'firebase/firestore';
 import { Screen, Kiosk, AdminSession, Permission } from '../../shared/types';
+import { formatCurrency } from '../../shared/lib/currencyFormatter';
 import { syncCampaignsForKiosk, removeKioskFromAllCampaigns } from "../../shared/lib/sync/campaignKioskSync";
 
 // UI Components
@@ -322,7 +323,6 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
     }));
   };
 
-  const formatCurrency = (amount: number) => new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', minimumFractionDigits: 0 }).format(amount);
   const handleExportKiosks = () => {
     const exportData = filteredKiosks.map((kiosk) => {
       const performance = performanceData[kiosk.id];

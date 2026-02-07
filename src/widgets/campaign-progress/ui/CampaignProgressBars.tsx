@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowUpDown, CheckCircle2, AlertCircle, AlertTriangle, TrendingUp } from 'lucide-react';
 import { CampaignProgress, sortCampaignProgress } from '../lib/progressCalculations';
+import { formatCurrency as formatGbp, formatCurrencyFromMajor as formatGbpMajor } from '../../../shared/lib/currencyFormatter';
 
 interface CampaignProgressBarsProps {
   campaigns: CampaignProgress[];
@@ -11,7 +12,7 @@ interface CampaignProgressBarsProps {
 export const CampaignProgressBars: React.FC<CampaignProgressBarsProps> = ({
   campaigns,
   onCampaignClick,
-  formatCurrency = (amount) => `£${amount.toLocaleString()}`,
+  formatCurrency = formatGbp,
 }) => {
   const [sortBy, setSortBy] = useState<'progress' | 'raised' | 'goal' | 'name'>('progress');
   
@@ -122,7 +123,7 @@ export const CampaignProgressBars: React.FC<CampaignProgressBarsProps> = ({
                 Raised: <span className="text-gray-900 font-semibold">{formatCurrency(campaign.raised)}</span>
               </span>
               <span className="text-gray-500">
-                Goal: {formatCurrency(campaign.goal)}
+                Goal: {formatGbpMajor(campaign.goal)}
               </span>
             </div>
 

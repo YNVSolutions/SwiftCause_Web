@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatCurrency } from '@/shared/lib/currencyFormatter';
+import { formatCurrencyFromMajor } from '@/shared/lib/currencyFormatter';
 import { AmountSelectorProps } from '../types';
 
 export const AmountSelector: React.FC<AmountSelectorProps> = ({
@@ -11,9 +11,7 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
   onCustomAmountChange,
 }) => {
   // Format amount without decimals
-  const formatAmount = (amount: number) => {
-    return formatCurrency(amount, currency).replace(/\.00$/, '');
-  };
+  const formatAmount = (amount: number) => formatCurrencyFromMajor(amount, currency);
 
   const handleCustomFocus = () => {
     // Clear preset selection when focusing on custom input
@@ -28,11 +26,7 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
     }
   };
 
-  const getCurrencySymbol = () => {
-    if (currency === 'GBP') return '\u00a3';
-    if (currency === 'EUR') return '\u20ac';
-    return '$';
-  };
+  const getCurrencySymbol = () => '£';
 
   return (
     <div className="space-y-4 font-lexend">

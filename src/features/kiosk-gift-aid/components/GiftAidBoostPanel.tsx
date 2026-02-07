@@ -1,6 +1,6 @@
 import React from 'react';
 import { ArrowUp, Sparkles } from 'lucide-react';
-import { formatCurrency } from '@/shared/lib/currencyFormatter';
+import { formatCurrencyFromMajor } from '@/shared/lib/currencyFormatter';
 
 interface GiftAidBoostPanelProps {
   amount: number;
@@ -28,15 +28,9 @@ export const GiftAidBoostPanel: React.FC<GiftAidBoostPanelProps> = ({
   const totalWithGiftAid = currentAmount + giftAidAmount;
   const isValidAmount = currentAmount > 0 && currentAmount <= 10000;
 
-  const formatAmount = (amt: number) => {
-    return formatCurrency(amt, currency).replace(/\.00$/, '');
-  };
+  const formatAmount = (amt: number) => formatCurrencyFromMajor(amt, currency);
 
-  const getCurrencySymbol = () => {
-    if (currency === 'GBP') return '\\u00a3';
-    if (currency === 'EUR') return '\\u20ac';
-    return '$';
-  };
+  const getCurrencySymbol = () => '£';
 
   return (
     <div className="bg-[#FFFBF7] rounded-[20px] border border-[rgba(15,23,42,0.08)] shadow-[0_12px_32px_rgba(15,23,42,0.08)] p-6 lg:p-8 flex flex-col max-w-2xl mx-auto relative overflow-hidden font-lexend">

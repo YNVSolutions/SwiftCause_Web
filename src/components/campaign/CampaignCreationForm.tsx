@@ -146,9 +146,9 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
 
     // Fundraising target validation
     if (!formData.fundraisingTarget || formData.fundraisingTarget <= 0) {
-      newErrors.fundraisingTarget = 'Fundraising target is required and must be greater than $0';
+      newErrors.fundraisingTarget = 'Fundraising target is required and must be greater than £0';
     } else if (formData.fundraisingTarget > 999999999) {
-      newErrors.fundraisingTarget = 'Fundraising target must not exceed $999,999,999';
+      newErrors.fundraisingTarget = 'Fundraising target must not exceed £999,999,999';
     }
 
     // Donation tiers validation (optional but if provided, must be valid)
@@ -157,7 +157,7 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
       validTiers.forEach((tier, index) => {
         const amount = parseFloat(tier);
         if (isNaN(amount) || amount <= 0) {
-          newErrors[`tier-${index}`] = 'Donation tier must be a valid amount greater than $0';
+          newErrors[`tier-${index}`] = 'Donation tier must be a valid amount greater than £0';
         }
       });
     }
@@ -627,7 +627,7 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                       <div>
                         <Label htmlFor="target" className="text-xs md:text-sm font-medium text-gray-700 mb-2 block">
-                          Fundraising Target ($) <span className="text-red-500">*</span>
+                          Fundraising Target (£) <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           id="target"
@@ -656,7 +656,7 @@ export const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({
                             Tier {index + 1} (Optional)
                           </Label>
                           <div className="flex items-center">
-                            <span className="text-gray-500 mr-2 text-sm md:text-base">$</span>
+                            <span className="text-gray-500 mr-2 text-sm md:text-base">£</span>
                             <Input
                               id={`tier-${index}`}
                               type="number"

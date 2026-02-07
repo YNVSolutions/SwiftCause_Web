@@ -53,7 +53,7 @@ export function transformCampaignsToProgress(campaigns: Campaign[]): CampaignPro
   return campaigns.map(campaign => {
     const raised = campaign.raised || 0;
     const goal = campaign.goal || 1;
-    const percentage = Math.min(100, Math.round((raised / goal) * 100));
+    const percentage = Math.min(100, Math.round(((raised / 100) / goal) * 100));
     const { status, statusColor, progressColor } = getProgressStatus(percentage);
 
     return {

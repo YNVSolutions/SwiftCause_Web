@@ -6,7 +6,7 @@ import { Progress } from '../../../shared/ui/progress';
 import { ImageWithFallback } from '../../../shared/ui/figma/ImageWithFallback';
 import { Heart, Info, ArrowRight, Star } from 'lucide-react';
 import { Campaign } from '../../../shared/types';
-import { formatCurrency } from '../../../shared/lib/currencyFormatter';
+import { formatCurrency, formatCurrencyFromMajor } from '../../../shared/lib/currencyFormatter';
 
 interface CampaignCardProps {
   campaign: Campaign;
@@ -80,7 +80,7 @@ export function CampaignCard({
                 </div>
                 <Progress value={getProgressPercentage(raisedAmount, campaign.goal)} className="h-1.5" />
                 <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>{getProgressPercentage(raisedAmount, campaign.goal).toFixed(0)}% of {formatCurrency(campaign.goal, organizationCurrency || 'GBP')}</span>
+                  <span>{getProgressPercentage(raisedAmount, campaign.goal).toFixed(0)}% of {formatCurrencyFromMajor(campaign.goal, organizationCurrency || 'GBP')}</span>
                 </div>
               </div>
             </div>
@@ -166,7 +166,7 @@ export function CampaignCard({
             <span className="text-muted-foreground">
               {campaign.goal ? getProgressPercentage(raisedAmount, campaign.goal).toFixed(1) + "% of goal" : 'N/A'}
             </span>
-            <span className="text-muted-foreground">Goal: { campaign.goal ? formatCurrency(campaign.goal, organizationCurrency || 'GBP') : 'N/A'}</span>
+            <span className="text-muted-foreground">Goal: { campaign.goal ? formatCurrencyFromMajor(campaign.goal, organizationCurrency || 'GBP') : 'N/A'}</span>
           </div>
         </div>
 

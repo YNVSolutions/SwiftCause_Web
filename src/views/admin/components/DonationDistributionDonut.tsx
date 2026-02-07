@@ -11,6 +11,8 @@ interface CategoryData {
   percentage: number;
   color: string;
 }
+// NOTE: If CategoryData.value represents amounts in pence (not counts),
+// switch displays to formatCurrency(value) for GBP formatting.
 
 interface DonationDistributionDonutProps {
   data?: CategoryData[];

@@ -12,6 +12,7 @@ import { Switch } from '../../../shared/ui/switch';
 import { Checkbox } from '../../../shared/ui/checkbox';
 import { Slider } from '../../../shared/ui/slider';
 import { Separator } from '../../../shared/ui/separator';
+import { formatCurrency, formatCurrencyFromMajor } from '../../../shared/lib/currencyFormatter';
 import {
   Settings,
   DollarSign,
@@ -249,7 +250,7 @@ export function CampaignConfigurationDialog({
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <Label htmlFor="goal">Fundraising Goal ($)</Label>
+                    <Label htmlFor="goal">Fundraising Goal (£)</Label>
                     <Input
                       id="goal"
                       type="number"
@@ -303,7 +304,7 @@ export function CampaignConfigurationDialog({
                         <div className="text-left">
                           <div className="font-medium">{set.name}</div>
                           <div className="text-xs text-gray-500">
-                            ${set.amounts.join(', $')}
+                            {set.amounts.map((amount) => formatCurrencyFromMajor(amount)).join(', ')}
                           </div>
                         </div>
                       </Button>
@@ -323,7 +324,7 @@ export function CampaignConfigurationDialog({
                         className="flex items-center space-x-1 cursor-pointer hover:bg-red-100"
                         onClick={() => removePredefinedAmount(amount)}
                       >
-                        <span>${amount}</span>
+                        <span>{formatCurrencyFromMajor(amount)}</span>
                         <X className="w-3 h-3" />
                       </Badge>
                     ))}
@@ -358,7 +359,7 @@ export function CampaignConfigurationDialog({
                     {formData.configuration.allowCustomAmount && (
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="minAmount">Minimum Amount ($)</Label>
+                          <Label htmlFor="minAmount">Minimum Amount (£)</Label>
                           <Input
                             id="minAmount"
                             type="number"
@@ -367,7 +368,7 @@ export function CampaignConfigurationDialog({
                           />
                         </div>
                         <div>
-                          <Label htmlFor="maxAmount">Maximum Amount ($)</Label>
+                          <Label htmlFor="maxAmount">Maximum Amount (£)</Label>
                           <Input
                             id="maxAmount"
                             type="number"
@@ -746,7 +747,7 @@ export function CampaignConfigurationDialog({
                     <div className="flex flex-wrap gap-2">
                       {formData.configuration.predefinedAmounts.slice(0, 5).map(amount => (
                         <Badge key={amount} variant="outline" className="px-3 py-1">
-                          ${amount}
+                          {formatCurrencyFromMajor(amount)}
                         </Badge>
                       ))}
                       {formData.configuration.allowCustomAmount && (

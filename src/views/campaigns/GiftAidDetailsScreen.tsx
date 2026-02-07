@@ -8,7 +8,7 @@ import { NavigationHeader } from '../../shared/ui/NavigationHeader';
 import { User, MapPin, ArrowRight } from 'lucide-react';
 import { Campaign } from '../../shared/types';
 import { GiftAidDetails } from '../../entities/giftAid/model/types';
-import { formatCurrency } from '../../shared/lib/currencyFormatter';
+import { formatCurrencyFromMajor } from '../../shared/lib/currencyFormatter';
 
 interface GiftAidDetailsScreenProps {
   campaign: Campaign;
@@ -202,11 +202,11 @@ export function GiftAidDetailsScreen({
                   aria-level={2}
                   className="text-2xl sm:text-3xl font-bold mb-2"
                 >
-                  Boosting your {formatCurrency(amount, organizationCurrency)} to{' '}
-                  {formatCurrency(totalWithGiftAid, organizationCurrency)}
+                  Boosting your {formatCurrencyFromMajor(amount, organizationCurrency)} to{' '}
+                  {formatCurrencyFromMajor(totalWithGiftAid, organizationCurrency)}
                 </div>
                 <p className="text-green-100 text-lg">
-                  Just a few details to claim your extra {formatCurrency(giftAidAmount, organizationCurrency)}
+                  Just a few details to claim your extra {formatCurrencyFromMajor(giftAidAmount, organizationCurrency)}
                 </p>
               </div>
             </CardHeader>

@@ -3,6 +3,7 @@ import { Badge } from '../../shared/ui/badge';
 import { Card, CardContent } from '../../shared/ui/card';
 import { Progress } from '../../shared/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shared/ui/tabs';
+import { formatCurrency, formatCurrencyFromMajor } from '../../shared/lib/currencyFormatter';
 import { 
   BarChart3,
   TrendingUp,
@@ -242,7 +243,7 @@ export function EnterprisePlatformShowcase() {
                   <span>+12%</span>
                 </div>
               </div>
-              <div className="text-2xl font-bold text-green-900">${totalAmountToday.toLocaleString()}</div>
+              <div className="text-2xl font-bold text-green-900">{formatCurrency(totalAmountToday)}</div>
               <div className="text-xs text-green-700">Today's Donations</div>
             </div>
             
@@ -277,7 +278,7 @@ export function EnterprisePlatformShowcase() {
                   <div className="flex items-center space-x-3">
                     <div className={`w-2 h-2 rounded-full ${donation.isRecurring ? 'bg-purple-500' : 'bg-green-500'}`} />
                     <div>
-                      <div className="text-sm font-medium text-gray-900">${donation.amount}</div>
+                      <div className="text-sm font-medium text-gray-900">{formatCurrency(donation.amount)}</div>
                       <div className="text-xs text-gray-600">{donation.campaignTitle}</div>
                     </div>
                   </div>
@@ -335,7 +336,7 @@ export function EnterprisePlatformShowcase() {
                   </div>
                   <div className="text-right">
                     <div className="text-lg font-bold text-gray-900">
-                      ${campaign.raised.toLocaleString()}
+                      {formatCurrency(campaign.raised)}
                     </div>
                     <div className="flex items-center space-x-1 text-xs">
                       {campaign.trend === 'up' ? (
@@ -358,10 +359,10 @@ export function EnterprisePlatformShowcase() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-gray-600">
-                      {campaign.progress}% of ${campaign.goal.toLocaleString()} goal
+                      {campaign.progress}% of {formatCurrencyFromMajor(campaign.goal)} goal
                     </span>
                     <span className="font-medium text-purple-600">
-                      ${(campaign.goal - campaign.raised).toLocaleString()} remaining
+                      {formatCurrencyFromMajor(campaign.goal - campaign.raised)} remaining
                     </span>
                   </div>
                   <Progress value={campaign.progress} className="h-3" />
@@ -412,7 +413,7 @@ export function EnterprisePlatformShowcase() {
                 
                 <div className="text-right">
                   <div className="text-sm font-bold text-gray-900">
-                    ${kiosk.todayAmount.toLocaleString()}
+                    {formatCurrency(kiosk.todayAmount)}
                   </div>
                   <div className="text-xs text-gray-600">
                     {kiosk.todayDonations} donations today
@@ -434,7 +435,7 @@ export function EnterprisePlatformShowcase() {
                 <div className="text-xs text-blue-700">Online</div>
               </div>
               <div>
-                <div className="text-lg font-bold text-green-900">${totalAmountToday.toLocaleString()}</div>
+                <div className="text-lg font-bold text-green-900">{formatCurrency(totalAmountToday)}</div>
                 <div className="text-xs text-green-700">Today</div>
               </div>
               <div>
@@ -514,7 +515,7 @@ export function EnterprisePlatformShowcase() {
                 <Globe className="w-4 h-4 text-blue-500" />
                 <span className="text-sm font-medium text-gray-900">Location Performance</span>
               </div>
-              <div className="text-xs text-gray-600">University Campus kiosk has highest average donation ($133)</div>
+              <div className="text-xs text-gray-600">University Campus kiosk has highest average donation ({formatCurrency(13300)})</div>
             </div>
           </div>
         </TabsContent>
