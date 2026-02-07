@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, DollarSign, TrendingUp, Award, ArrowUpDown } from 'lucide-react';
+import { formatCurrency as formatGbp } from '../../../shared/lib/currencyFormatter';
 import {
   calculateDistributionSummary,
   getHoverColor,
@@ -19,7 +20,7 @@ export const DonationDistributionDialog: React.FC<DonationDistributionDialogProp
   onClose,
   data,
   totalRaised,
-  formatCurrency = (amount) => `£${amount.toLocaleString()}`,
+  formatCurrency = formatGbp,
 }) => {
   const [hoveredBar, setHoveredBar] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState<'range' | 'count' | 'percentage'>('count');

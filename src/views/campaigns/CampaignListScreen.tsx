@@ -4,7 +4,7 @@ import { Campaign, KioskSession } from '../../shared/types';
 import { Button } from '../../shared/ui/button';
 import { ChevronLeft } from 'lucide-react';
 import { updateKiosk } from '../../shared/api';
-import { formatCurrency } from '../../shared/lib/currencyFormatter';
+import { formatCurrency, formatCurrencyFromMajor } from '../../shared/lib/currencyFormatter';
 
 interface CampaignListScreenProps {
   campaigns: Campaign[];
@@ -227,7 +227,7 @@ export function CampaignListScreen({
                       <div 
                         className="bg-white h-2 rounded-full transition-all duration-300"
                         style={{ 
-                          width: `${Math.min(((campaign.raised || 0) / campaign.goal) * 100, 100)}%` 
+                          width: `${Math.min((((campaign.raised || 0) / 100) / (campaign.goal || 1)) * 100, 100)}%` 
                         }}
                       />
                     </div>
@@ -250,7 +250,7 @@ export function CampaignListScreen({
                           disabled={isLoadingPayment}
                           className="h-10 bg-gray-100 hover:bg-gray-200 text-blue-600 font-semibold rounded-xl border-0 transition-all duration-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          💙 {formatCurrency(amount, kioskSession?.organizationCurrency || 'USD')}
+                          💙 {formatCurrencyFromMajor(amount, kioskSession?.organizationCurrency || 'GBP')}
                         </Button>
                       ))}
                     </div>
@@ -335,7 +335,7 @@ const CampaignCarousel = ({
                   <div 
                     className="bg-white h-3 rounded-full transition-all duration-300"
                     style={{ 
-                      width: `${Math.min(((campaign.raised || 0) / campaign.goal) * 100, 100)}%` 
+                      width: `${Math.min((((campaign.raised || 0) / 100) / (campaign.goal || 1)) * 100, 100)}%` 
                     }}
                   />
                 </div>
@@ -358,7 +358,7 @@ const CampaignCarousel = ({
                       disabled={isLoadingPayment}
                       className="h-14 bg-gray-100 hover:bg-gray-200 text-blue-600 font-semibold rounded-xl border-0 transition-all duration-200 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      💙 {formatCurrency(amount, kioskSession?.organizationCurrency || 'USD')}
+                      💙 {formatCurrencyFromMajor(amount, kioskSession?.organizationCurrency || 'GBP')}
                     </Button>
                   ))}
                 </div>

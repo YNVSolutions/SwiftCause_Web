@@ -77,6 +77,7 @@ import {
   DialogClose,
 } from "../../shared/ui/dialog";
 import { Screen, AdminSession, Permission, Campaign, Kiosk } from "../../shared/types";
+import { formatCurrency as formatGbp, formatCurrencyFromMajor as formatGbpMajor } from "../../shared/lib/currencyFormatter";
 import { db, storage } from "../../shared/lib/firebase";
 import {
   collection,
@@ -868,12 +869,7 @@ export function AdminDashboard({
     fetchAllKiosks();
   }, [onboardingFlow.showKioskForm, userSession.user.organizationId]);
 
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat("en-GB", {
-      style: "currency",
-      currency: "GBP",
-      minimumFractionDigits: 0,
-    }).format(amount);
+  const formatCurrency = (amount: number) => formatGbp(amount);
   const formatNumber = (num: number) =>
     new Intl.NumberFormat("en-GB").format(num);
 
@@ -881,6 +877,7 @@ export function AdminDashboard({
     if (amount === 0) return "£0";
     if (typeof amount !== "number") return "...";
 
+    const amountInGbp = amount / 100;
     const tiers = [
       { value: 1e12, name: "T" },
       { value: 1e9, name: "B" },
@@ -888,10 +885,10 @@ export function AdminDashboard({
       { value: 1e3, name: "K" },
     ];
 
-    const tier = tiers.find((t) => amount >= t.value);
+    const tier = tiers.find((t) => amountInGbp >= t.value);
 
     if (tier) {
-      const value = (amount / tier.value).toFixed(1);
+      const value = (amountInGbp / tier.value).toFixed(1);
       return `£${value}${tier.name}`;
     }
 
@@ -900,18 +897,19 @@ export function AdminDashboard({
   const formatShortCurrency = (amount: number) => {
     if (amount === 0) return "£0";
     if (typeof amount !== "number") return "...";
+    const amountInGbp = amount / 100;
     const tiers = [
       { value: 1e12, name: "T" },
       { value: 1e9, name: "B" },
       { value: 1e6, name: "M" },
       { value: 1e3, name: "K" },
     ];
-    const tier = tiers.find((t) => amount >= t.value);
+    const tier = tiers.find((t) => amountInGbp >= t.value);
     if (tier) {
-      const value = (amount / tier.value).toFixed(1);
+      const value = (amountInGbp / tier.value).toFixed(1);
       return `£${value}${tier.name}`;
     }
-    return `£${amount}`;
+    return formatCurrency(amount);
   };
 
   const getActivityIcon = (type: string) => {
@@ -1355,7 +1353,7 @@ export function AdminDashboard({
                                     <h4 className="font-medium text-gray-900 truncate">{campaign.title}</h4>
                                     <div className="flex items-center gap-3 mt-1">
                                       <span className="text-sm text-gray-500">
-                                        Goal: {formatCurrency(campaign.goal || 0)}
+                                        Goal: {formatGbpMajor(campaign.goal || 0)}
                                       </span>
                                       <span className="text-sm text-gray-500">
                                         Raised: {formatCurrency(campaign.raised || 0)}

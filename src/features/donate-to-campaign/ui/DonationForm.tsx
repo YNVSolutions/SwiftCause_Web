@@ -7,6 +7,7 @@ import { Checkbox } from '../../../shared/ui/checkbox';
 import { Textarea } from '../../../shared/ui/textarea';
 import { Campaign } from '../../../entities/campaign';
 import { DonationFormData } from '../model';
+import { formatCurrency, formatCurrencyFromMajor } from '../../../shared/lib/currencyFormatter';
 
 interface DonationFormProps {
   campaign: Campaign;
@@ -91,7 +92,7 @@ export function DonationForm({
                   variant={formData.amount === amount && !useCustomAmount ? "default" : "outline"}
                   onClick={() => handleAmountChange(amount)}
                 >
-                  ${amount}
+                  {formatCurrencyFromMajor(amount)}
                 </Button>
               ))}
             </div>
@@ -108,7 +109,7 @@ export function DonationForm({
                 {useCustomAmount && (
                   <Input
                     type="number"
-                    placeholder={`Enter amount (${minCustomAmount}-${maxCustomAmount})`}
+                    placeholder={`Enter amount (${formatCurrencyFromMajor(minCustomAmount)}-${formatCurrencyFromMajor(maxCustomAmount)})`}
                     value={customAmount}
                     onChange={(e) => handleCustomAmountChange(e.target.value)}
                     min={minCustomAmount}

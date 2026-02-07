@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Target, TrendingUp, Search, Filter, CheckCircle2, AlertCircle, AlertTriangle, ArrowUpDown } from 'lucide-react';
 import { CampaignProgress, sortCampaignProgress } from '../lib/progressCalculations';
+import { formatCurrency as formatGbp, formatCurrencyFromMajor as formatGbpMajor } from '../../../shared/lib/currencyFormatter';
 
 interface CampaignProgressDialogProps {
   isOpen: boolean;
@@ -15,7 +16,7 @@ export const CampaignProgressDialog: React.FC<CampaignProgressDialogProps> = ({
   onClose,
   campaigns,
   onCampaignClick,
-  formatCurrency = (amount) => `£${amount.toLocaleString()}`,
+  formatCurrency = formatGbp,
 }) => {
   const [sortBy, setSortBy] = useState<'progress' | 'raised' | 'goal' | 'name'>('progress');
   const [filterStatus, setFilterStatus] = useState<'all' | 'critical' | 'warning' | 'good' | 'completed'>('all');
@@ -121,7 +122,7 @@ export const CampaignProgressDialog: React.FC<CampaignProgressDialogProps> = ({
                 <div className="text-xs font-medium text-gray-600 mb-1">Overall Progress</div>
                 <p className="text-2xl font-bold text-gray-800">{overallProgress}%</p>
                 <p className="text-xs text-gray-500 mt-1">
-                  {formatCurrency(totalRaised)} / {formatCurrency(totalGoal)}
+                  {formatCurrency(totalRaised)} / {formatGbpMajor(totalGoal)}
                 </p>
               </div>
 
@@ -295,7 +296,7 @@ export const CampaignProgressDialog: React.FC<CampaignProgressDialogProps> = ({
                       </div>
                       <div className="text-right">
                         <div className="text-xs text-gray-500 mb-1">Goal</div>
-                        <div className="text-base font-semibold text-gray-900">{formatCurrency(campaign.goal)}</div>
+                        <div className="text-base font-semibold text-gray-900">{formatGbpMajor(campaign.goal)}</div>
                       </div>
                     </div>
 
@@ -303,7 +304,7 @@ export const CampaignProgressDialog: React.FC<CampaignProgressDialogProps> = ({
                     {campaign.status !== 'completed' && (
                       <div className="mt-3 pt-3 border-t border-gray-100">
                         <div className="text-xs text-gray-600">
-                          Remaining: <span className="font-medium text-gray-900">{formatCurrency(campaign.goal - campaign.raised)}</span>
+                          Remaining: <span className="font-medium text-gray-900">{formatGbpMajor(campaign.goal - campaign.raised)}</span>
                         </div>
                       </div>
                     )}

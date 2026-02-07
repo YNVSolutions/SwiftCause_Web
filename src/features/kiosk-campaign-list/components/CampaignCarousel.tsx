@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatCurrency } from '@/shared/lib/currencyFormatter';
+import { formatCurrency, formatCurrencyFromMajor } from '@/shared/lib/currencyFormatter';
 import { CampaignCarouselProps } from '../types';
 import { getTop3Amounts, getProgressPercentage } from '../lib/campaignUtils';
 
@@ -29,9 +29,9 @@ export const CampaignCarousel: React.FC<CampaignCarouselProps> = ({
   };
 
   // Format amount without decimals
-  const formatAmount = (amount: number) => {
-    return formatCurrency(amount, currency).replace(/\.00$/, '');
-  };
+  const formatRaised = (amount: number) => formatCurrency(amount, currency);
+  const formatPredefined = (amount: number) => formatCurrencyFromMajor(amount, currency);
+  const formatGoal = (amount: number) => formatCurrencyFromMajor(amount, currency);
 
   return (
     <>
@@ -91,10 +91,10 @@ export const CampaignCarousel: React.FC<CampaignCarouselProps> = ({
                     {/* Progress Info */}
                     <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
                       <span className="font-medium text-gray-900">
-                        {formatAmount(campaign.raised || 0)}
+                        {formatRaised(campaign.raised || 0)}
                       </span>
                       <span className="text-xs text-gray-500">
-                        Goal {formatAmount(campaign.goal)}
+                        Goal {formatGoal(campaign.goal)}
                       </span>
                       <span className="text-green-700 font-medium">{Math.round(progress)}%</span>
                     </div>
@@ -115,7 +115,7 @@ export const CampaignCarousel: React.FC<CampaignCarouselProps> = ({
                           onClick={(e) => handleAmountClick(e, amount)}
                           className="h-10 rounded-lg bg-green-50 text-green-700 border border-green-200 font-medium text-sm hover:bg-green-100 hover:border-green-300 transition-colors duration-200"
                         >
-                          {formatAmount(amount)}
+                          {formatPredefined(amount)}
                         </button>
                       ))}
                     </div>

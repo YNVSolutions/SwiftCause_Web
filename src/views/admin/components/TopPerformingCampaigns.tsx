@@ -4,6 +4,7 @@ import { Skeleton } from '../../../shared/ui/skeleton';
 import { Progress } from '../../../shared/ui/progress';
 import { Trophy, ArrowUpRight } from 'lucide-react';
 import { Button } from '../../../shared/ui/button';
+import { formatCurrency as formatGbp, formatCurrencyFromMajor as formatGbpMajor } from '../../../shared/lib/currencyFormatter';
 
 interface CampaignData {
   id: string;
@@ -26,7 +27,7 @@ export const TopPerformingCampaigns: React.FC<TopPerformingCampaignsProps> = ({
   data = [],
   loading = false,
   onViewDetails,
-  formatCurrency = (amount) => `£${amount.toLocaleString()}`,
+  formatCurrency = formatGbp,
   className = '',
 }) => {
   if (loading) {
@@ -122,7 +123,7 @@ export const TopPerformingCampaigns: React.FC<TopPerformingCampaignsProps> = ({
                 
                 <div className="flex items-center justify-between text-xs text-gray-500 leading-relaxed">
                   <span className="font-medium">
-                    {formatCurrency(campaign.raised)} of {formatCurrency(campaign.goal)}
+                    {formatCurrency(campaign.raised)} of {formatGbpMajor(campaign.goal)}
                   </span>
                   <span className="text-gray-400">
                     {campaign.donationCount} donations

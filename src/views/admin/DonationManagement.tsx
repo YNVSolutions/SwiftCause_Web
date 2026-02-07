@@ -36,6 +36,7 @@ import { getDonations } from '../../shared/lib/hooks/donationsService';
 import { AdminSearchFilterHeader, AdminSearchFilterConfig } from './components/AdminSearchFilterHeader';
 import { SortableTableHeader } from './components/SortableTableHeader';
 import { useTableSort } from '../../shared/lib/hooks/useTableSort';
+import { formatCurrency } from '../../shared/lib/currencyFormatter';
 
 import { getAllCampaigns } from '../../shared/api';
 import { AdminLayout } from './AdminLayout';
@@ -205,14 +206,6 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
     data: filteredDonationsData
   });
 
-  const formatCurrency = (amount: number, currency: string) => {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: (currency || 'gbp').toUpperCase(),
-        minimumFractionDigits: 2
-      }).format(amount);
-  };
-
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'success':
@@ -247,14 +240,9 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
     totalDonations: filteredDonations.length,
     completedDonations: filteredDonations.filter(d => d.paymentStatus === 'success').length,
     avgDonation: filteredDonations.length > 0 
-      ? filteredDonations.reduce((sum, d) => sum + d.amount, 0) / filteredDonations.length 
+      ? filteredDonations.reduce((sum, d) => sum + (d.amount || 0), 0) / filteredDonations.length 
       : 0,
   };
-
-  const summaryCurrency =
-    filteredDonations[0]?.currency ||
-    donations[0]?.currency ||
-    "USD";
 
   const handleExportDonations = () => {
     exportToCsv(donations, "donations");
@@ -300,7 +288,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                 <div>
                   <p className="text-xs uppercase tracking-widest text-gray-400">Total Raised</p>
                   <div className="mt-2">
-                    <span className="text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.totalAmount, summaryCurrency)}</span>
+                    <span className="text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.totalAmount)}</span>
                   </div>
                 </div>
               </CardContent>
@@ -342,7 +330,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                 <div>
                   <p className="text-xs uppercase tracking-widest text-gray-400">Average Donation</p>
                   <div className="mt-2">
-                    <span className="text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.avgDonation, summaryCurrency)}</span>
+                    <span className="text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.avgDonation)}</span>
                   </div>
                 </div>
               </CardContent>
@@ -500,7 +488,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
 
                           <TableCell className="px-4 py-3 text-center">
                             <p className="text-sm font-semibold text-gray-900">
-                              {formatCurrency((donation.amount || 0), donation.currency)}
+                              {formatCurrency(donation.amount || 0)}
                             </p>
                           </TableCell>
 
@@ -594,7 +582,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                       </div>
                       <div className="text-right">
                         <div className="text-xl font-bold text-slate-900">
-                          {formatCurrency((donation.amount || 0) / 100, donation.currency)}
+                          {formatCurrency(donation.amount || 0)}
                         </div>
                         <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Amount</span>
                       </div>
@@ -686,10 +674,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                   <div>
                     <Label className="text-sm font-medium text-gray-700">Donation Amount</Label>
                     <p className="text-sm font-semibold text-gray-900 mt-1">
-                      {new Intl.NumberFormat('en-GB', {
-                        style: 'currency',
-                        currency: selectedDonation.currency || 'GBP',
-                      }).format((selectedDonation.amount || 0))}
+                      {formatCurrency(selectedDonation.amount || 0)}
                     </p>
                   </div>
                   <div>
@@ -762,3 +747,6 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
     </AdminLayout>
   );
 }
+
+
+
