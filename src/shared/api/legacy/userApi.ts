@@ -12,7 +12,7 @@ async function callAuthenticatedFunction(functionName: string, method: string, d
     throw new Error("Authentication token not found. Please log in.");
   }
 
-  const url = `https://us-central1-swiftcause-app.cloudfunctions.net/${functionName}`;
+  const url = `https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/${functionName}`;
   
   const response = await fetch(url, {
     method: method,

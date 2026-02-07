@@ -6,7 +6,9 @@ const cors = require("../middleware/cors");
 const ALLOWED_ORIGINS = new Set([
   "http://localhost:3000",
   "https://swift-cause-web.vercel.app",
-  "https://swiftcause--swiftcause-app.us-east4.hosted.app"
+  "https://swiftcause--swiftcause-app.us-east4.hosted.app",
+  "https://swiftcause--swiftcause-prod.europe-west4.hosted.app",
+  "https://swiftcause.com"
 ]);
 /**
  * Create Stripe onboarding link for organization
