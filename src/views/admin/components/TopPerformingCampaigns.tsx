@@ -91,7 +91,13 @@ export const TopPerformingCampaigns: React.FC<TopPerformingCampaignsProps> = ({
       <CardContent className="p-6 pt-5">
         {data.length > 0 ? (
           <div className="space-y-6">
-            {data.map((campaign, index) => (
+            {data.map((campaign, index) => {
+              const goal = campaign.goal || 0;
+              const raisedInGbp = (campaign.raised || 0) / 100;
+              const displayPercentage =
+                goal > 0 ? Math.min((raisedInGbp / goal) * 100, 100) : 0;
+
+              return (
               <div key={campaign.id} className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -111,13 +117,13 @@ export const TopPerformingCampaigns: React.FC<TopPerformingCampaignsProps> = ({
                   </div>
                   <div className="text-right flex-shrink-0 ml-3">
                     <p className="text-sm font-medium text-gray-600">
-                      {campaign.percentage}%
+                      {Math.round(displayPercentage)}%
                     </p>
                   </div>
                 </div>
                 
                 <Progress 
-                  value={campaign.percentage} 
+                  value={displayPercentage} 
                   className="h-1.5"
                 />
                 
@@ -130,7 +136,7 @@ export const TopPerformingCampaigns: React.FC<TopPerformingCampaignsProps> = ({
                   </span>
                 </div>
               </div>
-            ))}
+            );})}
           </div>
         ) : (
           <div className="text-center py-12 text-gray-500">

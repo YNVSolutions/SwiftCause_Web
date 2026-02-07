@@ -2329,7 +2329,7 @@ export function AdminDashboard({
               <div className="grid grid-cols-3 items-center gap-4">
                 <span className="text-sm font-medium text-gray-700">Amount:</span>
                 <span className="col-span-2 text-sm font-semibold text-green-600">
-                  ${dialogVisibility.selectedActivity.donationData.amount}
+                  {formatCurrency(Number(dialogVisibility.selectedActivity.donationData.amount) || 0)}
                 </span>
               </div>
               

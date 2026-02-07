@@ -27,7 +27,8 @@ import {
   User,
   Target,
   Banknote,
-  CalendarDays
+  CalendarDays,
+  Gift
 } from 'lucide-react';
 import { Skeleton } from "../../shared/ui/skeleton"; // Import Skeleton
 import { Ghost } from "lucide-react"; // Import Ghost
@@ -462,58 +463,56 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                       return (
                         <TableRow 
                           key={donation.id} 
-                          className="cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
+                          className="cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0 align-middle"
                           onClick={() => handleViewDetails(donation)}
                         >
-                          <TableCell className="px-4 py-3 text-center">
-                            <div className="space-y-1 min-w-0">
+                          <TableCell className="px-4 py-4 text-center align-middle">
+                            <div className="flex items-center justify-center gap-2 min-w-0">
+                              {donation.isGiftAid && (
+                                <span
+                                  className="inline-flex items-center rounded-md bg-purple-50 px-2 py-0.5 text-[11px] font-semibold text-purple-700 ring-1 ring-purple-600/20"
+                                  title="Gift Aid donation"
+                                >
+                                  <Gift className="h-3 w-3" />
+                                </span>
+                              )}
                               <span className="text-sm font-medium text-gray-900 block truncate" title={donation.donorName || 'Anonymous'}>
                                 {donation.donorName || 'Anonymous'}
                               </span>
                             </div>
                           </TableCell>
 
-                          <TableCell className="px-4 py-3 text-center">
-                            <div className="space-y-1 min-w-0">
+                          <TableCell className="px-4 py-4 text-center align-middle">
+                            <div className="flex items-center justify-center min-w-0">
                               <p className="text-sm font-medium text-gray-900 truncate" title={campaignMap[donation.campaignId] || donation.campaignId}>
                                 {campaignMap[donation.campaignId] || donation.campaignId}
                               </p>
-                              {donation.isGiftAid && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-50 text-purple-700 ring-1 ring-purple-600/20">
-                                  Gift Aid
-                                </span>
-                              )}
                             </div>
                           </TableCell>
 
-                          <TableCell className="px-4 py-3 text-center">
+                          <TableCell className="px-4 py-4 text-center align-middle">
                             <p className="text-sm font-semibold text-gray-900">
                               {formatCurrency(donation.amount || 0)}
                             </p>
                           </TableCell>
 
-                          <TableCell className="px-4 py-3 text-center">
-                            <div className="space-y-1 min-w-0">
+                          <TableCell className="px-4 py-4 text-center align-middle">
+                            <div className="flex items-center justify-center min-w-0">
                               {kiosk ? (
-                                <>
-                                  <span className="text-sm font-medium text-gray-900 block truncate" title={kiosk.name}>
-                                    {kiosk.name}
-                                  </span>
-                                  <p className="text-xs text-gray-500 truncate" title={kiosk.location}>
-                                    {kiosk.location}
-                                  </p>
-                                </>
+                                <span className="text-sm font-medium text-gray-900 block truncate" title={kiosk.name}>
+                                  {kiosk.name}
+                                </span>
                               ) : (
                                 <span className="text-sm text-gray-500">Online</span>
                               )}
                             </div>
                           </TableCell>
 
-                          <TableCell className="px-4 py-3 text-center">
+                          <TableCell className="px-4 py-4 text-center align-middle">
                             <div className="flex justify-center">{getStatusBadge(donation.paymentStatus)}</div>
                           </TableCell>
 
-                          <TableCell className="px-4 py-3 text-center">
+                          <TableCell className="px-4 py-4 text-center align-middle">
                             <span className="text-sm text-gray-500">
                               {donation.timestamp
                                 ? new Date(donation.timestamp).toLocaleDateString('en-GB', {
@@ -574,9 +573,19 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                           <User className="w-5 h-5" />
                         </div>
                         <div>
-                          <h2 className="font-semibold text-lg leading-tight text-slate-900">
-                            {donation.donorName || 'Anonymous'}
-                          </h2>
+                          <div className="flex items-center gap-2">
+                            {donation.isGiftAid && (
+                              <span
+                                className="inline-flex items-center gap-1 rounded-md bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-purple-700 ring-1 ring-purple-600/20"
+                                title="Gift Aid donation"
+                              >
+                                <Gift className="h-3 w-3" />
+                              </span>
+                            )}
+                            <h2 className="font-semibold text-lg leading-tight text-slate-900">
+                              {donation.donorName || 'Anonymous'}
+                            </h2>
+                          </div>
                           <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Donor</span>
                         </div>
                       </div>
@@ -599,11 +608,6 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                               <MapPin className="w-3 h-3" />
                               {kiosk ? kiosk.name : 'Online'}
                             </span>
-                            {donation.isGiftAid && (
-                              <span className="bg-purple-50 text-purple-700 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide">
-                                Gift Aid
-                              </span>
-                            )}
                           </div>
                         </div>
                         <div className="text-right">
@@ -747,6 +751,3 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
     </AdminLayout>
   );
 }
-
-
-

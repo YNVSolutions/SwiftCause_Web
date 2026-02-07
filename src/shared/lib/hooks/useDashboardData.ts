@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { getKiosks, getRecentDonations, getCampaigns } from '../../api/firestoreService';
+import { formatCurrency } from '../currencyFormatter';
 import { collection, query, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Campaign } from '../../types';
@@ -318,14 +319,14 @@ export function useDashboardData(organizationId?: string) {
           }
         });
 
-        // Convert to array format for chart, showing last 6 months
+        // Convert to array format for chart: two previous, current, and two next months
         monthlyRevenue = [];
         const currentDate = new Date();
         
-        for (let i = 5; i >= 0; i--) {
-          const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+        for (let offset = -2; offset <= 2; offset++) {
+          const date = new Date(currentDate.getFullYear(), currentDate.getMonth() + offset, 1);
           const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-          const monthName = date.toLocaleDateString('en-US', { month: 'short' });
+          const monthName = date.toLocaleDateString('en-GB', { month: 'short' });
           
           const monthData = monthlyRevenueMap[monthKey] || { donationRevenue: 0, giftAidAmount: 0 };
           
@@ -433,13 +434,13 @@ export function useDashboardData(organizationId?: string) {
         donationDistribution = [];
         donationDistributionError = 'Error in fetching donation data';
         
-        // Set default empty monthly revenue data
+        // Set default empty monthly revenue data for two previous, current, and two next months
         monthlyRevenue = [];
         const currentDate = new Date();
         
-        for (let i = 5; i >= 0; i--) {
-          const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
-          const monthName = date.toLocaleDateString('en-US', { month: 'short' });
+        for (let offset = -2; offset <= 2; offset++) {
+          const date = new Date(currentDate.getFullYear(), currentDate.getMonth() + offset, 1);
+          const monthName = date.toLocaleDateString('en-GB', { month: 'short' });
           
           monthlyRevenue.push({
             month: monthName,
@@ -501,12 +502,16 @@ export function useDashboardData(organizationId?: string) {
           donation.campaignId;
 
         const dateObj = new Date(iso);
+        const donationAmount =
+          typeof donation.amount === 'string'
+            ? Number(donation.amount)
+            : donation.amount;
         
 
         return {
           id: donation.id,
           type: "donation",
-          message: `New donation of $${donation.amount} for campaign ${campaignName}`,
+          message: `New donation of ${formatCurrency(donationAmount || 0)} for campaign ${campaignName}`,
 
           // raw ISO used for sorting
           timestamp: iso,
@@ -555,6 +560,13 @@ export function useDashboardData(organizationId?: string) {
 
   useEffect(() => {
     fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchDashboardData();
+    }, 5 * 60 * 1000);
+    return () => clearInterval(interval);
   }, [fetchDashboardData]);
 
   return { loading, error, stats, recentActivities, alerts, refreshDashboard: fetchDashboardData };

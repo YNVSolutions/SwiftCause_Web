@@ -36,7 +36,8 @@ export const CampaignProgressDialog: React.FC<CampaignProgressDialogProps> = ({
   // Calculate summary stats
   const totalRaised = campaigns.reduce((sum, c) => sum + c.raised, 0);
   const totalGoal = campaigns.reduce((sum, c) => sum + c.goal, 0);
-  const overallProgress = totalGoal > 0 ? Math.round((totalRaised / totalGoal) * 100) : 0;
+  const overallProgress =
+    totalGoal > 0 ? Math.round(((totalRaised / 100) / totalGoal) * 100) : 0;
   const completedCount = campaigns.filter((c) => c.status === 'completed').length;
   const criticalCount = campaigns.filter((c) => c.status === 'critical').length;
 
