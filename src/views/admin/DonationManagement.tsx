@@ -482,9 +482,6 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                               <span className="text-sm font-medium text-gray-900 block truncate" title={donation.donorName || 'Anonymous'}>
                                 {donation.donorName || 'Anonymous'}
                               </span>
-                              <p className="text-xs font-mono text-gray-400 truncate" title={donation.stripePaymentIntentId}>
-                                {donation.stripePaymentIntentId || donation.transactionId || donation.id}
-                              </p>
                             </div>
                           </TableCell>
 
