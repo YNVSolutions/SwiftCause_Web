@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '../../shared/ui/button';
 import { Input } from '../../shared/ui/input';
 import { Label } from '../../shared/ui/label';
@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import {
   Search,
   Download,
+  RefreshCw,
   Calendar as CalendarIcon,
   DollarSign,
   Users,
@@ -90,38 +91,38 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
   const [ selectedDonation, setSelectedDonation] = useState<FetchedDonation | null>(null);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
 
-  
-  useEffect(() => {
-    const fetchAllData = async () => {
-      try {
-        setLoading(true);
-       
-        // Fetch kiosks
-        const kiosksRef = collection(db, 'kiosks');
-        const kiosksQuery = query(kiosksRef, where('organizationId', '==', userSession.user.organizationId || ''));
-        const kiosksSnapshot = await getDocs(kiosksQuery);
-        const kiosksData = kiosksSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Kiosk[];
+  const fetchAllData = useCallback(async () => {
+    try {
+      setLoading(true);
+     
+      // Fetch kiosks
+      const kiosksRef = collection(db, 'kiosks');
+      const kiosksQuery = query(kiosksRef, where('organizationId', '==', userSession.user.organizationId || ''));
+      const kiosksSnapshot = await getDocs(kiosksQuery);
+      const kiosksData = kiosksSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Kiosk[];
 
-        const [donationData, campaignData] = await Promise.all([
-          getDonations(userSession.user.organizationId || ''),
-          getAllCampaigns(userSession.user.organizationId || '')
-        ]);
-        setDonations(donationData as FetchedDonation[]);
-        setCampaigns(campaignData as Campaign[]);
-        setKiosks(kiosksData);
-        setError(null);
-      } catch (err) {
-        setError("Failed to load data. Please try again.");
-        console.error("Error fetching data:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAllData();
+      const [donationData, campaignData] = await Promise.all([
+        getDonations(userSession.user.organizationId || ''),
+        getAllCampaigns(userSession.user.organizationId || '')
+      ]);
+      setDonations(donationData as FetchedDonation[]);
+      setCampaigns(campaignData as Campaign[]);
+      setKiosks(kiosksData);
+      setError(null);
+    } catch (err) {
+      setError("Failed to load data. Please try again.");
+      console.error("Error fetching data:", err);
+    } finally {
+      setLoading(false);
+    }
   }, [userSession.user.organizationId]);
+
+  useEffect(() => {
+    fetchAllData();
+  }, [fetchAllData]);
 
   const campaignMap = useMemo(() => {
     return campaigns.reduce((acc, campaign) => {
@@ -353,6 +354,18 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
             config={searchFilterConfig}
             filterValues={filterValues}
             onFilterChange={handleFilterChange}
+            actions={
+              <Button
+                variant="outline"
+                onClick={fetchAllData}
+                disabled={loading}
+                aria-label="Refresh"
+                className="border-[#064e3b]/20 text-[#064e3b] hover:bg-[#064e3b]/10 hover:text-[#064e3b] hover:border-[#064e3b]/30"
+              >
+                <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""} sm:mr-2`} />
+                <span className="hidden sm:inline">Refresh</span>
+              </Button>
+            }
           />
 
           {/* Modern Table Container - Desktop */}
@@ -386,9 +399,9 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                           currentSortKey={sortKey} 
                           currentSortDirection={sortDirection} 
                           onSort={handleSort}
-                          className="w-[22%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                          className="w-[24%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
                         >
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-center gap-2">
                             <User className="h-4 w-4 text-gray-500 shrink-0" />
                             <span className="whitespace-nowrap">Donor</span>
                           </div>
@@ -398,9 +411,9 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                           currentSortKey={sortKey} 
                           currentSortDirection={sortDirection} 
                           onSort={handleSort}
-                          className="w-[20%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                          className="w-[21%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
                         >
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-center gap-2">
                             <Target className="h-4 w-4 text-gray-500 shrink-0" />
                             <span className="whitespace-nowrap">Campaign</span>
                           </div>
@@ -410,7 +423,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                           currentSortKey={sortKey} 
                           currentSortDirection={sortDirection} 
                           onSort={handleSort}
-                          className="w-[14%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center"
+                          className="w-[14%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
                         >
                           <div className="flex items-center justify-center gap-2">
                             <Banknote className="h-4 w-4 text-gray-500 shrink-0" />
@@ -422,9 +435,9 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                           currentSortKey={sortKey} 
                           currentSortDirection={sortDirection} 
                           onSort={handleSort}
-                          className="w-[18%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                          className="w-[13%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
                         >
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-center gap-2">
                             <MapPin className="h-4 w-4 text-gray-500 shrink-0" />
                             <span className="whitespace-nowrap">Kiosk</span>
                           </div>
@@ -434,9 +447,9 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                           currentSortKey={sortKey} 
                           currentSortDirection={sortDirection} 
                           onSort={handleSort}
-                          className="w-[12%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                          className="w-[12%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
                         >
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-center gap-2">
                             <CheckCircle className="h-4 w-4 text-gray-500 shrink-0" />
                             <span className="whitespace-nowrap">Status</span>
                           </div>
@@ -446,9 +459,9 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                           currentSortKey={sortKey} 
                           currentSortDirection={sortDirection} 
                           onSort={handleSort}
-                          className="w-[14%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                          className="w-[14%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
                         >
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-center gap-2">
                             <CalendarDays className="h-4 w-4 text-gray-500 shrink-0" />
                             <span className="whitespace-nowrap">Date</span>
                           </div>
@@ -464,7 +477,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                           className="cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
                           onClick={() => handleViewDetails(donation)}
                         >
-                          <TableCell className="px-4 py-3">
+                          <TableCell className="px-4 py-3 text-center">
                             <div className="space-y-1 min-w-0">
                               <span className="text-sm font-medium text-gray-900 block truncate" title={donation.donorName || 'Anonymous'}>
                                 {donation.donorName || 'Anonymous'}
@@ -475,7 +488,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                             </div>
                           </TableCell>
 
-                          <TableCell className="px-4 py-3">
+                          <TableCell className="px-4 py-3 text-center">
                             <div className="space-y-1 min-w-0">
                               <p className="text-sm font-medium text-gray-900 truncate" title={campaignMap[donation.campaignId] || donation.campaignId}>
                                 {campaignMap[donation.campaignId] || donation.campaignId}
@@ -494,7 +507,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                             </p>
                           </TableCell>
 
-                          <TableCell className="px-4 py-3">
+                          <TableCell className="px-4 py-3 text-center">
                             <div className="space-y-1 min-w-0">
                               {kiosk ? (
                                 <>
@@ -511,10 +524,20 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                             </div>
                           </TableCell>
 
-                          <TableCell className="px-4 py-3 pl-6">{getStatusBadge(donation.paymentStatus)}</TableCell>
+                          <TableCell className="px-4 py-3 text-center">
+                            <div className="flex justify-center">{getStatusBadge(donation.paymentStatus)}</div>
+                          </TableCell>
 
-                          <TableCell className="px-4 py-3">
-                            <span className="text-sm text-gray-500">{donation.timestamp}</span>
+                          <TableCell className="px-4 py-3 text-center">
+                            <span className="text-sm text-gray-500">
+                              {donation.timestamp
+                                ? new Date(donation.timestamp).toLocaleDateString('en-GB', {
+                                    day: '2-digit',
+                                    month: 'short',
+                                    year: 'numeric',
+                                  })
+                                : "N/A"}
+                            </span>
                           </TableCell>
                         </TableRow>
                       );
@@ -696,8 +719,6 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                             day: '2-digit',
                             month: 'short',
                             year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
                           })
                         : "N/A"}
                     </p>
