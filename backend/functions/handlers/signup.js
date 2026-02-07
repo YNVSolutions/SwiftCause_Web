@@ -1,5 +1,6 @@
 const admin = require("firebase-admin");
 const cors = require("../middleware/cors");
+const {recaptchaSecretKey} = require("../utils/recaptcha");
 const {verifyRecaptcha} = require("../utils/recaptcha");
 
 /**
@@ -69,4 +70,5 @@ const verifySignupRecaptcha = (req, res) => {
 
 module.exports = {
   verifySignupRecaptcha,
+  recaptchaSecretKey,
 };

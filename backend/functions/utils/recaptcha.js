@@ -1,8 +1,12 @@
-const functions = require("firebase-functions");
+const {defineSecret} = require("firebase-functions/params");
 const https = require("https");
+
+// Define reCAPTCHA secret
+const recaptchaSecretKey = defineSecret("RECAPTCHA_SECRET_KEY");
 
 /**
  * Verify reCAPTCHA token with Google
+ * Must be called within a function that has recaptchaSecretKey bound
  * @param {string} token - The reCAPTCHA token from the client
  * @return {Promise<boolean>} - Returns true if verification succeeds
  */
@@ -11,8 +15,8 @@ async function verifyRecaptcha(token) {
     throw new Error("reCAPTCHA token is required");
   }
 
-  // Get secret key from environment variable (v2 compatible)
-  const secretKey = process.env.RECAPTCHA_SECRET_KEY;
+  // Get secret key from Secret Manager
+  const secretKey = recaptchaSecretKey.value();
 
   if (!secretKey) {
     console.error("RECAPTCHA_SECRET_KEY not configured");
@@ -78,4 +82,5 @@ async function verifyRecaptcha(token) {
 
 module.exports = {
   verifyRecaptcha,
+  recaptchaSecretKey,
 };

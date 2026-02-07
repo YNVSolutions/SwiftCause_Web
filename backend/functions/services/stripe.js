@@ -1,31 +1,22 @@
-const dotenv = require("dotenv");
-dotenv.config();
+const {defineSecret} = require("firebase-functions/params");
 
-// Initialize Stripe only if API key is available
-let stripe = null;
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+// Define Stripe secrets
+const stripeSecretKey = defineSecret("STRIPE_SECRET_KEY");
+const stripeWebhookSecretAccount = defineSecret("STRIPE_WEBHOOK_SECRET_ACCOUNT");
+const stripeWebhookSecretPayment = defineSecret("STRIPE_WEBHOOK_SECRET_PAYMENT");
 
-if (stripeSecretKey) {
-  stripe = require("stripe")(stripeSecretKey);
-} else {
-  console.warn("STRIPE_SECRET_KEY not found. Stripe functionality will be disabled.");
-}
-
-const getWebhookSecrets = () => ({
-  account: process.env.STRIPE_WEBHOOK_SECRET_ACCOUNT,
-  payment: process.env.STRIPE_WEBHOOK_SECRET_PAYMENT,
-});
-
-// Helper to check if Stripe is initialized
-const ensureStripeInitialized = () => {
-  if (!stripe) {
-    throw new Error("Stripe is not initialized. Please configure STRIPE_SECRET_KEY.");
-  }
-  return stripe;
+/**
+ * Get Stripe client instance
+ * Must be called within a function that has stripeSecretKey bound
+ */
+const getStripeClient = () => {
+  const Stripe = require("stripe");
+  return Stripe(stripeSecretKey.value());
 };
 
 module.exports = {
-  stripe,
-  getWebhookSecrets,
-  ensureStripeInitialized,
+  getStripeClient,
+  stripeSecretKey,
+  stripeWebhookSecretAccount,
+  stripeWebhookSecretPayment,
 };

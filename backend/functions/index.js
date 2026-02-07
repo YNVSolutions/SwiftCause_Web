@@ -1,13 +1,12 @@
-const functions = require("firebase-functions");
 const {onRequest} = require("firebase-functions/v2/https");
-const {defineSecret} = require("firebase-functions/params");
 const admin = require("firebase-admin");
 
 // Initialize Firebase Admin
 admin.initializeApp();
 
-// Define secrets for v2 functions
-const recaptchaSecretKey = defineSecret("RECAPTCHA_SECRET_KEY");
+// Import secrets from services/utils
+const {stripeSecretKey} = require("./services/stripe");
+const {recaptchaSecretKey} = require("./utils/recaptcha");
 
 // Import handlers
 const {createUser, updateUser, deleteUser} = require("./handlers/users");
@@ -25,28 +24,45 @@ const {createStripeAccountForNewOrg} = require("./handlers/triggers");
 const {verifySignupRecaptcha} = require("./handlers/signup");
 const {kioskLogin} = require("./handlers/kiosk");
 
-// Export all functions (backwards compatible)
-exports.createUser = functions.https.onRequest(createUser);
-exports.updateUser = functions.https.onRequest(updateUser);
-exports.deleteUser = functions.https.onRequest(deleteUser);
-exports.handleAccountUpdatedStripeWebhook = functions.https.onRequest(
-    handleAccountUpdatedStripeWebhook,
+// Export v2 functions with appropriate secrets
+
+// User management functions (no secrets needed - just auth)
+exports.createUser = onRequest(createUser);
+exports.updateUser = onRequest(updateUser);
+exports.deleteUser = onRequest(deleteUser);
+
+// Webhook handlers (already exported as v2 functions with secrets)
+exports.handleAccountUpdatedStripeWebhook = handleAccountUpdatedStripeWebhook;
+exports.handlePaymentCompletedStripeWebhook = handlePaymentCompletedStripeWebhook;
+
+// Payment functions (need Stripe secret)
+exports.createOnboardingLink = onRequest(
+    {secrets: [stripeSecretKey]},
+    createOnboardingLink,
 );
-exports.handlePaymentCompletedStripeWebhook = functions.https.onRequest(
-    handlePaymentCompletedStripeWebhook,
-);
-exports.createOnboardingLink = functions.https.onRequest(createOnboardingLink);
-exports.createKioskPaymentIntent = functions.https.onRequest(
+
+exports.createKioskPaymentIntent = onRequest(
+    {secrets: [stripeSecretKey]},
     createKioskPaymentIntent,
 );
-exports.createPaymentIntent = functions.https.onRequest(createPaymentIntent);
-exports.createExpressDashboardLink = functions.https.onRequest(
+
+exports.createPaymentIntent = onRequest(
+    {secrets: [stripeSecretKey]},
+    createPaymentIntent,
+);
+
+exports.createExpressDashboardLink = onRequest(
+    {secrets: [stripeSecretKey]},
     createExpressDashboardLink,
 );
-exports.createStripeAccountForNewOrg = createStripeAccountForNewOrg;
-exports.kioskLogin = functions.https.onRequest(kioskLogin);
 
-// Export v2 function with secret
+// Firestore trigger (already exported as v2 function with secrets)
+exports.createStripeAccountForNewOrg = createStripeAccountForNewOrg;
+
+// Kiosk login (no secrets needed - just Firestore)
+exports.kioskLogin = onRequest(kioskLogin);
+
+// Signup verification (needs reCAPTCHA secret)
 exports.verifySignupRecaptcha = onRequest(
     {secrets: [recaptchaSecretKey]},
     verifySignupRecaptcha,

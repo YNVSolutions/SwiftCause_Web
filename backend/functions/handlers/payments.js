@@ -1,5 +1,5 @@
 const admin = require("firebase-admin");
-const {stripe, ensureStripeInitialized} = require("../services/stripe");
+const {getStripeClient} = require("../services/stripe");
 const {verifyAuth} = require("../middleware/auth");
 const cors = require("../middleware/cors");
 
@@ -18,8 +18,8 @@ const ALLOWED_ORIGINS = new Set([
 const createOnboardingLink = (req, res) => {
   cors(req, res, async () => {
     try {
-      // Ensure Stripe is initialized
-      const stripeClient = ensureStripeInitialized();
+      // Get Stripe client
+      const stripe = getStripeClient();
       
       // Verify authentication
       await verifyAuth(req);
@@ -51,7 +51,7 @@ const createOnboardingLink = (req, res) => {
         return res.status(400).send({error: "Invalid origin"});
       }
 
-      const accountLink = await stripeClient.accountLinks.create({
+      const accountLink = await stripe.accountLinks.create({
         account: accountId,
         type: "account_onboarding",
         refresh_url: `${baseUrl}/admin`,
@@ -74,8 +74,8 @@ const createOnboardingLink = (req, res) => {
 const createKioskPaymentIntent = (req, res) => {
   cors(req, res, async () => {
     try {
-      // Ensure Stripe is initialized
-      const stripeClient = ensureStripeInitialized();
+      // Get Stripe client
+      const stripe = getStripeClient();
       
       const {
         amount,
@@ -118,7 +118,7 @@ const createKioskPaymentIntent = (req, res) => {
       }
 
       // 1. Create or reuse a Customer
-      const customer = await stripeClient.customers.create({
+      const customer = await stripe.customers.create({
         email: donor?.email || undefined,
         name: donor?.name || undefined,
         metadata: {...metadata, campaignId},
@@ -128,7 +128,7 @@ const createKioskPaymentIntent = (req, res) => {
 
       if (!frequency || frequency === "once") {
         // One-time donation
-        const paymentIntent = await stripeClient.paymentIntents.create({
+        const paymentIntent = await stripe.paymentIntents.create({
           amount,
           currency,
           customer: customer.id,
@@ -146,15 +146,15 @@ const createKioskPaymentIntent = (req, res) => {
         }
 
         // Attach payment method to customer and set as default
-        await stripeClient.paymentMethods.attach(paymentMethodId, {
+        await stripe.paymentMethods.attach(paymentMethodId, {
           customer: customer.id,
         });
-        await stripeClient.customers.update(customer.id, {
+        await stripe.customers.update(customer.id, {
           invoice_settings: {default_payment_method: paymentMethodId},
         });
 
         // Create price for subscription
-        const price = await stripeClient.prices.create({
+        const price = await stripe.prices.create({
           unit_amount: amount,
           currency,
           recurring: {interval: frequency}, // "month" or "year"
@@ -164,7 +164,7 @@ const createKioskPaymentIntent = (req, res) => {
         });
 
         // Create subscription with the default payment method
-        const subscription = await stripeClient.subscriptions.create({
+        const subscription = await stripe.subscriptions.create({
           customer: customer.id,
           items: [{price: price.id}],
           default_payment_method: paymentMethodId,
@@ -230,8 +230,8 @@ const createKioskPaymentIntent = (req, res) => {
  */
 const createPaymentIntent = async (req, res) => {
   try {
-    // Ensure Stripe is initialized
-    const stripeClient = ensureStripeInitialized();
+    // Get Stripe client
+    const stripe = getStripeClient();
     
     const auth = await verifyAuth(req);
     const uid = auth.uid;
@@ -246,7 +246,7 @@ const createPaymentIntent = async (req, res) => {
     if (userDoc.exists && userDoc.data().stripeCustomerId) {
       customerId = userDoc.data().stripeCustomerId;
     } else {
-      const customer = await stripeClient.customers.create({
+      const customer = await stripe.customers.create({
         email: email,
         name: name,
         metadata: {firebaseUID: uid},
@@ -256,7 +256,7 @@ const createPaymentIntent = async (req, res) => {
       await userRef.set({stripeCustomerId: customerId}, {merge: true});
     }
 
-    const ephemeralKey = await stripeClient.ephemeralKeys.create(
+    const ephemeralKey = await stripe.ephemeralKeys.create(
         {customer: customerId},
         {apiVersion: "2022-11-15"},
     );
@@ -275,7 +275,7 @@ const createPaymentIntent = async (req, res) => {
 
     const {campaignId, donorId, donorName, isGiftAid} = metadata;
 
-    const paymentIntent = await stripeClient.paymentIntents.create({
+    const paymentIntent = await stripe.paymentIntents.create({
       amount,
       currency,
       customer: customerId,
@@ -315,15 +315,15 @@ const createPaymentIntent = async (req, res) => {
 const createExpressDashboardLink = (req, res) => {
   cors(req, res, async () => {
     try {
-      // Ensure Stripe is initialized
-      const stripeClient = ensureStripeInitialized();
+      // Get Stripe client
+      const stripe = getStripeClient();
       
       const {accountId} = req.body;
       if (!accountId) {
         return res.status(400).json({error: "accountId is required"});
       }
 
-      const loginLink = await stripeClient.accounts.createLoginLink(accountId);
+      const loginLink = await stripe.accounts.createLoginLink(accountId);
       res.json({url: loginLink.url});
     } catch (err) {
       console.error("Error creating Express dashboard link:", err);
