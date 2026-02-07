@@ -547,7 +547,7 @@ export function AdminLayout({
       console.log("Stripe Account ID:", stripeAccountId);
 
       // Make POST request to get the dashboard link
-      const response = await fetch("https://createexpressdashboardlink-j2f5w4qwxq-uc.a.run.app", {
+      const response = await fetch(`https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/createExpressDashboardLink`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
