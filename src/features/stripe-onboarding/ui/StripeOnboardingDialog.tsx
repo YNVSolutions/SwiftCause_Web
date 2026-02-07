@@ -53,7 +53,7 @@ export function StripeOnboardingDialog({
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
       const response = await fetch(
-        'https://us-central1-swiftcause-app.cloudfunctions.net/createOnboardingLink',
+        `https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/createOnboardingLink`,
         {
           method: 'POST',
           headers: {
