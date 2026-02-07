@@ -106,8 +106,11 @@ function AdminSidebar({
   handleStripeAccountClick: () => void;
   isLoadingStripe: boolean;
 }) {
-  const { state } = useSidebar();
-  const isCollapsed = state === "collapsed";
+  const { state, isMobile } = useSidebar();
+  
+  // On mobile, always show expanded sidebar (with text)
+  // On desktop, respect the collapsed state
+  const isCollapsed = !isMobile && state === "collapsed";
 
   return (
     <Sidebar 

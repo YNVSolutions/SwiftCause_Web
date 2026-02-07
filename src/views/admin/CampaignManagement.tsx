@@ -2409,20 +2409,24 @@ const CampaignManagement = ({
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                  onSelect={() => handleEditClick(campaign)}
-                                  className="flex items-center gap-2"
-                                >
-                                  <FaEdit className="h-4 w-4" />
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onSelect={() => handleDeleteClick(campaign)}
-                                  className="flex items-center gap-2 text-red-600 focus:text-red-600"
-                                >
-                                  <FaTrashAlt className="h-4 w-4" />
-                                  Delete
-                                </DropdownMenuItem>
+                                {hasPermission('edit_campaign') && (
+                                  <DropdownMenuItem
+                                    onSelect={() => handleEditClick(campaign)}
+                                    className="flex items-center gap-2"
+                                  >
+                                    <FaEdit className="h-4 w-4" />
+                                    Edit
+                                  </DropdownMenuItem>
+                                )}
+                                {hasPermission('delete_campaign') && (
+                                  <DropdownMenuItem
+                                    onSelect={() => handleDeleteClick(campaign)}
+                                    className="flex items-center gap-2 text-red-600 focus:text-red-600"
+                                  >
+                                    <FaTrashAlt className="h-4 w-4" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                )}
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </div>
@@ -2616,20 +2620,24 @@ const CampaignManagement = ({
                                     </Button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
-                                    <DropdownMenuItem
-                                      onSelect={() => handleEditClick(campaign)}
-                                      className="flex items-center gap-2"
-                                    >
-                                      <FaEdit className="h-4 w-4" />
-                                      Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onSelect={() => handleDeleteClick(campaign)}
-                                      className="flex items-center gap-2 text-red-600 focus:text-red-600"
-                                    >
-                                      <FaTrashAlt className="h-4 w-4" />
-                                      Delete
-                                    </DropdownMenuItem>
+                                    {hasPermission('edit_campaign') && (
+                                      <DropdownMenuItem
+                                        onSelect={() => handleEditClick(campaign)}
+                                        className="flex items-center gap-2"
+                                      >
+                                        <FaEdit className="h-4 w-4" />
+                                        Edit
+                                      </DropdownMenuItem>
+                                    )}
+                                    {hasPermission('delete_campaign') && (
+                                      <DropdownMenuItem
+                                        onSelect={() => handleDeleteClick(campaign)}
+                                        className="flex items-center gap-2 text-red-600 focus:text-red-600"
+                                      >
+                                        <FaTrashAlt className="h-4 w-4" />
+                                        Delete
+                                      </DropdownMenuItem>
+                                    )}
                                   </DropdownMenuContent>
                                 </DropdownMenu>
                               </TableCell>
@@ -2764,17 +2772,19 @@ const CampaignManagement = ({
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Button
-                  variant="outline"
-                  className="h-11 rounded-full"
-                  onClick={() => {
-                    if (!selectedCampaign) return;
-                    handleEditClick(selectedCampaign);
-                    setIsOverviewOpen(false);
-                  }}
-                >
-                  Edit Details
-                </Button>
+                {hasPermission('edit_campaign') && (
+                  <Button
+                    variant="outline"
+                    className="h-11 rounded-full"
+                    onClick={() => {
+                      if (!selectedCampaign) return;
+                      handleEditClick(selectedCampaign);
+                      setIsOverviewOpen(false);
+                    }}
+                  >
+                    Edit Details
+                  </Button>
+                )}
                 {(() => {
                   const status = (selectedCampaign?.status ?? "").toString().toLowerCase();
                   const isCompleted = status === "completed";
@@ -2786,7 +2796,7 @@ const CampaignManagement = ({
                         isPaused
                           ? "bg-emerald-700 hover:bg-emerald-800"
                           : "bg-red-500 hover:bg-red-600"
-                      }`}
+                      } ${!hasPermission('edit_campaign') ? 'col-span-2' : ''}`}
                       onClick={isPaused ? handleResumeCampaign : handlePauseCampaign}
                       disabled={!selectedCampaign || isCompleted}
                     >
