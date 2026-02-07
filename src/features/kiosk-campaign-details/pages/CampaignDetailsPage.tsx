@@ -265,13 +265,8 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
             <div className="space-y-1.5 rounded-xl border border-gray-200/50 bg-gray-100/50 px-3.5 py-2.5">
               <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Community support</p>
               <div className="flex justify-between items-center">
-<<<<<<< HEAD
-                <span className="text-[15px] text-slate-900 font-medium">
-                  {formatAmount(campaign.raised || 0)} / {formatAmount(campaign.goal)}
-=======
                 <span className="text-sm text-[#0A0A0A] font-medium">
                   {formatAmount(campaign.raised || 0)} / {formatGoal(campaign.goal)}
->>>>>>> fix/ui-data
                 </span>
                 <span className="text-[15px] text-[#0E8F5A] font-semibold">{Math.round(progress)}%</span>
               </div>
@@ -352,13 +347,8 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
           {/* Progress Section */}
           <div className="space-y-1.5 mb-4 rounded-xl border border-gray-200/50 bg-gray-100/50 px-3.5 py-2">
             <div className="flex justify-between items-center">
-<<<<<<< HEAD
-              <span className="text-[15px] text-slate-900 font-medium">
-                {formatAmount(campaign.raised || 0)} / {formatAmount(campaign.goal)}
-=======
               <span className="text-sm text-[#0A0A0A] font-medium">
                 {formatAmount(campaign.raised || 0)} / {formatGoal(campaign.goal)}
->>>>>>> fix/ui-data
               </span>
               <span className="text-[15px] text-[#0E8F5A] font-medium">{Math.round(progress)}%</span>
             </div>
@@ -418,3 +408,4 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
     </div>
   );
 };
+

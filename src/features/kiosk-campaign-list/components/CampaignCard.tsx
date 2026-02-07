@@ -50,56 +50,38 @@ export const CampaignCard: React.FC<CampaignCardProps> = ({
           {campaign.title}
         </h2>
 
-<<<<<<< HEAD
-        {/* Progress Section - De-emphasized */}
         <div className="flex-1 flex flex-col justify-end">
           {/* Progress Info */}
-          <div className="flex items-center justify-between text-xs mb-1.5">
-            <span className="font-medium text-slate-500">
-              Raised: {formatAmount(campaign.raised || 0)}
+          <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
+            <span className="font-medium text-gray-900">
+              {formatRaised(campaign.raised || 0)}
             </span>
-            <span className="text-[#0E8F5A] font-bold text-sm">{Math.round(progress)}%</span>
+            <span className="text-xs text-gray-500">
+              Goal {formatGoal(campaign.goal)}
+            </span>
+            <span className="text-green-700 font-medium">{Math.round(progress)}%</span>
           </div>
-=======
-        {/* Progress Info */}
-        <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
-          <span className="font-medium text-gray-900">
-            {formatRaised(campaign.raised || 0)}
-          </span>
-          <span className="text-xs text-gray-500">
-            Goal {formatGoal(campaign.goal)}
-          </span>
-          <span className="text-green-700 font-medium">{Math.round(progress)}%</span>
-        </div>
->>>>>>> fix/ui-data
 
           {/* Progress Bar */}
-          <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
+          <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
             <div
               className="bg-[#0E8F5A] h-2 rounded-full transition-all duration-300"
               style={{ width: `${progress}%` }}
             />
           </div>
 
-<<<<<<< HEAD
-          {/* Target Amount - De-emphasized */}
-          <p className="text-xs text-slate-400 mb-4">
-            Target: {formatAmount(campaign.goal)}
-          </p>
-=======
-        {/* Amount Buttons */}
-        <div className="grid grid-cols-3 gap-2 mb-5">
-          {top3Amounts.map((amount, index) => (
-            <button
-              key={index}
-              onClick={(e) => handleAmountClick(e, amount)}
-              className="h-11 rounded-lg bg-green-50 text-green-700 border border-green-200 font-medium text-sm hover:bg-green-100 hover:border-green-300 transition-colors duration-200"
-            >
-              {formatPredefined(amount)}
-            </button>
-          ))}
-        </div>
->>>>>>> fix/ui-data
+          {/* Amount Buttons */}
+          <div className="grid grid-cols-3 gap-2 mb-5">
+            {top3Amounts.map((amount, index) => (
+              <button
+                key={index}
+                onClick={(e) => handleAmountClick(e, amount)}
+                className="h-11 rounded-lg bg-green-50 text-green-700 border border-green-200 font-medium text-sm hover:bg-green-100 hover:border-green-300 transition-colors duration-200"
+              >
+                {formatPredefined(amount)}
+              </button>
+            ))}
+          </div>
 
           {/* Donate Button - Dominant CTA */}
           <button
