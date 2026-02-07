@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import {
   Plus, Search, UserCog, Users, Shield, Activity,
   Loader2, AlertCircle, Pencil, Trash2, AlertTriangle, MoreVertical, X, Check,
-  LayoutDashboard, Megaphone, Monitor, DollarSign, Settings, Info, RefreshCw   
+  LayoutDashboard, Megaphone, Monitor, DollarSign, Settings, Info, RefreshCw, Eye, EyeOff   
 } from 'lucide-react';
 import { Skeleton } from "../../shared/ui/skeleton";
 import { Ghost } from "lucide-react";
@@ -837,6 +837,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
 
 function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateUser, userSession, isCreating }: any) {
     const [errors, setErrors] = useState<{username?: string; email?: string; password?: string}>({});
+    const [showPassword, setShowPassword] = useState(false);
 
     const validateAndCreate = () => {
         const newErrors: {username?: string; email?: string; password?: string} = {};
@@ -945,22 +946,34 @@ function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateU
                     <div className="grid grid-cols-4 items-start gap-4">
                         <Label htmlFor="password" className="text-right pt-3">Password</Label>
                         <div className="col-span-3">
-                            <div className={`border rounded-lg focus-within:ring-1 transition-colors ${
+                            <div className={`border rounded-lg focus-within:ring-1 transition-colors relative ${
                                 errors.password 
                                     ? 'border-red-500 focus-within:border-red-500 focus-within:ring-red-100' 
                                     : 'border-gray-300 focus-within:border-indigo-500 focus-within:ring-indigo-100'
                             }`}>
                                 <Input 
                                     id="password" 
-                                    type="password" 
+                                    type={showPassword ? "text" : "password"}
                                     value={newUser.password} 
                                     onChange={(e) => {
                                         onUserChange({ ...newUser, password: e.target.value });
                                         if (errors.password) setErrors({...errors, password: undefined});
                                     }}
-                                    className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
+                                    className="w-full h-12 px-3 pr-10 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
                                     placeholder="Enter password"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                                    tabIndex={-1}
+                                >
+                                    {showPassword ? (
+                                        <EyeOff className="w-4 h-4" />
+                                    ) : (
+                                        <Eye className="w-4 h-4" />
+                                    )}
+                                </button>
                             </div>
                             {errors.password && (
                                 <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
