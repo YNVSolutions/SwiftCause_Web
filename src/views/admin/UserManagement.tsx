@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import {
   Plus, Search, UserCog, Users, Shield, Activity,
   Loader2, AlertCircle, Pencil, Trash2, AlertTriangle, MoreVertical, X, Check,
-  LayoutDashboard, Megaphone, Monitor, DollarSign, Settings, Info   
+  LayoutDashboard, Megaphone, Monitor, DollarSign, Settings, Info, RefreshCw, Eye, EyeOff   
 } from 'lucide-react';
 import { Skeleton } from "../../shared/ui/skeleton";
 import { Ghost } from "lucide-react";
@@ -162,6 +162,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
     const [roleFilter, setRoleFilter] = useState('all');
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
+    const [isCreatingUser, setIsCreatingUser] = useState(false);
     const [newUser, setNewUser] = useState({
         username: '', email: '', password: '', role: 'viewer' as UserRole, permissions: [] as Permission[],
     });
@@ -195,12 +196,16 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
             setDialogMessage("Username, email, and password are required.");
             return;
         }
+        
+        setIsCreatingUser(true);
         try {
             await addUser({ ...newUser, organizationId: userSession.user.organizationId! });
             setCreateDialogOpen(false);
             setNewUser({ username: '', email: '', password: '', role: 'viewer', permissions: [] });
         } catch (err) {
             setDialogMessage(`Error: ${(err as Error).message}`);
+        } finally {
+            setIsCreatingUser(false);
         }
     };
 
@@ -621,7 +626,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
             </Card>
             </main>
 
-            <CreateUserDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} newUser={newUser} onUserChange={setNewUser} onCreateUser={handleCreateUser} userSession={userSession} />
+            <CreateUserDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} newUser={newUser} onUserChange={setNewUser} onCreateUser={handleCreateUser} userSession={userSession} isCreating={isCreatingUser} />
             {editingUser && <EditUserDialog user={editingUser} onUpdate={handleUpdateUser} onClose={() => setEditingUser(null)} userSession={userSession} />}
             
             {/* Delete Confirmation Dialog */}
@@ -830,7 +835,36 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
     );
 }
 
-function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateUser, userSession }: any) {
+function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateUser, userSession, isCreating }: any) {
+    const [errors, setErrors] = useState<{username?: string; email?: string; password?: string}>({});
+    const [showPassword, setShowPassword] = useState(false);
+
+    const validateAndCreate = () => {
+        const newErrors: {username?: string; email?: string; password?: string} = {};
+        
+        if (!newUser.username || newUser.username.trim() === '') {
+            newErrors.username = 'Username is required';
+        }
+        
+        if (!newUser.email || newUser.email.trim() === '') {
+            newErrors.email = 'Email is required';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newUser.email)) {
+            newErrors.email = 'Please enter a valid email address';
+        }
+        
+        if (!newUser.password || newUser.password.trim() === '') {
+            newErrors.password = 'Password is required';
+        } else if (newUser.password.length < 6) {
+            newErrors.password = 'Password must be at least 6 characters';
+        }
+        
+        setErrors(newErrors);
+        
+        if (Object.keys(newErrors).length === 0) {
+            onCreateUser();
+        }
+    };
+
     const onPermissionChange = (permission: Permission, checked: boolean) => {
         const currentPermissions = newUser.permissions || [];
         const newPermissions = checked ? [...currentPermissions, permission] : currentPermissions.filter((p: Permission) => p !== permission);
@@ -854,48 +888,99 @@ function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateU
             <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader><DialogTitle>Create New User</DialogTitle><DialogDescription>Fill in the details to add a new user to your organization.</DialogDescription></DialogHeader>
                 <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="username" className="text-right">Username</Label>
+                    <div className="grid grid-cols-4 items-start gap-4">
+                        <Label htmlFor="username" className="text-right pt-3">Username</Label>
                         <div className="col-span-3">
-                            <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                            <div className={`border rounded-lg focus-within:ring-1 transition-colors ${
+                                errors.username 
+                                    ? 'border-red-500 focus-within:border-red-500 focus-within:ring-red-100' 
+                                    : 'border-gray-300 focus-within:border-indigo-500 focus-within:ring-indigo-100'
+                            }`}>
                                 <Input 
                                     id="username" 
                                     value={newUser.username} 
-                                    onChange={(e) => onUserChange({ ...newUser, username: e.target.value })} 
+                                    onChange={(e) => {
+                                        onUserChange({ ...newUser, username: e.target.value });
+                                        if (errors.username) setErrors({...errors, username: undefined});
+                                    }}
                                     className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
                                     placeholder="Enter username"
                                 />
                             </div>
+                            {errors.username && (
+                                <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                                    <AlertCircle className="w-3 h-3" />
+                                    {errors.username}
+                                </p>
+                            )}
                         </div>
                     </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="email" className="text-right">Email</Label>
+                    <div className="grid grid-cols-4 items-start gap-4">
+                        <Label htmlFor="email" className="text-right pt-3">Email</Label>
                         <div className="col-span-3">
-                            <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                            <div className={`border rounded-lg focus-within:ring-1 transition-colors ${
+                                errors.email 
+                                    ? 'border-red-500 focus-within:border-red-500 focus-within:ring-red-100' 
+                                    : 'border-gray-300 focus-within:border-indigo-500 focus-within:ring-indigo-100'
+                            }`}>
                                 <Input 
                                     id="email" 
                                     type="email" 
                                     value={newUser.email} 
-                                    onChange={(e) => onUserChange({ ...newUser, email: e.target.value })} 
+                                    onChange={(e) => {
+                                        onUserChange({ ...newUser, email: e.target.value });
+                                        if (errors.email) setErrors({...errors, email: undefined});
+                                    }}
                                     className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
                                     placeholder="Enter email address"
                                 />
                             </div>
+                            {errors.email && (
+                                <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                                    <AlertCircle className="w-3 h-3" />
+                                    {errors.email}
+                                </p>
+                            )}
                         </div>
                     </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="password" className="text-right">Password</Label>
+                    <div className="grid grid-cols-4 items-start gap-4">
+                        <Label htmlFor="password" className="text-right pt-3">Password</Label>
                         <div className="col-span-3">
-                            <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
+                            <div className={`border rounded-lg focus-within:ring-1 transition-colors relative ${
+                                errors.password 
+                                    ? 'border-red-500 focus-within:border-red-500 focus-within:ring-red-100' 
+                                    : 'border-gray-300 focus-within:border-indigo-500 focus-within:ring-indigo-100'
+                            }`}>
                                 <Input 
                                     id="password" 
-                                    type="password" 
+                                    type={showPassword ? "text" : "password"}
                                     value={newUser.password} 
-                                    onChange={(e) => onUserChange({ ...newUser, password: e.target.value })} 
-                                    className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
+                                    onChange={(e) => {
+                                        onUserChange({ ...newUser, password: e.target.value });
+                                        if (errors.password) setErrors({...errors, password: undefined});
+                                    }}
+                                    className="w-full h-12 px-3 pr-10 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent"
                                     placeholder="Enter password"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                                    tabIndex={-1}
+                                >
+                                    {showPassword ? (
+                                        <EyeOff className="w-4 h-4" />
+                                    ) : (
+                                        <Eye className="w-4 h-4" />
+                                    )}
+                                </button>
                             </div>
+                            {errors.password && (
+                                <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                                    <AlertCircle className="w-3 h-3" />
+                                    {errors.password}
+                                </p>
+                            )}
                         </div>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
@@ -918,68 +1003,234 @@ function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateU
                         </div>
                     </div>
                     <div>
-                        <Label className="font-semibold">Permissions</Label>
-                        <div className="grid grid-cols-2 gap-2 mt-2 p-4 border border-gray-300 rounded-lg max-h-40 overflow-y-auto">
-                            {allPermissions.map((p) => {
-                                // Campaign permissions dependency
-                                const isCampaignPermission = ['create_campaign', 'edit_campaign', 'delete_campaign'].includes(p);
-                                const hasViewCampaigns = newUser.permissions.includes('view_campaigns');
-                                const campaignDisabled = isCampaignPermission && !hasViewCampaigns;
-                                
-                                // Kiosk permissions dependency
-                                const isKioskPermission = ['create_kiosk', 'edit_kiosk', 'delete_kiosk'].includes(p);
-                                const hasViewKiosks = newUser.permissions.includes('view_kiosks');
-                                const kioskDisabled = isKioskPermission && !hasViewKiosks;
-                                
-                                // Assign campaigns special logic - needs either view_campaigns OR view_kiosks
-                                const isAssignCampaigns = p === 'assign_campaigns';
-                                const assignDisabled = isAssignCampaigns && !hasViewCampaigns && !hasViewKiosks;
-                                
-                                // User permissions dependency
-                                const isUserPermission = ['create_user', 'edit_user', 'delete_user'].includes(p);
-                                const hasViewUsers = newUser.permissions.includes('view_users');
-                                const userDisabled = isUserPermission && !hasViewUsers;
-                                
-                                const isDisabled = campaignDisabled || assignDisabled || kioskDisabled || userDisabled;
-                                
-                                let tooltipMessage = '';
-                                if (campaignDisabled) tooltipMessage = 'View campaigns is mandatory to create/edit/delete campaigns';
-                                if (assignDisabled) tooltipMessage = 'Either select view campaigns or view kiosks to enable assign campaigns';
-                                if (kioskDisabled) tooltipMessage = 'View kiosks is mandatory to create/edit/delete kiosks';
-                                if (userDisabled) tooltipMessage = 'View users is mandatory to create/edit/delete users';
-                                
-                                return (
-                                    <TooltipProvider key={p}>
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <div className={`flex items-center space-x-2 ${isDisabled ? 'opacity-50' : ''}`}>
-                                                    <Checkbox 
-                                                        id={`create-${p}`} 
-                                                        checked={newUser.permissions.includes(p)} 
-                                                        onCheckedChange={(c) => onPermissionChange(p, !!c)}
-                                                        disabled={isDisabled}
-                                                    />
-                                                    <Label 
-                                                        htmlFor={`create-${p}`} 
-                                                        className={`text-sm font-normal capitalize ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
-                                                    >
-                                                        {p.replace(/_/g, ' ')}
-                                                    </Label>
-                                                </div>
-                                            </TooltipTrigger>
-                                            {isDisabled && (
-                                                <TooltipContent>
-                                                    <p className="text-xs">{tooltipMessage}</p>
-                                                </TooltipContent>
-                                            )}
-                                        </Tooltip>
-                                    </TooltipProvider>
-                                );
-                            })}
+                        <div className="flex items-center justify-between mb-2">
+                            <Label className="text-sm font-semibold text-slate-700 uppercase tracking-wider">
+                                Permissions
+                            </Label>
+                            <span className="text-xs text-slate-400">
+                                {allPermissions.length} total available
+                            </span>
+                        </div>
+                        
+                        <div className="border border-slate-200 rounded-xl bg-slate-50/50">
+                            <div className="p-5 max-h-80 overflow-y-auto space-y-6">
+                                {/* User Permissions */}
+                                {(() => {
+                                    const userPerms = allPermissions.filter(p => p.includes('user') || p.includes('permission'));
+                                    if (userPerms.length === 0) return null;
+                                    const hasViewUsers = newUser.permissions.includes('view_users');
+                                    
+                                    return (
+                                        <div>
+                                            <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3">Users</h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                                                {userPerms.map((p) => {
+                                                    const isUserPermission = ['create_user', 'edit_user', 'delete_user'].includes(p);
+                                                    const userDisabled = isUserPermission && !hasViewUsers;
+                                                    return (
+                                                        <div key={p} className="flex items-center justify-between">
+                                                            <div className={`flex items-center space-x-3 ${userDisabled ? 'opacity-50' : ''}`}>
+                                                                <Checkbox 
+                                                                    id={`create-${p}`} 
+                                                                    checked={newUser.permissions.includes(p)} 
+                                                                    onCheckedChange={(c) => onPermissionChange(p, !!c)}
+                                                                    disabled={userDisabled}
+                                                                    className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                                                                />
+                                                                <Label 
+                                                                    htmlFor={`create-${p}`} 
+                                                                    className={`text-sm text-slate-700 font-medium ${userDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                                                                >
+                                                                    {p.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                                </Label>
+                                                            </div>
+                                                            {userDisabled && (
+                                                                <TooltipProvider>
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <button type="button" className="text-slate-400 hover:text-indigo-600">
+                                                                                <Info className="w-4 h-4" />
+                                                                            </button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>
+                                                                            <p className="text-xs">View users is mandatory to create/edit/delete users</p>
+                                                                        </TooltipContent>
+                                                                    </Tooltip>
+                                                                </TooltipProvider>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+
+                                {/* Campaign Permissions */}
+                                {(() => {
+                                    const campaignPerms = allPermissions.filter(p => p.includes('campaign') || p === 'assign_campaigns');
+                                    if (campaignPerms.length === 0) return null;
+                                    const hasViewCampaigns = newUser.permissions.includes('view_campaigns');
+                                    const hasViewKiosks = newUser.permissions.includes('view_kiosks');
+                                    
+                                    return (
+                                        <div>
+                                            <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3">Campaigns</h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                                                {campaignPerms.map((p) => {
+                                                    const isCampaignPermission = ['create_campaign', 'edit_campaign', 'delete_campaign'].includes(p);
+                                                    const isAssignCampaigns = p === 'assign_campaigns';
+                                                    
+                                                    const campaignDisabled = isCampaignPermission && !hasViewCampaigns;
+                                                    const assignDisabled = isAssignCampaigns && !hasViewCampaigns && !hasViewKiosks;
+                                                    const isDisabled = campaignDisabled || assignDisabled;
+                                                    
+                                                    let tooltipMessage = '';
+                                                    if (campaignDisabled) {
+                                                        tooltipMessage = 'View campaigns is mandatory to create/edit/delete campaigns';
+                                                    } else if (assignDisabled) {
+                                                        tooltipMessage = 'Either select view campaigns or view kiosks to enable assign campaigns';
+                                                    }
+                                                    return (
+                                                        <div key={p} className="flex items-center justify-between">
+                                                            <div className={`flex items-center space-x-3 ${isDisabled ? 'opacity-50' : ''}`}>
+                                                                <Checkbox 
+                                                                    id={`create-${p}`} 
+                                                                    checked={newUser.permissions.includes(p)} 
+                                                                    onCheckedChange={(c) => onPermissionChange(p, !!c)}
+                                                                    disabled={isDisabled}
+                                                                    className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                                                                />
+                                                                <Label 
+                                                                    htmlFor={`create-${p}`} 
+                                                                    className={`text-sm text-slate-700 font-medium ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                                                                >
+                                                                    {p.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                                </Label>
+                                                            </div>
+                                                            {isDisabled && (
+                                                                <TooltipProvider>
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <button type="button" className="text-slate-400 hover:text-indigo-600">
+                                                                                <Info className="w-4 h-4" />
+                                                                            </button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>
+                                                                            <p className="text-xs">{tooltipMessage}</p>
+                                                                        </TooltipContent>
+                                                                    </Tooltip>
+                                                                </TooltipProvider>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+
+                                {/* Kiosk Permissions */}
+                                {(() => {
+                                    const kioskPerms = allPermissions.filter(p => p.includes('kiosk'));
+                                    if (kioskPerms.length === 0) return null;
+                                    const hasViewKiosks = newUser.permissions.includes('view_kiosks');
+                                    
+                                    return (
+                                        <div>
+                                            <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3">Kiosks</h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                                                {kioskPerms.map((p) => {
+                                                    const isKioskPermission = ['create_kiosk', 'edit_kiosk', 'delete_kiosk'].includes(p);
+                                                    const kioskDisabled = isKioskPermission && !hasViewKiosks;
+                                                    return (
+                                                        <div key={p} className="flex items-center justify-between">
+                                                            <div className={`flex items-center space-x-3 ${kioskDisabled ? 'opacity-50' : ''}`}>
+                                                                <Checkbox 
+                                                                    id={`create-${p}`} 
+                                                                    checked={newUser.permissions.includes(p)} 
+                                                                    onCheckedChange={(c) => onPermissionChange(p, !!c)}
+                                                                    disabled={kioskDisabled}
+                                                                    className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                                                                />
+                                                                <Label 
+                                                                    htmlFor={`create-${p}`} 
+                                                                    className={`text-sm text-slate-700 font-medium ${kioskDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                                                                >
+                                                                    {p.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                                </Label>
+                                                            </div>
+                                                            {kioskDisabled && (
+                                                                <TooltipProvider>
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <button type="button" className="text-slate-400 hover:text-indigo-600">
+                                                                                <Info className="w-4 h-4" />
+                                                                            </button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>
+                                                                            <p className="text-xs">View kiosks is mandatory to create/edit/delete kiosks</p>
+                                                                        </TooltipContent>
+                                                                    </Tooltip>
+                                                                </TooltipProvider>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+
+                                {/* Donation Permissions */}
+                                {(() => {
+                                    const donationPerms = allPermissions.filter(p => p.includes('donation'));
+                                    if (donationPerms.length === 0) return null;
+                                    return (
+                                        <div>
+                                            <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3">Donations</h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                                                {donationPerms.map((p) => (
+                                                    <div key={p} className="flex items-center justify-between">
+                                                        <div className="flex items-center space-x-3">
+                                                            <Checkbox 
+                                                                id={`create-${p}`} 
+                                                                checked={newUser.permissions.includes(p)} 
+                                                                onCheckedChange={(c) => onPermissionChange(p, !!c)}
+                                                                className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                                                            />
+                                                            <Label 
+                                                                htmlFor={`create-${p}`} 
+                                                                className="text-sm text-slate-700 font-medium cursor-pointer"
+                                                            >
+                                                                {p.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                            </Label>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+                            </div>
                         </div>
                     </div>
                 </div>
-                <DialogFooter><Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button><Button onClick={onCreateUser}>Create User</Button></DialogFooter>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isCreating}>
+                        Cancel
+                    </Button>
+                    <Button onClick={validateAndCreate} disabled={isCreating}>
+                        {isCreating ? (
+                            <>
+                                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                                Creating...
+                            </>
+                        ) : (
+                            'Create User'
+                        )}
+                    </Button>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     );

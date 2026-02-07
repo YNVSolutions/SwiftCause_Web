@@ -1151,7 +1151,7 @@ export function CampaignForm({
                 </Button>
                 <Button
                   onClick={onSubmit}
-                  disabled={!campaignData.title || !campaignData.description || !campaignData.goal || isSubmitting || isSavingDraft}
+                  disabled={!campaignData.title || !campaignData.description || campaignData.goal <= 0 || isSubmitting || isSavingDraft}
                   className="bg-black hover:bg-gray-800 text-white px-6 w-full sm:w-auto h-12 sm:h-auto"
                 >
                   {isSubmitting ? (

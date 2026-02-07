@@ -1843,7 +1843,7 @@ const CampaignManagement = ({
         title: editCampaignFormData.title,
         description: editCampaignFormData.briefOverview,
         longDescription: editCampaignFormData.description,
-        status: 'paused',
+        status: editCampaignFormData.status || editingCampaignForNewForm.status || 'paused',
         goal: Number(editCampaignFormData.goal),
         tags: Array.isArray(editCampaignFormData.tags) ? editCampaignFormData.tags.filter(t => t.trim().length > 0) : [],
         coverImageUrl: coverImageUrl || "",
@@ -1993,13 +1993,14 @@ const CampaignManagement = ({
 
       const finalDataToSave = removeUndefined(dataToSave);
       await updateWithImage(editingCampaignForNewForm.id, finalDataToSave);
-      
+    
       await syncKiosksForCampaign(
         editingCampaignForNewForm.id,
         normalizeAssignments(editCampaignFormData.assignedKiosks),
         normalizeAssignments(editingCampaignForNewForm.assignedKiosks)
       );
       
+  
       // Reset form and close
       setIsEditCampaignFormOpen(false);
       setEditingCampaignForNewForm(null);
@@ -2027,7 +2028,8 @@ const CampaignManagement = ({
       });
     } catch (error) {
       console.error("Error updating campaign:", error);
-      alert("Failed to update campaign. Please try again.");
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      alert(`Failed to update campaign: ${errorMessage}`);
     } finally {
       setIsSubmittingEditCampaign(false);
     }
@@ -2409,20 +2411,24 @@ const CampaignManagement = ({
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                  onSelect={() => handleEditClick(campaign)}
-                                  className="flex items-center gap-2"
-                                >
-                                  <FaEdit className="h-4 w-4" />
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onSelect={() => handleDeleteClick(campaign)}
-                                  className="flex items-center gap-2 text-red-600 focus:text-red-600"
-                                >
-                                  <FaTrashAlt className="h-4 w-4" />
-                                  Delete
-                                </DropdownMenuItem>
+                                {hasPermission('edit_campaign') && (
+                                  <DropdownMenuItem
+                                    onSelect={() => handleEditClick(campaign)}
+                                    className="flex items-center gap-2"
+                                  >
+                                    <FaEdit className="h-4 w-4" />
+                                    Edit
+                                  </DropdownMenuItem>
+                                )}
+                                {hasPermission('delete_campaign') && (
+                                  <DropdownMenuItem
+                                    onSelect={() => handleDeleteClick(campaign)}
+                                    className="flex items-center gap-2 text-red-600 focus:text-red-600"
+                                  >
+                                    <FaTrashAlt className="h-4 w-4" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                )}
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </div>
@@ -2616,20 +2622,24 @@ const CampaignManagement = ({
                                     </Button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
-                                    <DropdownMenuItem
-                                      onSelect={() => handleEditClick(campaign)}
-                                      className="flex items-center gap-2"
-                                    >
-                                      <FaEdit className="h-4 w-4" />
-                                      Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onSelect={() => handleDeleteClick(campaign)}
-                                      className="flex items-center gap-2 text-red-600 focus:text-red-600"
-                                    >
-                                      <FaTrashAlt className="h-4 w-4" />
-                                      Delete
-                                    </DropdownMenuItem>
+                                    {hasPermission('edit_campaign') && (
+                                      <DropdownMenuItem
+                                        onSelect={() => handleEditClick(campaign)}
+                                        className="flex items-center gap-2"
+                                      >
+                                        <FaEdit className="h-4 w-4" />
+                                        Edit
+                                      </DropdownMenuItem>
+                                    )}
+                                    {hasPermission('delete_campaign') && (
+                                      <DropdownMenuItem
+                                        onSelect={() => handleDeleteClick(campaign)}
+                                        className="flex items-center gap-2 text-red-600 focus:text-red-600"
+                                      >
+                                        <FaTrashAlt className="h-4 w-4" />
+                                        Delete
+                                      </DropdownMenuItem>
+                                    )}
                                   </DropdownMenuContent>
                                 </DropdownMenu>
                               </TableCell>
@@ -2764,36 +2774,40 @@ const CampaignManagement = ({
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Button
-                  variant="outline"
-                  className="h-11 rounded-full"
-                  onClick={() => {
-                    if (!selectedCampaign) return;
-                    handleEditClick(selectedCampaign);
-                    setIsOverviewOpen(false);
-                  }}
-                >
-                  Edit Details
-                </Button>
-                {(() => {
-                  const status = (selectedCampaign?.status ?? "").toString().toLowerCase();
-                  const isCompleted = status === "completed";
-                  const isPaused = status === "paused";
-
-                  return (
+                {hasPermission('edit_campaign') && (
+                  <>
                     <Button
-                      className={`h-11 rounded-full text-white ${
-                        isPaused
-                          ? "bg-emerald-700 hover:bg-emerald-800"
-                          : "bg-red-500 hover:bg-red-600"
-                      }`}
-                      onClick={isPaused ? handleResumeCampaign : handlePauseCampaign}
-                      disabled={!selectedCampaign || isCompleted}
+                      variant="outline"
+                      className="h-11 rounded-full"
+                      onClick={() => {
+                        if (!selectedCampaign) return;
+                        handleEditClick(selectedCampaign);
+                        setIsOverviewOpen(false);
+                      }}
                     >
-                      {isPaused ? "Continue Donations" : "Pause Donations"}
+                      Edit Details
                     </Button>
-                  );
-                })()}
+                    {(() => {
+                      const status = (selectedCampaign?.status ?? "").toString().toLowerCase();
+                      const isCompleted = status === "completed";
+                      const isPaused = status === "paused";
+
+                      return (
+                        <Button
+                          className={`h-11 rounded-full text-white ${
+                            isPaused
+                              ? "bg-emerald-700 hover:bg-emerald-800"
+                              : "bg-red-500 hover:bg-red-600"
+                          }`}
+                          onClick={isPaused ? handleResumeCampaign : handlePauseCampaign}
+                          disabled={!selectedCampaign || isCompleted}
+                        >
+                          {isPaused ? "Continue Donations" : "Pause Donations"}
+                        </Button>
+                      );
+                    })()}
+                  </>
+                )}
               </div>
             </div>
           </div>

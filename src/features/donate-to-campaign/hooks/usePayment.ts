@@ -33,7 +33,7 @@ export function usePayment(onPaymentComplete: (result: PaymentResult) => void): 
     }
 
     try {
-      const response = await fetch('https://createkioskpaymentintent-j2f5w4qwxq-uc.a.run.app', {
+      const response = await fetch(`https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/createKioskPaymentIntent`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
