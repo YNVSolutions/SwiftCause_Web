@@ -354,7 +354,11 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-sm shadow-sm border-b">
         <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
-          <Button variant="ghost" onClick={onBack} className="p-2 sm:p-3">
+          <Button
+            variant="ghost"
+            onClick={onBack}
+            className="p-2 sm:p-3 rounded-full border border-gray-200 bg-transparent shadow-sm hover:bg-white/30"
+          >
             <ArrowLeft className="mr-2 h-4 w-4" />
             <span className="text-sm sm:text-base">Back to Campaign</span>
           </Button>
@@ -687,7 +691,7 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
                   className={`w-full h-14 text-base ${themeClasses.button}`}
                 >
                   <Gift className="mr-2 h-5 w-5" />
-                  Continue to Payment
+                  Donate
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
 

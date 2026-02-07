@@ -55,7 +55,7 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({
   };
 
   return (
-    <div className="relative w-full h-full rounded-2xl overflow-hidden bg-green-50">
+    <div className="relative w-full h-full rounded-2xl overflow-hidden bg-gray-100/50">
       {/* Main Image - key forces re-render on index change */}
       <img
         key={`carousel-image-${safeIndex}`}
@@ -64,22 +64,25 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({
         className="w-full h-full object-cover"
       />
 
+      {/* Subtle bottom gradient overlay */}
+      <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/8 to-transparent pointer-events-none" />
+
       {/* Navigation Arrows */}
       {hasMultipleImages && (
         <>
           <button
             type="button"
             onClick={handlePrev}
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-md transition-colors z-10 border border-green-100"
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-md transition-colors z-10 border border-[rgba(15,23,42,0.08)]"
           >
-            <ChevronLeft className="w-6 h-6 text-green-700" />
+            <ChevronLeft className="w-6 h-6 text-[#0E8F5A]" />
           </button>
           <button
             type="button"
             onClick={handleNext}
-            className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-md transition-colors z-10 border border-green-100"
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-md transition-colors z-10 border border-[rgba(15,23,42,0.08)]"
           >
-            <ChevronRight className="w-6 h-6 text-green-700" />
+            <ChevronRight className="w-6 h-6 text-[#0E8F5A]" />
           </button>
         </>
       )}
@@ -93,7 +96,7 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({
               key={index}
               onClick={(e) => handleDotClick(e, index)}
               className={`w-2.5 h-2.5 rounded-full transition-colors ${
-                index === safeIndex ? 'bg-green-600' : 'bg-green-200'
+                index === safeIndex ? 'bg-[#0E8F5A]' : 'bg-gray-200'
               }`}
             />
           ))}

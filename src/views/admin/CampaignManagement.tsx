@@ -380,7 +380,7 @@ const CampaignDialog = ({
           campaign.configuration?.showRecentDonations ?? true,
         maxRecentDonations: campaign.configuration?.maxRecentDonations ?? 5,
         // Adding Call-to-Action fields
-        primaryCTAText: campaign.configuration?.primaryCTAText || "Donate Now",
+        primaryCTAText: campaign.configuration?.primaryCTAText || "Donate",
         secondaryCTAText: campaign.configuration?.secondaryCTAText || "",
         urgencyMessage: campaign.configuration?.urgencyMessage || "",
         // Adding Visual Customization fields
