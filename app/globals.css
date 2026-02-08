@@ -768,3 +768,26 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
 .animate-number-change {
   animation: number-change 0.3s ease-out;
 }
+
+@keyframes float-gentle {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-float-gentle {
+  animation: float-gentle 3s ease-in-out infinite;
+}
+
+@keyframes dash {
+  to {
+    stroke-dashoffset: -10;
+  }
+}
+
+.animate-dash {
+  animation: dash 20s linear infinite;
+}
