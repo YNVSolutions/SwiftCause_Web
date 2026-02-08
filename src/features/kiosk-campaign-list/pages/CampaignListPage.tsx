@@ -1,4 +1,6 @@
 import React from 'react';
+import { LogOut } from 'lucide-react';
+import { KioskHeader } from '@/shared/components/KioskHeader';
 import { CampaignListPageProps } from '../types';
 import {
   LoadingState,
@@ -26,7 +28,6 @@ export const CampaignListPage: React.FC<CampaignListPageProps> = ({
 }) => {
   const { campaigns, loading, error, layoutMode } = state;
   const currency = kioskSession?.organizationCurrency || 'GBP';
-  
   // Loading state
   if (loading) {
     return <LoadingState />;
@@ -39,88 +40,75 @@ export const CampaignListPage: React.FC<CampaignListPageProps> = ({
 
   // Main content
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f8faf9] via-[#f0f5f3] to-[#e8f0ed] flex flex-col">
-      {/* Branding - Top Center, Minimal */}
-      <div className="pt-10 pb-6 flex justify-center">
-        <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="SwiftCause" className="h-11 w-11" />
-          <div className="text-2xl font-semibold text-slate-900">
-            <span className="text-slate-900">Swift</span>
-            <span className="text-[#22c55e]">Cause</span>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen">
+      <KioskHeader
+        variant="hero"
+        title=""
+        subtitle="Browse our verified campaigns and help make a difference today."
+        logoSrc="/logo.png"
+        logoAlt="SwiftCause"
+        brandPrimary="Choose a "
+        brandAccent="cause"
+        accentColor="#064e3b"
+        actionButton={
+          <button
+            onClick={onLogout}
+            title="Logout"
+            aria-label="Logout"
+            className="flex items-center justify-center h-10 w-10 rounded-lg border border-green-200 bg-white/90 text-green-700 shadow-sm hover:bg-green-50 hover:border-green-300 transition-colors"
+          >
+            <LogOut className="h-4.5 w-4.5" strokeWidth={2.4} />
+          </button>
+        }
+      />
 
-      {/* Page Title Section */}
-      <div className="pb-10 flex flex-col items-center">
-        <h1 className="text-4xl font-bold text-slate-900 mb-3 tracking-tight">
-          Choose a cause
-        </h1>
-        <p className="text-base text-slate-600 leading-relaxed max-w-2xl text-center">
-          Support meaningful causes and help create lasting impact.
-        </p>
-      </div>
-
-      {/* Campaign Grid */}
-      <main className="flex-1 w-full max-w-[1600px] mx-auto px-12 pb-16">
+      <main className="max-w-5/6 mx-auto px-6 lg:px-12 xl:px-16 py-4 overflow-y-auto">
         {campaigns.length === 0 ? (
           <EmptyState kioskName={kioskSession?.kioskName} />
         ) : (
           <>
-            {/* Large screens: Always grid */}
-            <div className="hidden lg:block">
+          {/* Large screens: Always grid */}
+          <div className="hidden lg:block">
+            <CampaignGrid
+              campaigns={campaigns}
+              currency={currency}
+              onSelectCampaign={onSelectCampaign}
+              onViewDetails={onViewDetails}
+            />
+          </div>
+
+          {/* Small screens: Layout based on kiosk settings */}
+          <div className="lg:hidden">
+            {layoutMode === 'carousel' && (
+              <CampaignCarousel
+                campaigns={campaigns}
+                currency={currency}
+                onSelectCampaign={onSelectCampaign}
+                onViewDetails={onViewDetails}
+              />
+            )}
+
+            {layoutMode === 'list' && (
+              <CampaignListLayout
+                campaigns={campaigns}
+                currency={currency}
+                onSelectCampaign={onSelectCampaign}
+                onViewDetails={onViewDetails}
+              />
+            )}
+
+            {layoutMode === 'grid' && (
               <CampaignGrid
                 campaigns={campaigns}
                 currency={currency}
                 onSelectCampaign={onSelectCampaign}
                 onViewDetails={onViewDetails}
               />
-            </div>
-
-            {/* Small screens: Layout based on kiosk settings */}
-            <div className="lg:hidden">
-              {layoutMode === 'carousel' && (
-                <CampaignCarousel
-                  campaigns={campaigns}
-                  currency={currency}
-                  onSelectCampaign={onSelectCampaign}
-                  onViewDetails={onViewDetails}
-                />
               )}
-
-              {layoutMode === 'list' && (
-                <CampaignListLayout
-                  campaigns={campaigns}
-                  currency={currency}
-                  onSelectCampaign={onSelectCampaign}
-                  onViewDetails={onViewDetails}
-                />
-              )}
-
-              {layoutMode === 'grid' && (
-                <CampaignGrid
-                  campaigns={campaigns}
-                  currency={currency}
-                  onSelectCampaign={onSelectCampaign}
-                  onViewDetails={onViewDetails}
-                />
-              )}
-            </div>
-          </>
-        )}
-      </main>
-
-      {/* Logout Button - Bottom Right */}
-      {onLogout && (
-        <div className="pb-8 pr-10 flex justify-end">
-          <button
-            onClick={onLogout}
-            className="px-5 py-2 text-sm text-slate-500 hover:text-slate-700 transition-colors"
-          >
-            Log out
-          </button>
-        </div>
+          </div>
+        </>
       )}
+      </main>
     </div>
   );
 };

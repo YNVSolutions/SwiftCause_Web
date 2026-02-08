@@ -34,7 +34,6 @@ export function useCampaignDetailsState({
   const [recurringInterval, setRecurringInterval] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
 
   // Auto-select middle predefined amount when campaign loads
-  // Auto-select middle predefined amount when campaign loads
   useEffect(() => {
     if (campaign && !initialAmount) {
       const predefinedAmounts = campaign.configuration?.predefinedAmounts || [10, 25, 100];

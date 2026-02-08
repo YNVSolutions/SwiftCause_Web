@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Campaign } from '@/shared/types';
 import { GiftAidDetails } from '@/entities/giftAid/model/types';
-import { ArrowLeft } from 'lucide-react';
 import { GiftAidBoostPanel, GiftAidDetailsPanel } from '../components';
 
 interface GiftAidPageProps {
@@ -47,33 +46,24 @@ export const GiftAidPage: React.FC<GiftAidPageProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 h-screen bg-gradient-to-b from-[#F1FAF6] via-white to-[#F1FAF6] overflow-hidden">
-      <button
-        type="button"
-        onClick={showDetails ? handleBackFromDetails : onBack}
-        className="absolute left-6 top-5 z-20 inline-flex items-center gap-2 text-[#0E8F5A] hover:text-[#0C8050] text-sm font-medium hover:underline underline-offset-4"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Back
-      </button>
-      <div className="absolute -top-24 right-0 h-80 w-80 rounded-full bg-white/40 blur-3xl opacity-70" />
-      <div className="absolute top-1/3 -left-24 h-72 w-72 rounded-full bg-white/40 blur-3xl opacity-60" />
-      <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full bg-white/40 blur-3xl opacity-90" />
+    <div className="min-h-screen bg-gradient-to-b from-green-50 via-white to-emerald-50/70 relative overflow-hidden">
+      <div className="absolute -top-24 right-0 h-80 w-80 rounded-full bg-green-100 blur-3xl opacity-70" />
+      <div className="absolute top-1/3 -left-24 h-72 w-72 rounded-full bg-emerald-100 blur-3xl opacity-60" />
+      <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full bg-green-50 blur-3xl opacity-90" />
 
       {/* Main Content */}
-      <main className="relative z-10 h-full w-full flex items-center justify-center">
-        <div className="h-full w-full overflow-hidden">
-          {/* Sliding Container - width is 200% to hold both panels */}
-          <div
-            className="flex transition-transform duration-500 ease-in-out h-full items-center"
-            style={{
-              width: '200%',
-              transform: showDetails ? 'translateX(-50%)' : 'translateX(0)',
-            }}
-          >
-            {/* Boost Panel */}
-            <div className="w-1/2 px-4 flex items-center justify-center">
-              <div className="max-w-xl mx-auto w-full">
+      <main className="py-4 overflow-hidden relative z-10">
+        {/* Sliding Container - width is 200% to hold both panels */}
+        <div
+          className="flex transition-transform duration-500 ease-in-out"
+          style={{
+            width: '200%',
+            transform: showDetails ? 'translateX(-50%)' : 'translateX(0)',
+          }}
+        >
+          {/* Boost Panel */}
+          <div className="w-1/2 px-4">
+            <div className="max-w-xl mx-auto">
               <GiftAidBoostPanel
                 amount={amount}
                 isCustomAmount={isCustomAmount}
@@ -81,24 +71,24 @@ export const GiftAidPage: React.FC<GiftAidPageProps> = ({
                 onCustomAmountChange={setCustomAmountValue}
                 currency={currency}
                 campaignTitle={campaign.title}
+                onBack={showDetails ? handleBackFromDetails : onBack}
                 onAccept={handleAcceptBoost}
                 onDecline={handleDecline}
               />
-              </div>
             </div>
+          </div>
 
-            {/* Details Panel */}
-            <div className="w-1/2 px-4 flex items-center justify-center">
-              <div className="max-w-xl mx-auto w-full">
-                <GiftAidDetailsPanel
-                  amount={finalAmount}
-                  currency={currency}
-                  campaignTitle={campaign.title}
-                  organizationId={campaign.organizationId || ''}
-                  onSubmit={handleDetailsSubmit}
-                  onBack={handleBackFromDetails}
-                />
-              </div>
+          {/* Details Panel */}
+          <div className="w-1/2 px-4">
+            <div className="max-w-xl mx-auto">
+              <GiftAidDetailsPanel
+                amount={finalAmount}
+                currency={currency}
+                campaignTitle={campaign.title}
+                organizationId={campaign.organizationId || ''}
+                onSubmit={handleDetailsSubmit}
+                onBack={handleBackFromDetails}
+              />
             </div>
           </div>
         </div>

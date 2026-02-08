@@ -4,10 +4,10 @@ import { EmptyStateProps } from '../types';
 export const EmptyState: React.FC<EmptyStateProps> = ({ kioskName }) => {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
-      <div className="bg-white/80 border border-[rgba(15,23,42,0.08)] shadow-lg rounded-2xl px-8 py-8 max-w-xl">
-        <div className="text-[#0E8F5A] mb-4">
+      <div className="bg-white/80 border border-green-100 shadow-lg rounded-2xl px-8 py-8 max-w-xl">
+        <div className="text-green-600 mb-4">
           <svg
-            className="mx-auto h-12 w-12 text-[#0E8F5A]"
+            className="mx-auto h-12 w-12 text-green-500"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
