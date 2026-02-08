@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, MapPin, ArrowRight, Check, CheckCircle, Shield } from 'lucide-react';
+import { User, MapPin, ArrowRight, Check, CheckCircle } from 'lucide-react';
 import { formatCurrencyFromMajor } from '@/shared/lib/currencyFormatter';
 import { GiftAidDetails } from '@/entities/giftAid/model/types';
 import { HMRC_DECLARATION_TEXT } from '@/shared/config/constants';
@@ -19,7 +19,6 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
   campaignTitle,
   organizationId,
   onSubmit,
-  onBack,
 }) => {
   const [fullName, setFullName] = useState('');
   const [houseNumber, setHouseNumber] = useState('');

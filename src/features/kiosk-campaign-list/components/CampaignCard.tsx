@@ -1,22 +1,15 @@
 import React from 'react';
 import { formatCurrency, formatCurrencyFromMajor } from '@/shared/lib/currencyFormatter';
 import { CampaignCardProps } from '../types';
-import { getTop3Amounts, getProgressPercentage } from '../lib/campaignUtils';
+import { getProgressPercentage } from '../lib/campaignUtils';
 
 export const CampaignCard: React.FC<CampaignCardProps> = ({
   campaign,
   currency,
-  onSelectAmount,
   onDonate,
   onCardClick,
 }) => {
-  const top3Amounts = getTop3Amounts(campaign);
   const progress = getProgressPercentage(campaign.raised || 0, campaign.goal);
-
-  const handleAmountClick = (e: React.MouseEvent, amount: number) => {
-    e.stopPropagation();
-    onSelectAmount(amount);
-  };
 
   const handleDonateClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -26,7 +19,6 @@ export const CampaignCard: React.FC<CampaignCardProps> = ({
 
   // Format amount without decimals
   const formatRaised = (amount: number) => formatCurrency(amount, currency);
-  const formatPredefined = (amount: number) => formatCurrencyFromMajor(amount, currency);
   const formatGoal = (amount: number) => formatCurrencyFromMajor(amount, currency);
 
   return (
