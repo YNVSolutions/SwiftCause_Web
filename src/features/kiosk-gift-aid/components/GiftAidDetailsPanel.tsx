@@ -131,18 +131,10 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
   return (
     <div className="bg-[#FFFBF7] rounded-[20px] border border-[rgba(15,23,42,0.08)] shadow-[0_12px_32px_rgba(15,23,42,0.08)] overflow-hidden h-full flex flex-col max-w-xl mx-auto font-lexend">
       {/* Header */}
-      <div className="bg-[#0E8F5A] text-white px-6 py-4 text-center relative">
-        <div className="flex justify-center mb-2">
-          <div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center">
-            <ArrowRight className="w-4 h-4 rotate-45" />
-          </div>
-        </div>
-        <h2 className="text-[22px] sm:text-[26px] font-semibold mb-1 tracking-[-0.01em] leading-[1.3]">
+      <div className="bg-[#0E8F5A] text-white px-6 py-3 text-center relative">
+        <h2 className="text-[20px] sm:text-[22px] font-semibold tracking-[-0.01em] leading-[1.25]">
           Boosting {formatAmount(amount)} to {formatAmount(totalWithGiftAid)}
         </h2>
-        <p className="text-white/90 text-[16px] font-normal">
-          Claim Gift Aid and boost your donation by 25%
-        </p>
       </div>
 
       {/* Form */}

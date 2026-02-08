@@ -206,7 +206,7 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
       `}</style>
       <button
         onClick={onBack}
-        className="absolute left-6 top-5 z-30 inline-flex items-center gap-2 text-[#0E8F5A] hover:text-[#0C8050] text-sm font-medium hover:underline underline-offset-4"
+        className="absolute left-5 top-4 z-30 inline-flex items-center gap-2 text-[#0E8F5A] hover:text-[#0C8050] text-sm font-medium hover:underline underline-offset-4"
       >
         <ArrowLeft className="h-4 w-4" strokeWidth={2} />
         Back
@@ -226,13 +226,13 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
         </header>
 
       {/* Large screens: Two-column layout */}
-      <main className="hidden lg:flex w-5/6 mx-auto py-5 flex-1 overflow-y-auto hide-scrollbar">
+      <main className="hidden lg:flex w-5/6 mx-auto py-4 flex-1 overflow-y-auto hide-scrollbar">
         {/* 3:2 grid layout - full height */}
-        <div className="grid grid-cols-5 gap-6 h-full w-full items-start">
+        <div className="grid grid-cols-5 gap-4 h-full w-full items-start">
           {/* Left Column (3/5): Scrollable - Image Carousel + Long Description */}
-          <div className="col-span-3 space-y-4 overflow-y-auto pr-2 hide-scrollbar">
+          <div className="col-span-3 space-y-3 overflow-y-auto pr-2 hide-scrollbar">
             {/* Image Carousel */}
-            <div className="h-[360px] shrink-0 rounded-[20px] border border-gray-200/50 bg-[#FFFBF7] shadow-[0_12px_32px_rgba(15,23,42,0.08)] overflow-hidden">
+            <div className="h-[320px] shrink-0 rounded-[18px] border border-gray-200/50 bg-[#FFFBF7] shadow-[0_10px_28px_rgba(15,23,42,0.08)] overflow-hidden">
               <ImageCarousel
                 images={galleryImages}
                 currentIndex={currentImageIndex}
@@ -243,26 +243,26 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
 
             {/* Description below images */}
             <div className="prose prose-gray max-w-none">
-              <div className="rounded-[20px] border border-gray-200/50 bg-[#FFFBF7] shadow-[0_12px_32px_rgba(15,23,42,0.08)] px-4 py-4 text-slate-700 text-[16px] leading-[1.6] font-normal">
+              <div className="rounded-[18px] border border-gray-200/50 bg-[#FFFBF7] shadow-[0_10px_28px_rgba(15,23,42,0.08)] px-4 py-3.5 text-slate-700 text-[15px] leading-[1.55] font-normal">
                 {renderDescription(belowImageDescription)}
               </div>
             </div>
           </div>
 
           {/* Right Column (2/5): Fixed - Title + Description + Progress + Amounts + Video */}
-          <div className="col-span-2 space-y-3.5 rounded-[20px] border border-gray-200/50 bg-[#FFFBF7] shadow-[0_12px_32px_rgba(15,23,42,0.08)] px-4 py-4 lg:sticky lg:top-0 h-fit">
+          <div className="col-span-2 space-y-3 rounded-[18px] border border-gray-200/50 bg-[#FFFBF7] shadow-[0_10px_28px_rgba(15,23,42,0.08)] px-4 py-3.5 lg:sticky lg:top-0 h-fit">
           {/* Title - Strongest text element */}
-          <h1 className="text-[26px] font-semibold text-slate-900 leading-[1.3] tracking-[-0.01em]">
+          <h1 className="text-[24px] font-semibold text-slate-900 leading-[1.3] tracking-[-0.01em]">
             {campaign.title}
           </h1>
           {campaign.description && (
-            <p className="text-[16px] text-slate-700 leading-[1.6] max-w-[65ch] font-normal">
+            <p className="text-[15px] text-slate-700 leading-[1.55] max-w-[65ch] font-normal">
               {campaign.description}
             </p>
           )}
 
             {/* Progress Section */}
-            <div className="space-y-1.5 rounded-xl border border-gray-200/50 bg-gray-100/50 px-3.5 py-2.5">
+            <div className="space-y-1.5 rounded-xl border border-gray-200/50 bg-gray-100/50 px-3 py-2">
               <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Community support</p>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-[#0A0A0A] font-medium">
@@ -280,7 +280,7 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
 
             {/* Amount Selector Label */}
             <div>
-              <p className="text-[14px] font-medium text-slate-500 uppercase tracking-wider mb-2">Choose an amount</p>
+              <p className="text-[13px] font-medium text-slate-500 uppercase tracking-wider mb-1.5">Choose an amount</p>
               <AmountSelector
                 amounts={predefinedAmounts}
                 selectedAmount={selectedAmount}
@@ -304,7 +304,7 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
                 onClick={onDonate}
                 label="Donate"
               />
-              <p className="text-[13px] text-center text-slate-400 font-normal">Secure payment • Encrypted</p>
+              <p className="text-[12px] text-center text-slate-400 font-normal">Secure payment • Encrypted</p>
             </div>
 
             {/* Video Player */}
@@ -325,7 +325,7 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
           style={{ paddingBottom: `${donationPanelHeight}px` }}
         >
           {/* Image Carousel */}
-          <div className="h-64 sm:h-80 mb-4 rounded-[20px] border border-gray-200/50 bg-[#FFFBF7] shadow-[0_12px_32px_rgba(15,23,42,0.08)] overflow-hidden">
+          <div className="h-64 sm:h-80 mb-4 rounded-[18px] border border-gray-200/50 bg-[#FFFBF7] shadow-[0_10px_28px_rgba(15,23,42,0.08)] overflow-hidden">
             <ImageCarousel
               images={galleryImages}
               currentIndex={currentImageIndex}
@@ -335,11 +335,11 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
           </div>
 
           {/* Title */}
-          <h1 className="text-[24px] sm:text-[26px] font-semibold text-slate-900 leading-[1.3] mb-2 tracking-[-0.01em]">
+          <h1 className="text-[24px] sm:text-[24px] font-semibold text-slate-900 leading-[1.3] mb-2 tracking-[-0.01em]">
             {campaign.title}
           </h1>
           {campaign.description && (
-            <p className="text-[16px] text-slate-700 leading-[1.6] mb-3.5 font-normal">
+            <p className="text-[15px] text-slate-700 leading-[1.55] mb-3.5 font-normal">
               {campaign.description}
             </p>
           )}
@@ -362,7 +362,7 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
 
           {/* Long Description */}
           <div className="prose prose-gray max-w-none mb-4">
-            <div className="rounded-[20px] border border-gray-200/50 bg-[#FFFBF7] shadow-[0_12px_32px_rgba(15,23,42,0.08)] px-3.5 py-3.5 text-slate-700 text-[16px] leading-[1.6] font-normal">
+            <div className="rounded-[18px] border border-gray-200/50 bg-[#FFFBF7] shadow-[0_10px_28px_rgba(15,23,42,0.08)] px-3.5 py-3 text-slate-700 text-[15px] leading-[1.55] font-normal">
               {renderDescription(belowImageDescription)}
             </div>
           </div>
@@ -408,4 +408,6 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
     </div>
   );
 };
+
+
 

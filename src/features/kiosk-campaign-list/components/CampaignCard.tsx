@@ -32,10 +32,10 @@ export const CampaignCard: React.FC<CampaignCardProps> = ({
   return (
     <div
       onClick={onCardClick}
-      className="group bg-white rounded-[28px] overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col cursor-pointer h-[460px] w-full max-w-[380px] mx-auto"
+      className="group bg-white rounded-[28px] overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col cursor-pointer h-[450px] w-full max-w-[380px] mx-auto"
     >
       {/* Hero Cover Image */}
-      <div className="relative h-[280px] overflow-hidden flex-shrink-0">
+      <div className="relative h-[245px] overflow-hidden flex-shrink-0">
         <img
           src={campaign.coverImageUrl || '/campaign-fallback.svg'}
           alt={campaign.title}
@@ -44,9 +44,9 @@ export const CampaignCard: React.FC<CampaignCardProps> = ({
       </div>
 
       {/* Campaign Info */}
-      <div className="px-5 pt-5 pb-4 flex flex-col h-[180px]">
+      <div className="px-4 pt-4 pb-4 flex flex-col h-[195px]">
         {/* Campaign Title - Dominant */}
-        <h2 className="text-lg font-bold text-slate-900 mb-3 leading-tight line-clamp-2">
+        <h2 className="text-lg font-bold text-slate-900 mb-2 leading-tight line-clamp-2">
           {campaign.title}
         </h2>
 
@@ -63,30 +63,17 @@ export const CampaignCard: React.FC<CampaignCardProps> = ({
           </div>
 
           {/* Progress Bar */}
-          <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
+          <div className="w-full bg-gray-200 rounded-full h-2 mb-2.5">
             <div
               className="bg-[#0E8F5A] h-2 rounded-full transition-all duration-300"
               style={{ width: `${progress}%` }}
             />
           </div>
 
-          {/* Amount Buttons */}
-          <div className="grid grid-cols-3 gap-2 mb-5">
-            {top3Amounts.map((amount, index) => (
-              <button
-                key={index}
-                onClick={(e) => handleAmountClick(e, amount)}
-                className="h-11 rounded-lg bg-green-50 text-green-700 border border-green-200 font-medium text-sm hover:bg-green-100 hover:border-green-300 transition-colors duration-200"
-              >
-                {formatPredefined(amount)}
-              </button>
-            ))}
-          </div>
-
           {/* Donate Button - Dominant CTA */}
           <button
             onClick={handleDonateClick}
-            className="w-full h-[54px] rounded-full font-bold text-base text-white bg-[#0E8F5A] hover:bg-[#0C8050] transition-colors duration-200 flex items-center justify-center shadow-sm"
+            className="w-full h-12 rounded-full font-bold text-base text-white bg-[#0E8F5A] hover:bg-[#0C8050] transition-colors duration-200 flex items-center justify-center shadow-sm mt-1"
           >
             Donate
           </button>
