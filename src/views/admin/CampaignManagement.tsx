@@ -2236,17 +2236,19 @@ const CampaignManagement = ({
           <span className="hidden sm:inline">Export</span>
         </Button>
       )}
-      headerInlineActions={(
-        <Button
-          className="h-10 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white px-5"
-          onClick={() => {
-            setIsNewCampaignFormOpen(true);
-          }}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Create New Campaign
-        </Button>
-      )}
+      headerInlineActions={
+        hasPermission('create_campaign') ? (
+          <Button
+            className="h-10 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white px-5"
+            onClick={() => {
+              setIsNewCampaignFormOpen(true);
+            }}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Create New Campaign
+          </Button>
+        ) : undefined
+      }
     >
       <div className="space-y-6 sm:space-y-8">
         <main className="px-6 lg:px-8 pt-10 pb-10">
@@ -2398,6 +2400,7 @@ const CampaignManagement = ({
                                   size="icon"
                                   className="h-8 w-8 text-gray-500 hover:bg-gray-100"
                                   aria-label="Campaign actions"
+                                  disabled={!hasPermission('edit_campaign') && !hasPermission('delete_campaign')}
                                 >
                                   <MoreVertical className="h-4 w-4" />
                                 </Button>
@@ -2609,6 +2612,7 @@ const CampaignManagement = ({
                                       size="icon"
                                       className="h-8 w-8 text-gray-500 hover:bg-gray-100"
                                       aria-label="Campaign actions"
+                                      disabled={!hasPermission('edit_campaign') && !hasPermission('delete_campaign')}
                                     >
                                       <MoreVertical className="h-4 w-4" />
                                     </Button>
@@ -2837,6 +2841,7 @@ const CampaignManagement = ({
         organizationId={userSession.user.organizationId}
         isSubmitting={isSubmittingNewCampaign}
         isSavingDraft={isSavingNewDraft}
+        hasPermission={hasPermission}
       />
 
       {/* Edit CampaignForm Component */}
@@ -2855,6 +2860,7 @@ const CampaignManagement = ({
         organizationId={userSession.user.organizationId}
         isSubmitting={isSubmittingEditCampaign}
         isSavingDraft={isSavingEditDraft}
+        hasPermission={hasPermission}
       />
       
       {/* Delete Confirmation Dialog */}

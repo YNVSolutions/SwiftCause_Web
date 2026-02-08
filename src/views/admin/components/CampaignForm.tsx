@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Campaign } from '../../../shared/types';
+import { Campaign, Permission } from '../../../shared/types';
 import { useScrollSpy } from '../../../shared/lib/hooks/useScrollSpy';
 import { kioskApi } from '../../../entities/kiosk/api';
 
@@ -58,6 +58,7 @@ export interface CampaignFormProps {
   organizationId?: string;
   isSubmitting?: boolean;
   isSavingDraft?: boolean;
+  hasPermission?: (permission: Permission) => boolean;
 }
 
 export function CampaignForm({
@@ -74,7 +75,8 @@ export function CampaignForm({
   onGalleryImagesSelect,
   organizationId,
   isSubmitting = false,
-  isSavingDraft = false
+  isSavingDraft = false,
+  hasPermission
 }: CampaignFormProps) {
   
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -109,7 +111,7 @@ export function CampaignForm({
     { id: 'basic-info', label: 'BASIC INFO' },
     { id: 'details', label: 'DETAILS' },
     { id: 'media', label: 'MEDIA' },
-    { id: 'kiosk-distribution', label: 'KIOSK DISTRIBUTION' }
+    ...(hasPermission?.('assign_campaigns') ? [{ id: 'kiosk-distribution', label: 'KIOSK DISTRIBUTION' }] : [])
   ];
 
   // Use ScrollSpy hook
@@ -965,16 +967,17 @@ export function CampaignForm({
               </section>
 
               {/* Kiosk Distribution Section */}
-              <section 
-                id="kiosk-distribution"
-                ref={sectionRefs['kiosk-distribution']}
-                className="p-4 sm:p-6 lg:p-8 border-b border-gray-100"
-                style={{ scrollSnapAlign: 'start' }}
-              >
-                <div className="max-w-4xl">
-                  <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-6 sm:mb-8">
-                    Kiosk Distribution
-                  </h2>
+              {hasPermission?.('assign_campaigns') && (
+                <section 
+                  id="kiosk-distribution"
+                  ref={sectionRefs['kiosk-distribution']}
+                  className="p-4 sm:p-6 lg:p-8 border-b border-gray-100"
+                  style={{ scrollSnapAlign: 'start' }}
+                >
+                  <div className="max-w-4xl">
+                    <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-6 sm:mb-8">
+                      Kiosk Distribution
+                    </h2>
                   
                   <div className="space-y-6">
                     <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
@@ -1126,6 +1129,7 @@ export function CampaignForm({
                   </div>
                 </div>
               </section>
+              )}
             </div>
 
             {/* Footer - Fixed */}

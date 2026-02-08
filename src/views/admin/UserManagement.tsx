@@ -164,7 +164,11 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
     const [isCreatingUser, setIsCreatingUser] = useState(false);
     const [newUser, setNewUser] = useState({
-        username: '', email: '', password: '', role: 'viewer' as UserRole, permissions: [] as Permission[],
+        username: '', 
+        email: '', 
+        password: '', 
+        role: 'viewer' as UserRole, 
+        permissions: ['view_dashboard', 'view_campaigns', 'view_kiosks', 'view_donations'] as Permission[],
     });
     
     // Sidebar state
@@ -874,10 +878,14 @@ function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateU
     const handleRoleChange = (role: UserRole) => {
         // Get default permissions for the selected role
         const defaultPermissions = DEFAULT_USER_PERMISSIONS[role as keyof typeof DEFAULT_USER_PERMISSIONS] || [];
+        // Filter out manage_permissions and system_admin from UI
+        const filteredPermissions = defaultPermissions.filter(
+            p => p !== 'manage_permissions' && p !== 'system_admin'
+        );
         onUserChange({ 
             ...newUser, 
             role: role,
-            permissions: [...defaultPermissions] // Set default permissions for the role
+            permissions: [...filteredPermissions] // Set filtered default permissions for the role
         });
     };
 
@@ -987,7 +995,7 @@ function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateU
                         <Label htmlFor="role" className="text-right">Role</Label>
                         <div className="col-span-3">
                             <div className="border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-100 transition-colors">
-                                <Select value={newUser.role} onValueChange={(value: UserRole) => onUserChange({ ...newUser, role: value })}>
+                                <Select value={newUser.role} onValueChange={handleRoleChange}>
                                     <SelectTrigger className="w-full h-12 px-3 bg-transparent outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent">
                                         <SelectValue placeholder="Select role" />
                                     </SelectTrigger>
@@ -1250,10 +1258,14 @@ function EditUserDialog({ user, onUpdate, onClose, userSession }: { user: User, 
     const handleRoleChange = (role: UserRole) => {
         // Get default permissions for the selected role
         const defaultPermissions = DEFAULT_USER_PERMISSIONS[role as keyof typeof DEFAULT_USER_PERMISSIONS] || [];
+        // Filter out manage_permissions and system_admin from UI
+        const filteredPermissions = defaultPermissions.filter(
+            p => p !== 'manage_permissions' && p !== 'system_admin'
+        );
         setEditedUser(prev => ({ 
             ...prev, 
             role: role,
-            permissions: [...defaultPermissions] // Set default permissions for the role
+            permissions: [...filteredPermissions] // Set filtered default permissions for the role
         }));
     };
 
@@ -1549,36 +1561,8 @@ function EditUserDialog({ user, onUpdate, onClose, userSession }: { user: User, 
                                     );
                                 })()}
 
-                                {/* System Permissions */}
-                                {(() => {
-                                    const systemPerms = allPermissions.filter(p => p === 'system_admin');
-                                    if (systemPerms.length === 0) return null;
-                                    return (
-                                        <div>
-                                            <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3">System</h4>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
-                                                {systemPerms.map((p) => (
-                                                    <div key={p} className="flex items-center justify-between">
-                                                        <div className="flex items-center space-x-3">
-                                                            <Checkbox 
-                                                                id={`edit-${p}`} 
-                                                                checked={editedUser.permissions?.includes(p)} 
-                                                                onCheckedChange={(c) => handlePermissionChange(p, !!c)}
-                                                                className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
-                                                            />
-                                                            <Label 
-                                                                htmlFor={`edit-${p}`} 
-                                                                className="text-sm text-slate-700 font-medium cursor-pointer"
-                                                            >
-                                                                {p.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                                                            </Label>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    );
-                                })()}
+                                {/* System Permissions - Removed system_admin option */}
+                                {/* System admin permission is not editable through the UI */}
                             </div>
                         </div>
                     </div>
