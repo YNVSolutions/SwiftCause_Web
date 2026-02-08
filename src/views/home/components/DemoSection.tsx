@@ -60,8 +60,8 @@ export function DemoSection() {
             </div>
           </div>
 
-          {/* Right Content - Demo Preview */}
-          <div className="w-full lg:w-2/3 relative">
+          {/* Right Content - Demo Preview - Hidden on mobile, visible on lg+ */}
+          <div className="hidden lg:block w-full lg:w-2/3 relative">
             <div className="w-full min-h-[300px] sm:min-h-[400px] p-4 sm:p-6 flex items-stretch justify-center">
               {/* Campaign Builder Demo */}
               {activeTab === 'campaign' && (
