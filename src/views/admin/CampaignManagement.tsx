@@ -1284,6 +1284,10 @@ const CampaignManagement = ({
   const [isSavingNewDraft, setIsSavingNewDraft] = useState(false);
   const [isSubmittingEditCampaign, setIsSubmittingEditCampaign] = useState(false);
   const [isSavingEditDraft, setIsSavingEditDraft] = useState(false);
+  
+  // Date validation error states
+  const [newCampaignDateError, setNewCampaignDateError] = useState(false);
+  const [editCampaignDateError, setEditCampaignDateError] = useState(false);
 
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -1292,6 +1296,10 @@ const CampaignManagement = ({
   const [campaignToDelete, setCampaignToDelete] = useState<DocumentData | null>(null);
   const [confirmDeleteInput, setConfirmDeleteInput] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Error dialog state
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false);
+  const [errorDialogMessage, setErrorDialogMessage] = useState("");
 
   const { campaigns, updateWithImage, createWithImage, remove, loading, uploadFile } =
     useCampaignManagement(userSession.user.organizationId || "");
@@ -1569,10 +1577,13 @@ const CampaignManagement = ({
       const endDate = new Date(newCampaignFormData.endDate);
       
       if (endDate <= startDate) {
-        alert("End date must be after start date");
+        setNewCampaignDateError(true);
         return;
       }
     }
+    
+    // Clear date error if validation passes
+    setNewCampaignDateError(false);
 
     setIsSubmittingNewCampaign(true);
     
@@ -1665,7 +1676,21 @@ const CampaignManagement = ({
       });
     } catch (error) {
       console.error("Error creating campaign:", error);
-      alert("Failed to create campaign. Please try again.");
+      
+      // Extract error message
+      let errorMessage = "Failed to create campaign. Please try again.";
+      if (error instanceof Error) {
+        if (error.message.includes("storage/unauthorized") || error.message.includes("permission")) {
+          errorMessage = "Insufficient storage permissions. Failed to create campaign.";
+        } else if (error.message.includes("storage")) {
+          errorMessage = "Storage error occurred. Failed to create campaign.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      setErrorDialogMessage(errorMessage);
+      setErrorDialogOpen(true);
     } finally {
       setIsSubmittingNewCampaign(false);
     }
@@ -1927,10 +1952,13 @@ const CampaignManagement = ({
       const endDate = new Date(editCampaignFormData.endDate);
       
       if (endDate <= startDate) {
-        alert("End date must be after start date");
+        setEditCampaignDateError(true);
         return;
       }
     }
+    
+    // Clear date error if validation passes
+    setEditCampaignDateError(false);
 
     setIsSubmittingEditCampaign(true);
     
@@ -2236,17 +2264,19 @@ const CampaignManagement = ({
           <span className="hidden sm:inline">Export</span>
         </Button>
       )}
-      headerInlineActions={(
-        <Button
-          className="h-10 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white px-5"
-          onClick={() => {
-            setIsNewCampaignFormOpen(true);
-          }}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Create New Campaign
-        </Button>
-      )}
+      headerInlineActions={
+        hasPermission('create_campaign') ? (
+          <Button
+            className="h-10 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white px-5"
+            onClick={() => {
+              setIsNewCampaignFormOpen(true);
+            }}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Create New Campaign
+          </Button>
+        ) : undefined
+      }
     >
       <div className="space-y-6 sm:space-y-8">
         <main className="px-6 lg:px-8 pt-10 pb-10">
@@ -2398,6 +2428,7 @@ const CampaignManagement = ({
                                   size="icon"
                                   className="h-8 w-8 text-gray-500 hover:bg-gray-100"
                                   aria-label="Campaign actions"
+                                  disabled={!hasPermission('edit_campaign') && !hasPermission('delete_campaign')}
                                 >
                                   <MoreVertical className="h-4 w-4" />
                                 </Button>
@@ -2609,6 +2640,7 @@ const CampaignManagement = ({
                                       size="icon"
                                       className="h-8 w-8 text-gray-500 hover:bg-gray-100"
                                       aria-label="Campaign actions"
+                                      disabled={!hasPermission('edit_campaign') && !hasPermission('delete_campaign')}
                                     >
                                       <MoreVertical className="h-4 w-4" />
                                     </Button>
@@ -2837,6 +2869,9 @@ const CampaignManagement = ({
         organizationId={userSession.user.organizationId}
         isSubmitting={isSubmittingNewCampaign}
         isSavingDraft={isSavingNewDraft}
+        hasPermission={hasPermission}
+        dateError={newCampaignDateError}
+        onDateErrorClear={() => setNewCampaignDateError(false)}
       />
 
       {/* Edit CampaignForm Component */}
@@ -2855,6 +2890,9 @@ const CampaignManagement = ({
         organizationId={userSession.user.organizationId}
         isSubmitting={isSubmittingEditCampaign}
         isSavingDraft={isSavingEditDraft}
+        hasPermission={hasPermission}
+        dateError={editCampaignDateError}
+        onDateErrorClear={() => setEditCampaignDateError(false)}
       />
       
       {/* Delete Confirmation Dialog */}
@@ -2923,6 +2961,29 @@ const CampaignManagement = ({
         organization={organization}
         loading={orgLoading}
       />
+
+      {/* Error Dialog */}
+      <Dialog open={errorDialogOpen} onOpenChange={setErrorDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+              Error
+            </DialogTitle>
+            <DialogDescription className="text-gray-600 pt-2">
+              {errorDialogMessage}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 mt-4">
+            <Button
+              onClick={() => setErrorDialogOpen(false)}
+              className="bg-gray-600 hover:bg-gray-700 text-white"
+            >
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 };

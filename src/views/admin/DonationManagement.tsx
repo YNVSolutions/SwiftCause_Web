@@ -265,17 +265,19 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
       headerSearchPlaceholder="Search donations..."
       headerSearchValue={searchTerm}
       onHeaderSearchChange={setSearchTerm}
-      headerTopRightActions={(
-        <Button
-          variant="outline"
-          size="sm"
-          className="rounded-2xl border-[#064e3b] bg-transparent text-[#064e3b] hover:bg-[#064e3b] hover:text-blue-800 transition-all duration-300 px-5"
-          onClick={handleExportDonations}
-        >
-          <Download className="h-4 w-4 sm:hidden" />
-          <span className="hidden sm:inline">Export</span>
-        </Button>
-      )}
+      headerTopRightActions={
+        hasPermission('export_donations') ? (
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-2xl border-[#064e3b] bg-transparent text-[#064e3b] hover:bg-[#064e3b] hover:text-blue-800 transition-all duration-300 px-5"
+            onClick={handleExportDonations}
+          >
+            <Download className="h-4 w-4 sm:hidden" />
+            <span className="hidden sm:inline">Export</span>
+          </Button>
+        ) : undefined
+      }
     >
       <div className="space-y-6 sm:space-y-8">
         <main className="px-6 lg:px-8 pt-12 pb-8">

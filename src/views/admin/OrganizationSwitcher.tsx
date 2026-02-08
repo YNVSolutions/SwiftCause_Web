@@ -25,7 +25,9 @@ export const OrganizationSwitcher: React.FC<OrganizationSwitcherProps> = ({ user
         const fetchOrgs = async () => {
             try {
                 const orgs = await getOrganizations();
-                setOrganizations(orgs as Organization[]);
+                // Filter out organizations without names and ensure they have valid data
+                const validOrgs = (orgs as Organization[]).filter(org => org && org.id && org.name);
+                setOrganizations(validOrgs);
             } catch (error) {
                 console.error("Failed to fetch organizations:", error);
             } finally {
@@ -39,7 +41,7 @@ export const OrganizationSwitcher: React.FC<OrganizationSwitcherProps> = ({ user
 
     // Filter organizations based on search query
     const filteredOrganizations = organizations.filter(org =>
-        org.name.toLowerCase().includes(searchQuery.toLowerCase())
+        org?.name?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     if (loading) {
