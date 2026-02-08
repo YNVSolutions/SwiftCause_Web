@@ -140,6 +140,9 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
     }, {} as Record<string, Kiosk>);
   }, [kiosks]);
 
+  const getCampaignDisplayName = (campaignId: string) =>
+    campaignMap[campaignId] || 'Unknown Campaign';
+
   // Configuration for AdminSearchFilterHeader
   const searchFilterConfig: AdminSearchFilterConfig = {
     filters: [
@@ -470,14 +473,6 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                         >
                           <TableCell className="px-4 py-4 text-center align-middle">
                             <div className="flex items-center justify-center gap-2 min-w-0">
-                              {donation.isGiftAid && (
-                                <span
-                                  className="inline-flex items-center rounded-md bg-purple-50 px-2 py-0.5 text-[11px] font-semibold text-purple-700 ring-1 ring-purple-600/20"
-                                  title="Gift Aid donation"
-                                >
-                                  <Gift className="h-3 w-3" />
-                                </span>
-                              )}
                               <span className="text-sm font-medium text-gray-900 block truncate" title={donation.donorName || 'Anonymous'}>
                                 {donation.donorName || 'Anonymous'}
                               </span>
@@ -486,15 +481,29 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
 
                           <TableCell className="px-4 py-4 text-center align-middle">
                             <div className="flex items-center justify-center min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate" title={campaignMap[donation.campaignId] || donation.campaignId}>
-                                {campaignMap[donation.campaignId] || donation.campaignId}
+                              <p className="text-sm font-medium text-gray-900 truncate" title={getCampaignDisplayName(donation.campaignId)}>
+                                {getCampaignDisplayName(donation.campaignId)}
                               </p>
                             </div>
                           </TableCell>
 
                           <TableCell className="px-4 py-4 text-center align-middle">
-                            <p className="text-sm font-semibold text-gray-900">
-                              {formatCurrency(donation.amount || 0)}
+                            <p className="mx-auto grid w-[120px] grid-cols-[20px_1fr] items-center gap-2 text-sm font-semibold text-gray-900 tabular-nums">
+                              <span className="h-5 w-5 inline-flex items-center justify-center">
+                                {donation.isGiftAid ? (
+                                  <span
+                                    className="inline-flex items-center rounded-md bg-purple-50 px-1.5 py-0.5 text-purple-700 ring-1 ring-purple-600/20"
+                                    title="Gift Aid donation"
+                                  >
+                                    <Gift className="h-3 w-3" />
+                                  </span>
+                                ) : (
+                                  <span className="h-3 w-3 opacity-0">
+                                    <Gift className="h-3 w-3" />
+                                  </span>
+                                )}
+                              </span>
+                              <span className="text-left">{formatCurrency(donation.amount || 0)}</span>
                             </p>
                           </TableCell>
 
@@ -576,14 +585,6 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            {donation.isGiftAid && (
-                              <span
-                                className="inline-flex items-center gap-1 rounded-md bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-purple-700 ring-1 ring-purple-600/20"
-                                title="Gift Aid donation"
-                              >
-                                <Gift className="h-3 w-3" />
-                              </span>
-                            )}
                             <h2 className="font-semibold text-lg leading-tight text-slate-900">
                               {donation.donorName || 'Anonymous'}
                             </h2>
@@ -592,8 +593,22 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-xl font-bold text-slate-900">
-                          {formatCurrency(donation.amount || 0)}
+                        <div className="ml-auto grid w-[140px] grid-cols-[20px_1fr] items-center gap-2 text-xl font-bold text-slate-900 tabular-nums">
+                          <span className="h-5 w-5 inline-flex items-center justify-center">
+                            {donation.isGiftAid ? (
+                              <span
+                                className="inline-flex items-center rounded-md bg-purple-50 px-1.5 py-0.5 text-purple-700 ring-1 ring-purple-600/20"
+                                title="Gift Aid donation"
+                              >
+                                <Gift className="h-3 w-3" />
+                              </span>
+                            ) : (
+                              <span className="h-3 w-3 opacity-0">
+                                <Gift className="h-3 w-3" />
+                              </span>
+                            )}
+                          </span>
+                          <span className="text-left">{formatCurrency(donation.amount || 0)}</span>
                         </div>
                         <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Amount</span>
                       </div>
@@ -603,7 +618,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                       <div className="flex justify-between items-center">
                         <div className="flex flex-col">
                           <span className="text-sm font-medium text-slate-600">
-                            {campaignMap[donation.campaignId] || donation.campaignId}
+                            {getCampaignDisplayName(donation.campaignId)}
                           </span>
                           <div className="flex gap-2 mt-1">
                             <span className="bg-indigo-50 text-indigo-700 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide flex items-center gap-1">
