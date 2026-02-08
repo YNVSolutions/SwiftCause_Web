@@ -18,7 +18,7 @@ import { Switch } from '../../../shared/ui/switch';
 import { Checkbox } from '../../../shared/ui/checkbox';
 
 import {
-  Menu, X, Save, Upload, RefreshCw
+  Menu, X, Save, Upload, RefreshCw, AlertCircle
 } from 'lucide-react';
 
 // Types for the form data
@@ -59,6 +59,8 @@ export interface CampaignFormProps {
   isSubmitting?: boolean;
   isSavingDraft?: boolean;
   hasPermission?: (permission: Permission) => boolean;
+  dateError?: boolean;
+  onDateErrorClear?: () => void;
 }
 
 export function CampaignForm({
@@ -76,7 +78,9 @@ export function CampaignForm({
   organizationId,
   isSubmitting = false,
   isSavingDraft = false,
-  hasPermission
+  hasPermission,
+  dateError = false,
+  onDateErrorClear
 }: CampaignFormProps) {
   
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -620,9 +624,22 @@ export function CampaignForm({
                           id="startDate"
                           type="date"
                           value={campaignData.startDate}
-                          onChange={(e) => setCampaignData(p => ({ ...p, startDate: e.target.value }))}
-                          className="h-14 text-base border-gray-300 rounded-xl focus:border-green-500 focus:ring-green-500 bg-white shadow-sm"
+                          onChange={(e) => {
+                            setCampaignData(p => ({ ...p, startDate: e.target.value }));
+                            if (dateError && onDateErrorClear) onDateErrorClear();
+                          }}
+                          className={`h-14 text-base rounded-xl bg-white shadow-sm ${
+                            dateError 
+                              ? 'border-2 border-red-500 focus:border-red-500 focus:ring-red-500' 
+                              : 'border-gray-300 focus:border-green-500 focus:ring-green-500'
+                          }`}
                         />
+                        {dateError && (
+                          <p className="text-sm text-red-600 mt-2 flex items-center gap-1.5 font-medium">
+                            <AlertCircle className="w-4 h-4" />
+                            End date must be after start date
+                          </p>
+                        )}
                       </div>
 
                       <div>
@@ -633,9 +650,22 @@ export function CampaignForm({
                           id="endDate"
                           type="date"
                           value={campaignData.endDate}
-                          onChange={(e) => setCampaignData(p => ({ ...p, endDate: e.target.value }))}
-                          className="h-14 text-base border-gray-300 rounded-xl focus:border-green-500 focus:ring-green-500 bg-white shadow-sm"
+                          onChange={(e) => {
+                            setCampaignData(p => ({ ...p, endDate: e.target.value }));
+                            if (dateError && onDateErrorClear) onDateErrorClear();
+                          }}
+                          className={`h-14 text-base rounded-xl bg-white shadow-sm ${
+                            dateError 
+                              ? 'border-2 border-red-500 focus:border-red-500 focus:ring-red-500' 
+                              : 'border-gray-300 focus:border-green-500 focus:ring-green-500'
+                          }`}
                         />
+                        {dateError && (
+                          <p className="text-sm text-red-600 mt-2 flex items-center gap-1.5 font-medium">
+                            <AlertCircle className="w-4 h-4" />
+                            End date must be after start date
+                          </p>
+                        )}
                       </div>
                     </div>
 
