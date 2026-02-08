@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '../../shared/ui/button';
 import { Input } from '../../shared/ui/input';
 import { Label } from '../../shared/ui/label';
@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import {
   Search,
   Download,
+  RefreshCw,
   Calendar as CalendarIcon,
   DollarSign,
   Users,
@@ -28,6 +29,7 @@ import {
   Banknote,
   CalendarDays,
   Building2,
+  Gift
 } from 'lucide-react';
 import { Skeleton } from "../../shared/ui/skeleton"; // Import Skeleton
 import { Ghost } from "lucide-react"; // Import Ghost
@@ -36,6 +38,7 @@ import { getDonations } from '../../shared/lib/hooks/donationsService';
 import { AdminSearchFilterHeader, AdminSearchFilterConfig } from './components/AdminSearchFilterHeader';
 import { SortableTableHeader } from './components/SortableTableHeader';
 import { useTableSort } from '../../shared/lib/hooks/useTableSort';
+import { formatCurrency } from '../../shared/lib/currencyFormatter';
 
 import { getAllCampaigns } from '../../shared/api';
 import { AdminLayout } from './AdminLayout';
@@ -56,6 +59,7 @@ interface FetchedDonation extends Omit<Donation, 'timestamp'> {
   paymentStatus: string;
   platform: string;
   stripePaymentIntentId: string;
+  transactionId?: string;
   timestamp: string;
   kioskId?: string;
 }
@@ -90,38 +94,38 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
   const [ selectedDonation, setSelectedDonation] = useState<FetchedDonation | null>(null);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
 
-  
-  useEffect(() => {
-    const fetchAllData = async () => {
-      try {
-        setLoading(true);
-       
-        // Fetch kiosks
-        const kiosksRef = collection(db, 'kiosks');
-        const kiosksQuery = query(kiosksRef, where('organizationId', '==', userSession.user.organizationId || ''));
-        const kiosksSnapshot = await getDocs(kiosksQuery);
-        const kiosksData = kiosksSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Kiosk[];
+  const fetchAllData = useCallback(async () => {
+    try {
+      setLoading(true);
+     
+      // Fetch kiosks
+      const kiosksRef = collection(db, 'kiosks');
+      const kiosksQuery = query(kiosksRef, where('organizationId', '==', userSession.user.organizationId || ''));
+      const kiosksSnapshot = await getDocs(kiosksQuery);
+      const kiosksData = kiosksSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Kiosk[];
 
-        const [donationData, campaignData] = await Promise.all([
-          getDonations(userSession.user.organizationId || ''),
-          getAllCampaigns(userSession.user.organizationId || '')
-        ]);
-        setDonations(donationData as FetchedDonation[]);
-        setCampaigns(campaignData as Campaign[]);
-        setKiosks(kiosksData);
-        setError(null);
-      } catch (err) {
-        setError("Failed to load data. Please try again.");
-        console.error("Error fetching data:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAllData();
+      const [donationData, campaignData] = await Promise.all([
+        getDonations(userSession.user.organizationId || ''),
+        getAllCampaigns(userSession.user.organizationId || '')
+      ]);
+      setDonations(donationData as FetchedDonation[]);
+      setCampaigns(campaignData as Campaign[]);
+      setKiosks(kiosksData);
+      setError(null);
+    } catch (err) {
+      setError("Failed to load data. Please try again.");
+      console.error("Error fetching data:", err);
+    } finally {
+      setLoading(false);
+    }
   }, [userSession.user.organizationId]);
+
+  useEffect(() => {
+    fetchAllData();
+  }, [fetchAllData]);
 
   const campaignMap = useMemo(() => {
     return campaigns.reduce((acc, campaign) => {
@@ -190,6 +194,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
     const campaignName = campaignMap[donation.campaignId] || '';
     const matchesSearch = (donation.donorName && donation.donorName.toLowerCase().includes(searchTerm.toLowerCase())) ||
                          (donation.stripePaymentIntentId && donation.stripePaymentIntentId.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                         (donation.transactionId && donation.transactionId.toLowerCase().includes(searchTerm.toLowerCase())) ||
                          (campaignName.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = statusFilter === 'all' || donation.paymentStatus === statusFilter;
     const matchesCampaign = campaignFilter === 'all' || donation.campaignId === campaignFilter;
@@ -202,14 +207,6 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
   const { sortedData: filteredDonations, sortKey, sortDirection, handleSort } = useTableSort({
     data: filteredDonationsData
   });
-
-  const formatCurrency = (amount: number, currency: string) => {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: (currency || 'gbp').toUpperCase(),
-        minimumFractionDigits: 2
-      }).format(amount);
-  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -241,18 +238,13 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
   };
 
   const totalStats = {
-    totalAmount: filteredDonations.reduce((sum, d) => sum + (d.paymentStatus === 'success' ? (d.amount || 0) / 100 : 0), 0),
+    totalAmount: filteredDonations.reduce((sum, d) => sum + (d.paymentStatus === 'success' ? (d.amount || 0) : 0), 0),
     totalDonations: filteredDonations.length,
     completedDonations: filteredDonations.filter(d => d.paymentStatus === 'success').length,
     avgDonation: filteredDonations.length > 0 
-      ? filteredDonations.reduce((sum, d) => sum + d.amount, 0) / filteredDonations.length 
+      ? filteredDonations.reduce((sum, d) => sum + (d.amount || 0), 0) / filteredDonations.length 
       : 0,
   };
-
-  const summaryCurrency =
-    filteredDonations[0]?.currency ||
-    donations[0]?.currency ||
-    "USD";
 
   const handleExportDonations = () => {
     exportToCsv(donations, "donations");
@@ -300,6 +292,19 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
           <span className="hidden sm:inline">Export</span>
         </Button>
       )}
+      headerTopRightActions={
+        hasPermission('export_donations') ? (
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-2xl border-[#064e3b] bg-transparent text-[#064e3b] hover:bg-[#064e3b] hover:text-blue-800 transition-all duration-300 px-5"
+            onClick={handleExportDonations}
+          >
+            <Download className="h-4 w-4 sm:hidden" />
+            <span className="hidden sm:inline">Export</span>
+          </Button>
+        ) : undefined
+      }
     >
       <div className="space-y-6 sm:space-y-8">
         <main className="px-6 lg:px-8 pt-12 pb-8">
@@ -313,7 +318,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                 <div>
                   <p className="text-xs uppercase tracking-widest text-gray-400">Total Raised</p>
                   <div className="mt-2">
-                    <span className="text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.totalAmount, summaryCurrency)}</span>
+                    <span className="text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.totalAmount)}</span>
                   </div>
                 </div>
               </CardContent>
@@ -355,7 +360,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                 <div>
                   <p className="text-xs uppercase tracking-widest text-gray-400">Average Donation</p>
                   <div className="mt-2">
-                    <span className="text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.avgDonation, summaryCurrency)}</span>
+                    <span className="text-2xl font-semibold text-gray-900">{formatCurrency(totalStats.avgDonation)}</span>
                   </div>
                 </div>
               </CardContent>
@@ -367,6 +372,18 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
             config={searchFilterConfig}
             filterValues={filterValues}
             onFilterChange={handleFilterChange}
+            actions={
+              <Button
+                variant="outline"
+                onClick={fetchAllData}
+                disabled={loading}
+                aria-label="Refresh"
+                className="border-[#064e3b]/20 text-[#064e3b] hover:bg-[#064e3b]/10 hover:text-[#064e3b] hover:border-[#064e3b]/30"
+              >
+                <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""} sm:mr-2`} />
+                <span className="hidden sm:inline">Refresh</span>
+              </Button>
+            }
           />
 
           {/* Modern Table Container - Desktop */}
@@ -400,9 +417,9 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                           currentSortKey={sortKey} 
                           currentSortDirection={sortDirection} 
                           onSort={handleSort}
-                          className="w-[22%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                          className="w-[24%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
                         >
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-center gap-2">
                             <User className="h-4 w-4 text-gray-500 shrink-0" />
                             <span className="whitespace-nowrap">Donor</span>
                           </div>
@@ -412,9 +429,9 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                           currentSortKey={sortKey} 
                           currentSortDirection={sortDirection} 
                           onSort={handleSort}
-                          className="w-[20%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                          className="w-[21%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
                         >
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-center gap-2">
                             <Target className="h-4 w-4 text-gray-500 shrink-0" />
                             <span className="whitespace-nowrap">Campaign</span>
                           </div>
@@ -424,7 +441,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                           currentSortKey={sortKey} 
                           currentSortDirection={sortDirection} 
                           onSort={handleSort}
-                          className="w-[14%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center"
+                          className="w-[14%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
                         >
                           <div className="flex items-center justify-center gap-2">
                             <Banknote className="h-4 w-4 text-gray-500 shrink-0" />
@@ -436,9 +453,9 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                           currentSortKey={sortKey} 
                           currentSortDirection={sortDirection} 
                           onSort={handleSort}
-                          className="w-[18%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                          className="w-[13%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
                         >
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-center gap-2">
                             <MapPin className="h-4 w-4 text-gray-500 shrink-0" />
                             <span className="whitespace-nowrap">Kiosk</span>
                           </div>
@@ -448,9 +465,9 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                           currentSortKey={sortKey} 
                           currentSortDirection={sortDirection} 
                           onSort={handleSort}
-                          className="w-[12%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                          className="w-[12%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
                         >
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-center gap-2">
                             <CheckCircle className="h-4 w-4 text-gray-500 shrink-0" />
                             <span className="whitespace-nowrap">Status</span>
                           </div>
@@ -460,9 +477,9 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                           currentSortKey={sortKey} 
                           currentSortDirection={sortDirection} 
                           onSort={handleSort}
-                          className="w-[14%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide"
+                          className="w-[14%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
                         >
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-center gap-2">
                             <CalendarDays className="h-4 w-4 text-gray-500 shrink-0" />
                             <span className="whitespace-nowrap">Date</span>
                           </div>
@@ -475,60 +492,65 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                       return (
                         <TableRow 
                           key={donation.id} 
-                          className="cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
+                          className="cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0 align-middle"
                           onClick={() => handleViewDetails(donation)}
                         >
-                          <TableCell className="px-4 py-3">
-                            <div className="space-y-1 min-w-0">
+                          <TableCell className="px-4 py-4 text-center align-middle">
+                            <div className="flex items-center justify-center gap-2 min-w-0">
+                              {donation.isGiftAid && (
+                                <span
+                                  className="inline-flex items-center rounded-md bg-purple-50 px-2 py-0.5 text-[11px] font-semibold text-purple-700 ring-1 ring-purple-600/20"
+                                  title="Gift Aid donation"
+                                >
+                                  <Gift className="h-3 w-3" />
+                                </span>
+                              )}
                               <span className="text-sm font-medium text-gray-900 block truncate" title={donation.donorName || 'Anonymous'}>
                                 {donation.donorName || 'Anonymous'}
                               </span>
-                              <p className="text-xs font-mono text-gray-400 truncate" title={donation.stripePaymentIntentId}>
-                                {donation.stripePaymentIntentId}
-                              </p>
                             </div>
                           </TableCell>
 
-                          <TableCell className="px-4 py-3">
-                            <div className="space-y-1 min-w-0">
+                          <TableCell className="px-4 py-4 text-center align-middle">
+                            <div className="flex items-center justify-center min-w-0">
                               <p className="text-sm font-medium text-gray-900 truncate" title={campaignMap[donation.campaignId] || donation.campaignId}>
                                 {campaignMap[donation.campaignId] || donation.campaignId}
                               </p>
-                              {donation.isGiftAid && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-50 text-purple-700 ring-1 ring-purple-600/20">
-                                  Gift Aid
-                                </span>
-                              )}
                             </div>
                           </TableCell>
 
-                          <TableCell className="px-4 py-3 text-center">
+                          <TableCell className="px-4 py-4 text-center align-middle">
                             <p className="text-sm font-semibold text-gray-900">
-                              {formatCurrency((donation.amount || 0) / 100, donation.currency)}
+                              {formatCurrency(donation.amount || 0)}
                             </p>
                           </TableCell>
 
-                          <TableCell className="px-4 py-3">
-                            <div className="space-y-1 min-w-0">
+                          <TableCell className="px-4 py-4 text-center align-middle">
+                            <div className="flex items-center justify-center min-w-0">
                               {kiosk ? (
-                                <>
-                                  <span className="text-sm font-medium text-gray-900 block truncate" title={kiosk.name}>
-                                    {kiosk.name}
-                                  </span>
-                                  <p className="text-xs text-gray-500 truncate" title={kiosk.location}>
-                                    {kiosk.location}
-                                  </p>
-                                </>
+                                <span className="text-sm font-medium text-gray-900 block truncate" title={kiosk.name}>
+                                  {kiosk.name}
+                                </span>
                               ) : (
                                 <span className="text-sm text-gray-500">Online</span>
                               )}
                             </div>
                           </TableCell>
 
-                          <TableCell className="px-4 py-3 pl-6">{getStatusBadge(donation.paymentStatus)}</TableCell>
+                          <TableCell className="px-4 py-4 text-center align-middle">
+                            <div className="flex justify-center">{getStatusBadge(donation.paymentStatus)}</div>
+                          </TableCell>
 
-                          <TableCell className="px-4 py-3">
-                            <span className="text-sm text-gray-500">{donation.timestamp}</span>
+                          <TableCell className="px-4 py-4 text-center align-middle">
+                            <span className="text-sm text-gray-500">
+                              {donation.timestamp
+                                ? new Date(donation.timestamp).toLocaleDateString('en-GB', {
+                                    day: '2-digit',
+                                    month: 'short',
+                                    year: 'numeric',
+                                  })
+                                : "N/A"}
+                            </span>
                           </TableCell>
                         </TableRow>
                       );
@@ -580,15 +602,25 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                           <User className="w-5 h-5" />
                         </div>
                         <div>
-                          <h2 className="font-semibold text-lg leading-tight text-slate-900">
-                            {donation.donorName || 'Anonymous'}
-                          </h2>
+                          <div className="flex items-center gap-2">
+                            {donation.isGiftAid && (
+                              <span
+                                className="inline-flex items-center gap-1 rounded-md bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-purple-700 ring-1 ring-purple-600/20"
+                                title="Gift Aid donation"
+                              >
+                                <Gift className="h-3 w-3" />
+                              </span>
+                            )}
+                            <h2 className="font-semibold text-lg leading-tight text-slate-900">
+                              {donation.donorName || 'Anonymous'}
+                            </h2>
+                          </div>
                           <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Donor</span>
                         </div>
                       </div>
                       <div className="text-right">
                         <div className="text-xl font-bold text-slate-900">
-                          {formatCurrency((donation.amount || 0) / 100, donation.currency)}
+                          {formatCurrency(donation.amount || 0)}
                         </div>
                         <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Amount</span>
                       </div>
@@ -605,11 +637,6 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                               <MapPin className="w-3 h-3" />
                               {kiosk ? kiosk.name : 'Online'}
                             </span>
-                            {donation.isGiftAid && (
-                              <span className="bg-purple-50 text-purple-700 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide">
-                                Gift Aid
-                              </span>
-                            )}
                           </div>
                         </div>
                         <div className="text-right">
@@ -680,10 +707,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                   <div>
                     <Label className="text-sm font-medium text-gray-700">Donation Amount</Label>
                     <p className="text-sm font-semibold text-gray-900 mt-1">
-                      {new Intl.NumberFormat('en-GB', {
-                        style: 'currency',
-                        currency: selectedDonation.currency || 'GBP',
-                      }).format((selectedDonation.amount || 0) / 100)}
+                      {formatCurrency(selectedDonation.amount || 0)}
                     </p>
                   </div>
                   <div>
@@ -710,8 +734,6 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                             day: '2-digit',
                             month: 'short',
                             year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
                           })
                         : "N/A"}
                     </p>
@@ -741,7 +763,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                 <div>
                   <Label className="text-sm font-medium text-gray-700">Transaction ID</Label>
                   <p className="text-xs text-gray-700 font-mono mt-1 bg-gray-50 px-2 py-1 rounded border border-gray-200 inline-block">
-                    {selectedDonation.stripePaymentIntentId || selectedDonation.id || "N/A"}
+                    {selectedDonation.stripePaymentIntentId || selectedDonation.transactionId || selectedDonation.id || "N/A"}
                   </p>
                 </div>
               </div>

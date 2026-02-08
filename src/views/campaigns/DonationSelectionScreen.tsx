@@ -23,6 +23,7 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import { Campaign, Donation } from '../../shared/types';
+import { formatCurrency, formatCurrencyFromMajor } from '../../shared/lib/currencyFormatter';
 
 interface FrequencyOption {
   value: 'monthly' | 'quarterly' | 'yearly';
@@ -136,10 +137,10 @@ function ImpactPreview({
         <CardDescription>Preview your yearly contribution</CardDescription>
       </CardHeader>
       <CardContent className="pt-0">
-        <p className="text-3xl font-bold">{formatCurrency(annualImpact)}</p>
+        <p className="text-3xl font-bold">{formatCurrencyFromMajor(annualImpact)}</p>
         <p className="text-gray-600">Annual impact</p>
         <p className="text-sm mt-2 text-gray-700">
-          Your {formatCurrency(amount)}/{intervalLabelMap[interval as keyof typeof intervalLabelMap]} donation
+          Your {formatCurrencyFromMajor(amount)}/{intervalLabelMap[interval as keyof typeof intervalLabelMap]} donation
           helps us plan long-term
         </p>
       </CardContent>
@@ -209,14 +210,6 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
           ? 'Great for seasonal campaigns and milestone goals'
           : 'Best annual value with predictable funding'
   }));
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-GB', {
-      style: 'currency',
-      currency: 'GBP',
-      minimumFractionDigits: 0
-    }).format(amount);
-  };
 
   const getAnnualAmount = (amount: number, interval: 'monthly' | 'quarterly' | 'yearly') => {
     switch (interval) {
@@ -303,13 +296,14 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
     e.preventDefault();
     if (!isValidAmount()) return;
 
+    const donationAmountPence = Math.round(getCurrentAmount() * 100);
     const donation: Donation = {
       campaignId: campaign.id,
-      amount: getCurrentAmount(),
+      amount: donationAmountPence,
       isRecurring,
       recurringInterval: isRecurring ? recurringInterval : undefined,
       isAnonymous: donorInfo.isAnonymous,
-      isGiftAid: isGiftAid,
+      isGiftAid: campaign.configuration.giftAidEnabled ? isGiftAid : false, // Only allow Gift Aid if enabled
       donorName: "" // No gift aid details collected yet, so no donor name
     };
 
@@ -353,7 +347,11 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-sm shadow-sm border-b">
         <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
-          <Button variant="ghost" onClick={onBack} className="p-2 sm:p-3">
+          <Button
+            variant="ghost"
+            onClick={onBack}
+            className="p-2 sm:p-3 rounded-full border border-gray-200 bg-transparent shadow-sm hover:bg-white/30"
+          >
             <ArrowLeft className="mr-2 h-4 w-4" />
             <span className="text-sm sm:text-base">Back to Campaign</span>
           </Button>
@@ -388,7 +386,7 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between text-sm">
                     <span>Raised: {formatCurrency(campaign.raised)}</span>
-                    <span>Goal: {formatCurrency(campaign.goal)}</span>
+                    <span>Goal: {formatCurrencyFromMajor(campaign.goal)}</span>
                   </div>
                   <Progress value={progress} className="h-2" />
                   <p className="text-sm text-gray-600">{progress.toFixed(1)}% funded</p>
@@ -403,7 +401,7 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
                   </div>
                   <div className="flex items-center space-x-1">
                     <Heart className="w-4 h-4" />
-                    <span>{formatCurrency(151)} avg</span>
+                    <span>{formatCurrencyFromMajor(151)} avg</span>
                   </div>
                 </div>
               )}
@@ -472,10 +470,10 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
                           selectedAmount === amount ? themeClasses.button : ''
                         }`}
                       >
-                        <span className="text-lg font-semibold">{formatCurrency(amount)}</span>
+                        <span className="text-lg font-semibold">{formatCurrencyFromMajor(amount)}</span>
                         {allowRecurring && isRecurring && config.recurringDiscount && (
                           <span className="text-xs opacity-75">
-                            {formatCurrency(amount * (1 - config.recurringDiscount / 100))} after discount
+                            {formatCurrencyFromMajor(amount * (1 - config.recurringDiscount / 100))} after discount
                           </span>
                         )}
                       </Button>
@@ -502,7 +500,7 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
                         />
                       </div>
                       <p className="text-sm text-gray-500">
-                        Enter between {formatCurrency(config.minCustomAmount)} and {formatCurrency(config.maxCustomAmount)}
+                        Enter between {formatCurrencyFromMajor(config.minCustomAmount)} and {formatCurrencyFromMajor(config.maxCustomAmount)}
                       </p>
                     </div>
                   )}
@@ -548,7 +546,7 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
                           <ImpactPreview
                             amount={discountedAmount}
                             interval={recurringInterval}
-                            formatCurrency={formatCurrency}
+                            formatCurrency={formatCurrencyFromMajor}
                           />
                           <div className="p-4 rounded-xl border bg-gradient-to-br from-blue-50 to-indigo-50">
                             <div className="flex items-center justify-between mb-2">
@@ -560,15 +558,15 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
                               ) : null}
                             </div>
                             <p className="text-2xl font-bold" aria-live="polite">
-                              {formatCurrency(discountedAmount)}/{intervalLabel}
+                              {formatCurrencyFromMajor(discountedAmount)}/{intervalLabel}
                             </p>
                             <p className="text-sm text-gray-700">
-                              Equals {formatCurrency(annualizedAmount)} per year
+                              Equals {formatCurrencyFromMajor(annualizedAmount)} per year
                             </p>
                             {hasRecurringDiscount && (
                               <p className="text-xs text-green-700 flex items-center gap-2 mt-2">
                                 <Percent className="w-4 h-4" aria-hidden="true" />
-                                Saving {config.recurringDiscount}% vs one-time ({formatCurrency(undiscountedAnnual)} yearly)
+                                Saving {config.recurringDiscount}% vs one-time ({formatCurrencyFromMajor(undiscountedAnnual)} yearly)
                               </p>
                             )}
                             <div className="mt-3 space-y-1 text-sm text-gray-700">
@@ -605,18 +603,20 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
                 */}
 
                 {/* Anonymous donation option only */}
-                {/* Gift Aid option */}
-                <div className="flex items-center space-x-2 p-3 bg-green-50/50 rounded-lg">
-                  <Checkbox
-                    id="giftAid"
-                    checked={isGiftAid}
-                    onCheckedChange={(checked: boolean) => setIsGiftAid(checked)}
-                  />
-                  <Label htmlFor="giftAid" className="text-sm flex-1">
-                    Yes, add Gift Aid. I am a UK taxpayer and understand that if I pay less Income Tax and/or Capital Gains Tax than the amount of Gift Aid claimed on all my donations in that tax year it is my responsibility to pay any difference.
-                  </Label>
-                  <Gift className="w-5 h-5 text-green-600" />
-                </div>
+                {/* Gift Aid option - only show if enabled in campaign configuration */}
+                {campaign.configuration.giftAidEnabled && (
+                  <div className="flex items-center space-x-2 p-3 bg-green-50/50 rounded-lg">
+                    <Checkbox
+                      id="giftAid"
+                      checked={isGiftAid}
+                      onCheckedChange={(checked: boolean) => setIsGiftAid(checked)}
+                    />
+                    <Label htmlFor="giftAid" className="text-sm flex-1">
+                      Yes, add Gift Aid. I am a UK taxpayer and understand that if I pay less Income Tax and/or Capital Gains Tax than the amount of Gift Aid claimed on all my donations in that tax year it is my responsibility to pay any difference.
+                    </Label>
+                    <Gift className="w-5 h-5 text-green-600" />
+                  </div>
+                )}
  
                 {config.enableAnonymousDonations && (
                   <div className="flex items-center justify-center space-x-2 p-3 bg-gray-50 rounded-lg">
@@ -641,11 +641,11 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
                       <span className="font-medium">Your donation:</span>
                       <div className="text-right">
                         <div className="text-xl font-semibold">
-                          {formatCurrency(getDiscountedAmount())}
+                          {formatCurrencyFromMajor(getDiscountedAmount())}
                         </div>
                         {isRecurring && config.recurringDiscount && getCurrentAmount() !== getDiscountedAmount() && (
                           <div className="text-sm text-gray-500 line-through">
-                            {formatCurrency(getCurrentAmount())}
+                            {formatCurrencyFromMajor(getCurrentAmount())}
                           </div>
                         )}
                       </div>
@@ -667,7 +667,7 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
                       {donorInfo.isAnonymous && (
                         <Badge variant="secondary">Anonymous</Badge>
                       )}
-                      {isGiftAid && (
+                      {campaign.configuration.giftAidEnabled && isGiftAid && (
                         <Badge variant="secondary" className="flex items-center space-x-1 bg-green-100 text-green-800">
                           <Gift className="w-3 h-3" />
                           <span>Gift Aid</span>
@@ -684,7 +684,7 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
                   className={`w-full h-14 text-base ${themeClasses.button}`}
                 >
                   <Gift className="mr-2 h-5 w-5" />
-                  Continue to Payment
+                  Donate
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
 

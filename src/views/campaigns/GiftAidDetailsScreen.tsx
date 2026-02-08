@@ -8,7 +8,7 @@ import { NavigationHeader } from '../../shared/ui/NavigationHeader';
 import { User, MapPin, ArrowRight } from 'lucide-react';
 import { Campaign } from '../../shared/types';
 import { GiftAidDetails } from '../../entities/giftAid/model/types';
-import { formatCurrency } from '../../shared/lib/currencyFormatter';
+import { formatCurrencyFromMajor } from '../../shared/lib/currencyFormatter';
 
 interface GiftAidDetailsScreenProps {
   campaign: Campaign;
@@ -59,7 +59,7 @@ export function GiftAidDetailsScreen({
   // Show loading screen when initially loading
   if (isInitialLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="min-h-screen bg-white">
         <NavigationHeader
           title="Gift Aid Details"
           onBack={onBack}
@@ -67,7 +67,7 @@ export function GiftAidDetailsScreen({
         />
         <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0E8F5A] mx-auto mb-4"></div>
             <p className="text-gray-600">Loading Gift Aid form...</p>
           </div>
         </main>
@@ -78,7 +78,7 @@ export function GiftAidDetailsScreen({
   // Show loading screen when submitting
   if (isSubmitting) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="min-h-screen bg-white">
         <NavigationHeader
           title="Gift Aid Details"
           onBack={onBack}
@@ -86,7 +86,7 @@ export function GiftAidDetailsScreen({
         />
         <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0E8F5A] mx-auto mb-4"></div>
             <p className="text-gray-600">Processing your details...</p>
           </div>
         </main>
@@ -147,6 +147,7 @@ export function GiftAidDetailsScreen({
         const firstName = nameParts[0] || '';
         const surname = nameParts.slice(1).join(' ') || '';
         
+        const donationAmountPence = Math.round(amount * 100);
         const giftAidDetails: GiftAidDetails = {
           // Donor Information
           firstName: firstName,
@@ -163,7 +164,7 @@ export function GiftAidDetailsScreen({
           declarationDate: currentDate,
           
           // Donation Details
-          donationAmount: amount,
+          donationAmount: donationAmountPence,
           donationDate: currentDate,
           organizationId: campaign.organizationId || '',
           donationId: '', // Default empty string
@@ -179,7 +180,7 @@ export function GiftAidDetailsScreen({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-white">
       <NavigationHeader
         title="Gift Aid Details"
         onBack={onBack}
@@ -188,31 +189,23 @@ export function GiftAidDetailsScreen({
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-center">
-          <Card className="w-full max-w-2xl bg-white shadow-xl rounded-2xl overflow-hidden">
-            <CardHeader className="bg-gradient-to-r from-green-600 to-green-700 text-white p-8">
+          <Card className="w-full max-w-2xl !bg-[#FCFCFA] shadow-[0_10px_30px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04)] rounded-2xl overflow-hidden border border-gray-200/50">
+            <CardHeader className="bg-gradient-to-r from-green-600 to-green-700 text-white p-5">
               <div className="text-center">
-                <div className="flex justify-center mb-4">
-                  <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                    <ArrowRight className="w-8 h-8 rotate-45" />
-                  </div>
-                </div>
                 <div
                   role="heading"
                   aria-level={2}
-                  className="text-2xl sm:text-3xl font-bold mb-2"
+                  className="text-lg sm:text-xl font-bold"
                 >
-                  Boosting your {formatCurrency(amount, organizationCurrency)} to{' '}
-                  {formatCurrency(totalWithGiftAid, organizationCurrency)}
+                  Boosting {formatCurrencyFromMajor(amount, organizationCurrency)} to{' '}
+                  {formatCurrencyFromMajor(totalWithGiftAid, organizationCurrency)}
                 </div>
-                <p className="text-green-100 text-lg">
-                  Just a few details to claim your extra {formatCurrency(giftAidAmount, organizationCurrency)}
-                </p>
               </div>
             </CardHeader>
 
-            <CardContent className="p-8">
+            <CardContent className="p-8 !bg-[#FCFCFA]">
               {/* Campaign Info */}
-              <div className="mb-8 p-4 bg-gray-50 rounded-lg text-center">
+              <div className="mb-8 p-4 bg-gray-100/50 rounded-lg text-center border border-gray-200/30">
                 <p className="text-sm text-gray-600 mb-1">Donating to:</p>
                 <p className="font-semibold text-gray-900 text-lg">{campaign.title}</p>
               </div>
@@ -238,7 +231,7 @@ export function GiftAidDetailsScreen({
                         setFullName(e.target.value);
                         if (errors.fullName) setErrors(prev => ({ ...prev, fullName: undefined }));
                       }}
-                      className={`h-14 text-lg ${errors.fullName ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'}`}
+                      className={`h-14 text-lg bg-[#FCFCFA] ${errors.fullName ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-[#0E8F5A]'}`}
                       placeholder="e.g. John Smith"
                     />
                     {errors.fullName && (
@@ -270,7 +263,7 @@ export function GiftAidDetailsScreen({
                         setPostcode(e.target.value);
                         if (errors.postcode) setErrors(prev => ({ ...prev, postcode: undefined }));
                       }}
-                      className={`h-14 text-lg uppercase ${errors.postcode ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'}`}
+                      className={`h-14 text-lg uppercase bg-[#FCFCFA] ${errors.postcode ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-[#0E8F5A]'}`}
                       placeholder="e.g. SW1A 1AA"
                       maxLength={8}
                     />

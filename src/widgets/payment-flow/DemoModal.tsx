@@ -4,6 +4,7 @@ import { Button } from '../../shared/ui/button';
 import { Badge } from '../../shared/ui/badge';
 import { Progress } from '../../shared/ui/progress';
 import { Card, CardContent } from '../../shared/ui/card';
+import { formatCurrency, formatCurrencyFromMajor } from '../../shared/lib/currencyFormatter';
 import { 
   X, 
   Play, 
@@ -75,8 +76,8 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
       features: ["Live donation tracking", "Campaign categories", "Impact metrics", "Progress visualization"],
       mockData: {
         campaign: "Clean Water Initiative",
-        raised: "$32,450",
-        goal: "$50,000",
+        raised: 3245000,
+        goal: 5000000,
         progress: 65,
         donors: 247,
         category: "Health & Environment"
@@ -87,8 +88,8 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
       description: "Intuitive donation forms with flexible payment options and recurring support",
       features: ["Quick amount selection", "Recurring donations", "Anonymous giving", "Custom amounts"],
       mockData: {
-        amounts: [25, 50, 100, 250],
-        selected: 100,
+        amounts: [2500, 5000, 10000, 25000],
+        selected: 10000,
         recurring: "Monthly",
         customEnabled: true
       }
@@ -109,7 +110,7 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
       description: "Comprehensive insights and reporting dashboard for administrators",
       features: ["Live dashboards", "Donor analytics", "Campaign performance", "Export capabilities"],
       mockData: {
-        totalRaised: "$125,430",
+        totalRaised: 12543000,
         campaigns: 12,
         growth: "+23%",
         kiosks: 8,
@@ -331,7 +332,7 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
                                     <div className="space-y-2">
                                       <div className="flex items-center justify-between">
                                         <span className="text-sm text-gray-600">
-                                          {currentStepData.mockData.raised as string} raised
+                                          {formatCurrency(currentStepData.mockData.raised as number)} raised
                                         </span>
                                         <span className="text-sm font-semibold text-green-600">
                                           {currentStepData.mockData.progress as number}% complete
@@ -343,7 +344,7 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
                                           <Users className="w-3.5 h-3.5" />
                                           <span>{currentStepData.mockData.donors as number} donors</span>
                                         </span>
-                                        <span>Goal: {currentStepData.mockData.goal as string}</span>
+                                        <span>Goal: {formatCurrencyFromMajor(currentStepData.mockData.goal as number)}</span>
                                       </div>
                                     </div>
                                   </div>
@@ -402,7 +403,7 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
                                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000"></div>
                                 
                                 <Heart className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform relative z-10" />
-                                <span className="relative z-10">Donate ${currentStepData.mockData.selected as number}</span>
+                                <span className="relative z-10">Donate {formatCurrency(currentStepData.mockData.selected as number)}</span>
                                 <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform relative z-10" />
                               </Button>
                             </div>
@@ -466,7 +467,7 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
                                   <DollarSign className="w-4 h-4 text-green-600" />
                                   <span className="text-xs font-medium text-green-700">Total Raised</span>
                                 </div>
-                                <div className="text-xl font-bold text-green-900">{currentStepData.mockData.totalRaised as string}</div>
+                                <div className="text-xl font-bold text-green-900">{formatCurrency(currentStepData.mockData.totalRaised as number)}</div>
                                 <div className="text-xs text-green-600">{currentStepData.mockData.growth as string} this month</div>
                               </div>
                               
@@ -648,4 +649,3 @@ export function DemoModal({ open, onOpenChange }: DemoModalProps) {
     </>
   );
 }
-

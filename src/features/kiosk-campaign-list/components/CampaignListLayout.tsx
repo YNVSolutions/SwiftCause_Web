@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatCurrency } from '@/shared/lib/currencyFormatter';
+import { formatCurrency, formatCurrencyFromMajor } from '@/shared/lib/currencyFormatter';
 import { CampaignListLayoutProps } from '../types';
 import { getTop3Amounts, getProgressPercentage } from '../lib/campaignUtils';
 
@@ -27,9 +27,9 @@ export const CampaignListLayout: React.FC<CampaignListLayoutProps> = ({
   };
 
   // Format amount without decimals
-  const formatAmount = (amount: number) => {
-    return formatCurrency(amount, currency).replace(/\.00$/, '');
-  };
+  const formatRaised = (amount: number) => formatCurrency(amount, currency);
+  const formatPredefined = (amount: number) => formatCurrencyFromMajor(amount, currency);
+  const formatGoal = (amount: number) => formatCurrencyFromMajor(amount, currency);
 
   return (
     <>
@@ -67,7 +67,7 @@ export const CampaignListLayout: React.FC<CampaignListLayoutProps> = ({
           <div key={campaign.id} className="campaign-float" style={getFloatStyle(campaign.id)}>
             <div
               onClick={() => onViewDetails(campaign)}
-              className="group bg-white rounded-2xl overflow-hidden shadow-sm border border-green-100 cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+              className="group bg-white rounded-2xl overflow-hidden shadow-sm border border-[rgba(15,23,42,0.08)] cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
             >
               {/* Campaign Image */}
               <div className="relative h-48 overflow-hidden">
@@ -88,18 +88,18 @@ export const CampaignListLayout: React.FC<CampaignListLayoutProps> = ({
                 {/* Progress Info */}
                 <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
                   <span className="font-medium text-gray-900">
-                    {formatAmount(campaign.raised || 0)}
+                    {formatRaised(campaign.raised || 0)}
                   </span>
                   <span className="text-xs text-gray-500">
-                    Goal {formatAmount(campaign.goal)}
+                    Goal {formatGoal(campaign.goal)}
                   </span>
-                  <span className="text-green-700 font-medium">{Math.round(progress)}%</span>
+                  <span className="text-[#0E8F5A] font-medium">{Math.round(progress)}%</span>
                 </div>
 
                 {/* Progress Bar */}
-                <div className="w-full bg-green-100 rounded-full h-2 mb-5">
+                <div className="w-full bg-gray-200 rounded-full h-2 mb-5">
                   <div
-                    className="bg-gradient-to-r from-green-600 to-emerald-600 h-2 rounded-full transition-all duration-300"
+                    className="bg-[#0E8F5A] h-2 rounded-full transition-all duration-300"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
@@ -110,9 +110,9 @@ export const CampaignListLayout: React.FC<CampaignListLayoutProps> = ({
                     <button
                       key={index}
                       onClick={(e) => handleAmountClick(e, amount)}
-                      className="h-10 rounded-lg bg-green-50 text-green-700 border border-green-200 font-medium text-sm hover:bg-green-100 hover:border-green-300 transition-colors duration-200"
+                      className="h-10 rounded-lg bg-gray-100/50 text-[#0E8F5A] border border-[rgba(15,23,42,0.08)] font-medium text-sm hover:bg-gray-100/70 hover:border-[rgba(15,23,42,0.12)] transition-colors duration-200"
                     >
-                      {formatAmount(amount)}
+                      {formatPredefined(amount)}
                     </button>
                   ))}
                 </div>
@@ -120,7 +120,7 @@ export const CampaignListLayout: React.FC<CampaignListLayoutProps> = ({
                 {/* Donate Button */}
                 <button
                   onClick={handleDonateClick}
-                  className="w-full h-11 rounded-lg font-medium text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-200/60 transition-all duration-200"
+                  className="w-full h-11 rounded-lg font-medium text-white bg-[#0E8F5A] hover:bg-[#0C8050] shadow-lg shadow-green-200/60 transition-all duration-200"
                 >
                   Donate
                 </button>

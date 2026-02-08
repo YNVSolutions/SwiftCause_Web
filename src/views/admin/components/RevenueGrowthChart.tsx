@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../..
 import { Skeleton } from '../../../shared/ui/skeleton';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { TrendingUp } from 'lucide-react';
+import { formatCurrency as formatGbp } from '../../../shared/lib/currencyFormatter';
 
 interface RevenueDataPoint {
   month: string;
@@ -32,7 +33,7 @@ const CustomTooltip = ({ active, payload, label, formatCurrency }: any) => {
               <span className="text-gray-600">{entry.name}:</span>
             </div>
             <span className="font-semibold text-gray-900">
-              {formatCurrency ? formatCurrency(entry.value) : `£${entry.value.toLocaleString()}`}
+              {formatCurrency(entry.value)}
             </span>
           </div>
         ))}
@@ -45,7 +46,7 @@ const CustomTooltip = ({ active, payload, label, formatCurrency }: any) => {
 export const RevenueGrowthChart: React.FC<RevenueGrowthChartProps> = ({
   data = [],
   loading = false,
-  formatCurrency = (amount) => `£${amount.toLocaleString()}`,
+  formatCurrency = formatGbp,
   className = '',
 }) => {
   if (loading) {
@@ -108,19 +109,14 @@ export const RevenueGrowthChart: React.FC<RevenueGrowthChartProps> = ({
                 />
                 <YAxis 
                   tickFormatter={(value) => {
+                    const valueInGbp = value / 100;
                     // Compact format for mobile
                     if (typeof window !== 'undefined' && window.innerWidth < 640) {
-                      if (value >= 1000000) return `£${(value / 1000000).toFixed(1)}M`;
-                      if (value >= 1000) return `£${(value / 1000).toFixed(0)}K`;
-                      return `£${value}`;
+                      if (valueInGbp >= 1000000) return `£${(valueInGbp / 1000000).toFixed(1)}M`;
+                      if (valueInGbp >= 1000) return `£${(valueInGbp / 1000).toFixed(0)}K`;
+                      return formatCurrency(value);
                     }
-                    // Desktop format - ensure currency symbol is shown
-                    const formatted = formatCurrency(value);
-                    // If formatCurrency doesn't include £, add it
-                    if (!formatted.includes('£') && !formatted.includes('$')) {
-                      return `£${value.toLocaleString()}`;
-                    }
-                    return formatted;
+                    return formatCurrency(value);
                   }}
                   axisLine={false}
                   tickLine={false}

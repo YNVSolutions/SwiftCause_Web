@@ -6,7 +6,7 @@ import { Progress } from './progress';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Heart, Info, ArrowRight, Star } from 'lucide-react';
 import { Campaign } from '../types';
-import { formatCurrency } from '../lib/currencyFormatter';
+import { formatCurrency, formatCurrencyFromMajor } from '../lib/currencyFormatter';
 
 interface CampaignCardProps {
   campaign: Campaign;
@@ -78,7 +78,7 @@ export function CampaignCard({
                 </div>
                 <Progress value={getProgressPercentage(campaign.raised, campaign.goal)} className="h-1.5" />
                 <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>{getProgressPercentage(campaign.raised, campaign.goal).toFixed(0)}% of {formatCurrency(campaign.goal, organizationCurrency || 'GBP')}</span>
+                  <span>{getProgressPercentage(campaign.raised, campaign.goal).toFixed(0)}% of {formatCurrencyFromMajor(campaign.goal, organizationCurrency || 'GBP')}</span>
                 </div>
               </div>
             </div>
@@ -91,7 +91,7 @@ export function CampaignCard({
                   className="bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 ease-in-out text-sm"
                 >
                   <Heart className="mr-1 h-4 w-4" />
-                  Donate Now
+                  Donate
                 </Button>
               )}
 
@@ -154,7 +154,7 @@ export function CampaignCard({
             <span className="text-muted-foreground">
               {campaign.goal ? getProgressPercentage(campaign.raised, campaign.goal).toFixed(1) + "% of goal" : 'N/A'}
             </span>
-            <span className="text-muted-foreground">Goal: { campaign.goal ? formatCurrency(campaign.goal, organizationCurrency || 'GBP') : 'N/A'}</span>
+            <span className="text-muted-foreground">Goal: { campaign.goal ? formatCurrencyFromMajor(campaign.goal, organizationCurrency || 'GBP') : 'N/A'}</span>
           </div>
         </div>
 
@@ -166,7 +166,7 @@ export function CampaignCard({
               size="lg"
             >
               <Heart className="mr-2 h-5 w-5" />
-              <span className="text-base sm:text-lg">Donate Now</span>
+              <span className="text-base sm:text-lg">Donate</span>
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           )}

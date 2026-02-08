@@ -30,6 +30,7 @@ import { Switch } from "../../../shared/ui/switch";
 import { Checkbox } from "../../../shared/ui/checkbox";
 import { Separator } from "../../../shared/ui/separator";
 import { ScrollArea } from "../../../shared/ui/scroll-area";
+import { formatCurrency } from "../../../shared/lib/currencyFormatter";
 import {
   Monitor,
   Settings,
@@ -120,14 +121,6 @@ export function KioskCampaignAssignmentDialog({
   }, [kiosk]);
 
   const [activeTab, setActiveTab] = useState("campaigns");
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-GB", {
-      style: "currency",
-      currency: "GBP",
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
 
   const handleSave = () => {
     

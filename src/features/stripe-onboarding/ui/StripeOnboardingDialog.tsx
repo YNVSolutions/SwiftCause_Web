@@ -3,10 +3,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogHeader,
   DialogTitle,
-  DialogFooter,
-  DialogClose,
 } from '../../../shared/ui/dialog';
 import { Button } from '../../../shared/ui/button';
 import { CreditCard, RefreshCw, AlertCircle, CheckCircle, ArrowRight, Shield, Zap, TrendingUp } from 'lucide-react';
@@ -56,7 +53,7 @@ export function StripeOnboardingDialog({
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
       const response = await fetch(
-        'https://us-central1-swiftcause-app.cloudfunctions.net/createOnboardingLink',
+        `https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/createOnboardingLink`,
         {
           method: 'POST',
           headers: {
@@ -83,14 +80,15 @@ export function StripeOnboardingDialog({
       } else {
         throw new Error('No onboarding URL received from server.');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating Stripe onboarding link:', error);
-      
-      if (error.name === 'AbortError') {
+
+      if (error instanceof DOMException && error.name === 'AbortError') {
         showToast('Request timed out. Please check your connection and try again.', 'error', 4000);
       } else {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         showToast(
-          `Failed to start Stripe onboarding: ${error.message}`,
+          `Failed to start Stripe onboarding: ${errorMessage}`,
           'error',
           4000
         );

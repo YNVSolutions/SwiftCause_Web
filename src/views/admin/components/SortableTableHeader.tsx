@@ -53,8 +53,8 @@ export function SortableTableHeader({
           : 'none'
       }
     >
-      <div className="flex items-center gap-2 pl-4">
-        <span className="whitespace-nowrap">{children}</span>
+      <div className="flex items-center gap-2">
+        {children}
         <div className="flex flex-col flex-shrink-0">
           <ChevronUp 
             className={`w-3 h-3 transition-colors ${

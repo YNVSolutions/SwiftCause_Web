@@ -4,6 +4,7 @@ import { DEFAULT_CAMPAIGN_CONFIG } from "../../shared/config";
 import { DocumentData, Timestamp } from "firebase/firestore";
 import { useCampaignManagement } from "../../shared/lib/hooks/useCampaignManagement";
 import { useOrganizationTags } from "../../shared/lib/hooks/useOrganizationTags";
+import { formatCurrency, formatCurrencyFromMajor } from "../../shared/lib/currencyFormatter";
 import { kioskApi } from "../../entities/kiosk/api";
 import { Button } from "../../shared/ui/button";
 import { Input } from "../../shared/ui/input";
@@ -381,7 +382,7 @@ const CampaignDialog = ({
           campaign.configuration?.showRecentDonations ?? true,
         maxRecentDonations: campaign.configuration?.maxRecentDonations ?? 5,
         // Adding Call-to-Action fields
-        primaryCTAText: campaign.configuration?.primaryCTAText || "Donate Now",
+        primaryCTAText: campaign.configuration?.primaryCTAText || "Donate",
         secondaryCTAText: campaign.configuration?.secondaryCTAText || "",
         urgencyMessage: campaign.configuration?.urgencyMessage || "",
         // Adding Visual Customization fields
@@ -988,7 +989,7 @@ const CampaignDialog = ({
                     <div className="grid grid-cols-4 gap-4">
                       <div>
                         <Label htmlFor="goal" className="block text-sm font-semibold text-gray-900 mb-3">
-                          Fundraising Target ($) <span className="text-red-500">*</span>
+                          Fundraising Target (£) <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           id="goal"
@@ -1008,7 +1009,7 @@ const CampaignDialog = ({
                             Tier {index + 1}
                           </Label>
                           <div className="flex items-center">
-                            <span className="text-gray-600 font-medium mr-2">$</span>
+                            <span className="text-gray-600 font-medium mr-2">£</span>
                             <Input
                               id={`tier-${index}`}
                               type="number"
@@ -1249,7 +1250,8 @@ const CampaignManagement = ({
     recurringIntervals: [],
     tags: [],
     isGlobal: false,
-    assignedKiosks: []
+    assignedKiosks: [],
+    giftAidEnabled: false
   });
   
   const [editCampaignFormData, setEditCampaignFormData] = useState<CampaignFormData>({
@@ -1269,7 +1271,8 @@ const CampaignManagement = ({
     recurringIntervals: [],
     tags: [],
     isGlobal: false,
-    assignedKiosks: []
+    assignedKiosks: [],
+    giftAidEnabled: false
   });
   
   const [selectedNewCampaignImageFile, setSelectedNewCampaignImageFile] = useState<File | null>(null);
@@ -1282,14 +1285,22 @@ const CampaignManagement = ({
   const [isSavingNewDraft, setIsSavingNewDraft] = useState(false);
   const [isSubmittingEditCampaign, setIsSubmittingEditCampaign] = useState(false);
   const [isSavingEditDraft, setIsSavingEditDraft] = useState(false);
+  
+  // Date validation error states
+  const [newCampaignDateError, setNewCampaignDateError] = useState(false);
+  const [editCampaignDateError, setEditCampaignDateError] = useState(false);
 
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const [dateRange, setDateRange] = useState("last30");
+  const [dateRange, setDateRange] = useState("all");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [campaignToDelete, setCampaignToDelete] = useState<DocumentData | null>(null);
   const [confirmDeleteInput, setConfirmDeleteInput] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Error dialog state
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false);
+  const [errorDialogMessage, setErrorDialogMessage] = useState("");
 
   const { campaigns, updateWithImage, createWithImage, remove, loading, uploadFile } =
     useCampaignManagement(userSession.user.organizationId || "");
@@ -1377,7 +1388,8 @@ const CampaignManagement = ({
         : [],
       tags: Array.isArray(campaign.tags) ? campaign.tags : [],
       isGlobal: campaign.isGlobal || false,
-      assignedKiosks: normalizeAssignments(campaign.assignedKiosks)
+      assignedKiosks: normalizeAssignments(campaign.assignedKiosks),
+      giftAidEnabled: campaign.configuration?.giftAidEnabled || false
     };
     
     setEditCampaignFormData(formData);
@@ -1566,10 +1578,13 @@ const CampaignManagement = ({
       const endDate = new Date(newCampaignFormData.endDate);
       
       if (endDate <= startDate) {
-        alert("End date must be after start date");
+        setNewCampaignDateError(true);
         return;
       }
     }
+    
+    // Clear date error if validation passes
+    setNewCampaignDateError(false);
 
     setIsSubmittingNewCampaign(true);
     
@@ -1620,6 +1635,7 @@ const CampaignManagement = ({
           predefinedAmounts: newCampaignFormData.predefinedAmounts.filter(a => a > 0),
           enableRecurring: newCampaignFormData.enableRecurring,
           recurringIntervals: newCampaignFormData.recurringIntervals,
+          giftAidEnabled: newCampaignFormData.giftAidEnabled,
         },
       };
 
@@ -1656,11 +1672,26 @@ const CampaignManagement = ({
         recurringIntervals: [],
         tags: [],
         isGlobal: false,
-        assignedKiosks: []
+        assignedKiosks: [],
+        giftAidEnabled: false
       });
     } catch (error) {
       console.error("Error creating campaign:", error);
-      alert("Failed to create campaign. Please try again.");
+      
+      // Extract error message
+      let errorMessage = "Failed to create campaign. Please try again.";
+      if (error instanceof Error) {
+        if (error.message.includes("storage/unauthorized") || error.message.includes("permission")) {
+          errorMessage = "Insufficient storage permissions. Failed to create campaign.";
+        } else if (error.message.includes("storage")) {
+          errorMessage = "Storage error occurred. Failed to create campaign.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      setErrorDialogMessage(errorMessage);
+      setErrorDialogOpen(true);
     } finally {
       setIsSubmittingNewCampaign(false);
     }
@@ -1687,7 +1718,8 @@ const CampaignManagement = ({
       recurringIntervals: [],
       tags: [],
       isGlobal: false,
-      assignedKiosks: []
+      assignedKiosks: [],
+      giftAidEnabled: false
     });
   };
 
@@ -1747,6 +1779,7 @@ const CampaignManagement = ({
           predefinedAmounts: newCampaignFormData.predefinedAmounts.filter(a => a > 0),
           enableRecurring: newCampaignFormData.enableRecurring,
           recurringIntervals: newCampaignFormData.recurringIntervals,
+          giftAidEnabled: newCampaignFormData.giftAidEnabled,
         },
       };
 
@@ -1783,7 +1816,8 @@ const CampaignManagement = ({
         recurringIntervals: [],
         tags: [],
         isGlobal: false,
-        assignedKiosks: []
+        assignedKiosks: [],
+        giftAidEnabled: false
       });
     } catch (error) {
       console.error("Error saving campaign draft:", error);
@@ -1836,7 +1870,7 @@ const CampaignManagement = ({
         title: editCampaignFormData.title,
         description: editCampaignFormData.briefOverview,
         longDescription: editCampaignFormData.description,
-        status: 'paused',
+        status: editCampaignFormData.status || editingCampaignForNewForm.status || 'paused',
         goal: Number(editCampaignFormData.goal),
         tags: Array.isArray(editCampaignFormData.tags) ? editCampaignFormData.tags.filter(t => t.trim().length > 0) : [],
         coverImageUrl: coverImageUrl || "",
@@ -1851,6 +1885,7 @@ const CampaignManagement = ({
           predefinedAmounts: editCampaignFormData.predefinedAmounts.filter(a => a > 0),
           enableRecurring: editCampaignFormData.enableRecurring,
           recurringIntervals: editCampaignFormData.recurringIntervals,
+          giftAidEnabled: editCampaignFormData.giftAidEnabled,
         },
       };
 
@@ -1892,7 +1927,8 @@ const CampaignManagement = ({
         recurringIntervals: [],
         tags: [],
         isGlobal: false,
-        assignedKiosks: []
+        assignedKiosks: [],
+        giftAidEnabled: false
       });
     } catch (error) {
       console.error("Error saving campaign draft:", error);
@@ -1917,10 +1953,13 @@ const CampaignManagement = ({
       const endDate = new Date(editCampaignFormData.endDate);
       
       if (endDate <= startDate) {
-        alert("End date must be after start date");
+        setEditCampaignDateError(true);
         return;
       }
     }
+    
+    // Clear date error if validation passes
+    setEditCampaignDateError(false);
 
     setIsSubmittingEditCampaign(true);
     
@@ -1971,6 +2010,7 @@ const CampaignManagement = ({
           predefinedAmounts: editCampaignFormData.predefinedAmounts.filter(a => a > 0),
           enableRecurring: editCampaignFormData.enableRecurring,
           recurringIntervals: editCampaignFormData.recurringIntervals,
+          giftAidEnabled: editCampaignFormData.giftAidEnabled,
         },
       };
 
@@ -1983,13 +2023,14 @@ const CampaignManagement = ({
 
       const finalDataToSave = removeUndefined(dataToSave);
       await updateWithImage(editingCampaignForNewForm.id, finalDataToSave);
-      
+    
       await syncKiosksForCampaign(
         editingCampaignForNewForm.id,
         normalizeAssignments(editCampaignFormData.assignedKiosks),
         normalizeAssignments(editingCampaignForNewForm.assignedKiosks)
       );
       
+  
       // Reset form and close
       setIsEditCampaignFormOpen(false);
       setEditingCampaignForNewForm(null);
@@ -2012,11 +2053,13 @@ const CampaignManagement = ({
         recurringIntervals: [],
         tags: [],
         isGlobal: false,
-        assignedKiosks: []
+        assignedKiosks: [],
+        giftAidEnabled: false
       });
     } catch (error) {
       console.error("Error updating campaign:", error);
-      alert("Failed to update campaign. Please try again.");
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      alert(`Failed to update campaign: ${errorMessage}`);
     } finally {
       setIsSubmittingEditCampaign(false);
     }
@@ -2044,17 +2087,9 @@ const CampaignManagement = ({
       recurringIntervals: [],
       tags: [],
       isGlobal: false,
-      assignedKiosks: []
+      assignedKiosks: [],
+      giftAidEnabled: false
     });
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
   };
 
   const getStatusColor = (status: string) => {
@@ -2095,7 +2130,7 @@ const CampaignManagement = ({
   const progressValues = campaigns
     .filter((campaign: any) => campaign.goal && campaign.raised)
     .map((campaign: any) =>
-      Math.min((Number(campaign.raised) / Number(campaign.goal)) * 100, 100)
+      Math.min(((Number(campaign.raised) / 100) / Number(campaign.goal)) * 100, 100)
     );
   const averageProgress =
     progressValues.length > 0
@@ -2155,6 +2190,7 @@ const CampaignManagement = ({
         key: "dateRange",
         label: "Date Range",
         type: "select",
+        includeAllOption: false,
         options: [
           { label: "All time", value: "all" },
           { label: "Last 30 Days", value: "last30" },
@@ -2243,17 +2279,19 @@ const CampaignManagement = ({
           <span className="hidden sm:inline">Export</span>
         </Button>
       )}
-      headerInlineActions={(
-        <Button
-          className="h-10 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white px-5"
-          onClick={() => {
-            setIsNewCampaignFormOpen(true);
-          }}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Create New Campaign
-        </Button>
-      )}
+      headerInlineActions={
+        hasPermission('create_campaign') ? (
+          <Button
+            className="h-10 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white px-5"
+            onClick={() => {
+              setIsNewCampaignFormOpen(true);
+            }}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Create New Campaign
+          </Button>
+        ) : undefined
+      }
     >
       <div className="space-y-6 sm:space-y-8">
         <main className="px-6 lg:px-8 pt-10 pb-10">
@@ -2365,7 +2403,7 @@ const CampaignManagement = ({
                       const donationCount = Number(campaign.donationCount) || 0;
                       const progress =
                         goalAmount > 0
-                          ? Math.min((raisedAmount / goalAmount) * 100, 100)
+                          ? Math.min(((raisedAmount / 100) / goalAmount) * 100, 100)
                           : 0;
 
                       return (
@@ -2405,25 +2443,30 @@ const CampaignManagement = ({
                                   size="icon"
                                   className="h-8 w-8 text-gray-500 hover:bg-gray-100"
                                   aria-label="Campaign actions"
+                                  disabled={!hasPermission('edit_campaign') && !hasPermission('delete_campaign')}
                                 >
                                   <MoreVertical className="h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                  onSelect={() => handleEditClick(campaign)}
-                                  className="flex items-center gap-2"
-                                >
-                                  <FaEdit className="h-4 w-4" />
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onSelect={() => handleDeleteClick(campaign)}
-                                  className="flex items-center gap-2 text-red-600 focus:text-red-600"
-                                >
-                                  <FaTrashAlt className="h-4 w-4" />
-                                  Delete
-                                </DropdownMenuItem>
+                                {hasPermission('edit_campaign') && (
+                                  <DropdownMenuItem
+                                    onSelect={() => handleEditClick(campaign)}
+                                    className="flex items-center gap-2"
+                                  >
+                                    <FaEdit className="h-4 w-4" />
+                                    Edit
+                                  </DropdownMenuItem>
+                                )}
+                                {hasPermission('delete_campaign') && (
+                                  <DropdownMenuItem
+                                    onSelect={() => handleDeleteClick(campaign)}
+                                    className="flex items-center gap-2 text-red-600 focus:text-red-600"
+                                  >
+                                    <FaTrashAlt className="h-4 w-4" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                )}
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </div>
@@ -2447,7 +2490,7 @@ const CampaignManagement = ({
                           <div className="mt-4">
                             <div className="flex items-center justify-between text-xs text-gray-500">
                               <span>
-                                {formatCurrency(raisedAmount)} / {formatCurrency(goalAmount)}
+                                {formatCurrency(raisedAmount)} / {formatCurrencyFromMajor(goalAmount)}
                               </span>
                               <span>{progress.toFixed(0)}%</span>
                             </div>
@@ -2530,7 +2573,7 @@ const CampaignManagement = ({
                           const goalAmount = Number(campaign.goal) || 0;
                           const progress =
                             goalAmount > 0
-                              ? Math.min((raisedAmount / goalAmount) * 100, 100)
+                              ? Math.min(((raisedAmount / 100) / goalAmount) * 100, 100)
                               : 0;
                           const status = (campaign.status ?? "inactive").toString();
                           const statusTone = status.toLowerCase();
@@ -2592,7 +2635,7 @@ const CampaignManagement = ({
                                 <div className="w-[220px] max-w-full">
                                   <div className="flex items-center justify-between text-xs text-gray-500">
                                     <span>
-                                      {formatCurrency(raisedAmount)} / {formatCurrency(goalAmount)}
+                                      {formatCurrency(raisedAmount)} / {formatCurrencyFromMajor(goalAmount)}
                                     </span>
                                     <span>{progress.toFixed(0)}%</span>
                                   </div>
@@ -2612,25 +2655,30 @@ const CampaignManagement = ({
                                       size="icon"
                                       className="h-8 w-8 text-gray-500 hover:bg-gray-100"
                                       aria-label="Campaign actions"
+                                      disabled={!hasPermission('edit_campaign') && !hasPermission('delete_campaign')}
                                     >
                                       <MoreVertical className="h-4 w-4" />
                                     </Button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
-                                    <DropdownMenuItem
-                                      onSelect={() => handleEditClick(campaign)}
-                                      className="flex items-center gap-2"
-                                    >
-                                      <FaEdit className="h-4 w-4" />
-                                      Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onSelect={() => handleDeleteClick(campaign)}
-                                      className="flex items-center gap-2 text-red-600 focus:text-red-600"
-                                    >
-                                      <FaTrashAlt className="h-4 w-4" />
-                                      Delete
-                                    </DropdownMenuItem>
+                                    {hasPermission('edit_campaign') && (
+                                      <DropdownMenuItem
+                                        onSelect={() => handleEditClick(campaign)}
+                                        className="flex items-center gap-2"
+                                      >
+                                        <FaEdit className="h-4 w-4" />
+                                        Edit
+                                      </DropdownMenuItem>
+                                    )}
+                                    {hasPermission('delete_campaign') && (
+                                      <DropdownMenuItem
+                                        onSelect={() => handleDeleteClick(campaign)}
+                                        className="flex items-center gap-2 text-red-600 focus:text-red-600"
+                                      >
+                                        <FaTrashAlt className="h-4 w-4" />
+                                        Delete
+                                      </DropdownMenuItem>
+                                    )}
                                   </DropdownMenuContent>
                                 </DropdownMenu>
                               </TableCell>
@@ -2706,7 +2754,7 @@ const CampaignManagement = ({
                   <span>
                     {selectedCampaign?.goal
                       ? Math.min(
-                          (Number(selectedCampaign?.raised || 0) /
+                          ((Number(selectedCampaign?.raised || 0) / 100) /
                             Number(selectedCampaign.goal)) *
                             100,
                           100
@@ -2720,7 +2768,7 @@ const CampaignManagement = ({
                     className={`h-full ${getProgressColor(
                       selectedCampaign?.goal
                         ? Math.min(
-                            (Number(selectedCampaign?.raised || 0) /
+                            ((Number(selectedCampaign?.raised || 0) / 100) /
                               Number(selectedCampaign.goal)) *
                               100,
                             100
@@ -2731,7 +2779,7 @@ const CampaignManagement = ({
                       width: `${
                         selectedCampaign?.goal
                           ? Math.min(
-                              (Number(selectedCampaign?.raised || 0) /
+                              ((Number(selectedCampaign?.raised || 0) / 100) /
                                 Number(selectedCampaign.goal)) *
                                 100,
                               100
@@ -2751,7 +2799,7 @@ const CampaignManagement = ({
                   <div className="text-right">
                     <div className="text-xs uppercase tracking-wide">Goal</div>
                     <div className="text-base font-semibold text-gray-900">
-                      {formatCurrency(Number(selectedCampaign?.goal || 0))}
+                      {formatCurrencyFromMajor(Number(selectedCampaign?.goal || 0))}
                     </div>
                   </div>
                 </div>
@@ -2765,36 +2813,40 @@ const CampaignManagement = ({
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Button
-                  variant="outline"
-                  className="h-11 rounded-full"
-                  onClick={() => {
-                    if (!selectedCampaign) return;
-                    handleEditClick(selectedCampaign);
-                    setIsOverviewOpen(false);
-                  }}
-                >
-                  Edit Details
-                </Button>
-                {(() => {
-                  const status = (selectedCampaign?.status ?? "").toString().toLowerCase();
-                  const isCompleted = status === "completed";
-                  const isPaused = status === "paused";
-
-                  return (
+                {hasPermission('edit_campaign') && (
+                  <>
                     <Button
-                      className={`h-11 rounded-full text-white ${
-                        isPaused
-                          ? "bg-emerald-700 hover:bg-emerald-800"
-                          : "bg-red-500 hover:bg-red-600"
-                      }`}
-                      onClick={isPaused ? handleResumeCampaign : handlePauseCampaign}
-                      disabled={!selectedCampaign || isCompleted}
+                      variant="outline"
+                      className="h-11 rounded-full"
+                      onClick={() => {
+                        if (!selectedCampaign) return;
+                        handleEditClick(selectedCampaign);
+                        setIsOverviewOpen(false);
+                      }}
                     >
-                      {isPaused ? "Continue Donations" : "Pause Donations"}
+                      Edit Details
                     </Button>
-                  );
-                })()}
+                    {(() => {
+                      const status = (selectedCampaign?.status ?? "").toString().toLowerCase();
+                      const isCompleted = status === "completed";
+                      const isPaused = status === "paused";
+
+                      return (
+                        <Button
+                          className={`h-11 rounded-full text-white ${
+                            isPaused
+                              ? "bg-emerald-700 hover:bg-emerald-800"
+                              : "bg-red-500 hover:bg-red-600"
+                          }`}
+                          onClick={isPaused ? handleResumeCampaign : handlePauseCampaign}
+                          disabled={!selectedCampaign || isCompleted}
+                        >
+                          {isPaused ? "Continue Donations" : "Pause Donations"}
+                        </Button>
+                      );
+                    })()}
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -2832,6 +2884,9 @@ const CampaignManagement = ({
         organizationId={userSession.user.organizationId}
         isSubmitting={isSubmittingNewCampaign}
         isSavingDraft={isSavingNewDraft}
+        hasPermission={hasPermission}
+        dateError={newCampaignDateError}
+        onDateErrorClear={() => setNewCampaignDateError(false)}
       />
 
       {/* Edit CampaignForm Component */}
@@ -2850,6 +2905,9 @@ const CampaignManagement = ({
         organizationId={userSession.user.organizationId}
         isSubmitting={isSubmittingEditCampaign}
         isSavingDraft={isSavingEditDraft}
+        hasPermission={hasPermission}
+        dateError={editCampaignDateError}
+        onDateErrorClear={() => setEditCampaignDateError(false)}
       />
       
       {/* Delete Confirmation Dialog */}
@@ -2918,6 +2976,29 @@ const CampaignManagement = ({
         organization={organization}
         loading={orgLoading}
       />
+
+      {/* Error Dialog */}
+      <Dialog open={errorDialogOpen} onOpenChange={setErrorDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+              Error
+            </DialogTitle>
+            <DialogDescription className="text-gray-600 pt-2">
+              {errorDialogMessage}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 mt-4">
+            <Button
+              onClick={() => setErrorDialogOpen(false)}
+              className="bg-gray-600 hover:bg-gray-700 text-white"
+            >
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 };

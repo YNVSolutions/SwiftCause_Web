@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatCurrency } from '@/shared/lib/currencyFormatter';
+import { formatCurrencyFromMajor } from '@/shared/lib/currencyFormatter';
 import { AmountSelectorProps } from '../types';
 
 export const AmountSelector: React.FC<AmountSelectorProps> = ({
@@ -11,9 +11,7 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
   onCustomAmountChange,
 }) => {
   // Format amount without decimals
-  const formatAmount = (amount: number) => {
-    return formatCurrency(amount, currency).replace(/\.00$/, '');
-  };
+  const formatAmount = (amount: number) => formatCurrencyFromMajor(amount, currency);
 
   const handleCustomFocus = () => {
     // Clear preset selection when focusing on custom input
@@ -28,14 +26,10 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
     }
   };
 
-  const getCurrencySymbol = () => {
-    if (currency === 'GBP') return '\u00a3';
-    if (currency === 'EUR') return '\u20ac';
-    return '$';
-  };
+  const getCurrencySymbol = () => '£';
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 font-lexend">
       {/*
       {enableRecurring && (
         <div
@@ -54,8 +48,8 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
                 onClick={option.onSelect}
                 className={`h-full rounded-lg border text-left transition-all p-3 flex flex-col gap-1 hover:shadow-md hover:-translate-y-0.5 ${
                   option.active
-                    ? 'border-green-500 bg-green-50 text-[#0A0A0A]'
-                    : 'border-green-200 bg-white hover:border-green-400'
+                    ? 'border-[rgba(15,23,42,0.08)] bg-gray-100/50 text-[#0A0A0A]'
+                    : 'border-[rgba(15,23,42,0.08)] bg-white hover:border-[rgba(15,23,42,0.12)]'
                 }`}
               >
                 <span className="inline-flex items-center gap-2 font-semibold text-sm">
@@ -79,10 +73,10 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
               onSelectAmount(amount);
               onCustomAmountChange('');
             }}
-            className={`h-14 rounded-xl font-medium text-lg transition-colors duration-200 border ${
+            className={`h-12 rounded-full font-semibold text-[17px] transition-all duration-150 ease-out border ${
               selectedAmount === amount
-                ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white border-transparent'
-                : 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:border-green-300'
+                ? 'bg-[#0E8F5A] text-white border-transparent shadow-[0_12px_32px_rgba(15,23,42,0.08)] scale-[1.02]'
+                : 'bg-[#FFFBF7] text-[#0E8F5A] border-gray-200 hover:bg-gray-100/50 hover:border-gray-300 hover:brightness-[1.02]'
             }`}
           >
             {formatAmount(amount)}
@@ -92,7 +86,7 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
 
       {/* Custom Amount Input */}
       <div className="relative">
-        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">
+        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-[18px] font-normal">
           {getCurrencySymbol()}
         </span>
         <input
@@ -101,19 +95,19 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
           onChange={(e) => handleCustomChange(e.target.value)}
           onFocus={handleCustomFocus}
           placeholder="Custom amount"
-          className="w-full h-14 pl-10 pr-4 rounded-xl border border-green-200 text-lg focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-300 transition-colors bg-white/90"
+          className="w-full h-12 pl-10 pr-4 rounded-lg border border-gray-200 text-[17px] font-normal focus:outline-none focus:border-[#0E8F5A] focus:ring-1 focus:ring-[#0E8F5A]/20 transition-all duration-150 ease-out bg-[#FFFBF7]"
         />
       </div>
 
       {/*
       {enableRecurring && isRecurring && (
-        <div className="rounded-lg bg-green-50/70 px-3 py-2 flex items-center justify-center gap-2 text-[15px] border border-green-100 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+        <div className="rounded-lg bg-gray-100/50 px-3 py-2 flex items-center justify-center gap-2 text-[15px] border border-[rgba(15,23,42,0.08)] shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
           <span className="relative flex items-center justify-center w-8 h-8 shrink-0" aria-hidden="true">
-            <span className="absolute inset-0 rounded-full bg-green-100" />
-            <span className="absolute -inset-1 rounded-full border border-green-200" />
-            <Heart className="w-4 h-4 text-green-600 relative" />
+            <span className="absolute inset-0 rounded-full bg-gray-100/50" />
+            <span className="absolute -inset-1 rounded-full border border-[rgba(15,23,42,0.08)]" />
+            <Heart className="w-4 h-4 text-[#0E8F5A] relative" />
           </span>
-          <span className="text-green-700 font-medium">
+          <span className="text-[#0E8F5A] font-medium">
             Your next {recurringLabel.toLowerCase()} donation is on {getNextBillingDate()}
           </span>
         </div>
@@ -122,10 +116,10 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
 
       {/*
       {isRecurring && effectiveAmount > 0 && (
-        <div className="rounded-xl bg-green-50/70 border border-green-200 px-4 py-3 shadow-sm">
+        <div className="rounded-xl bg-gray-100/50 border border-[rgba(15,23,42,0.08)] px-4 py-3 shadow-sm">
           <div className="flex justify-between items-center">
-            <span className="text-sm font-semibold text-green-800">Cost preview</span>
-            <span className="text-sm text-green-700">Est.</span>
+            <span className="text-sm font-semibold text-[#0E8F5A]">Cost preview</span>
+            <span className="text-sm text-[#0E8F5A]">Est.</span>
           </div>
           <p className="text-lg font-bold text-[#0A0A0A] mt-1">
             {formatAmount(effectiveAmount)}/{recurringUnitLabel}

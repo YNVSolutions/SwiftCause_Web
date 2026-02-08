@@ -207,7 +207,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const signupDataWithRecaptcha = signupData as SignupFormData & { recaptchaToken?: string };
       if (signupDataWithRecaptcha.recaptchaToken) {
         const verifyResponse = await fetch(
-          'https://verifysignuprecaptcha-j2f5w4qwxq-uc.a.run.app',
+          `https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/verifySignupRecaptcha`,
           {
             method: 'POST',
             headers: {

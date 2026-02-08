@@ -27,6 +27,7 @@ export interface CampaignConfiguration {
   shareMessage?: string;
   enableDonorWall: boolean;
   enableComments: boolean;
+  giftAidEnabled: boolean;
 }
 
 export interface Campaign {

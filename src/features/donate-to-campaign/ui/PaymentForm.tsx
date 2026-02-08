@@ -27,7 +27,7 @@ export function PaymentContainer({ campaign, donation, onPaymentComplete, onBack
     fetchOrganizationCurrency();
   }, [campaign.organizationId]);
 
-  const submitPayment = async (amount: number, metadata: any, currency: string) => {
+  const submitPayment = async (amount: number, metadata: Record<string, unknown>, currency: string) => {
     await processPayment(amount, metadata, organizationCurrency || currency);
   };
 
@@ -43,5 +43,4 @@ export function PaymentContainer({ campaign, donation, onPaymentComplete, onBack
     />
   );
 }
-
 

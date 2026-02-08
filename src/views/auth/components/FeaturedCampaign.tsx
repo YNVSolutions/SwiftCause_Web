@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Heart, Users, TrendingUp, Sparkles } from 'lucide-react';
+import { formatCurrency, formatCurrencyFromMajor } from '../../../shared/lib/currencyFormatter';
 
 // Campaign interface - matches your backend data structure
 export interface Campaign {
@@ -96,14 +97,6 @@ export function FeaturedCampaign({
   const campaign = campaigns[activeCampaign];
   const progress = (campaign.raised / campaign.goal) * 100;
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-GB', {
-      style: 'currency',
-      currency: 'GBP',
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
-
   // Default gradient if not provided
   const gradient = campaign.gradient || 'from-green-400/20 via-emerald-400/20 to-teal-400/20';
   const accentColor = campaign.accentColor || 'bg-green-500';
@@ -174,7 +167,7 @@ export function FeaturedCampaign({
                     {formatCurrency(campaign.raised)}
                   </span>
                   <span className="text-lg text-gray-500 ml-2">
-                    of {formatCurrency(campaign.goal)}
+                    of {formatCurrencyFromMajor(campaign.goal)}
                   </span>
                 </div>
                 <div className="flex items-center space-x-1 text-green-600">
@@ -211,7 +204,7 @@ export function FeaturedCampaign({
                   </span>
                 </div>
                 <span className="text-gray-500">
-                  {formatCurrency(campaign.goal - campaign.raised)} to go
+                  {formatCurrencyFromMajor(campaign.goal - campaign.raised)} to go
                 </span>
               </div>
             </div>

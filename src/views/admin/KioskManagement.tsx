@@ -16,6 +16,7 @@ import {
   getDoc,
 } from 'firebase/firestore';
 import { Screen, Kiosk, AdminSession, Permission } from '../../shared/types';
+import { formatCurrency } from '../../shared/lib/currencyFormatter';
 import { syncCampaignsForKiosk, removeKioskFromAllCampaigns } from "../../shared/lib/sync/campaignKioskSync";
 
 // UI Components
@@ -45,6 +46,7 @@ import {
   Download,
   Loader2,
   Building2,
+  Ghost,
 } from 'lucide-react';
 import { AdminLayout } from './AdminLayout';
 import { KioskForm, KioskFormData } from './components/KioskForm';
@@ -133,6 +135,9 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
   const [showAccessCodes, setShowAccessCodes] = useState<{ [key: string]: boolean }>({});
   const [copiedIds, setCopiedIds] = useState<{ [key: string]: boolean }>({});
 
+  const normalizeAssignedCampaigns = (campaignIds?: string[]) =>
+    Array.from(new Set((campaignIds || []).filter(Boolean)));
+
   // Configuration for AdminSearchFilterHeader
   const searchFilterConfig: AdminSearchFilterConfig = {
     filters: [
@@ -172,7 +177,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
     
     setNewKiosk(prev => ({
       ...prev,
-      assignedCampaigns: [...prev.assignedCampaigns, campaignId]
+      assignedCampaigns: normalizeAssignedCampaigns([...prev.assignedCampaigns, campaignId])
     }));
   };
 
@@ -188,6 +193,8 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
     
     setIsCreatingKiosk(true);
     try {
+      const normalizedAssignedCampaigns = normalizeAssignedCampaigns(newKiosk.assignedCampaigns);
+
       if (editingKiosk) {
         const updatedKioskData = {
           ...editingKiosk,
@@ -195,7 +202,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
           location: newKiosk.location,
           accessCode: newKiosk.accessCode,
           status: newKiosk.status,
-          assignedCampaigns: newKiosk.assignedCampaigns,
+          assignedCampaigns: normalizedAssignedCampaigns,
           settings: {
             ...editingKiosk.settings,
             displayMode: newKiosk.displayLayout,
@@ -206,7 +213,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
         await updateDoc(kioskRef, updatedKioskData);
         
         const oldAssignedCampaigns = editingKiosk.assignedCampaigns || [];
-        await syncCampaignsForKiosk(editingKiosk.id, newKiosk.assignedCampaigns, oldAssignedCampaigns);
+        await syncCampaignsForKiosk(editingKiosk.id, normalizedAssignedCampaigns, oldAssignedCampaigns);
       } else {
         // Create new kiosk
         const newKioskData: Omit<Kiosk, 'id'> = {
@@ -215,7 +222,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
           lastActive: new Date().toISOString(),
           totalDonations: 0,
           totalRaised: 0,
-          assignedCampaigns: newKiosk.assignedCampaigns,
+          assignedCampaigns: normalizedAssignedCampaigns,
           defaultCampaign: '',
           deviceInfo: {},
           operatingHours: {},
@@ -229,7 +236,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
         };
         const docRef = await addDoc(collection(db, 'kiosks'), newKioskData);
         
-        await syncCampaignsForKiosk(docRef.id, newKiosk.assignedCampaigns, []);
+        await syncCampaignsForKiosk(docRef.id, normalizedAssignedCampaigns, []);
       }
       refreshKiosks();
       refreshCampaigns(); // Refresh campaigns to show updated assignments
@@ -256,7 +263,7 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
       location: kiosk.location,
       accessCode: kiosk.accessCode || '',
       status: kiosk.status,
-      assignedCampaigns: kiosk.assignedCampaigns || [],
+      assignedCampaigns: normalizeAssignedCampaigns(kiosk.assignedCampaigns),
       displayLayout: (kiosk.settings?.displayMode as 'grid' | 'list' | 'carousel') || 'grid'
     });
     setIsCreateDialogOpen(true);
@@ -317,7 +324,6 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
     }));
   };
 
-  const formatCurrency = (amount: number) => new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', minimumFractionDigits: 0 }).format(amount);
   const handleExportKiosks = () => {
     const exportData = filteredKiosks.map((kiosk) => {
       const performance = performanceData[kiosk.id];
@@ -792,8 +798,10 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
                   </div>
                 </>
               ) : (
-                <div className="text-center py-12 p-6">
-                  <p className="text-gray-500">No kiosks found matching your search criteria.</p>
+                <div className="text-center py-8 text-gray-500 p-6">
+                  <Ghost className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                  <p className="text-lg font-medium mb-2">No Kiosks Found</p>
+                  <p className="text-sm mb-4">No kiosks found matching your search criteria.</p>
                 </div>
               )}
             </CardContent>

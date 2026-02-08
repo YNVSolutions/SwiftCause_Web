@@ -4,6 +4,7 @@ import { Skeleton } from '../../../shared/ui/skeleton';
 import { Progress } from '../../../shared/ui/progress';
 import { Trophy, ArrowUpRight } from 'lucide-react';
 import { Button } from '../../../shared/ui/button';
+import { formatCurrency as formatGbp, formatCurrencyFromMajor as formatGbpMajor } from '../../../shared/lib/currencyFormatter';
 
 interface CampaignData {
   id: string;
@@ -26,7 +27,7 @@ export const TopPerformingCampaigns: React.FC<TopPerformingCampaignsProps> = ({
   data = [],
   loading = false,
   onViewDetails,
-  formatCurrency = (amount) => `£${amount.toLocaleString()}`,
+  formatCurrency = formatGbp,
   className = '',
 }) => {
   if (loading) {
@@ -90,7 +91,13 @@ export const TopPerformingCampaigns: React.FC<TopPerformingCampaignsProps> = ({
       <CardContent className="p-6 pt-5">
         {data.length > 0 ? (
           <div className="space-y-6">
-            {data.map((campaign, index) => (
+            {data.map((campaign, index) => {
+              const goal = campaign.goal || 0;
+              const raisedInGbp = (campaign.raised || 0) / 100;
+              const displayPercentage =
+                goal > 0 ? Math.min((raisedInGbp / goal) * 100, 100) : 0;
+
+              return (
               <div key={campaign.id} className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -110,26 +117,26 @@ export const TopPerformingCampaigns: React.FC<TopPerformingCampaignsProps> = ({
                   </div>
                   <div className="text-right flex-shrink-0 ml-3">
                     <p className="text-sm font-medium text-gray-600">
-                      {campaign.percentage}%
+                      {Math.round(displayPercentage)}%
                     </p>
                   </div>
                 </div>
                 
                 <Progress 
-                  value={campaign.percentage} 
+                  value={displayPercentage} 
                   className="h-1.5"
                 />
                 
                 <div className="flex items-center justify-between text-xs text-gray-500 leading-relaxed">
                   <span className="font-medium">
-                    {formatCurrency(campaign.raised)} of {formatCurrency(campaign.goal)}
+                    {formatCurrency(campaign.raised)} of {formatGbpMajor(campaign.goal)}
                   </span>
                   <span className="text-gray-400">
                     {campaign.donationCount} donations
                   </span>
                 </div>
               </div>
-            ))}
+            );})}
           </div>
         ) : (
           <div className="text-center py-12 text-gray-500">

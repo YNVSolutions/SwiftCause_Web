@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useKiosks } from '../../../shared/lib/hooks/useKiosks';
-import { KioskSession, UserRole, Kiosk } from '../../../shared/types';
+import { KioskSession, UserRole } from '../../../shared/types';
 import { kioskAuthApi } from '../api';
 
 type OnLogin = (role: UserRole, sessionData?: KioskSession) => void;
 
 export function useKioskLogin(onLogin: OnLogin) {
-	const { loading: kiosksLoading, error: kiosksError } = useKiosks() as unknown as { kiosks: Kiosk[]; loading: boolean; error: string | null };
+	const { error: kiosksError } = useKiosks() as unknown as { error: string | null };
 	const [kioskId, setKioskId] = useState('');
 	const [accessCode, setAccessCode] = useState('');
 	const [localError, setLocalError] = useState<string>('');

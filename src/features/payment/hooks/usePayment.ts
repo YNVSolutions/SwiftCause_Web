@@ -15,7 +15,6 @@ export function usePayment(onPaymentComplete: (result: PaymentResult) => void): 
   const [error, setError] = useState<string | null>(null);
 
   const handlePaymentSubmit = useCallback(async (amount: number, metadata: Record<string, unknown>, currency: string) => {
-    console.log('usePayment - handlePaymentSubmit: received metadata', metadata);
     setIsProcessing(true);
     setError(null);
 
@@ -34,12 +33,12 @@ export function usePayment(onPaymentComplete: (result: PaymentResult) => void): 
     }
 
     try {
-      const response = await fetch('https://createkioskpaymentintent-j2f5w4qwxq-uc.a.run.app', {
+      const response = await fetch(`https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/createKioskPaymentIntent`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ amount: Math.round(amount * 100), metadata: metadata, currency: currency }),
+        body: JSON.stringify({ amount: amount, metadata: metadata, currency: currency }),
       });
 
       if (!response.ok) {
