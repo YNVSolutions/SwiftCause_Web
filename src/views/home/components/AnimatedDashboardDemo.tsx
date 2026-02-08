@@ -1,8 +1,21 @@
 'use client'
 
 import { useState, useEffect } from 'react';
-import { TrendingUp, Heart, Users, Zap, ArrowUpRight } from 'lucide-react';
+import { TrendingUp, Heart, Users, Zap, ArrowUpRight, Globe, Smartphone } from 'lucide-react';
 import Image from 'next/image';
+
+interface FloatingFeature {
+  icon: React.ReactNode;
+  title: string;
+  value: string;
+  description?: string;
+  color: string;
+  position: string;
+  delay: number;
+  size: 'small' | 'large';
+}
+
+const isLightTheme = (color: string) => color.includes('white') || color.includes('F7F6F2');
 
 export function AnimatedDashboardDemo() {
   const [totalRaised, setTotalRaised] = useState(145.39);
@@ -10,6 +23,39 @@ export function AnimatedDashboardDemo() {
   const [donations, setDonations] = useState(76);
   const [giftAid, setGiftAid] = useState(7.23);
   const [activeMetric, setActiveMetric] = useState(0);
+  const [visibleFeatures, setVisibleFeatures] = useState<number[]>([]);
+
+  const floatingFeatures: FloatingFeature[] = [
+    {
+      icon: <Zap className="w-5 h-5" />,
+      title: "Gift Aid",
+      value: "+25% Boost",
+      description: "Automatic tax reclaim for UK donors",
+      color: "from-[#064e3b] to-[#0f5132]",
+      position: "top-8 -right-4",
+      delay: 0,
+      size: 'large'
+    },
+    {
+      icon: <Globe className="w-4 h-4" />,
+      title: "Multi-channel",
+      value: "Online & Kiosk",
+      color: "from-[#064e3b] to-[#0f5132]",
+      position: "bottom-8 -left-4",
+      delay: 1000,
+      size: 'small'
+    },
+    {
+      icon: <Smartphone className="w-5 h-5" />,
+      title: "Mobile Ready",
+      value: "Any Device",
+      description: "Optimized for all screens",
+      color: "from-[#064e3b] to-[#0f5132]",
+      position: "top-1/2 -right-12",
+      delay: 2000,
+      size: 'large'
+    }
+  ];
 
   // Animate numbers
   useEffect(() => {
@@ -31,8 +77,180 @@ export function AnimatedDashboardDemo() {
     return () => clearInterval(interval);
   }, []);
 
+  // Animate floating features appearing one by one
+  useEffect(() => {
+    floatingFeatures.forEach((feature, index) => {
+      setTimeout(() => {
+        setVisibleFeatures(prev => [...prev, index]);
+      }, feature.delay);
+    });
+  }, []);
+
   return (
     <div className="relative">
+      {/* Floating Feature Boxes */}
+      {floatingFeatures.map((feature, index) => (
+        <div key={index}>
+          {/* Connecting Arrow Line */}
+          <svg 
+            className={`absolute z-0 pointer-events-none transition-opacity duration-700 ${
+              visibleFeatures.includes(index) ? 'opacity-100' : 'opacity-0'
+            }`}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              overflow: 'visible'
+            }}
+          >
+            <defs>
+              <marker
+                id={`arrowhead-${index}`}
+                markerWidth="10"
+                markerHeight="10"
+                refX="9"
+                refY="3"
+                orient="auto"
+              >
+                <polygon
+                  points="0 0, 10 3, 0 6"
+                  fill={`url(#gradient-${index})`}
+                  opacity="0.6"
+                />
+              </marker>
+              <linearGradient id={`gradient-${index}`} x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#064e3b" stopOpacity="0.4" />
+                <stop offset="100%" stopColor="#0f5132" stopOpacity="0.7" />
+              </linearGradient>
+            </defs>
+            {/* Arrow path - different for each position */}
+            {feature.position.includes('top-8 -right') && (
+              <path
+                d="M 420 100 Q 480 80, 520 100"
+                stroke={`url(#gradient-${index})`}
+                strokeWidth="2"
+                fill="none"
+                strokeDasharray="5,5"
+                markerEnd={`url(#arrowhead-${index})`}
+                className="animate-dash"
+              />
+            )}
+            {feature.position.includes('top-32 -left') && (
+              <path
+                d="M 80 150 Q 20 140, -20 160"
+                stroke={`url(#gradient-${index})`}
+                strokeWidth="2"
+                fill="none"
+                strokeDasharray="5,5"
+                markerEnd={`url(#arrowhead-${index})`}
+                className="animate-dash"
+              />
+            )}
+            {feature.position.includes('bottom-32 -right') && (
+              <path
+                d="M 420 380 Q 480 400, 520 380"
+                stroke={`url(#gradient-${index})`}
+                strokeWidth="2"
+                fill="none"
+                strokeDasharray="5,5"
+                markerEnd={`url(#arrowhead-${index})`}
+                className="animate-dash"
+              />
+            )}
+            {feature.position.includes('bottom-8 -left') && (
+              <path
+                d="M 80 430 Q 20 440, -20 420"
+                stroke={`url(#gradient-${index})`}
+                strokeWidth="2"
+                fill="none"
+                strokeDasharray="5,5"
+                markerEnd={`url(#arrowhead-${index})`}
+                className="animate-dash"
+              />
+            )}
+            {feature.position.includes('top-1/2 -right') && (
+              <path
+                d="M 420 240 Q 480 240, 540 240"
+                stroke={`url(#gradient-${index})`}
+                strokeWidth="2"
+                fill="none"
+                strokeDasharray="5,5"
+                markerEnd={`url(#arrowhead-${index})`}
+                className="animate-dash"
+              />
+            )}
+          </svg>
+
+          {/* Feature Box */}
+          <div
+            className={`absolute ${feature.position} z-10 transition-all duration-700 ${
+              visibleFeatures.includes(index) 
+                ? 'opacity-100 translate-y-0' 
+                : 'opacity-0 translate-y-4'
+            }`}
+          >
+            {feature.size === 'large' ? (
+              // Large Box with Description
+              <div className={`bg-gradient-to-br ${feature.color} rounded-2xl p-5 shadow-2xl backdrop-blur-sm ${
+                isLightTheme(feature.color) 
+                  ? 'border-2 border-[#064e3b]/20' 
+                  : 'border border-white/20'
+              } min-w-[180px] max-w-[200px] hover:scale-105 transition-transform duration-300`}>
+                <div className="flex items-start gap-3 mb-2">
+                  <div className={`rounded-xl p-2 backdrop-blur-sm ${
+                    isLightTheme(feature.color)
+                      ? 'bg-[#064e3b]/10'
+                      : 'bg-white/20'
+                  }`}>
+                    <div className={isLightTheme(feature.color) ? 'text-[#064e3b]' : 'text-white'}>
+                      {feature.icon}
+                    </div>
+                  </div>
+                  <div className={`flex-1 ${isLightTheme(feature.color) ? 'text-[#064e3b]' : 'text-white'}`}>
+                    <div className="text-[10px] font-semibold opacity-90 uppercase tracking-wide">{feature.title}</div>
+                    <div className="text-sm font-bold mt-0.5">{feature.value}</div>
+                  </div>
+                </div>
+                {feature.description && (
+                  <div className={`text-[9px] leading-relaxed mt-2 border-t pt-2 ${
+                    isLightTheme(feature.color)
+                      ? 'text-[#064e3b]/70 border-[#064e3b]/20'
+                      : 'text-white/80 border-white/20'
+                  }`}>
+                    {feature.description}
+                  </div>
+                )}
+              </div>
+            ) : (
+              // Small Compact Box
+              <div className={`bg-gradient-to-br ${feature.color} rounded-2xl p-4 shadow-2xl backdrop-blur-sm ${
+                isLightTheme(feature.color)
+                  ? 'border-2 border-[#064e3b]/20'
+                  : 'border border-white/20'
+              } min-w-[140px] hover:scale-105 transition-transform duration-300`}>
+                <div className="flex items-center gap-2 mb-1">
+                  <div className={`rounded-lg p-1.5 backdrop-blur-sm ${
+                    isLightTheme(feature.color)
+                      ? 'bg-[#064e3b]/10'
+                      : 'bg-white/20'
+                  }`}>
+                    <div className={isLightTheme(feature.color) ? 'text-[#064e3b]' : 'text-white'}>
+                      {feature.icon}
+                    </div>
+                  </div>
+                  <div className={isLightTheme(feature.color) ? 'text-[#064e3b]' : 'text-white'}>
+                    <div className="text-[9px] font-semibold opacity-90">{feature.title}</div>
+                    <div className="text-xs font-bold">{feature.value}</div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
+
       <div className="absolute -top-20 -right-20 w-80 h-80 bg-[#064e3b]/5 rounded-full blur-3xl"></div>
       <div className="relative glass-card border border-white p-6 rounded-[2.5rem] shadow-2xl overflow-hidden">
         <div className="bg-white rounded-2xl overflow-hidden shadow-inner border border-slate-100">
