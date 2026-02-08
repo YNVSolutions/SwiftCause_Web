@@ -186,34 +186,70 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
           </button>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Menu - Slide from Right */}
         {isMenuOpen && (
-          <div className="md:hidden absolute top-full left-0 right-0 bg-[#F3F1EA] border-b border-[#064e3b]/10 shadow-xl p-6 flex flex-col gap-4">
-            {navItems.map((item) => (
-              <a 
-                key={item.label} 
-                href={item.href}
-                onClick={(e) => handleNavClick(e, item.href)}
-                className="text-lg font-medium text-[#064e3b] cursor-pointer"
-              >
-                {item.label}
-              </a>
-            ))}
-            <div className="flex flex-col gap-3 pt-4 border-t border-[#064e3b]/10">
-              <button 
-                onClick={onLogin}
-                className="w-full py-3 text-[#064e3b] font-semibold border border-[#064e3b]/20 rounded-xl"
-              >
-                Login
-              </button>
-              <button 
-                onClick={onSignup}
-                className="w-full py-3 bg-[#064e3b] text-white font-semibold rounded-xl shadow-lg"
-              >
-                Sign Up Free
-              </button>
+          <>
+            {/* Backdrop with blur */}
+            <div 
+              className="md:hidden fixed inset-0 bg-black/20 backdrop-blur-sm z-40 animate-fade-in"
+              onClick={() => setIsMenuOpen(false)}
+            />
+            
+            {/* Sidebar Menu */}
+            <div className="md:hidden fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-[#F3F1EA] shadow-2xl z-50 flex flex-col animate-slide-in-right">
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b border-[#064e3b]/10">
+                <div className="flex items-center gap-2">
+                  <Image 
+                    src="/logo.png" 
+                    alt="SwiftCause Logo" 
+                    width={32} 
+                    height={32}
+                    className="rounded-xl shadow-lg"
+                  />
+                  <span className="text-xl font-bold text-[#064e3b]">SwiftCause</span>
+                </div>
+                <button 
+                  onClick={() => setIsMenuOpen(false)}
+                  className="p-2 hover:bg-[#064e3b]/5 rounded-lg transition-colors"
+                >
+                  <X className="w-6 h-6 text-[#064e3b]" />
+                </button>
+              </div>
+
+              {/* Navigation Links */}
+              <div className="flex-1 overflow-y-auto p-6">
+                <nav className="flex flex-col gap-2">
+                  {navItems.map((item) => (
+                    <a 
+                      key={item.label} 
+                      href={item.href}
+                      onClick={(e) => handleNavClick(e, item.href)}
+                      className="text-lg font-medium text-[#064e3b] hover:bg-[#064e3b]/5 px-4 py-3 rounded-xl transition-colors cursor-pointer"
+                    >
+                      {item.label}
+                    </a>
+                  ))}
+                </nav>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="p-6 border-t border-[#064e3b]/10 space-y-3">
+                <button 
+                  onClick={onLogin}
+                  className="w-full py-3 text-[#064e3b] font-semibold border-2 border-[#064e3b]/20 rounded-xl hover:bg-[#064e3b]/5 transition-colors"
+                >
+                  Login
+                </button>
+                <button 
+                  onClick={onSignup}
+                  className="w-full py-3 bg-[#064e3b] text-white font-semibold rounded-xl shadow-lg hover:bg-[#0f5132] transition-colors"
+                >
+                  Sign Up Free
+                </button>
+              </div>
             </div>
-          </div>
+          </>
         )}
       </nav>
 
@@ -311,7 +347,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
                 </div>
               </div>
 
-              <div className="lg:w-2/3 relative">
+              <div className="hidden lg:block lg:w-2/3 relative">
                    <div className="w-full h-full min-h-[400px]  p-6 flex items-stretch justify-center">
                       {/* Campaign Builder Demo */}
                       {activeTab === 'campaign' && (
@@ -832,7 +868,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
             <div className="bg-white rounded-[3rem] p-8 md:p-16 shadow-2xl flex flex-col lg:flex-row gap-16 overflow-hidden relative">
               <div className="lg:w-1/2 space-y-8 relative z-10">
                 <h2 className="text-4xl font-bold text-[#064e3b]">Let's talk about your mission.</h2>
-                <p className="text-lg text-slate-600">
+                <p className="hidden md:block text-lg text-slate-600">
                   Ready to streamline your fundraising? Whether you have a question about kiosks, Gift Aid, or custom pricing, our team is here to help.
                 </p>
               </div>
@@ -906,7 +942,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
 
             <div className="space-y-4">
               <h5 className="font-bold text-[#064e3b] uppercase tracking-wider text-xs">Navigation</h5>
-              <ul className="grid grid-cols-2 gap-y-2 gap-x-4 text-sm text-slate-600 font-medium">
+              <ul className="flex flex-row gap-4 text-sm text-slate-600 font-medium">
                 <li>
                   <button 
                     onClick={onLogin}
@@ -924,35 +960,11 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
                   </button>
                 </li>
                 <li>
-                  <a 
-                    href="#contact" 
-                    className="hover:text-[#064e3b] transition-colors"
-                  >
-                    Contact
-                  </a>
-                </li>
-                <li>
                   <button 
                     onClick={() => onNavigate('terms')}
                     className="hover:text-[#064e3b] transition-colors"
                   >
                     Terms
-                  </button>
-                </li>
-                <li>
-                  <button 
-                    onClick={() => onNavigate('about')}
-                    className="hover:text-[#064e3b] transition-colors"
-                  >
-                    About
-                  </button>
-                </li>
-                <li>
-                  <button 
-                    onClick={() => onNavigate('docs')}
-                    className="hover:text-[#064e3b] transition-colors"
-                  >
-                    Docs
                   </button>
                 </li>
               </ul>
