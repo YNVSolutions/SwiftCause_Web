@@ -22,6 +22,7 @@ import {
   Linkedin,
   MessageCircle
 } from 'lucide-react';
+import Image from 'next/image';
 
 interface HomePageProps {
   onLogin: () => void;
@@ -45,10 +46,19 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
 
   const navItems = [
     { label: 'Features', href: '#features' },
-    { label: 'Performance', href: '#performance' },
+    { label: 'Tools', href: '#demo' },
     { label: 'FAQ', href: '#faq' },
     { label: 'Contact', href: '#contact' },
   ];
+
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    const element = document.querySelector(href);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setIsMenuOpen(false);
+    }
+  };
 
   const features = [
     {
@@ -100,13 +110,13 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
       icon: <PenTool className="w-5 h-5" />
     },
     kiosk: {
-      title: "Powerful Kiosk Experience",
+      title: "Assign to Kiosk",
       description: "Turn any tablet into a professional donation station. Perfect for shop fronts, events, and community spaces.",
       image: "https://picsum.photos/1000/600?random=kiosk",
       icon: <Tv className="w-5 h-5" />
     },
     dashboard: {
-      title: "Integrated Performance Tracking",
+      title: "Admin Dashboard",
       description: "See your multi-channel performance at a glance. Export Gift Aid reports and analyze donor trends effortlessly.",
       image: "https://picsum.photos/1000/600?random=analytics",
       icon: <Activity className="w-5 h-5" />
@@ -127,9 +137,13 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
             onClick={() => onNavigate('home')}
             className="flex items-center gap-2"
           >
-            <div className="w-10 h-10 bg-[#064e3b] rounded-xl flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-xl">S</span>
-            </div>
+            <Image 
+              src="/logo.png" 
+              alt="SwiftCause Logo" 
+              width={40} 
+              height={40}
+              className="rounded-xl shadow-lg"
+            />
             <span className="text-2xl font-bold text-[#064e3b] tracking-tight">SwiftCause</span>
           </button>
 
@@ -138,8 +152,9 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
             {navItems.map((item) => (
               <a 
                 key={item.label} 
-                href={item.href} 
-                className="text-[#064e3b]/80 hover:text-[#064e3b] font-medium transition-colors"
+                href={item.href}
+                onClick={(e) => handleNavClick(e, item.href)}
+                className="text-[#064e3b]/80 hover:text-[#064e3b] font-medium transition-colors cursor-pointer"
               >
                 {item.label}
               </a>
@@ -176,9 +191,9 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
             {navItems.map((item) => (
               <a 
                 key={item.label} 
-                href={item.href} 
-                className="text-lg font-medium text-[#064e3b]"
-                onClick={() => setIsMenuOpen(false)}
+                href={item.href}
+                onClick={(e) => handleNavClick(e, item.href)}
+                className="text-lg font-medium text-[#064e3b] cursor-pointer"
               >
                 {item.label}
               </a>
@@ -217,7 +232,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
               </h1>
               
               <p className="text-xl text-slate-600 leading-relaxed max-w-lg">
-                Empower your charity with modern digital tools for physical kiosks, online campaigns, and automatic Gift Aid—all in one place.
+                Empower your charity with modern digital tools for fast setup, seamless donations, and kiosk-based giving.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
@@ -235,24 +250,251 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
               <div className="absolute -top-20 -right-20 w-80 h-80 bg-[#064e3b]/5 rounded-full blur-3xl"></div>
               <div className="relative glass-card border border-white p-6 rounded-[2.5rem] shadow-2xl overflow-hidden">
                 <div className="bg-white rounded-2xl overflow-hidden shadow-inner border border-slate-100">
-                  <div className="h-12 bg-slate-50 border-b flex items-center px-4 gap-2">
+                  {/* Mac Window Header */}
+                  <div className="h-10 bg-slate-50 border-b flex items-center px-4 gap-2">
                     <div className="w-3 h-3 rounded-full bg-red-400"></div>
                     <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
                     <div className="w-3 h-3 rounded-full bg-green-400"></div>
-                    <div className="ml-4 h-6 w-full max-w-md bg-white rounded border border-slate-100 flex items-center px-2 text-[10px] text-slate-400 text-center justify-center">
-                      app.swiftcause.org/new-campaign
-                    </div>
                   </div>
-                  <div className="p-8 space-y-4">
-                     <div className="space-y-1">
-                        <div className="h-4 w-24 bg-slate-100 rounded"></div>
-                        <div className="h-10 w-full bg-[#F3F1EA] rounded-xl border border-slate-200"></div>
-                     </div>
-                     <div className="space-y-1">
-                        <div className="h-4 w-32 bg-slate-100 rounded"></div>
-                        <div className="h-24 w-full bg-[#F3F1EA] rounded-xl border border-slate-200"></div>
-                     </div>
-                     <div className="h-12 w-full bg-[#064e3b] rounded-xl"></div>
+                  
+                  {/* Mini Dashboard Content */}
+                  <div className="flex h-[480px]">
+                    {/* Sidebar */}
+                    <div className="w-40 bg-[#064e3b] p-4 flex flex-col">
+                      <div className="mb-6">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Image 
+                            src="/logo.png" 
+                            alt="Logo" 
+                            width={20} 
+                            height={20}
+                            className="rounded"
+                          />
+                          <div className="text-white text-xs font-bold">SwiftCause</div>
+                        </div>
+                        <div className="text-[8px] text-white/60">Admin Portal</div>
+                      </div>
+                      
+                      <div className="space-y-1 flex-1">
+                        <div className="px-2 py-1.5 bg-white/10 rounded text-white text-[10px] font-medium">
+                          Dashboard
+                        </div>
+                        <div className="px-2 py-1.5 text-white/60 text-[10px] font-medium">
+                          Campaigns
+                        </div>
+                        <div className="px-2 py-1.5 text-white/60 text-[10px] font-medium">
+                          Donations
+                        </div>
+                        <div className="px-2 py-1.5 text-white/60 text-[10px] font-medium">
+                          Kiosks
+                        </div>
+                        <div className="px-2 py-1.5 text-white/60 text-[10px] font-medium">
+                          Users
+                        </div>
+                        <div className="px-2 py-1.5 text-white/60 text-[10px] font-medium">
+                          Gift Aid
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Main Content */}
+                    <div className="flex-1 bg-[#F7F6F2] p-4 overflow-hidden">
+                      <div className="mb-3">
+                        <h3 className="text-sm font-bold text-[#064e3b]">Dashboard</h3>
+                        <p className="text-[8px] text-slate-500">Real-time view of fundraising activity</p>
+                      </div>
+                      
+                      {/* Stats Cards */}
+                      <div className="grid grid-cols-4 gap-2 mb-3">
+                        <div className="bg-white rounded-lg p-2 border border-slate-100">
+                          <div className="text-[8px] text-slate-500 mb-1">TOTAL RAISED</div>
+                          <div className="text-sm font-bold text-[#064e3b]">£145.39</div>
+                        </div>
+                        <div className="bg-white rounded-lg p-2 border border-slate-100">
+                          <div className="text-[8px] text-slate-500 mb-1">CAMPAIGNS</div>
+                          <div className="text-sm font-bold text-[#064e3b]">75</div>
+                        </div>
+                        <div className="bg-white rounded-lg p-2 border border-slate-100">
+                          <div className="text-[8px] text-slate-500 mb-1">DONATIONS</div>
+                          <div className="text-sm font-bold text-[#064e3b]">76</div>
+                        </div>
+                        <div className="bg-white rounded-lg p-2 border border-slate-100">
+                          <div className="text-[8px] text-slate-500 mb-1">GIFT AID</div>
+                          <div className="text-sm font-bold text-[#064e3b]">£7.23</div>
+                        </div>
+                      </div>
+                      
+                      {/* Revenue Chart */}
+                      <div className="bg-white rounded-lg p-3 border border-slate-100 mb-3">
+                        <div className="flex items-center gap-1 mb-2">
+                          <TrendingUp className="w-3 h-3 text-emerald-600" />
+                          <h4 className="text-[10px] font-bold text-[#064e3b]">Revenue Growth</h4>
+                        </div>
+                        <p className="text-[7px] text-slate-500 mb-3">Monthly revenue trends including Gift Aid uplift</p>
+                        
+                        {/* Simple Line Chart */}
+                        <div className="relative h-24 pl-8">
+                          <svg className="w-full h-full" viewBox="0 0 300 100" preserveAspectRatio="none">
+                            {/* Grid lines */}
+                            <line x1="0" y1="25" x2="300" y2="25" stroke="#e2e8f0" strokeWidth="0.5" />
+                            <line x1="0" y1="50" x2="300" y2="50" stroke="#e2e8f0" strokeWidth="0.5" />
+                            <line x1="0" y1="75" x2="300" y2="75" stroke="#e2e8f0" strokeWidth="0.5" />
+                            
+                            {/* Revenue line (going up) */}
+                            <polyline
+                              points="0,85 50,72 100,63 150,50 200,38 250,29 300,21"
+                              fill="none"
+                              stroke="#064e3b"
+                              strokeWidth="2"
+                            />
+                            
+                            {/* Donations line (dashed, going up) */}
+                            <polyline
+                              points="0,90 50,78 100,69 150,57 200,43 250,35 300,27"
+                              fill="none"
+                              stroke="#0f5132"
+                              strokeWidth="1.5"
+                              strokeDasharray="3,3"
+                            />
+                          </svg>
+                          
+                          {/* Y-axis labels */}
+                          <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-between text-[7px] text-slate-400">
+                            <span>£50</span>
+                            <span>£40</span>
+                            <span>£30</span>
+                            <span>£20</span>
+                          </div>
+                          
+                          {/* X-axis labels */}
+                          <div className="absolute bottom-0 left-8 right-0 flex justify-between text-[7px] text-slate-400 -mb-4">
+                            <span>Dec</span>
+                            <span>Jan</span>
+                            <span>Feb</span>
+                            <span>Mar</span>
+                            <span>Apr</span>
+                          </div>
+                        </div>
+                        
+                        {/* Legend */}
+                        <div className="flex gap-3 mt-5 justify-center">
+                          <div className="flex items-center gap-1">
+                            <div className="w-3 h-0.5 bg-[#0f5132]"></div>
+                            <span className="text-[7px] text-slate-600">Donations</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <div className="w-3 h-0.5 bg-[#064e3b]"></div>
+                            <span className="text-[7px] text-slate-600">Total Revenue</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Bottom Row: Activity Heatmap & Pie Chart */}
+                      <div className="grid grid-cols-2 gap-3">
+                        {/* Activity Heatmap */}
+                        <div className="bg-white rounded-lg p-3 border border-slate-100">
+                          <h4 className="text-[10px] font-bold text-[#064e3b] mb-2">Activity Heatmap</h4>
+                          <div className="space-y-1">
+                            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => (
+                              <div key={day} className="flex items-center gap-1">
+                                <span className="text-[7px] text-slate-500 w-6">{day}</span>
+                                <div className="flex gap-0.5 flex-1">
+                                  {Array.from({ length: 12 }).map((_, j) => {
+                                    const intensity = Math.random();
+                                    const bgColor = intensity > 0.7 ? 'bg-emerald-600' : 
+                                                   intensity > 0.5 ? 'bg-emerald-400' : 
+                                                   intensity > 0.3 ? 'bg-emerald-200' : 'bg-slate-100';
+                                    return (
+                                      <div 
+                                        key={j} 
+                                        className={`h-2 flex-1 rounded-sm ${bgColor}`}
+                                      />
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="flex items-center justify-between mt-2 text-[6px] text-slate-400">
+                            <span>Less</span>
+                            <div className="flex gap-0.5">
+                              <div className="w-2 h-2 bg-slate-100 rounded-sm"></div>
+                              <div className="w-2 h-2 bg-emerald-200 rounded-sm"></div>
+                              <div className="w-2 h-2 bg-emerald-400 rounded-sm"></div>
+                              <div className="w-2 h-2 bg-emerald-600 rounded-sm"></div>
+                            </div>
+                            <span>More</span>
+                          </div>
+                        </div>
+
+                        {/* Pie Chart */}
+                        <div className="bg-white rounded-lg p-3 border border-slate-100">
+                          <h4 className="text-[10px] font-bold text-[#064e3b] mb-2">Donation Sources</h4>
+                          <div className="flex items-center justify-center h-24">
+                            <svg width="80" height="80" viewBox="0 0 100 100">
+                              {/* Online - 60% */}
+                              <circle
+                                cx="50"
+                                cy="50"
+                                r="40"
+                                fill="transparent"
+                                stroke="#10b981"
+                                strokeWidth="20"
+                                strokeDasharray="150.8 251.2"
+                                transform="rotate(-90 50 50)"
+                              />
+                              {/* Kiosk - 30% */}
+                              <circle
+                                cx="50"
+                                cy="50"
+                                r="40"
+                                fill="transparent"
+                                stroke="#3b82f6"
+                                strokeWidth="20"
+                                strokeDasharray="75.4 326.6"
+                                strokeDashoffset="-150.8"
+                                transform="rotate(-90 50 50)"
+                              />
+                              {/* Events - 10% */}
+                              <circle
+                                cx="50"
+                                cy="50"
+                                r="40"
+                                fill="transparent"
+                                stroke="#a855f7"
+                                strokeWidth="20"
+                                strokeDasharray="25.1 376.9"
+                                strokeDashoffset="-226.2"
+                                transform="rotate(-90 50 50)"
+                              />
+                            </svg>
+                          </div>
+                          <div className="space-y-1 mt-2">
+                            <div className="flex items-center justify-between text-[7px]">
+                              <div className="flex items-center gap-1">
+                                <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                                <span className="text-slate-600">Online</span>
+                              </div>
+                              <span className="font-bold text-slate-700">60%</span>
+                            </div>
+                            <div className="flex items-center justify-between text-[7px]">
+                              <div className="flex items-center gap-1">
+                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                <span className="text-slate-600">Kiosk</span>
+                              </div>
+                              <span className="font-bold text-slate-700">30%</span>
+                            </div>
+                            <div className="flex items-center justify-between text-[7px]">
+                              <div className="flex items-center gap-1">
+                                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                                <span className="text-slate-600">Events</span>
+                              </div>
+                              <span className="font-bold text-slate-700">10%</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -318,54 +560,123 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
                     </button>
                   ))}
                 </div>
-
-                <div className="pt-6">
-                  <button 
-                    onClick={() => onNavigate('docs')}
-                    className="text-[#064e3b] font-bold inline-flex items-center gap-2 hover:gap-3 transition-all"
-                  >
-                    Learn more about our builder <Layout className="w-4 h-4" />
-                  </button>
-                </div>
               </div>
 
               <div className="lg:w-2/3 relative">
-                <div className="relative z-10 bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden h-full">
-                   <div className="w-full h-full min-h-[400px] bg-gradient-to-br from-slate-50 to-slate-100 p-8 flex items-stretch justify-center">
+                   <div className="w-full h-full min-h-[400px]  p-6 flex items-stretch justify-center">
                       {/* Campaign Builder Demo */}
                       {activeTab === 'campaign' && (
-                        <div className="w-full h-full flex items-center justify-center animate-fade-in">
-                          <div className="bg-white rounded-2xl p-8 shadow-lg w-full h-full flex flex-col justify-center max-w-2xl">
-                            <div className="space-y-6">
+                        <div className="w-full max-w-2xl h-full flex items-center justify-center animate-fade-in">
+                          <div className="bg-white rounded-2xl shadow-2xl w-full h-full overflow-hidden border border-slate-200">
+                            {/* Modal Header */}
+                            <div className="bg-slate-50 border-b border-slate-200 px-4 py-2.5 flex items-center justify-between">
                               <div>
-                                <label className="text-base font-semibold text-slate-600 mb-3 block">Campaign Title</label>
-                                <div className="h-14 bg-[#F3F1EA] rounded-xl border-2 border-[#064e3b]/20 flex items-center px-5">
-                                  <span className="text-lg text-slate-700 animate-pulse">Save the Rainforest</span>
-                                </div>
+                                <div className="text-[9px] text-slate-500 uppercase tracking-wider mb-0.5">Edit • Campaign</div>
+                                <h3 className="text-sm font-bold text-[#064e3b]">General Information</h3>
                               </div>
-                              <div>
-                                <label className="text-base font-semibold text-slate-600 mb-3 block">Fundraising Goal</label>
-                                <div className="h-14 bg-[#F3F1EA] rounded-xl border-2 border-[#064e3b]/20 flex items-center px-5">
-                                  <span className="text-lg text-slate-700">£50,000</span>
-                                </div>
-                              </div>
-                              <div>
-                                <label className="text-base font-semibold text-slate-600 mb-3 block">Donation Amounts</label>
-                                <div className="flex gap-4">
-                                  <div className="flex-1 h-16 bg-emerald-100 rounded-xl flex items-center justify-center border-2 border-emerald-500">
-                                    <span className="text-2xl font-bold text-emerald-700">£25</span>
-                                  </div>
-                                  <div className="flex-1 h-16 bg-emerald-100 rounded-xl flex items-center justify-center border-2 border-emerald-500">
-                                    <span className="text-2xl font-bold text-emerald-700">£50</span>
-                                  </div>
-                                  <div className="flex-1 h-16 bg-emerald-100 rounded-xl flex items-center justify-center border-2 border-emerald-500">
-                                    <span className="text-2xl font-bold text-emerald-700">£100</span>
-                                  </div>
-                                </div>
-                              </div>
-                              <button className="w-full h-16 bg-[#064e3b] text-white rounded-xl font-bold text-lg shadow-lg hover:bg-[#0f5132] transition-all">
-                                Create Campaign
+                              <button className="w-6 h-6 rounded-full hover:bg-slate-200 flex items-center justify-center text-slate-400">
+                                <X className="w-4 h-4" />
                               </button>
+                            </div>
+
+                            <div className="flex h-[calc(100%-56px)]">
+                              {/* Sidebar */}
+                              <div className="w-36 bg-slate-50 border-r border-slate-200 p-2.5">
+                                <div className="mb-2">
+                                  <div className="text-[9px] font-bold text-slate-500 mb-1">Campaign</div>
+                                  <div className="text-[8px] text-slate-400">Configuration</div>
+                                </div>
+                                <div className="space-y-1.5">
+                                  <div className="px-2.5 py-2 bg-emerald-600 text-white rounded-lg font-semibold text-[10px]">
+                                    BASIC INFO
+                                  </div>
+                                  <div className="px-2.5 py-2 text-slate-600 hover:bg-white rounded-lg font-medium text-[10px] cursor-pointer">
+                                    DETAILS
+                                  </div>
+                                  <div className="px-2.5 py-2 text-slate-600 hover:bg-white rounded-lg font-medium text-[10px] cursor-pointer">
+                                    MEDIA
+                                  </div>
+                                  <div className="px-2.5 py-2 text-slate-600 hover:bg-white rounded-lg font-medium text-[10px] cursor-pointer">
+                                    KIOSK DISTRIBUTION
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Main Form Content */}
+                              <div className="flex-1 p-4 overflow-y-auto">
+                                <div className="space-y-3.5">
+                                  {/* Campaign Title */}
+                                  <div>
+                                    <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">
+                                      Campaign Title
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value="Warm Clothes & Meals Can Bring Back The Lost Smiles"
+                                      readOnly
+                                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-[11px] text-slate-700"
+                                    />
+                                  </div>
+
+                                  {/* Brief Overview */}
+                                  <div>
+                                    <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">
+                                      Brief Overview
+                                    </label>
+                                    <textarea
+                                      value="Let us all join hands and support SPYM in their efforts to help those in dire need."
+                                      readOnly
+                                      rows={2}
+                                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-[11px] text-slate-700 resize-none"
+                                    />
+                                  </div>
+
+                                  {/* Detailed Campaign Story */}
+                                  <div>
+                                    <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">
+                                      Detailed Campaign Story
+                                    </label>
+                                    <div className="border-2 border-emerald-500 rounded-lg overflow-hidden">
+                                      {/* Rich Text Toolbar */}
+                                      <div className="bg-white border-b border-slate-200 px-2 py-1.5 flex items-center gap-1.5">
+                                        <button className="w-6 h-6 flex items-center justify-center hover:bg-slate-100 rounded">
+                                          <span className="font-bold text-[11px]">B</span>
+                                        </button>
+                                        <button className="w-6 h-6 flex items-center justify-center hover:bg-slate-100 rounded">
+                                          <span className="italic text-[11px]">I</span>
+                                        </button>
+                                        <button className="w-6 h-6 flex items-center justify-center hover:bg-slate-100 rounded">
+                                          <span className="text-[11px]">—</span>
+                                        </button>
+                                      </div>
+                                      {/* Text Content */}
+                                      <div className="bg-white px-3 py-2 min-h-[100px] text-[11px] text-slate-700 leading-relaxed">
+                                        <p>
+                                          The chilly winters of Delhi are infamous. Each year, we hear about <strong>hundreds</strong> of homeless people who have died braving the cold winter waves. While we are all cuddled up in our homes with warm clothes and good food, there are so many on the streets.
+                                        </p>
+                                        <div className="mt-1.5 w-0.5 h-3 bg-emerald-500 animate-pulse"></div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className="flex items-center justify-between mt-5 pt-4 border-t border-slate-200">
+                                  <button className="flex items-center gap-1.5 px-3 py-1.5 text-slate-600 hover:bg-slate-100 rounded-lg text-[10px] font-medium">
+                                    <Layout className="w-3 h-3" />
+                                    SAVE DRAFT
+                                  </button>
+                                  <div className="flex gap-2">
+                                    <button className="px-3 py-1.5 text-slate-600 hover:bg-slate-100 rounded-lg text-[10px] font-semibold">
+                                      CANCEL
+                                    </button>
+                                    <button className="px-3 py-1.5 bg-[#064e3b] text-white rounded-lg text-[10px] font-semibold hover:bg-[#0f5132] flex items-center gap-1.5">
+                                      <Layout className="w-3 h-3" />
+                                      UPDATE CAMPAIGN
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -373,32 +684,147 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
 
                       {/* Kiosk Demo */}
                       {activeTab === 'kiosk' && (
-                        <div className="w-full h-full flex items-center justify-center animate-fade-in">
-                          <div className="bg-gradient-to-b from-slate-800 to-slate-900 rounded-3xl p-6 shadow-2xl border-4 border-slate-700 w-full max-w-xl h-full flex items-center">
-                            <div className="bg-white rounded-2xl p-10 space-y-8 w-full">
-                              <div className="text-center">
-                                <h3 className="text-3xl font-bold text-[#064e3b] mb-3">Support Our Cause</h3>
-                                <p className="text-base text-slate-600">Choose your donation amount</p>
+                        <div className="w-full max-w-2xl h-full flex items-center justify-center animate-fade-in">
+                          <div className="bg-white rounded-2xl shadow-2xl w-full h-full overflow-hidden border border-slate-200">
+                            {/* Modal Header */}
+                            <div className="bg-slate-50 border-b border-slate-200 px-4 py-2.5 flex items-center justify-between">
+                              <div>
+                                <div className="text-[9px] text-slate-500 uppercase tracking-wider mb-0.5">Edit • Kiosk</div>
+                                <h3 className="text-sm font-bold text-[#064e3b]">Kiosk Configuration</h3>
                               </div>
-                              
-                              <div className="grid grid-cols-2 gap-5">
-                                {['£10', '£25', '£50', '£100'].map((amount, i) => (
-                                  <button 
-                                    key={i}
-                                    className="h-28 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl border-2 border-emerald-200 hover:border-emerald-500 transition-all flex items-center justify-center group"
-                                  >
-                                    <span className="text-4xl font-bold text-emerald-700 group-hover:scale-110 transition-transform">{amount}</span>
-                                  </button>
-                                ))}
-                              </div>
-
-                              <button className="w-full h-20 bg-[#064e3b] text-white rounded-2xl font-bold text-2xl shadow-lg animate-pulse">
-                                Tap to Donate
+                              <button className="w-6 h-6 rounded-full hover:bg-slate-200 flex items-center justify-center text-slate-400">
+                                <X className="w-4 h-4" />
                               </button>
+                            </div>
 
-                              <div className="flex items-center justify-center gap-2 text-base text-slate-500">
-                                <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
-                                <span>Secure Payment</span>
+                            <div className="flex h-[calc(100%-56px)]">
+                              {/* Sidebar */}
+                              <div className="w-36 bg-slate-50 border-r border-slate-200 p-2.5">
+                                <div className="mb-2">
+                                  <div className="text-[9px] font-bold text-slate-500 mb-1">Kiosk</div>
+                                  <div className="text-[8px] text-slate-400">Configuration</div>
+                                </div>
+                                <div className="space-y-1.5">
+                                  <div className="px-2.5 py-2 text-slate-600 hover:bg-white rounded-lg font-medium text-[10px] cursor-pointer">
+                                    BASIC INFO
+                                  </div>
+                                  <div className="px-2.5 py-2 bg-emerald-600 text-white rounded-lg font-semibold text-[10px]">
+                                    CAMPAIGNS
+                                  </div>
+                                  <div className="px-2.5 py-2 text-slate-600 hover:bg-white rounded-lg font-medium text-[10px] cursor-pointer">
+                                    DISPLAY
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Main Content */}
+                              <div className="flex-1 p-4 overflow-y-auto">
+                                <div className="space-y-4">
+                                  {/* Available Campaigns */}
+                                  <div>
+                                    <div className="flex items-center gap-2 mb-3">
+                                      <Plus className="w-4 h-4 text-slate-400" />
+                                      <h4 className="text-[11px] font-bold text-slate-700">Available Campaigns</h4>
+                                      <span className="text-[10px] text-slate-400">2</span>
+                                    </div>
+                                    
+                                    <div className="space-y-2">
+                                      {/* Campaign 1 */}
+                                      <div className="bg-slate-50 rounded-lg p-3 flex items-center gap-3 border border-slate-200">
+                                        <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex-shrink-0 flex items-center justify-center">
+                                          <Heart className="w-5 h-5 text-white" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          <div className="text-[11px] font-semibold text-slate-700 truncate">
+                                            Warm Clothes & Meals Can Bring Back The Lost Smiles On T...
+                                          </div>
+                                          <div className="flex items-center gap-2 mt-0.5">
+                                            <span className="text-[9px] text-slate-500">£12.22 raised</span>
+                                            <span className="text-[9px] text-slate-400">•</span>
+                                            <span className="text-[9px] text-slate-500">17% funded</span>
+                                          </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          <button className="text-emerald-600 text-[10px] font-semibold flex items-center gap-1">
+                                            <Plus className="w-3 h-3" />
+                                            ASSIGN
+                                          </button>
+                                          <button className="text-blue-600 text-[10px] font-semibold flex items-center gap-1">
+                                            <PenTool className="w-3 h-3" />
+                                            Edit
+                                          </button>
+                                        </div>
+                                      </div>
+
+                                      {/* Campaign 2 */}
+                                      <div className="bg-slate-50 rounded-lg p-3 flex items-center gap-3 border border-slate-200">
+                                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex-shrink-0 flex items-center justify-center">
+                                          <Zap className="w-5 h-5 text-white" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          <div className="text-[11px] font-semibold text-slate-700 truncate">
+                                            Schooling Special needs children
+                                          </div>
+                                          <div className="flex items-center gap-2 mt-0.5">
+                                            <span className="text-[9px] text-slate-500">£0.00 raised</span>
+                                            <span className="text-[9px] text-slate-400">•</span>
+                                            <span className="text-[9px] text-slate-500">0% funded</span>
+                                          </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          <button className="text-emerald-600 text-[10px] font-semibold flex items-center gap-1">
+                                            <Plus className="w-3 h-3" />
+                                            ASSIGN
+                                          </button>
+                                          <button className="text-blue-600 text-[10px] font-semibold flex items-center gap-1">
+                                            <PenTool className="w-3 h-3" />
+                                            Edit
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Campaign View */}
+                                  <div className="pt-4 border-t border-slate-200">
+                                    <h4 className="text-[11px] font-bold text-slate-700 mb-3">Campaign View</h4>
+                                    
+                                    <div className="mb-3">
+                                      <div className="text-[10px] font-bold text-slate-600 mb-2">DISPLAY LAYOUT</div>
+                                      <div className="grid grid-cols-3 gap-2">
+                                        <div className="border-2 border-emerald-500 bg-emerald-50 rounded-lg p-3 flex flex-col items-center gap-2 cursor-pointer">
+                                          <Layout className="w-6 h-6 text-emerald-600" />
+                                          <span className="text-[10px] font-semibold text-emerald-700">GRID</span>
+                                        </div>
+                                        <div className="border border-slate-200 bg-white rounded-lg p-3 flex flex-col items-center gap-2 cursor-pointer hover:border-slate-300">
+                                          <Menu className="w-6 h-6 text-slate-400" />
+                                          <span className="text-[10px] font-semibold text-slate-500">LIST</span>
+                                        </div>
+                                        <div className="border border-slate-200 bg-white rounded-lg p-3 flex flex-col items-center gap-2 cursor-pointer hover:border-slate-300">
+                                          <Tv className="w-6 h-6 text-slate-400" />
+                                          <span className="text-[10px] font-semibold text-slate-500">CAROUSEL</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className="flex items-center justify-between mt-5 pt-4 border-t border-slate-200">
+                                  <button className="flex items-center gap-1.5 px-3 py-1.5 text-slate-600 hover:bg-slate-100 rounded-lg text-[10px] font-medium">
+                                    <Layout className="w-3 h-3" />
+                                    SAVE DRAFT
+                                  </button>
+                                  <div className="flex gap-2">
+                                    <button className="px-3 py-1.5 text-slate-600 hover:bg-slate-100 rounded-lg text-[10px] font-semibold">
+                                      CANCEL
+                                    </button>
+                                    <button className="px-3 py-1.5 bg-[#064e3b] text-white rounded-lg text-[10px] font-semibold hover:bg-[#0f5132] flex items-center gap-1.5">
+                                      <Layout className="w-3 h-3" />
+                                      UPDATE KIOSK
+                                    </button>
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -407,168 +833,200 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
 
                       {/* Dashboard Demo */}
                       {activeTab === 'dashboard' && (
-                        <div className="w-full h-full flex items-center justify-center animate-fade-in">
-                          <div className="bg-white rounded-2xl p-10 shadow-lg w-full h-full flex flex-col justify-center">
-                            <div className="flex justify-between items-center mb-8">
-                              <div>
-                                <h3 className="text-2xl font-bold text-[#064e3b]">Campaign Performance</h3>
-                                <p className="text-sm text-slate-500 mt-1">Last 30 days</p>
-                              </div>
-                              <div className="text-right">
-                                <div className="text-4xl font-bold text-[#064e3b]">£18,450</div>
-                                <div className="text-base text-emerald-600 font-semibold flex items-center gap-1 justify-end mt-1">
-                                  <ArrowUpRight className="w-5 h-5" />
-                                  +32%
+                        <div className="w-full max-w-2xl h-full flex items-center justify-center animate-fade-in">
+                          <div className="bg-white rounded-2xl shadow-2xl w-full h-full overflow-hidden border border-slate-200">
+                            {/* Mac Window Header */}
+                            <div className="h-10 bg-slate-50 border-b flex items-center px-4 gap-2">
+                              <div className="w-3 h-3 rounded-full bg-red-400"></div>
+                              <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+                              <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                            </div>
+                            
+                            {/* Mini Dashboard Content */}
+                            <div className="flex h-[calc(100%-40px)]">
+                              {/* Sidebar */}
+                              <div className="w-32 bg-[#064e3b] p-3 flex flex-col">
+                                <div className="mb-4">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <Image 
+                                      src="/logo.png" 
+                                      alt="Logo" 
+                                      width={16} 
+                                      height={16}
+                                      className="rounded"
+                                    />
+                                    <div className="text-white text-[10px] font-bold">SwiftCause</div>
+                                  </div>
+                                  <div className="text-[7px] text-white/60">Admin Portal</div>
+                                </div>
+                                
+                                <div className="space-y-1 flex-1">
+                                  <div className="px-2 py-1.5 bg-white/10 rounded text-white text-[9px] font-medium">
+                                    Dashboard
+                                  </div>
+                                  <div className="px-2 py-1.5 text-white/60 text-[9px] font-medium">
+                                    Campaigns
+                                  </div>
+                                  <div className="px-2 py-1.5 text-white/60 text-[9px] font-medium">
+                                    Donations
+                                  </div>
+                                  <div className="px-2 py-1.5 text-white/60 text-[9px] font-medium">
+                                    Kiosks
+                                  </div>
+                                  <div className="px-2 py-1.5 text-white/60 text-[9px] font-medium">
+                                    Users
+                                  </div>
                                 </div>
                               </div>
-                            </div>
+                              
+                              {/* Main Content */}
+                              <div className="flex-1 bg-[#F7F6F2] p-3 overflow-hidden">
+                                <div className="mb-2">
+                                  <h3 className="text-xs font-bold text-[#064e3b]">Dashboard</h3>
+                                  <p className="text-[7px] text-slate-500">Real-time view of fundraising activity</p>
+                                </div>
+                                
+                                {/* Stats Cards */}
+                                <div className="grid grid-cols-4 gap-1.5 mb-2">
+                                  <div className="bg-white rounded-lg p-1.5 border border-slate-100">
+                                    <div className="text-[7px] text-slate-500 mb-0.5">TOTAL RAISED</div>
+                                    <div className="text-[11px] font-bold text-[#064e3b]">£145.39</div>
+                                  </div>
+                                  <div className="bg-white rounded-lg p-1.5 border border-slate-100">
+                                    <div className="text-[7px] text-slate-500 mb-0.5">CAMPAIGNS</div>
+                                    <div className="text-[11px] font-bold text-[#064e3b]">75</div>
+                                  </div>
+                                  <div className="bg-white rounded-lg p-1.5 border border-slate-100">
+                                    <div className="text-[7px] text-slate-500 mb-0.5">DONATIONS</div>
+                                    <div className="text-[11px] font-bold text-[#064e3b]">76</div>
+                                  </div>
+                                  <div className="bg-white rounded-lg p-1.5 border border-slate-100">
+                                    <div className="text-[7px] text-slate-500 mb-0.5">GIFT AID</div>
+                                    <div className="text-[11px] font-bold text-[#064e3b]">£7.23</div>
+                                  </div>
+                                </div>
+                                
+                                {/* Revenue Chart */}
+                                <div className="bg-white rounded-lg p-2.5 border border-slate-100 mb-2">
+                                  <div className="flex items-center gap-1 mb-1.5">
+                                    <TrendingUp className="w-3 h-3 text-emerald-600" />
+                                    <h4 className="text-[9px] font-bold text-[#064e3b]">Revenue Growth</h4>
+                                  </div>
+                                  
+                                  {/* Simple Line Chart */}
+                                  <div className="relative h-20 pl-6">
+                                    <svg className="w-full h-full" viewBox="0 0 300 100" preserveAspectRatio="none">
+                                      <line x1="0" y1="25" x2="300" y2="25" stroke="#e2e8f0" strokeWidth="0.5" />
+                                      <line x1="0" y1="50" x2="300" y2="50" stroke="#e2e8f0" strokeWidth="0.5" />
+                                      <line x1="0" y1="75" x2="300" y2="75" stroke="#e2e8f0" strokeWidth="0.5" />
+                                      
+                                      <polyline
+                                        points="0,85 50,72 100,63 150,50 200,38 250,29 300,21"
+                                        fill="none"
+                                        stroke="#064e3b"
+                                        strokeWidth="2"
+                                      />
+                                      
+                                      <polyline
+                                        points="0,90 50,78 100,69 150,57 200,43 250,35 300,27"
+                                        fill="none"
+                                        stroke="#0f5132"
+                                        strokeWidth="1.5"
+                                        strokeDasharray="3,3"
+                                      />
+                                    </svg>
+                                    
+                                    <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-between text-[6px] text-slate-400">
+                                      <span>£50</span>
+                                      <span>£40</span>
+                                      <span>£30</span>
+                                      <span>£20</span>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="flex gap-2 mt-3 justify-center">
+                                    <div className="flex items-center gap-1">
+                                      <div className="w-2 h-0.5 bg-[#0f5132]"></div>
+                                      <span className="text-[6px] text-slate-600">Donations</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <div className="w-2 h-0.5 bg-[#064e3b]"></div>
+                                      <span className="text-[6px] text-slate-600">Total Revenue</span>
+                                    </div>
+                                  </div>
+                                </div>
 
-                            <div className="grid grid-cols-3 gap-4 mb-8">
-                              <div className="bg-emerald-50 rounded-2xl p-5">
-                                <div className="text-sm text-slate-600 mb-2">Online</div>
-                                <div className="text-2xl font-bold text-emerald-700">£11.8k</div>
-                              </div>
-                              <div className="bg-blue-50 rounded-2xl p-5">
-                                <div className="text-sm text-slate-600 mb-2">Kiosk</div>
-                                <div className="text-2xl font-bold text-blue-700">£5.7k</div>
-                              </div>
-                              <div className="bg-purple-50 rounded-2xl p-5">
-                                <div className="text-sm text-slate-600 mb-2">Events</div>
-                                <div className="text-2xl font-bold text-purple-700">£930</div>
-                              </div>
-                            </div>
+                                {/* Bottom Row: Activity Heatmap & Pie Chart */}
+                                <div className="grid grid-cols-2 gap-2">
+                                  {/* Activity Heatmap */}
+                                  <div className="bg-white rounded-lg p-2 border border-slate-100">
+                                    <h4 className="text-[9px] font-bold text-[#064e3b] mb-1.5">Activity</h4>
+                                    <div className="space-y-0.5">
+                                      {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => (
+                                        <div key={day} className="flex items-center gap-1">
+                                          <span className="text-[6px] text-slate-500 w-5">{day}</span>
+                                          <div className="flex gap-0.5 flex-1">
+                                            {Array.from({ length: 10 }).map((_, j) => {
+                                              const intensity = Math.random();
+                                              const bgColor = intensity > 0.7 ? 'bg-emerald-600' : 
+                                                             intensity > 0.5 ? 'bg-emerald-400' : 
+                                                             intensity > 0.3 ? 'bg-emerald-200' : 'bg-slate-100';
+                                              return (
+                                                <div 
+                                                  key={j} 
+                                                  className={`h-1.5 flex-1 rounded-sm ${bgColor}`}
+                                                />
+                                              );
+                                            })}
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
 
-                            <div className="space-y-4">
-                              <div className="flex items-center justify-between text-base">
-                                <span className="text-slate-600 font-medium">Campaign Progress</span>
-                                <span className="font-bold text-[#064e3b] text-lg">64%</span>
-                              </div>
-                              <div className="h-5 bg-slate-100 rounded-full overflow-hidden">
-                                <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full animate-pulse" style={{ width: '64%' }}></div>
+                                  {/* Pie Chart */}
+                                  <div className="bg-white rounded-lg p-2 border border-slate-100">
+                                    <h4 className="text-[9px] font-bold text-[#064e3b] mb-1.5">Sources</h4>
+                                    <div className="flex items-center justify-center h-16">
+                                      <svg width="60" height="60" viewBox="0 0 100 100">
+                                        <circle cx="50" cy="50" r="40" fill="transparent" stroke="#10b981" strokeWidth="20" strokeDasharray="150.8 251.2" transform="rotate(-90 50 50)" />
+                                        <circle cx="50" cy="50" r="40" fill="transparent" stroke="#3b82f6" strokeWidth="20" strokeDasharray="75.4 326.6" strokeDashoffset="-150.8" transform="rotate(-90 50 50)" />
+                                        <circle cx="50" cy="50" r="40" fill="transparent" stroke="#a855f7" strokeWidth="20" strokeDasharray="25.1 376.9" strokeDashoffset="-226.2" transform="rotate(-90 50 50)" />
+                                      </svg>
+                                    </div>
+                                    <div className="space-y-0.5 mt-1">
+                                      <div className="flex items-center justify-between text-[6px]">
+                                        <div className="flex items-center gap-1">
+                                          <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
+                                          <span className="text-slate-600">Online</span>
+                                        </div>
+                                        <span className="font-bold text-slate-700">60%</span>
+                                      </div>
+                                      <div className="flex items-center justify-between text-[6px]">
+                                        <div className="flex items-center gap-1">
+                                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                                          <span className="text-slate-600">Kiosk</span>
+                                        </div>
+                                        <span className="font-bold text-slate-700">30%</span>
+                                      </div>
+                                      <div className="flex items-center justify-between text-[6px]">
+                                        <div className="flex items-center gap-1">
+                                          <div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
+                                          <span className="text-slate-600">Events</span>
+                                        </div>
+                                        <span className="font-bold text-slate-700">10%</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           </div>
                         </div>
                       )}
                    </div>
-                </div>
                 <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#0f5132]/10 rounded-full blur-3xl"></div>
                 <div className="absolute -bottom-10 -left-10 w-60 h-60 bg-[#064e3b]/10 rounded-full blur-3xl"></div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Performance Section */}
-        <section id="performance" className="py-24 bg-[#F3F1EA] px-6 overflow-hidden">
-          <div className="container mx-auto">
-            <div className="grid lg:grid-cols-2 gap-16 items-center">
-              <div className="space-y-6">
-                <h2 className="text-4xl font-bold text-[#064e3b] leading-tight">Integrated Performance & Real-time Insights.</h2>
-                <p className="text-lg text-slate-600 leading-relaxed">
-                  Never wonder where your fundraising stands. Our unified dashboard pulls data from physical kiosks and online campaigns to give you a 360° view of your impact.
-                </p>
-                <ul className="space-y-4 pt-4">
-                  {[
-                    { title: "Dynamic Goal Tracking", icon: <TrendingUp className="w-5 h-5" /> },
-                    { title: "Automatic Gift Aid Calculation", icon: <PieChart className="w-5 h-5" /> },
-                  ].map((item, idx) => (
-                    <li key={idx} className="flex items-center gap-3 text-[#064e3b] font-semibold">
-                      <div className="w-8 h-8 rounded-full bg-[#064e3b]/10 flex items-center justify-center">
-                        {item.icon}
-                      </div>
-                      {item.title}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="bg-white p-8 rounded-[2.5rem] shadow-2xl border border-white">
-                <div className="space-y-8">
-                  <div className="flex justify-between items-end">
-                    <div>
-                      <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Total Raised This Month</div>
-                      <div className="text-3xl font-bold text-[#064e3b]">£24,590</div>
-                      <div className="text-sm text-slate-500 mt-1">Goal: £30,000</div>
-                    </div>
-                    <div className="flex items-center gap-1 text-[#0f5132] font-bold bg-emerald-50 px-3 py-2 rounded-lg">
-                      <ArrowUpRight className="w-4 h-4" />
-                      <span>+24%</span>
-                    </div>
-                  </div>
-
-                  {/* Progress Bar */}
-                  <div className="space-y-2">
-                    <div className="h-4 bg-slate-100 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full transition-all duration-1000"
-                        style={{ width: '82%' }}
-                      ></div>
-                    </div>
-                    <div className="flex justify-between text-xs text-slate-500">
-                      <span>82% of monthly goal</span>
-                      <span>£5,410 to go</span>
-                    </div>
-                  </div>
-
-                  {/* Weekly Trend Chart */}
-                  <div>
-                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Weekly Donations</div>
-                    <div className="flex items-end justify-between h-32 gap-2 bg-slate-50 rounded-xl p-4">
-                      {[
-                        { height: 45, label: 'Mon', amount: '£2.8k' },
-                        { height: 70, label: 'Tue', amount: '£4.2k' },
-                        { height: 55, label: 'Wed', amount: '£3.3k' },
-                        { height: 85, label: 'Thu', amount: '£5.1k' },
-                        { height: 65, label: 'Fri', amount: '£3.9k' },
-                        { height: 90, label: 'Sat', amount: '£5.4k' },
-                        { height: 75, label: 'Sun', amount: '£4.5k' }
-                      ].map((day, i) => (
-                        <div key={i} className="flex-1 flex flex-col items-center gap-2 group h-full justify-end">
-                          <div className="relative w-full flex items-end" style={{ height: '100%' }}>
-                            <div 
-                              className="w-full bg-gradient-to-t from-[#064e3b] to-emerald-500 group-hover:from-emerald-600 group-hover:to-emerald-400 transition-all rounded-t-lg cursor-pointer relative" 
-                              style={{ height: `${day.height}%` }}
-                            >
-                              <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10">
-                                {day.amount}
-                              </div>
-                            </div>
-                          </div>
-                          <span className="text-[10px] text-slate-400 font-medium mt-1">{day.label}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Channel Breakdown */}
-                  <div className="grid grid-cols-3 gap-4 pt-4">
-                    <div className="p-4 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl border border-emerald-200">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                        <div className="text-[10px] font-bold text-emerald-700 uppercase">Online</div>
-                      </div>
-                      <div className="text-lg font-bold text-emerald-700">£15.7k</div>
-                      <div className="text-xs text-emerald-600">64%</div>
-                    </div>
-                    <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl border border-blue-200">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        <div className="text-[10px] font-bold text-blue-700 uppercase">Kiosk</div>
-                      </div>
-                      <div className="text-lg font-bold text-blue-700">£7.6k</div>
-                      <div className="text-xs text-blue-600">31%</div>
-                    </div>
-                    <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl border border-purple-200">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                        <div className="text-[10px] font-bold text-purple-700 uppercase">Events</div>
-                      </div>
-                      <div className="text-lg font-bold text-purple-700">£1.2k</div>
-                      <div className="text-xs text-purple-600">5%</div>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -679,9 +1137,13 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
                 onClick={() => onNavigate('home')}
                 className="flex items-center gap-2"
               >
-                <div className="w-8 h-8 bg-[#064e3b] rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">S</span>
-                </div>
+                <Image 
+                  src="/logo.png" 
+                  alt="SwiftCause Logo" 
+                  width={32} 
+                  height={32}
+                  className="rounded-lg"
+                />
                 <span className="text-xl font-bold text-[#064e3b]">SwiftCause</span>
               </button>
               <p className="text-slate-500 text-sm leading-relaxed max-w-xs">
