@@ -105,19 +105,19 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
   const demoContent = {
     campaign: {
       title: "Create Campaigns in Seconds",
-      description: "Our intuitive builder lets you tell stories that inspire action. Customize amounts, add Gift Aid, and go live instantly.",
+      description: "Build and launch fundraising campaigns instantly.",
       image: "https://picsum.photos/1000/600?random=builder",
       icon: <PenTool className="w-5 h-5" />
     },
     kiosk: {
       title: "Assign to Kiosk",
-      description: "Turn any tablet into a professional donation station. Perfect for shop fronts, events, and community spaces.",
+      description: "Connect campaigns to physical donation terminals.",
       image: "https://picsum.photos/1000/600?random=kiosk",
       icon: <Tv className="w-5 h-5" />
     },
     dashboard: {
       title: "Admin Dashboard",
-      description: "See your multi-channel performance at a glance. Export Gift Aid reports and analyze donor trends effortlessly.",
+      description: "Track performance and manage your organization.",
       image: "https://picsum.photos/1000/600?random=analytics",
       icon: <Activity className="w-5 h-5" />
     }
@@ -553,7 +553,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
                       </div>
                       <div>
                         <h4 className={`font-bold ${activeTab === tab ? 'text-[#064e3b]' : 'text-slate-600'}`}>
-                          {demoContent[tab].title.split(' ')[0]} {demoContent[tab].title.split(' ')[1]}
+                          {demoContent[tab].title}
                         </h4>
                         <p className="text-sm opacity-80 line-clamp-1">{demoContent[tab].description}</p>
                       </div>
@@ -1233,10 +1233,20 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
               <div className="flex gap-4 items-center">
                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Follow us</span>
                 <div className="flex gap-2">
-                  <a href="#" className="w-8 h-8 bg-white border border-slate-200 rounded-lg flex items-center justify-center text-[#064e3b] hover:bg-[#064e3b] hover:text-white transition-all shadow-sm">
+                  <a 
+                    href="https://www.linkedin.com/company/ynv-solutions" 
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-8 h-8 bg-white border border-slate-200 rounded-lg flex items-center justify-center text-[#064e3b] hover:bg-[#064e3b] hover:text-white transition-all shadow-sm"
+                  >
                     <Linkedin className="w-4 h-4" />
                   </a>
-                  <a href="#" className="w-8 h-8 bg-white border border-slate-200 rounded-lg flex items-center justify-center text-[#064e3b] hover:bg-[#064e3b] hover:text-white transition-all shadow-sm">
+                  <a 
+                    href="https://github.com/YNVSolutions/SwiftCause_Web" 
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-8 h-8 bg-white border border-slate-200 rounded-lg flex items-center justify-center text-[#064e3b] hover:bg-[#064e3b] hover:text-white transition-all shadow-sm"
+                  >
                     <Github className="w-4 h-4" />
                   </a>
                 </div>
