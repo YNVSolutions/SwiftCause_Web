@@ -508,7 +508,7 @@ export function CampaignConfigurationDialog({
                         id="primaryCTA"
                         value={formData.configuration.primaryCTAText}
                         onChange={(e) => updateConfiguration({ primaryCTAText: e.target.value })}
-                        placeholder="Donate Now"
+                        placeholder="Donate"
                       />
                     </div>
 

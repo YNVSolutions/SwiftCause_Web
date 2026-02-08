@@ -93,7 +93,7 @@ export const DEFAULT_CAMPAIGN_CONFIG = {
   showDonorCount: true,
   showRecentDonations: true,
   maxRecentDonations: 5,
-  primaryCTAText: 'Donate Now',
+  primaryCTAText: 'Donate',
   secondaryCTAText: 'Learn More',
   theme: 'default' as const,
   requiredFields: ['email'] as const,

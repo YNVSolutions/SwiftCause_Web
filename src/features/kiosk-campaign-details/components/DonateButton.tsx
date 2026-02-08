@@ -7,7 +7,7 @@ export const DonateButton: React.FC<DonateButtonProps> = ({ disabled, onClick, l
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="w-full h-14 rounded-xl font-medium text-lg text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-200/70"
+      className="w-full h-[52px] rounded-full font-semibold text-[17px] text-white transition-all duration-150 ease-out disabled:opacity-50 disabled:cursor-not-allowed bg-[#0E8F5A] hover:brightness-[1.02] active:brightness-[0.98] shadow-[0_12px_32px_rgba(15,23,42,0.08)] font-lexend tracking-[0.01em]"
     >
       {label}
     </button>

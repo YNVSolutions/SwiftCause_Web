@@ -103,7 +103,7 @@ export function CampaignCard({
                   className="bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 ease-in-out text-sm"
                 >
                   <Heart className="mr-1 h-4 w-4" />
-                  Donate 
+                  Donate
                 </Button>
               )}
 
@@ -189,7 +189,7 @@ export function CampaignCard({
               size="lg"
             >
               <Heart className="mr-2 h-5 w-5" />
-              <span className="text-base sm:text-lg">Donate Now</span>
+              <span className="text-base sm:text-lg">Donate</span>
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           )}
