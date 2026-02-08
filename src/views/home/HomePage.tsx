@@ -1044,29 +1044,33 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
               {faqs.map((faq, idx) => (
                 <div 
                   key={idx} 
-                  className={`border border-slate-100 rounded-3xl transition-all ${openFaqIndex === idx ? 'bg-[#F7F6F2] shadow-sm' : 'bg-white hover:bg-slate-50'}`}
+                  className={`border rounded-3xl transition-all cursor-pointer ${
+                    openFaqIndex === idx 
+                      ? 'bg-[#F7F6F2] border-slate-200 shadow-sm' 
+                      : 'bg-white border-slate-100 hover:bg-slate-50 hover:border-slate-200'
+                  }`}
+                  onClick={() => setOpenFaqIndex(openFaqIndex === idx ? null : idx)}
                 >
                   <button 
                     className="w-full px-8 py-6 flex items-center justify-between text-left focus:outline-none"
-                    onClick={() => setOpenFaqIndex(openFaqIndex === idx ? null : idx)}
                   >
                     <span className="text-lg font-bold text-[#064e3b] pr-8">{faq.question}</span>
-                    {openFaqIndex === idx ? (
-                      <Minus className="w-6 h-6 text-[#0f5132]" />
-                    ) : (
-                      <Plus className="w-6 h-6 text-[#064e3b]" />
-                    )}
+                    <div className={`transition-transform duration-200 ${openFaqIndex === idx ? 'rotate-180' : ''}`}>
+                      {openFaqIndex === idx ? (
+                        <Minus className="w-6 h-6 text-[#0f5132]" />
+                      ) : (
+                        <Plus className="w-6 h-6 text-[#064e3b]" />
+                      )}
+                    </div>
                   </button>
                   
-                  <div 
-                    className={`px-8 overflow-hidden transition-all duration-300 ${
-                      openFaqIndex === idx ? 'max-h-96 pb-8 opacity-100' : 'max-h-0 opacity-0'
-                    }`}
-                  >
-                    <p className="text-slate-600 leading-relaxed">
-                      {faq.answer}
-                    </p>
-                  </div>
+                  {openFaqIndex === idx && (
+                    <div className="px-8 pb-6 animate-fade-in">
+                      <p className="text-slate-600 leading-relaxed">
+                        {faq.answer}
+                      </p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
