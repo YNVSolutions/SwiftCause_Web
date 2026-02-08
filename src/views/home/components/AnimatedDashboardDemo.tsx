@@ -88,294 +88,274 @@ export function AnimatedDashboardDemo() {
 
   return (
     <div className="relative">
-      {/* Floating Feature Boxes */}
-      {floatingFeatures.map((feature, index) => (
-        <div key={index}>
-          {/* Connecting Arrow Line */}
-          <svg 
-            className={`absolute z-0 pointer-events-none transition-opacity duration-700 ${
-              visibleFeatures.includes(index) ? 'opacity-100' : 'opacity-0'
-            }`}
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              overflow: 'visible'
-            }}
-          >
-            <defs>
-              <marker
-                id={`arrowhead-${index}`}
-                markerWidth="10"
-                markerHeight="10"
-                refX="9"
-                refY="3"
-                orient="auto"
-              >
-                <polygon
-                  points="0 0, 10 3, 0 6"
-                  fill={`url(#gradient-${index})`}
-                  opacity="0.6"
+      {/* Floating Feature Boxes - Hidden on mobile, visible on md+ */}
+      <div className="hidden md:block">
+        {floatingFeatures.map((feature, index) => (
+          <div key={index}>
+            {/* Connecting Arrow Line */}
+            <svg 
+              className={`absolute z-0 pointer-events-none transition-opacity duration-700 ${
+                visibleFeatures.includes(index) ? 'opacity-100' : 'opacity-0'
+              }`}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                overflow: 'visible'
+              }}
+            >
+              <defs>
+                <marker
+                  id={`arrowhead-${index}`}
+                  markerWidth="10"
+                  markerHeight="10"
+                  refX="9"
+                  refY="3"
+                  orient="auto"
+                >
+                  <polygon
+                    points="0 0, 10 3, 0 6"
+                    fill={`url(#gradient-${index})`}
+                    opacity="0.6"
+                  />
+                </marker>
+                <linearGradient id={`gradient-${index}`} x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#064e3b" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="#0f5132" stopOpacity="0.7" />
+                </linearGradient>
+              </defs>
+              {/* Arrow path - different for each position */}
+              {feature.position.includes('top-8 -right') && (
+                <path
+                  d="M 420 100 Q 480 80, 520 100"
+                  stroke={`url(#gradient-${index})`}
+                  strokeWidth="2"
+                  fill="none"
+                  strokeDasharray="5,5"
+                  markerEnd={`url(#arrowhead-${index})`}
+                  className="animate-dash"
                 />
-              </marker>
-              <linearGradient id={`gradient-${index}`} x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#064e3b" stopOpacity="0.4" />
-                <stop offset="100%" stopColor="#0f5132" stopOpacity="0.7" />
-              </linearGradient>
-            </defs>
-            {/* Arrow path - different for each position */}
-            {feature.position.includes('top-8 -right') && (
-              <path
-                d="M 420 100 Q 480 80, 520 100"
-                stroke={`url(#gradient-${index})`}
-                strokeWidth="2"
-                fill="none"
-                strokeDasharray="5,5"
-                markerEnd={`url(#arrowhead-${index})`}
-                className="animate-dash"
-              />
-            )}
-            {feature.position.includes('top-32 -left') && (
-              <path
-                d="M 80 150 Q 20 140, -20 160"
-                stroke={`url(#gradient-${index})`}
-                strokeWidth="2"
-                fill="none"
-                strokeDasharray="5,5"
-                markerEnd={`url(#arrowhead-${index})`}
-                className="animate-dash"
-              />
-            )}
-            {feature.position.includes('bottom-32 -right') && (
-              <path
-                d="M 420 380 Q 480 400, 520 380"
-                stroke={`url(#gradient-${index})`}
-                strokeWidth="2"
-                fill="none"
-                strokeDasharray="5,5"
-                markerEnd={`url(#arrowhead-${index})`}
-                className="animate-dash"
-              />
-            )}
-            {feature.position.includes('bottom-8 -left') && (
-              <path
-                d="M 80 430 Q 20 440, -20 420"
-                stroke={`url(#gradient-${index})`}
-                strokeWidth="2"
-                fill="none"
-                strokeDasharray="5,5"
-                markerEnd={`url(#arrowhead-${index})`}
-                className="animate-dash"
-              />
-            )}
-            {feature.position.includes('top-1/2 -right') && (
-              <path
-                d="M 420 240 Q 480 240, 540 240"
-                stroke={`url(#gradient-${index})`}
-                strokeWidth="2"
-                fill="none"
-                strokeDasharray="5,5"
-                markerEnd={`url(#arrowhead-${index})`}
-                className="animate-dash"
-              />
-            )}
-          </svg>
+              )}
+              {feature.position.includes('bottom-8 -left') && (
+                <path
+                  d="M 80 430 Q 20 440, -20 420"
+                  stroke={`url(#gradient-${index})`}
+                  strokeWidth="2"
+                  fill="none"
+                  strokeDasharray="5,5"
+                  markerEnd={`url(#arrowhead-${index})`}
+                  className="animate-dash"
+                />
+              )}
+              {feature.position.includes('top-1/2 -right') && (
+                <path
+                  d="M 420 240 Q 480 240, 540 240"
+                  stroke={`url(#gradient-${index})`}
+                  strokeWidth="2"
+                  fill="none"
+                  strokeDasharray="5,5"
+                  markerEnd={`url(#arrowhead-${index})`}
+                  className="animate-dash"
+                />
+              )}
+            </svg>
 
-          {/* Feature Box */}
-          <div
-            className={`absolute ${feature.position} z-10 transition-all duration-700 ${
-              visibleFeatures.includes(index) 
-                ? 'opacity-100 translate-y-0' 
-                : 'opacity-0 translate-y-4'
-            }`}
-          >
-            {feature.size === 'large' ? (
-              // Large Box with Description
-              <div className={`bg-gradient-to-br ${feature.color} rounded-2xl p-5 shadow-2xl backdrop-blur-sm ${
-                isLightTheme(feature.color) 
-                  ? 'border-2 border-[#064e3b]/20' 
-                  : 'border border-white/20'
-              } min-w-[180px] max-w-[200px] hover:scale-105 transition-transform duration-300`}>
-                <div className="flex items-start gap-3 mb-2">
-                  <div className={`rounded-xl p-2 backdrop-blur-sm ${
-                    isLightTheme(feature.color)
-                      ? 'bg-[#064e3b]/10'
-                      : 'bg-white/20'
-                  }`}>
-                    <div className={isLightTheme(feature.color) ? 'text-[#064e3b]' : 'text-white'}>
-                      {feature.icon}
+            {/* Feature Box */}
+            <div
+              className={`absolute ${feature.position} z-10 transition-all duration-700 ${
+                visibleFeatures.includes(index) 
+                  ? 'opacity-100 translate-y-0' 
+                  : 'opacity-0 translate-y-4'
+              }`}
+            >
+              {feature.size === 'large' ? (
+                // Large Box with Description
+                <div className={`bg-gradient-to-br ${feature.color} rounded-2xl p-5 shadow-2xl backdrop-blur-sm ${
+                  isLightTheme(feature.color) 
+                    ? 'border-2 border-[#064e3b]/20' 
+                    : 'border border-white/20'
+                } min-w-[180px] max-w-[200px] hover:scale-105 transition-transform duration-300`}>
+                  <div className="flex items-start gap-3 mb-2">
+                    <div className={`rounded-xl p-2 backdrop-blur-sm ${
+                      isLightTheme(feature.color)
+                        ? 'bg-[#064e3b]/10'
+                        : 'bg-white/20'
+                    }`}>
+                      <div className={isLightTheme(feature.color) ? 'text-[#064e3b]' : 'text-white'}>
+                        {feature.icon}
+                      </div>
+                    </div>
+                    <div className={`flex-1 ${isLightTheme(feature.color) ? 'text-[#064e3b]' : 'text-white'}`}>
+                      <div className="text-[10px] font-semibold opacity-90 uppercase tracking-wide">{feature.title}</div>
+                      <div className="text-sm font-bold mt-0.5">{feature.value}</div>
                     </div>
                   </div>
-                  <div className={`flex-1 ${isLightTheme(feature.color) ? 'text-[#064e3b]' : 'text-white'}`}>
-                    <div className="text-[10px] font-semibold opacity-90 uppercase tracking-wide">{feature.title}</div>
-                    <div className="text-sm font-bold mt-0.5">{feature.value}</div>
-                  </div>
+                  {feature.description && (
+                    <div className={`text-[9px] leading-relaxed mt-2 border-t pt-2 ${
+                      isLightTheme(feature.color)
+                        ? 'text-[#064e3b]/70 border-[#064e3b]/20'
+                        : 'text-white/80 border-white/20'
+                    }`}>
+                      {feature.description}
+                    </div>
+                  )}
                 </div>
-                {feature.description && (
-                  <div className={`text-[9px] leading-relaxed mt-2 border-t pt-2 ${
-                    isLightTheme(feature.color)
-                      ? 'text-[#064e3b]/70 border-[#064e3b]/20'
-                      : 'text-white/80 border-white/20'
-                  }`}>
-                    {feature.description}
-                  </div>
-                )}
-              </div>
-            ) : (
-              // Small Compact Box
-              <div className={`bg-gradient-to-br ${feature.color} rounded-2xl p-4 shadow-2xl backdrop-blur-sm ${
-                isLightTheme(feature.color)
-                  ? 'border-2 border-[#064e3b]/20'
-                  : 'border border-white/20'
-              } min-w-[140px] hover:scale-105 transition-transform duration-300`}>
-                <div className="flex items-center gap-2 mb-1">
-                  <div className={`rounded-lg p-1.5 backdrop-blur-sm ${
-                    isLightTheme(feature.color)
-                      ? 'bg-[#064e3b]/10'
-                      : 'bg-white/20'
-                  }`}>
+              ) : (
+                // Small Compact Box
+                <div className={`bg-gradient-to-br ${feature.color} rounded-2xl p-4 shadow-2xl backdrop-blur-sm ${
+                  isLightTheme(feature.color)
+                    ? 'border-2 border-[#064e3b]/20'
+                    : 'border border-white/20'
+                } min-w-[140px] hover:scale-105 transition-transform duration-300`}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className={`rounded-lg p-1.5 backdrop-blur-sm ${
+                      isLightTheme(feature.color)
+                        ? 'bg-[#064e3b]/10'
+                        : 'bg-white/20'
+                    }`}>
+                      <div className={isLightTheme(feature.color) ? 'text-[#064e3b]' : 'text-white'}>
+                        {feature.icon}
+                      </div>
+                    </div>
                     <div className={isLightTheme(feature.color) ? 'text-[#064e3b]' : 'text-white'}>
-                      {feature.icon}
+                      <div className="text-[9px] font-semibold opacity-90">{feature.title}</div>
+                      <div className="text-xs font-bold">{feature.value}</div>
                     </div>
                   </div>
-                  <div className={isLightTheme(feature.color) ? 'text-[#064e3b]' : 'text-white'}>
-                    <div className="text-[9px] font-semibold opacity-90">{feature.title}</div>
-                    <div className="text-xs font-bold">{feature.value}</div>
-                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
 
       <div className="absolute -top-20 -right-20 w-80 h-80 bg-[#064e3b]/5 rounded-full blur-3xl"></div>
-      <div className="relative glass-card border border-white p-6 rounded-[2.5rem] shadow-2xl overflow-hidden">
-        <div className="bg-white rounded-2xl overflow-hidden shadow-inner border border-slate-100">
+      <div className="relative glass-card border border-white p-3 sm:p-4 md:p-6 rounded-2xl sm:rounded-[2.5rem] shadow-2xl overflow-hidden">
+        <div className="bg-white rounded-xl sm:rounded-2xl overflow-hidden shadow-inner border border-slate-100">
           {/* Mac Window Header */}
-          <div className="h-10 bg-slate-50 border-b flex items-center px-4 gap-2">
-            <div className="w-3 h-3 rounded-full bg-red-400"></div>
-            <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
-            <div className="w-3 h-3 rounded-full bg-green-400"></div>
+          <div className="h-8 sm:h-10 bg-slate-50 border-b flex items-center px-3 sm:px-4 gap-2">
+            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-red-400"></div>
+            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-yellow-400"></div>
+            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-green-400"></div>
           </div>
           
           {/* Mini Dashboard Content */}
-          <div className="flex h-[480px]">
-            {/* Sidebar */}
-            <div className="w-40 bg-[#064e3b] p-4 flex flex-col">
-              <div className="mb-6">
-                <div className="flex items-center gap-2 mb-1">
+          <div className="flex h-[350px] sm:h-[400px] md:h-[480px]">
+            {/* Sidebar - Hidden on mobile */}
+            <div className="hidden sm:block w-28 md:w-40 bg-[#064e3b] p-2 md:p-4 flex flex-col">
+              <div className="mb-4 md:mb-6">
+                <div className="flex items-center gap-1.5 md:gap-2 mb-1">
                   <Image 
                     src="/logo.png" 
                     alt="Logo" 
-                    width={20} 
-                    height={20}
-                    className="rounded"
+                    width={16} 
+                    height={16}
+                    className="md:w-5 md:h-5 rounded"
                   />
-                  <div className="text-white text-xs font-bold">SwiftCause</div>
+                  <div className="text-white text-[9px] md:text-xs font-bold">SwiftCause</div>
                 </div>
-                <div className="text-[8px] text-white/60">Admin Portal</div>
+                <div className="text-[7px] md:text-[8px] text-white/60">Admin Portal</div>
               </div>
               
-              <div className="space-y-1 flex-1">
-                <div className="px-2 py-1.5 bg-white/10 rounded text-white text-[10px] font-medium">
+              <div className="space-y-0.5 md:space-y-1 flex-1">
+                <div className="px-1.5 md:px-2 py-1 md:py-1.5 bg-white/10 rounded text-white text-[8px] md:text-[10px] font-medium">
                   Dashboard
                 </div>
-                <div className="px-2 py-1.5 text-white/60 text-[10px] font-medium">
+                <div className="px-1.5 md:px-2 py-1 md:py-1.5 text-white/60 text-[8px] md:text-[10px] font-medium">
                   Campaigns
                 </div>
-                <div className="px-2 py-1.5 text-white/60 text-[10px] font-medium">
+                <div className="px-1.5 md:px-2 py-1 md:py-1.5 text-white/60 text-[8px] md:text-[10px] font-medium">
                   Donations
                 </div>
-                <div className="px-2 py-1.5 text-white/60 text-[10px] font-medium">
+                <div className="px-1.5 md:px-2 py-1 md:py-1.5 text-white/60 text-[8px] md:text-[10px] font-medium">
                   Kiosks
                 </div>
-                <div className="px-2 py-1.5 text-white/60 text-[10px] font-medium">
+                <div className="px-1.5 md:px-2 py-1 md:py-1.5 text-white/60 text-[8px] md:text-[10px] font-medium">
                   Users
                 </div>
-                <div className="px-2 py-1.5 text-white/60 text-[10px] font-medium">
+                <div className="px-1.5 md:px-2 py-1 md:py-1.5 text-white/60 text-[8px] md:text-[10px] font-medium">
                   Gift Aid
                 </div>
               </div>
             </div>
             
             {/* Main Content */}
-            <div className="flex-1 bg-[#F7F6F2] p-4 overflow-hidden">
-              <div className="mb-3">
-                <h3 className="text-sm font-bold text-[#064e3b]">Dashboard</h3>
-                <p className="text-[8px] text-slate-500">Real-time view of fundraising activity</p>
+            <div className="flex-1 bg-[#F7F6F2] p-2 sm:p-3 md:p-4 overflow-hidden">
+              <div className="mb-2 md:mb-3">
+                <h3 className="text-xs sm:text-sm font-bold text-[#064e3b]">Dashboard</h3>
+                <p className="text-[7px] sm:text-[8px] text-slate-500">Real-time view of fundraising activity</p>
               </div>
               
               {/* Animated Stats Cards */}
-              <div className="grid grid-cols-4 gap-2 mb-3">
-                <div className={`bg-white rounded-lg p-2 border transition-all duration-300 ${
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 md:gap-2 mb-2 md:mb-3">
+                <div className={`bg-white rounded-lg p-1.5 md:p-2 border transition-all duration-300 ${
                   activeMetric === 0 ? 'border-emerald-500 shadow-lg scale-105' : 'border-slate-100'
                 }`}>
-                  <div className="text-[8px] text-slate-500 mb-1 flex items-center justify-between">
+                  <div className="text-[7px] sm:text-[8px] text-slate-500 mb-0.5 md:mb-1 flex items-center justify-between">
                     <span>TOTAL RAISED</span>
-                    {activeMetric === 0 && <ArrowUpRight className="w-2 h-2 text-emerald-600 animate-bounce" />}
+                    {activeMetric === 0 && <ArrowUpRight className="w-1.5 h-1.5 md:w-2 md:h-2 text-emerald-600 animate-bounce" />}
                   </div>
-                  <div className="text-sm font-bold text-[#064e3b]">£{totalRaised.toFixed(2)}</div>
+                  <div className="text-xs sm:text-sm font-bold text-[#064e3b]">£{totalRaised.toFixed(2)}</div>
                   {activeMetric === 0 && (
-                    <div className="text-[7px] text-emerald-600 mt-1">+12.5% today</div>
+                    <div className="text-[6px] sm:text-[7px] text-emerald-600 mt-0.5 md:mt-1">+12.5% today</div>
                   )}
                 </div>
                 
-                <div className={`bg-white rounded-lg p-2 border transition-all duration-300 ${
+                <div className={`bg-white rounded-lg p-1.5 md:p-2 border transition-all duration-300 ${
                   activeMetric === 1 ? 'border-blue-500 shadow-lg scale-105' : 'border-slate-100'
                 }`}>
-                  <div className="text-[8px] text-slate-500 mb-1 flex items-center justify-between">
+                  <div className="text-[7px] sm:text-[8px] text-slate-500 mb-0.5 md:mb-1 flex items-center justify-between">
                     <span>CAMPAIGNS</span>
-                    {activeMetric === 1 && <Heart className="w-2 h-2 text-blue-600 animate-pulse" />}
+                    {activeMetric === 1 && <Heart className="w-1.5 h-1.5 md:w-2 md:h-2 text-blue-600 animate-pulse" />}
                   </div>
-                  <div className="text-sm font-bold text-[#064e3b]">{campaigns}</div>
+                  <div className="text-xs sm:text-sm font-bold text-[#064e3b]">{campaigns}</div>
                   {activeMetric === 1 && (
-                    <div className="text-[7px] text-blue-600 mt-1">23 active</div>
+                    <div className="text-[6px] sm:text-[7px] text-blue-600 mt-0.5 md:mt-1">23 active</div>
                   )}
                 </div>
                 
-                <div className={`bg-white rounded-lg p-2 border transition-all duration-300 ${
+                <div className={`bg-white rounded-lg p-1.5 md:p-2 border transition-all duration-300 ${
                   activeMetric === 2 ? 'border-purple-500 shadow-lg scale-105' : 'border-slate-100'
                 }`}>
-                  <div className="text-[8px] text-slate-500 mb-1 flex items-center justify-between">
+                  <div className="text-[7px] sm:text-[8px] text-slate-500 mb-0.5 md:mb-1 flex items-center justify-between">
                     <span>DONATIONS</span>
-                    {activeMetric === 2 && <Users className="w-2 h-2 text-purple-600 animate-pulse" />}
+                    {activeMetric === 2 && <Users className="w-1.5 h-1.5 md:w-2 md:h-2 text-purple-600 animate-pulse" />}
                   </div>
-                  <div className="text-sm font-bold text-[#064e3b]">{donations}</div>
+                  <div className="text-xs sm:text-sm font-bold text-[#064e3b]">{donations}</div>
                   {activeMetric === 2 && (
-                    <div className="text-[7px] text-purple-600 mt-1">3 this hour</div>
+                    <div className="text-[6px] sm:text-[7px] text-purple-600 mt-0.5 md:mt-1">3 this hour</div>
                   )}
                 </div>
                 
-                <div className={`bg-white rounded-lg p-2 border transition-all duration-300 ${
+                <div className={`bg-white rounded-lg p-1.5 md:p-2 border transition-all duration-300 ${
                   activeMetric === 3 ? 'border-amber-500 shadow-lg scale-105' : 'border-slate-100'
                 }`}>
-                  <div className="text-[8px] text-slate-500 mb-1 flex items-center justify-between">
+                  <div className="text-[7px] sm:text-[8px] text-slate-500 mb-0.5 md:mb-1 flex items-center justify-between">
                     <span>GIFT AID</span>
-                    {activeMetric === 3 && <Zap className="w-2 h-2 text-amber-600 animate-bounce" />}
+                    {activeMetric === 3 && <Zap className="w-1.5 h-1.5 md:w-2 md:h-2 text-amber-600 animate-bounce" />}
                   </div>
-                  <div className="text-sm font-bold text-[#064e3b]">£{giftAid.toFixed(2)}</div>
+                  <div className="text-xs sm:text-sm font-bold text-[#064e3b]">£{giftAid.toFixed(2)}</div>
                   {activeMetric === 3 && (
-                    <div className="text-[7px] text-amber-600 mt-1">+25% boost</div>
+                    <div className="text-[6px] sm:text-[7px] text-amber-600 mt-0.5 md:mt-1">+25% boost</div>
                   )}
                 </div>
               </div>
               
               {/* Revenue Chart with Animation */}
-              <div className="bg-white rounded-lg p-3 border border-slate-100 mb-3">
-                <div className="flex items-center gap-1 mb-2">
-                  <TrendingUp className="w-3 h-3 text-emerald-600" />
-                  <h4 className="text-[10px] font-bold text-[#064e3b]">Revenue Growth</h4>
+              <div className="bg-white rounded-lg p-2 md:p-3 border border-slate-100 mb-2 md:mb-3">
+                <div className="flex items-center gap-1 mb-1 md:mb-2">
+                  <TrendingUp className="w-2.5 h-2.5 md:w-3 md:h-3 text-emerald-600" />
+                  <h4 className="text-[8px] md:text-[10px] font-bold text-[#064e3b]">Revenue Growth</h4>
                   <div className="ml-auto">
-                    <span className="text-[8px] text-emerald-600 font-semibold">↑ 24.3%</span>
+                    <span className="text-[7px] md:text-[8px] text-emerald-600 font-semibold">↑ 24.3%</span>
                   </div>
                 </div>
-                <p className="text-[7px] text-slate-500 mb-3">Monthly revenue trends including Gift Aid uplift</p>
+                <p className="text-[6px] md:text-[7px] text-slate-500 mb-2 md:mb-3">Monthly revenue trends including Gift Aid uplift</p>
                 
                 {/* Animated Line Chart */}
-                <div className="relative h-24 pl-8">
+                <div className="relative h-16 sm:h-20 md:h-24 pl-6 md:pl-8">
                   <svg className="w-full h-full" viewBox="0 0 300 100" preserveAspectRatio="none">
                     {/* Grid lines */}
                     <line x1="0" y1="25" x2="300" y2="25" stroke="#e2e8f0" strokeWidth="0.5" />
@@ -424,7 +404,7 @@ export function AnimatedDashboardDemo() {
                   </svg>
                   
                   {/* Y-axis labels */}
-                  <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-between text-[7px] text-slate-400">
+                  <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-between text-[6px] md:text-[7px] text-slate-400">
                     <span>£50</span>
                     <span>£40</span>
                     <span>£30</span>
@@ -432,7 +412,7 @@ export function AnimatedDashboardDemo() {
                   </div>
                   
                   {/* X-axis labels */}
-                  <div className="absolute bottom-0 left-8 right-0 flex justify-between text-[7px] text-slate-400 -mb-4">
+                  <div className="absolute bottom-0 left-6 md:left-8 right-0 flex justify-between text-[6px] md:text-[7px] text-slate-400 -mb-3 md:-mb-4">
                     <span>Dec</span>
                     <span>Jan</span>
                     <span>Feb</span>
@@ -442,27 +422,27 @@ export function AnimatedDashboardDemo() {
                 </div>
                 
                 {/* Legend */}
-                <div className="flex gap-3 mt-5 justify-center">
+                <div className="flex gap-2 md:gap-3 mt-4 md:mt-5 justify-center">
                   <div className="flex items-center gap-1">
-                    <div className="w-3 h-0.5 bg-[#0f5132]"></div>
-                    <span className="text-[7px] text-slate-600">Donations</span>
+                    <div className="w-2 md:w-3 h-0.5 bg-[#0f5132]"></div>
+                    <span className="text-[6px] md:text-[7px] text-slate-600">Donations</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <div className="w-3 h-0.5 bg-[#064e3b]"></div>
-                    <span className="text-[7px] text-slate-600">Total Revenue</span>
+                    <div className="w-2 md:w-3 h-0.5 bg-[#064e3b]"></div>
+                    <span className="text-[6px] md:text-[7px] text-slate-600">Total Revenue</span>
                   </div>
                 </div>
               </div>
 
               {/* Bottom Row: Activity Heatmap & Pie Chart */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3">
                 {/* Activity Heatmap with Animation */}
-                <div className="bg-white rounded-lg p-3 border border-slate-100">
-                  <h4 className="text-[10px] font-bold text-[#064e3b] mb-2">Activity Heatmap</h4>
-                  <div className="space-y-1">
+                <div className="bg-white rounded-lg p-2 md:p-3 border border-slate-100">
+                  <h4 className="text-[8px] md:text-[10px] font-bold text-[#064e3b] mb-1.5 md:mb-2">Activity Heatmap</h4>
+                  <div className="space-y-0.5 md:space-y-1">
                     {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => (
-                      <div key={day} className="flex items-center gap-1">
-                        <span className="text-[7px] text-slate-500 w-6">{day}</span>
+                      <div key={day} className="flex items-center gap-0.5 md:gap-1">
+                        <span className="text-[6px] md:text-[7px] text-slate-500 w-5 md:w-6">{day}</span>
                         <div className="flex gap-0.5 flex-1">
                           {Array.from({ length: 12 }).map((_, j) => {
                             const intensity = Math.random();
@@ -472,7 +452,7 @@ export function AnimatedDashboardDemo() {
                             return (
                               <div 
                                 key={j} 
-                                className={`h-2 flex-1 rounded-sm ${bgColor} transition-all duration-500`}
+                                className={`h-1.5 md:h-2 flex-1 rounded-sm ${bgColor} transition-all duration-500`}
                                 style={{ 
                                   animationDelay: `${(i * 12 + j) * 50}ms`,
                                   animation: 'fadeIn 0.5s ease-in-out'
@@ -484,23 +464,23 @@ export function AnimatedDashboardDemo() {
                       </div>
                     ))}
                   </div>
-                  <div className="flex items-center justify-between mt-2 text-[6px] text-slate-400">
+                  <div className="flex items-center justify-between mt-1.5 md:mt-2 text-[5px] md:text-[6px] text-slate-400">
                     <span>Less</span>
                     <div className="flex gap-0.5">
-                      <div className="w-2 h-2 bg-slate-100 rounded-sm"></div>
-                      <div className="w-2 h-2 bg-emerald-200 rounded-sm"></div>
-                      <div className="w-2 h-2 bg-emerald-400 rounded-sm"></div>
-                      <div className="w-2 h-2 bg-emerald-600 rounded-sm"></div>
+                      <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-slate-100 rounded-sm"></div>
+                      <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-emerald-200 rounded-sm"></div>
+                      <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-emerald-400 rounded-sm"></div>
+                      <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-emerald-600 rounded-sm"></div>
                     </div>
                     <span>More</span>
                   </div>
                 </div>
 
                 {/* Animated Pie Chart */}
-                <div className="bg-white rounded-lg p-3 border border-slate-100">
-                  <h4 className="text-[10px] font-bold text-[#064e3b] mb-2">Donation Sources</h4>
-                  <div className="flex items-center justify-center h-24">
-                    <svg width="80" height="80" viewBox="0 0 100 100">
+                <div className="bg-white rounded-lg p-2 md:p-3 border border-slate-100">
+                  <h4 className="text-[8px] md:text-[10px] font-bold text-[#064e3b] mb-1.5 md:mb-2">Donation Sources</h4>
+                  <div className="flex items-center justify-center h-16 sm:h-20 md:h-24">
+                    <svg width="60" height="60" viewBox="0 0 100 100" className="sm:w-20 sm:h-20">
                       {/* Online - 60% */}
                       <circle
                         cx="50"
@@ -541,24 +521,24 @@ export function AnimatedDashboardDemo() {
                       />
                     </svg>
                   </div>
-                  <div className="space-y-1 mt-2">
-                    <div className="flex items-center justify-between text-[7px]">
+                  <div className="space-y-0.5 md:space-y-1 mt-1.5 md:mt-2">
+                    <div className="flex items-center justify-between text-[6px] md:text-[7px]">
                       <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                        <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-emerald-500 rounded-full animate-pulse"></div>
                         <span className="text-slate-600">Online</span>
                       </div>
                       <span className="font-bold text-slate-700">60%</span>
                     </div>
-                    <div className="flex items-center justify-between text-[7px]">
+                    <div className="flex items-center justify-between text-[6px] md:text-[7px]">
                       <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-blue-500 rounded-full"></div>
                         <span className="text-slate-600">Kiosk</span>
                       </div>
                       <span className="font-bold text-slate-700">30%</span>
                     </div>
-                    <div className="flex items-center justify-between text-[7px]">
+                    <div className="flex items-center justify-between text-[6px] md:text-[7px]">
                       <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                        <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-purple-500 rounded-full"></div>
                         <span className="text-slate-600">Events</span>
                       </div>
                       <span className="font-bold text-slate-700">10%</span>
