@@ -4,7 +4,7 @@ import { Input } from '../../shared/ui/input';
 import { Card, CardContent } from '../../shared/ui/card';
 import { ArrowUp, ArrowLeft } from 'lucide-react';
 import { Campaign } from '../../shared/types';
-import { formatCurrency } from '../../shared/lib/currencyFormatter';
+import { formatCurrencyFromMajor } from '../../shared/lib/currencyFormatter';
 
 interface GiftAidBoostScreenProps {
   campaign: Campaign;
@@ -103,7 +103,7 @@ export function GiftAidBoostScreen({
                     <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
                       Turn your donation into{' '}
                       <span className="text-green-600">
-                        {isValidAmount ? formatCurrency(totalWithGiftAid, organizationCurrency) : '$0.00'}
+                        {isValidAmount ? formatCurrencyFromMajor(totalWithGiftAid, organizationCurrency) : formatCurrencyFromMajor(0)}
                       </span>{' '}
                       for free?
                     </h1>
@@ -112,7 +112,7 @@ export function GiftAidBoostScreen({
                     <div className="max-w-xs mx-auto">
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-lg font-semibold">
-                          $
+                          £
                         </span>
                         <Input
                           type="number"
@@ -130,9 +130,9 @@ export function GiftAidBoostScreen({
                   </div>
                 ) : (
                   <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
-                    Turn your {formatCurrency(currentAmount, organizationCurrency)} into{' '}
+                    Turn your {formatCurrencyFromMajor(currentAmount, organizationCurrency)} into{' '}
                     <span className="text-green-600">
-                      {formatCurrency(totalWithGiftAid, organizationCurrency)}
+                      {formatCurrencyFromMajor(totalWithGiftAid, organizationCurrency)}
                     </span>{' '}
                     for free?
                   </h1>
@@ -143,7 +143,7 @@ export function GiftAidBoostScreen({
                     Are you a UK Taxpayer? We can reclaim{' '}
                     <span className="font-semibold text-gray-900">25%</span>{' '}
                     <span className="font-semibold text-gray-900">
-                      ({isValidAmount ? formatCurrency(giftAidAmount, organizationCurrency) : '$0.00'})
+                      ({isValidAmount ? formatCurrencyFromMajor(giftAidAmount, organizationCurrency) : formatCurrencyFromMajor(0)})
                     </span>{' '}
                     from the government at no cost to you.
                   </p>
@@ -172,7 +172,7 @@ export function GiftAidBoostScreen({
                   variant="ghost"
                   className="w-full h-12 text-gray-500 hover:text-gray-700 font-medium text-base disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isLoading ? 'Processing...' : `No, continue with ${isValidAmount ? formatCurrency(currentAmount, organizationCurrency) : '$0.00'}`}
+                  {isLoading ? 'Processing...' : `No, continue with ${isValidAmount ? formatCurrencyFromMajor(currentAmount, organizationCurrency) : formatCurrencyFromMajor(0)}`}
                 </Button>
               </div>
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User, MapPin, ArrowRight, Check, CheckCircle, Shield } from 'lucide-react';
-import { formatCurrency } from '@/shared/lib/currencyFormatter';
+import { formatCurrencyFromMajor } from '@/shared/lib/currencyFormatter';
 import { GiftAidDetails } from '@/entities/giftAid/model/types';
 import { HMRC_DECLARATION_TEXT } from '@/shared/config/constants';
 
@@ -43,9 +43,7 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
   const giftAidAmount = amount * 0.25;
   const totalWithGiftAid = amount + giftAidAmount;
 
-  const formatAmount = (amt: number) => {
-    return formatCurrency(amt, currency).replace(/\.00$/, '');
-  };
+  const formatAmount = (amt: number) => formatCurrencyFromMajor(amt, currency);
 
   const validateForm = () => {
     const newErrors: typeof errors = {};

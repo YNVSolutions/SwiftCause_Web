@@ -30,9 +30,7 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
   const totalImpact = donation.amount + giftAidAmount;
 
   // Format amount without decimals
-  const formatAmount = (amount: number) => {
-    return formatCurrency((amount || 0) / 100, organizationCurrency || 'GBP').replace(/\.00$/, '');
-  };
+  const formatAmount = (amount: number) => formatCurrency(amount || 0);
 
   const handleSubmit = async () => {
     // Store complete Gift Aid data in sessionStorage for backup

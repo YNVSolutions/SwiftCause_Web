@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { formatCurrency } from '@/shared/lib/currencyFormatter';
+import { formatCurrency, formatCurrencyFromMajor } from '@/shared/lib/currencyFormatter';
 import { ArrowLeft } from 'lucide-react';
 import { CampaignDetailsPageProps } from '../types';
 import {
@@ -105,9 +105,8 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
     campaign.goal > 0 ? Math.min(((campaign.raised || 0) / campaign.goal) * 100, 100) : 0;
 
   // Format amount without decimals
-  const formatAmount = (amount: number) => {
-    return formatCurrency(amount, currency).replace(/\.00$/, '');
-  };
+  const formatAmount = (amount: number) => formatCurrency(amount, currency);
+  const formatGoal = (amount: number) => formatCurrencyFromMajor(amount, currency);
 
   // Description to show below images (long description if available, else short)
   const belowImageDescription = campaign.longDescription || campaign.description;
@@ -308,7 +307,7 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
             <div className="space-y-2 rounded-2xl border border-green-100 bg-green-50/60 px-4 py-3">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-[#0A0A0A] font-medium">
-                  {formatAmount(campaign.raised || 0)} / {formatAmount(campaign.goal)}
+                  {formatAmount(campaign.raised || 0)} / {formatGoal(campaign.goal)}
                 </span>
                 <span className="text-sm text-green-700 font-medium">{Math.round(progress)}%</span>
               </div>
@@ -384,7 +383,7 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
           <div className="space-y-2 mb-6 rounded-2xl border border-green-100 bg-green-50/60 px-4 py-3">
             <div className="flex justify-between items-center">
               <span className="text-sm text-[#0A0A0A] font-medium">
-                {formatAmount(campaign.raised || 0)} / {formatAmount(campaign.goal)}
+                {formatAmount(campaign.raised || 0)} / {formatGoal(campaign.goal)}
               </span>
               <span className="text-sm text-green-700 font-medium">{Math.round(progress)}%</span>
             </div>

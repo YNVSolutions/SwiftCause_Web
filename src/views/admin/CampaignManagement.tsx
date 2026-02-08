@@ -4,6 +4,7 @@ import { DEFAULT_CAMPAIGN_CONFIG } from "../../shared/config";
 import { DocumentData, Timestamp } from "firebase/firestore";
 import { useCampaignManagement } from "../../shared/lib/hooks/useCampaignManagement";
 import { useOrganizationTags } from "../../shared/lib/hooks/useOrganizationTags";
+import { formatCurrency, formatCurrencyFromMajor } from "../../shared/lib/currencyFormatter";
 import { kioskApi } from "../../entities/kiosk/api";
 import { Button } from "../../shared/ui/button";
 import { Input } from "../../shared/ui/input";
@@ -987,7 +988,7 @@ const CampaignDialog = ({
                     <div className="grid grid-cols-4 gap-4">
                       <div>
                         <Label htmlFor="goal" className="block text-sm font-semibold text-gray-900 mb-3">
-                          Fundraising Target ($) <span className="text-red-500">*</span>
+                          Fundraising Target (£) <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           id="goal"
@@ -1007,7 +1008,7 @@ const CampaignDialog = ({
                             Tier {index + 1}
                           </Label>
                           <div className="flex items-center">
-                            <span className="text-gray-600 font-medium mr-2">$</span>
+                            <span className="text-gray-600 font-medium mr-2">£</span>
                             <Input
                               id={`tier-${index}`}
                               type="number"
@@ -2062,15 +2063,6 @@ const CampaignManagement = ({
     });
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case "active":
@@ -2109,7 +2101,7 @@ const CampaignManagement = ({
   const progressValues = campaigns
     .filter((campaign: any) => campaign.goal && campaign.raised)
     .map((campaign: any) =>
-      Math.min((Number(campaign.raised) / Number(campaign.goal)) * 100, 100)
+      Math.min(((Number(campaign.raised) / 100) / Number(campaign.goal)) * 100, 100)
     );
   const averageProgress =
     progressValues.length > 0
@@ -2366,7 +2358,7 @@ const CampaignManagement = ({
                       const donationCount = Number(campaign.donationCount) || 0;
                       const progress =
                         goalAmount > 0
-                          ? Math.min((raisedAmount / goalAmount) * 100, 100)
+                          ? Math.min(((raisedAmount / 100) / goalAmount) * 100, 100)
                           : 0;
 
                       return (
@@ -2452,7 +2444,7 @@ const CampaignManagement = ({
                           <div className="mt-4">
                             <div className="flex items-center justify-between text-xs text-gray-500">
                               <span>
-                                {formatCurrency(raisedAmount)} / {formatCurrency(goalAmount)}
+                                {formatCurrency(raisedAmount)} / {formatCurrencyFromMajor(goalAmount)}
                               </span>
                               <span>{progress.toFixed(0)}%</span>
                             </div>
@@ -2535,7 +2527,7 @@ const CampaignManagement = ({
                           const goalAmount = Number(campaign.goal) || 0;
                           const progress =
                             goalAmount > 0
-                              ? Math.min((raisedAmount / goalAmount) * 100, 100)
+                              ? Math.min(((raisedAmount / 100) / goalAmount) * 100, 100)
                               : 0;
                           const status = (campaign.status ?? "inactive").toString();
                           const statusTone = status.toLowerCase();
@@ -2597,7 +2589,7 @@ const CampaignManagement = ({
                                 <div className="w-[220px] max-w-full">
                                   <div className="flex items-center justify-between text-xs text-gray-500">
                                     <span>
-                                      {formatCurrency(raisedAmount)} / {formatCurrency(goalAmount)}
+                                      {formatCurrency(raisedAmount)} / {formatCurrencyFromMajor(goalAmount)}
                                     </span>
                                     <span>{progress.toFixed(0)}%</span>
                                   </div>
@@ -2715,7 +2707,7 @@ const CampaignManagement = ({
                   <span>
                     {selectedCampaign?.goal
                       ? Math.min(
-                          (Number(selectedCampaign?.raised || 0) /
+                          ((Number(selectedCampaign?.raised || 0) / 100) /
                             Number(selectedCampaign.goal)) *
                             100,
                           100
@@ -2729,7 +2721,7 @@ const CampaignManagement = ({
                     className={`h-full ${getProgressColor(
                       selectedCampaign?.goal
                         ? Math.min(
-                            (Number(selectedCampaign?.raised || 0) /
+                            ((Number(selectedCampaign?.raised || 0) / 100) /
                               Number(selectedCampaign.goal)) *
                               100,
                             100
@@ -2740,7 +2732,7 @@ const CampaignManagement = ({
                       width: `${
                         selectedCampaign?.goal
                           ? Math.min(
-                              (Number(selectedCampaign?.raised || 0) /
+                              ((Number(selectedCampaign?.raised || 0) / 100) /
                                 Number(selectedCampaign.goal)) *
                                 100,
                               100
@@ -2760,7 +2752,7 @@ const CampaignManagement = ({
                   <div className="text-right">
                     <div className="text-xs uppercase tracking-wide">Goal</div>
                     <div className="text-base font-semibold text-gray-900">
-                      {formatCurrency(Number(selectedCampaign?.goal || 0))}
+                      {formatCurrencyFromMajor(Number(selectedCampaign?.goal || 0))}
                     </div>
                   </div>
                 </div>
