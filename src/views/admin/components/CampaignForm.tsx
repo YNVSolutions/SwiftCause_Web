@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Campaign } from '../../../shared/types';
+import { Campaign, Permission } from '../../../shared/types';
 import { useScrollSpy } from '../../../shared/lib/hooks/useScrollSpy';
 import { kioskApi } from '../../../entities/kiosk/api';
 
@@ -18,7 +18,7 @@ import { Switch } from '../../../shared/ui/switch';
 import { Checkbox } from '../../../shared/ui/checkbox';
 
 import {
-  Menu, X, Save, Upload, RefreshCw
+  Menu, X, Save, Upload, RefreshCw, AlertCircle
 } from 'lucide-react';
 
 // Types for the form data
@@ -58,6 +58,9 @@ export interface CampaignFormProps {
   organizationId?: string;
   isSubmitting?: boolean;
   isSavingDraft?: boolean;
+  hasPermission?: (permission: Permission) => boolean;
+  dateError?: boolean;
+  onDateErrorClear?: () => void;
 }
 
 export function CampaignForm({
@@ -74,7 +77,10 @@ export function CampaignForm({
   onGalleryImagesSelect,
   organizationId,
   isSubmitting = false,
-  isSavingDraft = false
+  isSavingDraft = false,
+  hasPermission,
+  dateError = false,
+  onDateErrorClear
 }: CampaignFormProps) {
   
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -109,7 +115,7 @@ export function CampaignForm({
     { id: 'basic-info', label: 'BASIC INFO' },
     { id: 'details', label: 'DETAILS' },
     { id: 'media', label: 'MEDIA' },
-    { id: 'kiosk-distribution', label: 'KIOSK DISTRIBUTION' }
+    ...(hasPermission?.('assign_campaigns') ? [{ id: 'kiosk-distribution', label: 'KIOSK DISTRIBUTION' }] : [])
   ];
 
   // Use ScrollSpy hook
@@ -618,9 +624,22 @@ export function CampaignForm({
                           id="startDate"
                           type="date"
                           value={campaignData.startDate}
-                          onChange={(e) => setCampaignData(p => ({ ...p, startDate: e.target.value }))}
-                          className="h-14 text-base border-gray-300 rounded-xl focus:border-green-500 focus:ring-green-500 bg-white shadow-sm"
+                          onChange={(e) => {
+                            setCampaignData(p => ({ ...p, startDate: e.target.value }));
+                            if (dateError && onDateErrorClear) onDateErrorClear();
+                          }}
+                          className={`h-14 text-base rounded-xl bg-white shadow-sm ${
+                            dateError 
+                              ? 'border-2 border-red-500 focus:border-red-500 focus:ring-red-500' 
+                              : 'border-gray-300 focus:border-green-500 focus:ring-green-500'
+                          }`}
                         />
+                        {dateError && (
+                          <p className="text-sm text-red-600 mt-2 flex items-center gap-1.5 font-medium">
+                            <AlertCircle className="w-4 h-4" />
+                            End date must be after start date
+                          </p>
+                        )}
                       </div>
 
                       <div>
@@ -631,9 +650,22 @@ export function CampaignForm({
                           id="endDate"
                           type="date"
                           value={campaignData.endDate}
-                          onChange={(e) => setCampaignData(p => ({ ...p, endDate: e.target.value }))}
-                          className="h-14 text-base border-gray-300 rounded-xl focus:border-green-500 focus:ring-green-500 bg-white shadow-sm"
+                          onChange={(e) => {
+                            setCampaignData(p => ({ ...p, endDate: e.target.value }));
+                            if (dateError && onDateErrorClear) onDateErrorClear();
+                          }}
+                          className={`h-14 text-base rounded-xl bg-white shadow-sm ${
+                            dateError 
+                              ? 'border-2 border-red-500 focus:border-red-500 focus:ring-red-500' 
+                              : 'border-gray-300 focus:border-green-500 focus:ring-green-500'
+                          }`}
                         />
+                        {dateError && (
+                          <p className="text-sm text-red-600 mt-2 flex items-center gap-1.5 font-medium">
+                            <AlertCircle className="w-4 h-4" />
+                            End date must be after start date
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -965,16 +997,17 @@ export function CampaignForm({
               </section>
 
               {/* Kiosk Distribution Section */}
-              <section 
-                id="kiosk-distribution"
-                ref={sectionRefs['kiosk-distribution']}
-                className="p-4 sm:p-6 lg:p-8 border-b border-gray-100"
-                style={{ scrollSnapAlign: 'start' }}
-              >
-                <div className="max-w-4xl">
-                  <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-6 sm:mb-8">
-                    Kiosk Distribution
-                  </h2>
+              {hasPermission?.('assign_campaigns') && (
+                <section 
+                  id="kiosk-distribution"
+                  ref={sectionRefs['kiosk-distribution']}
+                  className="p-4 sm:p-6 lg:p-8 border-b border-gray-100"
+                  style={{ scrollSnapAlign: 'start' }}
+                >
+                  <div className="max-w-4xl">
+                    <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-6 sm:mb-8">
+                      Kiosk Distribution
+                    </h2>
                   
                   <div className="space-y-6">
                     <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
@@ -1126,6 +1159,7 @@ export function CampaignForm({
                   </div>
                 </div>
               </section>
+              )}
             </div>
 
             {/* Footer - Fixed */}

@@ -89,6 +89,7 @@ import {
   addDoc,
   doc,
   updateDoc,
+  Timestamp,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import {
@@ -99,6 +100,11 @@ import {
 import { useOrganization } from "../../shared/lib/hooks/useOrganization";
 import { useCampaignManagement } from "../../shared/lib/hooks/useCampaignManagement";
 import { auth } from "../../shared/lib/firebase";
+import { 
+  syncKiosksForCampaign, 
+  normalizeAssignments 
+} from "../../shared/lib/sync/campaignKioskSync";
+import { DEFAULT_CAMPAIGN_CONFIG } from "../../shared/config";
 
 import { AdminLayout } from "./AdminLayout";
 import { OrganizationSwitcher } from "./OrganizationSwitcher";
@@ -165,7 +171,34 @@ export function AdminDashboard({
     saveCampaign,
     clearImageSelection,
     clearGallerySelection,
+    uploadFile,
+    createWithImage,
   } = useCampaignManagement(userSession.user.organizationId);
+
+  // Helper function to remove undefined properties from an object
+  const removeUndefined = (obj: any): any => {
+    if (obj === null || typeof obj !== "object") {
+      return obj;
+    }
+
+    if (Array.isArray(obj)) {
+      return obj.map(removeUndefined).filter((item) => item !== undefined);
+    }
+
+    const newObj: any = {};
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        const value = obj[key];
+        if (value !== undefined) {
+          const processedValue = removeUndefined(value);
+          if (processedValue !== undefined) {
+            newObj[key] = processedValue;
+          }
+        }
+      }
+    }
+    return newObj;
+  };
 
   // Map CampaignForm fields to database schema
   const mapFormDataToDatabase = useCallback((formData: CampaignFormData) => {
@@ -247,6 +280,9 @@ export function AdminDashboard({
     createdId: '',
     linkingId: null as string | null
   });
+
+  // Date validation error state for getting started flow
+  const [campaignDateError, setCampaignDateError] = useState(false);
 
   const [kioskCreation, setKioskCreation] = useState({
     formData: {
@@ -468,9 +504,12 @@ export function AdminDashboard({
     const endDate = new Date(campaignCreation.newCampaign.endDate);
     
     if (endDate <= startDate) {
-      showToast("End date must be after start date", "error", 4000);
+      setCampaignDateError(true);
       return;
     }
+    
+    // Clear date error if validation passes
+    setCampaignDateError(false);
     
     setCampaignCreation(prev => ({ ...prev, isCreating: true }));
     try {
@@ -675,10 +714,13 @@ export function AdminDashboard({
       const endDate = new Date(campaignCreation.formData.endDate);
       
       if (endDate <= startDate) {
-        showToast("End date must be after start date", "error", 4000);
+        setCampaignDateError(true);
         return;
       }
     }
+    
+    // Clear date error if validation passes
+    setCampaignDateError(false);
     
     setCampaignCreation(prev => ({ ...prev, isCreating: true }));
     try {
@@ -692,79 +734,134 @@ export function AdminDashboard({
         // Map form data to database schema
         const mappedData = mapFormDataToDatabase(campaignCreation.formData);
         
-        // Prepare campaign data
-        let campaignDataToUpdate = {
+        let coverImageUrl = mappedData.coverImageUrl || '';
+        
+        // Upload cover image BEFORE update if selected
+        if (selectedImage) {
+          const uploadedUrl = await uploadFile(
+            selectedImage,
+            `campaigns/${campaignCreation.editingCampaignInTour.id}/${Date.now()}_${selectedImage.name}`
+          );
+          if (uploadedUrl) {
+            coverImageUrl = uploadedUrl;
+          }
+        }
+        
+        // Upload gallery images BEFORE update if selected
+        const existingGalleryUrls = Array.isArray(campaignCreation.formData.galleryImages) 
+          ? campaignCreation.formData.galleryImages 
+          : [];
+        let galleryImageUrls = [...existingGalleryUrls];
+        
+        if (selectedGalleryImages.length > 0) {
+          for (const file of selectedGalleryImages) {
+            const uploadedUrl = await uploadFile(
+              file,
+              `campaigns/${campaignCreation.editingCampaignInTour.id}/gallery/${Date.now()}_${file.name}`
+            );
+            if (uploadedUrl) {
+              galleryImageUrls.push(uploadedUrl);
+            }
+          }
+        }
+        
+        // Prepare campaign data with uploaded URLs
+        const campaignDataToUpdate = {
           ...mappedData,
+          coverImageUrl: coverImageUrl,
+          galleryImages: galleryImageUrls,
           startDate: startDate,
           endDate: endDate,
           updatedAt: new Date(),
         };
         
-        // Upload cover image if selected, using the shared hook
-        if (selectedImage) {
-          const uploadedData = await handleImageUpload(campaignCreation.editingCampaignInTour.id, campaignDataToUpdate);
-          if (uploadedData?.coverImageUrl) {
-            campaignDataToUpdate.coverImageUrl = uploadedData.coverImageUrl;
-          }
-        }
-        
-        // Upload gallery images if selected, using the shared hook
-        const existingGalleryUrls = Array.isArray(campaignCreation.formData.galleryImages) 
-          ? campaignCreation.formData.galleryImages 
-          : [];
-        const finalGalleryUrls = await handleGalleryImagesUpload(campaignCreation.editingCampaignInTour.id, existingGalleryUrls);
-        campaignDataToUpdate.galleryImages = finalGalleryUrls;
-        
         await updateDoc(campaignRef, campaignDataToUpdate);
+        
+        // Clear image selections after successful upload
+        clearImageSelection();
+        clearGallerySelection();
         
         // Refresh campaigns list
         const campaigns = await fetchCampaignsByOrganization(userSession.user.organizationId!);
         setCampaignCreation(prev => ({ ...prev, allCampaigns: campaigns }));
       } else {
-        // Create new campaign
-        // Map form data to database schema
-        const mappedData = mapFormDataToDatabase(campaignCreation.formData);
+        // Create new campaign - Using same logic as CampaignManagement
+        const formData = campaignCreation.formData;
         
-        const campaignData = {
-          ...mappedData,
-          raised: 0,
-          startDate: startDate,
-          endDate: endDate,
-          organizationId: userSession.user.organizationId,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
+        let coverImageUrl = formData.coverImageUrl;
         
-        const docRef = await addDoc(collection(db, 'campaigns'), campaignData);
-        
-        // Upload cover image after campaign creation if selected, using the shared hook
-        let finalCoverImageUrl = campaignData.coverImageUrl;
+        // Upload cover image file if one was selected
         if (selectedImage) {
-          const uploadedData = await handleImageUpload(docRef.id, campaignData);
-          if (uploadedData?.coverImageUrl) {
-            finalCoverImageUrl = uploadedData.coverImageUrl;
+          const uploadedUrl = await uploadFile(
+            selectedImage,
+            `campaigns/new/${Date.now()}_${selectedImage.name}`
+          );
+          if (uploadedUrl) {
+            coverImageUrl = uploadedUrl;
           }
         }
         
-        // Upload gallery images after campaign creation if selected, using the shared hook
-        const finalGalleryUrls = await handleGalleryImagesUpload(docRef.id, []);
-        
-        // Update the campaign with the Firebase Storage URLs
-        if (finalCoverImageUrl !== campaignData.coverImageUrl || finalGalleryUrls.length > 0) {
-          await updateDoc(doc(db, 'campaigns', docRef.id), {
-            coverImageUrl: finalCoverImageUrl,
-            galleryImages: finalGalleryUrls
-          });
+        // Upload gallery images if any were selected
+        let galleryImageUrls = [...(formData.galleryImages || [])];
+        if (selectedGalleryImages.length > 0) {
+          for (const file of selectedGalleryImages) {
+            const uploadedUrl = await uploadFile(
+              file,
+              `campaigns/new/gallery/${Date.now()}_${file.name}`
+            );
+            if (uploadedUrl) {
+              galleryImageUrls.push(uploadedUrl);
+            }
+          }
         }
         
-        setCampaignCreation(prev => ({ ...prev, createdId: docRef.id }));
+        const dataToSave: { [key: string]: any } = {
+          title: formData.title,
+          description: formData.briefOverview || '',
+          longDescription: formData.description || '',
+          status: formData.status,
+          goal: Number(formData.goal),
+          tags: Array.isArray(formData.tags) ? formData.tags.filter(t => t.trim().length > 0) : [],
+          coverImageUrl: coverImageUrl || "",
+          videoUrl: formData.videoUrl || "",
+          galleryImages: galleryImageUrls,
+          category: formData.category || "",
+          organizationId: userSession.user.organizationId || "",
+          assignedKiosks: normalizeAssignments(formData.assignedKiosks),
+          isGlobal: formData.isGlobal,
+          configuration: {
+            ...DEFAULT_CAMPAIGN_CONFIG,
+            predefinedAmounts: formData.predefinedAmounts.filter((a: number) => a > 0),
+            enableRecurring: formData.enableRecurring,
+            recurringIntervals: formData.recurringIntervals,
+            giftAidEnabled: formData.giftAidEnabled,
+          },
+        };
+
+        if (formData.startDate) {
+          dataToSave.startDate = Timestamp.fromDate(new Date(formData.startDate));
+        }
+        if (formData.endDate) {
+          dataToSave.endDate = Timestamp.fromDate(new Date(formData.endDate));
+        }
+
+        const finalDataToSave = removeUndefined(dataToSave);
+        const newCampaign = await createWithImage(finalDataToSave);
+        
+        await syncKiosksForCampaign(newCampaign.id, normalizeAssignments(formData.assignedKiosks), []);
+        
+        // Clear image selections after successful upload
+        clearImageSelection();
+        clearGallerySelection();
+        
+        setCampaignCreation(prev => ({ ...prev, createdId: newCampaign.id }));
         
         // Refresh campaigns list
-        const campaigns = await fetchCampaignsByOrganization(userSession.user.organizationId!);
-        setCampaignCreation(prev => ({ ...prev, allCampaigns: campaigns }));
+        const refreshedCampaigns = await fetchCampaignsByOrganization(userSession.user.organizationId!);
+        setCampaignCreation(prev => ({ ...prev, allCampaigns: refreshedCampaigns }));
         
         // Set the newly created campaign as selected
-        const newlyCreatedCampaign = campaigns.find(c => c.id === docRef.id);
+        const newlyCreatedCampaign = refreshedCampaigns.find(c => c.id === newCampaign.id);
         if (newlyCreatedCampaign) {
           setCampaignCreation(prev => ({ ...prev, selectedCampaignInTour: newlyCreatedCampaign }));
         }
@@ -772,7 +869,7 @@ export function AdminDashboard({
         // Move to next step only when creating new
         setOnboardingFlow(prev => ({ ...prev, showCampaignForm: false, showKioskForm: true }));
         
-        console.log("Campaign created successfully with ID:", docRef.id);
+        console.log("Campaign created successfully with ID:", newCampaign.id);
       }
       
       // Reset form and close dialog
@@ -1083,13 +1180,20 @@ export function AdminDashboard({
     );
   }
 
+  // Check if user has all required permissions for the getting started tour
+  const hasGetStartedPermissions = 
+    hasPermission('edit_campaign') && 
+    hasPermission('view_campaigns') && 
+    hasPermission('view_kiosks') && 
+    hasPermission('edit_kiosk');
+
   return (
     <AdminLayout 
       onNavigate={onNavigate} 
       onLogout={onLogout} 
       userSession={userSession} 
       hasPermission={hasPermission}
-      onStartTour={handleStartTour}
+      onStartTour={hasGetStartedPermissions ? handleStartTour : undefined}
       onOpenStripeSetup={() => setDialogVisibility(prev => ({ ...prev, showStripeStatusDialog: true }))}
       headerTitle={(
         <div className="flex flex-col">
@@ -1478,6 +1582,7 @@ export function AdminDashboard({
                     clearImageSelection();
                     clearGallerySelection();
                     setCampaignCreation(prev => ({ ...prev, editingCampaignInTour: null }));
+                    setCampaignDateError(false);
                   }
                 }}
                 editingCampaign={campaignCreation.editingCampaignInTour}
@@ -1494,6 +1599,7 @@ export function AdminDashboard({
                   clearGallerySelection();
                   setDialogVisibility(prev => ({ ...prev, showCampaignFormDialog: false }));
                   setCampaignCreation(prev => ({ ...prev, editingCampaignInTour: null }));
+                  setCampaignDateError(false);
                 }}
                 formatCurrency={formatCurrency}
                 onImageFileSelect={(file) => {
@@ -1525,6 +1631,9 @@ export function AdminDashboard({
                 }}
                 organizationId={userSession.user.organizationId}
                 isSubmitting={campaignCreation.isCreating}
+                hasPermission={hasPermission}
+                dateError={campaignDateError}
+                onDateErrorClear={() => setCampaignDateError(false)}
               />
             </div>
 

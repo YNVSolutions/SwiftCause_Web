@@ -7,7 +7,7 @@ import { Checkbox } from '../../../shared/ui/checkbox';
 import { Textarea } from '../../../shared/ui/textarea';
 import { Campaign } from '../../../entities/campaign';
 import { DonationFormData } from '../model';
-import { formatCurrency, formatCurrencyFromMajor } from '../../../shared/lib/currencyFormatter';
+import { formatCurrencyFromMajor } from '../../../shared/lib/currencyFormatter';
 
 interface DonationFormProps {
   campaign: Campaign;
