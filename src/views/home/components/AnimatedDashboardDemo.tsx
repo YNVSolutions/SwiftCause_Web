@@ -51,7 +51,7 @@ const floatingFeatures: FloatingFeature[] = [
 
 export function AnimatedDashboardDemo() {
   const [totalRaised, setTotalRaised] = useState(145.39);
-  const [campaigns, setCampaigns] = useState(75);
+  const [campaigns] = useState(75);
   const [donations, setDonations] = useState(76);
   const [giftAid, setGiftAid] = useState(7.23);
   const [activeMetric, setActiveMetric] = useState(0);
