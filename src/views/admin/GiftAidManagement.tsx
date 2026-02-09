@@ -564,7 +564,13 @@ export function GiftAidManagement({
                         <TableCell className="px-4 py-4 text-center">
                           <p className="text-base text-gray-700">{donation.donationDate ? (() => {
                             const date = new Date(donation.donationDate);
-                            return isNaN(date.getTime()) ? "Invalid Date" : date.toISOString().split('T')[0];
+                            return isNaN(date.getTime())
+                              ? "Invalid Date"
+                              : date.toLocaleDateString('en-GB', {
+                                  day: '2-digit',
+                                  month: 'short',
+                                  year: 'numeric',
+                                });
                           })() : "N/A"}</p>
                         </TableCell>
                         <TableCell className="px-4 py-4 text-center">
@@ -665,7 +671,7 @@ export function GiftAidManagement({
                     <div className="flex items-center gap-2 text-xs text-slate-500">
                       <CalendarDays className="w-4 h-4" />
                       {donation.donationDate && donation.donationDate !== "Unknown Date" 
-                        ? new Date(donation.donationDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                        ? new Date(donation.donationDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
                         : "N/A"}
                     </div>
                     <button 
