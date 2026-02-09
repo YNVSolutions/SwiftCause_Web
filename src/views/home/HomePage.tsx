@@ -14,7 +14,6 @@ import {
   Activity,
   Layout,
   TrendingUp,
-  ArrowUpRight,
   Plus,
   Minus,
   Send,
@@ -747,7 +746,7 @@ export function HomePage({ onLogin, onSignup, onNavigate }: HomePageProps) {
                                   <div className="bg-white rounded-lg p-2 border border-slate-100">
                                     <h4 className="text-[9px] font-bold text-[#064e3b] mb-1.5">Activity</h4>
                                     <div className="space-y-0.5">
-                                      {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => (
+                                      {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
                                         <div key={day} className="flex items-center gap-1">
                                           <span className="text-[6px] text-slate-500 w-5">{day}</span>
                                           <div className="flex gap-0.5 flex-1">
