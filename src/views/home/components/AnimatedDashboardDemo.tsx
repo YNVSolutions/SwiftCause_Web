@@ -17,6 +17,38 @@ interface FloatingFeature {
 
 const isLightTheme = (color: string) => color.includes('white') || color.includes('F7F6F2');
 
+const floatingFeatures: FloatingFeature[] = [
+  {
+    icon: <Zap className="w-5 h-5" />,
+    title: "Gift Aid",
+    value: "+25% Boost",
+    description: "Automatic tax reclaim for UK donors",
+    color: "from-[#064e3b] to-[#0f5132]",
+    position: "top-8 -right-4",
+    delay: 0,
+    size: 'large'
+  },
+  {
+    icon: <Globe className="w-4 h-4" />,
+    title: "Multi-channel",
+    value: "Online & Kiosk",
+    color: "from-[#064e3b] to-[#0f5132]",
+    position: "bottom-8 -left-4",
+    delay: 1000,
+    size: 'small'
+  },
+  {
+    icon: <Smartphone className="w-5 h-5" />,
+    title: "Mobile Ready",
+    value: "Any Device",
+    description: "Optimized for all screens",
+    color: "from-[#064e3b] to-[#0f5132]",
+    position: "top-1/2 -right-12",
+    delay: 2000,
+    size: 'large'
+  }
+];
+
 export function AnimatedDashboardDemo() {
   const [totalRaised, setTotalRaised] = useState(145.39);
   const [campaigns, setCampaigns] = useState(75);
@@ -24,38 +56,6 @@ export function AnimatedDashboardDemo() {
   const [giftAid, setGiftAid] = useState(7.23);
   const [activeMetric, setActiveMetric] = useState(0);
   const [visibleFeatures, setVisibleFeatures] = useState<number[]>([]);
-
-  const floatingFeatures: FloatingFeature[] = [
-    {
-      icon: <Zap className="w-5 h-5" />,
-      title: "Gift Aid",
-      value: "+25% Boost",
-      description: "Automatic tax reclaim for UK donors",
-      color: "from-[#064e3b] to-[#0f5132]",
-      position: "top-8 -right-4",
-      delay: 0,
-      size: 'large'
-    },
-    {
-      icon: <Globe className="w-4 h-4" />,
-      title: "Multi-channel",
-      value: "Online & Kiosk",
-      color: "from-[#064e3b] to-[#0f5132]",
-      position: "bottom-8 -left-4",
-      delay: 1000,
-      size: 'small'
-    },
-    {
-      icon: <Smartphone className="w-5 h-5" />,
-      title: "Mobile Ready",
-      value: "Any Device",
-      description: "Optimized for all screens",
-      color: "from-[#064e3b] to-[#0f5132]",
-      position: "top-1/2 -right-12",
-      delay: 2000,
-      size: 'large'
-    }
-  ];
 
   // Animate numbers
   useEffect(() => {
