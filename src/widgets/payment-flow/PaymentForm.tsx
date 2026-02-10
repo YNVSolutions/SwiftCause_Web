@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
 import { Button } from '../../shared/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '../../shared/ui/alert';
@@ -13,13 +13,23 @@ interface PaymentFormProps {
 const PaymentForm: React.FC<PaymentFormProps> = ({ loading, error, onSubmit }) => {
   const stripe = useStripe();
   const elements = useElements();
+  const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!stripe || !elements) {
       return;
     }
-    await onSubmit();
+    if (submitting || loading) {
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await onSubmit();
+      // On success, keep submitting=true until navigation/unmount.
+    } catch {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -41,8 +51,8 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ loading, error, onSubmit }) =
           },
         }} />
       </div>
-      <Button type="submit" disabled={!stripe || loading} className="w-full min-w-full h-14 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white text-[17px] font-semibold">
-        {loading ? (
+      <Button type="submit" disabled={!stripe || loading || submitting} className="w-full min-w-full h-14 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white text-[17px] font-semibold">
+        {loading || submitting ? (
           <span className="flex items-center justify-center">
             <svg className="animate-spin h-5 w-5 mr-3 text-white" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

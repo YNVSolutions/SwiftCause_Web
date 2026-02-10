@@ -203,6 +203,25 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
         .hide-scrollbar {
           scrollbar-width: none;
         }
+        /* Soft fade for scrollable left column */
+        .left-scroll-fade {
+          position: relative;
+        }
+        .left-scroll-fade::after {
+          content: "";
+          position: sticky;
+          left: 0;
+          right: 0;
+          height: 64px;
+          z-index: 5;
+          pointer-events: none;
+          display: block;
+        }
+        .left-scroll-fade::after {
+          bottom: 0;
+          margin-bottom: -64px;
+          background: linear-gradient(to top, #FFFBF7, rgba(255,251,247,0));
+        }
       `}</style>
       <button
         onClick={onBack}
@@ -226,13 +245,13 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
         </header>
 
       {/* Large screens: Two-column layout */}
-      <main className="hidden lg:flex w-5/6 mx-auto py-4 flex-1 overflow-y-auto hide-scrollbar">
+      <main className="hidden lg:flex w-5/6 mx-auto py-4 flex-1 overflow-hidden">
         {/* 3:2 grid layout - full height */}
         <div className="grid grid-cols-5 gap-4 h-full w-full items-start">
           {/* Left Column (3/5): Scrollable - Image Carousel + Long Description */}
-          <div className="col-span-3 space-y-3 overflow-y-auto pr-2 hide-scrollbar">
+          <div className="col-span-3 space-y-3 overflow-y-auto pr-2 hide-scrollbar max-h-[calc(100vh-80px)] left-scroll-fade rounded-[22px] bg-[#FFFBF7]">
             {/* Image Carousel */}
-            <div className="h-[320px] shrink-0 rounded-[18px] border border-gray-200/50 bg-[#FFFBF7] shadow-[0_10px_28px_rgba(15,23,42,0.08)] overflow-hidden">
+            <div className="aspect-video max-h-[400px] w-full shrink-0 rounded-[22px] border border-gray-200/50 bg-[#FFFBF7] shadow-sm overflow-hidden">
               <ImageCarousel
                 images={galleryImages}
                 currentIndex={currentImageIndex}
@@ -243,76 +262,78 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
 
             {/* Description below images */}
             <div className="prose prose-gray max-w-none">
-              <div className="rounded-[18px] border border-gray-200/50 bg-[#FFFBF7] shadow-[0_10px_28px_rgba(15,23,42,0.08)] px-4 py-3.5 text-slate-700 text-[15px] leading-[1.55] font-normal">
+              <div className="rounded-[22px] border border-gray-200/50 bg-[#FFFBF7] shadow-sm px-4 py-3.5 text-slate-700 text-[15px] leading-[1.55] font-normal">
                 {renderDescription(belowImageDescription)}
               </div>
             </div>
           </div>
 
           {/* Right Column (2/5): Fixed - Title + Description + Progress + Amounts + Video */}
-          <div className="col-span-2 space-y-3 rounded-[18px] border border-gray-200/50 bg-[#FFFBF7] shadow-[0_10px_28px_rgba(15,23,42,0.08)] px-4 py-3.5 lg:sticky lg:top-0 h-fit">
-          {/* Title - Strongest text element */}
-          <h1 className="text-[24px] font-semibold text-slate-900 leading-[1.3] tracking-[-0.01em]">
-            {campaign.title}
-          </h1>
-          {campaign.description && (
-            <p className="text-[15px] text-slate-700 leading-[1.55] max-w-[65ch] font-normal">
-              {campaign.description}
-            </p>
-          )}
+          <div className="col-span-2 rounded-[18px] border border-gray-200/50 bg-[#FFFBF7] shadow-[0_10px_28px_rgba(15,23,42,0.08)] px-4 py-3.5 lg:sticky lg:top-0 h-fit pt-8">
+            <div className="flex flex-col gap-3 max-h-[calc(100vh-120px)]">
+              {/* Title - Strongest text element */}
+              <h1 className="text-[24px] font-semibold text-slate-900 leading-[1.3] tracking-[-0.01em]">
+                {campaign.title}
+              </h1>
+              {campaign.description && (
+                <p className="text-[15px] text-slate-700 leading-[1.55] max-w-[65ch] font-normal overflow-y-auto pr-1 hide-scrollbar max-h-[142px]">
+                  {campaign.description}
+                </p>
+              )}
 
-            {/* Progress Section */}
-            <div className="space-y-1.5 rounded-xl border border-gray-200/50 bg-gray-100/50 px-3 py-2">
-              <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Community support</p>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-[#0A0A0A] font-medium">
-                  {formatAmount(campaign.raised || 0)} / {formatGoal(campaign.goal)}
-                </span>
-                <span className="text-[15px] text-[#0E8F5A] font-semibold">{Math.round(progress)}%</span>
+              {/* Progress Section */}
+              <div className="space-y-1.5 rounded-xl border border-gray-200/50 bg-gray-100/50 px-3 py-2">
+                <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Community support</p>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-[#0A0A0A] font-medium">
+                    {formatAmount(campaign.raised || 0)} / {formatGoal(campaign.goal)}
+                  </span>
+                  <span className="text-[15px] text-[#0E8F5A] font-semibold">{Math.round(progress)}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className="bg-[#0E8F5A] h-2 rounded-full transition-all duration-300 ease-out"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-[#0E8F5A] h-2 rounded-full transition-all duration-300 ease-out"
-                  style={{ width: `${progress}%` }}
+
+              {/* Amount Selector Label */}
+              <div>
+                <p className="text-[13px] font-medium text-slate-500 uppercase tracking-wider mb-1.5">Choose an amount</p>
+                <AmountSelector
+                  amounts={predefinedAmounts}
+                  selectedAmount={selectedAmount}
+                  customAmount={customAmount}
+                  currency={currency}
+                  enableRecurring={enableRecurring}
+                  recurringIntervals={recurringIntervals}
+                  isRecurring={isRecurring}
+                  recurringInterval={recurringInterval}
+                  onSelectAmount={onSelectAmount}
+                  onCustomAmountChange={onCustomAmountChange}
+                  onRecurringToggle={onRecurringToggle}
+                  onRecurringIntervalChange={onRecurringIntervalChange}
                 />
               </div>
-            </div>
 
-            {/* Amount Selector Label */}
-            <div>
-              <p className="text-[13px] font-medium text-slate-500 uppercase tracking-wider mb-1.5">Choose an amount</p>
-              <AmountSelector
-                amounts={predefinedAmounts}
-                selectedAmount={selectedAmount}
-                customAmount={customAmount}
-                currency={currency}
-                enableRecurring={enableRecurring}
-                recurringIntervals={recurringIntervals}
-                isRecurring={isRecurring}
-                recurringInterval={recurringInterval}
-                onSelectAmount={onSelectAmount}
-                onCustomAmountChange={onCustomAmountChange}
-                onRecurringToggle={onRecurringToggle}
-                onRecurringIntervalChange={onRecurringIntervalChange}
-              />
-            </div>
-
-            {/* Donate Button */}
-            <div className="space-y-1">
-              <DonateButton
-                disabled={!hasValidAmount}
-                onClick={onDonate}
-                label="Donate"
-              />
-              <p className="text-[12px] text-center text-slate-400 font-normal">Secure payment • Encrypted</p>
-            </div>
-
-            {/* Video Player */}
-            {campaign.videoUrl && (
-              <div className="pt-0.5">
-                <VideoPlayer videoUrl={campaign.videoUrl} />
+              {/* Donate Button */}
+              <div className="space-y-1">
+                <DonateButton
+                  disabled={!hasValidAmount}
+                  onClick={onDonate}
+                  label="Donate"
+                />
+                <p className="text-[12px] text-center text-slate-400 font-normal">Secure payment • Encrypted</p>
               </div>
-            )}
+
+              {/* Video Player */}
+              {campaign.videoUrl && (
+                <div className="pt-0.5">
+                  <VideoPlayer videoUrl={campaign.videoUrl} />
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </main>
@@ -325,7 +346,7 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
           style={{ paddingBottom: `${donationPanelHeight}px` }}
         >
           {/* Image Carousel */}
-          <div className="h-64 sm:h-80 mb-4 rounded-[18px] border border-gray-200/50 bg-[#FFFBF7] shadow-[0_10px_28px_rgba(15,23,42,0.08)] overflow-hidden">
+          <div className="aspect-video max-h-[260px] sm:max-h-[300px] md:max-h-[340px] mb-4 rounded-[18px] border border-gray-200/50 bg-[#FFFBF7] shadow-[0_10px_28px_rgba(15,23,42,0.08)] overflow-hidden">
             <ImageCarousel
               images={galleryImages}
               currentIndex={currentImageIndex}
@@ -361,7 +382,7 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
           </div>
 
           {/* Long Description */}
-          <div className="prose prose-gray max-w-none mb-4">
+          <div className="prose prose-gray max-w-none mb-2">
             <div className="rounded-[18px] border border-gray-200/50 bg-[#FFFBF7] shadow-[0_10px_28px_rgba(15,23,42,0.08)] px-3.5 py-3 text-slate-700 text-[15px] leading-[1.55] font-normal">
               {renderDescription(belowImageDescription)}
             </div>
@@ -408,6 +429,3 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
     </div>
   );
 };
-
-
-

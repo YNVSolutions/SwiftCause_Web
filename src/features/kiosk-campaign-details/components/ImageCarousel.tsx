@@ -61,7 +61,7 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({
         key={`carousel-image-${safeIndex}`}
         src={currentImage}
         alt={`Campaign image ${safeIndex + 1}`}
-        className="w-full h-full object-cover"
+        className="w-full h-full object-cover object-center"
       />
 
       {/* Subtle bottom gradient overlay */}

@@ -47,11 +47,11 @@ export const GiftAidPage: React.FC<GiftAidPageProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 h-screen bg-gradient-to-b from-[#F1FAF6] via-white to-[#F1FAF6] overflow-hidden">
+    <div className="fixed inset-0 h-screen bg-gradient-to-b from-[#F1FAF6] via-white to-[#F1FAF6] overflow-hidden lg:overflow-y-auto">
       <button
         type="button"
         onClick={showDetails ? handleBackFromDetails : onBack}
-        className="absolute left-6 top-5 z-20 inline-flex items-center gap-2 text-[#0E8F5A] hover:text-[#0C8050] text-sm font-medium hover:underline underline-offset-4"
+        className="absolute left-4 sm:left-6 top-4 sm:top-5 z-20 inline-flex items-center gap-2 text-[#0E8F5A] hover:text-[#0C8050] text-sm font-medium hover:underline underline-offset-4"
       >
         <ArrowLeft className="w-4 h-4" />
         Back
@@ -61,7 +61,7 @@ export const GiftAidPage: React.FC<GiftAidPageProps> = ({
       <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full bg-white/40 blur-3xl opacity-90" />
 
       {/* Main Content */}
-      <main className="relative z-10 h-full w-full flex items-center justify-center">
+      <main className="relative z-10 h-full w-full flex items-center justify-center px-3 sm:px-4 pt-10 sm:pt-12">
         <div className="h-full w-full overflow-hidden">
           {/* Sliding Container - width is 200% to hold both panels */}
           <div
@@ -72,8 +72,8 @@ export const GiftAidPage: React.FC<GiftAidPageProps> = ({
             }}
           >
             {/* Boost Panel */}
-            <div className="w-1/2 px-4 flex items-center justify-center">
-              <div className="max-w-xl mx-auto w-full">
+            <div className="w-1/2 px-3 sm:px-4 flex items-center justify-center">
+              <div className="max-w-lg sm:max-w-xl md:max-w-3xl mx-auto w-full">
               <GiftAidBoostPanel
                 amount={amount}
                 isCustomAmount={isCustomAmount}
@@ -88,8 +88,8 @@ export const GiftAidPage: React.FC<GiftAidPageProps> = ({
             </div>
 
             {/* Details Panel */}
-            <div className="w-1/2 px-4 flex items-center justify-center">
-              <div className="max-w-xl mx-auto w-full">
+            <div className="w-1/2 px-3 sm:px-4 flex items-center justify-center">
+              <div className="max-w-lg sm:max-w-xl md:max-w-3xl mx-auto w-full">
                 <GiftAidDetailsPanel
                   amount={finalAmount}
                   currency={currency}
