@@ -222,6 +222,15 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
           margin-bottom: -64px;
           background: linear-gradient(to top, #FFFBF7, rgba(255,251,247,0));
         }
+        .desc-scroll-fade {
+          position: relative;
+          overflow-y: auto;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        .desc-scroll-fade::-webkit-scrollbar {
+          display: none;
+        }
       `}</style>
       <button
         onClick={onBack}
@@ -270,15 +279,23 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
 
           {/* Right Column (2/5): Fixed - Title + Description + Progress + Amounts + Video */}
           <div className="col-span-2 rounded-[18px] border border-gray-200/50 bg-[#FFFBF7] shadow-[0_10px_28px_rgba(15,23,42,0.08)] px-4 py-3.5 lg:sticky lg:top-0 h-fit pt-8">
-            <div className="flex flex-col gap-3 max-h-[calc(100vh-120px)]">
+            <div className="flex flex-col gap-3 max-h-[calc(100vh-120px)] overflow-y-auto pr-1 hide-scrollbar">
               {/* Title - Strongest text element */}
               <h1 className="text-[24px] font-semibold text-slate-900 leading-[1.3] tracking-[-0.01em]">
                 {campaign.title}
               </h1>
               {campaign.description && (
-                <p className="text-[15px] text-slate-700 leading-[1.55] max-w-[65ch] font-normal overflow-y-auto pr-1 hide-scrollbar max-h-[142px]">
-                  {campaign.description}
-                </p>
+                campaign.videoUrl ? (
+                  <div className="desc-scroll-fade shrink-0 max-h-[170px] pr-1">
+                    <p className="text-[15px] text-slate-700 leading-[1.55] max-w-[65ch] font-normal">
+                      {campaign.description}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-[15px] text-slate-700 leading-[1.55] max-w-[65ch] font-normal">
+                    {campaign.description}
+                  </p>
+                )
               )}
 
               {/* Progress Section */}

@@ -749,6 +749,30 @@ export function AdminLayout({
           min-height: 3rem !important;
           width: 3rem !important;
         }
+        
+        /* Fix: Prevent white text on hover for header elements */
+        [data-sidebar="menu-button"]:hover span,
+        [data-sidebar="menu-button"]:hover svg {
+          color: inherit !important;
+        }
+        
+        /* Fix: Ensure sidebar text stays white on hover */
+        [data-sidebar="sidebar"] [data-sidebar="menu-button"]:hover {
+          color: white !important;
+        }
+        
+        /* Fix: Ensure active state maintains white text */
+        [data-sidebar="menu-button"][data-active="true"],
+        [data-sidebar="menu-button"][data-active="true"]:hover {
+          color: white !important;
+        }
+        
+        /* Fix: Ensure footer elements maintain white text */
+        [data-sidebar="footer"] button:hover,
+        [data-sidebar="footer"] button:hover span,
+        [data-sidebar="footer"] button:hover svg {
+          color: inherit !important;
+        }
       `}</style>
       
       {/* Main Layout Container */}
@@ -772,6 +796,7 @@ export function AdminLayout({
               <AdminPageHeader
                 title={resolvedTitle}
                 subtitle={resolvedSubtitle}
+                organizationName={userSession.user.organizationName}
                 topRightActions={headerTopRightActions}
                 inlineActions={headerInlineActions}
                 search={headerSearch}

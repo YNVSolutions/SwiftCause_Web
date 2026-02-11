@@ -169,17 +169,20 @@ export function CampaignListScreen({
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-4 py-4">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <Button 
-            variant="ghost" 
-            onClick={onLogout}
-            className="p-2"
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </Button>
+          <div className="w-10" />
           <h1 className="text-xl font-semibold text-gray-900">Choose a cause</h1>
           <div className="w-10" /> {/* Spacer for centering */}
         </div>
       </div>
+
+      <Button
+        variant="ghost"
+        onClick={onLogout}
+        className="fixed left-4 bottom-4 z-50 p-2 bg-white/95 border border-gray-200 shadow-sm hover:bg-gray-100"
+        aria-label="Log out"
+      >
+        <ChevronLeft className="w-6 h-6" />
+      </Button>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-6">
