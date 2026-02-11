@@ -6,6 +6,13 @@ module.exports = {
     './src/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
+    screens: {
+      sm: "640px",
+      md: "768px",   // tablet starts
+      lg: "1050px",  // desktop starts
+      xl: "1280px",
+      "2xl": "1536px",
+    },
     extend: {
       fontFamily: {
         'lexend': ['var(--font-lexend)', 'sans-serif'],

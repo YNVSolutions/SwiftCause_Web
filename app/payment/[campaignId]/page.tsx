@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { PaymentContainer } from '@/features/payment'
 import { useState, useEffect, use } from 'react'
-import { Campaign, Donation } from '@/shared/types'
+import { Campaign, Donation, PaymentResult } from '@/shared/types'
 import { getCampaignById } from '@/shared/api/firestoreService'
 import { KioskLoading } from '@/shared/ui/KioskLoading'
 
@@ -50,12 +50,17 @@ export default function PaymentPage({ params }: { params: Promise<{ campaignId: 
     fetchData()
   }, [campaignId])
 
-  const handlePaymentComplete = async (result: { success: boolean; message?: string; transactionId?: string }) => {
+  const handlePaymentComplete = async (result: PaymentResult) => {
+    const enrichedResult: PaymentResult = {
+      ...result,
+      campaignTitle: campaign?.title
+    };
+
     // Store payment result
-    sessionStorage.setItem('paymentResult', JSON.stringify(result))
+    sessionStorage.setItem('paymentResult', JSON.stringify(enrichedResult))
     
     // If payment successful and Gift Aid data exists, store it to Firebase
-    if (result.success && result.transactionId) {
+    if (enrichedResult.success && enrichedResult.transactionId) {
       try {
         const completeGiftAidData = sessionStorage.getItem('completeGiftAidData');
         if (completeGiftAidData) {
@@ -63,7 +68,7 @@ export default function PaymentPage({ params }: { params: Promise<{ campaignId: 
           const { submitGiftAidDeclaration } = await import('@/entities/giftAid');
           await submitGiftAidDeclaration(
             giftAidData,
-            result.transactionId,
+            enrichedResult.transactionId,
             campaignId,
             campaign?.title || 'Unknown Campaign'
           );

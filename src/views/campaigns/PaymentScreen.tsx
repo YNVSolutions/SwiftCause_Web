@@ -86,29 +86,29 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
       </button>
 
       <main className="relative z-10 flex-1 flex items-center justify-center px-4 pt-0 pb-6">
-        <div className="w-full max-w-2xl">
+        <div className="w-full max-w-2xl md:max-w-3xl">
             <div className="bg-[#FFFBF7] rounded-[18px] border border-gray-200/50 shadow-[0_10px_28px_rgba(15,23,42,0.08)] overflow-hidden">
               {/* Campaign Header */}
-              <div className="bg-[#0E8F5A] text-white px-6 py-4 text-center">
+              <div className="bg-[#0E8F5A] text-white px-5 py-3 text-center">
                 <div className="text-center">
                   <p className="text-white/85 text-[12px] uppercase tracking-wide mb-0.5 font-medium">Donating to</p>
-                  <h2 className="text-[20px] lg:text-[24px] font-semibold tracking-[-0.01em] leading-[1.25]">{campaign.title}</h2>
+                  <h2 className="text-[18px] sm:text-[20px] lg:text-[22px] font-semibold tracking-[-0.01em] leading-[1.25]">{campaign.title}</h2>
                 </div>
-                <div className="flex justify-center mt-2.5">
-                  <div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center shadow-lg">
-                    <Heart className="w-4 h-4" />
+                <div className="flex justify-center mt-2">
+                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center shadow-lg">
+                    <Heart className="w-3.5 h-3.5" />
                   </div>
                 </div>
               </div>
 
-            <div className="p-6 lg:p-7 bg-[#FFFBF7]">
+            <div className="p-5 sm:p-6 lg:p-7 bg-[#FFFBF7]">
               {/* Donation Summary Section */}
-              <div className="mb-6">
-                <div className="space-y-4">
+              <div className="mb-5">
+                <div className="space-y-3.5">
                   {/* Donation Amount */}
                   <div className="flex justify-between items-center">
-                    <span className="text-[16px] text-slate-700 font-normal">Donation Amount</span>
-                    <span className="text-[20px] font-semibold text-slate-900">
+                    <span className="text-[14px] sm:text-[16px] text-slate-700 font-normal">Donation Amount</span>
+                    <span className="text-[18px] sm:text-[20px] font-semibold text-slate-900">
                       {formatAmount(donation.amount)}
                     </span>
                   </div>
@@ -118,19 +118,19 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
                     <div className="flex justify-between items-center">
                       <div className="flex items-center space-x-2">
                         <CheckCircle className="h-4 w-4 text-[#0E8F5A]" />
-                        <span className="text-[16px] text-[#0E8F5A] font-semibold">Gift Aid (25%)</span>
+                        <span className="text-[14px] sm:text-[16px] text-[#0E8F5A] font-semibold">Gift Aid (25%)</span>
                       </div>
-                      <span className="text-[18px] font-semibold text-[#0E8F5A]">
+                      <span className="text-[16px] sm:text-[18px] font-semibold text-[#0E8F5A]">
                         +{formatAmount(giftAidAmount)}
                       </span>
                     </div>
                   )}
 
                   {/* Total Impact */}
-                  <div className="pt-4 border-t border-gray-200">
+                  <div className="pt-3.5 border-t border-gray-200">
                     <div className="flex justify-between items-center">
-                      <span className="text-[18px] font-semibold text-slate-900">Total Impact</span>
-                      <span className="text-[22px] font-semibold text-[#0E8F5A]">
+                      <span className="text-[16px] sm:text-[18px] font-semibold text-slate-900">Total Impact</span>
+                      <span className="text-[20px] sm:text-[22px] font-semibold text-[#0E8F5A]">
                         {formatAmount(totalImpact)}
                       </span>
                     </div>
@@ -139,13 +139,13 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
 
                 {/* Gift Aid Declaration Details */}
                 {isGiftAid && giftAidDetails && (
-                  <div className="mt-4 p-4 bg-gray-100/50 border border-gray-200/30 rounded-xl">
+                  <div className="mt-3.5 p-3 sm:p-4 bg-gray-100/50 border border-gray-200/30 rounded-xl">
                     <div className="space-y-1.5">
-                      <p className="text-[14px] text-slate-700 font-normal leading-[1.55]">
+                      <p className="text-[12px] sm:text-[14px] text-slate-700 font-normal leading-[1.55]">
                         <span className="font-semibold text-slate-900">Declaration:</span> I confirm I have paid enough UK Income/Capital Gains 
                         Tax to cover all my Gift Aid donations.
                       </p>
-                      <p className="text-[14px] text-slate-700 font-normal leading-[1.55]">
+                      <p className="text-[12px] sm:text-[14px] text-slate-700 font-normal leading-[1.55]">
                         <span className="font-semibold text-slate-900">Details:</span> {giftAidDetails.firstName} {giftAidDetails.surname}, {giftAidDetails.postcode}
                       </p>
                     </div>
@@ -154,14 +154,14 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
               </div>
 
               {/* Payment Method Section */}
-              <div className="mb-5">
-                <div className="flex items-center mb-4">
+              <div className="mb-4">
+                <div className="flex items-center mb-3">
                   <Lock className="h-4 w-4 text-[#0E8F5A] mr-2" />
-                  <h2 className="text-[16px] font-semibold text-slate-900">Payment Method</h2>
+                  <h2 className="text-[14px] sm:text-[16px] font-semibold text-slate-900">Payment Method</h2>
                 </div>
 
                 {/* Payment Form - Always mounted to keep Stripe Elements alive */}
-                <div className="bg-gray-100/50 border border-gray-200/30 rounded-xl p-5">
+                <div className="bg-gray-100/50 border border-gray-200/30 rounded-xl p-4 sm:p-5">
                   <PaymentForm 
                     loading={isProcessing}
                     error={error}
@@ -171,7 +171,7 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
               </div>
 
               {/* Security Notice */}
-              <div className="text-center text-slate-500 text-[13px] font-normal">
+              <div className="text-center text-slate-500 text-[12px] sm:text-[13px] font-normal">
                 <p>Your payment information is encrypted and secure.</p>
               </div>
             </div>

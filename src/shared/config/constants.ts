@@ -199,8 +199,8 @@ export const LOADING_STATES = {
 
 export const BREAKPOINTS = {
   mobile: 768,
-  tablet: 1024,
-  desktop: 1280
+  tablet: 1050,
+  desktop: 1050
 } as const;
 
 export const ANIMATION_DURATIONS = {
