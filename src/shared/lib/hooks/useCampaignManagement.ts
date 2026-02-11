@@ -137,6 +137,7 @@ export function useCampaignManagement(organizationId?: string) {
       
       const coverImageUrl = updatedData.coverImageUrl as string;
       setImagePreview(coverImageUrl);
+      setImagePreview(updatedData.coverImageUrl || null);
       setSelectedImage(null);
       return { ...updatedData, coverImageUrl };
     } catch (error) {
@@ -342,4 +343,3 @@ export function useCampaignManagement(organizationId?: string) {
     saveCampaign, // New centralized save function
   };
 }
-
