@@ -47,7 +47,7 @@ export const GiftAidPage: React.FC<GiftAidPageProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 h-screen bg-gradient-to-b from-[#F1FAF6] via-white to-[#F1FAF6] overflow-hidden lg:overflow-y-auto">
+    <div className="fixed inset-0 h-[100dvh] bg-gradient-to-b from-[#F1FAF6] via-white to-[#F1FAF6] overflow-hidden">
       <button
         type="button"
         onClick={showDetails ? handleBackFromDetails : onBack}
@@ -61,8 +61,11 @@ export const GiftAidPage: React.FC<GiftAidPageProps> = ({
       <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full bg-white/40 blur-3xl opacity-90" />
 
       {/* Main Content */}
-      <main className="relative z-10 h-full w-full flex items-center justify-center px-3 sm:px-4 pt-10 sm:pt-12">
-        <div className="h-full w-full overflow-hidden">
+      <main className="relative z-10 h-full w-full flex items-center justify-center px-3 sm:px-4 py-8 sm:py-10 md:py-10">
+        <div
+          className="h-full w-full max-h-[calc(100vh-96px)] overflow-hidden"
+          style={{ maxHeight: 'calc(100dvh - 96px)' }}
+        >
           {/* Sliding Container - width is 200% to hold both panels */}
           <div
             className="flex transition-transform duration-500 ease-in-out h-full items-center"
@@ -72,8 +75,8 @@ export const GiftAidPage: React.FC<GiftAidPageProps> = ({
             }}
           >
             {/* Boost Panel */}
-            <div className="w-1/2 px-3 sm:px-4 flex items-center justify-center">
-              <div className="max-w-lg sm:max-w-xl md:max-w-3xl mx-auto w-full">
+            <div className="w-1/2 px-3 sm:px-4 h-full flex items-center justify-center">
+              <div className="max-w-lg sm:max-w-xl md:max-w-[46rem] mx-auto w-full h-full">
               <GiftAidBoostPanel
                 amount={amount}
                 isCustomAmount={isCustomAmount}
@@ -88,8 +91,8 @@ export const GiftAidPage: React.FC<GiftAidPageProps> = ({
             </div>
 
             {/* Details Panel */}
-            <div className="w-1/2 px-3 sm:px-4 flex items-center justify-center">
-              <div className="max-w-lg sm:max-w-xl md:max-w-3xl mx-auto w-full">
+            <div className="w-1/2 px-3 sm:px-4 h-full flex items-center justify-center">
+              <div className="max-w-lg sm:max-w-xl md:max-w-[46rem] mx-auto w-full h-full">
                 <GiftAidDetailsPanel
                   amount={finalAmount}
                   currency={currency}

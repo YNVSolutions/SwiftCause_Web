@@ -128,48 +128,43 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
   };
 
   return (
-    <div className="bg-[#FFFBF7] rounded-[20px] border border-[rgba(15,23,42,0.08)] shadow-[0_12px_32px_rgba(15,23,42,0.08)] overflow-hidden h-full flex flex-col w-full max-w-xl md:max-w-3xl mx-auto font-lexend max-h-[calc(100vh-96px)] sm:max-h-[calc(100vh-120px)] md:max-h-[calc(100vh-140px)] lg:max-h-none">
+    <div className="bg-[#FFFCF9] rounded-[22px] border border-[rgba(15,23,42,0.07)] shadow-[0_18px_42px_rgba(15,23,42,0.10)] overflow-hidden flex flex-col w-full max-w-xl md:max-w-[42rem] lg:max-w-[42rem] mx-auto font-lexend max-h-full">
       {/* Header */}
-      <div className="bg-[#0E8F5A] text-white px-4 sm:px-6 py-2.5 sm:py-3 text-center relative sticky top-0 z-10">
-        <h2 className="text-[18px] sm:text-[22px] font-semibold tracking-[-0.01em] leading-[1.25]">
+      <div className="bg-[#0E8F5A] text-white px-4 sm:px-6 py-3.5 sm:py-4 text-center relative sticky top-0 z-10">
+        <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-white/90 mb-1">Your impact</p>
+        <h2 className="text-[17px] sm:text-[20px] font-semibold tracking-[-0.01em] leading-[1.2]">
           Boosting {formatAmount(amount)} to {formatAmount(totalWithGiftAid)}
         </h2>
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="px-4 sm:px-6 py-3 sm:py-4 grow flex flex-col min-h-0">
+      <form onSubmit={handleSubmit} className="px-4 sm:px-5 py-3 sm:py-3.5 grow flex flex-col min-h-0">
         <div
-          className="flex-1 min-h-0 overflow-y-auto pr-1 hide-scrollbar gift-aid-details-scroll"
+          className="flex-1 min-h-0 overflow-y-auto pr-1 pb-4 hide-scrollbar gift-aid-details-scroll"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           <style jsx>{`
             .hide-scrollbar::-webkit-scrollbar {
               display: none;
             }
-            @media (min-width: 1050px) {
-              .gift-aid-details-scroll {
-                overflow-y: visible;
-                max-height: none;
-              }
-            }
           `}</style>
           {/* Campaign Info */}
-          <div className="mb-3 p-3 bg-gray-100/50 border border-[rgba(15,23,42,0.08)] rounded-xl text-center">
-            <p className="text-[11px] text-[#0E8F5A] font-medium tracking-[0.18em] uppercase">Donating to</p>
-            <p className="font-medium text-slate-900 mt-1 tracking-[-0.01em] text-[15px] sm:text-[17px]">{campaignTitle}</p>
+          <div className="mb-3 p-3 bg-[#EEF7F2] border border-[#BFE2CF] rounded-[18px] text-center">
+            <p className="text-[10px] text-[#0E8F5A] font-medium tracking-[0.16em] uppercase">Donating to</p>
+            <p className="font-medium text-slate-900 mt-1 tracking-[-0.01em] text-[14px] sm:text-[15px] leading-[1.3]">{campaignTitle}</p>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {/* Section 1: Donor details */}
             <div className="space-y-2">
             <div className="flex items-center gap-3 pb-1">
               <User className="w-4 h-4 text-[#0E8F5A]" />
-              <h3 className="text-[16px] sm:text-[18px] font-semibold text-slate-900 tracking-[-0.01em]">Donor details</h3>
+              <h3 className="text-[16px] sm:text-[17px] font-semibold text-slate-900 tracking-[-0.01em]">Donor details</h3>
             </div>
             
             {/* Full Name */}
             <div className="space-y-1">
-              <label className="block text-[13px] sm:text-[15px] font-medium text-slate-600">
+              <label className="block text-[12px] sm:text-[14px] font-medium text-slate-600">
                 Full Name *
               </label>
               <input
@@ -179,10 +174,10 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
                   setFullName(e.target.value);
                   if (errors.fullName) setErrors((prev) => ({ ...prev, fullName: undefined }));
                 }}
-                className={`w-full h-10 sm:h-11 px-4 rounded-lg border-2 text-[14px] sm:text-[16px] font-normal focus:outline-none transition-all bg-white ${
+                className={`w-full h-10 px-4 rounded-[14px] border text-[14px] sm:text-[15px] font-normal focus:outline-none transition-all bg-white ${
                   errors.fullName
                     ? 'border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-100'
-                    : 'border-gray-200 focus:border-[#0E8F5A] focus:ring-2 focus:ring-[#0E8F5A]/10'
+                    : 'border-slate-200 focus:border-[#0E8F5A] focus:ring-2 focus:ring-[#0E8F5A]/10'
                 }`}
                 placeholder="e.g. John Smith"
               />
@@ -192,7 +187,7 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
             {/* House Number and Address Line 1 - side by side */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="block text-[13px] sm:text-[15px] font-medium text-slate-600">
+                <label className="block text-[12px] sm:text-[14px] font-medium text-slate-600">
                   House Number
                 </label>
                 <input
@@ -202,10 +197,10 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
                     setHouseNumber(e.target.value);
                     if (errors.houseNumber) setErrors((prev) => ({ ...prev, houseNumber: undefined }));
                   }}
-                  className={`w-full h-10 sm:h-11 px-4 rounded-lg border-2 text-[14px] sm:text-[16px] font-normal focus:outline-none transition-all bg-white ${
+                  className={`w-full h-10 px-4 rounded-[14px] border text-[14px] sm:text-[15px] font-normal focus:outline-none transition-all bg-white ${
                     errors.houseNumber
                       ? 'border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-100'
-                      : 'border-gray-200 focus:border-[#0E8F5A] focus:ring-2 focus:ring-[#0E8F5A]/10'
+                      : 'border-slate-200 focus:border-[#0E8F5A] focus:ring-2 focus:ring-[#0E8F5A]/10'
                   }`}
                   placeholder="e.g. 123"
                 />
@@ -213,7 +208,7 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
               </div>
 
               <div className="space-y-1">
-                <label className="block text-[13px] sm:text-[15px] font-medium text-slate-600">
+                <label className="block text-[12px] sm:text-[14px] font-medium text-slate-600">
                   Street Address *
                 </label>
                 <input
@@ -223,10 +218,10 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
                     setAddressLine1(e.target.value);
                     if (errors.addressLine1) setErrors((prev) => ({ ...prev, addressLine1: undefined }));
                   }}
-                  className={`w-full h-10 sm:h-11 px-4 rounded-lg border-2 text-[14px] sm:text-[16px] font-normal focus:outline-none transition-all bg-white ${
+                  className={`w-full h-10 px-4 rounded-[14px] border text-[14px] sm:text-[15px] font-normal focus:outline-none transition-all bg-white ${
                     errors.addressLine1
                       ? 'border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-100'
-                      : 'border-gray-200 focus:border-[#0E8F5A] focus:ring-2 focus:ring-[#0E8F5A]/10'
+                      : 'border-slate-200 focus:border-[#0E8F5A] focus:ring-2 focus:ring-[#0E8F5A]/10'
                   }`}
                   placeholder="e.g. Main Street"
                 />
@@ -237,20 +232,20 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
             {/* Address Line 2 and Town - side by side */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="block text-[13px] sm:text-[15px] font-medium text-slate-600">
+                <label className="block text-[12px] sm:text-[14px] font-medium text-slate-600">
                   Address Line 2 (Optional)
                 </label>
                 <input
                   type="text"
                   value={addressLine2}
                   onChange={(e) => setAddressLine2(e.target.value)}
-                  className="w-full h-10 sm:h-11 px-4 rounded-lg border-2 border-gray-200 focus:border-[#0E8F5A] focus:ring-2 focus:ring-[#0E8F5A]/10 text-[14px] sm:text-[16px] font-normal focus:outline-none transition-all bg-white"
+                  className="w-full h-10 px-4 rounded-[14px] border border-slate-200 focus:border-[#0E8F5A] focus:ring-2 focus:ring-[#0E8F5A]/10 text-[14px] sm:text-[15px] font-normal focus:outline-none transition-all bg-white"
                   placeholder="Apartment, suite, etc."
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="block text-[13px] sm:text-[15px] font-medium text-slate-600">
+                <label className="block text-[12px] sm:text-[14px] font-medium text-slate-600">
                   Town/City *
                 </label>
                 <input
@@ -260,10 +255,10 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
                     setTown(e.target.value);
                     if (errors.town) setErrors((prev) => ({ ...prev, town: undefined }));
                   }}
-                  className={`w-full h-10 sm:h-11 px-4 rounded-lg border-2 text-[14px] sm:text-[16px] font-normal focus:outline-none transition-all bg-white ${
+                  className={`w-full h-10 px-4 rounded-[14px] border text-[14px] sm:text-[15px] font-normal focus:outline-none transition-all bg-white ${
                     errors.town
                       ? 'border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-100'
-                      : 'border-gray-200 focus:border-[#0E8F5A] focus:ring-2 focus:ring-[#0E8F5A]/10'
+                      : 'border-slate-200 focus:border-[#0E8F5A] focus:ring-2 focus:ring-[#0E8F5A]/10'
                   }`}
                   placeholder="e.g. London"
                 />
@@ -274,7 +269,7 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
             {/* UK Postcode */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="flex items-center gap-2 text-[13px] sm:text-[15px] font-medium text-slate-600">
+                <label className="flex items-center gap-2 text-[12px] sm:text-[14px] font-medium text-slate-600">
                   <MapPin className="w-3.5 h-3.5 text-slate-400" />
                   UK Postcode *
                 </label>
@@ -286,10 +281,10 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
                     setPostcode(normalizedPostcode);
                     if (errors.postcode) setErrors((prev) => ({ ...prev, postcode: undefined }));
                   }}
-                  className={`w-full h-10 sm:h-11 px-4 rounded-lg border-2 text-[14px] sm:text-[16px] font-normal uppercase focus:outline-none transition-all bg-white ${
+                  className={`w-full h-10 px-4 rounded-[14px] border text-[14px] sm:text-[15px] font-normal uppercase focus:outline-none transition-all bg-white ${
                     errors.postcode
                       ? 'border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-100'
-                      : 'border-gray-200 focus:border-[#0E8F5A] focus:ring-2 focus:ring-[#0E8F5A]/10'
+                      : 'border-slate-200 focus:border-[#0E8F5A] focus:ring-2 focus:ring-[#0E8F5A]/10'
                   }`}
                   placeholder="E.G. SW1A 1AA"
                   maxLength={8}
@@ -298,14 +293,14 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
               </div>
 
               <div className="space-y-1">
-                <label className="block text-[13px] sm:text-[15px] font-medium text-slate-600">
+                <label className="block text-[12px] sm:text-[14px] font-medium text-slate-600">
                   Country
                 </label>
                 <input
                   type="text"
                   value="United Kingdom"
                   disabled
-                  className="w-full h-10 sm:h-11 px-4 rounded-lg border-2 border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed text-[14px] sm:text-[16px] font-normal"
+                  className="w-full h-10 px-4 rounded-[14px] border border-slate-200 bg-slate-50 text-gray-500 cursor-not-allowed text-[14px] sm:text-[15px] font-normal"
                 />
               </div>
             </div>
@@ -315,7 +310,7 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
             <div className="space-y-2">
             <div className="flex items-center gap-3 pb-1">
               <CheckCircle className="w-4 h-4 text-[#0E8F5A]" />
-              <h3 className="text-[16px] sm:text-[18px] font-semibold text-slate-900 tracking-[-0.01em]">Gift Aid declaration</h3>
+              <h3 className="text-[16px] sm:text-[17px] font-semibold text-slate-900 tracking-[-0.01em]">Gift Aid declaration</h3>
             </div>
             
             {/* Declaration */}
@@ -328,8 +323,8 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
                 errors.consent
                   ? 'border-2 border-red-400 bg-red-50'
                   : declarationAccepted
-                    ? 'bg-gray-100/50 border-2 border-[rgba(15,23,42,0.08)]'
-                    : 'bg-gray-100/50 border-2 border-[rgba(15,23,42,0.08)] hover:bg-gray-100/70'
+                    ? 'bg-slate-100/80 border border-[rgba(15,23,42,0.08)]'
+                    : 'bg-slate-100/80 border border-[rgba(15,23,42,0.08)] hover:bg-slate-100'
               }`}
             >
               {/* Custom Checkbox */}
@@ -343,7 +338,7 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
                 {declarationAccepted && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
               </div>
               <div className="ml-3 sm:ml-4 flex-1">
-                <span className="text-[13px] sm:text-[15px] text-slate-700 leading-[1.6] block font-normal">
+                <span className="text-[13px] sm:text-[14px] text-slate-700 leading-[1.55] block font-normal">
                   {HMRC_DECLARATION_TEXT}
                 </span>
               </div>
@@ -354,14 +349,14 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
         </div>
 
         {/* Sticky Footer Button */}
-        <div className="mt-3 sm:mt-4 space-y-2 sticky bottom-0 z-10 bg-[#FFFBF7] pt-2">
+        <div className="mt-3 sm:mt-4 space-y-2 sticky bottom-0 z-10 bg-[#FFFCF9] pt-2">
           <button
             type="submit"
             disabled={submitting || !declarationAccepted}
-            className="w-full h-11 sm:h-12 rounded-full font-semibold text-[15px] sm:text-[17px] text-white transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center bg-[#0E8F5A] hover:brightness-[1.02] active:brightness-[0.98] shadow-[0_12px_32px_rgba(15,23,42,0.08)] tracking-[0.01em]"
+            className="w-full h-11 sm:h-12 rounded-[16px] font-semibold text-[15px] sm:text-[16px] text-white transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center bg-[#0E8F5A] hover:brightness-[1.02] active:brightness-[0.98] shadow-[0_10px_24px_rgba(14,143,90,0.28)] tracking-[0.005em]"
           >
-            <ArrowRight className="w-4 h-4 mr-2" />
             {submitting ? 'Processing...' : 'Continue to Payment'}
+            {!submitting && <ArrowRight className="w-4 h-4 ml-2" />}
           </button>
         </div>
       </form>
