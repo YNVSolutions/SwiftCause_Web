@@ -120,7 +120,7 @@ export function useCampaignManagement(organizationId?: string) {
     }
   }, []);
 
-  const handleImageUpload = useCallback(async (campaignId: string, campaignData: any) => {
+  const handleImageUpload = useCallback(async (campaignId: string, campaignData: CampaignSaveData) => {
     if (!selectedImage) return null;
     
     setUploadingImage(true);
@@ -128,15 +128,17 @@ export function useCampaignManagement(organizationId?: string) {
       const filePath = `campaigns/${campaignId}/coverImage/${selectedImage.name}`;
       const downloadURL = await uploadFile(selectedImage, filePath);
 
-      let updatedData;
+      let updatedData: Record<string, unknown>;
       if (campaignId) {
         updatedData = await updateWithImage(campaignId, { ...campaignData, coverImageUrl: downloadURL });
       } else {
         updatedData = await createWithImage({ ...campaignData, coverImageUrl: downloadURL });
       }
-      setImagePreview(updatedData.coverImageUrl);
+      
+      const coverImageUrl = updatedData.coverImageUrl as string;
+      setImagePreview(coverImageUrl);
       setSelectedImage(null);
-      return updatedData;
+      return { ...updatedData, coverImageUrl };
     } catch (error) {
       throw error;
     } finally {
