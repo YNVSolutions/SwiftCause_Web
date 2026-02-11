@@ -32,15 +32,7 @@ function ResultContent() {
   }, [searchParams])
 
   const handleEmailConfirmation = () => {
-    const params = new URLSearchParams();
-    if (paymentResult?.transactionId) {
-      params.set('transactionId', paymentResult.transactionId);
-    }
-    if (paymentResult?.campaignTitle) {
-      params.set('campaignTitle', paymentResult.campaignTitle);
-    }
-    const query = params.toString();
-    router.push(query ? `/email-confirmation?${query}` : '/email-confirmation');
+    router.push('/email-confirmation')
   }
 
   const handleReturnToStart = () => {

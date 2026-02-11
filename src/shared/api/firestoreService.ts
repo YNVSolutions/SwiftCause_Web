@@ -13,11 +13,12 @@ import {
   Timestamp,
   where
 } from 'firebase/firestore';
-import { Organization, Campaign, GiftAidDetails } from '../types';
+import { Organization, Campaign } from '../types';
 export async function getCampaigns(organizationId?: string): Promise<Campaign[]> {
-  const campaignsCollection = organizationId
-    ? query(collection(db, 'campaigns'), where("organizationId", "==", organizationId))
-    : collection(db, 'campaigns');
+  let campaignsCollection: any = collection(db, 'campaigns');
+  if (organizationId) {
+    campaignsCollection = query(campaignsCollection, where("organizationId", "==", organizationId));
+  }
   const snapshot = await getDocs(campaignsCollection);
   return snapshot.docs.map(d => ({ id: d.id, ...(d.data() as object) } as Campaign));
 }
@@ -33,9 +34,10 @@ export async function getCampaignById(campaignId: string): Promise<Campaign | nu
 }
 
 export async function getKiosks(organizationId?: string) {
-  const kiosksCollection = organizationId
-    ? query(collection(db, 'kiosks'), where("organizationId", "==", organizationId))
-    : collection(db, 'kiosks');
+  let kiosksCollection: any = collection(db, 'kiosks');
+  if (organizationId) {
+    kiosksCollection = query(kiosksCollection, where("organizationId", "==", organizationId));
+  }
   const snapshot = await getDocs(kiosksCollection);
   return snapshot.docs.map(d => ({ id: d.id, ...(d.data() as object) }));
 }
@@ -45,13 +47,12 @@ export async function getAllKiosks() {
   return snapshot.docs.map(d => ({ id: d.id, ...(d.data() as object) }));
 }
 
-export async function updateCampaign(campaignId: string, data: Record<string, unknown>) {
+export async function updateCampaign(campaignId: string, data: any) {
   const ref = doc(db, 'campaigns', campaignId);
   await updateDoc(ref, data);
 }
 
-export async function updateCampaignWithImage(campaignId: string, data: Record<string, unknown>, imageFile: File | null = null) {
-  void imageFile;
+export async function updateCampaignWithImage(campaignId: string, data: any, imageFile: File | null = null) {
   const ref = doc(db, 'campaigns', campaignId);
   await updateDoc(ref, data);
   return data;
@@ -82,31 +83,31 @@ export async function getOrganizationById(organizationId: string): Promise<Organ
   if (docSnap.exists()) {
     return { ...(docSnap.data() as Organization), id: docSnap.id };
   } else {
-    console.warn("No such organization document!");
+    console.log("No such organization document!");
     return null;
   }
 }
 export async function getAllCampaigns(organizationId?: string) {
-  const campaignsRef = organizationId
-    ? query(collection(db, 'campaigns'), where("organizationId", "==", organizationId))
-    : collection(db, 'campaigns');
+  let campaignsRef: any = collection(db, 'campaigns');
+  if (organizationId) {
+    campaignsRef = query(campaignsRef, where("organizationId", "==", organizationId));
+  }
   const snapshot = await getDocs(campaignsRef);
   return snapshot.docs.map(d => ({ id: d.id, ...(d.data() as object) }));
 }
 
-export async function updateKiosk(kioskId: string, data: Record<string, unknown>) {
+export async function updateKiosk(kioskId: string, data: any) {
   const ref = doc(db, 'kiosks', kioskId);
   await updateDoc(ref, data);
 }
 
-export async function createCampaign(data: Record<string, unknown>) {
+export async function createCampaign(data: any) {
   const campaignsRef = collection(db, 'campaigns');
   const docRef = await addDoc(campaignsRef, { ...data, raised: data.raised || 0 });
   return { id: docRef.id, ...data, raised: data.raised || 0 };
 }
 
-export async function createCampaignWithImage(data: Record<string, unknown>, imageFile: File | null = null) {
-  void imageFile;
+export async function createCampaignWithImage(data: any, imageFile: File | null = null) {
   const campaignData = {
     ...data,
     raised: 0,
@@ -126,7 +127,7 @@ export async function deleteCampaign(campaignId: string) {
 }
 
 export async function getRecentDonations(limitCount: number, organizationId?: string) {
-  const donationsRef = collection(db, 'donations');
+  let donationsRef: any = collection(db, 'donations');
   let q = query(donationsRef, orderBy('timestamp', 'desc'), limit(limitCount));
   if (organizationId) {
     q = query(donationsRef, where("organizationId", "==", organizationId), orderBy('timestamp', 'desc'), limit(limitCount));
@@ -135,30 +136,15 @@ export async function getRecentDonations(limitCount: number, organizationId?: st
   return snapshot.docs.map(d => ({ id: d.id, ...d.data() as object}));
 }
 
-export async function createThankYouMail(recipientEmail: string, campaignName?: string) {
+export async function createThankYouMail(recipientEmail: string) {
   const mailRef = collection(db, 'mail');
-  const normalizedCampaignName = campaignName?.replace(/[\r\n]+/g, ' ').trim();
-  const escapedCampaignName = normalizedCampaignName
-    ? normalizedCampaignName
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;')
-    : '';
-  const campaignTextLine = normalizedCampaignName ? `Campaign: ${normalizedCampaignName}\n\n` : '';
-  const campaignHtmlLine = normalizedCampaignName
-    ? `<p><strong>Campaign:</strong> ${escapedCampaignName}</p>`
-    : '';
   const donationThankYouEmail = {
     to: [recipientEmail],
     message: {
-      subject: normalizedCampaignName
-        ? `Thank you for supporting ${normalizedCampaignName}!`
-        : "Thank you for your donation!",
-      text: `Dear Donor,\n\nThank you so much for your generous contribution to our campaign. Your support means a lot to us and helps us move closer to our goal.\n\n${campaignTextLine}We truly appreciate your kindness and belief in our mission.\n\nWith gratitude,\nSwift Cause`,
-      html: `<!DOCTYPE html>\n<html>\n  <body style="font-family: Arial, sans-serif; color: #333;">\n    <h2>Thank You for Your Donation!</h2>\n    <p>Dear Donor,</p>\n    <p>Thank you so much for your generous contribution to our campaign. Your support means a lot to us and helps us move closer to our goal.</p>\n    ${campaignHtmlLine}\n    <p>We truly appreciate your kindness and belief in our mission.</p>\n    <p>With gratitude,</p>\n    <p><strong>Swift Cause</strong></p>\n  </body>\n</html>`,
-    },
+      subject: 'Thank you for your donation!',
+      text: `Dear Donor,\n\nThank you so much for your generous contribution to our campaign. Your support means a lot to us and helps us move closer to our goal.\n\nWe truly appreciate your kindness and belief in our mission.\n\nWith gratitude,\nSwift Cause`,
+      html: `<!DOCTYPE html>\n<html>\n  <body style=\"font-family: Arial, sans-serif; color: #333;\">\n    <h2>Thank You for Your Donation!</h2>\n    <p>Dear Donor,</p>\n    <p>Thank you so much for your generous contribution to our campaign. Your support means a lot to us and helps us move closer to our goal.</p>\n    <p>We truly appreciate your kindness and belief in our mission.</p>\n    <p>With gratitude,</p>\n    <p><strong>Swift Cause</strong></p>\n  </body>\n</html>`
+    }
   };
 
   await addDoc(mailRef, donationThankYouEmail);
@@ -202,7 +188,7 @@ export async function queueContactConfirmationEmail(feedback: FeedbackData) {
   return { id: docRef.id, ...mailData };
 }
 
-export async function storeGiftAidDeclaration(giftAidData: GiftAidDetails, transactionId: string) {
+export async function storeGiftAidDeclaration(giftAidData: any, transactionId: string) {
   const giftAidRef = collection(db, 'giftAidDeclarations');
   const giftAidDeclaration = {
     // Donor Information
@@ -238,7 +224,7 @@ export async function storeGiftAidDeclaration(giftAidData: GiftAidDetails, trans
   };
   
   const docRef = await addDoc(giftAidRef, giftAidDeclaration);
-  console.warn('Gift Aid declaration stored with ID:', docRef.id);
+  console.log('Gift Aid declaration stored with ID:', docRef.id);
   return { id: docRef.id, ...giftAidDeclaration };
 }
 
@@ -266,7 +252,7 @@ export async function submitCurrencyRequest(data: CurrencyRequestData) {
   };
   
   const docRef = await addDoc(currencyRequestsRef, requestData);
-  console.warn('Currency request submitted with ID:', docRef.id);
+  console.log('Currency request submitted with ID:', docRef.id);
   return { id: docRef.id, ...requestData };
 }
 

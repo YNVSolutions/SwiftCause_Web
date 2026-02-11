@@ -1,14 +1,13 @@
 import { useState, FormEvent, ChangeEvent } from 'react';
 import { createThankYouMail } from '../../shared/api';
-import { Mail, Send, Home, CheckCircle } from 'lucide-react';
+import { Mail, Send, Home, CheckCircle, ArrowLeft } from 'lucide-react';
 
 interface EmailConfirmationScreenProps {
   transactionId?: string;
-  campaignName?: string;
   onComplete: () => void;
 }
 
-export function EmailConfirmationScreen({ transactionId, campaignName, onComplete }: EmailConfirmationScreenProps) {
+export function EmailConfirmationScreen({ transactionId, onComplete }: EmailConfirmationScreenProps) {
   const [email, setEmail] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
@@ -20,7 +19,7 @@ export function EmailConfirmationScreen({ transactionId, campaignName, onComplet
     setError(null);
 
     try {
-      await createThankYouMail(email, campaignName);
+      await createThankYouMail(email);
       setEmailSent(true);
     } catch (err) {
       console.error('Error sending receipt email:', err);
@@ -113,12 +112,6 @@ export function EmailConfirmationScreen({ transactionId, campaignName, onComplet
                   <div className="mb-6 p-4 bg-green-50/70 border border-green-100 rounded-2xl text-center">
                     <p className="text-sm text-green-700 mb-1">Transaction Id</p>
                     <p className="font-mono text-sm text-[#0A0A0A] break-all">{transactionId}</p>
-                  </div>
-                )}
-                {campaignName && (
-                  <div className="mb-6 p-4 bg-green-50/70 border border-green-100 rounded-2xl text-center">
-                    <p className="text-sm text-green-700 mb-1">Campaign</p>
-                    <p className="text-sm text-[#0A0A0A] break-words">{campaignName}</p>
                   </div>
                 )}
 
