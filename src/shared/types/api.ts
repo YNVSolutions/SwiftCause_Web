@@ -3,6 +3,7 @@ export interface PaymentResult {
   success: boolean;
   transactionId?: string;
   error?: string;
+  campaignTitle?: string;
 }
 
 export interface ApiResponse<T> {
