@@ -127,19 +127,22 @@ export function useCampaignManagement(organizationId?: string) {
     try {
       const filePath = `campaigns/${campaignId}/coverImage/${selectedImage.name}`;
       const downloadURL = await uploadFile(selectedImage, filePath);
+      
+      if (!downloadURL) {
+        throw new Error('Failed to upload image');
+      }
 
-      let updatedData: Record<string, unknown>;
+      let updatedData;
       if (campaignId) {
-        updatedData = await updateWithImage(campaignId, { ...campaignData, coverImageUrl: downloadURL });
+        updatedData = await updateWithImage(campaignId, { ...campaignData, coverImageUrl: downloadURL } as any);
       } else {
-        updatedData = await createWithImage({ ...campaignData, coverImageUrl: downloadURL });
+        updatedData = await createWithImage({ ...campaignData, coverImageUrl: downloadURL } as any);
       }
       
-      const coverImageUrl = updatedData.coverImageUrl as string;
+      const coverImageUrl = (updatedData as any).coverImageUrl || downloadURL;
       setImagePreview(coverImageUrl);
-      setImagePreview(updatedData.coverImageUrl || null);
       setSelectedImage(null);
-      return { ...updatedData, coverImageUrl };
+      return updatedData;
     } catch (error) {
       throw error;
     } finally {
