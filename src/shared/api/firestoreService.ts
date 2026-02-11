@@ -13,12 +13,11 @@ import {
   Timestamp,
   where
 } from 'firebase/firestore';
-import { Organization, Campaign } from '../types';
+import { Organization, Campaign, GiftAidDetails } from '../types';
 export async function getCampaigns(organizationId?: string): Promise<Campaign[]> {
-  let campaignsCollection: any = collection(db, 'campaigns');
-  if (organizationId) {
-    campaignsCollection = query(campaignsCollection, where("organizationId", "==", organizationId));
-  }
+  const campaignsCollection = organizationId
+    ? query(collection(db, 'campaigns'), where("organizationId", "==", organizationId))
+    : collection(db, 'campaigns');
   const snapshot = await getDocs(campaignsCollection);
   return snapshot.docs.map(d => ({ id: d.id, ...(d.data() as object) } as Campaign));
 }
@@ -34,10 +33,9 @@ export async function getCampaignById(campaignId: string): Promise<Campaign | nu
 }
 
 export async function getKiosks(organizationId?: string) {
-  let kiosksCollection: any = collection(db, 'kiosks');
-  if (organizationId) {
-    kiosksCollection = query(kiosksCollection, where("organizationId", "==", organizationId));
-  }
+  const kiosksCollection = organizationId
+    ? query(collection(db, 'kiosks'), where("organizationId", "==", organizationId))
+    : collection(db, 'kiosks');
   const snapshot = await getDocs(kiosksCollection);
   return snapshot.docs.map(d => ({ id: d.id, ...(d.data() as object) }));
 }
@@ -47,12 +45,13 @@ export async function getAllKiosks() {
   return snapshot.docs.map(d => ({ id: d.id, ...(d.data() as object) }));
 }
 
-export async function updateCampaign(campaignId: string, data: any) {
+export async function updateCampaign(campaignId: string, data: Record<string, unknown>) {
   const ref = doc(db, 'campaigns', campaignId);
   await updateDoc(ref, data);
 }
 
-export async function updateCampaignWithImage(campaignId: string, data: any, imageFile: File | null = null) {
+export async function updateCampaignWithImage(campaignId: string, data: Record<string, unknown>, imageFile: File | null = null) {
+  void imageFile;
   const ref = doc(db, 'campaigns', campaignId);
   await updateDoc(ref, data);
   return data;
@@ -83,31 +82,31 @@ export async function getOrganizationById(organizationId: string): Promise<Organ
   if (docSnap.exists()) {
     return { ...(docSnap.data() as Organization), id: docSnap.id };
   } else {
-    console.log("No such organization document!");
+    console.warn("No such organization document!");
     return null;
   }
 }
 export async function getAllCampaigns(organizationId?: string) {
-  let campaignsRef: any = collection(db, 'campaigns');
-  if (organizationId) {
-    campaignsRef = query(campaignsRef, where("organizationId", "==", organizationId));
-  }
+  const campaignsRef = organizationId
+    ? query(collection(db, 'campaigns'), where("organizationId", "==", organizationId))
+    : collection(db, 'campaigns');
   const snapshot = await getDocs(campaignsRef);
   return snapshot.docs.map(d => ({ id: d.id, ...(d.data() as object) }));
 }
 
-export async function updateKiosk(kioskId: string, data: any) {
+export async function updateKiosk(kioskId: string, data: Record<string, unknown>) {
   const ref = doc(db, 'kiosks', kioskId);
   await updateDoc(ref, data);
 }
 
-export async function createCampaign(data: any) {
+export async function createCampaign(data: Record<string, unknown>) {
   const campaignsRef = collection(db, 'campaigns');
   const docRef = await addDoc(campaignsRef, { ...data, raised: data.raised || 0 });
   return { id: docRef.id, ...data, raised: data.raised || 0 };
 }
 
-export async function createCampaignWithImage(data: any, imageFile: File | null = null) {
+export async function createCampaignWithImage(data: Record<string, unknown>, imageFile: File | null = null) {
+  void imageFile;
   const campaignData = {
     ...data,
     raised: 0,
@@ -127,7 +126,7 @@ export async function deleteCampaign(campaignId: string) {
 }
 
 export async function getRecentDonations(limitCount: number, organizationId?: string) {
-  let donationsRef: any = collection(db, 'donations');
+  const donationsRef = collection(db, 'donations');
   let q = query(donationsRef, orderBy('timestamp', 'desc'), limit(limitCount));
   if (organizationId) {
     q = query(donationsRef, where("organizationId", "==", organizationId), orderBy('timestamp', 'desc'), limit(limitCount));
@@ -203,7 +202,7 @@ export async function queueContactConfirmationEmail(feedback: FeedbackData) {
   return { id: docRef.id, ...mailData };
 }
 
-export async function storeGiftAidDeclaration(giftAidData: any, transactionId: string) {
+export async function storeGiftAidDeclaration(giftAidData: GiftAidDetails, transactionId: string) {
   const giftAidRef = collection(db, 'giftAidDeclarations');
   const giftAidDeclaration = {
     // Donor Information
@@ -239,7 +238,7 @@ export async function storeGiftAidDeclaration(giftAidData: any, transactionId: s
   };
   
   const docRef = await addDoc(giftAidRef, giftAidDeclaration);
-  console.log('Gift Aid declaration stored with ID:', docRef.id);
+  console.warn('Gift Aid declaration stored with ID:', docRef.id);
   return { id: docRef.id, ...giftAidDeclaration };
 }
 
@@ -267,7 +266,7 @@ export async function submitCurrencyRequest(data: CurrencyRequestData) {
   };
   
   const docRef = await addDoc(currencyRequestsRef, requestData);
-  console.log('Currency request submitted with ID:', docRef.id);
+  console.warn('Currency request submitted with ID:', docRef.id);
   return { id: docRef.id, ...requestData };
 }
 
