@@ -582,7 +582,7 @@ const CampaignDialog = ({
     // Upload cover image if a new one was selected
     if (selectedImage) {
       try {
-        const uploadedData = await handleImageUpload(campaign?.id, finalData);
+        const uploadedData = await handleImageUpload(campaign?.id, finalData as any);
         if (uploadedData?.coverImageUrl) {
           finalData = { ...finalData, coverImageUrl: uploadedData.coverImageUrl };
           setImagePreviewUrl(uploadedData.coverImageUrl);
@@ -1408,7 +1408,7 @@ const CampaignManagement = ({
       const updated = await updateWithImage(selectedCampaign.id, { status: "paused" });
       setSelectedCampaign((prev) =>
         prev
-          ? { ...prev, ...(updated as Campaign | undefined), status: "paused" }
+          ? { ...prev, ...(updated as unknown as Campaign), status: "paused" }
           : prev
       );
     } catch (error) {
@@ -1422,7 +1422,7 @@ const CampaignManagement = ({
       const updated = await updateWithImage(selectedCampaign.id, { status: "active" });
       setSelectedCampaign((prev) =>
         prev
-          ? { ...prev, ...(updated as Campaign | undefined), status: "active" }
+          ? { ...prev, ...(updated as unknown as Campaign), status: "active" }
           : prev
       );
     } catch (error) {
