@@ -5,6 +5,7 @@ import { PaymentContainer } from '@/features/payment'
 import { useState, useEffect, use } from 'react'
 import { Campaign, Donation } from '@/shared/types'
 import { getCampaignById } from '@/shared/api/firestoreService'
+import { isCampaignActiveForKioskDonation } from '@/shared/lib/campaignStatus'
 import { KioskLoading } from '@/shared/ui/KioskLoading'
 
 export default function PaymentPage({ params }: { params: Promise<{ campaignId: string }> }) {
@@ -35,6 +36,11 @@ export default function PaymentPage({ params }: { params: Promise<{ campaignId: 
         const campaignData = await getCampaignById(campaignId)
         
         if (campaignData) {
+          if (!isCampaignActiveForKioskDonation(campaignData as Campaign)) {
+            setError('This campaign is not active for donations right now.')
+            setCampaign(null)
+            return
+          }
           setCampaign(campaignData as Campaign)
         } else {
           setError('Campaign not found')
