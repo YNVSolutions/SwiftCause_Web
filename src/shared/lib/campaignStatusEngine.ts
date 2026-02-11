@@ -88,12 +88,13 @@ function reconcileCampaignStatus(
 ): CampaignStatusResolution {
   const status = campaign.status;
   const goal = Number(campaign.goal) || 0;
-  const raised = Number(campaign.raised) || 0;
+  const raisedMinor = Number(campaign.raised) || 0;
+  const raisedMajor = raisedMinor / 100;
   const autoCompletedGoal = Number(campaign.autoCompletedGoal);
   const alreadyAutoCompletedForThisGoal =
     Number.isFinite(autoCompletedGoal) && autoCompletedGoal === goal;
 
-  if (goal > 0 && raised >= goal && !alreadyAutoCompletedForThisGoal) {
+  if (goal > 0 && raisedMajor >= goal && !alreadyAutoCompletedForThisGoal) {
     return {
       status: 'completed',
       updates: {
