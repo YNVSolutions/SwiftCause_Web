@@ -134,7 +134,7 @@ export function useCampaignManagement(organizationId?: string) {
       } else {
         updatedData = await createWithImage({ ...campaignData, coverImageUrl: downloadURL });
       }
-      setImagePreview(updatedData.coverImageUrl);
+      setImagePreview(updatedData.coverImageUrl || null);
       setSelectedImage(null);
       return updatedData;
     } catch (error) {
@@ -340,4 +340,3 @@ export function useCampaignManagement(organizationId?: string) {
     saveCampaign, // New centralized save function
   };
 }
-

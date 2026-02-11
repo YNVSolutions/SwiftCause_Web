@@ -45,12 +45,12 @@ export async function getAllKiosks() {
   return snapshot.docs.map(d => ({ id: d.id, ...(d.data() as object) }));
 }
 
-export async function updateCampaign(campaignId: string, data: Record<string, unknown>) {
+export async function updateCampaign(campaignId: string, data: Partial<Campaign>) {
   const ref = doc(db, 'campaigns', campaignId);
   await updateDoc(ref, data);
 }
 
-export async function updateCampaignWithImage(campaignId: string, data: Record<string, unknown>, imageFile: File | null = null) {
+export async function updateCampaignWithImage(campaignId: string, data: Partial<Campaign>, imageFile: File | null = null): Promise<Partial<Campaign>> {
   void imageFile;
   const ref = doc(db, 'campaigns', campaignId);
   await updateDoc(ref, data);
@@ -86,12 +86,12 @@ export async function getOrganizationById(organizationId: string): Promise<Organ
     return null;
   }
 }
-export async function getAllCampaigns(organizationId?: string) {
+export async function getAllCampaigns(organizationId?: string): Promise<Campaign[]> {
   const campaignsRef = organizationId
     ? query(collection(db, 'campaigns'), where("organizationId", "==", organizationId))
     : collection(db, 'campaigns');
   const snapshot = await getDocs(campaignsRef);
-  return snapshot.docs.map(d => ({ id: d.id, ...(d.data() as object) }));
+  return snapshot.docs.map(d => ({ id: d.id, ...(d.data() as object) } as Campaign));
 }
 
 export async function updateKiosk(kioskId: string, data: Record<string, unknown>) {
@@ -99,13 +99,13 @@ export async function updateKiosk(kioskId: string, data: Record<string, unknown>
   await updateDoc(ref, data);
 }
 
-export async function createCampaign(data: Record<string, unknown>) {
+export async function createCampaign(data: Omit<Campaign, 'id'>): Promise<Campaign> {
   const campaignsRef = collection(db, 'campaigns');
   const docRef = await addDoc(campaignsRef, { ...data, raised: data.raised || 0 });
-  return { id: docRef.id, ...data, raised: data.raised || 0 };
+  return { id: docRef.id, ...data, raised: data.raised || 0 } as Campaign;
 }
 
-export async function createCampaignWithImage(data: Record<string, unknown>, imageFile: File | null = null) {
+export async function createCampaignWithImage(data: Omit<Campaign, 'id'>, imageFile: File | null = null): Promise<Campaign> {
   void imageFile;
   const campaignData = {
     ...data,
@@ -117,7 +117,7 @@ export async function createCampaignWithImage(data: Record<string, unknown>, ima
   
   const campaignsRef = collection(db, 'campaigns');
   const docRef = await addDoc(campaignsRef, campaignData);
-  return { id: docRef.id, ...campaignData };
+  return { id: docRef.id, ...campaignData } as unknown as Campaign;
 }
 
 export async function deleteCampaign(campaignId: string) {
