@@ -7,8 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import {
   Plus, Search, UserCog, Users, Shield, Activity,
   Loader2, AlertCircle, Pencil, Trash2, AlertTriangle, MoreVertical, X, Check,
-  LayoutDashboard, Megaphone, Monitor, DollarSign, Settings, Info, Building2   
-  LayoutDashboard, Megaphone, Monitor, DollarSign, Settings, Info, RefreshCw, Eye, EyeOff   
+  LayoutDashboard, Megaphone, Monitor, DollarSign, Settings, Info, Building2, RefreshCw, Eye, EyeOff   
 } from 'lucide-react';
 import { Skeleton } from "../../shared/ui/skeleton";
 import { Ghost } from "lucide-react";
