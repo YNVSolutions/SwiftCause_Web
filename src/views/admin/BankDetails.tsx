@@ -149,7 +149,21 @@ export function BankDetails({ onNavigate, onLogout, userSession, hasPermission }
       userSession={userSession} 
       hasPermission={hasPermission}
       activeScreen="admin-bank-details"
-      headerTitle="Bank Details"
+      headerTitle={(
+        <div className="flex flex-col">
+          {userSession.user.organizationName && (
+            <div className="flex items-center gap-1.5 mb-1">
+              <Building2 className="h-3.5 w-3.5 text-emerald-600" />
+              <span className="text-xs font-semibold text-emerald-700 tracking-wide">
+                {userSession.user.organizationName}
+              </span>
+            </div>
+          )}
+          <h1 className="text-2xl font-semibold text-slate-800 tracking-tight">
+            Bank Details
+          </h1>
+        </div>
+      )}
       headerSubtitle="Manage your payment settings and Stripe integration"
     >
       <div className="px-6 lg:px-8 pt-12 pb-8 max-w-6xl mx-auto space-y-8">

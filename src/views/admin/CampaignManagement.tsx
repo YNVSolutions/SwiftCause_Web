@@ -53,6 +53,7 @@ import {
   Rocket,
   Wallet,
   Download,
+  Building2,
 } from "lucide-react";
 import { Calendar } from "../../shared/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "../../shared/ui/popover";
@@ -581,7 +582,7 @@ const CampaignDialog = ({
     // Upload cover image if a new one was selected
     if (selectedImage) {
       try {
-        const uploadedData = await handleImageUpload(campaign?.id, finalData);
+        const uploadedData = await handleImageUpload(campaign?.id, finalData as any);
         if (uploadedData?.coverImageUrl) {
           finalData = { ...finalData, coverImageUrl: uploadedData.coverImageUrl };
           setImagePreviewUrl(uploadedData.coverImageUrl);
@@ -1407,7 +1408,7 @@ const CampaignManagement = ({
       const updated = await updateWithImage(selectedCampaign.id, { status: "paused" });
       setSelectedCampaign((prev) =>
         prev
-          ? { ...prev, ...(updated as Campaign | undefined), status: "paused" }
+          ? { ...prev, ...(updated as unknown as Campaign), status: "paused" }
           : prev
       );
     } catch (error) {
@@ -1421,7 +1422,7 @@ const CampaignManagement = ({
       const updated = await updateWithImage(selectedCampaign.id, { status: "active" });
       setSelectedCampaign((prev) =>
         prev
-          ? { ...prev, ...(updated as Campaign | undefined), status: "active" }
+          ? { ...prev, ...(updated as unknown as Campaign), status: "active" }
           : prev
       );
     } catch (error) {
@@ -2248,7 +2249,21 @@ const CampaignManagement = ({
       userSession={userSession}
       hasPermission={hasPermission}
       activeScreen="admin-campaigns"
-      headerTitle={null}
+      headerTitle={(
+        <div className="flex flex-col">
+          {userSession.user.organizationName && (
+            <div className="flex items-center gap-1.5 mb-1">
+              <Building2 className="h-3.5 w-3.5 text-emerald-600" />
+              <span className="text-xs font-semibold text-emerald-700 tracking-wide">
+                {userSession.user.organizationName}
+              </span>
+            </div>
+          )}
+          <h1 className="text-2xl font-semibold text-slate-800 tracking-tight">
+            Campaigns
+          </h1>
+        </div>
+      )}
       headerSubtitle="Manage your donation campaigns"
       headerSearchPlaceholder="Search campaigns..."
       headerSearchValue={searchTerm}
@@ -2257,7 +2272,7 @@ const CampaignManagement = ({
         <Button
           variant="outline"
           size="sm"
-          className="rounded-2xl border-[#064e3b] bg-transparent text-[#064e3b] hover:bg-[#064e3b] hover:text-gray-800 transition-all duration-300 px-5"
+          className="rounded-2xl border-[#064e3b] bg-transparent text-[#064e3b] hover:bg-emerald-50 hover:border-emerald-600 hover:shadow-md hover:shadow-emerald-900/10 hover:scale-105 transition-all duration-300 px-5"
           onClick={() => exportToCsv(filteredAndSortedCampaigns, "campaigns")}
         >
           <Download className="h-4 w-4 sm:hidden" />

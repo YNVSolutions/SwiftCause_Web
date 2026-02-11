@@ -67,10 +67,25 @@ export const authApi = {
       const userDocSnap = await getDoc(userDocRef);
       
       if (userDocSnap.exists()) {
-        return {
+        const userData = {
           id: userDocSnap.id,
           ...userDocSnap.data()
         } as User;
+        
+        // Fetch organization name if organizationId exists
+        if (userData.organizationId) {
+          try {
+            const orgDocRef = doc(db, 'organizations', userData.organizationId);
+            const orgDocSnap = await getDoc(orgDocRef);
+            if (orgDocSnap.exists()) {
+              userData.organizationName = orgDocSnap.data().name;
+            }
+          } catch (error) {
+            console.error('Error fetching organization name during sign in:', error);
+          }
+        }
+        
+        return userData;
       }
       return null;
     } catch (error: unknown) {

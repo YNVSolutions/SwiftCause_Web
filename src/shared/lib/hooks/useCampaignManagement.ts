@@ -120,21 +120,27 @@ export function useCampaignManagement(organizationId?: string) {
     }
   }, []);
 
-  const handleImageUpload = useCallback(async (campaignId: string, campaignData: any) => {
+  const handleImageUpload = useCallback(async (campaignId: string, campaignData: CampaignSaveData) => {
     if (!selectedImage) return null;
     
     setUploadingImage(true);
     try {
       const filePath = `campaigns/${campaignId}/coverImage/${selectedImage.name}`;
       const downloadURL = await uploadFile(selectedImage, filePath);
+      
+      if (!downloadURL) {
+        throw new Error('Failed to upload image');
+      }
 
       let updatedData;
       if (campaignId) {
-        updatedData = await updateWithImage(campaignId, { ...campaignData, coverImageUrl: downloadURL });
+        updatedData = await updateWithImage(campaignId, { ...campaignData, coverImageUrl: downloadURL } as any);
       } else {
-        updatedData = await createWithImage({ ...campaignData, coverImageUrl: downloadURL });
+        updatedData = await createWithImage({ ...campaignData, coverImageUrl: downloadURL } as any);
       }
-      setImagePreview(updatedData.coverImageUrl || null);
+      
+      const coverImageUrl = (updatedData as any).coverImageUrl || downloadURL;
+      setImagePreview(coverImageUrl);
       setSelectedImage(null);
       return updatedData;
     } catch (error) {
