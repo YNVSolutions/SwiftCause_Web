@@ -388,8 +388,7 @@ export function useDashboardData(organizationId?: string) {
           }))
           .sort((a, b) => b.percentage - a.percentage)
           .slice(0, 5);
-      } catch (error) {
-        const details = toErrorDetails(error);
+      } catch {
         donationDistribution = [];
         donationDistributionError = 'Error in fetching donation data';
         
@@ -509,7 +508,7 @@ export function useDashboardData(organizationId?: string) {
         }));
       setAlerts(offlineKioskAlerts);
 
-    } catch (e) {
+    } catch {
       setError('Could not load dashboard data. Please try refreshing.');
     } finally {
       setLoading(false);
