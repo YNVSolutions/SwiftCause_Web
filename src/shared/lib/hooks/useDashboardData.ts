@@ -86,8 +86,6 @@ export function useDashboardData(organizationId?: string) {
       return;
     }
 
-    console.log('fetchDashboardData called with organizationId:', organizationId);
-
     setLoading(true);
     setError(null);
 
@@ -161,8 +159,6 @@ export function useDashboardData(organizationId?: string) {
       let topCampaigns: Array<{ id: string; name: string; raised: number; goal: number; percentage: number; donationCount: number }> = [];
       
       try {
-        console.log('Fetching donations for category distribution analysis, organization:', organizationId);
-
         // Fetch all donations for this organization (client-side counting approach)
         const { getDocs } = await import('firebase/firestore');
         const donationsQuery = query(
@@ -172,8 +168,6 @@ export function useDashboardData(organizationId?: string) {
         
         const donationsSnapshot = await getDocs(donationsQuery);
         
-        console.log(`Total donations fetched: ${donationsSnapshot.size}`);
-
         // Create a map of campaign ID to category using existing campaigns data
         const campaignCategoryMap: { [campaignId: string]: string } = {};
         campaignsData.forEach((campaign: Campaign) => {

@@ -73,7 +73,6 @@ export async function getOrganizationById(organizationId: string): Promise<Organ
   if (docSnap.exists()) {
     return { ...(docSnap.data() as Organization), id: docSnap.id };
   } else {
-    console.log("No such organization document!");
     return null;
   }
 }
