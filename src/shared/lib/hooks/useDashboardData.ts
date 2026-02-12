@@ -6,20 +6,6 @@ import { db } from '../firebase';
 import { Campaign } from '../../types';
 import { Kiosk, Donation } from '../../types';
 
-const toErrorDetails = (error: unknown): { code: string; message: string; stack: string } => {
-  if (error instanceof Error) {
-    return { code: (error as Error & { code?: string })?.code || 'error', message: error.message, stack: error.stack || 'No stack trace' };
-  }
-  if (typeof error === 'object' && error !== null) {
-    return {
-      code: (error as Record<string, unknown>).code as string || 'unknown',
-      message: (error as Record<string, unknown>).message as string || JSON.stringify(error),
-      stack: (error as Record<string, unknown>).stack as string || 'No stack trace',
-    };
-  }
-  return { code: 'unknown', message: String(error), stack: 'No stack trace' };
-};
-
 
 interface DashboardStats {
   totalRaised: number;
