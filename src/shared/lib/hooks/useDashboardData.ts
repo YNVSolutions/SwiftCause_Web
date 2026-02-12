@@ -146,7 +146,7 @@ export function useDashboardData(organizationId?: string) {
       let donationDistributionError: string | undefined;
       
       // Declare categoryTotals outside try block so it's accessible in catch block
-      let categoryTotals: { [category: string]: { count: number; amount: number } } = {};
+      const categoryTotals: { [category: string]: { count: number; amount: number } } = {};
       
       // Declare monthlyRevenue outside try block so it's accessible in catch block
       let monthlyRevenue: Array<{ month: string; donationRevenue: number; totalRevenue: number }> = [];

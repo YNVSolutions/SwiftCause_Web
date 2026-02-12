@@ -116,7 +116,7 @@ export async function deleteCampaign(campaignId: string) {
 }
 
 export async function getRecentDonations(limitCount: number, organizationId?: string) {
-  let donationsRef: any = collection(db, 'donations');
+  const donationsRef = collection(db, 'donations');
   let q = query(donationsRef, orderBy('timestamp', 'desc'), limit(limitCount));
   if (organizationId) {
     q = query(donationsRef, where("organizationId", "==", organizationId), orderBy('timestamp', 'desc'), limit(limitCount));

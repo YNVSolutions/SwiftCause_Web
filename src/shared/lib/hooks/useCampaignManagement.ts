@@ -230,8 +230,8 @@ export function useCampaignManagement(organizationId?: string) {
     const { campaignId, isUpdate, organizationId, selectedOrganizationLogo, onProgress, onError } = options;
     
     try {
-      let finalData = { ...campaignData };
-      let tempCampaignId = campaignId || `temp_${Date.now()}`;
+      const finalData = { ...campaignData };
+      const tempCampaignId = campaignId || `temp_${Date.now()}`;
 
       // Step 1: Upload cover image if selected
       if (selectedImage) {
