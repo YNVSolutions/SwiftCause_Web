@@ -177,8 +177,6 @@ export function useDashboardData(organizationId?: string) {
         });
 
         // Count donations by category
-        let totalDonationAmount = 0;
-        let totalDonationCount = 0;
 
         donationsSnapshot.forEach((doc) => {
           const donation = doc.data();

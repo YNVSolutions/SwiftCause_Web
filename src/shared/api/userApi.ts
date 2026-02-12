@@ -1,4 +1,4 @@
-import { collection, getDocs, doc, DocumentData, query, where } from 'firebase/firestore';
+import { collection, getDocs, DocumentData, query, where } from 'firebase/firestore';
 import { getAuth } from "firebase/auth";
 import { db } from '../lib/firebase';
 import { User, UserRole, Permission } from '../types';

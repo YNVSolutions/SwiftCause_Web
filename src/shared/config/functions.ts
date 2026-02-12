@@ -7,9 +7,6 @@ const PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
 const REGION = 'us-central1';
 
 export const getFunctionUrl = (functionName: string): string => {
-  // Convert function name to lowercase and remove special characters for Cloud Run format
-  const cloudRunName = functionName.toLowerCase().replace(/_/g, '');
-  
   // Cloud Run URL format: https://[function-name]-[hash].a.run.app
   return `https://${REGION}-${PROJECT_ID}.cloudfunctions.net/${functionName}`;
 };

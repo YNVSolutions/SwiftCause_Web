@@ -1,4 +1,4 @@
-export const formatCurrency = (amountInPence: number, _currency: string = 'GBP') => {
+export const formatCurrency = (amountInPence: number) => {
   const amountInGbp = (amountInPence || 0) / 100;
   return new Intl.NumberFormat('en-GB', {
     style: 'currency',
@@ -8,7 +8,7 @@ export const formatCurrency = (amountInPence: number, _currency: string = 'GBP')
   }).format(amountInGbp);
 };
 
-export const formatCurrencyFromMajor = (amountInGbp: number, _currency: string = 'GBP') => {
+export const formatCurrencyFromMajor = (amountInGbp: number) => {
   return new Intl.NumberFormat('en-GB', {
     style: 'currency',
     currency: 'GBP',
