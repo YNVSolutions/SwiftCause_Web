@@ -10,7 +10,6 @@ import {
   orderBy,
   limit,
   deleteDoc,
-  Timestamp,
   where
 } from 'firebase/firestore';
 import { Organization } from '../../types';
@@ -48,7 +47,7 @@ export async function updateCampaign(campaignId: string, data: Record<string, un
   await updateDoc(ref, data);
 }
 
-export async function updateCampaignWithImage(campaignId: string, data: Record<string, unknown>, imageFile: File | null = null): Promise<Record<string, unknown>> {
+export async function updateCampaignWithImage(campaignId: string, data: Record<string, unknown>): Promise<Record<string, unknown>> {
   const ref = doc(db, 'campaigns', campaignId);
   await updateDoc(ref, data);
   return data;
@@ -102,7 +101,7 @@ export async function createCampaign(data: Record<string, unknown>): Promise<Cam
   return { id: docRef.id, ...data, raised: data.raised || 0 };
 }
 
-export async function createCampaignWithImage(data: Record<string, unknown>, imageFile: File | null = null): Promise<CampaignQuery> {
+export async function createCampaignWithImage(data: Record<string, unknown>): Promise<CampaignQuery> {
   const campaignData = {
     ...data,
     raised: 0,
