@@ -133,12 +133,12 @@ export function useCampaignManagement(organizationId?: string) {
 
       let updatedData;
       if (campaignId) {
-        updatedData = await updateWithImage(campaignId, { ...campaignData, coverImageUrl: downloadURL } as any);
+        updatedData = await updateWithImage(campaignId, { ...campaignData, coverImageUrl: downloadURL } as CampaignSaveData);
       } else {
-        updatedData = await createWithImage({ ...campaignData, coverImageUrl: downloadURL } as any);
+        updatedData = await createWithImage({ ...campaignData, coverImageUrl: downloadURL } as CampaignSaveData);
       }
       
-      const coverImageUrl = (updatedData as any).coverImageUrl || downloadURL;
+      const coverImageUrl = (updatedData as CampaignSaveData).coverImageUrl || downloadURL;
       setImagePreview(coverImageUrl);
       setSelectedImage(null);
       return updatedData;
@@ -164,7 +164,7 @@ export function useCampaignManagement(organizationId?: string) {
             uploadedUrls.push(downloadURL);
           }
         } catch (error) {
-          console.error(`Error uploading gallery image ${file.name}:`, error);
+          // Error already logged, continue with next file
         }
       }
       
@@ -174,7 +174,6 @@ export function useCampaignManagement(organizationId?: string) {
       
       return finalGalleryUrls;
     } catch (error) {
-      console.error("Error uploading gallery images:", error);
       throw error;
     } finally {
       setUploadingGallery(false);
