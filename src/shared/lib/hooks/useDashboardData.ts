@@ -184,15 +184,6 @@ export function useDashboardData(organizationId?: string) {
           const donation = doc.data();
           const campaignId = donation.campaignId;
           
-          console.log('Processing donation:', {
-            id: doc.id,
-            campaignId: campaignId,
-            amount: donation.amount,
-            category: donation.category, // Check if category is directly on donation
-            isGiftAid: donation.isGiftAid,
-            donationData: donation
-          });
-          
           // Calculate Gift Aid (25% of donation if eligible)
           if (donation.isGiftAid && donation.amount) {
             totalGiftAid += donation.amount * 0.25;
@@ -214,12 +205,6 @@ export function useDashboardData(organizationId?: string) {
           // If still no category, use "Uncategorized" as fallback
           if (!category) {
             category = "Uncategorized";
-            console.warn('Donation categorized as Uncategorized:', {
-              donationId: doc.id,
-              campaignId: campaignId,
-              availableCampaigns: Object.keys(campaignCategoryMap),
-              donationFields: Object.keys(donation)
-            });
           }
 
           let amount = donation.amount;
@@ -231,7 +216,6 @@ export function useDashboardData(organizationId?: string) {
           
           // Skip invalid amounts
           if (typeof amount !== 'number' || isNaN(amount)) {
-            console.warn('Invalid amount in donation:', doc.id, amount);
             return;
           }
 
@@ -245,12 +229,6 @@ export function useDashboardData(organizationId?: string) {
           categoryTotals[category].amount += amount;
           totalDonationCount++;
           totalDonationAmount += amount;
-          
-          console.log('Donation processed successfully:', {
-            category: category,
-            count: categoryTotals[category].count,
-            amount: categoryTotals[category].amount
-          });
         });
 
         // Convert to the expected format with percentages
@@ -261,8 +239,6 @@ export function useDashboardData(organizationId?: string) {
           }))
           .sort((a, b) => b.count - a.count); // Sort by count descending
         
-        console.log('Donation distribution by category calculated:', donationDistribution);
-
         // Compute monthly revenue data
         const monthlyRevenueMap: { [month: string]: { donationRevenue: number; giftAidAmount: number } } = {};
         
@@ -331,8 +307,6 @@ export function useDashboardData(organizationId?: string) {
           });
         }
         
-        console.log('Monthly revenue calculated:', monthlyRevenue);
-
         // Compute heatmap data from donations
         const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
         const heatmapMatrix: { [key: string]: number } = {};
@@ -392,8 +366,6 @@ export function useDashboardData(organizationId?: string) {
           }
         });
         
-        console.log('Heatmap data calculated:', heatmapData.slice(0, 10), '... (showing first 10 entries)');
-
         // Transform donation distribution for donut chart
         const colors = ['#4F46E5', '#10B981', '#F59E0B', '#8B5CF6', '#06B6D4', '#EC4899', '#F97316', '#84CC16'];
         const totalDonations = donationDistribution.reduce((sum, item) => sum + item.count, 0);
@@ -418,13 +390,8 @@ export function useDashboardData(organizationId?: string) {
           }))
           .sort((a, b) => b.percentage - a.percentage)
           .slice(0, 5);
-        
-        console.log('Category data calculated:', categoryData);
-        console.log('Top campaigns calculated:', topCampaigns);
       } catch (error) {
-        console.error('Donation distribution query failed:', error);
         const details = toErrorDetails(error);
-        console.error('Error details:', details);
         donationDistribution = [];
         donationDistributionError = 'Error in fetching donation data';
         
@@ -545,7 +512,6 @@ export function useDashboardData(organizationId?: string) {
       setAlerts(offlineKioskAlerts);
 
     } catch (e) {
-      console.error("Failed to fetch dashboard data:", e);
       setError('Could not load dashboard data. Please try refreshing.');
     } finally {
       setLoading(false);
