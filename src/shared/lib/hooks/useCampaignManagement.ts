@@ -41,7 +41,7 @@ export interface SaveCampaignOptions {
  * briefOverview -> description (short summary for cards)
  * description -> longDescription (detailed campaign story)
  */
-export function mapFormDataToDatabase(formData: any) {
+export function mapFormDataToDatabase(formData: CampaignSaveData): Record<string, unknown> {
   return {
     title: formData.title,
     description: formData.briefOverview || '',  // Brief overview goes to description
@@ -77,7 +77,6 @@ export function useCampaignManagement(organizationId?: string) {
       const downloadURL = await getDownloadURL(snapshot.ref);
       return downloadURL;
     } catch (error) {
-      console.error("Error uploading file:", error);
       throw new Error("Failed to upload file.");
     }
   }, []);
@@ -244,7 +243,6 @@ export function useCampaignManagement(organizationId?: string) {
           }
           clearImageSelection();
         } catch (error) {
-          console.error('Error uploading cover image:', error);
           onError?.('Failed to upload cover image');
           throw error;
         }
@@ -260,7 +258,6 @@ export function useCampaignManagement(organizationId?: string) {
             finalData.organizationInfoLogo = logoUrl;
           }
         } catch (error) {
-          console.error('Error uploading organization logo:', error);
           onError?.('Failed to upload organization logo');
           throw error;
         }
@@ -284,7 +281,6 @@ export function useCampaignManagement(organizationId?: string) {
           finalData.galleryImages = [...existingGalleryUrls, ...uploadedUrls];
           clearGallerySelection();
         } catch (error) {
-          console.error('Error uploading gallery images:', error);
           onError?.('Failed to upload gallery images');
           throw error;
         }
@@ -314,7 +310,6 @@ export function useCampaignManagement(organizationId?: string) {
         return { id: docRef.id, ...newCampaignPayload };
       }
     } catch (error) {
-      console.error('Error saving campaign:', error);
       throw error;
     }
   }, [selectedImage, selectedGalleryImages, uploadFile, clearImageSelection, clearGallerySelection]);
