@@ -14,19 +14,25 @@ import {
   where
 } from 'firebase/firestore';
 import { Organization } from '../../types';
-export async function getCampaigns(organizationId?: string) {
-  let campaignsCollection: any = collection(db, 'campaigns');
+
+interface CampaignQuery {
+  id: string;
+  [key: string]: unknown;
+}
+
+export async function getCampaigns(organizationId?: string): Promise<CampaignQuery[]> {
+  let campaignsCollection = collection(db, 'campaigns');
   if (organizationId) {
-    campaignsCollection = query(campaignsCollection, where("organizationId", "==", organizationId));
+    campaignsCollection = query(campaignsCollection, where("organizationId", "==", organizationId)) as ReturnType<typeof collection>;
   }
   const snapshot = await getDocs(campaignsCollection);
   return snapshot.docs.map(d => ({ id: d.id, ...(d.data() as object) }));
 }
 
-export async function getKiosks(organizationId?: string) {
-  let kiosksCollection: any = collection(db, 'kiosks');
+export async function getKiosks(organizationId?: string): Promise<CampaignQuery[]> {
+  let kiosksCollection = collection(db, 'kiosks');
   if (organizationId) {
-    kiosksCollection = query(kiosksCollection, where("organizationId", "==", organizationId));
+    kiosksCollection = query(kiosksCollection, where("organizationId", "==", organizationId)) as ReturnType<typeof collection>;
   }
   const snapshot = await getDocs(kiosksCollection);
   return snapshot.docs.map(d => ({ id: d.id, ...(d.data() as object) }));
@@ -37,12 +43,12 @@ export async function getAllKiosks() {
   return snapshot.docs.map(d => ({ id: d.id, ...(d.data() as object) }));
 }
 
-export async function updateCampaign(campaignId: string, data: any) {
+export async function updateCampaign(campaignId: string, data: Record<string, unknown>): Promise<void> {
   const ref = doc(db, 'campaigns', campaignId);
   await updateDoc(ref, data);
 }
 
-export async function updateCampaignWithImage(campaignId: string, data: any, imageFile: File | null = null) {
+export async function updateCampaignWithImage(campaignId: string, data: Record<string, unknown>, imageFile: File | null = null): Promise<Record<string, unknown>> {
   const ref = doc(db, 'campaigns', campaignId);
   await updateDoc(ref, data);
   return data;
@@ -76,16 +82,16 @@ export async function getOrganizationById(organizationId: string): Promise<Organ
     return null;
   }
 }
-export async function getAllCampaigns(organizationId?: string) {
-  let campaignsRef: any = collection(db, 'campaigns');
+export async function getAllCampaigns(organizationId?: string): Promise<CampaignQuery[]> {
+  let campaignsRef = collection(db, 'campaigns');
   if (organizationId) {
-    campaignsRef = query(campaignsRef, where("organizationId", "==", organizationId));
+    campaignsRef = query(campaignsRef, where("organizationId", "==", organizationId)) as ReturnType<typeof collection>;
   }
   const snapshot = await getDocs(campaignsRef);
   return snapshot.docs.map(d => ({ id: d.id, ...(d.data() as object) }));
 }
 
-export async function updateKiosk(kioskId: string, data: any) {
+export async function updateKiosk(kioskId: string, data: Record<string, unknown>): Promise<void> {
   const ref = doc(db, 'kiosks', kioskId);
   await updateDoc(ref, data);
 }
