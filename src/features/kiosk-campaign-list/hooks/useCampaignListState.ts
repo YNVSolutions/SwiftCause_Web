@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { KioskSession } from '@/shared/types';
 import { useCampaigns } from '@/entities/campaign';
+import { isCampaignActiveForKioskDonation } from '@/shared/lib/campaignStatus';
 import { CampaignListState, CampaignLayoutMode } from '../types';
 
 interface UseCampaignListStateProps {
@@ -30,6 +31,7 @@ export function useCampaignListState({
     if (!kioskSession) return rawCampaigns;
 
     let filtered = rawCampaigns.filter((c) => {
+      if (!isCampaignActiveForKioskDonation(c)) return false;
       if (c.isGlobal) return true;
       return kioskSession.assignedCampaigns?.includes(c.id);
     });

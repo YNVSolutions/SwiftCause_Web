@@ -41,6 +41,38 @@ import {
   DEFAULT_CAMPAIGN_VALUES
 } from '../../../shared/config';
 
+type DateInputValue =
+  | string
+  | Date
+  | { seconds: number; nanoseconds?: number; toDate?: () => Date }
+  | undefined;
+
+function toDateInputValue(value: DateInputValue): string {
+  if (!value) return '';
+
+  if (typeof value === 'string') {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? '' : parsed.toISOString().split('T')[0];
+  }
+
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? '' : value.toISOString().split('T')[0];
+  }
+
+  if (typeof value.toDate === 'function') {
+    const parsed = value.toDate();
+    return Number.isNaN(parsed.getTime()) ? '' : parsed.toISOString().split('T')[0];
+  }
+
+  if (typeof value.seconds === 'number') {
+    const parsed = new Date(value.seconds * 1000);
+    return Number.isNaN(parsed.getTime()) ? '' : parsed.toISOString().split('T')[0];
+  }
+
+  return '';
+}
+
 interface CampaignConfigurationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -275,7 +307,7 @@ export function CampaignConfigurationDialog({
                     <Input
                       id="endDate"
                       type="date"
-                      value={formData.endDate}
+                      value={toDateInputValue(formData.endDate)}
                       onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
                     />
                   </div>

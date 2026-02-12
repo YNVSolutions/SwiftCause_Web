@@ -14,12 +14,28 @@ import {
   where
 } from 'firebase/firestore';
 import { Organization, Campaign, GiftAidDetails } from '../types';
+import { applyCampaignStatusEvent } from '../lib/campaignStatusEngine';
+
+async function syncCampaignStatus(campaign: Campaign): Promise<Campaign> {
+  const resolution = applyCampaignStatusEvent(campaign, { type: 'SYSTEM_RECONCILE' });
+  const resolvedStatus = resolution.status;
+  const needsStatusUpdate = campaign.status !== resolvedStatus;
+  const needsMetadataUpdate = Boolean(resolution.updates);
+
+  if (needsStatusUpdate || needsMetadataUpdate) {
+    const ref = doc(db, 'campaigns', campaign.id);
+    await updateDoc(ref, { status: resolvedStatus, ...(resolution.updates || {}) });
+  }
+
+  return { ...campaign, status: resolvedStatus, ...(resolution.updates || {}) };
+}
 export async function getCampaigns(organizationId?: string): Promise<Campaign[]> {
   const campaignsCollection = organizationId
     ? query(collection(db, 'campaigns'), where("organizationId", "==", organizationId))
     : collection(db, 'campaigns');
   const snapshot = await getDocs(campaignsCollection);
-  return snapshot.docs.map(d => ({ id: d.id, ...(d.data() as object) } as Campaign));
+  const campaigns = snapshot.docs.map(d => ({ id: d.id, ...(d.data() as object) } as Campaign));
+  return Promise.all(campaigns.map(syncCampaignStatus));
 }
 
 export async function getCampaignById(campaignId: string): Promise<Campaign | null> {
@@ -27,7 +43,8 @@ export async function getCampaignById(campaignId: string): Promise<Campaign | nu
   const docSnap = await getDoc(docRef);
   
   if (docSnap.exists()) {
-    return { id: docSnap.id, ...(docSnap.data() as object) } as Campaign;
+    const campaign = { id: docSnap.id, ...(docSnap.data() as object) } as Campaign;
+    return syncCampaignStatus(campaign);
   }
   return null;
 }
