@@ -6,15 +6,15 @@ import { db } from '../firebase';
 import { Campaign } from '../../types';
 import { Kiosk, Donation } from '../../types';
 
-const toErrorDetails = (error: unknown) => {
+const toErrorDetails = (error: unknown): { code: string; message: string; stack: string } => {
   if (error instanceof Error) {
-    return { code: (error as any)?.code || 'error', message: error.message, stack: error.stack || 'No stack trace' };
+    return { code: (error as Error & { code?: string })?.code || 'error', message: error.message, stack: error.stack || 'No stack trace' };
   }
   if (typeof error === 'object' && error !== null) {
     return {
-      code: (error as any).code || 'unknown',
-      message: (error as any).message || JSON.stringify(error),
-      stack: (error as any).stack || 'No stack trace',
+      code: (error as Record<string, unknown>).code as string || 'unknown',
+      message: (error as Record<string, unknown>).message as string || JSON.stringify(error),
+      stack: (error as Record<string, unknown>).stack as string || 'No stack trace',
     };
   }
   return { code: 'unknown', message: String(error), stack: 'No stack trace' };
@@ -444,7 +444,7 @@ export function useDashboardData(organizationId?: string) {
       });
 
       const formattedActivities = recentDonationsData.map((donation: Donation): Activity => {
-        const rawTs: any = donation.timestamp;
+        const rawTs: FirestoreTimestamp | string | Date = donation.timestamp as FirestoreTimestamp | string | Date;
 
         // Normalize into ISO string for sorting
         let iso: string;
@@ -455,7 +455,7 @@ export function useDashboardData(organizationId?: string) {
           iso = safeIso(String(rawTs));
         }
 
-        const platform: string | undefined = (donation as any).platform;
+        const platform: string | undefined = (donation as Donation & { platform?: string }).platform;
         const campaignName =
           campaignsData.find(c => c.id === donation.campaignId)?.title ||
           donation.campaignId;
@@ -586,9 +586,9 @@ function isFirestoreTimestamp(value: unknown): value is FirestoreTimestamp {
     typeof value === "object" &&
     value !== null &&
     "seconds" in value &&
-    typeof (value as any).seconds === "number" &&
+    typeof (value as FirestoreTimestamp).seconds === "number" &&
     "nanoseconds" in value &&
-    typeof (value as any).nanoseconds === "number"
+    typeof (value as FirestoreTimestamp).nanoseconds === "number"
   );
 }
 
