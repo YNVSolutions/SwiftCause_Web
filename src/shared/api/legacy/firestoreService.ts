@@ -96,13 +96,13 @@ export async function updateKiosk(kioskId: string, data: Record<string, unknown>
   await updateDoc(ref, data);
 }
 
-export async function createCampaign(data: any) {
+export async function createCampaign(data: Record<string, unknown>): Promise<CampaignQuery> {
   const campaignsRef = collection(db, 'campaigns');
   const docRef = await addDoc(campaignsRef, { ...data, raised: data.raised || 0 });
   return { id: docRef.id, ...data, raised: data.raised || 0 };
 }
 
-export async function createCampaignWithImage(data: any, imageFile: File | null = null) {
+export async function createCampaignWithImage(data: Record<string, unknown>, imageFile: File | null = null): Promise<CampaignQuery> {
   const campaignData = {
     ...data,
     raised: 0,
@@ -138,7 +138,7 @@ export async function createThankYouMail(recipientEmail: string) {
     message: {
       subject: 'Thank you for your donation!',
       text: `Dear Donor,\n\nThank you so much for your generous contribution to our campaign. Your support means a lot to us and helps us move closer to our goal.\n\nWe truly appreciate your kindness and belief in our mission.\n\nWith gratitude,\nSwift Cause`,
-      html: `<!DOCTYPE html>\n<html>\n  <body style=\"font-family: Arial, sans-serif; color: #333;\">\n    <h2>Thank You for Your Donation!</h2>\n    <p>Dear Donor,</p>\n    <p>Thank you so much for your generous contribution to our campaign. Your support means a lot to us and helps us move closer to our goal.</p>\n    <p>We truly appreciate your kindness and belief in our mission.</p>\n    <p>With gratitude,</p>\n    <p><strong>Swift Cause</strong></p>\n  </body>\n</html>`
+      html: `<!DOCTYPE html>\n<html>\n  <body style="font-family: Arial, sans-serif; color: #333;">\n    <h2>Thank You for Your Donation!</h2>\n    <p>Dear Donor,</p>\n    <p>Thank you so much for your generous contribution to our campaign. Your support means a lot to us and helps us move closer to our goal.</p>\n    <p>We truly appreciate your kindness and belief in our mission.</p>\n    <p>With gratitude,</p>\n    <p><strong>Swift Cause</strong></p>\n  </body>\n</html>`
     }
   };
 
