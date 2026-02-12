@@ -24,7 +24,7 @@ export interface CampaignSaveData {
   organizationInfoDescription?: string;
   organizationInfoWebsite?: string;
   organizationInfoLogo?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface SaveCampaignOptions {
@@ -76,7 +76,7 @@ export function useCampaignManagement(organizationId?: string) {
       const snapshot = await uploadTask;
       const downloadURL = await getDownloadURL(snapshot.ref);
       return downloadURL;
-    } catch (error) {
+    } catch {
       throw new Error("Failed to upload file.");
     }
   }, []);
@@ -142,8 +142,6 @@ export function useCampaignManagement(organizationId?: string) {
       setImagePreview(coverImageUrl);
       setSelectedImage(null);
       return updatedData;
-    } catch (error) {
-      throw error;
     } finally {
       setUploadingImage(false);
     }
@@ -163,7 +161,7 @@ export function useCampaignManagement(organizationId?: string) {
           if (downloadURL) {
             uploadedUrls.push(downloadURL);
           }
-        } catch (error) {
+        } catch {
           // Error already logged, continue with next file
         }
       }
@@ -173,8 +171,6 @@ export function useCampaignManagement(organizationId?: string) {
       setSelectedGalleryImages([]);
       
       return finalGalleryUrls;
-    } catch (error) {
-      throw error;
     } finally {
       setUploadingGallery(false);
     }
@@ -241,9 +237,9 @@ export function useCampaignManagement(organizationId?: string) {
             finalData.coverImageUrl = coverImageUrl;
           }
           clearImageSelection();
-        } catch (error) {
+        } catch {
           onError?.('Failed to upload cover image');
-          throw error;
+          throw new Error('Failed to upload cover image');
         }
       }
 
@@ -256,9 +252,9 @@ export function useCampaignManagement(organizationId?: string) {
           if (logoUrl) {
             finalData.organizationInfoLogo = logoUrl;
           }
-        } catch (error) {
+        } catch {
           onError?.('Failed to upload organization logo');
-          throw error;
+          throw new Error('Failed to upload organization logo');
         }
       }
 
@@ -279,9 +275,9 @@ export function useCampaignManagement(organizationId?: string) {
           
           finalData.galleryImages = [...existingGalleryUrls, ...uploadedUrls];
           clearGallerySelection();
-        } catch (error) {
+        } catch {
           onError?.('Failed to upload gallery images');
-          throw error;
+          throw new Error('Failed to upload gallery images');
         }
       }
 
@@ -309,7 +305,7 @@ export function useCampaignManagement(organizationId?: string) {
         return { id: docRef.id, ...newCampaignPayload };
       }
     } catch (error) {
-      throw error;
+      throw error instanceof Error ? error : new Error('Failed to save campaign');
     }
   }, [selectedImage, selectedGalleryImages, uploadFile, clearImageSelection, clearGallerySelection]);
 
