@@ -19,7 +19,7 @@ export async function submitGiftAidDeclaration(
     throw new Error(`Failed to validate Gift Aid eligibility for campaign ${campaignId}: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 
-  const mappedDeclaration: Omit<GiftAidDeclaration, 'id' | 'createdAt' | 'updatedAt'> = {
+  const mappedDeclaration: Omit<GiftAidDeclaration, 'id' | 'createdAt' | 'updatedAt' | 'classification' | 'pendingReasons'> = {
     donorFirstName: giftAidDetails.firstName,
     donorSurname: giftAidDetails.surname,
     donorHouseNumber: giftAidDetails.houseNumber || '',
@@ -46,5 +46,6 @@ export async function submitGiftAidDeclaration(
     giftAidStatus: 'pending'
   };
 
-  return await giftAidApi.createGiftAidDeclaration(mappedDeclaration);
+  // Classification will be automatically applied by giftAidApi.createGiftAidDeclaration
+  return await giftAidApi.createGiftAidDeclaration(mappedDeclaration as Omit<GiftAidDeclaration, 'id' | 'createdAt' | 'updatedAt'>);
 }
