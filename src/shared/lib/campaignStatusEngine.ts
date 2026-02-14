@@ -87,50 +87,9 @@ function reconcileCampaignStatus(
   now: Date
 ): CampaignStatusResolution {
   const status = campaign.status;
-  const goal = Number(campaign.goal) || 0;
-  const raisedMinor = Number(campaign.raised) || 0;
-  const raisedMajor = raisedMinor / 100;
-  const autoCompletedGoal = Number(campaign.autoCompletedGoal);
-  const alreadyAutoCompletedForThisGoal =
-    Number.isFinite(autoCompletedGoal) && autoCompletedGoal === goal;
-
-  if (goal > 0 && raisedMajor >= goal && !alreadyAutoCompletedForThisGoal) {
-    return {
-      status: 'completed',
-      updates: {
-        status: 'completed',
-        autoCompletedGoal: goal,
-        autoCompletedAt: now.toISOString(),
-      },
-    };
-  }
 
   if (status === 'completed') {
     return { status: 'completed' };
-  }
-
-  const endDate = parseCampaignDate(campaign.endDate);
-  if (endDate && endOfDay(endDate) < now) {
-    const endDateKey = endDate.toISOString();
-    const alreadyAutoPausedForThisEndDate =
-      campaign.autoPausedEndDate === endDateKey;
-
-    if (status !== 'paused' && !alreadyAutoPausedForThisEndDate) {
-      return {
-        status: 'paused',
-        updates: {
-          status: 'paused',
-          autoPausedEndDate: endDateKey,
-          autoPausedEndDateAt: now.toISOString(),
-        },
-      };
-    }
-
-    if (status === 'paused') {
-      return { status: 'paused' };
-    }
-
-    return { status: status === 'active' ? 'active' : 'paused' };
   }
 
   const startDate = parseCampaignDate(campaign.startDate);
