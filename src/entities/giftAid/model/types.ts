@@ -5,6 +5,7 @@
  * - All monetary amounts are stored in pence (minor currency units)
  * - donationId enforces strict 1:1 mapping with donations
  * - Fields must not be modified without legal review
+ * - Classification tracks: STANDARD (>£30), GADS (≤£30), PENDING (incomplete)
  */
 export interface GiftAidDeclaration {
   // MANDATORY: Document identifier (equals donationId for 1:1 mapping)
@@ -45,6 +46,10 @@ export interface GiftAidDeclaration {
   // MANDATORY: Status tracking
   giftAidStatus: 'pending' | 'claimed' | 'rejected';
   
+  // MANDATORY: Classification tracking (HMRC compliance)
+  classification: 'STANDARD' | 'GADS' | 'PENDING'; // Gift Aid track classification
+  pendingReasons?: string[]; // Reasons for PENDING classification (if applicable)
+  
   // MANDATORY: Audit trail (compliance requirement)
   createdAt: string; // ISO timestamp when record was created
   updatedAt: string; // ISO timestamp when record was last modified
@@ -84,4 +89,25 @@ export interface GiftAidDetails {
   // Audit Trail
   timestamp: string;
   taxYear: string;
+}
+
+/**
+ * Gift Aid validation result
+ * Used to determine if a donation has complete data for classification
+ */
+export interface GiftAidValidationResult {
+  isValid: boolean;
+  missingFields: string[];
+  pendingReasons: string[];
+}
+
+/**
+ * Gift Aid classification result
+ * Returned by classification logic
+ */
+export interface GiftAidClassificationResult {
+  classification: 'STANDARD' | 'GADS' | 'PENDING';
+  giftAidAmount: number; // Calculated Gift Aid amount in pence
+  pendingReasons?: string[];
+  isEligible: boolean;
 }
