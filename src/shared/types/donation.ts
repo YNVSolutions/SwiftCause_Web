@@ -43,6 +43,8 @@ export interface Donation {
   isGiftAid?: boolean;
   giftAidAccepted?: boolean; // Explicit tracking of Gift Aid acceptance/decline
   giftAidDetails?: GiftAidDetails;
+  giftAidClassification?: 'STANDARD' | 'GADS' | 'PENDING'; // Gift Aid track classification
+  giftAidPendingReasons?: string[]; // Reasons for PENDING classification
   organizationId?: string;
 }
 
