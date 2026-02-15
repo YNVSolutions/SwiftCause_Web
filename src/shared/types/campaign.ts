@@ -41,7 +41,12 @@ export interface Campaign {
   tags?: string[];
   status?: "active" | "paused" | "completed";
   createdAt?: string;
-  endDate?: string;
+  startDate?: string | Date | { seconds: number; nanoseconds?: number; toDate?: () => Date };
+  endDate?: string | Date | { seconds: number; nanoseconds?: number; toDate?: () => Date };
+  autoCompletedGoal?: number;
+  autoCompletedAt?: string;
+  autoPausedEndDate?: string;
+  autoPausedEndDateAt?: string;
   organizationId?: string;
   donationCount?: number;
   configuration: CampaignConfiguration;

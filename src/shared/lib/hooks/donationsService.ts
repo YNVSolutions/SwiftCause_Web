@@ -3,10 +3,26 @@ import { Donation } from '../../types';
 
 
 function formatTimestamp(timestamp: any): string {
-  if (!timestamp || !timestamp.toDate) {
-    return 'N/A';
+  if (!timestamp) return '';
+
+  if (typeof timestamp?.toDate === 'function') {
+    return timestamp.toDate().toISOString();
   }
-  return timestamp.toDate().toLocaleString();
+
+  if (typeof timestamp?.seconds === 'number') {
+    return new Date(timestamp.seconds * 1000).toISOString();
+  }
+
+  if (timestamp instanceof Date) {
+    return timestamp.toISOString();
+  }
+
+  if (typeof timestamp === 'string') {
+    const parsed = new Date(timestamp);
+    return Number.isNaN(parsed.getTime()) ? '' : parsed.toISOString();
+  }
+
+  return '';
 }
 
 

@@ -92,7 +92,7 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
               <div className="bg-[#0E8F5A] text-white px-5 py-3 text-center">
                 <div className="text-center">
                   <p className="text-white/85 text-[12px] uppercase tracking-wide mb-0.5 font-medium">Donating to</p>
-                  <h2 className="text-[18px] sm:text-[20px] lg:text-[22px] font-semibold tracking-[-0.01em] leading-[1.25]">{campaign.title}</h2>
+                  <h2 className="text-[18px] sm:text-[20px] lg:text-[22px] font-semibold tracking-[-0.01em] leading-tight">{campaign.title}</h2>
                 </div>
                 <div className="flex justify-center mt-2">
                   <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center shadow-lg">

@@ -28,6 +28,7 @@ import {
   Target,
   Banknote,
   CalendarDays,
+  Building2,
   Gift
 } from 'lucide-react';
 import { Skeleton } from "../../shared/ui/skeleton"; // Import Skeleton
@@ -73,6 +74,23 @@ interface DonationManagementProps {
   onLogout: () => void;
   userSession: AdminSession;
   hasPermission: (permission: Permission) => boolean;
+}
+
+function parseDonationDate(value?: string): Date | null {
+  if (!value) return null;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function formatDonationDate(value?: string, withLeadingZero = true): string {
+  const parsed = parseDonationDate(value);
+  if (!parsed) return 'N/A';
+
+  return parsed.toLocaleDateString('en-GB', {
+    day: withLeadingZero ? '2-digit' : 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
 }
 
 export function DonationManagement({ onNavigate, onLogout, userSession, hasPermission }: DonationManagementProps) {
@@ -200,7 +218,9 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                          (campaignName.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = statusFilter === 'all' || donation.paymentStatus === statusFilter;
     const matchesCampaign = campaignFilter === 'all' || donation.campaignId === campaignFilter;
-    const matchesDate = !dateFilter || new Date(donation.timestamp).toDateString() === dateFilter.toDateString();
+    const donationDate = parseDonationDate(donation.timestamp);
+    const matchesDate =
+      !dateFilter || (donationDate ? donationDate.toDateString() === dateFilter.toDateString() : false);
     
     return matchesSearch && matchesStatus && matchesCampaign && matchesDate;
   });
@@ -264,6 +284,21 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
       userSession={userSession}
       hasPermission={hasPermission}
       activeScreen="admin-donations"
+      headerTitle={(
+        <div className="flex flex-col">
+          {userSession.user.organizationName && (
+            <div className="flex items-center gap-1.5 mb-1">
+              <Building2 className="h-3.5 w-3.5 text-emerald-600" />
+              <span className="text-xs font-semibold text-emerald-700 tracking-wide">
+                {userSession.user.organizationName}
+              </span>
+            </div>
+          )}
+          <h1 className="text-2xl font-semibold text-slate-800 tracking-tight">
+            Donations
+          </h1>
+        </div>
+      )}
       headerSubtitle="Track and analyze donation transactions"
       headerSearchPlaceholder="Search donations..."
       headerSearchValue={searchTerm}
@@ -273,7 +308,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
           <Button
             variant="outline"
             size="sm"
-            className="rounded-2xl border-[#064e3b] bg-transparent text-[#064e3b] hover:bg-[#064e3b] hover:text-blue-800 transition-all duration-300 px-5"
+            className="rounded-2xl border-[#064e3b] bg-transparent text-[#064e3b] hover:bg-emerald-50 hover:border-emerald-600 hover:shadow-md hover:shadow-emerald-900/10 hover:scale-105 transition-all duration-300 px-5"
             onClick={handleExportDonations}
           >
             <Download className="h-4 w-4 sm:hidden" />
@@ -526,11 +561,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                           <TableCell className="px-4 py-4 text-center align-middle">
                             <span className="text-sm text-gray-500">
                               {donation.timestamp
-                                ? new Date(donation.timestamp).toLocaleDateString('en-GB', {
-                                    day: '2-digit',
-                                    month: 'short',
-                                    year: 'numeric',
-                                  })
+                                ? formatDonationDate(donation.timestamp, true)
                                 : "N/A"}
                             </span>
                           </TableCell>
@@ -636,7 +667,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                         <div className="flex items-center gap-2 text-xs text-slate-500">
                           <CalendarDays className="w-4 h-4" />
                           {donation.timestamp 
-                            ? new Date(donation.timestamp).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                            ? formatDonationDate(donation.timestamp, false)
                             : "N/A"}
                         </div>
                         <button 
@@ -718,11 +749,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                     <Label className="text-sm font-medium text-gray-700">Donation Date</Label>
                     <p className="text-sm text-gray-900 mt-1">
                       {selectedDonation.timestamp 
-                        ? new Date(selectedDonation.timestamp).toLocaleDateString('en-GB', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric',
-                          })
+                        ? formatDonationDate(selectedDonation.timestamp, true)
                         : "N/A"}
                     </p>
                   </div>

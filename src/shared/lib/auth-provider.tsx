@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { getAuth, onAuthStateChanged, User as FirebaseAuthUser, signOut } from 'firebase/auth'
+import { getAuth, onAuthStateChanged, User as FirebaseAuthUser, signOut, sendEmailVerification } from 'firebase/auth'
 import { doc, getDoc, db } from './firebase'
 import {
   UserRole,
@@ -62,7 +62,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const kioskRef = doc(db, 'kiosks', targetKioskId)
         const kioskSnap = await getDoc(kioskRef)
         if (kioskSnap.exists()) {
-          const kioskData = kioskSnap.data() as any
+          const kioskData = kioskSnap.data() as Record<string, unknown>
           
           setCurrentKioskSession((prev) => ({
             ...prev!,
@@ -89,7 +89,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       if (firebaseUser) {
         // Get ID token result to check custom claims
-        const idTokenResult = await firebaseUser.getIdToken(true);
+        await firebaseUser.getIdToken(true);
         const decodedToken = await firebaseUser.getIdTokenResult();
         
         // Check if this is a kiosk user (UID starts with "kiosk:")
@@ -134,9 +134,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (userDocSnap.exists()) {
           const userData = userDocSnap.data() as User
           
+          // Fetch organization name if organizationId exists
+          let organizationName: string | undefined = undefined
+          if (userData.organizationId) {
+            try {
+              const orgDocRef = doc(db, 'organizations', userData.organizationId)
+              const orgDocSnap = await getDoc(orgDocRef)
+              if (orgDocSnap.exists()) {
+                const orgData = orgDocSnap.data()
+                organizationName = orgData.name || orgData.organizationName || userData.organizationId
+              }
+            } catch (error) {
+              console.error('Error fetching organization name:', error)
+            }
+          }
+          
           setUserRole(userData.role)
           setCurrentAdminSession({
-            user: userData,
+            user: {
+              ...userData,
+              organizationName: organizationName
+            },
             loginTime: new Date().toISOString(),
             permissions: userData.permissions || []
           })
@@ -157,7 +175,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       clearTimeout(timeout)
       unsubscribe()
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleLogin = async (role: UserRole, sessionData?: KioskSession | AdminSession) => {
@@ -188,7 +205,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const handleSignup = async (signupData: SignupFormData): Promise<string> => {
     try {
       // Verify reCAPTCHA with backend first
-      if ((signupData as any).recaptchaToken) {
+      const signupDataWithRecaptcha = signupData as SignupFormData & { recaptchaToken?: string };
+      if (signupDataWithRecaptcha.recaptchaToken) {
         const verifyResponse = await fetch(
           `https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/verifySignupRecaptcha`,
           {
@@ -197,7 +215,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              recaptchaToken: (signupData as any).recaptchaToken,
+              recaptchaToken: signupDataWithRecaptcha.recaptchaToken,
               email: signupData.email,
             }),
           }
