@@ -24,6 +24,7 @@ const {
 const {createStripeAccountForNewOrg} = require("./handlers/triggers");
 const {verifySignupRecaptcha} = require("./handlers/signup");
 const {kioskLogin} = require("./handlers/kiosk");
+const {sendEmail} = require("./services/sendgrid");
 
 // Export all functions (backwards compatible)
 exports.createUser = functions.https.onRequest(createUser);
@@ -45,6 +46,9 @@ exports.createExpressDashboardLink = functions.https.onRequest(
 );
 exports.createStripeAccountForNewOrg = createStripeAccountForNewOrg;
 exports.kioskLogin = functions.https.onRequest(kioskLogin);
+
+// Export SendGrid email function
+exports.sendEmail = sendEmail;
 
 // Export v2 function with secret
 exports.verifySignupRecaptcha = onRequest(

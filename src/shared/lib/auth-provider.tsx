@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { getAuth, onAuthStateChanged, User as FirebaseAuthUser, sendEmailVerification, signOut } from 'firebase/auth'
+import { getAuth, onAuthStateChanged, User as FirebaseAuthUser, signOut } from 'firebase/auth'
 import { doc, getDoc, db } from './firebase'
 import {
   UserRole,
@@ -14,6 +14,7 @@ import {
 import { createUserWithEmailAndPassword } from 'firebase/auth'
 import { setDoc } from 'firebase/firestore'
 import { getFirestore } from 'firebase/firestore'
+import { emailService } from '@/shared/api/emailService'
 
 const auth = getAuth()
 const firestore = getFirestore()
@@ -256,8 +257,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         createdAt: new Date().toISOString(),
       })
 
-      // Send verification email
-      await sendEmailVerification(userCredential.user)
+      // Send verification email via SendGrid
+      // TODO: Replace 'YOUR_SENDGRID_TEMPLATE_ID' with your actual SendGrid template ID
+      await emailService.sendVerificationEmail(
+        signupData.email,
+        process.env.NEXT_PUBLIC_SENDGRID_VERIFICATION_TEMPLATE_ID || ' d-23aac70d71724b859684e7933eed46f7'
+      )
 
       // DON'T sign out - keep user authenticated so they can resend verification
       // But DON'T establish a session in our app (don't call handleLogin)
@@ -290,8 +295,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         throw new Error('Email does not match current user')
       }
       
-      // Send verification email
-      await sendEmailVerification(user)
+      // Send verification email via SendGrid
+      // TODO: Replace 'YOUR_SENDGRID_TEMPLATE_ID' with your actual SendGrid template ID
+      await emailService.sendVerificationEmail(
+        email,
+        process.env.NEXT_PUBLIC_SENDGRID_VERIFICATION_TEMPLATE_ID || 'YOUR_SENDGRID_TEMPLATE_ID'
+      )
     } catch (error) {
       console.error('Error resending verification email:', error)
       throw error

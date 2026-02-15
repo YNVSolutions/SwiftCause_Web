@@ -3,7 +3,6 @@ import {
   createUserWithEmailAndPassword, 
   signOut, 
   onAuthStateChanged,
-  sendEmailVerification,
   applyActionCode,
   User as FirebaseAuthUser
 } from 'firebase/auth';
@@ -11,6 +10,7 @@ import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs } fro
 import { auth, db } from '../../../shared/lib/firebase';
 import { User } from '../../../entities/user';
 import { SignupCredentials } from '../model';
+import { emailService } from '../../../shared/api/emailService';
 
 export const authApi = {
   async signInForVerificationCheck(email: string, password: string) {
@@ -149,8 +149,15 @@ export const authApi = {
         createdAt: new Date().toISOString(),
       });
 
-      // Send verification email
-      await sendEmailVerification(userCredential.user);
+      // Send verification email via SendGrid
+      const currentYear = new Date().getFullYear();
+      await emailService.sendVerificationEmail(
+        credentials.email,
+        'd-23aac70d71724b859684e7933eed46f7',
+        {
+          year: currentYear
+        }
+      );
 
       return {
         id: userId,
@@ -235,7 +242,17 @@ export const authApi = {
   // Send verification email to current user
   async sendVerificationEmail(user: FirebaseAuthUser): Promise<void> {
     try {
-      await sendEmailVerification(user);
+      if (!user.email) {
+        throw new Error('User email not found');
+      }
+      const currentYear = new Date().getFullYear();
+      await emailService.sendVerificationEmail(
+        user.email,
+        'd-23aac70d71724b859684e7933eed46f7',
+        {
+          year: currentYear
+        }
+      );
     } catch (error: unknown) {
       console.error('Error sending verification email:', error);
       throw error;
@@ -252,7 +269,14 @@ export const authApi = {
       if (user.email !== email) {
         throw new Error('Email does not match current user');
       }
-      await sendEmailVerification(user);
+      const currentYear = new Date().getFullYear();
+      await emailService.sendVerificationEmail(
+        email,
+        'd-23aac70d71724b859684e7933eed46f7',
+        {
+          year: currentYear
+        }
+      );
     } catch (error: unknown) {
       console.error('Error resending verification email:', error);
       throw error;
