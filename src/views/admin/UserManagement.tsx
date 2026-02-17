@@ -40,13 +40,15 @@ const allPermissions: Permission[] = [
 ];
 
 const canAssignRole = (actorRole: UserRole, targetRole: UserRole): boolean => {
-    if (actorRole === 'manager' && (targetRole === 'admin' || targetRole === 'super_admin')) {
-        return false;
-    }
-    if (actorRole !== 'super_admin' && targetRole === 'super_admin') {
-        return false;
-    }
-    return true;
+    const roleMatrix: Record<UserRole, UserRole[]> = {
+        super_admin: ['super_admin', 'admin', 'manager', 'operator', 'viewer', 'kiosk'],
+        admin: ['admin', 'manager', 'operator', 'viewer', 'kiosk'],
+        manager: ['manager', 'operator', 'viewer', 'kiosk'],
+        operator: ['operator', 'viewer', 'kiosk'],
+        viewer: ['viewer', 'kiosk'],
+        kiosk: []
+    };
+    return roleMatrix[actorRole]?.includes(targetRole) ?? false;
 };
 
 const canAssignPermission = (actorSession: AdminSession, permission: Permission): boolean => {
@@ -220,7 +222,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
             return;
         }
         if (!canAssignRole(userSession.user.role, newUser.role)) {
-            setDialogMessage("Managers cannot assign Admin or Super Admin roles.");
+            setDialogMessage("You do not have permission to assign this role.");
             return;
         }
         const hasUnauthorizedPermission = (newUser.permissions || []).some(
@@ -265,7 +267,7 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
 
     const handleUpdateUser = async (userId: string, updates: Partial<User>) => {
         if (updates.role && !canAssignRole(userSession.user.role, updates.role)) {
-            const errorMessage = "Managers cannot assign Admin or Super Admin roles.";
+            const errorMessage = "You do not have permission to assign this role.";
             setDialogMessage(errorMessage);
             throw new Error(errorMessage);
         }
@@ -917,7 +919,7 @@ function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateU
             newErrors.password = 'Password must be at least 6 characters';
         }
         if (!canAssignRole(userSession?.user?.role, newUser.role)) {
-            newErrors.role = 'Managers cannot assign Admin or Super Admin roles';
+            newErrors.role = 'You do not have permission to assign this role';
         }
         const hasUnauthorizedPermission = (newUser.permissions || []).some(
             (permission: Permission) => !canAssignPermission(userSession, permission)
@@ -948,7 +950,7 @@ function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateU
 
     const handleRoleChange = (role: UserRole) => {
         if (!canAssignRole(userSession?.user?.role, role)) {
-            setErrors(prev => ({ ...prev, role: 'Managers cannot assign Admin or Super Admin roles' }));
+            setErrors(prev => ({ ...prev, role: 'You do not have permission to assign this role' }));
             return;
         }
         // Get default permissions for the selected role
@@ -1358,7 +1360,7 @@ function EditUserDialog({ user, onUpdate, onClose, userSession }: { user: User, 
 
     const handleRoleChange = (role: UserRole) => {
         if (!canAssignRole(userSession?.user?.role, role)) {
-            setRoleError('Managers cannot assign Admin or Super Admin roles');
+            setRoleError('You do not have permission to assign this role');
             return;
         }
         // Get default permissions for the selected role

@@ -2,6 +2,39 @@ const admin = require("firebase-admin");
 const {verifyAuth} = require("../middleware/auth");
 const cors = require("../middleware/cors");
 
+const ROLE_ASSIGNMENT_MATRIX = {
+  super_admin: ["super_admin", "admin", "manager", "operator", "viewer", "kiosk"],
+  admin: ["admin", "manager", "operator", "viewer", "kiosk"],
+  manager: ["manager", "operator", "viewer", "kiosk"],
+  operator: ["operator", "viewer", "kiosk"],
+  viewer: ["viewer", "kiosk"],
+};
+
+const canAssignRole = (callerRole, targetRole) => {
+  const allowedRoles = ROLE_ASSIGNMENT_MATRIX[callerRole] || [];
+  return allowedRoles.includes(targetRole);
+};
+
+const canAssignPermissions = (callerData, targetPermissions) => {
+  if (!Array.isArray(targetPermissions)) return false;
+
+  // Super admins can assign any permission set.
+  if (callerData?.role === "super_admin") return true;
+
+  const callerPermissions = Array.isArray(callerData?.permissions) ? callerData.permissions : [];
+  if (callerPermissions.includes("system_admin")) return true;
+
+  // Non-super-admin users cannot grant system_admin.
+  if (targetPermissions.includes("system_admin")) return false;
+
+  return targetPermissions.every((permission) => callerPermissions.includes(permission));
+};
+
+const isSameOrganization = (callerData, targetOrganizationId) => {
+  return callerData?.organizationId && targetOrganizationId &&
+    callerData.organizationId === targetOrganizationId;
+};
+
 /**
  * Create a new user with role and permissions
  * @param {object} req - Express request object
@@ -48,10 +81,26 @@ const createUser = (req, res) => {
             .send({error: "Missing required fields for user creation."});
       }
 
-      // Prevent non-super_admin users from creating super_admin users
-      if (role === "super_admin" && callerData?.role !== "super_admin") {
+      // Enforce same-organization user management for non-super admins.
+      if (callerData?.role !== "super_admin" &&
+          !isSameOrganization(callerData, organizationId)) {
         return res.status(403).send({
-          error: "Only super admins can create super admin users",
+          error: "You can only create users within your organization",
+        });
+      }
+
+      // Enforce role hierarchy:
+      // super_admin > admin > manager > operator > viewer.
+      if (!canAssignRole(callerData?.role, role)) {
+        return res.status(403).send({
+          error: "You do not have permission to assign this role",
+        });
+      }
+
+      // Enforce permission subset assignment.
+      if (!canAssignPermissions(callerData, permissions || [])) {
+        return res.status(403).send({
+          error: "You can only assign permissions that you already have",
         });
       }
 
@@ -153,17 +202,34 @@ const updateUser = (req, res) => {
 
       const targetUserData = targetUserDoc.data();
 
-      // Prevent non-super_admin users from editing super_admin users
-      if (targetUserData?.role === "super_admin" && callerData?.role !== "super_admin") {
+      // Enforce same-organization user management for non-super admins.
+      if (callerData?.role !== "super_admin" &&
+          !isSameOrganization(callerData, targetUserData?.organizationId)) {
+        return res.status(403).send({
+          error: "You can only edit users in your organization",
+        });
+      }
+
+      // Prevent non-super_admin users from editing super_admin users.
+      if (targetUserData?.role === "super_admin" &&
+          callerData?.role !== "super_admin") {
         return res.status(403).send({
           error: "Only super admins can edit super admin users",
         });
       }
 
-      // Prevent non-super_admin users from changing a user's role to super_admin
-      if (data.role === "super_admin" && callerData?.role !== "super_admin") {
+      // Enforce role hierarchy for role changes.
+      if (data.role !== undefined && !canAssignRole(callerData?.role, data.role)) {
         return res.status(403).send({
-          error: "Only super admins can assign super admin role",
+          error: "You do not have permission to assign this role",
+        });
+      }
+
+      // Enforce permission subset assignment.
+      if (data.permissions !== undefined &&
+          !canAssignPermissions(callerData, data.permissions)) {
+        return res.status(403).send({
+          error: "You can only assign permissions that you already have",
         });
       }
 
@@ -260,6 +326,14 @@ const deleteUser = (req, res) => {
       }
 
       const targetUserData = targetUserDoc.data();
+
+      // Enforce same-organization user management for non-super admins.
+      if (callerData?.role !== "super_admin" &&
+          !isSameOrganization(callerData, targetUserData?.organizationId)) {
+        return res.status(403).send({
+          error: "You can only delete users in your organization",
+        });
+      }
 
       // Prevent non-super_admin users from deleting super_admin users
       if (targetUserData?.role === "super_admin" && callerData?.role !== "super_admin") {
