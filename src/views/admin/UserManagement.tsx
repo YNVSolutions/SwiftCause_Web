@@ -39,6 +39,27 @@ const allPermissions: Permission[] = [
     'view_donations', 'export_donations', 'view_users'
 ];
 
+const canAssignRole = (actorRole: UserRole, targetRole: UserRole): boolean => {
+    const roleMatrix: Record<UserRole, UserRole[]> = {
+        super_admin: ['super_admin', 'admin', 'manager', 'operator', 'viewer', 'kiosk'],
+        admin: ['admin', 'manager', 'operator', 'viewer', 'kiosk'],
+        manager: ['manager', 'operator', 'viewer', 'kiosk'],
+        operator: ['operator', 'viewer', 'kiosk'],
+        viewer: ['viewer', 'kiosk'],
+        kiosk: []
+    };
+    return roleMatrix[actorRole]?.includes(targetRole) ?? false;
+};
+
+const canAssignPermission = (actorSession: AdminSession, permission: Permission): boolean => {
+    const actorPermissions = actorSession?.user?.permissions || [];
+    return (
+        actorSession?.user?.role === 'super_admin' ||
+        actorPermissions.includes('system_admin') ||
+        actorPermissions.includes(permission)
+    );
+};
+
 // Helper function to get initials from username
 const getInitials = (username: string): string => {
   const parts = username.trim().split(' ');
@@ -200,6 +221,17 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
             setDialogMessage("Username, email, and password are required.");
             return;
         }
+        if (!canAssignRole(userSession.user.role, newUser.role)) {
+            setDialogMessage("You do not have permission to assign this role.");
+            return;
+        }
+        const hasUnauthorizedPermission = (newUser.permissions || []).some(
+            (permission) => !canAssignPermission(userSession, permission)
+        );
+        if (hasUnauthorizedPermission) {
+            setDialogMessage("You can only assign permissions that you already have.");
+            return;
+        }
         
         setIsCreatingUser(true);
         try {
@@ -234,6 +266,16 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
     };
 
     const handleUpdateUser = async (userId: string, updates: Partial<User>) => {
+        if (updates.role && !canAssignRole(userSession.user.role, updates.role)) {
+            const errorMessage = "You do not have permission to assign this role.";
+            setDialogMessage(errorMessage);
+            throw new Error(errorMessage);
+        }
+        if (updates.permissions && updates.permissions.some((permission) => !canAssignPermission(userSession, permission))) {
+            const errorMessage = "You can only assign permissions that you already have.";
+            setDialogMessage(errorMessage);
+            throw new Error(errorMessage);
+        }
         try {
             await updateUser(userId, updates);
             setEditingUser(null);
@@ -855,11 +897,11 @@ export function UserManagement({ onNavigate, onLogout, userSession, hasPermissio
 }
 
 function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateUser, userSession, isCreating }: any) {
-    const [errors, setErrors] = useState<{username?: string; email?: string; password?: string}>({});
+    const [errors, setErrors] = useState<{username?: string; email?: string; password?: string; role?: string; permissions?: string}>({});
     const [showPassword, setShowPassword] = useState(false);
 
     const validateAndCreate = () => {
-        const newErrors: {username?: string; email?: string; password?: string} = {};
+        const newErrors: {username?: string; email?: string; password?: string; role?: string; permissions?: string} = {};
         
         if (!newUser.username || newUser.username.trim() === '') {
             newErrors.username = 'Username is required';
@@ -876,6 +918,15 @@ function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateU
         } else if (newUser.password.length < 6) {
             newErrors.password = 'Password must be at least 6 characters';
         }
+        if (!canAssignRole(userSession?.user?.role, newUser.role)) {
+            newErrors.role = 'You do not have permission to assign this role';
+        }
+        const hasUnauthorizedPermission = (newUser.permissions || []).some(
+            (permission: Permission) => !canAssignPermission(userSession, permission)
+        );
+        if (hasUnauthorizedPermission) {
+            newErrors.permissions = 'You can only assign permissions that you already have';
+        }
         
         setErrors(newErrors);
         
@@ -885,12 +936,23 @@ function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateU
     };
 
     const onPermissionChange = (permission: Permission, checked: boolean) => {
+        if (!canAssignPermission(userSession, permission)) {
+            setErrors(prev => ({ ...prev, permissions: 'You can only assign permissions that you already have' }));
+            return;
+        }
         const currentPermissions = newUser.permissions || [];
         const newPermissions = checked ? [...currentPermissions, permission] : currentPermissions.filter((p: Permission) => p !== permission);
         onUserChange({ ...newUser, permissions: newPermissions });
+        if (errors.permissions) {
+            setErrors(prev => ({ ...prev, permissions: undefined }));
+        }
     };
 
     const handleRoleChange = (role: UserRole) => {
+        if (!canAssignRole(userSession?.user?.role, role)) {
+            setErrors(prev => ({ ...prev, role: 'You do not have permission to assign this role' }));
+            return;
+        }
         // Get default permissions for the selected role
         const defaultPermissions = DEFAULT_USER_PERMISSIONS[role as keyof typeof DEFAULT_USER_PERMISSIONS] || [];
         // Filter out manage_permissions and system_admin from UI
@@ -902,6 +964,9 @@ function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateU
             role: role,
             permissions: [...filteredPermissions] // Set filtered default permissions for the role
         });
+        if (errors.role) {
+            setErrors(prev => ({ ...prev, role: undefined }));
+        }
     };
 
     const isSuperAdmin = userSession?.user?.role === 'super_admin';
@@ -1016,13 +1081,21 @@ function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateU
                                     </SelectTrigger>
                                     <SelectContent>
                                         {isSuperAdmin && <SelectItem value="super_admin">Super Admin</SelectItem>}
-                                        <SelectItem value="admin">Admin</SelectItem>
+                                        {canAssignRole(userSession?.user?.role, 'admin') && (
+                                            <SelectItem value="admin">Admin</SelectItem>
+                                        )}
                                         <SelectItem value="manager">Manager</SelectItem>
                                         <SelectItem value="operator">Operator</SelectItem>
                                         <SelectItem value="viewer">Viewer</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
+                            {errors.role && (
+                                <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                                    <AlertCircle className="w-3 h-3" />
+                                    {errors.role}
+                                </p>
+                            )}
                         </div>
                     </div>
                     <div>
@@ -1034,6 +1107,12 @@ function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateU
                                 {allPermissions.length} total available
                             </span>
                         </div>
+                        {errors.permissions && (
+                            <p className="text-xs text-red-600 mb-2 flex items-center gap-1">
+                                <AlertCircle className="w-3 h-3" />
+                                {errors.permissions}
+                            </p>
+                        )}
                         
                         <div className="border border-slate-200 rounded-xl bg-slate-50/50">
                             <div className="p-5 max-h-80 overflow-y-auto space-y-6">
@@ -1262,15 +1341,28 @@ function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateU
 function EditUserDialog({ user, onUpdate, onClose, userSession }: { user: User, onUpdate: (userId: string, updates: Partial<User>) => Promise<void>, onClose: () => void, userSession: AdminSession }) {
     const [editedUser, setEditedUser] = useState(user);
     const [isSaving, setIsSaving] = useState(false);
+    const [roleError, setRoleError] = useState<string | null>(null);
+    const [permissionError, setPermissionError] = useState<string | null>(null);
     useEffect(() => { setEditedUser(user); }, [user]);
 
     const handlePermissionChange = (permission: Permission, checked: boolean) => {
+        if (!canAssignPermission(userSession, permission)) {
+            setPermissionError('You can only assign permissions that you already have');
+            return;
+        }
         const currentPermissions = editedUser.permissions || [];
         const newPermissions = checked ? [...currentPermissions, permission] : currentPermissions.filter((p: Permission) => p !== permission);
         setEditedUser(prev => ({ ...prev, permissions: newPermissions }));
+        if (permissionError) {
+            setPermissionError(null);
+        }
     };
 
     const handleRoleChange = (role: UserRole) => {
+        if (!canAssignRole(userSession?.user?.role, role)) {
+            setRoleError('You do not have permission to assign this role');
+            return;
+        }
         // Get default permissions for the selected role
         const defaultPermissions = DEFAULT_USER_PERMISSIONS[role as keyof typeof DEFAULT_USER_PERMISSIONS] || [];
         // Filter out manage_permissions and system_admin from UI
@@ -1282,6 +1374,9 @@ function EditUserDialog({ user, onUpdate, onClose, userSession }: { user: User, 
             role: role,
             permissions: [...filteredPermissions] // Set filtered default permissions for the role
         }));
+        if (roleError) {
+            setRoleError(null);
+        }
     };
 
     const handleSaveChanges = async () => {
@@ -1325,12 +1420,20 @@ function EditUserDialog({ user, onUpdate, onClose, userSession }: { user: User, 
                             </SelectTrigger>
                             <SelectContent>
                                 {isSuperAdmin && <SelectItem value="super_admin">Super Admin</SelectItem>}
-                                <SelectItem value="admin">Admin</SelectItem>
+                                {canAssignRole(userSession?.user?.role, 'admin') && (
+                                    <SelectItem value="admin">Admin</SelectItem>
+                                )}
                                 <SelectItem value="manager">Manager</SelectItem>
                                 <SelectItem value="operator">Operator</SelectItem>
                                 <SelectItem value="viewer">Viewer</SelectItem>
                             </SelectContent>
                         </Select>
+                        {roleError && (
+                            <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                                <AlertCircle className="w-3 h-3" />
+                                {roleError}
+                            </p>
+                        )}
                     </div>
 
                     {/* Permissions */}
@@ -1343,6 +1446,12 @@ function EditUserDialog({ user, onUpdate, onClose, userSession }: { user: User, 
                                 {allPermissions.length} total available
                             </span>
                         </div>
+                        {permissionError && (
+                            <p className="text-xs text-red-600 mb-2 flex items-center gap-1">
+                                <AlertCircle className="w-3 h-3" />
+                                {permissionError}
+                            </p>
+                        )}
                         
                         <div className="border border-slate-200 rounded-xl bg-slate-50/50">
                             <div className="p-5 max-h-80 overflow-y-auto space-y-6">
