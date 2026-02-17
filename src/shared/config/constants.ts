@@ -302,8 +302,14 @@ export const DEFAULT_USER_PERMISSIONS = {
   operator: [
     'view_dashboard',
     'view_campaigns',
+    'create_campaign',
+    'edit_campaign',
     'view_kiosks',
-    'view_donations'
+    'create_kiosk',
+    'edit_kiosk',
+    'assign_campaigns',
+    'view_donations',
+    'export_donations'
   ],
   viewer: [
     'view_dashboard',
