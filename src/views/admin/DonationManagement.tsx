@@ -52,6 +52,8 @@ interface FetchedDonation extends Omit<Donation, 'timestamp'> {
   id: string;
   amount: number;
   campaignId: string;
+  campaignTitleSnapshot?: string;
+  campaignTitle?: string;
   currency: string;
   donorId: string;
   donorName: string;
@@ -158,8 +160,20 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
     }, {} as Record<string, Kiosk>);
   }, [kiosks]);
 
-  const getCampaignDisplayName = (campaignId: string) =>
-    campaignMap[campaignId] || 'Unknown Campaign';
+  const getCampaignDisplayName = (donation: FetchedDonation) => {
+    const snapshotTitle =
+      (donation.campaignTitleSnapshot || donation.campaignTitle || '').trim();
+
+    if (snapshotTitle) {
+      return snapshotTitle;
+    }
+
+    if (donation.campaignId && campaignMap[donation.campaignId]) {
+      return campaignMap[donation.campaignId];
+    }
+
+    return 'Deleted Campaign';
+  };
 
   // Configuration for AdminSearchFilterHeader
   const searchFilterConfig: AdminSearchFilterConfig = {
@@ -211,7 +225,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
 
   // Filter donations first
   const filteredDonationsData = donations.filter(donation => {
-    const campaignName = campaignMap[donation.campaignId] || '';
+    const campaignName = getCampaignDisplayName(donation);
     const matchesSearch = (donation.donorName && donation.donorName.toLowerCase().includes(searchTerm.toLowerCase())) ||
                          (donation.stripePaymentIntentId && donation.stripePaymentIntentId.toLowerCase().includes(searchTerm.toLowerCase())) ||
                          (donation.transactionId && donation.transactionId.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -516,8 +530,8 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
 
                           <TableCell className="px-4 py-4 text-center align-middle">
                             <div className="flex items-center justify-center min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate" title={getCampaignDisplayName(donation.campaignId)}>
-                                {getCampaignDisplayName(donation.campaignId)}
+                              <p className="text-sm font-medium text-gray-900 truncate" title={getCampaignDisplayName(donation)}>
+                                {getCampaignDisplayName(donation)}
                               </p>
                             </div>
                           </TableCell>
@@ -649,7 +663,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                       <div className="flex justify-between items-center">
                         <div className="flex flex-col">
                           <span className="text-sm font-medium text-slate-600">
-                            {getCampaignDisplayName(donation.campaignId)}
+                            {getCampaignDisplayName(donation)}
                           </span>
                           <div className="flex gap-2 mt-1">
                             <span className="bg-indigo-50 text-indigo-700 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide flex items-center gap-1">
@@ -740,7 +754,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                 <div>
                   <Label className="text-sm font-medium text-gray-700">Campaign</Label>
                   <p className="text-sm text-gray-900 mt-1">
-                    {campaigns.find(c => c.id === selectedDonation.campaignId)?.title || "N/A"}
+                    {getCampaignDisplayName(selectedDonation)}
                   </p>
                 </div>
                 
