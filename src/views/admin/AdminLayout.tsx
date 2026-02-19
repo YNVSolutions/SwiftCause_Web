@@ -84,6 +84,11 @@ const getInitials = (name: string) => {
     .slice(0, 2);
 };
 
+const getRoleDisplayName = (role: AdminSession["user"]["role"]) =>
+  role
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+
 // AdminSidebar component that uses the SidebarProvider context
 function AdminSidebar({ 
   onNavigate, 
@@ -107,6 +112,7 @@ function AdminSidebar({
   isLoadingStripe: boolean;
 }) {
   const { state, isMobile } = useSidebar();
+  const roleDisplayName = getRoleDisplayName(userSession.user.role);
   
   // On mobile, always show expanded sidebar (with text)
   // On desktop, respect the collapsed state
@@ -404,7 +410,7 @@ function AdminSidebar({
                 <p className="text-white font-medium text-sm truncate">
                   {userSession.user.username || 'Admin User'}
                 </p>
-                <p className="text-white/70 text-xs">System Administrator</p>
+                <p className="text-white/70 text-xs">{roleDisplayName}</p>
               </div>
             </div>
             
@@ -484,6 +490,7 @@ export function AdminLayout({
   const resolvedTitle = headerTitle ?? currentLabel;
   const resolvedSubtitle = headerSubtitle ?? undefined;
   const userInitials = getInitials(userSession.user.username || userSession.user.email || "U");
+  const roleDisplayName = getRoleDisplayName(userSession.user.role);
   const headerSearch =
     headerSearchValue !== undefined && onHeaderSearchChange
       ? {
@@ -812,7 +819,7 @@ export function AdminLayout({
                         variant="ghost"
                         size="sm"
                         onClick={() => setShowUserProfile(!showUserProfile)}
-                        className="group h-10 w-10 p-0 rounded-full border-0 bg-gradient-to-br from-blue-500/80 to-purple-600/80 text-white shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105"
+                        className="group h-10 w-10 p-0 rounded-full border-0 bg-linear-to-br from-blue-500/80 to-purple-600/80 text-white shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105"
                         aria-label="Open profile"
                       >
                         <Avatar className="h-8 w-8 transition-transform duration-200 group-hover:scale-105">
@@ -843,7 +850,7 @@ export function AdminLayout({
 
         {/* Loading Overlay for Stripe */}
         {isLoadingStripe && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-100 flex items-center justify-center">
             <div className="bg-white rounded-xl shadow-2xl p-8 flex flex-col items-center gap-4 max-w-sm mx-4">
               <Loader2 className="h-12 w-12 text-[#064e3b] animate-spin" />
               <div className="text-center">
@@ -938,10 +945,10 @@ export function AdminLayout({
                 </button>
 
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-100/60 to-purple-100/60 backdrop-blur-xl flex items-center justify-center border border-blue-200/30 shadow-lg">
+                <div className="w-14 h-14 rounded-full bg-linear-to-br from-blue-100/60 to-purple-100/60 backdrop-blur-xl flex items-center justify-center border border-blue-200/30 shadow-lg">
                   <Avatar className="w-12 h-12">
                     <AvatarImage src={userSession.user.photoURL || undefined} />
-                    <AvatarFallback className="bg-gradient-to-br from-blue-500/80 to-purple-600/80 text-white text-lg font-bold border border-blue-300/30 shadow-inner">
+                    <AvatarFallback className="bg-linear-to-br from-blue-500/80 to-purple-600/80 text-white text-lg font-bold border border-blue-300/30 shadow-inner">
                       {userInitials}
                     </AvatarFallback>
                   </Avatar>
@@ -952,8 +959,8 @@ export function AdminLayout({
                     {userSession.user.username || "Admin User"}
                   </h3>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="px-2 py-1 bg-gradient-to-r from-green-100/70 to-emerald-100/70 backdrop-blur-xl rounded-full text-xs font-medium border border-green-200/40 text-green-700">
-                      Administrator
+                    <span className="px-2 py-1 bg-linear-to-r from-green-100/70 to-emerald-100/70 backdrop-blur-xl rounded-full text-xs font-medium border border-green-200/40 text-green-700">
+                      {roleDisplayName}
                     </span>
                   </div>
                 </div>
@@ -997,7 +1004,7 @@ export function AdminLayout({
                     </div>
                     <div>
                       <p className="text-gray-500 text-xs font-medium">Role</p>
-                      <p className="text-gray-900 font-medium">Administrator</p>
+                      <p className="text-gray-900 font-medium">{roleDisplayName}</p>
                     </div>
                   </div>
 
@@ -1105,7 +1112,7 @@ export function AdminLayout({
                     </span>
                   )}
                   {hasPermission("system_admin") && (
-                    <span className="px-2.5 py-1 bg-gradient-to-r from-purple-100/80 to-pink-100/80 backdrop-blur-xl text-purple-800 text-xs font-bold rounded-md border border-purple-300/50 shadow-sm">
+                    <span className="px-2.5 py-1 bg-linear-to-r from-purple-100/80 to-pink-100/80 backdrop-blur-xl text-purple-800 text-xs font-bold rounded-md border border-purple-300/50 shadow-sm">
                       system admin
                     </span>
                   )}
