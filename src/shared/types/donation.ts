@@ -30,7 +30,9 @@ export interface Donation {
   campaignId: string;
   amount: number;
   isRecurring: boolean;
-  recurringInterval?: "monthly" | "quarterly" | "yearly";
+  recurringInterval?: "monthly" | "quarterly" | "yearly"; // Keep existing for backward compatibility
+  subscriptionId?: string; // NEW - links to subscription for recurring donations
+  invoiceId?: string; // NEW - Stripe invoice ID for recurring payments
   id?: string;
   donorEmail?: string;
   donorName?: string;
