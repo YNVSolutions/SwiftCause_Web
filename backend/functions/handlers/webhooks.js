@@ -7,6 +7,111 @@ const {
 } = require("../entities/subscription");
 const {isEventProcessed, markEventProcessed} = require("../shared/firestore");
 
+const DEFAULT_GIFT_AID_DECLARATION_TEXT = "I confirm I have paid enough UK Income or Capital Gains Tax to cover all my Gift Aid donations in this tax year.";
+
+const toBoolean = (value) => value === true || value === "true" || value === "1";
+
+const toStringOrNull = (value) => {
+  if (typeof value !== "string") return null;
+  const normalized = value.trim();
+  return normalized.length > 0 ? normalized : null;
+};
+
+const parseIsoDate = (value) => {
+  const normalized = toStringOrNull(value);
+  if (!normalized) return null;
+  const parsed = new Date(normalized);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toISOString();
+};
+
+const getDonationDateFromPaymentIntent = (paymentIntent, metadata) => {
+  const metadataDonationDate = parseIsoDate(metadata.giftAidDonationDate);
+  if (metadataDonationDate) return metadataDonationDate;
+  if (typeof paymentIntent.created === "number") {
+    return new Date(paymentIntent.created * 1000).toISOString();
+  }
+  return new Date().toISOString();
+};
+
+const getTaxYear = (dateValue) => {
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return null;
+
+  const year = date.getUTCFullYear();
+  const month = date.getUTCMonth();
+  const startYear = month >= 3 ? year : year - 1;
+  const endYearShort = String((startYear + 1) % 100).padStart(2, "0");
+  return `${startYear}-${endYearShort}`;
+};
+
+const createGiftAidDeclarationIfNeeded = async ({
+  paymentIntent,
+  metadata,
+  campaignId,
+  campaignTitleSnapshot,
+  organizationId,
+}) => {
+  const isGiftAid = toBoolean(metadata.isGiftAid);
+  if (!isGiftAid) return;
+
+  const donationId = paymentIntent.id;
+  const giftAidRef = admin.firestore().collection("giftAidDeclarations").doc(donationId);
+  const existingGiftAid = await giftAidRef.get();
+
+  if (existingGiftAid.exists) {
+    return;
+  }
+
+  const donorFirstName = toStringOrNull(metadata.giftAidFirstName);
+  const donorSurname = toStringOrNull(metadata.giftAidSurname);
+  const donorName = toStringOrNull(metadata.donorName);
+  const parsedNames = donorName ? donorName.split(" ").filter(Boolean) : [];
+  const fallbackFirstName = parsedNames[0] || "Anonymous";
+  const fallbackSurname = parsedNames.slice(1).join(" ") || "Donor";
+
+  const donationDate = getDonationDateFromPaymentIntent(paymentIntent, metadata);
+  const declarationDate = parseIsoDate(metadata.giftAidDeclarationDate) || donationDate;
+  const now = new Date().toISOString();
+  const resolvedOrganizationId =
+    toStringOrNull(organizationId) ||
+    toStringOrNull(metadata.giftAidOrganizationId) ||
+    toStringOrNull(metadata.organizationId) ||
+    null;
+
+  const giftAidData = {
+    id: donationId,
+    donationId,
+    donorFirstName: donorFirstName || fallbackFirstName,
+    donorSurname: donorSurname || fallbackSurname,
+    donorHouseNumber: toStringOrNull(metadata.giftAidHouseNumber) || "",
+    donorAddressLine1: toStringOrNull(metadata.giftAidAddressLine1) || "",
+    donorAddressLine2: toStringOrNull(metadata.giftAidAddressLine2) || "",
+    donorTown: toStringOrNull(metadata.giftAidTown) || "",
+    donorPostcode: toStringOrNull(metadata.giftAidPostcode) || "",
+    declarationText:
+      toStringOrNull(metadata.giftAidDeclarationText) ||
+      DEFAULT_GIFT_AID_DECLARATION_TEXT,
+    declarationDate,
+    ukTaxpayerConfirmation: toBoolean(metadata.giftAidTaxpayer),
+    donationAmount: paymentIntent.amount,
+    giftAidAmount: Math.round(paymentIntent.amount * 0.25),
+    campaignId: campaignId || null,
+    campaignTitle: campaignTitleSnapshot || "Deleted Campaign",
+    organizationId: resolvedOrganizationId,
+    donationDate,
+    taxYear:
+      toStringOrNull(metadata.giftAidTaxYear) ||
+      getTaxYear(donationDate) ||
+      "unknown",
+    giftAidStatus: "pending",
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  await giftAidRef.set(giftAidData);
+};
+
 /**
  * Handle Stripe account.updated webhook
  * @param {object} req - Express request object
@@ -102,24 +207,58 @@ const handlePaymentCompletedStripeWebhook = async (req, res) => {
 
   if (event.type === "payment_intent.succeeded") {
     const paymentIntent = event.data.object;
+    const metadata = paymentIntent.metadata || {};
+    const campaignId = toStringOrNull(metadata.campaignId);
+    let organizationId = toStringOrNull(metadata.organizationId);
+    let campaignTitleSnapshot = toStringOrNull(metadata.campaignTitle) || "Deleted Campaign";
+    let campaignExists = false;
 
-    // Use entity to create donation
+    if (campaignId) {
+      const campaignRef = admin.firestore().collection("campaigns").doc(campaignId);
+      const campaignSnap = await campaignRef.get();
+
+      if (campaignSnap.exists) {
+        campaignExists = true;
+        const campaignData = campaignSnap.data() || {};
+        campaignTitleSnapshot =
+          toStringOrNull(campaignData.title) || campaignTitleSnapshot;
+        organizationId =
+          toStringOrNull(campaignData.organizationId) || organizationId;
+      } else {
+        console.warn("Campaign not found for payment intent:", paymentIntent.id, campaignId);
+      }
+    }
+
+    // Use entity to create donation with recurring support
     await createDonationDoc({
       transactionId: paymentIntent.id,
-      campaignId: paymentIntent.metadata.campaignId || null,
-      organizationId: paymentIntent.metadata.organizationId || null,
+      campaignId: campaignId || null,
+      organizationId: organizationId || null,
       amount: paymentIntent.amount,
       currency: paymentIntent.currency,
-      donorName: paymentIntent.metadata.donorName || "Anonymous",
-      donorEmail: paymentIntent.metadata.donorEmail || null,
-      donorPhone: paymentIntent.metadata.donorPhone || null,
-      donorMessage: paymentIntent.metadata.donorMessage || null,
-      isAnonymous: paymentIntent.metadata.isAnonymous === "true",
-      isGiftAid: paymentIntent.metadata.isGiftAid === "true",
-      isRecurring: paymentIntent.metadata.isRecurring === "true",
-      recurringInterval: paymentIntent.metadata.recurringInterval || null,
-      kioskId: paymentIntent.metadata.kioskId || null,
-      platform: paymentIntent.metadata.platform || "unknown",
+      donorName: toStringOrNull(metadata.donorName) || "Anonymous",
+      donorEmail: toStringOrNull(metadata.donorEmail),
+      donorPhone: toStringOrNull(metadata.donorPhone),
+      donorMessage: toStringOrNull(metadata.donorMessage),
+      isAnonymous: toBoolean(metadata.isAnonymous),
+      isGiftAid: toBoolean(metadata.isGiftAid),
+      isRecurring: toBoolean(metadata.isRecurring),
+      recurringInterval: toStringOrNull(metadata.recurringInterval),
+      kioskId: toStringOrNull(metadata.kioskId),
+      platform: toStringOrNull(metadata.platform) || "unknown",
+      metadata: {
+        campaignTitleSnapshot,
+        source: "stripe_webhook",
+      },
+    });
+
+    // Create Gift Aid declaration if needed
+    await createGiftAidDeclarationIfNeeded({
+      paymentIntent,
+      metadata,
+      campaignId,
+      campaignTitleSnapshot,
+      organizationId,
     });
 
     // Mark event as processed

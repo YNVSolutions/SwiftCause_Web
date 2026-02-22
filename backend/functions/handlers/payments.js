@@ -100,8 +100,17 @@ const createKioskPaymentIntent = (req, res) => {
           .collection("campaigns")
           .doc(campaignId)
           .get();
+      if (!campaignSnap.exists) {
+        return res.status(404).send({error: "Campaign not found"});
+      }
       const campaignData = campaignSnap.data();
       const orgId = campaignData.organizationId;
+      const canonicalMetadata = {
+        ...metadata,
+        campaignId,
+        campaignTitle: campaignData.title || metadata.campaignTitle || null,
+        organizationId: orgId || metadata.organizationId || null,
+      };
 
       const orgSnap = await admin
           .firestore()
@@ -121,7 +130,7 @@ const createKioskPaymentIntent = (req, res) => {
       const customer = await stripeClient.customers.create({
         email: donor?.email || undefined,
         name: donor?.name || undefined,
-        metadata: {...metadata, campaignId},
+        metadata: canonicalMetadata,
       });
 
       let clientSecret;
@@ -134,7 +143,7 @@ const createKioskPaymentIntent = (req, res) => {
           customer: customer.id,
           payment_method_types: ["card"],
           transfer_data: {destination: stripeAccountId},
-          metadata: {...metadata, platform: "kiosk", frequency: "once"},
+          metadata: {...canonicalMetadata, platform: "kiosk", frequency: "once"},
         });
         clientSecret = paymentIntent.client_secret;
       } else {
@@ -172,7 +181,7 @@ const createKioskPaymentIntent = (req, res) => {
           expand: ["latest_invoice.payment_intent"],
           trial_period_days: 0,
           transfer_data: {destination: stripeAccountId},
-          metadata: {...metadata, platform: "kiosk", frequency},
+          metadata: {...canonicalMetadata, platform: "kiosk", frequency},
         });
 
         console.log("Subscription created:", {
