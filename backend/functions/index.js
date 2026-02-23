@@ -8,6 +8,9 @@ admin.initializeApp();
 
 // Define secrets for v2 functions
 const recaptchaSecretKey = defineSecret("RECAPTCHA_SECRET_KEY");
+const sendgridApiKey = defineSecret("SENDGRID_API_KEY");
+const sendgridFromEmail = defineSecret("SENDGRID_FROM_EMAIL");
+const sendgridFromName = defineSecret("SENDGRID_FROM_NAME");
 
 // Import handlers
 const {createUser, updateUser, deleteUser} = require("./handlers/users");
@@ -33,7 +36,10 @@ const {kioskLogin} = require("./handlers/kiosk");
 exports.createUser = functions.https.onRequest(createUser);
 exports.updateUser = functions.https.onRequest(updateUser);
 exports.deleteUser = functions.https.onRequest(deleteUser);
-exports.sendDonationThankYouEmail = functions.https.onRequest(sendDonationThankYouEmail);
+exports.sendDonationThankYouEmail = onRequest(
+    {secrets: [sendgridApiKey, sendgridFromEmail, sendgridFromName]},
+    sendDonationThankYouEmail,
+);
 exports.handleAccountUpdatedStripeWebhook = functions.https.onRequest(
     handleAccountUpdatedStripeWebhook,
 );

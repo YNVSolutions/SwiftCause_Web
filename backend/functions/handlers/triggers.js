@@ -1,7 +1,12 @@
 const admin = require("firebase-admin");
 const {stripe, ensureStripeInitialized} = require("../services/stripe");
 const {onDocumentCreated} = require("firebase-functions/v2/firestore");
+const {defineSecret} = require("firebase-functions/params");
 const {sendOrganizationWelcomeEmail} = require("../services/email");
+
+const sendgridApiKey = defineSecret("SENDGRID_API_KEY");
+const sendgridFromEmail = defineSecret("SENDGRID_FROM_EMAIL");
+const sendgridFromName = defineSecret("SENDGRID_FROM_NAME");
 
 /**
  * Firestore trigger: Create Stripe account when new organization is created
@@ -59,7 +64,10 @@ const createStripeAccountForNewOrg = onDocumentCreated(
  * currently store a contact email.
  */
 const sendWelcomeEmailForNewOrg = onDocumentCreated(
-    "organizations/{orgId}",
+    {
+      document: "organizations/{orgId}",
+      secrets: [sendgridApiKey, sendgridFromEmail, sendgridFromName],
+    },
     async (event) => {
       const orgId = event.params.orgId;
       const orgData = event.data?.data() || {};
