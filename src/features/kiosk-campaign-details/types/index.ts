@@ -16,6 +16,8 @@ export interface CampaignDetailsState {
 export interface CampaignDetailsPageProps {
   state: CampaignDetailsState;
   currency: string;
+  donorEmail?: string;
+  donorName?: string;
   onBack: () => void;
   onSelectAmount: (amount: number) => void;
   onCustomAmountChange: (value: string) => void;
@@ -23,6 +25,8 @@ export interface CampaignDetailsPageProps {
   onRecurringIntervalChange: (value: 'monthly' | 'quarterly' | 'yearly') => void;
   onDonate: () => void;
   onImageChange: (index: number) => void;
+  onDonorEmailChange?: (email: string) => void;
+  onDonorNameChange?: (name: string) => void;
 }
 
 // Props for header
@@ -48,10 +52,14 @@ export interface AmountSelectorProps {
   recurringIntervals?: ('monthly' | 'quarterly' | 'yearly')[];
   recurringInterval: 'monthly' | 'quarterly' | 'yearly';
   isRecurring: boolean;
+  donorEmail?: string;
+  donorName?: string;
   onSelectAmount: (amount: number) => void;
   onCustomAmountChange: (value: string) => void;
   onRecurringToggle: (value: boolean) => void;
   onRecurringIntervalChange: (value: 'monthly' | 'quarterly' | 'yearly') => void;
+  onDonorEmailChange?: (email: string) => void;
+  onDonorNameChange?: (name: string) => void;
 }
 
 // Props for donate button

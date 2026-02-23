@@ -1,15 +1,35 @@
 import React from 'react';
 import { formatCurrencyFromMajor } from '@/shared/lib/currencyFormatter';
 import { AmountSelectorProps } from '../types';
+import { Calendar, Repeat } from 'lucide-react';
+import { RecurringDonorInfo } from './RecurringDonorInfo';
 
 export const AmountSelector: React.FC<AmountSelectorProps> = ({
   amounts,
   selectedAmount,
   customAmount,
   currency,
+  enableRecurring = false,
+  recurringIntervals = [],
+  isRecurring = false,
+  recurringInterval = 'monthly',
+  donorEmail = '',
+  donorName = '',
   onSelectAmount,
   onCustomAmountChange,
+  onRecurringToggle,
+  onRecurringIntervalChange,
+  onDonorEmailChange,
+  onDonorNameChange,
 }) => {
+  // Debug logging
+  console.log('AmountSelector props:', {
+    enableRecurring,
+    recurringIntervals,
+    isRecurring,
+    recurringInterval
+  });
+
   // Format amount without decimals
   const formatAmount = (amount: number) => formatCurrencyFromMajor(amount, currency);
 
@@ -28,40 +48,89 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
 
   const getCurrencySymbol = () => '£';
 
+  // Get effective amount for display
+  const effectiveAmount = customAmount ? parseFloat(customAmount) : selectedAmount || 0;
+
+  // Get recurring label
+  const getRecurringLabel = () => {
+    switch (recurringInterval) {
+      case 'monthly':
+        return 'Monthly';
+      case 'quarterly':
+        return 'Quarterly';
+      case 'yearly':
+        return 'Yearly';
+      default:
+        return 'Monthly';
+    }
+  };
+
   return (
     <div className="space-y-4 font-lexend">
-      {/*
-      {enableRecurring && (
-        <div
-          className="grid grid-cols-2 sm:grid-cols-4 gap-2"
-          role="radiogroup"
-          aria-label="Donation frequency"
-        >
-          {frequencyOptions.map((option) => {
-            const Icon = option.icon;
-            return (
-              <button
-                key={option.key}
-                type="button"
-                role="radio"
-                aria-checked={option.active}
-                onClick={option.onSelect}
-                className={`h-full rounded-lg border text-left transition-all p-3 flex flex-col gap-1 hover:shadow-md hover:-translate-y-0.5 ${
-                  option.active
-                    ? 'border-[rgba(15,23,42,0.08)] bg-gray-100/50 text-[#0A0A0A]'
-                    : 'border-[rgba(15,23,42,0.08)] bg-white hover:border-[rgba(15,23,42,0.12)]'
-                }`}
-              >
-                <span className="inline-flex items-center gap-2 font-semibold text-sm">
-                  <Icon className="w-4 h-4" aria-hidden="true" />
-                  {option.label}
-                </span>
-              </button>
-            );
-          })}
+      {/* Recurring Toggle - Always show for testing */}
+      {(enableRecurring || true) && (
+        <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-200">
+          <div className="flex items-center gap-2">
+            <Repeat className="w-4 h-4 text-[#0E8F5A]" />
+            <span className="text-sm font-medium text-slate-700">Make this recurring</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => onRecurringToggle?.(!isRecurring)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              isRecurring ? 'bg-[#0E8F5A]' : 'bg-gray-300'
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                isRecurring ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
         </div>
       )}
-      */}
+
+      {/* Recurring Interval Selector */}
+      {(enableRecurring || true) && isRecurring && (recurringIntervals.length > 0 || true) && (
+        <div className="grid grid-cols-3 gap-2">
+          {(recurringIntervals.length > 0 ? recurringIntervals : ['monthly', 'quarterly', 'yearly']).map((interval) => (
+            <button
+              key={interval}
+              type="button"
+              onClick={() => onRecurringIntervalChange?.(interval as 'monthly' | 'quarterly' | 'yearly')}
+              className={`h-10 rounded-lg border text-sm font-medium transition-all ${
+                recurringInterval === interval
+                  ? 'bg-[#0E8F5A] text-white border-transparent'
+                  : 'bg-white text-slate-700 border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              <span className="flex items-center justify-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5" />
+                {interval.charAt(0).toUpperCase() + interval.slice(1)}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Recurring Donor Info */}
+      {(enableRecurring || true) && isRecurring && onDonorEmailChange && onDonorNameChange && (
+        <RecurringDonorInfo
+          email={donorEmail}
+          name={donorName}
+          onEmailChange={onDonorEmailChange}
+          onNameChange={onDonorNameChange}
+        />
+      )}
+
+      {/* Recurring Preview */}
+      {(enableRecurring || true) && isRecurring && effectiveAmount > 0 && (
+        <div className="rounded-lg bg-blue-50 border border-blue-200 px-3 py-2">
+          <p className="text-sm text-blue-900">
+            <span className="font-semibold">{formatAmount(effectiveAmount)}</span> will be charged {getRecurringLabel().toLowerCase()}
+          </p>
+        </div>
+      )}
 
       {/* Preset Amounts */}
       <div className="grid grid-cols-3 gap-3">
@@ -98,46 +167,6 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
           className="w-full h-12 pl-10 pr-4 rounded-lg border border-gray-200 text-[17px] font-normal focus:outline-none focus:border-[#0E8F5A] focus:ring-1 focus:ring-[#0E8F5A]/20 transition-all duration-150 ease-out bg-[#FFFBF7]"
         />
       </div>
-
-      {/*
-      {enableRecurring && isRecurring && (
-        <div className="rounded-lg bg-gray-100/50 px-3 py-2 flex items-center justify-center gap-2 text-[15px] border border-[rgba(15,23,42,0.08)] shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
-          <span className="relative flex items-center justify-center w-8 h-8 shrink-0" aria-hidden="true">
-            <span className="absolute inset-0 rounded-full bg-gray-100/50" />
-            <span className="absolute -inset-1 rounded-full border border-[rgba(15,23,42,0.08)]" />
-            <Heart className="w-4 h-4 text-[#0E8F5A] relative" />
-          </span>
-          <span className="text-[#0E8F5A] font-medium">
-            Your next {recurringLabel.toLowerCase()} donation is on {getNextBillingDate()}
-          </span>
-        </div>
-      )}
-      */}
-
-      {/*
-      {isRecurring && effectiveAmount > 0 && (
-        <div className="rounded-xl bg-gray-100/50 border border-[rgba(15,23,42,0.08)] px-4 py-3 shadow-sm">
-          <div className="flex justify-between items-center">
-            <span className="text-sm font-semibold text-[#0E8F5A]">Cost preview</span>
-            <span className="text-sm text-[#0E8F5A]">Est.</span>
-          </div>
-          <p className="text-lg font-bold text-[#0A0A0A] mt-1">
-            {formatAmount(effectiveAmount)}/{recurringUnitLabel}
-          </p>
-          <p className="text-sm text-gray-600">
-            Equals {formatAmount(annualAmount)} per year
-          </p>
-        </div>
-      )}
-      */}
-
-      {/*
-      {enableRecurring && isRecurring && (
-        <p className="text-xs text-gray-600 text-center px-4">
-          By enabling recurring donations, you agree to our subscription terms and can cancel anytime.
-        </p>
-      )}
-      */}
     </div>
   );
 };

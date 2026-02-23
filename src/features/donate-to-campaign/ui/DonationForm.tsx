@@ -5,6 +5,8 @@ import { Label } from '../../../shared/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../shared/ui/card';
 import { Checkbox } from '../../../shared/ui/checkbox';
 import { Textarea } from '../../../shared/ui/textarea';
+import { Switch } from '../../../shared/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../shared/ui/select';
 import { Campaign } from '../../../entities/campaign';
 import { DonationFormData } from '../model';
 import { formatCurrencyFromMajor } from '../../../shared/lib/currencyFormatter';
@@ -35,6 +37,8 @@ export function DonationForm({
   allowCustomAmount = true,
   minCustomAmount = 1,
   maxCustomAmount = 10000,
+  enableRecurring = false,
+  recurringIntervals = ["monthly", "yearly"],
   defaultRecurringInterval = "monthly",
   requiredFields = ["email"],
   optionalFields = ["name", "message"],
@@ -121,7 +125,6 @@ export function DonationForm({
           </div>
 
           {/* Recurring Donation */}
-          {/*
           {enableRecurring && (
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
@@ -130,31 +133,42 @@ export function DonationForm({
                   checked={formData.isRecurring}
                   onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isRecurring: checked }))}
                 />
-                <Label htmlFor="recurring">Make this a recurring donation</Label>
+                <Label htmlFor="recurring" className="cursor-pointer">
+                  Make this a recurring donation
+                </Label>
               </div>
               
               {formData.isRecurring && (
-                <Select
-                  value={formData.recurringInterval}
-                  onValueChange={(value: "monthly" | "quarterly" | "yearly") => 
-                    setFormData(prev => ({ ...prev, recurringInterval: value }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select frequency" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {recurringIntervals.map((interval) => (
-                      <SelectItem key={interval} value={interval}>
-                        {interval.charAt(0).toUpperCase() + interval.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="space-y-2">
+                  <Label htmlFor="interval">Frequency</Label>
+                  <Select
+                    value={formData.recurringInterval}
+                    onValueChange={(value: "monthly" | "quarterly" | "yearly") => 
+                      setFormData(prev => ({ ...prev, recurringInterval: value }))
+                    }
+                  >
+                    <SelectTrigger id="interval">
+                      <SelectValue placeholder="Select frequency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {recurringIntervals.map((interval) => (
+                        <SelectItem key={interval} value={interval}>
+                          {interval.charAt(0).toUpperCase() + interval.slice(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground">
+                    You will be charged {formatCurrencyFromMajor(formData.amount)} {
+                      formData.recurringInterval === "monthly" ? "every month" : 
+                      formData.recurringInterval === "yearly" ? "every year" : 
+                      "every quarter"
+                    }
+                  </p>
+                </div>
               )}
             </div>
           )}
-          */}
 
           {/* Donor Information */}
           {!formData.isAnonymous && (
