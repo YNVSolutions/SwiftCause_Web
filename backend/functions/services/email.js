@@ -1,25 +1,14 @@
 const dotenv = require("dotenv");
 const sgMail = require("@sendgrid/mail");
-const functions = require("firebase-functions");
 
 dotenv.config();
 
 let isInitialized = false;
 
 const getEmailConfig = () => {
-  let runtimeSendGridConfig = {};
-  try {
-    runtimeSendGridConfig = functions.config()?.sendgrid || {};
-  } catch (error) {
-    runtimeSendGridConfig = {};
-  }
-
-  const apiKey = process.env.SENDGRID_API_KEY || runtimeSendGridConfig.api_key;
-  const fromEmail = process.env.SENDGRID_FROM_EMAIL || runtimeSendGridConfig.from_email;
-  const fromName =
-    process.env.SENDGRID_FROM_NAME ||
-    runtimeSendGridConfig.from_name ||
-    "SwiftCause";
+  const apiKey = process.env.SENDGRID_API_KEY;
+  const fromEmail = process.env.SENDGRID_FROM_EMAIL;
+  const fromName = process.env.SENDGRID_FROM_NAME || "SwiftCause";
 
   if (!apiKey) {
     throw new Error("SENDGRID_API_KEY is not configured.");
@@ -189,9 +178,52 @@ const sendOrganizationWelcomeEmail = async ({
   });
 };
 
+const sendContactConfirmationEmail = async ({
+  to,
+  firstName,
+  message,
+}) => {
+  const safeFirstName = (typeof firstName === "string" && firstName.trim()) ?
+    firstName.trim() :
+    "there";
+  const safeMessage = typeof message === "string" ? message.trim() : "";
+  const messageHtml = escapeHtml(safeMessage).replace(/\r?\n/g, "<br/>");
+
+  const subject = "We received your message";
+  const text = [
+    `Hi ${safeFirstName},`,
+    "",
+    "Thanks for contacting SwiftCause. We received your message and will get back to you shortly.",
+    "",
+    "Message:",
+    safeMessage || "(No message provided)",
+    "",
+    "SwiftCause Team",
+  ].join("\n");
+
+  const html = `<!DOCTYPE html>
+<html>
+  <body style="font-family: Arial, sans-serif; color: #333;">
+    <p>Hi ${escapeHtml(safeFirstName)},</p>
+    <p>Thanks for contacting SwiftCause. We received your message and will get back to you shortly.</p>
+    <p><strong>Message:</strong><br/>${messageHtml || "(No message provided)"}</p>
+    <p><strong>SwiftCause Team</strong></p>
+  </body>
+</html>`;
+
+  return sendEmail({
+    to,
+    subject,
+    text,
+    html,
+    categories: ["contact-confirmation"],
+  });
+};
+
 module.exports = {
   ensureEmailInitialized,
   sendEmail,
   sendDonationThankYouEmail,
   sendOrganizationWelcomeEmail,
+  sendContactConfirmationEmail,
 };

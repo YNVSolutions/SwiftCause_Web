@@ -204,19 +204,25 @@ export async function submitFeedback(feedback: FeedbackData) {
 }
 
 export async function queueContactConfirmationEmail(feedback: FeedbackData) {
-  const mailRef = collection(db, 'mail');
-  const mailData = {
-    to: feedback.email,
-    message: {
-      subject: 'We received your message',
-      text: `Hi ${feedback.firstName || 'there'},\n\nThanks for contacting SwiftCause. We received your message and will get back to you shortly.\n\nMessage:\n${feedback.message}\n\n— SwiftCause Team`,
-      html: `<p>Hi ${feedback.firstName || 'there'},</p><p>Thanks for contacting SwiftCause. We received your message and will get back to you shortly.</p><p><strong>Message:</strong><br/>${String(feedback.message).replace(/\n/g, '<br/>')}</p><p>— SwiftCause Team</p>`
+  const url = `https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/sendContactConfirmationEmail`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
     },
-    createdAt: Timestamp.now()
-  };
+    body: JSON.stringify({
+      email: feedback.email,
+      firstName: feedback.firstName,
+      message: feedback.message,
+    }),
+  });
 
-  const docRef = await addDoc(mailRef, mailData);
-  return { id: docRef.id, ...mailData };
+  const responseData = await response.json();
+  if (!response.ok) {
+    throw new Error(responseData.error || 'Failed to send contact confirmation email.');
+  }
+
+  return responseData;
 }
 
 export async function storeGiftAidDeclaration(giftAidData: GiftAidDetails, transactionId: string) {
@@ -309,3 +315,4 @@ export async function checkOrganizationIdExists(organizationId: string): Promise
     throw error;
   }
 }
+

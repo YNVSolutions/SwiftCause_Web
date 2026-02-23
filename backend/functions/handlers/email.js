@@ -1,7 +1,9 @@
 const admin = require("firebase-admin");
 const cors = require("../middleware/cors");
-const {sendDonationThankYouEmail: sendDonationThankYouEmailViaSendGrid} =
-  require("../services/email");
+const {
+  sendDonationThankYouEmail: sendDonationThankYouEmailViaSendGrid,
+  sendContactConfirmationEmail: sendContactConfirmationEmailViaSendGrid,
+} = require("../services/email");
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -76,6 +78,52 @@ const sendDonationThankYouEmail = (req, res) => {
   });
 };
 
+/**
+ * Send contact form confirmation email via SendGrid.
+ * @param {object} req - Express request object
+ * @param {object} res - Express response object
+ */
+const sendContactConfirmationEmail = (req, res) => {
+  cors(req, res, async () => {
+    try {
+      if (req.method !== "POST") {
+        return res.status(405).send({error: "Method not allowed"});
+      }
+
+      const email = normalizeString(req.body?.email);
+      const firstName = normalizeString(req.body?.firstName);
+      const message = normalizeString(req.body?.message);
+
+      if (!email || !EMAIL_REGEX.test(email)) {
+        return res.status(400).send({error: "A valid email is required."});
+      }
+
+      if (!message) {
+        return res.status(400).send({error: "message is required."});
+      }
+
+      const emailResult = await sendContactConfirmationEmailViaSendGrid({
+        to: email,
+        firstName,
+        message,
+      });
+
+      console.log("Contact confirmation email sent", {
+        email,
+        statusCode: emailResult?.statusCode || null,
+      });
+
+      return res.status(200).send({success: true});
+    } catch (error) {
+      console.error("Error sending contact confirmation email:", error);
+      return res.status(500).send({
+        error: error.message || "Failed to send contact confirmation email.",
+      });
+    }
+  });
+};
+
 module.exports = {
   sendDonationThankYouEmail,
+  sendContactConfirmationEmail,
 };

@@ -14,7 +14,10 @@ const sendgridFromName = defineSecret("SENDGRID_FROM_NAME");
 
 // Import handlers
 const {createUser, updateUser, deleteUser} = require("./handlers/users");
-const {sendDonationThankYouEmail} = require("./handlers/email");
+const {
+  sendDonationThankYouEmail,
+  sendContactConfirmationEmail,
+} = require("./handlers/email");
 const {
   handleAccountUpdatedStripeWebhook,
   handlePaymentCompletedStripeWebhook,
@@ -38,6 +41,10 @@ exports.createUser = functions.https.onRequest(createUser);
 exports.updateUser = functions.https.onRequest(updateUser);
 exports.deleteUser = functions.https.onRequest(deleteUser);
 exports.completeEmailVerification = functions.https.onRequest(completeEmailVerification);
+exports.sendContactConfirmationEmail = onRequest(
+    {secrets: [sendgridApiKey, sendgridFromEmail, sendgridFromName]},
+    sendContactConfirmationEmail,
+);
 exports.sendDonationThankYouEmail = onRequest(
     {secrets: [sendgridApiKey, sendgridFromEmail, sendgridFromName]},
     sendDonationThankYouEmail,
