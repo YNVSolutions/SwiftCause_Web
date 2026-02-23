@@ -14,6 +14,21 @@ function EmailActionContent() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'invalid'>('loading')
   const [errorMessage, setErrorMessage] = useState<string>('')
 
+  const getVerificationTokenData = () => {
+    const continueUrlRaw = searchParams?.get('continueUrl')
+    if (!continueUrlRaw) return null
+
+    try {
+      const continueUrl = new URL(continueUrlRaw)
+      const uid = continueUrl.searchParams.get('verify_uid')
+      const token = continueUrl.searchParams.get('verify_token')
+      if (!uid || !token) return null
+      return { uid, token }
+    } catch {
+      return null
+    }
+  }
+
   useEffect(() => {
     const verifyEmail = async () => {
       const mode = searchParams?.get('mode')
@@ -34,6 +49,13 @@ function EmailActionContent() {
 
       try {
         await authApi.verifyEmailCode(oobCode)
+        const verificationTokenData = getVerificationTokenData()
+        if (verificationTokenData) {
+          await authApi.completeEmailVerification(
+            verificationTokenData.uid,
+            verificationTokenData.token,
+          )
+        }
         setStatus('success')
       } catch (error) {
         console.error('Email verification error:', error)

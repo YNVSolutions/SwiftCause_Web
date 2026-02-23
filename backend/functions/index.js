@@ -31,11 +31,13 @@ const {
 } = require("./handlers/triggers");
 const {verifySignupRecaptcha} = require("./handlers/signup");
 const {kioskLogin} = require("./handlers/kiosk");
+const {completeEmailVerification} = require("./handlers/verification");
 
 // Export all functions (backwards compatible)
 exports.createUser = functions.https.onRequest(createUser);
 exports.updateUser = functions.https.onRequest(updateUser);
 exports.deleteUser = functions.https.onRequest(deleteUser);
+exports.completeEmailVerification = functions.https.onRequest(completeEmailVerification);
 exports.sendDonationThankYouEmail = onRequest(
     {secrets: [sendgridApiKey, sendgridFromEmail, sendgridFromName]},
     sendDonationThankYouEmail,
