@@ -20,7 +20,7 @@ export function EmailConfirmationScreen({ transactionId, campaignName, onComplet
     setError(null);
 
     try {
-      await createThankYouMail(email, campaignName);
+      await createThankYouMail(email, campaignName, transactionId);
       setEmailSent(true);
     } catch (err) {
       console.error('Error sending receipt email:', err);
