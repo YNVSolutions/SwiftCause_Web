@@ -48,6 +48,18 @@ export const CampaignDetailsContainer: React.FC<CampaignDetailsContainerProps> =
   const handleDonate = useCallback(() => {
     const amount = actions.getEffectiveAmount();
     if (campaign && amount > 0) {
+      // For recurring donations, validate email
+      if (state.isRecurring) {
+        const email = actions.getDonorEmail();
+        if (!email || !email.includes('@')) {
+          alert('Please enter a valid email address for recurring donations');
+          return;
+        }
+        // Store donor info in sessionStorage
+        sessionStorage.setItem('donorEmail', email);
+        sessionStorage.setItem('donorName', actions.getDonorName());
+      }
+      
       onDonate(campaign, amount, {
         isRecurring: state.isRecurring,
         recurringInterval: state.recurringInterval,
@@ -66,6 +78,10 @@ export const CampaignDetailsContainer: React.FC<CampaignDetailsContainerProps> =
       onRecurringIntervalChange={actions.setRecurringInterval}
       onDonate={handleDonate}
       onImageChange={actions.setCurrentImageIndex}
+      onDonorEmailChange={actions.setDonorEmail}
+      onDonorNameChange={actions.setDonorName}
+      donorEmail={actions.getDonorEmail()}
+      donorName={actions.getDonorName()}
     />
   );
 };
