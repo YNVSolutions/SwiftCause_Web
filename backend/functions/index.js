@@ -11,6 +11,7 @@ const recaptchaSecretKey = defineSecret("RECAPTCHA_SECRET_KEY");
 
 // Import handlers
 const {createUser, updateUser, deleteUser} = require("./handlers/users");
+const {sendDonationThankYouEmail} = require("./handlers/email");
 const {
   handleAccountUpdatedStripeWebhook,
   handlePaymentCompletedStripeWebhook,
@@ -21,7 +22,10 @@ const {
   createPaymentIntent,
   createExpressDashboardLink,
 } = require("./handlers/payments");
-const {createStripeAccountForNewOrg} = require("./handlers/triggers");
+const {
+  createStripeAccountForNewOrg,
+  sendWelcomeEmailForNewOrg,
+} = require("./handlers/triggers");
 const {verifySignupRecaptcha} = require("./handlers/signup");
 const {kioskLogin} = require("./handlers/kiosk");
 
@@ -29,6 +33,7 @@ const {kioskLogin} = require("./handlers/kiosk");
 exports.createUser = functions.https.onRequest(createUser);
 exports.updateUser = functions.https.onRequest(updateUser);
 exports.deleteUser = functions.https.onRequest(deleteUser);
+exports.sendDonationThankYouEmail = functions.https.onRequest(sendDonationThankYouEmail);
 exports.handleAccountUpdatedStripeWebhook = functions.https.onRequest(
     handleAccountUpdatedStripeWebhook,
 );
@@ -44,6 +49,7 @@ exports.createExpressDashboardLink = functions.https.onRequest(
     createExpressDashboardLink,
 );
 exports.createStripeAccountForNewOrg = createStripeAccountForNewOrg;
+exports.sendWelcomeEmailForNewOrg = sendWelcomeEmailForNewOrg;
 exports.kioskLogin = functions.https.onRequest(kioskLogin);
 
 // Export v2 function with secret
