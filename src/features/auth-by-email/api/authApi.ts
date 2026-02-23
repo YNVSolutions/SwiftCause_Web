@@ -61,7 +61,11 @@ export const authApi = {
       
       // Update lastLogin timestamp
       await updateDoc(userDocRef, {
-        lastLogin: new Date().toISOString()
+        lastLogin: new Date().toISOString(),
+        emailVerified: userCredential.user.emailVerified,
+        ...(userCredential.user.emailVerified ?
+          {emailVerifiedAt: new Date().toISOString()} :
+          {}),
       });
       
       const userDocSnap = await getDoc(userDocRef);
@@ -150,6 +154,7 @@ export const authApi = {
         isActive: true,
         createdAt: new Date().toISOString(),
         organizationId: credentials.organizationId,
+        emailVerified: false,
       };
 
       await setDoc(doc(db, 'users', userId), userData);
@@ -283,6 +288,17 @@ export const authApi = {
       const user = auth.currentUser;
       if (user) {
         await user.reload();
+        if (user.emailVerified) {
+          try {
+            const userDocRef = doc(db, 'users', user.uid);
+            await updateDoc(userDocRef, {
+              emailVerified: true,
+              emailVerifiedAt: new Date().toISOString(),
+            });
+          } catch (syncError) {
+            console.error('Error syncing verified email to Firestore after verification:', syncError);
+          }
+        }
       }
     } catch (error: unknown) {
       console.error('Error verifying email code:', error);

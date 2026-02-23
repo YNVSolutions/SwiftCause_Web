@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { getAuth, onAuthStateChanged, sendEmailVerification, signOut } from 'firebase/auth'
-import { doc, getDoc, db } from './firebase'
+import { doc, getDoc, updateDoc, db } from './firebase'
 import {
   UserRole,
   User,
@@ -131,7 +131,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const userDocSnap = await getDoc(userDocRef)
 
         if (userDocSnap.exists()) {
-          const userData = userDocSnap.data() as User
+          const rawUserData = userDocSnap.data() as User & {
+            emailVerified?: boolean
+            emailVerifiedAt?: string
+          }
+
+          if (firebaseUser.emailVerified && rawUserData.emailVerified !== true) {
+            try {
+              await updateDoc(userDocRef, {
+                emailVerified: true,
+                emailVerifiedAt: new Date().toISOString(),
+              })
+              rawUserData.emailVerified = true
+            } catch (error) {
+              console.error('Error syncing emailVerified to Firestore:', error)
+            }
+          }
+
+          const userData = rawUserData as User
           
           // Fetch organization name if organizationId exists
           let organizationName: string | undefined = undefined
@@ -260,6 +277,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         isActive: true,
         createdAt: new Date().toISOString(),
         organizationId: signupData.organizationId,
+        emailVerified: false,
       }
 
       await setDoc(doc(firestore, 'users', userId), userData)
