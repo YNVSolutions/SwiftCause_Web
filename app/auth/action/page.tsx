@@ -14,25 +14,24 @@ function EmailActionContent() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'invalid'>('loading')
   const [errorMessage, setErrorMessage] = useState<string>('')
 
-  const getVerificationTokenData = () => {
-    const continueUrlRaw = searchParams?.get('continueUrl')
-    if (!continueUrlRaw) return null
-
-    try {
-      const continueUrl = new URL(continueUrlRaw)
-      const uid = continueUrl.searchParams.get('verify_uid')
-      const token = continueUrl.searchParams.get('verify_token')
-      if (!uid || !token) return null
-      return { uid, token }
-    } catch {
-      return null
-    }
-  }
-
   useEffect(() => {
     const verifyEmail = async () => {
       const mode = searchParams?.get('mode')
       const oobCode = searchParams?.get('oobCode')
+      const getVerificationTokenData = () => {
+        const continueUrlRaw = searchParams?.get('continueUrl')
+        if (!continueUrlRaw) return null
+
+        try {
+          const continueUrl = new URL(continueUrlRaw)
+          const uid = continueUrl.searchParams.get('verify_uid')
+          const token = continueUrl.searchParams.get('verify_token')
+          if (!uid || !token) return null
+          return { uid, token }
+        } catch {
+          return null
+        }
+      }
 
       // Only handle email verification
       if (mode !== 'verifyEmail') {
