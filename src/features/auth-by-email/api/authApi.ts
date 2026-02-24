@@ -12,6 +12,36 @@ import { auth, db } from '../../../shared/lib/firebase';
 import { User } from '../../../entities/user';
 import { SignupCredentials } from '../model';
 
+const getFunctionUrl = (functionName: string) =>
+  `https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/${functionName}`;
+
+const createVerificationToken = (): string => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID().replace(/-/g, '');
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+};
+
+const buildVerificationActionSettings = async (uid: string) => {
+  const token = createVerificationToken();
+  const expiresAt = new Date(Date.now() + (24 * 60 * 60 * 1000)).toISOString();
+
+  await updateDoc(doc(db, 'users', uid), {
+    emailVerificationToken: token,
+    emailVerificationTokenExpiresAt: expiresAt,
+  });
+
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const continueUrl = new URL('/auth/verify-email', origin || 'http://localhost');
+  continueUrl.searchParams.set('verify_uid', uid);
+  continueUrl.searchParams.set('verify_token', token);
+
+  return {
+    handleCodeInApp: true,
+    url: continueUrl.toString(),
+  };
+};
+
 export const authApi = {
   async signInForVerificationCheck(email: string, password: string) {
     try {
@@ -61,7 +91,11 @@ export const authApi = {
       
       // Update lastLogin timestamp
       await updateDoc(userDocRef, {
-        lastLogin: new Date().toISOString()
+        lastLogin: new Date().toISOString(),
+        emailVerified: userCredential.user.emailVerified,
+        ...(userCredential.user.emailVerified ?
+          {emailVerifiedAt: new Date().toISOString()} :
+          {}),
       });
       
       const userDocSnap = await getDoc(userDocRef);
@@ -150,6 +184,7 @@ export const authApi = {
         isActive: true,
         createdAt: new Date().toISOString(),
         organizationId: credentials.organizationId,
+        emailVerified: false,
       };
 
       await setDoc(doc(db, 'users', userId), userData);
@@ -165,7 +200,8 @@ export const authApi = {
       });
 
       // Send verification email
-      await sendEmailVerification(userCredential.user);
+      const actionCodeSettings = await buildVerificationActionSettings(userId);
+      await sendEmailVerification(userCredential.user, actionCodeSettings);
 
       return {
         id: userId,
@@ -250,7 +286,8 @@ export const authApi = {
   // Send verification email to current user
   async sendVerificationEmail(user: FirebaseAuthUser): Promise<void> {
     try {
-      await sendEmailVerification(user);
+      const actionCodeSettings = await buildVerificationActionSettings(user.uid);
+      await sendEmailVerification(user, actionCodeSettings);
     } catch (error: unknown) {
       console.error('Error sending verification email:', error);
       throw error;
@@ -267,7 +304,8 @@ export const authApi = {
       if (user.email !== email) {
         throw new Error('Email does not match current user');
       }
-      await sendEmailVerification(user);
+      const actionCodeSettings = await buildVerificationActionSettings(user.uid);
+      await sendEmailVerification(user, actionCodeSettings);
     } catch (error: unknown) {
       console.error('Error resending verification email:', error);
       throw error;
@@ -283,10 +321,36 @@ export const authApi = {
       const user = auth.currentUser;
       if (user) {
         await user.reload();
+        if (user.emailVerified) {
+          try {
+            const userDocRef = doc(db, 'users', user.uid);
+            await updateDoc(userDocRef, {
+              emailVerified: true,
+              emailVerifiedAt: new Date().toISOString(),
+            });
+          } catch (syncError) {
+            console.error('Error syncing verified email to Firestore after verification:', syncError);
+          }
+        }
       }
     } catch (error: unknown) {
       console.error('Error verifying email code:', error);
       throw error;
+    }
+  },
+
+  async completeEmailVerification(uid: string, token: string): Promise<void> {
+    const response = await fetch(getFunctionUrl('completeEmailVerification'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ uid, token }),
+    });
+
+    const responseData = await response.json();
+    if (!response.ok) {
+      throw new Error(responseData.error || 'Failed to complete email verification.');
     }
   }
 };
