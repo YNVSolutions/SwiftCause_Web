@@ -45,18 +45,43 @@ const sendDonationThankYouEmail = (req, res) => {
       }
 
       const donationData = donationSnap.data() || {};
+      const organizationId = normalizeString(donationData.organizationId) || "";
       const campaignName =
         normalizeString(req.body?.campaignName) ||
         normalizeString(donationData.campaignTitleSnapshot);
+      let organizationName = null;
+
+      if (organizationId) {
+        try {
+          const orgSnap = await admin
+              .firestore()
+              .collection("organizations")
+              .doc(organizationId)
+              .get();
+          if (orgSnap.exists) {
+            const orgData = orgSnap.data() || {};
+            organizationName =
+              normalizeString(orgData.name) ||
+              normalizeString(orgData.organizationName);
+          }
+        } catch (orgError) {
+          console.warn("Failed to resolve organization name for receipt email:", {
+            transactionId,
+            organizationId,
+            error: orgError.message,
+          });
+        }
+      }
 
       const emailResult = await sendDonationThankYouEmailViaSendGrid({
         to: email,
         donorName: normalizeString(donationData.donorName) || "Donor",
         campaignName,
+        organizationName,
         amount: typeof donationData.amount === "number" ? donationData.amount : null,
         currency: normalizeString(donationData.currency) || "",
         donationId: transactionId,
-        organizationId: normalizeString(donationData.organizationId) || "",
+        organizationId,
       });
 
       console.log("Donation thank-you email sent", {
