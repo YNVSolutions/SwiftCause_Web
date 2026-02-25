@@ -1,9 +1,44 @@
 const dotenv = require("dotenv");
 const sgMail = require("@sendgrid/mail");
+const admin = require("firebase-admin");
 
 dotenv.config();
 
 let isInitialized = false;
+
+const sanitizeErrorMessage = (error) => {
+  const message = error?.message || String(error || "Unknown error");
+  return String(message).slice(0, 500);
+};
+
+const logEmailEvent = async ({
+  eventType,
+  status,
+  recipient,
+  statusCode,
+  providerMessageId,
+  customArgs,
+  errorMessage,
+}) => {
+  try {
+    const db = admin.firestore();
+    await db.collection("emailEvents").add({
+      eventType: eventType || "unknown",
+      provider: "sendgrid",
+      status,
+      recipient,
+      statusCode: statusCode || null,
+      providerMessageId: providerMessageId || null,
+      donationId: customArgs?.donationId || null,
+      organizationId: customArgs?.organizationId || null,
+      uid: customArgs?.uid || null,
+      errorMessage: errorMessage || null,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  } catch (logError) {
+    console.error("Failed to write emailEvents audit log:", sanitizeErrorMessage(logError));
+  }
+};
 
 const getEmailConfig = () => {
   const apiKey = process.env.SENDGRID_API_KEY;
@@ -47,27 +82,51 @@ const sendEmail = async ({
   html,
   categories,
   customArgs,
+  auditEventType,
 }) => {
   ensureEmailInitialized();
   const {fromEmail, fromName} = getEmailConfig();
+  const recipient = Array.isArray(to) ? to.join(",") : String(to || "");
 
-  const [response] = await sgMail.send({
-    to,
-    from: {
-      email: fromEmail,
-      name: fromName,
-    },
-    subject,
-    text,
-    html,
-    categories,
-    customArgs,
-  });
+  try {
+    const [response] = await sgMail.send({
+      to,
+      from: {
+        email: fromEmail,
+        name: fromName,
+      },
+      subject,
+      text,
+      html,
+      categories,
+      customArgs,
+    });
 
-  return {
-    statusCode: response?.statusCode,
-    messageId: response?.headers?.["x-message-id"] || null,
-  };
+    const result = {
+      statusCode: response?.statusCode,
+      messageId: response?.headers?.["x-message-id"] || null,
+    };
+
+    await logEmailEvent({
+      eventType: auditEventType,
+      status: "success",
+      recipient,
+      statusCode: result.statusCode,
+      providerMessageId: result.messageId,
+      customArgs,
+    });
+
+    return result;
+  } catch (error) {
+    await logEmailEvent({
+      eventType: auditEventType,
+      status: "failed",
+      recipient,
+      customArgs,
+      errorMessage: sanitizeErrorMessage(error),
+    });
+    throw error;
+  }
 };
 
 const sendDonationThankYouEmail = async ({
@@ -128,6 +187,7 @@ const sendDonationThankYouEmail = async ({
       donationId: donationId || "",
       organizationId: organizationId || "",
     },
+    auditEventType: "donation_thank_you",
   });
 };
 
@@ -136,6 +196,7 @@ const sendOrganizationWelcomeEmail = async ({
   organizationName,
   recipientName,
   organizationId,
+  uid,
 }) => {
   const safeRecipientName = (typeof recipientName === "string" && recipientName.trim()) ?
     recipientName.trim() :
@@ -174,7 +235,9 @@ const sendOrganizationWelcomeEmail = async ({
     categories: ["organization-welcome"],
     customArgs: {
       organizationId: organizationId || "",
+      uid: uid || "",
     },
+    auditEventType: "org_welcome",
   });
 };
 
@@ -217,6 +280,7 @@ const sendContactConfirmationEmail = async ({
     text,
     html,
     categories: ["contact-confirmation"],
+    auditEventType: "contact_confirmation",
   });
 };
 
