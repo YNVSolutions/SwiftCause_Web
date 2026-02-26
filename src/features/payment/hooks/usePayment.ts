@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
+import type { Stripe, StripeCardElement } from '@stripe/stripe-js';
 import { PaymentResult } from '../../../shared/types';
 
 interface UsePaymentReturn {
@@ -65,8 +66,8 @@ export function usePayment(onPaymentComplete: (result: PaymentResult) => void): 
  * Handle one-time payment
  */
 async function handleOneTimePayment(
-  stripe: unknown,
-  cardElement: unknown,
+  stripe: Stripe,
+  cardElement: StripeCardElement,
   amount: number,
   metadata: Record<string, unknown>,
   currency: string,
@@ -126,8 +127,8 @@ async function handleOneTimePayment(
  * Handle recurring subscription payment
  */
 async function handleRecurringPayment(
-  stripe: unknown,
-  cardElement: unknown,
+  stripe: Stripe,
+  cardElement: StripeCardElement,
   amount: number,
   metadata: Record<string, unknown>,
   currency: string,
@@ -136,8 +137,7 @@ async function handleRecurringPayment(
 ) {
 
   // First, create a payment method
-  const stripeInstance = stripe as { createPaymentMethod: (options: { type: string; card: unknown }) => Promise<{ paymentMethod?: { id: string }; error?: { message?: string } }> };
-  const { paymentMethod, error: pmError } = await stripeInstance.createPaymentMethod({
+  const { paymentMethod, error: pmError } = await stripe.createPaymentMethod({
     type: 'card',
     card: cardElement,
   });
