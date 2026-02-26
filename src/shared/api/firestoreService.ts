@@ -152,33 +152,33 @@ export async function getRecentDonations(limitCount: number, organizationId?: st
   return snapshot.docs.map(d => ({ id: d.id, ...d.data() as object}));
 }
 
-export async function createThankYouMail(recipientEmail: string, campaignName?: string) {
-  const mailRef = collection(db, 'mail');
-  const normalizedCampaignName = campaignName?.replace(/[\r\n]+/g, ' ').trim();
-  const escapedCampaignName = normalizedCampaignName
-    ? normalizedCampaignName
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;')
-    : '';
-  const campaignTextLine = normalizedCampaignName ? `Campaign: ${normalizedCampaignName}\n\n` : '';
-  const campaignHtmlLine = normalizedCampaignName
-    ? `<p><strong>Campaign:</strong> ${escapedCampaignName}</p>`
-    : '';
-  const donationThankYouEmail = {
-    to: [recipientEmail],
-    message: {
-      subject: normalizedCampaignName
-        ? `Thank you for supporting ${normalizedCampaignName}!`
-        : "Thank you for your donation!",
-      text: `Dear Donor,\n\nThank you so much for your generous contribution to our campaign. Your support means a lot to us and helps us move closer to our goal.\n\n${campaignTextLine}We truly appreciate your kindness and belief in our mission.\n\nWith gratitude,\nSwift Cause`,
-      html: `<!DOCTYPE html>\n<html>\n  <body style="font-family: Arial, sans-serif; color: #333;">\n    <h2>Thank You for Your Donation!</h2>\n    <p>Dear Donor,</p>\n    <p>Thank you so much for your generous contribution to our campaign. Your support means a lot to us and helps us move closer to our goal.</p>\n    ${campaignHtmlLine}\n    <p>We truly appreciate your kindness and belief in our mission.</p>\n    <p>With gratitude,</p>\n    <p><strong>Swift Cause</strong></p>\n  </body>\n</html>`,
-    },
-  };
+export async function createThankYouMail(recipientEmail: string, campaignName?: string, transactionId?: string) {
+  const normalizedEmail = recipientEmail.trim();
+  if (!normalizedEmail) {
+    throw new Error('Recipient email is required.');
+  }
 
-  await addDoc(mailRef, donationThankYouEmail);
+  if (!transactionId) {
+    throw new Error('Transaction ID is required to send a receipt email.');
+  }
+
+  const url = `https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/sendDonationThankYouEmail`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      email: normalizedEmail,
+      campaignName,
+      transactionId,
+    }),
+  });
+
+  const responseData = await response.json();
+  if (!response.ok) {
+    throw new Error(responseData.error || 'Failed to send thank-you email.');
+  }
 }
 
 export interface FeedbackData {
@@ -204,19 +204,25 @@ export async function submitFeedback(feedback: FeedbackData) {
 }
 
 export async function queueContactConfirmationEmail(feedback: FeedbackData) {
-  const mailRef = collection(db, 'mail');
-  const mailData = {
-    to: feedback.email,
-    message: {
-      subject: 'We received your message',
-      text: `Hi ${feedback.firstName || 'there'},\n\nThanks for contacting SwiftCause. We received your message and will get back to you shortly.\n\nMessage:\n${feedback.message}\n\n— SwiftCause Team`,
-      html: `<p>Hi ${feedback.firstName || 'there'},</p><p>Thanks for contacting SwiftCause. We received your message and will get back to you shortly.</p><p><strong>Message:</strong><br/>${String(feedback.message).replace(/\n/g, '<br/>')}</p><p>— SwiftCause Team</p>`
+  const url = `https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/sendContactConfirmationEmail`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
     },
-    createdAt: Timestamp.now()
-  };
+    body: JSON.stringify({
+      email: feedback.email,
+      firstName: feedback.firstName,
+      message: feedback.message,
+    }),
+  });
 
-  const docRef = await addDoc(mailRef, mailData);
-  return { id: docRef.id, ...mailData };
+  const responseData = await response.json();
+  if (!response.ok) {
+    throw new Error(responseData.error || 'Failed to send contact confirmation email.');
+  }
+
+  return responseData;
 }
 
 export async function storeGiftAidDeclaration(giftAidData: GiftAidDetails, transactionId: string) {
@@ -309,3 +315,4 @@ export async function checkOrganizationIdExists(organizationId: string): Promise
     throw error;
   }
 }
+

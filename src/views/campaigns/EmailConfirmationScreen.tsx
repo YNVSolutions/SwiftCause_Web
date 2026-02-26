@@ -20,7 +20,7 @@ export function EmailConfirmationScreen({ transactionId, campaignName, onComplet
     setError(null);
 
     try {
-      await createThankYouMail(email, campaignName);
+      await createThankYouMail(email, campaignName, transactionId);
       setEmailSent(true);
     } catch (err) {
       console.error('Error sending receipt email:', err);
@@ -36,7 +36,7 @@ export function EmailConfirmationScreen({ transactionId, campaignName, onComplet
 
   if (emailSent) {
     return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-b from-green-50 via-white to-emerald-50/70 relative overflow-hidden">
+      <div className="min-h-screen flex flex-col bg-linear-to-b from-green-50 via-white to-emerald-50/70 relative overflow-hidden">
         <div className="absolute -top-24 right-0 h-80 w-80 rounded-full bg-green-100 blur-3xl opacity-70" />
         <div className="absolute top-1/3 -left-24 h-72 w-72 rounded-full bg-emerald-100 blur-3xl opacity-60" />
         <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full bg-green-50 blur-3xl opacity-90" />
@@ -45,7 +45,7 @@ export function EmailConfirmationScreen({ transactionId, campaignName, onComplet
           <div className="w-full max-w-xl">
             <div className="bg-white/90 rounded-3xl border border-green-100 shadow-xl overflow-hidden">
               {/* Success Header */}
-              <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-5 text-center">
+              <div className="bg-linear-to-r from-green-600 to-emerald-600 text-white px-6 py-5 text-center">
                 <div className="flex justify-center mb-3">
                   <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center shadow-lg">
                     <CheckCircle className="w-10 h-10" />
@@ -66,7 +66,7 @@ export function EmailConfirmationScreen({ transactionId, campaignName, onComplet
                 {/* Action Button */}
                 <button
                   onClick={onComplete}
-                  className="w-full h-14 rounded-xl font-medium text-white flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-200/70"
+                  className="w-full h-14 rounded-xl font-medium text-white flex items-center justify-center gap-2 transition-all bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-200/70"
                 >
                   <Home className="w-5 h-5" />
                   Back to Campaigns
@@ -87,7 +87,7 @@ export function EmailConfirmationScreen({ transactionId, campaignName, onComplet
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-green-50 via-white to-emerald-50/70 relative overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-linear-to-b from-green-50 via-white to-emerald-50/70 relative overflow-hidden">
       <div className="absolute -top-24 right-0 h-80 w-80 rounded-full bg-green-100 blur-3xl opacity-70" />
       <div className="absolute top-1/3 -left-24 h-72 w-72 rounded-full bg-emerald-100 blur-3xl opacity-60" />
       <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full bg-green-50 blur-3xl opacity-90" />
@@ -96,7 +96,7 @@ export function EmailConfirmationScreen({ transactionId, campaignName, onComplet
         <div className="w-full max-w-xl">
           <div className="bg-white/90 rounded-3xl border border-green-100 shadow-xl overflow-hidden">
             {/* Header */}
-            <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-5 text-center">
+            <div className="bg-linear-to-r from-green-600 to-emerald-600 text-white px-6 py-5 text-center">
               <div className="flex justify-center mb-3">
                 <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center shadow-lg">
                   <Mail className="w-9 h-9" />
@@ -118,7 +118,7 @@ export function EmailConfirmationScreen({ transactionId, campaignName, onComplet
                 {campaignName && (
                   <div className="mb-6 p-4 bg-green-50/70 border border-green-100 rounded-2xl text-center">
                     <p className="text-sm text-green-700 mb-1">Campaign</p>
-                    <p className="text-sm text-[#0A0A0A] break-words">{campaignName}</p>
+                    <p className="text-sm text-[#0A0A0A] wrap-break-word">{campaignName}</p>
                   </div>
                 )}
 
@@ -154,7 +154,7 @@ export function EmailConfirmationScreen({ transactionId, campaignName, onComplet
                   <button
                     type="submit"
                     disabled={isSending || !email}
-                    className="w-full h-14 rounded-xl font-medium text-white flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-200/70"
+                    className="w-full h-14 rounded-xl font-medium text-white flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-200/70"
                   >
                     {isSending ? (
                       <>

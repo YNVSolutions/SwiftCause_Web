@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { getAuth, onAuthStateChanged, sendEmailVerification, signOut } from 'firebase/auth'
-import { doc, getDoc, db } from './firebase'
+import { doc, getDoc, updateDoc, db } from './firebase'
 import {
   UserRole,
   User,
@@ -17,6 +17,33 @@ import { getFirestore } from 'firebase/firestore'
 
 const auth = getAuth()
 const firestore = getFirestore()
+
+const createVerificationToken = (): string => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID().replace(/-/g, '')
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`
+}
+
+const buildVerificationActionSettings = async (uid: string) => {
+  const token = createVerificationToken()
+  const expiresAt = new Date(Date.now() + (24 * 60 * 60 * 1000)).toISOString()
+
+  await updateDoc(doc(firestore, 'users', uid), {
+    emailVerificationToken: token,
+    emailVerificationTokenExpiresAt: expiresAt,
+  })
+
+  const origin = typeof window !== 'undefined' ? window.location.origin : ''
+  const continueUrl = new URL('/auth/verify-email', origin || 'http://localhost')
+  continueUrl.searchParams.set('verify_uid', uid)
+  continueUrl.searchParams.set('verify_token', token)
+
+  return {
+    handleCodeInApp: true,
+    url: continueUrl.toString(),
+  }
+}
 
 interface AuthContextType {
   userRole: UserRole | null
@@ -132,7 +159,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const userDocSnap = await getDoc(userDocRef)
 
         if (userDocSnap.exists()) {
-          const userData = userDocSnap.data() as User
+          const rawUserData = userDocSnap.data() as User & {
+            emailVerified?: boolean
+            emailVerifiedAt?: string
+          }
+
+          if (firebaseUser.emailVerified && rawUserData.emailVerified !== true) {
+            try {
+              await updateDoc(userDocRef, {
+                emailVerified: true,
+                emailVerifiedAt: new Date().toISOString(),
+              })
+              rawUserData.emailVerified = true
+            } catch (error) {
+              console.error('Error syncing emailVerified to Firestore:', error)
+            }
+          }
+
+          const userData = rawUserData as User
           
           // Fetch organization name if organizationId exists
           let organizationName: string | undefined = undefined
@@ -269,6 +313,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         isActive: true,
         createdAt: new Date().toISOString(),
         organizationId: signupData.organizationId,
+        emailVerified: false,
       }
 
       await setDoc(doc(firestore, 'users', userId), userData)
@@ -284,7 +329,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       })
 
       // Send verification email
-      await sendEmailVerification(userCredential.user)
+      const actionCodeSettings = await buildVerificationActionSettings(userId)
+      await sendEmailVerification(userCredential.user, actionCodeSettings)
 
       // DON'T sign out - keep user authenticated so they can resend verification
       // But DON'T establish a session in our app (don't call handleLogin)
@@ -318,7 +364,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       
       // Send verification email
-      await sendEmailVerification(user)
+      const actionCodeSettings = await buildVerificationActionSettings(user.uid)
+      await sendEmailVerification(user, actionCodeSettings)
     } catch (error) {
       console.error('Error resending verification email:', error)
       throw error
