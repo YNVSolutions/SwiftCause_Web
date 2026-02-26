@@ -9,7 +9,7 @@ interface PaymentScreenProps {
   donation: Donation;
   isProcessing: boolean;
   error: string | null;
-  handlePaymentSubmit: (amount: number, metadata: any, currency: string) => Promise<void>;
+  handlePaymentSubmit: (amount: number, metadata: Record<string, unknown>, currency: string) => Promise<void>;
   onBack: () => void;
   organizationCurrency?: string;
 }
@@ -104,7 +104,6 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
         giftAidTimestamp: giftAidDetails.timestamp
       } : {})
     };
-    console.log('PaymentScreen - handleSubmit: Final metadata object', metadata);
     await handlePaymentSubmit(donation.amount, metadata, organizationCurrency || 'GBP'); 
   };
 

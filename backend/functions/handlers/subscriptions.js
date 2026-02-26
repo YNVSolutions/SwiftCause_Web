@@ -2,7 +2,6 @@ const admin = require("firebase-admin");
 const {
   ensureStripeInitialized,
 } = require("../services/stripe");
-const {verifyAuth} = require("../middleware/auth");
 const cors = require("../middleware/cors");
 const {createSubscriptionDoc} = require("../entities/subscription");
 

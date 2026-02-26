@@ -65,8 +65,8 @@ export function usePayment(onPaymentComplete: (result: PaymentResult) => void): 
  * Handle one-time payment
  */
 async function handleOneTimePayment(
-  stripe: any,
-  cardElement: any,
+  stripe: unknown,
+  cardElement: unknown,
   amount: number,
   metadata: Record<string, unknown>,
   currency: string,
@@ -126,36 +126,27 @@ async function handleOneTimePayment(
  * Handle recurring subscription payment
  */
 async function handleRecurringPayment(
-  stripe: any,
-  cardElement: any,
+  stripe: unknown,
+  cardElement: unknown,
   amount: number,
   metadata: Record<string, unknown>,
   currency: string,
   onPaymentComplete: (result: PaymentResult) => void,
   setError: (error: string) => void
 ) {
-  console.log('handleRecurringPayment called with:', {
-    amount,
-    currency,
-    campaignId: metadata.campaignId,
-    donorEmail: metadata.donorEmail,
-    recurringInterval: metadata.recurringInterval
-  });
 
   // First, create a payment method
-  const { paymentMethod, error: pmError } = await stripe.createPaymentMethod({
+  const stripeInstance = stripe as { createPaymentMethod: (options: { type: string; card: unknown }) => Promise<{ paymentMethod?: { id: string }; error?: { message?: string } }> };
+  const { paymentMethod, error: pmError } = await stripeInstance.createPaymentMethod({
     type: 'card',
     card: cardElement,
   });
 
   if (pmError) {
-    console.error('Payment method creation error:', pmError);
     setError(pmError.message || 'Failed to create payment method.');
     onPaymentComplete({ success: false, error: pmError.message || 'Failed to create payment method.' });
     return;
   }
-
-  console.log('Payment method created:', paymentMethod.id);
 
   // Map recurring interval from UI format to API format
   const intervalMap: Record<string, string> = {
@@ -167,8 +158,6 @@ async function handleRecurringPayment(
   const recurringInterval = metadata.recurringInterval as string;
   const interval = intervalMap[recurringInterval] || 'month';
 
-  console.log('Interval mapping:', { recurringInterval, interval });
-
   const requestBody = {
     amount,
     interval,
@@ -178,7 +167,7 @@ async function handleRecurringPayment(
       name: metadata.donorName || 'Anonymous',
       phone: metadata.donorPhone,
     },
-    paymentMethodId: paymentMethod.id,
+    paymentMethodId: paymentMethod?.id,
     metadata: {
       ...metadata,
       platform: metadata.platform || 'web',

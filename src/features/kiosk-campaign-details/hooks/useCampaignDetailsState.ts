@@ -18,6 +18,10 @@ interface UseCampaignDetailsStateReturn {
     setIsRecurring: (value: boolean) => void;
     setRecurringInterval: (value: 'monthly' | 'quarterly' | 'yearly') => void;
     getEffectiveAmount: () => number;
+    setDonorEmail: (email: string) => void;
+    setDonorName: (name: string) => void;
+    getDonorEmail: () => string;
+    getDonorName: () => string;
   };
 }
 
