@@ -1,7 +1,6 @@
 const admin = require("firebase-admin");
 const {
   ensureStripeInitialized,
-  getOrCreateCustomerByEmail,
 } = require("../services/stripe");
 const {verifyAuth} = require("../middleware/auth");
 const cors = require("../middleware/cors");
@@ -26,20 +25,31 @@ const createRecurringSubscription = (req, res) => {
         metadata = {},
       } = req.body;
 
+      console.log("createRecurringSubscription called with:", {
+        amount,
+        interval,
+        campaignId,
+        donorEmail: donor?.email,
+        paymentMethodId: paymentMethodId ? "provided" : "missing",
+      });
+
       // Validation
       if (!amount || !interval || !campaignId || !donor?.email) {
+        console.error("Validation failed:", {amount, interval, campaignId, donorEmail: donor?.email});
         return res.status(400).send({
           error: "Missing required fields: amount, interval, campaignId, donor.email",
         });
       }
 
       if (!["month", "year"].includes(interval)) {
+        console.error("Invalid interval:", interval);
         return res.status(400).send({
           error: "Invalid interval. Must be 'month' or 'year'",
         });
       }
 
       if (!paymentMethodId) {
+        console.error("Missing paymentMethodId");
         return res.status(400).send({
           error: "Missing paymentMethodId",
         });
@@ -76,12 +86,30 @@ const createRecurringSubscription = (req, res) => {
         });
       }
 
-      // Get or create customer
-      const customer = await getOrCreateCustomerByEmail(donor.email, {
-        name: donor.name || "Anonymous",
-        campaignId,
-        organizationId: orgId,
+      // Get organization currency or default to usd
+      const orgData = orgSnap.data();
+      const currency = (orgData.currency || "usd").toLowerCase();
+
+      console.log("Organization data:", {
+        orgId,
+        currency,
+        stripeAccountId,
       });
+
+      // Create a NEW customer for this subscription to avoid currency conflicts
+      // (Stripe doesn't allow mixing currencies on the same customer)
+      const customer = await stripeClient.customers.create({
+        email: donor.email,
+        name: donor.name || "Anonymous",
+        phone: donor.phone || undefined,
+        metadata: {
+          campaignId,
+          organizationId: orgId,
+          platform: metadata.platform || "web",
+        },
+      });
+
+      console.log("Customer created:", customer.id);
 
       // Attach payment method to customer
       await stripeClient.paymentMethods.attach(paymentMethodId, {
@@ -95,7 +123,7 @@ const createRecurringSubscription = (req, res) => {
       // Create price with inline product (per-subscription strategy)
       const price = await stripeClient.prices.create({
         unit_amount: amount,
-        currency: "usd",
+        currency: currency,
         recurring: {interval},
         product_data: {
           name: `Recurring donation to ${campaignData.title}`,
@@ -138,23 +166,69 @@ const createRecurringSubscription = (req, res) => {
         organizationId: orgId,
         interval,
         amount,
-        currency: "usd",
+        currency: currency,
         status: subscription.status,
         currentPeriodEnd: subscription.current_period_end,
         metadata: {
           donorEmail: donor.email,
           donorName: donor.name || "Anonymous",
+          donorPhone: donor.phone || null,
+          campaignTitle: campaignData.title,
           platform: metadata.platform || "web",
         },
       });
 
+      // Create initial donation record immediately to update campaign amount
+      const {createDonationDoc} = require("../entities/donation");
+      
+      // Map interval back to UI format
+      const intervalMap = {
+        'month': 'monthly',
+        'year': 'yearly'
+      };
+      const recurringInterval = intervalMap[interval] || interval;
+
+      try {
+        await createDonationDoc({
+          transactionId: subscription.id + "_initial",
+          campaignId,
+          organizationId: orgId,
+          amount: amount,
+          currency: currency,
+          donorEmail: donor.email,
+          donorName: donor.name || "Anonymous",
+          donorPhone: donor.phone || null,
+          isRecurring: true,
+          recurringInterval: recurringInterval,
+          subscriptionId: subscription.id,
+          invoiceId: null,
+          platform: metadata.platform || "web",
+          metadata: {
+            campaignTitleSnapshot: campaignData.title,
+            source: "subscription_initial_payment"
+          }
+        });
+        console.log("Initial donation created for subscription:", subscription.id);
+      } catch (donationError) {
+        console.error("Failed to create initial donation:", donationError);
+        // Don't fail the subscription creation if donation fails
+      }
+
       // Handle first invoice
       const latestInvoice = subscription.latest_invoice;
+
+      console.log("Latest invoice details:", {
+        exists: !!latestInvoice,
+        status: latestInvoice?.status,
+        hasPaymentIntent: !!latestInvoice?.payment_intent,
+        invoiceId: latestInvoice?.id,
+      });
 
       if (latestInvoice?.payment_intent) {
         const paymentIntent = latestInvoice.payment_intent;
         return res.status(200).send({
           subscriptionId: subscription.id,
+          customerId: customer.id,
           clientSecret: paymentIntent.client_secret,
           status: subscription.status,
           requiresAction: paymentIntent.status === "requires_action",
@@ -163,6 +237,7 @@ const createRecurringSubscription = (req, res) => {
         return res.status(200).send({
           success: true,
           subscriptionId: subscription.id,
+          customerId: customer.id,
           message: "Subscription created and first payment completed",
           status: subscription.status,
         });
@@ -170,10 +245,17 @@ const createRecurringSubscription = (req, res) => {
 
       return res.status(200).send({
         subscriptionId: subscription.id,
+        customerId: customer.id,
         status: subscription.status,
       });
     } catch (error) {
       console.error("Error creating recurring subscription:", error);
+      console.error("Error stack:", error.stack);
+      console.error("Error details:", {
+        message: error.message,
+        type: error.type,
+        code: error.code,
+      });
       return res.status(500).send({error: error.message});
     }
   });
