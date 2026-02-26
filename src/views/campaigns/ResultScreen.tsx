@@ -68,9 +68,17 @@ export function ResultScreen({ result, onEmailConfirmation, onReturnToStart, onR
               <div className="p-8 lg:p-10">
                 {/* Transaction ID */}
                 {result.transactionId && (
-                  <div className="mb-8 p-4 bg-green-50/70 border border-green-100 rounded-2xl text-center">
+                  <div className="mb-6 p-4 bg-green-50/70 border border-green-100 rounded-2xl text-center">
                     <p className="text-sm text-green-700 mb-1">Transaction ID</p>
                     <p className="font-mono text-sm text-[#0A0A0A] break-all">{result.transactionId}</p>
+                  </div>
+                )}
+
+                {/* Customer ID (for recurring donations only) */}
+                {result.customerId && (
+                  <div className="mb-6 p-4 bg-blue-50/70 border border-blue-100 rounded-2xl text-center">
+                    <p className="text-sm text-blue-700 mb-1">Customer ID</p>
+                    <p className="font-mono text-sm text-[#0A0A0A] break-all">{result.customerId}</p>
                   </div>
                 )}
 
