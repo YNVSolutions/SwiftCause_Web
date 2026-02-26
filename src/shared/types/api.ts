@@ -3,6 +3,7 @@ export interface PaymentResult {
   success: boolean;
   transactionId?: string;
   subscriptionId?: string;
+  customerId?: string;
   error?: string;
   campaignTitle?: string;
 }
