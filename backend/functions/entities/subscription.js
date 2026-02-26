@@ -24,6 +24,20 @@ const createSubscriptionDoc = async (subscriptionData) => {
       .collection("subscriptions")
       .doc(stripeSubscriptionId);
 
+  // Convert currentPeriodEnd to Firestore Timestamp
+  // currentPeriodEnd is a Unix timestamp in seconds from Stripe
+  let periodEndTimestamp;
+  if (typeof currentPeriodEnd === 'number') {
+    // It's a Unix timestamp in seconds, convert to milliseconds then to Timestamp
+    periodEndTimestamp = admin.firestore.Timestamp.fromMillis(currentPeriodEnd * 1000);
+  } else if (currentPeriodEnd instanceof Date) {
+    // It's already a Date object
+    periodEndTimestamp = admin.firestore.Timestamp.fromDate(currentPeriodEnd);
+  } else {
+    // Fallback to current time
+    periodEndTimestamp = admin.firestore.Timestamp.now();
+  }
+
   await subscriptionRef.set({
     stripeSubscriptionId,
     customerId,
@@ -33,12 +47,13 @@ const createSubscriptionDoc = async (subscriptionData) => {
     amount,
     currency,
     status,
-    currentPeriodEnd: admin.firestore.Timestamp.fromDate(
-        new Date(currentPeriodEnd * 1000),
-    ),
+    donorEmail: metadata.donorEmail || null,
+    donorName: metadata.donorName || null,
+    donorPhone: metadata.donorPhone || null,
+    currentPeriodEnd: periodEndTimestamp,
     createdAt: admin.firestore.Timestamp.now(),
     updatedAt: admin.firestore.Timestamp.now(),
-    ...metadata,
+    metadata: metadata,
   });
 
   console.log("Subscription document created:", stripeSubscriptionId);
