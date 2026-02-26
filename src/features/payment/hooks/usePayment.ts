@@ -174,8 +174,6 @@ async function handleRecurringPayment(
     },
   };
 
-  console.log('Sending request to createRecurringSubscription:', requestBody);
-
   // Create subscription via backend
   const response = await fetch(
     `https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/createRecurringSubscription`,
@@ -187,8 +185,6 @@ async function handleRecurringPayment(
       body: JSON.stringify(requestBody),
     }
   );
-
-  console.log('Response status:', response.status);
 
   if (!response.ok) {
     const errorData = await response.json();
@@ -205,11 +201,8 @@ async function handleRecurringPayment(
   }
 
   const result = await response.json();
-  console.log('Subscription creation result:', result);
-  console.log('Customer ID from backend:', result.customerId);
 
   if (result.requiresAction && result.clientSecret) {
-    console.log('3D Secure authentication required');
     // Handle 3D Secure or other authentication
     const { error: confirmError } = await stripe.confirmCardPayment(result.clientSecret);
     
@@ -222,8 +215,6 @@ async function handleRecurringPayment(
   }
 
   if (result.success || result.subscriptionId) {
-    console.log('Subscription created successfully:', result.subscriptionId);
-    console.log('Passing customerId to onPaymentComplete:', result.customerId);
     onPaymentComplete({
       success: true,
       transactionId: result.subscriptionId,
