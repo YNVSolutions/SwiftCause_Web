@@ -22,14 +22,6 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
   onDonorEmailChange,
   onDonorNameChange,
 }) => {
-  // Debug logging
-  console.log('AmountSelector props:', {
-    enableRecurring,
-    recurringIntervals,
-    isRecurring,
-    recurringInterval
-  });
-
   // Format amount without decimals
   const formatAmount = (amount: number) => formatCurrencyFromMajor(amount, currency);
 
@@ -67,8 +59,8 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
 
   return (
     <div className="space-y-4 font-lexend">
-      {/* Recurring Toggle - Always show for testing */}
-      {(enableRecurring || true) && (
+      {/* Recurring Toggle */}
+      {enableRecurring && (
         <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-200">
           <div className="flex items-center gap-2">
             <Repeat className="w-4 h-4 text-[#0E8F5A]" />
@@ -91,9 +83,9 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
       )}
 
       {/* Recurring Interval Selector */}
-      {(enableRecurring || true) && isRecurring && (recurringIntervals.length > 0 || true) && (
+      {enableRecurring && isRecurring && recurringIntervals.length > 0 && (
         <div className="grid grid-cols-3 gap-2">
-          {(recurringIntervals.length > 0 ? recurringIntervals : ['monthly', 'quarterly', 'yearly']).map((interval) => (
+          {recurringIntervals.map((interval) => (
             <button
               key={interval}
               type="button"
@@ -114,7 +106,7 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
       )}
 
       {/* Recurring Donor Info */}
-      {(enableRecurring || true) && isRecurring && onDonorEmailChange && onDonorNameChange && (
+      {enableRecurring && isRecurring && onDonorEmailChange && onDonorNameChange && (
         <RecurringDonorInfo
           email={donorEmail}
           name={donorName}
@@ -124,7 +116,7 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
       )}
 
       {/* Recurring Preview */}
-      {(enableRecurring || true) && isRecurring && effectiveAmount > 0 && (
+      {enableRecurring && isRecurring && effectiveAmount > 0 && (
         <div className="rounded-lg bg-blue-50 border border-blue-200 px-3 py-2">
           <p className="text-sm text-blue-900">
             <span className="font-semibold">{formatAmount(effectiveAmount)}</span> will be charged {getRecurringLabel().toLowerCase()}
