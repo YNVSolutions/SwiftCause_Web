@@ -134,6 +134,14 @@ async function handleRecurringPayment(
   onPaymentComplete: (result: PaymentResult) => void,
   setError: (error: string) => void
 ) {
+  console.log('handleRecurringPayment called with:', {
+    amount,
+    currency,
+    campaignId: metadata.campaignId,
+    donorEmail: metadata.donorEmail,
+    recurringInterval: metadata.recurringInterval
+  });
+
   // First, create a payment method
   const { paymentMethod, error: pmError } = await stripe.createPaymentMethod({
     type: 'card',
@@ -141,10 +149,13 @@ async function handleRecurringPayment(
   });
 
   if (pmError) {
+    console.error('Payment method creation error:', pmError);
     setError(pmError.message || 'Failed to create payment method.');
     onPaymentComplete({ success: false, error: pmError.message || 'Failed to create payment method.' });
     return;
   }
+
+  console.log('Payment method created:', paymentMethod.id);
 
   // Map recurring interval from UI format to API format
   const intervalMap: Record<string, string> = {
@@ -156,6 +167,26 @@ async function handleRecurringPayment(
   const recurringInterval = metadata.recurringInterval as string;
   const interval = intervalMap[recurringInterval] || 'month';
 
+  console.log('Interval mapping:', { recurringInterval, interval });
+
+  const requestBody = {
+    amount,
+    interval,
+    campaignId: metadata.campaignId,
+    donor: {
+      email: metadata.donorEmail || 'anonymous@example.com',
+      name: metadata.donorName || 'Anonymous',
+      phone: metadata.donorPhone,
+    },
+    paymentMethodId: paymentMethod.id,
+    metadata: {
+      ...metadata,
+      platform: metadata.platform || 'web',
+    },
+  };
+
+  console.log('Sending request to createRecurringSubscription:', requestBody);
+
   // Create subscription via backend
   const response = await fetch(
     `https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/createRecurringSubscription`,
@@ -164,26 +195,15 @@ async function handleRecurringPayment(
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        amount,
-        interval,
-        campaignId: metadata.campaignId,
-        donor: {
-          email: metadata.donorEmail || 'anonymous@example.com',
-          name: metadata.donorName || 'Anonymous',
-          phone: metadata.donorPhone,
-        },
-        paymentMethodId: paymentMethod.id,
-        metadata: {
-          ...metadata,
-          platform: metadata.platform || 'web',
-        },
-      }),
+      body: JSON.stringify(requestBody),
     }
   );
 
+  console.log('Response status:', response.status);
+
   if (!response.ok) {
     const errorData = await response.json();
+    console.error('Backend error response:', errorData);
     const errorMessage =
       typeof errorData === 'string'
         ? errorData
@@ -196,25 +216,31 @@ async function handleRecurringPayment(
   }
 
   const result = await response.json();
+  console.log('Subscription creation result:', result);
 
   if (result.requiresAction && result.clientSecret) {
+    console.log('3D Secure authentication required');
     // Handle 3D Secure or other authentication
     const { error: confirmError } = await stripe.confirmCardPayment(result.clientSecret);
     
     if (confirmError) {
+      console.error('Payment authentication error:', confirmError);
       setError(confirmError.message || 'Payment authentication failed.');
       onPaymentComplete({ success: false, error: confirmError.message || 'Payment authentication failed.' });
       return;
     }
   }
 
-  if (result.success) {
+  if (result.success || result.subscriptionId) {
+    console.log('Subscription created successfully:', result.subscriptionId);
     onPaymentComplete({
       success: true,
       transactionId: result.subscriptionId,
       subscriptionId: result.subscriptionId,
+      customerId: result.customerId,
     });
   } else {
+    console.error('Subscription creation failed:', result);
     setError(result.message || 'Subscription creation failed.');
     onPaymentComplete({
       success: false,
