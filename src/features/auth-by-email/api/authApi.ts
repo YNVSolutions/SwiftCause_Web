@@ -42,6 +42,42 @@ const buildVerificationActionSettings = async (uid: string) => {
   };
 };
 
+const hasFirebaseAuthCode = (
+  error: unknown,
+  code: string
+): error is { code: string } => {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    (error as { code?: string }).code === code
+  );
+};
+
+const sendVerificationEmailWithFallback = async (
+  user: FirebaseAuthUser,
+  uid: string
+): Promise<void> => {
+  const actionCodeSettings = await buildVerificationActionSettings(uid);
+
+  try {
+    await sendEmailVerification(user, actionCodeSettings);
+  } catch (error) {
+    if (!hasFirebaseAuthCode(error, 'auth/unauthorized-continue-uri')) {
+      throw error;
+    }
+
+    console.error('Verification continue URL rejected by Firebase Auth', {
+      runtimeOrigin: typeof window !== 'undefined' ? window.location.origin : null,
+      continueUrl: actionCodeSettings.url,
+      code: error.code,
+    });
+
+    // Fallback to Firebase-hosted verification email to avoid blocking signup.
+    await sendEmailVerification(user);
+  }
+};
+
 export const authApi = {
   async signInForVerificationCheck(email: string, password: string) {
     try {
@@ -200,8 +236,7 @@ export const authApi = {
       });
 
       // Send verification email
-      const actionCodeSettings = await buildVerificationActionSettings(userId);
-      await sendEmailVerification(userCredential.user, actionCodeSettings);
+      await sendVerificationEmailWithFallback(userCredential.user, userId);
 
       return {
         id: userId,
@@ -286,8 +321,7 @@ export const authApi = {
   // Send verification email to current user
   async sendVerificationEmail(user: FirebaseAuthUser): Promise<void> {
     try {
-      const actionCodeSettings = await buildVerificationActionSettings(user.uid);
-      await sendEmailVerification(user, actionCodeSettings);
+      await sendVerificationEmailWithFallback(user, user.uid);
     } catch (error: unknown) {
       console.error('Error sending verification email:', error);
       throw error;
@@ -304,8 +338,7 @@ export const authApi = {
       if (user.email !== email) {
         throw new Error('Email does not match current user');
       }
-      const actionCodeSettings = await buildVerificationActionSettings(user.uid);
-      await sendEmailVerification(user, actionCodeSettings);
+      await sendVerificationEmailWithFallback(user, user.uid);
     } catch (error: unknown) {
       console.error('Error resending verification email:', error);
       throw error;

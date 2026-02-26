@@ -45,6 +45,42 @@ const buildVerificationActionSettings = async (uid: string) => {
   }
 }
 
+const hasFirebaseAuthCode = (
+  error: unknown,
+  code: string
+): error is { code: string } => {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    (error as { code?: string }).code === code
+  )
+}
+
+const sendVerificationEmailWithFallback = async (
+  user: import('firebase/auth').User,
+  uid: string
+) => {
+  const actionCodeSettings = await buildVerificationActionSettings(uid)
+
+  try {
+    await sendEmailVerification(user, actionCodeSettings)
+  } catch (error) {
+    if (!hasFirebaseAuthCode(error, 'auth/unauthorized-continue-uri')) {
+      throw error
+    }
+
+    console.error('Verification continue URL rejected by Firebase Auth', {
+      runtimeOrigin: typeof window !== 'undefined' ? window.location.origin : null,
+      continueUrl: actionCodeSettings.url,
+      code: error.code,
+    })
+
+    // Fallback: send Firebase-hosted verification email so signup can complete.
+    await sendEmailVerification(user)
+  }
+}
+
 interface AuthContextType {
   userRole: UserRole | null
   currentKioskSession: KioskSession | null
@@ -320,8 +356,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       })
 
       // Send verification email
-      const actionCodeSettings = await buildVerificationActionSettings(userId)
-      await sendEmailVerification(userCredential.user, actionCodeSettings)
+      await sendVerificationEmailWithFallback(userCredential.user, userId)
 
       // DON'T sign out - keep user authenticated so they can resend verification
       // But DON'T establish a session in our app (don't call handleLogin)
@@ -355,8 +390,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       
       // Send verification email
-      const actionCodeSettings = await buildVerificationActionSettings(user.uid)
-      await sendEmailVerification(user, actionCodeSettings)
+      await sendVerificationEmailWithFallback(user, user.uid)
     } catch (error) {
       console.error('Error resending verification email:', error)
       throw error
