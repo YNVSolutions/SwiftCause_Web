@@ -22,6 +22,23 @@ const createVerificationToken = (): string => {
   return `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
 };
 
+const getVerificationBaseUrl = (): string => {
+  const configuredBaseUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (configuredBaseUrl) {
+    try {
+      return new URL(configuredBaseUrl).origin;
+    } catch {
+      console.error('Invalid NEXT_PUBLIC_APP_URL for verification links:', configuredBaseUrl);
+    }
+  }
+
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return window.location.origin;
+  }
+
+  return 'http://localhost';
+};
+
 const buildVerificationActionSettings = async (uid: string) => {
   const token = createVerificationToken();
   const expiresAt = new Date(Date.now() + (24 * 60 * 60 * 1000)).toISOString();
@@ -31,8 +48,7 @@ const buildVerificationActionSettings = async (uid: string) => {
     emailVerificationTokenExpiresAt: expiresAt,
   });
 
-  const origin = typeof window !== 'undefined' ? window.location.origin : '';
-  const continueUrl = new URL('/auth/verify-email', origin || 'http://localhost');
+  const continueUrl = new URL('/auth/verify-email', getVerificationBaseUrl());
   continueUrl.searchParams.set('verify_uid', uid);
   continueUrl.searchParams.set('verify_token', token);
 
