@@ -356,6 +356,13 @@ const handleInvoicePaid = async (invoice) => {
     return;
   }
 
+  // Map interval back to UI format for consistency
+  const intervalMap = {
+    'month': 'monthly',
+    'year': 'yearly'
+  };
+  const recurringInterval = intervalMap[subscriptionData.interval] || subscriptionData.interval;
+
   // Create donation record for this recurring payment
   await createDonationDoc({
     transactionId: invoice.payment_intent || invoice.id,
@@ -363,13 +370,18 @@ const handleInvoicePaid = async (invoice) => {
     organizationId: subscriptionData.organizationId,
     amount: invoice.amount_paid,
     currency: invoice.currency,
-    donorEmail: subscriptionData.metadata?.donorEmail || null,
-    donorName: subscriptionData.metadata?.donorName || "Anonymous",
+    donorEmail: subscriptionData.donorEmail || subscriptionData.metadata?.donorEmail || null,
+    donorName: subscriptionData.donorName || subscriptionData.metadata?.donorName || "Anonymous",
+    donorPhone: subscriptionData.donorPhone || subscriptionData.metadata?.donorPhone || null,
     isRecurring: true,
-    recurringInterval: subscriptionData.interval,
+    recurringInterval: recurringInterval,
     subscriptionId: subscriptionId,
     invoiceId: invoice.id,
     platform: subscriptionData.metadata?.platform || "web",
+    metadata: {
+      campaignTitleSnapshot: subscriptionData.metadata?.campaignTitle || "Recurring Donation",
+      source: "stripe_webhook_recurring"
+    }
   });
 
   console.log("Recurring donation recorded for invoice:", invoice.id);
