@@ -117,6 +117,10 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms }: SignupS
     } else if (step === 4) {
       if (!formData.password) newErrors.password = 'Password is required';
       else if (formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
+      else if (!/[A-Z]/.test(formData.password)) newErrors.password = 'Password must contain at least one uppercase letter';
+      else if (!/[a-z]/.test(formData.password)) newErrors.password = 'Password must contain at least one lowercase letter';
+      else if (!/[0-9]/.test(formData.password)) newErrors.password = 'Password must contain at least one number';
+      else if (!/[!@#$%^&*(),.?":{}|<>]/.test(formData.password)) newErrors.password = 'Password must contain at least one special character';
       if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
 
     }

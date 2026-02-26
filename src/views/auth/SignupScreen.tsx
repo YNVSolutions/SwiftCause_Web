@@ -174,10 +174,11 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms, initialSt
   const isPasswordValid = (password: string): boolean => {
     const hasMinLength = password.length >= 8;
     const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
     const hasNumber = /[0-9]/.test(password);
     const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
     
-    return hasMinLength && hasUpperCase && hasNumber && hasSpecialChar;
+    return hasMinLength && hasUpperCase && hasLowerCase && hasNumber && hasSpecialChar;
   };
 
   const handleEmailBlur = async () => {
@@ -289,6 +290,8 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms, initialSt
           newErrors.password = 'Password must be at least 8 characters';
         } else if (!/[A-Z]/.test(formData.password)) {
           newErrors.password = 'Password must contain at least one uppercase letter';
+        } else if (!/[a-z]/.test(formData.password)) {
+          newErrors.password = 'Password must contain at least one lowercase letter';
         } else if (!/[0-9]/.test(formData.password)) {
           newErrors.password = 'Password must contain at least one number';
         } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(formData.password)) {
@@ -956,6 +959,7 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms, initialSt
                               const checks = [
                                 formData.password.length >= 8,
                                 /[A-Z]/.test(formData.password),
+                                /[a-z]/.test(formData.password),
                                 /[0-9]/.test(formData.password),
                                 /[!@#$%^&*(),.?":{}|<>]/.test(formData.password)
                               ];
@@ -969,18 +973,19 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms, initialSt
                         </div>
                         <div className="flex gap-1 h-1.5">
                           {(() => {
-                            const checks = [
-                              formData.password.length >= 8,
-                              /[A-Z]/.test(formData.password),
-                              /[0-9]/.test(formData.password),
-                              /[!@#$%^&*(),.?":{}|<>]/.test(formData.password)
-                            ];
-                            const passedCount = checks.filter(Boolean).length;
-                            
-                            return [0, 1, 2, 3].map((index) => (
-                              <div 
-                                key={index}
-                                className={`flex-1 rounded-full ${index < passedCount ? 'bg-[#11d452]' : 'bg-[#cfe7d3]'}`}
+                              const checks = [
+                                formData.password.length >= 8,
+                                /[A-Z]/.test(formData.password),
+                                /[a-z]/.test(formData.password),
+                                /[0-9]/.test(formData.password),
+                                /[!@#$%^&*(),.?":{}|<>]/.test(formData.password)
+                              ];
+                              const passedCount = checks.filter(Boolean).length;
+                              
+                              return [0, 1, 2, 3, 4].map((index) => (
+                                <div 
+                                  key={index}
+                                  className={`flex-1 rounded-full ${index < passedCount ? 'bg-[#11d452]' : 'bg-[#cfe7d3]'}`}
                               ></div>
                             ));
                           })()}
@@ -1007,6 +1012,16 @@ export function SignupScreen({ onSignup, onBack, onLogin, onViewTerms, initialSt
                           )}
                           <span className={`text-xs font-medium ${/[A-Z]/.test(formData.password) ? 'text-[#0d1b10]' : formData.password.length > 0 ? 'text-red-600' : 'text-[#4c9a59]'}`}>
                             One uppercase letter
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {/[a-z]/.test(formData.password) ? (
+                            <CheckCircle className="text-[#11d452] w-[18px] h-[18px]" />
+                          ) : (
+                            <div className="w-[18px] h-[18px] rounded-full border-2 border-[#cfe7d3]"></div>
+                          )}
+                          <span className={`text-xs font-medium ${/[a-z]/.test(formData.password) ? 'text-[#0d1b10]' : formData.password.length > 0 ? 'text-red-600' : 'text-[#4c9a59]'}`}>
+                            One lowercase letter
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
