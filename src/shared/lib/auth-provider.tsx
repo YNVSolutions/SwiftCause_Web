@@ -87,9 +87,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       clearTimeout(timeout) // Clear timeout when auth state changes
       
       if (firebaseUser) {
-        // Get ID token result to check custom claims
-        await firebaseUser.getIdToken(true);
-        const decodedToken = await firebaseUser.getIdTokenResult();
+        try {
+          // Get ID token result to check custom claims
+          await firebaseUser.getIdToken(true);
+          const decodedToken = await firebaseUser.getIdTokenResult();
         
         // Check if this is a kiosk user (UID starts with "kiosk:")
         if (firebaseUser.uid.startsWith('kiosk:')) {
@@ -160,6 +161,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         } else {
           console.warn('AuthProvider: User document not found for UID:', firebaseUser.uid)
           handleLogout()
+        }
+        } catch (error) {
+          // Handle auth errors gracefully (e.g., network issues, token errors)
+          console.error('AuthProvider: Error processing authenticated user:', error)
+          // Don't block the app, just clear auth state
+          setUserRole(null)
+          setCurrentKioskSession(null)
+          setCurrentAdminSession(null)
         }
       } else {
         // No Firebase user, clear all sessions
