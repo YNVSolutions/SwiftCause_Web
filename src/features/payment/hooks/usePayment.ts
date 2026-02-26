@@ -206,6 +206,7 @@ async function handleRecurringPayment(
 
   const result = await response.json();
   console.log('Subscription creation result:', result);
+  console.log('Customer ID from backend:', result.customerId);
 
   if (result.requiresAction && result.clientSecret) {
     console.log('3D Secure authentication required');
@@ -222,6 +223,7 @@ async function handleRecurringPayment(
 
   if (result.success || result.subscriptionId) {
     console.log('Subscription created successfully:', result.subscriptionId);
+    console.log('Passing customerId to onPaymentComplete:', result.customerId);
     onPaymentComplete({
       success: true,
       transactionId: result.subscriptionId,

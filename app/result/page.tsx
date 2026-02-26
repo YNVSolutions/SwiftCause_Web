@@ -17,7 +17,10 @@ function ResultContent() {
     // Get payment result from sessionStorage or URL params
     const storedResult = sessionStorage.getItem('paymentResult')
     if (storedResult) {
-      setPaymentResult(JSON.parse(storedResult))
+      const parsedResult = JSON.parse(storedResult);
+      console.log('Payment result from sessionStorage:', parsedResult);
+      console.log('Customer ID in result:', parsedResult.customerId);
+      setPaymentResult(parsedResult);
     } else if (searchParams) {
       // Fallback to URL params
       const success = searchParams.get('success')
