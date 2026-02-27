@@ -18,6 +18,10 @@ interface UseCampaignDetailsStateReturn {
     setIsRecurring: (value: boolean) => void;
     setRecurringInterval: (value: 'monthly' | 'quarterly' | 'yearly') => void;
     getEffectiveAmount: () => number;
+    setDonorEmail: (email: string) => void;
+    setDonorName: (name: string) => void;
+    getDonorEmail: () => string;
+    getDonorName: () => string;
   };
 }
 
@@ -32,6 +36,8 @@ export function useCampaignDetailsState({
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurringInterval, setRecurringInterval] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
+  const [donorEmail, setDonorEmail] = useState('');
+  const [donorName, setDonorName] = useState('');
 
   // Auto-select middle predefined amount when campaign loads
   // Auto-select middle predefined amount when campaign loads
@@ -103,6 +109,10 @@ export function useCampaignDetailsState({
     setCurrentImageIndex: handleSetCurrentImageIndex,
     setIsRecurring: handleRecurringToggle,
     setRecurringInterval: handleRecurringIntervalChange,
+    setDonorEmail,
+    setDonorName,
+    getDonorEmail: () => donorEmail,
+    getDonorName: () => donorName,
     getEffectiveAmount,
   };
 

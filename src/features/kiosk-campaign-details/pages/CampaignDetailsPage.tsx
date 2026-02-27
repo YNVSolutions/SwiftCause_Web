@@ -18,6 +18,8 @@ import {
 export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
   state,
   currency,
+  donorEmail = '',
+  donorName = '',
   onBack,
   onSelectAmount,
   onCustomAmountChange,
@@ -25,6 +27,8 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
   onRecurringIntervalChange,
   onDonate,
   onImageChange,
+  onDonorEmailChange,
+  onDonorNameChange,
 }) => {
   const {
     campaign,
@@ -94,7 +98,7 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
 
   // Get predefined amounts
   const predefinedAmounts = campaign.configuration?.predefinedAmounts || [10, 25, 100];
-  const enableRecurring = campaign.configuration?.enableRecurring ?? false;
+  const enableRecurring = campaign.configuration?.enableRecurring ?? true; // Default to true
   const recurringIntervals = (campaign.configuration?.recurringIntervals?.length
     ? campaign.configuration.recurringIntervals
     : ['monthly', 'quarterly', 'yearly']) as ('monthly' | 'quarterly' | 'yearly')[];
@@ -327,10 +331,14 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
                   recurringIntervals={recurringIntervals}
                   isRecurring={isRecurring}
                   recurringInterval={recurringInterval}
+                  donorEmail={donorEmail}
+                  donorName={donorName}
                   onSelectAmount={onSelectAmount}
                   onCustomAmountChange={onCustomAmountChange}
                   onRecurringToggle={onRecurringToggle}
                   onRecurringIntervalChange={onRecurringIntervalChange}
+                  onDonorEmailChange={onDonorEmailChange}
+                  onDonorNameChange={onDonorNameChange}
                 />
               </div>
 
@@ -429,10 +437,14 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
           recurringIntervals={recurringIntervals}
           isRecurring={isRecurring}
           recurringInterval={recurringInterval}
+          donorEmail={donorEmail}
+          donorName={donorName}
           onSelectAmount={onSelectAmount}
           onCustomAmountChange={onCustomAmountChange}
           onRecurringToggle={onRecurringToggle}
           onRecurringIntervalChange={onRecurringIntervalChange}
+          onDonorEmailChange={onDonorEmailChange}
+          onDonorNameChange={onDonorNameChange}
         />
 
         {/* Donate Button */}

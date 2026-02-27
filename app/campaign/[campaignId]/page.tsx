@@ -99,6 +99,15 @@ export default function CampaignPage({
     } else {
       // Skip Gift Aid and go directly to payment
       const amountPence = Math.round(amount * 100);
+      
+      // Get donor info from sessionStorage if recurring
+      let donorEmail = '';
+      let donorName = '';
+      if (options.isRecurring) {
+        donorEmail = sessionStorage.getItem('donorEmail') || '';
+        donorName = sessionStorage.getItem('donorName') || '';
+      }
+      
       const donation = {
         campaignId: _campaign.id,
         amount: amountPence,
@@ -107,7 +116,8 @@ export default function CampaignPage({
         isRecurring: options.isRecurring,
         recurringInterval: options.isRecurring ? options.recurringInterval : undefined,
         kioskId: currentKioskSession?.kioskId,
-        donorName: '',
+        donorEmail: donorEmail,
+        donorName: donorName || 'Anonymous',
       };
       sessionStorage.setItem('donation', JSON.stringify(donation));
       sessionStorage.setItem('paymentBackPath', `/campaign/${campaignId}`);
@@ -127,6 +137,7 @@ export default function CampaignPage({
       giftAidDetails: details,
       kioskId: currentKioskSession?.kioskId,
       donorName: `${details.firstName} ${details.surname}`,
+      donorEmail: sessionStorage.getItem('donorEmail') || '', // Get from sessionStorage for recurring
     };
     sessionStorage.setItem('donation', JSON.stringify(donation));
     sessionStorage.setItem('giftAidData', JSON.stringify(details));
@@ -145,7 +156,8 @@ export default function CampaignPage({
       isRecurring: isRecurringSelection,
       recurringInterval: isRecurringSelection ? recurringIntervalParam : undefined,
       kioskId: currentKioskSession?.kioskId,
-      donorName: '',
+      donorName: sessionStorage.getItem('donorName') || '',
+      donorEmail: sessionStorage.getItem('donorEmail') || '',
     };
     sessionStorage.setItem('donation', JSON.stringify(donation));
     sessionStorage.setItem('paymentBackPath', `${window.location.pathname}${window.location.search}`);

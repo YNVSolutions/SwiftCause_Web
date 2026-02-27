@@ -1,14 +1,15 @@
-import { CheckCircle, Lock, Heart, ArrowLeft } from 'lucide-react';
+import { CheckCircle, Lock, Heart, ArrowLeft, RefreshCw, Calendar } from 'lucide-react';
 import { Campaign, Donation } from '../../shared/types';
 import PaymentForm from '../../widgets/payment-flow/PaymentForm';
 import { formatCurrency } from '../../shared/lib/currencyFormatter';
+import { Badge } from '../../shared/ui/badge';
 
 interface PaymentScreenProps {
   campaign: Campaign;
   donation: Donation;
   isProcessing: boolean;
   error: string | null;
-  handlePaymentSubmit: (amount: number, metadata: any, currency: string) => Promise<void>;
+  handlePaymentSubmit: (amount: number, metadata: Record<string, unknown>, currency: string) => Promise<void>;
   onBack: () => void;
   organizationCurrency?: string;
 }
@@ -28,6 +29,38 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
   const isGiftAid = donation.isGiftAid || false;
   const giftAidAmount = isGiftAid ? donation.amount * 0.25 : 0;
   const totalImpact = donation.amount + giftAidAmount;
+  
+  // Recurring payment details
+  const isRecurring = donation.isRecurring || false;
+  const recurringInterval = donation.recurringInterval || 'monthly';
+  
+  // Format recurring interval for display
+  const intervalDisplayMap: Record<string, string> = {
+    monthly: 'month',
+    quarterly: 'quarter',
+    yearly: 'year',
+  };
+  const intervalDisplay = intervalDisplayMap[recurringInterval] || 'month';
+  
+  // Calculate next charge date for recurring
+  const getNextChargeDate = () => {
+    const nextDate = new Date();
+    if (recurringInterval === 'monthly') {
+      nextDate.setMonth(nextDate.getMonth() + 1);
+    } else if (recurringInterval === 'quarterly') {
+      nextDate.setMonth(nextDate.getMonth() + 3);
+    } else {
+      nextDate.setFullYear(nextDate.getFullYear() + 1);
+    }
+    return nextDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  };
+  
+  // Calculate annual impact for recurring
+  const getAnnualImpact = () => {
+    if (!isRecurring) return donation.amount;
+    const multiplier = recurringInterval === 'monthly' ? 12 : recurringInterval === 'quarterly' ? 4 : 1;
+    return donation.amount * multiplier;
+  };
 
   // Format amount without decimals
   const formatAmount = (amount: number) => formatCurrency(amount || 0);
@@ -44,11 +77,14 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
       donationAmount: donation.amount,
       organizationId: campaign.organizationId,
       isRecurring: donation.isRecurring,
+      recurringInterval: donation.recurringInterval,
       isGiftAid: isGiftAid,
       giftAidAccepted: donation.giftAidAccepted || false, // Include explicit Gift Aid acceptance status
       kioskId: donation.kioskId || null,
-      // Add donor name if gift aid is provided, otherwise empty string
-      donorName: isGiftAid && giftAidDetails ? `${giftAidDetails.firstName} ${giftAidDetails.surname}` : "",
+      // Add donor information
+      donorEmail: donation.donorEmail || (isGiftAid && giftAidDetails ? `${giftAidDetails.firstName.toLowerCase()}.${giftAidDetails.surname.toLowerCase()}@example.com` : ''),
+      donorName: isGiftAid && giftAidDetails ? `${giftAidDetails.firstName} ${giftAidDetails.surname}` : (donation.donorName || ""),
+      donorPhone: donation.donorPhone || null,
       ...(isGiftAid && giftAidDetails ? {
         // Legacy Gift Aid fields (keeping for backward compatibility)
         giftAidName: `${giftAidDetails.firstName} ${giftAidDetails.surname}`,
@@ -68,7 +104,6 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
         giftAidTimestamp: giftAidDetails.timestamp
       } : {})
     };
-    console.log('PaymentScreen - handleSubmit: Final metadata object', metadata);
     await handlePaymentSubmit(donation.amount, metadata, organizationCurrency || 'GBP'); 
   };
 
@@ -104,12 +139,45 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
             <div className="p-5 sm:p-6 lg:p-7 bg-[#FFFBF7]">
               {/* Donation Summary Section */}
               <div className="mb-5">
+                {/* Recurring Badge */}
+                {isRecurring && (
+                  <div className="mb-4 p-3 sm:p-4 bg-gradient-to-r from-[#0E8F5A]/10 to-emerald-50 border border-[#0E8F5A]/20 rounded-xl">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 bg-[#0E8F5A] rounded-full flex items-center justify-center">
+                        <RefreshCw className="w-4 h-4 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-[14px] sm:text-[15px] font-semibold text-slate-900">
+                            Recurring Donation
+                          </h3>
+                          <Badge className="bg-[#0E8F5A] text-white text-[10px] px-2 py-0.5">
+                            {recurringInterval === 'monthly' ? 'Monthly' : recurringInterval === 'quarterly' ? 'Quarterly' : 'Yearly'}
+                          </Badge>
+                        </div>
+                        <p className="text-[12px] sm:text-[13px] text-slate-600 leading-relaxed">
+                          Your card will be charged {formatAmount(donation.amount)} every {intervalDisplay}.
+                        </p>
+                        <div className="flex items-center gap-1.5 mt-2 text-[11px] sm:text-[12px] text-slate-500">
+                          <Calendar className="w-3.5 h-3.5" />
+                          <span>Next charge: {getNextChargeDate()}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-3.5">
                   {/* Donation Amount */}
                   <div className="flex justify-between items-center">
-                    <span className="text-[14px] sm:text-[16px] text-slate-700 font-normal">Donation Amount</span>
+                    <div className="flex flex-col">
+                      <span className="text-[14px] sm:text-[16px] text-slate-700 font-normal">
+                        {isRecurring ? `${recurringInterval === 'monthly' ? 'Monthly' : recurringInterval === 'quarterly' ? 'Quarterly' : 'Annual'} Amount` : 'Donation Amount'}
+                      </span>
+                    </div>
                     <span className="text-[18px] sm:text-[20px] font-semibold text-slate-900">
                       {formatAmount(donation.amount)}
+                      {isRecurring && <span className="text-[14px] text-slate-600">/{intervalDisplay}</span>}
                     </span>
                   </div>
 
@@ -129,7 +197,16 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
                   {/* Total Impact */}
                   <div className="pt-3.5 border-t border-gray-200">
                     <div className="flex justify-between items-center">
-                      <span className="text-[16px] sm:text-[18px] font-semibold text-slate-900">Total Impact</span>
+                      <div className="flex flex-col">
+                        <span className="text-[16px] sm:text-[18px] font-semibold text-slate-900">
+                          {isRecurring ? 'Total Impact Today' : 'Total Impact'}
+                        </span>
+                        {isRecurring && (
+                          <span className="text-[11px] sm:text-[12px] text-slate-500 mt-0.5">
+                            Annual impact: {formatAmount(getAnnualImpact() + (isGiftAid ? getAnnualImpact() * 0.25 : 0))}
+                          </span>
+                        )}
+                      </div>
                       <span className="text-[20px] sm:text-[22px] font-semibold text-[#0E8F5A]">
                         {formatAmount(totalImpact)}
                       </span>

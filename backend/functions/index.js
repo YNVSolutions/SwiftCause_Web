@@ -21,6 +21,7 @@ const {
 const {
   handleAccountUpdatedStripeWebhook,
   handlePaymentCompletedStripeWebhook,
+  handleSubscriptionWebhook,
 } = require("./handlers/webhooks");
 const {
   createOnboardingLink,
@@ -28,6 +29,8 @@ const {
   createPaymentIntent,
   createExpressDashboardLink,
 } = require("./handlers/payments");
+const {createRecurringSubscription, cancelRecurringSubscription, updateSubscriptionPaymentMethod} = require("./handlers/subscriptions");
+const {createStripeAccountForNewOrg} = require("./handlers/triggers");
 const {
   createStripeAccountForNewOrg,
   sendWelcomeEmailForNewOrg,
@@ -55,6 +58,9 @@ exports.handleAccountUpdatedStripeWebhook = functions.https.onRequest(
 exports.handlePaymentCompletedStripeWebhook = functions.https.onRequest(
     handlePaymentCompletedStripeWebhook,
 );
+exports.handleSubscriptionWebhook = functions.https.onRequest(
+    handleSubscriptionWebhook,
+);
 exports.createOnboardingLink = functions.https.onRequest(createOnboardingLink);
 exports.createKioskPaymentIntent = functions.https.onRequest(
     createKioskPaymentIntent,
@@ -62,6 +68,15 @@ exports.createKioskPaymentIntent = functions.https.onRequest(
 exports.createPaymentIntent = functions.https.onRequest(createPaymentIntent);
 exports.createExpressDashboardLink = functions.https.onRequest(
     createExpressDashboardLink,
+);
+exports.createRecurringSubscription = functions.https.onRequest(
+    createRecurringSubscription,
+);
+exports.cancelRecurringSubscription = functions.https.onRequest(
+    cancelRecurringSubscription,
+);
+exports.updateSubscriptionPaymentMethod = functions.https.onRequest(
+    updateSubscriptionPaymentMethod,
 );
 exports.createStripeAccountForNewOrg = createStripeAccountForNewOrg;
 exports.sendWelcomeEmailForNewOrg = sendWelcomeEmailForNewOrg;

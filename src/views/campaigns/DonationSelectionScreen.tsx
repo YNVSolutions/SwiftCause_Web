@@ -507,7 +507,6 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
                 </div>
 
                 {/* Recurring Donation */}
-                {/*
                 {allowRecurring && (
                   <div className="space-y-4 p-4 border rounded-xl bg-white/70 shadow-sm">
                     <RecurringToggle
@@ -600,7 +599,6 @@ export function DonationSelectionScreen({ campaign, onSubmit, onBack }: Donation
                     )}
                   </div>
                 )}
-                */}
 
                 {/* Anonymous donation option only */}
                 {/* Gift Aid option - only show if enabled in campaign configuration */}
