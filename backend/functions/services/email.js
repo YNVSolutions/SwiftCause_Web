@@ -217,8 +217,29 @@ const sendDonationThankYouEmail = async ({
     `,
   });
 
+  const normalizedRecipient = String(to || "").trim().toLowerCase();
+  if (donationId && normalizedRecipient) {
+    const existingSend = await admin
+        .firestore()
+        .collection("emailEvents")
+        .where("eventType", "==", "donation_thank_you")
+        .where("status", "==", "success")
+        .where("donationId", "==", donationId)
+        .where("recipient", "==", normalizedRecipient)
+        .limit(1)
+        .get();
+
+    if (!existingSend.empty) {
+      return {
+        statusCode: 200,
+        messageId: null,
+        deduplicated: true,
+      };
+    }
+  }
+
   return sendEmail({
-    to,
+    to: normalizedRecipient || to,
     subject,
     text: textLines.join("\n"),
     html,

@@ -13,6 +13,24 @@ const normalizeString = (value) => {
   return trimmed.length > 0 ? trimmed : null;
 };
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const getDonationWithRetry = async (transactionId, attempts = 6, delayMs = 500) => {
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    const donationRef = admin.firestore().collection("donations").doc(transactionId);
+    const donationSnap = await donationRef.get();
+    if (donationSnap.exists) {
+      return donationSnap;
+    }
+
+    if (attempt < attempts) {
+      await sleep(delayMs);
+    }
+  }
+
+  return null;
+};
+
 /**
  * Send donation thank-you email via SendGrid (replaces Firestore mail queue).
  * Validates that the provided transactionId corresponds to an existing donation.
@@ -37,11 +55,12 @@ const sendDonationThankYouEmail = (req, res) => {
         return res.status(400).send({error: "transactionId is required."});
       }
 
-      const donationRef = admin.firestore().collection("donations").doc(transactionId);
-      const donationSnap = await donationRef.get();
+      const donationSnap = await getDonationWithRetry(transactionId);
 
-      if (!donationSnap.exists) {
-        return res.status(404).send({error: "Donation not found."});
+      if (!donationSnap || !donationSnap.exists) {
+        return res.status(409).send({
+          error: "Donation is still processing. Please retry in a few seconds.",
+        });
       }
 
       const donationData = donationSnap.data() || {};
