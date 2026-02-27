@@ -21,6 +21,13 @@ const RETRYABLE_STATUS_CODES = new Set([408, 409, 425, 429, 500, 502, 503, 504])
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+class NonRetryableFunctionError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'NonRetryableFunctionError';
+  }
+}
+
 function getFunctionsBaseUrl(): string {
   const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
   if (!projectId) {
@@ -87,9 +94,13 @@ async function postPublicFunction<TResponse>(
         continue;
       }
 
-      throw new Error(message);
+      throw new NonRetryableFunctionError(message);
     } catch (error) {
       clearTimeout(timeout);
+      if (error instanceof NonRetryableFunctionError) {
+        throw error;
+      }
+
       const isAbort = error instanceof Error && error.name === 'AbortError';
       const isLastAttempt = attempt >= attempts;
 

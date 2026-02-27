@@ -230,6 +230,15 @@ const sendDonationThankYouEmail = async ({
         .get();
 
     if (!existingSend.empty) {
+      await logEmailEvent({
+        eventType: "donation_thank_you",
+        status: "deduplicated",
+        recipient: normalizedRecipient,
+        customArgs: {
+          donationId: donationId || "",
+          organizationId: organizationId || "",
+        },
+      });
       return {
         statusCode: 200,
         messageId: null,
