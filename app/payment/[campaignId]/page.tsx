@@ -65,27 +65,19 @@ export default function PaymentPage({ params }: { params: Promise<{ campaignId: 
     // Store payment result
     sessionStorage.setItem('paymentResult', JSON.stringify(enrichedResult))
     
-    // If payment successful and Gift Aid data exists, store it to Firebase
+    // Gift Aid declarations are created by the Stripe webhook (source of truth).
+    // Do not create them from the client to avoid duplicate declarations.
     if (enrichedResult.success && enrichedResult.transactionId) {
       try {
         const completeGiftAidData = sessionStorage.getItem('completeGiftAidData');
         if (completeGiftAidData) {
-          const giftAidData = JSON.parse(completeGiftAidData);
-          const { submitGiftAidDeclaration } = await import('@/entities/giftAid');
-          await submitGiftAidDeclaration(
-            giftAidData,
-            enrichedResult.transactionId,
-            campaignId,
-            campaign?.title || 'Unknown Campaign'
-          );
-          
-          // Clean up session storage after successful storage
+          // Clean up session storage and let the webhook handle persistence
           sessionStorage.removeItem('completeGiftAidData');
           sessionStorage.removeItem('giftAidData');
         }
       } catch (error) {
-        console.error('Error storing Gift Aid declaration:', error);
-        // Don't block the user flow if Gift Aid storage fails
+        console.error('Error cleaning up Gift Aid session data:', error);
+        // Don't block the user flow if cleanup fails
       }
     }
     

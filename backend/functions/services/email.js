@@ -1,9 +1,44 @@
 const dotenv = require("dotenv");
 const sgMail = require("@sendgrid/mail");
+const admin = require("firebase-admin");
 
 dotenv.config();
 
 let isInitialized = false;
+
+const sanitizeErrorMessage = (error) => {
+  const message = error?.message || String(error || "Unknown error");
+  return String(message).slice(0, 500);
+};
+
+const logEmailEvent = async ({
+  eventType,
+  status,
+  recipient,
+  statusCode,
+  providerMessageId,
+  customArgs,
+  errorMessage,
+}) => {
+  try {
+    const db = admin.firestore();
+    await db.collection("emailEvents").add({
+      eventType: eventType || "unknown",
+      provider: "sendgrid",
+      status,
+      recipient,
+      statusCode: statusCode || null,
+      providerMessageId: providerMessageId || null,
+      donationId: customArgs?.donationId || null,
+      organizationId: customArgs?.organizationId || null,
+      uid: customArgs?.uid || null,
+      errorMessage: errorMessage || null,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  } catch (logError) {
+    console.error("Failed to write emailEvents audit log:", sanitizeErrorMessage(logError));
+  }
+};
 
 const getEmailConfig = () => {
   const apiKey = process.env.SENDGRID_API_KEY;
@@ -40,6 +75,27 @@ const escapeHtml = (value = "") =>
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#39;");
 
+const buildEmailShell = ({preheader, title, bodyHtml}) => `<!DOCTYPE html>
+<html>
+  <body style="margin:0; padding:24px; background:#f6f8fb; font-family: Arial, sans-serif; color:#1f2937;">
+    <div style="display:none; max-height:0; overflow:hidden; opacity:0;">
+      ${escapeHtml(preheader || "")}
+    </div>
+    <div style="max-width:640px; margin:0 auto; background:#ffffff; border:1px solid #e5e7eb; border-radius:14px; overflow:hidden;">
+      <div style="background:#064e3b; color:#ffffff; padding:18px 24px;">
+        <div style="font-size:12px; letter-spacing:0.08em; text-transform:uppercase; opacity:0.9;">SwiftCause</div>
+        <div style="font-size:24px; font-weight:700; margin-top:6px;">${escapeHtml(title)}</div>
+      </div>
+      <div style="padding:24px;">
+        ${bodyHtml}
+      </div>
+      <div style="padding:16px 24px; border-top:1px solid #e5e7eb; color:#6b7280; font-size:12px;">
+        Sent by SwiftCause
+      </div>
+    </div>
+  </body>
+</html>`;
+
 const sendEmail = async ({
   to,
   subject,
@@ -47,33 +103,58 @@ const sendEmail = async ({
   html,
   categories,
   customArgs,
+  auditEventType,
 }) => {
   ensureEmailInitialized();
   const {fromEmail, fromName} = getEmailConfig();
+  const recipient = Array.isArray(to) ? to.join(",") : String(to || "");
 
-  const [response] = await sgMail.send({
-    to,
-    from: {
-      email: fromEmail,
-      name: fromName,
-    },
-    subject,
-    text,
-    html,
-    categories,
-    customArgs,
-  });
+  try {
+    const [response] = await sgMail.send({
+      to,
+      from: {
+        email: fromEmail,
+        name: fromName,
+      },
+      subject,
+      text,
+      html,
+      categories,
+      customArgs,
+    });
 
-  return {
-    statusCode: response?.statusCode,
-    messageId: response?.headers?.["x-message-id"] || null,
-  };
+    const result = {
+      statusCode: response?.statusCode,
+      messageId: response?.headers?.["x-message-id"] || null,
+    };
+
+    await logEmailEvent({
+      eventType: auditEventType,
+      status: "success",
+      recipient,
+      statusCode: result.statusCode,
+      providerMessageId: result.messageId,
+      customArgs,
+    });
+
+    return result;
+  } catch (error) {
+    await logEmailEvent({
+      eventType: auditEventType,
+      status: "failed",
+      recipient,
+      customArgs,
+      errorMessage: sanitizeErrorMessage(error),
+    });
+    throw error;
+  }
 };
 
 const sendDonationThankYouEmail = async ({
   to,
   donorName,
   campaignName,
+  organizationName,
   amount,
   currency,
   donationId,
@@ -84,6 +165,9 @@ const sendDonationThankYouEmail = async ({
     "Donor";
   const safeCampaignName = (typeof campaignName === "string" && campaignName.trim()) ?
     campaignName.trim() :
+    null;
+  const safeOrganizationName = (typeof organizationName === "string" && organizationName.trim()) ?
+    organizationName.trim() :
     null;
   const upperCurrency = typeof currency === "string" ? currency.toUpperCase() : "";
   const amountDisplay = typeof amount === "number" ?
@@ -97,26 +181,41 @@ const sendDonationThankYouEmail = async ({
   const textLines = [
     `Dear ${safeDonorName},`,
     "",
-    "Thank you for your generous donation.",
+    "Thank you for your generous donation to our campaign.",
   ];
 
   if (amountDisplay) textLines.push(`Amount: ${amountDisplay}`);
   if (safeCampaignName) textLines.push(`Campaign: ${safeCampaignName}`);
 
-  textLines.push("", "We appreciate your support.", "", "SwiftCause");
+  textLines.push(
+      "",
+      "We truly appreciate your kindness and belief in our mission.",
+      "",
+      "With gratitude,",
+      safeOrganizationName ?
+        `on behalf of the ${safeOrganizationName} team.` :
+        "on behalf of the charity team.",
+      "",
+      "Powered by SwiftCause",
+  );
 
-  const html = `<!DOCTYPE html>
-<html>
-  <body style="font-family: Arial, sans-serif; color: #333;">
-    <h2>Thank you for your donation!</h2>
-    <p>Dear ${escapeHtml(safeDonorName)},</p>
-    <p>Thank you for your generous donation.</p>
-    ${amountDisplay ? `<p><strong>Amount:</strong> ${escapeHtml(amountDisplay)}</p>` : ""}
-    ${safeCampaignName ? `<p><strong>Campaign:</strong> ${escapeHtml(safeCampaignName)}</p>` : ""}
-    <p>We appreciate your support.</p>
-    <p><strong>SwiftCause</strong></p>
-  </body>
-</html>`;
+  const html = buildEmailShell({
+    preheader: "Thanks for your donation. Your support helps campaigns move forward.",
+    title: "Thank You for Your Donation",
+    bodyHtml: `
+      <p style="margin:0 0 12px;">Dear ${escapeHtml(safeDonorName)},</p>
+      <p style="margin:0 0 12px;">Thank you for your generous donation to our campaign.</p>
+      ${amountDisplay ? `<p style="margin:0 0 8px;"><strong>Amount:</strong> ${escapeHtml(amountDisplay)}</p>` : ""}
+      ${safeCampaignName ? `<p style="margin:0 0 12px;"><strong>Campaign:</strong> ${escapeHtml(safeCampaignName)}</p>` : ""}
+      <p style="margin:0 0 12px;">We truly appreciate your kindness and belief in our mission.</p>
+      <p style="margin:0 0 10px;">With gratitude,<br/><strong>${escapeHtml(
+        safeOrganizationName ?
+          `on behalf of the ${safeOrganizationName} team.` :
+          "on behalf of the charity team.",
+      )}</strong></p>
+      <p style="margin:0; color:#6b7280; font-size:13px;">Powered by SwiftCause</p>
+    `,
+  });
 
   return sendEmail({
     to,
@@ -128,6 +227,7 @@ const sendDonationThankYouEmail = async ({
       donationId: donationId || "",
       organizationId: organizationId || "",
     },
+    auditEventType: "donation_thank_you",
   });
 };
 
@@ -136,6 +236,7 @@ const sendOrganizationWelcomeEmail = async ({
   organizationName,
   recipientName,
   organizationId,
+  uid,
 }) => {
   const safeRecipientName = (typeof recipientName === "string" && recipientName.trim()) ?
     recipientName.trim() :
@@ -148,23 +249,25 @@ const sendOrganizationWelcomeEmail = async ({
   const text = [
     `Hi ${safeRecipientName},`,
     "",
-    `Welcome to SwiftCause. Your organization (${safeOrgName}) has been created.`,
-    "You can now sign in and start setting up campaigns and kiosks.",
+    `Welcome to SwiftCause. Your organization (${safeOrgName}) is now set up.`,
+    "You can now sign in and start setting up campaigns, kiosks, and Stripe onboarding.",
+    "If you need help getting started, just reply to this email.",
     "",
-    "SwiftCause",
+    "Welcome aboard,",
+    "SwiftCause Team",
   ].join("\n");
 
-  const html = `<!DOCTYPE html>
-<html>
-  <body style="font-family: Arial, sans-serif; color: #333;">
-    <h2>Welcome to SwiftCause</h2>
-    <p>Hi ${escapeHtml(safeRecipientName)},</p>
-    <p>Welcome to SwiftCause. Your organization
-      <strong>${escapeHtml(safeOrgName)}</strong> has been created.</p>
-    <p>You can now sign in and start setting up campaigns and kiosks.</p>
-    <p><strong>SwiftCause</strong></p>
-  </body>
-</html>`;
+  const html = buildEmailShell({
+    preheader: "Your SwiftCause organization is ready. Sign in to get started.",
+    title: "Welcome to SwiftCause",
+    bodyHtml: `
+      <p style="margin:0 0 12px;">Hi ${escapeHtml(safeRecipientName)},</p>
+      <p style="margin:0 0 12px;">Welcome to SwiftCause. Your organization <strong>${escapeHtml(safeOrgName)}</strong> is now set up.</p>
+      <p style="margin:0 0 12px;">You can now sign in and start setting up campaigns, kiosks, and Stripe onboarding.</p>
+      <p style="margin:0 0 12px;">If you need help getting started, just reply to this email.</p>
+      <p style="margin:0;">Welcome aboard,<br/><strong>SwiftCause Team</strong></p>
+    `,
+  });
 
   return sendEmail({
     to,
@@ -174,7 +277,9 @@ const sendOrganizationWelcomeEmail = async ({
     categories: ["organization-welcome"],
     customArgs: {
       organizationId: organizationId || "",
+      uid: uid || "",
     },
+    auditEventType: "org_welcome",
   });
 };
 
@@ -194,22 +299,29 @@ const sendContactConfirmationEmail = async ({
     `Hi ${safeFirstName},`,
     "",
     "Thanks for contacting SwiftCause. We received your message and will get back to you shortly.",
+    "Our team usually replies within one business day.",
     "",
     "Message:",
     safeMessage || "(No message provided)",
     "",
+    "Regards,",
     "SwiftCause Team",
   ].join("\n");
 
-  const html = `<!DOCTYPE html>
-<html>
-  <body style="font-family: Arial, sans-serif; color: #333;">
-    <p>Hi ${escapeHtml(safeFirstName)},</p>
-    <p>Thanks for contacting SwiftCause. We received your message and will get back to you shortly.</p>
-    <p><strong>Message:</strong><br/>${messageHtml || "(No message provided)"}</p>
-    <p><strong>SwiftCause Team</strong></p>
-  </body>
-</html>`;
+  const html = buildEmailShell({
+    preheader: "We received your message and will get back to you shortly.",
+    title: "We Received Your Message",
+    bodyHtml: `
+      <p style="margin:0 0 12px;">Hi ${escapeHtml(safeFirstName)},</p>
+      <p style="margin:0 0 12px;">Thanks for contacting SwiftCause. We received your message and will get back to you shortly.</p>
+      <p style="margin:0 0 12px;">Our team usually replies within one business day.</p>
+      <p style="margin:0 0 6px;"><strong>Your message</strong></p>
+      <div style="margin:0 0 12px; padding:12px; border:1px solid #e5e7eb; border-radius:10px; background:#f9fafb;">
+        ${messageHtml || "(No message provided)"}
+      </div>
+      <p style="margin:0;">Regards,<br/><strong>SwiftCause Team</strong></p>
+    `,
+  });
 
   return sendEmail({
     to,
@@ -217,6 +329,7 @@ const sendContactConfirmationEmail = async ({
     text,
     html,
     categories: ["contact-confirmation"],
+    auditEventType: "contact_confirmation",
   });
 };
 

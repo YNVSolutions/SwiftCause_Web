@@ -105,6 +105,7 @@ const sendWelcomeEmailForNewOrg = onDocumentUpdated(
           organizationName,
           recipientName: afterData.username || afterData.displayName || null,
           organizationId: orgId,
+          uid,
         });
 
         await admin
