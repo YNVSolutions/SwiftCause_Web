@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '../../shared/ui/button';
-import { ArrowLeft, Mail, Building, SendHorizontal, Loader2, CheckCircle, AlertCircle, Clock } from 'lucide-react';
+import { ArrowLeft, Mail, SendHorizontal, Loader2, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 import { submitFeedback, queueContactConfirmationEmail } from '../../shared/api/firestoreService';
 import { useToast } from '../../shared/ui/ToastProvider';
 
@@ -41,14 +41,20 @@ export function ContactPage({ onNavigate, onBack }: { onNavigate?: (screen: stri
         return;
       }
       await submitFeedback(formData);
+      let confirmationEmailFailed = false;
       try {
         await queueContactConfirmationEmail(formData);
       } catch (emailError) {
+        confirmationEmailFailed = true;
         console.error('Error queueing confirmation email:', emailError);
       }
       setIsLoading(false);
       setIsSubmitted(true);
-      showToast('Message sent! We will get back to you soon.', 'success', 3000);
+      if (confirmationEmailFailed) {
+        showToast('Message saved. Confirmation email may be delayed.', 'error', 4000);
+      } else {
+        showToast('Message sent! We will get back to you soon.', 'success', 3000);
+      }
     } catch (err) {
       console.error('Error submitting feedback:', err);
       setIsLoading(false);

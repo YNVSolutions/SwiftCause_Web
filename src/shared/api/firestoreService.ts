@@ -16,6 +16,110 @@ import {
 import { Organization, Campaign, GiftAidDetails } from '../types';
 import { applyCampaignStatusEvent } from '../lib/campaignStatusEngine';
 
+const FUNCTION_TIMEOUT_MS = 15000;
+const RETRYABLE_STATUS_CODES = new Set([408, 409, 425, 429, 500, 502, 503, 504]);
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+class NonRetryableFunctionError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'NonRetryableFunctionError';
+  }
+}
+
+function getFunctionsBaseUrl(): string {
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  if (!projectId) {
+    throw new Error('NEXT_PUBLIC_FIREBASE_PROJECT_ID is not configured.');
+  }
+  return `https://us-central1-${projectId}.cloudfunctions.net`;
+}
+
+async function parseJsonSafe(response: Response): Promise<unknown> {
+  try {
+    return await response.json();
+  } catch {
+    return null;
+  }
+}
+
+async function postPublicFunction<TResponse>(
+  functionName: string,
+  payload: Record<string, unknown>,
+  options: {
+    attempts?: number;
+    retryDelayMs?: number;
+    timeoutMs?: number;
+  } = {}
+): Promise<TResponse> {
+  const attempts = options.attempts ?? 3;
+  const retryDelayMs = options.retryDelayMs ?? 700;
+  const timeoutMs = options.timeoutMs ?? FUNCTION_TIMEOUT_MS;
+  const url = `${getFunctionsBaseUrl()}/${functionName}`;
+
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Client-Source': 'public-web',
+        },
+        body: JSON.stringify(payload),
+        credentials: 'omit',
+        cache: 'no-store',
+        keepalive: true,
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeout);
+      const responseData = await parseJsonSafe(response);
+
+      if (response.ok) {
+        return responseData as TResponse;
+      }
+
+      const errorPayload = responseData as { error?: string; message?: string } | null;
+      const message =
+        errorPayload?.error ||
+        errorPayload?.message ||
+        `Request failed with status ${response.status}.`;
+
+      if (RETRYABLE_STATUS_CODES.has(response.status) && attempt < attempts) {
+        await sleep(retryDelayMs);
+        continue;
+      }
+
+      throw new NonRetryableFunctionError(message);
+    } catch (error) {
+      clearTimeout(timeout);
+      if (error instanceof NonRetryableFunctionError) {
+        throw error;
+      }
+
+      const isAbort = error instanceof Error && error.name === 'AbortError';
+      const isLastAttempt = attempt >= attempts;
+
+      if (!isLastAttempt) {
+        await sleep(retryDelayMs);
+        continue;
+      }
+
+      if (isAbort) {
+        throw new Error('Request timed out while contacting email service.');
+      }
+
+      throw error;
+    }
+  }
+
+  throw new Error('Failed to contact function.');
+}
+
 async function syncCampaignStatus(campaign: Campaign): Promise<Campaign> {
   const resolution = applyCampaignStatusEvent(campaign, { type: 'SYSTEM_RECONCILE' });
   const resolvedStatus = resolution.status;
@@ -162,23 +266,14 @@ export async function createThankYouMail(recipientEmail: string, campaignName?: 
     throw new Error('Transaction ID is required to send a receipt email.');
   }
 
-  const url = `https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/sendDonationThankYouEmail`;
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      email: normalizedEmail,
-      campaignName,
-      transactionId,
-    }),
+  await postPublicFunction('sendDonationThankYouEmail', {
+    email: normalizedEmail,
+    campaignName,
+    transactionId,
+  }, {
+    attempts: 4,
+    retryDelayMs: 900,
   });
-
-  const responseData = await response.json();
-  if (!response.ok) {
-    throw new Error(responseData.error || 'Failed to send thank-you email.');
-  }
 }
 
 export interface FeedbackData {
@@ -204,25 +299,14 @@ export async function submitFeedback(feedback: FeedbackData) {
 }
 
 export async function queueContactConfirmationEmail(feedback: FeedbackData) {
-  const url = `https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/sendContactConfirmationEmail`;
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      email: feedback.email,
-      firstName: feedback.firstName,
-      message: feedback.message,
-    }),
+  return postPublicFunction('sendContactConfirmationEmail', {
+    email: feedback.email,
+    firstName: feedback.firstName,
+    message: feedback.message,
+  }, {
+    attempts: 3,
+    retryDelayMs: 700,
   });
-
-  const responseData = await response.json();
-  if (!response.ok) {
-    throw new Error(responseData.error || 'Failed to send contact confirmation email.');
-  }
-
-  return responseData;
 }
 
 export async function storeGiftAidDeclaration(giftAidData: GiftAidDetails, transactionId: string) {
