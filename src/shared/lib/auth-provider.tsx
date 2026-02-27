@@ -25,6 +25,23 @@ const createVerificationToken = (): string => {
   return `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`
 }
 
+const getVerificationBaseUrl = (): string => {
+  const configuredBaseUrl = process.env.NEXT_PUBLIC_APP_URL?.trim()
+  if (configuredBaseUrl) {
+    try {
+      return new URL(configuredBaseUrl).origin
+    } catch {
+      console.error('Invalid NEXT_PUBLIC_APP_URL for verification links:', configuredBaseUrl)
+    }
+  }
+
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return window.location.origin
+  }
+
+  return 'http://localhost'
+}
+
 const buildVerificationActionSettings = async (uid: string) => {
   const token = createVerificationToken()
   const expiresAt = new Date(Date.now() + (24 * 60 * 60 * 1000)).toISOString()
@@ -34,14 +51,49 @@ const buildVerificationActionSettings = async (uid: string) => {
     emailVerificationTokenExpiresAt: expiresAt,
   })
 
-  const origin = typeof window !== 'undefined' ? window.location.origin : ''
-  const continueUrl = new URL('/auth/verify-email', origin || 'http://localhost')
+  const continueUrl = new URL('/auth/verify-email', getVerificationBaseUrl())
   continueUrl.searchParams.set('verify_uid', uid)
   continueUrl.searchParams.set('verify_token', token)
 
   return {
     handleCodeInApp: true,
     url: continueUrl.toString(),
+  }
+}
+
+const hasFirebaseAuthCode = (
+  error: unknown,
+  code: string
+): error is { code: string } => {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    (error as { code?: string }).code === code
+  )
+}
+
+const sendVerificationEmailWithFallback = async (
+  user: import('firebase/auth').User,
+  uid: string
+) => {
+  const actionCodeSettings = await buildVerificationActionSettings(uid)
+
+  try {
+    await sendEmailVerification(user, actionCodeSettings)
+  } catch (error) {
+    if (!hasFirebaseAuthCode(error, 'auth/unauthorized-continue-uri')) {
+      throw error
+    }
+
+    console.error('Verification continue URL rejected by Firebase Auth', {
+      runtimeOrigin: typeof window !== 'undefined' ? window.location.origin : null,
+      continueUrl: actionCodeSettings.url,
+      code: error.code,
+    })
+
+    // Fallback: send Firebase-hosted verification email so signup can complete.
+    await sendEmailVerification(user)
   }
 }
 
@@ -320,8 +372,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       })
 
       // Send verification email
-      const actionCodeSettings = await buildVerificationActionSettings(userId)
-      await sendEmailVerification(userCredential.user, actionCodeSettings)
+      await sendVerificationEmailWithFallback(userCredential.user, userId)
 
       // DON'T sign out - keep user authenticated so they can resend verification
       // But DON'T establish a session in our app (don't call handleLogin)
@@ -355,8 +406,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       
       // Send verification email
-      const actionCodeSettings = await buildVerificationActionSettings(user.uid)
-      await sendEmailVerification(user, actionCodeSettings)
+      await sendVerificationEmailWithFallback(user, user.uid)
     } catch (error) {
       console.error('Error resending verification email:', error)
       throw error
