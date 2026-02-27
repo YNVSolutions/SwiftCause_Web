@@ -30,7 +30,6 @@ const {
   createExpressDashboardLink,
 } = require("./handlers/payments");
 const {createRecurringSubscription, cancelRecurringSubscription, updateSubscriptionPaymentMethod} = require("./handlers/subscriptions");
-const {createStripeAccountForNewOrg} = require("./handlers/triggers");
 const {
   createStripeAccountForNewOrg,
   sendWelcomeEmailForNewOrg,
