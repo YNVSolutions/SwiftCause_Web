@@ -15,6 +15,41 @@ const canAssignRole = (callerRole, targetRole) => {
   return allowedRoles.includes(targetRole);
 };
 
+const PASSWORD_POLICY = {
+  minLength: 8,
+  requireUppercase: true,
+  requireLowercase: true,
+  requireNumber: true,
+  requireSpecialCharacter: true,
+};
+
+const SPECIAL_CHARACTER_REGEX = /[!@#$%^&*(),.?":{}|<>]/;
+
+const validatePasswordStrength = (password) => {
+  if (typeof password !== "string" || password.length < PASSWORD_POLICY.minLength) {
+    return "Password must be at least 8 characters";
+  }
+
+  if (PASSWORD_POLICY.requireUppercase && !/[A-Z]/.test(password)) {
+    return "Password must contain at least one uppercase letter";
+  }
+
+  if (PASSWORD_POLICY.requireLowercase && !/[a-z]/.test(password)) {
+    return "Password must contain at least one lowercase letter";
+  }
+
+  if (PASSWORD_POLICY.requireNumber && !/[0-9]/.test(password)) {
+    return "Password must contain at least one number";
+  }
+
+  if (PASSWORD_POLICY.requireSpecialCharacter &&
+      !SPECIAL_CHARACTER_REGEX.test(password)) {
+    return "Password must contain at least one special character";
+  }
+
+  return null;
+};
+
 const canAssignPermissions = (callerData, targetPermissions) => {
   if (!Array.isArray(targetPermissions)) return false;
 
@@ -79,6 +114,11 @@ const createUser = (req, res) => {
         return res
             .status(400)
             .send({error: "Missing required fields for user creation."});
+      }
+
+      const passwordValidationError = validatePasswordStrength(password);
+      if (passwordValidationError) {
+        return res.status(400).send({error: passwordValidationError});
       }
 
       // Enforce same-organization user management for non-super admins.
@@ -365,4 +405,5 @@ module.exports = {
   createUser,
   updateUser,
   deleteUser,
+  validatePasswordStrength,
 };
