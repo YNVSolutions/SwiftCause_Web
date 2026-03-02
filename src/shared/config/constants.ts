@@ -324,7 +324,7 @@ export const PASSWORD_REQUIREMENTS = {
   requireUppercase: true,
   requireLowercase: true,
   requireNumbers: true,
-  requireSpecialChars: false
+  requireSpecialChars: true
 } as const;
 
 // HMRC-compliant Gift Aid declaration text

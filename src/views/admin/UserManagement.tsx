@@ -12,7 +12,7 @@ import {
 import { Skeleton } from "../../shared/ui/skeleton";
 import { Ghost } from "lucide-react";
 import { Screen, User, UserRole, AdminSession, Permission } from '../../shared/types'; 
-import { DEFAULT_USER_PERMISSIONS } from '../../shared/config/constants';
+import { DEFAULT_USER_PERMISSIONS, PASSWORD_REQUIREMENTS } from '../../shared/config/constants';
 import { calculateUserStats } from '../../shared/lib/userManagementHelpers';
 import { useUsers } from '../../shared/lib/hooks/useUsers';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../../shared/ui/dialog';
@@ -59,6 +59,8 @@ const canAssignPermission = (actorSession: AdminSession, permission: Permission)
         actorPermissions.includes(permission)
     );
 };
+
+const SPECIAL_CHARACTER_REGEX = /[!@#$%^&*(),.?":{}|<>]/;
 
 // Helper function to get initials from username
 const getInitials = (username: string): string => {
@@ -915,8 +917,17 @@ function CreateUserDialog({ open, onOpenChange, newUser, onUserChange, onCreateU
         
         if (!newUser.password || newUser.password.trim() === '') {
             newErrors.password = 'Password is required';
-        } else if (newUser.password.length < 6) {
-            newErrors.password = 'Password must be at least 6 characters';
+        } else if (newUser.password.length < PASSWORD_REQUIREMENTS.minLength) {
+            newErrors.password = `Password must be at least ${PASSWORD_REQUIREMENTS.minLength} characters`;
+        } else if (PASSWORD_REQUIREMENTS.requireUppercase && !/[A-Z]/.test(newUser.password)) {
+            newErrors.password = 'Password must contain at least one uppercase letter';
+        } else if (PASSWORD_REQUIREMENTS.requireLowercase && !/[a-z]/.test(newUser.password)) {
+            newErrors.password = 'Password must contain at least one lowercase letter';
+        } else if (PASSWORD_REQUIREMENTS.requireNumbers && !/[0-9]/.test(newUser.password)) {
+            newErrors.password = 'Password must contain at least one number';
+        } else if (PASSWORD_REQUIREMENTS.requireSpecialChars &&
+            !SPECIAL_CHARACTER_REGEX.test(newUser.password)) {
+            newErrors.password = 'Password must contain at least one special character';
         }
         if (!canAssignRole(userSession?.user?.role, newUser.role)) {
             newErrors.role = 'You do not have permission to assign this role';
