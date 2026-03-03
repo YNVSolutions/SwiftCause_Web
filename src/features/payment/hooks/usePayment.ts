@@ -10,6 +10,9 @@ interface UsePaymentReturn {
   handlePaymentSubmit: (amount: number, metadata: Record<string, unknown>, currency: string) => Promise<void>;
 }
 
+const getStringValue = (value: unknown): string | undefined =>
+  typeof value === 'string' && value.trim().length > 0 ? value : undefined;
+
 export function usePayment(onPaymentComplete: (result: PaymentResult) => void): UsePaymentReturn {
   const stripe = useStripe();
   const elements = useElements();
@@ -151,20 +154,33 @@ async function handleRecurringPayment(
 
   // Map recurring interval from UI format to API format
   const recurringInterval = metadata.recurringInterval as string;
+  const campaignId = getStringValue(metadata.campaignId);
+  const donorEmail = getStringValue(metadata.donorEmail);
+  const donorName = getStringValue(metadata.donorName);
+  const donorPhone = getStringValue(metadata.donorPhone);
+  const platform = getStringValue(metadata.platform);
+
+  if (!campaignId) {
+    const errorMessage = 'Campaign ID is required for recurring subscriptions.';
+    setError(errorMessage);
+    onPaymentComplete({ success: false, error: errorMessage });
+    return;
+  }
+
   const requestBody: CreateSubscriptionRequest = {
     amount,
     interval: recurringInterval === 'yearly' ? 'year' : 'month',
     intervalCount: recurringInterval === 'quarterly' ? 3 : 1,
-    campaignId: metadata.campaignId,
+    campaignId,
     donor: {
-      email: metadata.donorEmail || 'anonymous@example.com',
-      name: metadata.donorName || 'Anonymous',
-      phone: metadata.donorPhone,
+      email: donorEmail || 'anonymous@example.com',
+      name: donorName || 'Anonymous',
+      phone: donorPhone,
     },
     paymentMethodId: paymentMethod?.id,
     metadata: {
       ...metadata,
-      platform: metadata.platform || 'web',
+      platform: platform || 'web',
     },
   };
 
