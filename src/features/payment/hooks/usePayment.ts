@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
 import type { Stripe, StripeCardElement } from '@stripe/stripe-js';
 import { PaymentResult } from '../../../shared/types';
+import type { CreateSubscriptionRequest } from '../../../shared/types/subscription';
 
 interface UsePaymentReturn {
   isProcessing: boolean;
@@ -149,18 +150,11 @@ async function handleRecurringPayment(
   }
 
   // Map recurring interval from UI format to API format
-  const intervalMap: Record<string, string> = {
-    monthly: 'month',
-    quarterly: 'month', // Quarterly is handled as 3-month interval
-    yearly: 'year',
-  };
-
   const recurringInterval = metadata.recurringInterval as string;
-  const interval = intervalMap[recurringInterval] || 'month';
-
-  const requestBody = {
+  const requestBody: CreateSubscriptionRequest = {
     amount,
-    interval,
+    interval: recurringInterval === 'yearly' ? 'year' : 'month',
+    intervalCount: recurringInterval === 'quarterly' ? 3 : 1,
     campaignId: metadata.campaignId,
     donor: {
       email: metadata.donorEmail || 'anonymous@example.com',
