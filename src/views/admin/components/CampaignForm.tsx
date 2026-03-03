@@ -670,7 +670,6 @@ export function CampaignForm({
                     </div>
 
                     {/* Recurring Payments Toggle */}
-                    {/*
                     <div className="col-span-full">
                       <div className="flex items-center justify-between mb-4">
                         <Label className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
@@ -748,7 +747,6 @@ export function CampaignForm({
                         </div>
                       )}
                     </div>
-                    */}
 
                     <div className="col-span-full">
                       <Label htmlFor="tags" className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3 block">
