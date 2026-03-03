@@ -11,6 +11,9 @@ const recaptchaSecretKey = defineSecret("RECAPTCHA_SECRET_KEY");
 const sendgridApiKey = defineSecret("SENDGRID_API_KEY");
 const sendgridFromEmail = defineSecret("SENDGRID_FROM_EMAIL");
 const sendgridFromName = defineSecret("SENDGRID_FROM_NAME");
+const stripeSecretKey = defineSecret("STRIPE_SECRET_KEY");
+const stripeWebhookSecretAccount = defineSecret("STRIPE_WEBHOOK_SECRET_ACCOUNT");
+const stripeWebhookSecretPayment = defineSecret("STRIPE_WEBHOOK_SECRET_PAYMENT");
 
 // Import handlers
 const {createUser, updateUser, deleteUser} = require("./handlers/users");
@@ -52,29 +55,49 @@ exports.sendDonationThankYouEmail = onRequest(
     sendDonationThankYouEmail,
 );
 exports.handleAccountUpdatedStripeWebhook = functions.https.onRequest(
+    {
+      secrets: [stripeSecretKey, stripeWebhookSecretAccount],
+    },
     handleAccountUpdatedStripeWebhook,
 );
 exports.handlePaymentCompletedStripeWebhook = functions.https.onRequest(
+    {
+      secrets: [stripeSecretKey, stripeWebhookSecretPayment],
+    },
     handlePaymentCompletedStripeWebhook,
 );
 exports.handleSubscriptionWebhook = functions.https.onRequest(
+    {
+      secrets: [stripeSecretKey, stripeWebhookSecretPayment],
+    },
     handleSubscriptionWebhook,
 );
-exports.createOnboardingLink = functions.https.onRequest(createOnboardingLink);
+exports.createOnboardingLink = functions.https.onRequest(
+    {secrets: [stripeSecretKey]},
+    createOnboardingLink,
+);
 exports.createKioskPaymentIntent = functions.https.onRequest(
+    {secrets: [stripeSecretKey]},
     createKioskPaymentIntent,
 );
-exports.createPaymentIntent = functions.https.onRequest(createPaymentIntent);
+exports.createPaymentIntent = functions.https.onRequest(
+    {secrets: [stripeSecretKey]},
+    createPaymentIntent,
+);
 exports.createExpressDashboardLink = functions.https.onRequest(
+    {secrets: [stripeSecretKey]},
     createExpressDashboardLink,
 );
 exports.createRecurringSubscription = functions.https.onRequest(
+    {secrets: [stripeSecretKey]},
     createRecurringSubscription,
 );
 exports.cancelRecurringSubscription = functions.https.onRequest(
+    {secrets: [stripeSecretKey]},
     cancelRecurringSubscription,
 );
 exports.updateSubscriptionPaymentMethod = functions.https.onRequest(
+    {secrets: [stripeSecretKey]},
     updateSubscriptionPaymentMethod,
 );
 exports.createStripeAccountForNewOrg = createStripeAccountForNewOrg;
