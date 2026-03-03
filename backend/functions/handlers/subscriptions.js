@@ -18,6 +18,7 @@ const createRecurringSubscription = (req, res) => {
       const {
         amount,
         interval, // 'month', 'year'
+        intervalCount = 1,
         campaignId,
         donor,
         paymentMethodId,
@@ -27,6 +28,7 @@ const createRecurringSubscription = (req, res) => {
       console.log("createRecurringSubscription called with:", {
         amount,
         interval,
+        intervalCount,
         campaignId,
         donorEmail: donor?.email,
         paymentMethodId: paymentMethodId ? "provided" : "missing",
@@ -44,6 +46,19 @@ const createRecurringSubscription = (req, res) => {
         console.error("Invalid interval:", interval);
         return res.status(400).send({
           error: "Invalid interval. Must be 'month' or 'year'",
+        });
+      }
+
+      const normalizedIntervalCount = Number(intervalCount);
+      if (
+        !Number.isInteger(normalizedIntervalCount) ||
+        normalizedIntervalCount < 1 ||
+        (interval === "year" && normalizedIntervalCount !== 1) ||
+        (interval === "month" && ![1, 3].includes(normalizedIntervalCount))
+      ) {
+        console.error("Invalid intervalCount:", intervalCount);
+        return res.status(400).send({
+          error: "Invalid intervalCount for the selected interval",
         });
       }
 
@@ -123,7 +138,10 @@ const createRecurringSubscription = (req, res) => {
       const price = await stripeClient.prices.create({
         unit_amount: amount,
         currency: currency,
-        recurring: {interval},
+        recurring: {
+          interval,
+          interval_count: normalizedIntervalCount,
+        },
         product_data: {
           name: `Recurring donation to ${campaignData.title}`,
           metadata: {
@@ -164,6 +182,7 @@ const createRecurringSubscription = (req, res) => {
         campaignId,
         organizationId: orgId,
         interval,
+        intervalCount: normalizedIntervalCount,
         amount,
         currency: currency,
         status: subscription.status,
@@ -176,42 +195,6 @@ const createRecurringSubscription = (req, res) => {
           platform: metadata.platform || "web",
         },
       });
-
-      // Create initial donation record immediately to update campaign amount
-      const {createDonationDoc} = require("../entities/donation");
-      
-      // Map interval back to UI format
-      const intervalMap = {
-        'month': 'monthly',
-        'year': 'yearly'
-      };
-      const recurringInterval = intervalMap[interval] || interval;
-
-      try {
-        await createDonationDoc({
-          transactionId: subscription.id + "_initial",
-          campaignId,
-          organizationId: orgId,
-          amount: amount,
-          currency: currency,
-          donorEmail: donor.email,
-          donorName: donor.name || "Anonymous",
-          donorPhone: donor.phone || null,
-          isRecurring: true,
-          recurringInterval: recurringInterval,
-          subscriptionId: subscription.id,
-          invoiceId: null,
-          platform: metadata.platform || "web",
-          metadata: {
-            campaignTitleSnapshot: campaignData.title,
-            source: "subscription_initial_payment"
-          }
-        });
-        console.log("Initial donation created for subscription:", subscription.id);
-      } catch (donationError) {
-        console.error("Failed to create initial donation:", donationError);
-        // Don't fail the subscription creation if donation fails
-      }
 
       // Handle first invoice
       const latestInvoice = subscription.latest_invoice;
