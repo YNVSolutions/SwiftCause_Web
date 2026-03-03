@@ -126,18 +126,28 @@ export async function updateSubscriptionStatus(
 /**
  * Calculate subscription statistics for a campaign
  */
-export async function getSubscriptionStats(campaignId: string) {
+export async function getSubscriptionStats(organizationId: string) {
   try {
-    const subscriptions = await getSubscriptionsByCampaign(campaignId);
+    const subscriptions = await getSubscriptionsByOrganization(organizationId);
     
     const active = subscriptions.filter(s => s.status === 'active');
     const totalMonthlyRevenue = active.reduce((sum, sub) => {
-      const monthlyAmount = sub.interval === 'year' ? sub.amount / 12 : sub.amount;
+      const monthlyAmount =
+        sub.interval === 'year'
+          ? sub.amount / 12
+          : sub.intervalCount === 3
+            ? sub.amount / 3
+            : sub.amount;
       return sum + monthlyAmount;
     }, 0);
     
     const totalAnnualRevenue = active.reduce((sum, sub) => {
-      const annualAmount = sub.interval === 'month' ? sub.amount * 12 : sub.amount;
+      const annualAmount =
+        sub.interval === 'month'
+          ? sub.intervalCount === 3
+            ? sub.amount * 4
+            : sub.amount * 12
+          : sub.amount;
       return sum + annualAmount;
     }, 0);
     
