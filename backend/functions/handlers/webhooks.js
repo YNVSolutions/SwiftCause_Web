@@ -357,11 +357,12 @@ const handleInvoicePaid = async (invoice) => {
   }
 
   // Map interval back to UI format for consistency
-  const intervalMap = {
-    'month': 'monthly',
-    'year': 'yearly'
-  };
-  const recurringInterval = intervalMap[subscriptionData.interval] || subscriptionData.interval;
+  const recurringInterval =
+    subscriptionData.interval === "year" ?
+      "yearly" :
+      subscriptionData.intervalCount === 3 ?
+        "quarterly" :
+        "monthly";
 
   // Create donation record for this recurring payment
   await createDonationDoc({

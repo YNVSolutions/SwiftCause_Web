@@ -16,6 +16,7 @@ export interface Subscription {
   campaignId: string;
   organizationId: string;
   interval: SubscriptionInterval;
+  intervalCount?: number;
   amount: number;
   currency: string;
   status: SubscriptionStatus;
@@ -36,6 +37,7 @@ export interface Subscription {
 export interface CreateSubscriptionRequest {
   amount: number;
   interval: SubscriptionInterval;
+  intervalCount?: number;
   campaignId: string;
   donor: {
     email: string;

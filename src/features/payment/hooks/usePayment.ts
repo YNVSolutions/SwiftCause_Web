@@ -2,12 +2,16 @@ import { useState, useCallback } from 'react';
 import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
 import type { Stripe, StripeCardElement } from '@stripe/stripe-js';
 import { PaymentResult } from '../../../shared/types';
+import type { CreateSubscriptionRequest } from '../../../shared/types/subscription';
 
 interface UsePaymentReturn {
   isProcessing: boolean;
   error: string | null;
   handlePaymentSubmit: (amount: number, metadata: Record<string, unknown>, currency: string) => Promise<void>;
 }
+
+const getStringValue = (value: unknown): string | undefined =>
+  typeof value === 'string' && value.trim().length > 0 ? value : undefined;
 
 export function usePayment(onPaymentComplete: (result: PaymentResult) => void): UsePaymentReturn {
   const stripe = useStripe();
@@ -149,28 +153,34 @@ async function handleRecurringPayment(
   }
 
   // Map recurring interval from UI format to API format
-  const intervalMap: Record<string, string> = {
-    monthly: 'month',
-    quarterly: 'month', // Quarterly is handled as 3-month interval
-    yearly: 'year',
-  };
-
   const recurringInterval = metadata.recurringInterval as string;
-  const interval = intervalMap[recurringInterval] || 'month';
+  const campaignId = getStringValue(metadata.campaignId);
+  const donorEmail = getStringValue(metadata.donorEmail);
+  const donorName = getStringValue(metadata.donorName);
+  const donorPhone = getStringValue(metadata.donorPhone);
+  const platform = getStringValue(metadata.platform);
 
-  const requestBody = {
+  if (!campaignId) {
+    const errorMessage = 'Campaign ID is required for recurring subscriptions.';
+    setError(errorMessage);
+    onPaymentComplete({ success: false, error: errorMessage });
+    return;
+  }
+
+  const requestBody: CreateSubscriptionRequest = {
     amount,
-    interval,
-    campaignId: metadata.campaignId,
+    interval: recurringInterval === 'yearly' ? 'year' : 'month',
+    intervalCount: recurringInterval === 'quarterly' ? 3 : 1,
+    campaignId,
     donor: {
-      email: metadata.donorEmail || 'anonymous@example.com',
-      name: metadata.donorName || 'Anonymous',
-      phone: metadata.donorPhone,
+      email: donorEmail || 'anonymous@example.com',
+      name: donorName || 'Anonymous',
+      phone: donorPhone,
     },
     paymentMethodId: paymentMethod?.id,
     metadata: {
       ...metadata,
-      platform: metadata.platform || 'web',
+      platform: platform || 'web',
     },
   };
 

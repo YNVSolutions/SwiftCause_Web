@@ -25,26 +25,24 @@ export const isSubscriptionPastDue = (subscription: Subscription): boolean => {
  * Get human-readable interval display
  */
 export const getSubscriptionDisplayInterval = (
-  interval: SubscriptionInterval
+  interval: SubscriptionInterval,
+  intervalCount: number = 1
 ): string => {
-  const map: Record<SubscriptionInterval, string> = {
-    month: "Monthly",
-    year: "Yearly",
-  };
-  return map[interval] || interval;
+  if (interval === "year") return "Yearly";
+  if (intervalCount === 3) return "Quarterly";
+  return "Monthly";
 };
 
 /**
  * Get short interval display (for UI badges)
  */
 export const getSubscriptionShortInterval = (
-  interval: SubscriptionInterval
+  interval: SubscriptionInterval,
+  intervalCount: number = 1
 ): string => {
-  const map: Record<SubscriptionInterval, string> = {
-    month: "/mo",
-    year: "/yr",
-  };
-  return map[interval] || "";
+  if (interval === "year") return "/yr";
+  if (intervalCount === 3) return "/qtr";
+  return "/mo";
 };
 
 /**
@@ -80,9 +78,10 @@ export const mapToStripeInterval = (
  * Map Stripe interval format to campaign interval format
  */
 export const mapFromStripeInterval = (
-  interval: SubscriptionInterval
-): "monthly" | "yearly" => {
-  if (interval === "month") return "monthly";
+  interval: SubscriptionInterval,
+  intervalCount: number = 1
+): "monthly" | "quarterly" | "yearly" => {
   if (interval === "year") return "yearly";
+  if (intervalCount === 3) return "quarterly";
   return "monthly";
 };
