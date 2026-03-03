@@ -17,6 +17,7 @@ import {
 import { getSubscriptionsByOrganization, getSubscriptionStats } from '../../entities/subscription/api/subscriptionApi';
 import { Subscription } from '../../shared/types/subscription';
 import { formatCurrencyFromMajor } from '../../shared/lib/currencyFormatter';
+import { getSubscriptionDisplayInterval } from '../../entities/subscription/model/selectors';
 
 interface SubscriptionManagementProps {
   organizationId: string;
@@ -212,7 +213,7 @@ export function SubscriptionManagement({ organizationId }: SubscriptionManagemen
                       </td>
                       <td className="p-3">
                         <Badge variant="outline">
-                          {sub.interval === 'month' ? 'Monthly' : 'Yearly'}
+                          {getSubscriptionDisplayInterval(sub.interval, sub.intervalCount)}
                         </Badge>
                       </td>
                       <td className="p-3">{getStatusBadge(sub.status)}</td>
