@@ -7,12 +7,16 @@ const {sendOrganizationWelcomeEmail} = require("../services/email");
 const sendgridApiKey = defineSecret("SENDGRID_API_KEY");
 const sendgridFromEmail = defineSecret("SENDGRID_FROM_EMAIL");
 const sendgridFromName = defineSecret("SENDGRID_FROM_NAME");
+const stripeSecretKey = defineSecret("STRIPE_SECRET_KEY");
 
 /**
  * Firestore trigger: Create Stripe account when new organization is created
  */
 const createStripeAccountForNewOrg = onDocumentCreated(
-    "organizations/{orgId}",
+    {
+      document: "organizations/{orgId}",
+      secrets: [stripeSecretKey],
+    },
     async (event) => {
       const orgId = event.params.orgId;
       console.log(`Creating Stripe account for new organization: ${orgId}`);
