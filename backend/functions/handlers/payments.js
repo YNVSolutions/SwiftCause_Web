@@ -326,16 +326,68 @@ const createExpressDashboardLink = (req, res) => {
     try {
       // Ensure Stripe is initialized
       const stripeClient = ensureStripeInitialized();
-      
-      const {accountId} = req.body;
-      if (!accountId) {
-        return res.status(400).json({error: "accountId is required"});
+
+      const auth = await verifyAuth(req);
+      const callerDoc = await admin
+          .firestore()
+          .collection("users")
+          .doc(auth.uid)
+          .get();
+
+      if (!callerDoc.exists) {
+        return res.status(403).json({error: "Caller is not a valid user"});
       }
 
-      const loginLink = await stripeClient.accounts.createLoginLink(accountId);
+      const callerData = callerDoc.data() || {};
+      const callerRole = callerData.role;
+      const callerOrgId = typeof callerData.organizationId === "string" ?
+        callerData.organizationId.trim() :
+        "";
+      const callerPermissions = Array.isArray(callerData.permissions) ?
+        callerData.permissions :
+        [];
+      const requestedOrgId = typeof req.body?.orgId === "string" ?
+        req.body.orgId.trim() :
+        "";
+      const isSuperScope =
+        callerRole === "super_admin" ||
+        callerPermissions.includes("system_admin");
+
+      let targetOrgId = callerOrgId;
+      if (isSuperScope && requestedOrgId) {
+        targetOrgId = requestedOrgId;
+      } else if (requestedOrgId && requestedOrgId !== callerOrgId) {
+        return res.status(403).json({
+          error: "You can only access Stripe dashboard for your organization",
+        });
+      }
+
+      if (!targetOrgId) {
+        return res.status(400).json({error: "Missing orgId"});
+      }
+
+      const orgDoc = await admin
+          .firestore()
+          .collection("organizations")
+          .doc(targetOrgId)
+          .get();
+
+      if (!orgDoc.exists) {
+        return res.status(404).json({error: "Organization not found"});
+      }
+
+      const stripeAccountId = orgDoc.data()?.stripe?.accountId;
+      if (!stripeAccountId) {
+        return res.status(404).json({error: "Stripe account not found"});
+      }
+
+      const loginLink = await stripeClient.accounts.createLoginLink(stripeAccountId);
       res.json({url: loginLink.url});
     } catch (err) {
       console.error("Error creating Express dashboard link:", err);
+      if (err.code === 401 || err.code === 403) {
+        return res.status(err.code).json({error: err.message});
+      }
       res.status(500).json({error: err.message});
     }
   });
