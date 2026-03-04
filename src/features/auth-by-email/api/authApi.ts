@@ -231,7 +231,6 @@ export const authApi = {
           'edit_user',
           'delete_user',
           'manage_permissions',
-          'system_admin',
         ],
         isActive: true,
         createdAt: new Date().toISOString(),
