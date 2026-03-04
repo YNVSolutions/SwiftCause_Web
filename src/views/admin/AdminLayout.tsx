@@ -39,7 +39,7 @@ import {
   Loader2,
   AlertCircle,
 } from "lucide-react";
-import { db } from "../../shared/lib/firebase";
+import { auth, db } from "../../shared/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 
 const SCREEN_LABELS: Partial<Record<Screen, string>> = {
@@ -553,14 +553,27 @@ export function AdminLayout({
 
       console.log("Stripe Account ID:", stripeAccountId);
 
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        setIsLoadingStripe(false);
+        setStripeError({
+          title: "Authentication Required",
+          message: "Your session has expired. Please sign in again."
+        });
+        return;
+      }
+
+      const idToken = await currentUser.getIdToken();
+
       // Make POST request to get the dashboard link
       const response = await fetch(`https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/createExpressDashboardLink`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${idToken}`,
         },
         body: JSON.stringify({
-          accountId: stripeAccountId,
+          orgId: userSession.user.organizationId,
         }),
       });
 
