@@ -360,7 +360,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           'edit_user',
           'delete_user',
           'manage_permissions',
-          'system_admin',
         ] as Permission[],
         isActive: true,
         createdAt: new Date().toISOString(),
