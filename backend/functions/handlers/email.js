@@ -15,7 +15,7 @@ const normalizeString = (value) => {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const getDonationWithRetry = async (transactionId, attempts = 6, delayMs = 500) => {
+const getDonationWithRetry = async (transactionId, attempts = 10, delayMs = 700) => {
   for (let attempt = 1; attempt <= attempts; attempt++) {
     const donationRef = admin.firestore().collection("donations").doc(transactionId);
     const donationSnap = await donationRef.get();

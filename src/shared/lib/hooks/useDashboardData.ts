@@ -58,6 +58,8 @@ export interface Alert {
   priority: 'low' | 'medium' | 'high';
 }
 
+const IS_DEBUG_LOGGING = process.env.NODE_ENV !== 'production';
+
 export function useDashboardData(organizationId?: string) {
   const [stats, setStats] = useState<DashboardStats>({
     totalRaised: 0,
@@ -86,7 +88,9 @@ export function useDashboardData(organizationId?: string) {
       return;
     }
 
-    console.log('fetchDashboardData called with organizationId:', organizationId);
+    if (IS_DEBUG_LOGGING) {
+      console.log('fetchDashboardData called with organizationId:', organizationId);
+    }
 
     setLoading(true);
     setError(null);
@@ -161,7 +165,9 @@ export function useDashboardData(organizationId?: string) {
       let topCampaigns: Array<{ id: string; name: string; raised: number; goal: number; percentage: number; donationCount: number }> = [];
       
       try {
-        console.log('Fetching donations for category distribution analysis, organization:', organizationId);
+        if (IS_DEBUG_LOGGING) {
+          console.log('Fetching donations for category distribution analysis, organization:', organizationId);
+        }
 
         // Fetch all donations for this organization (client-side counting approach)
         const { getDocs } = await import('firebase/firestore');
@@ -172,32 +178,31 @@ export function useDashboardData(organizationId?: string) {
         
         const donationsSnapshot = await getDocs(donationsQuery);
         
-        console.log(`Total donations fetched: ${donationsSnapshot.size}`);
+        if (IS_DEBUG_LOGGING) {
+          console.log(`Total donations fetched: ${donationsSnapshot.size}`);
+        }
 
         // Create a map of campaign ID to category using existing campaigns data
         const campaignCategoryMap: { [campaignId: string]: string } = {};
+        const campaignCategoryByTitleMap: { [titleKey: string]: string } = {};
         campaignsData.forEach((campaign: Campaign) => {
           if (campaign.id && campaign.category) {
             campaignCategoryMap[campaign.id] = campaign.category;
+          }
+          if (campaign.title && campaign.category) {
+            campaignCategoryByTitleMap[campaign.title.trim().toLowerCase()] = campaign.category;
           }
         });
 
         // Count donations by category
         let totalDonationAmount = 0;
         let totalDonationCount = 0;
+        let uncategorizedCount = 0;
+        const uncategorizedSamples: Array<{ donationId: string; campaignId?: string; campaignTitleSnapshot?: string }> = [];
 
         donationsSnapshot.forEach((doc) => {
           const donation = doc.data();
           const campaignId = donation.campaignId;
-          
-          console.log('Processing donation:', {
-            id: doc.id,
-            campaignId: campaignId,
-            amount: donation.amount,
-            category: donation.category, // Check if category is directly on donation
-            isGiftAid: donation.isGiftAid,
-            donationData: donation
-          });
           
           // Calculate Gift Aid (25% of donation if eligible)
           if (donation.isGiftAid && donation.amount) {
@@ -205,11 +210,19 @@ export function useDashboardData(organizationId?: string) {
           }
           
           // First try to get category directly from donation
-          let category = donation.category;
+          let category = typeof donation.category === 'string' ? donation.category.trim() : '';
           
           // If no direct category, try to get from campaign mapping
           if (!category && campaignId) {
             category = campaignCategoryMap[campaignId];
+          }
+
+          // Fallback to campaign title snapshot when campaignId is missing or campaign was deleted
+          if (!category && typeof donation.campaignTitleSnapshot === 'string') {
+            const titleKey = donation.campaignTitleSnapshot.trim().toLowerCase();
+            if (titleKey) {
+              category = campaignCategoryByTitleMap[titleKey];
+            }
           }
           
           // If still no category but it's a Gift Aid donation, use "Gift Aid" as category
@@ -220,12 +233,14 @@ export function useDashboardData(organizationId?: string) {
           // If still no category, use "Uncategorized" as fallback
           if (!category) {
             category = "Uncategorized";
-            console.warn('Donation categorized as Uncategorized:', {
-              donationId: doc.id,
-              campaignId: campaignId,
-              availableCampaigns: Object.keys(campaignCategoryMap),
-              donationFields: Object.keys(donation)
-            });
+            uncategorizedCount++;
+            if (IS_DEBUG_LOGGING && uncategorizedSamples.length < 3) {
+              uncategorizedSamples.push({
+                donationId: doc.id,
+                campaignId: campaignId,
+                campaignTitleSnapshot: donation.campaignTitleSnapshot,
+              });
+            }
           }
 
           let amount = donation.amount;
@@ -252,11 +267,6 @@ export function useDashboardData(organizationId?: string) {
           totalDonationCount++;
           totalDonationAmount += amount;
           
-          console.log('Donation processed successfully:', {
-            category: category,
-            count: categoryTotals[category].count,
-            amount: categoryTotals[category].amount
-          });
         });
 
         // Convert to the expected format with percentages
@@ -267,7 +277,15 @@ export function useDashboardData(organizationId?: string) {
           }))
           .sort((a, b) => b.count - a.count); // Sort by count descending
         
-        console.log('Donation distribution by category calculated:', donationDistribution);
+        if (IS_DEBUG_LOGGING) {
+          console.log('Donation distribution by category calculated:', donationDistribution);
+        }
+        if (IS_DEBUG_LOGGING && uncategorizedCount > 0) {
+          console.warn('Some donations were categorized as Uncategorized.', {
+            uncategorizedCount,
+            sampleDonations: uncategorizedSamples,
+          });
+        }
 
         // Compute monthly revenue data
         const monthlyRevenueMap: { [month: string]: { donationRevenue: number; giftAidAmount: number } } = {};
@@ -337,7 +355,9 @@ export function useDashboardData(organizationId?: string) {
           });
         }
         
-        console.log('Monthly revenue calculated:', monthlyRevenue);
+        if (IS_DEBUG_LOGGING) {
+          console.log('Monthly revenue calculated:', monthlyRevenue);
+        }
 
         // Compute heatmap data from donations
         const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -398,7 +418,9 @@ export function useDashboardData(organizationId?: string) {
           }
         });
         
-        console.log('Heatmap data calculated:', heatmapData.slice(0, 10), '... (showing first 10 entries)');
+        if (IS_DEBUG_LOGGING) {
+          console.log('Heatmap data calculated:', heatmapData.slice(0, 10), '... (showing first 10 entries)');
+        }
 
         // Transform donation distribution for donut chart
         const colors = ['#4F46E5', '#10B981', '#F59E0B', '#8B5CF6', '#06B6D4', '#EC4899', '#F97316', '#84CC16'];
@@ -425,8 +447,10 @@ export function useDashboardData(organizationId?: string) {
           .sort((a, b) => b.percentage - a.percentage)
           .slice(0, 5);
         
-        console.log('Category data calculated:', categoryData);
-        console.log('Top campaigns calculated:', topCampaigns);
+        if (IS_DEBUG_LOGGING) {
+          console.log('Category data calculated:', categoryData);
+          console.log('Top campaigns calculated:', topCampaigns);
+        }
       } catch (error) {
         console.error('Donation distribution query failed:', error);
         const details = toErrorDetails(error);

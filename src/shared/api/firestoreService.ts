@@ -28,6 +28,13 @@ class NonRetryableFunctionError extends Error {
   }
 }
 
+class RetryableFunctionError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'RetryableFunctionError';
+  }
+}
+
 function getFunctionsBaseUrl(): string {
   const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
   if (!projectId) {
@@ -89,9 +96,12 @@ async function postPublicFunction<TResponse>(
         errorPayload?.message ||
         `Request failed with status ${response.status}.`;
 
-      if (RETRYABLE_STATUS_CODES.has(response.status) && attempt < attempts) {
-        await sleep(retryDelayMs);
-        continue;
+      if (RETRYABLE_STATUS_CODES.has(response.status)) {
+        if (attempt < attempts) {
+          await sleep(retryDelayMs);
+          continue;
+        }
+        throw new RetryableFunctionError(message);
       }
 
       throw new NonRetryableFunctionError(message);
@@ -271,7 +281,7 @@ export async function createThankYouMail(recipientEmail: string, campaignName?: 
     campaignName,
     transactionId,
   }, {
-    attempts: 4,
+    attempts: 1,
     retryDelayMs: 900,
   });
 }
@@ -399,4 +409,3 @@ export async function checkOrganizationIdExists(organizationId: string): Promise
     throw error;
   }
 }
-
