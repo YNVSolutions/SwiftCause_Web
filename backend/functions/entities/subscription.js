@@ -1,6 +1,44 @@
 const admin = require("firebase-admin");
 
 /**
+ * Convert value to Firestore Timestamp
+ * @param {number|Date|object} value - Value to convert
+ * @return {object} Firestore Timestamp
+ */
+const toFirestoreTimestamp = (value) => {
+  if (!value) {
+    return admin.firestore.Timestamp.now();
+  }
+  if (typeof value === "number") {
+    // Unix timestamp in seconds, convert to milliseconds
+    return admin.firestore.Timestamp.fromMillis(value * 1000);
+  }
+  if (value instanceof Date) {
+    return admin.firestore.Timestamp.fromDate(value);
+  }
+  if (value.seconds !== undefined) {
+    // Already a Firestore Timestamp-like object
+    return admin.firestore.Timestamp.fromMillis(value.seconds * 1000);
+  }
+  return admin.firestore.Timestamp.now();
+};
+
+/**
+ * Calculate next payment date based on interval
+ * @param {number} currentPeriodEnd - Unix timestamp in seconds
+ * @param {string} interval - Subscription interval (month/year)
+ * @param {number} intervalCount - Number of intervals
+ * @return {object} Firestore Timestamp
+ */
+const calculateNextPaymentAt = (currentPeriodEnd, interval, intervalCount) => {
+  if (!currentPeriodEnd) {
+    return null;
+  }
+  // currentPeriodEnd is already the next payment date from Stripe
+  return toFirestoreTimestamp(currentPeriodEnd);
+};
+
+/**
  * Create subscription document in Firestore
  * @param {object} subscriptionData - Subscription data
  * @return {Promise<object>} Firestore document reference
@@ -17,6 +55,7 @@ const createSubscriptionDoc = async (subscriptionData) => {
     currency = "usd",
     status,
     currentPeriodEnd,
+    currentPeriodStart,
     metadata = {},
   } = subscriptionData;
 
@@ -25,19 +64,11 @@ const createSubscriptionDoc = async (subscriptionData) => {
       .collection("subscriptions")
       .doc(stripeSubscriptionId);
 
-  // Convert currentPeriodEnd to Firestore Timestamp
-  // currentPeriodEnd is a Unix timestamp in seconds from Stripe
-  let periodEndTimestamp;
-  if (typeof currentPeriodEnd === 'number') {
-    // It's a Unix timestamp in seconds, convert to milliseconds then to Timestamp
-    periodEndTimestamp = admin.firestore.Timestamp.fromMillis(currentPeriodEnd * 1000);
-  } else if (currentPeriodEnd instanceof Date) {
-    // It's already a Date object
-    periodEndTimestamp = admin.firestore.Timestamp.fromDate(currentPeriodEnd);
-  } else {
-    // Fallback to current time
-    periodEndTimestamp = admin.firestore.Timestamp.now();
-  }
+  const now = admin.firestore.Timestamp.now();
+  const periodEndTimestamp = toFirestoreTimestamp(currentPeriodEnd);
+  const startedAtTimestamp = currentPeriodStart ?
+    toFirestoreTimestamp(currentPeriodStart) :
+    now;
 
   await subscriptionRef.set({
     stripeSubscriptionId,
@@ -53,8 +84,17 @@ const createSubscriptionDoc = async (subscriptionData) => {
     donorName: metadata.donorName || null,
     donorPhone: metadata.donorPhone || null,
     currentPeriodEnd: periodEndTimestamp,
-    createdAt: admin.firestore.Timestamp.now(),
-    updatedAt: admin.firestore.Timestamp.now(),
+    startedAt: startedAtTimestamp,
+    lastPaymentAt: null,
+    nextPaymentAt: calculateNextPaymentAt(
+        currentPeriodEnd,
+        interval,
+        intervalCount,
+    ),
+    canceledAt: null,
+    cancelReason: null,
+    createdAt: now,
+    updatedAt: now,
     metadata: metadata,
   });
 
@@ -69,16 +109,43 @@ const createSubscriptionDoc = async (subscriptionData) => {
  * @param {object} updates - Additional fields to update
  * @return {Promise<void>}
  */
-const updateSubscriptionStatus = async (stripeSubscriptionId, status, updates = {}) => {
+const updateSubscriptionStatus = async (
+    stripeSubscriptionId,
+    status,
+    updates = {},
+) => {
   const subscriptionRef = admin
       .firestore()
       .collection("subscriptions")
       .doc(stripeSubscriptionId);
 
+  // Normalize timestamp fields in updates
+  const normalizedUpdates = {...updates};
+  if (normalizedUpdates.currentPeriodEnd) {
+    normalizedUpdates.currentPeriodEnd = toFirestoreTimestamp(
+        normalizedUpdates.currentPeriodEnd,
+    );
+  }
+  if (normalizedUpdates.lastPaymentAt) {
+    normalizedUpdates.lastPaymentAt = toFirestoreTimestamp(
+        normalizedUpdates.lastPaymentAt,
+    );
+  }
+  if (normalizedUpdates.nextPaymentAt) {
+    normalizedUpdates.nextPaymentAt = toFirestoreTimestamp(
+        normalizedUpdates.nextPaymentAt,
+    );
+  }
+  if (normalizedUpdates.canceledAt) {
+    normalizedUpdates.canceledAt = toFirestoreTimestamp(
+        normalizedUpdates.canceledAt,
+    );
+  }
+
   const updateData = {
     status,
     updatedAt: admin.firestore.Timestamp.now(),
-    ...updates,
+    ...normalizedUpdates,
   };
 
   await subscriptionRef.update(updateData);
@@ -104,4 +171,6 @@ module.exports = {
   createSubscriptionDoc,
   updateSubscriptionStatus,
   getSubscriptionByStripeId,
+  toFirestoreTimestamp,
+  calculateNextPaymentAt,
 };
