@@ -187,6 +187,7 @@ const createRecurringSubscription = (req, res) => {
         currency: currency,
         status: subscription.status,
         currentPeriodEnd: subscription.current_period_end,
+        currentPeriodStart: subscription.current_period_start,
         metadata: {
           donorEmail: donor.email,
           donorName: donor.name || "Anonymous",
@@ -253,7 +254,11 @@ const cancelRecurringSubscription = (req, res) => {
     try {
       const stripeClient = ensureStripeInitialized();
 
-      const {subscriptionId, cancelImmediately = false} = req.body;
+      const {
+        subscriptionId,
+        cancelImmediately = false,
+        cancelReason = null,
+      } = req.body;
 
       if (!subscriptionId) {
         return res.status(400).send({
@@ -283,7 +288,7 @@ const cancelRecurringSubscription = (req, res) => {
           },
       );
 
-      // Update in Firestore
+      // Update in Firestore with cancel reason
       await admin
           .firestore()
           .collection("subscriptions")
@@ -291,6 +296,7 @@ const cancelRecurringSubscription = (req, res) => {
           .update({
             status: "canceled",
             canceledAt: admin.firestore.Timestamp.now(),
+            cancelReason: cancelReason || "user_requested",
             updatedAt: admin.firestore.Timestamp.now(),
           });
 
