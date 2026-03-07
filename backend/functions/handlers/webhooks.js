@@ -4,6 +4,7 @@ const {createDonationDoc} = require("../entities/donation");
 const {
   updateSubscriptionStatus,
   getSubscriptionByStripeId,
+  calculateNextPaymentAt,
 } = require("../entities/subscription");
 const {isEventProcessed, markEventProcessed} = require("../shared/firestore");
 
@@ -371,18 +372,30 @@ const handleInvoicePaid = async (invoice) => {
     organizationId: subscriptionData.organizationId,
     amount: invoice.amount_paid,
     currency: invoice.currency,
-    donorEmail: subscriptionData.donorEmail || subscriptionData.metadata?.donorEmail || null,
-    donorName: subscriptionData.donorName || subscriptionData.metadata?.donorName || "Anonymous",
-    donorPhone: subscriptionData.donorPhone || subscriptionData.metadata?.donorPhone || null,
+    donorEmail: subscriptionData.donorEmail ||
+      subscriptionData.metadata?.donorEmail ||
+      null,
+    donorName: subscriptionData.donorName ||
+      subscriptionData.metadata?.donorName ||
+      "Anonymous",
+    donorPhone: subscriptionData.donorPhone ||
+      subscriptionData.metadata?.donorPhone ||
+      null,
     isRecurring: true,
     recurringInterval: recurringInterval,
     subscriptionId: subscriptionId,
     invoiceId: invoice.id,
     platform: subscriptionData.metadata?.platform || "web",
     metadata: {
-      campaignTitleSnapshot: subscriptionData.metadata?.campaignTitle || "Recurring Donation",
-      source: "stripe_webhook_recurring"
-    }
+      campaignTitleSnapshot:
+        subscriptionData.metadata?.campaignTitle || "Recurring Donation",
+      source: "stripe_webhook_recurring",
+    },
+  });
+
+  // Update subscription analytics: lastPaymentAt
+  await updateSubscriptionStatus(subscriptionId, subscriptionData.status, {
+    lastPaymentAt: admin.firestore.Timestamp.now(),
   });
 
   console.log("Recurring donation recorded for invoice:", invoice.id);
@@ -428,10 +441,15 @@ const handleSubscriptionCreated = async (subscription) => {
  * @return {Promise<void>}
  */
 const handleSubscriptionUpdated = async (subscription) => {
+  const nextPaymentAt = calculateNextPaymentAt(
+      subscription.current_period_end,
+      subscription.items.data[0]?.plan?.interval || "month",
+      subscription.items.data[0]?.plan?.interval_count || 1,
+  );
+
   await updateSubscriptionStatus(subscription.id, subscription.status, {
-    currentPeriodEnd: admin.firestore.Timestamp.fromDate(
-        new Date(subscription.current_period_end * 1000),
-    ),
+    currentPeriodEnd: subscription.current_period_end,
+    nextPaymentAt: nextPaymentAt,
   });
 
   console.log("Subscription updated:", subscription.id, subscription.status);
@@ -443,8 +461,13 @@ const handleSubscriptionUpdated = async (subscription) => {
  * @return {Promise<void>}
  */
 const handleSubscriptionDeleted = async (subscription) => {
+  const cancelReason = subscription.cancellation_details?.reason ||
+    subscription.metadata?.cancelReason ||
+    "unknown";
+
   await updateSubscriptionStatus(subscription.id, "canceled", {
     canceledAt: admin.firestore.Timestamp.now(),
+    cancelReason: cancelReason,
   });
 
   console.log("Subscription canceled:", subscription.id);
