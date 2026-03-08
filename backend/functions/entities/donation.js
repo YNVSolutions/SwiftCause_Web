@@ -35,7 +35,49 @@ const createDonationDoc = async (donationData) => {
   // Check if already exists (idempotency)
   const existing = await donationRef.get();
   if (existing.exists) {
-    console.log("Donation already exists:", transactionId);
+    const existingData = existing.data() || {};
+    const patch = {};
+
+    const setIfMissing = (field, value) => {
+      if (value === undefined || value === null || value === "") return;
+      const current = existingData[field];
+      if (current === undefined || current === null || current === "") {
+        patch[field] = value;
+      }
+    };
+
+    setIfMissing("campaignId", campaignId);
+    setIfMissing("organizationId", organizationId);
+    setIfMissing("donorName", donorName);
+    setIfMissing("donorEmail", donorEmail);
+    setIfMissing("donorPhone", donorPhone);
+    setIfMissing("donorMessage", donorMessage);
+    setIfMissing("currency", currency);
+    setIfMissing("kioskId", kioskId);
+    setIfMissing("platform", platform);
+    setIfMissing("subscriptionId", subscriptionId);
+    setIfMissing("invoiceId", invoiceId);
+    setIfMissing("recurringInterval", recurringInterval);
+    setIfMissing("campaignTitleSnapshot", metadata.campaignTitleSnapshot);
+
+    if (isRecurring === true && existingData.isRecurring !== true) {
+      patch.isRecurring = true;
+    }
+    if (isGiftAid === true && existingData.isGiftAid !== true) {
+      patch.isGiftAid = true;
+    }
+    if (typeof isAnonymous === "boolean" && existingData.isAnonymous === undefined) {
+      patch.isAnonymous = isAnonymous;
+    }
+
+    if (Object.keys(patch).length > 0) {
+      patch.updatedAt = admin.firestore.Timestamp.now();
+      patch.enrichedByWebhook = true;
+      await donationRef.set(patch, {merge: true});
+      console.log("Donation existed; enriched missing fields:", transactionId, Object.keys(patch));
+    } else {
+      console.log("Donation already exists with complete fields:", transactionId);
+    }
     return donationRef;
   }
 
