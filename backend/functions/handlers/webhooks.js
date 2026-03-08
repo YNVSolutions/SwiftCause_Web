@@ -1,5 +1,10 @@
 const admin = require("firebase-admin");
-const {stripe, getWebhookSecrets, ensureStripeInitialized} = require("../services/stripe");
+const {
+  stripe,
+  getWebhookSecrets,
+  ensureStripeInitialized,
+  verifyWebhookSignatureWithAnySecret,
+} = require("../services/stripe");
 const {createDonationDoc} = require("../entities/donation");
 const {
   updateSubscriptionStatus,
@@ -131,7 +136,7 @@ const handleAccountUpdatedStripeWebhook = async (req, res) => {
     
     const sig = req.headers["stripe-signature"];
     const {account: endpointSecretAccount} = getWebhookSecrets();
-    event = stripeClient.webhooks.constructEvent(
+    event = verifyWebhookSignatureWithAnySecret(
         req.rawBody,
         sig,
         endpointSecretAccount,
@@ -193,7 +198,7 @@ const handlePaymentCompletedStripeWebhook = async (req, res) => {
     
     const sig = req.headers["stripe-signature"];
     const {payment: endpointSecretPayment} = getWebhookSecrets();
-    event = stripeClient.webhooks.constructEvent(
+    event = verifyWebhookSignatureWithAnySecret(
         req.rawBody,
         sig,
         endpointSecretPayment,
@@ -300,7 +305,7 @@ const handleSubscriptionWebhook = async (req, res) => {
     const sig = req.headers["stripe-signature"];
     const {payment: endpointSecretPayment} = getWebhookSecrets();
 
-    event = stripeClient.webhooks.constructEvent(
+    event = verifyWebhookSignatureWithAnySecret(
         req.rawBody,
         sig,
         endpointSecretPayment,
