@@ -24,6 +24,10 @@ export default function AdminSubscriptionsPage() {
   return (
     <SubscriptionManagement
       organizationId={currentAdminSession.user.organizationId || ''}
+      onNavigate={handleNavigate}
+      onLogout={handleLogout}
+      userSession={currentAdminSession}
+      hasPermission={hasPermission}
     />
   )
 }
