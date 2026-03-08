@@ -107,6 +107,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [campaignFilter, setCampaignFilter] = useState('all');
+  const [recurringFilter, setRecurringFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
   const [ selectedDonation, setSelectedDonation] = useState<FetchedDonation | null>(null);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
@@ -201,6 +202,15 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
         options: campaigns.map(campaign => ({ label: campaign.title, value: campaign.id }))
       },
       {
+        key: "recurringFilter",
+        label: "Recurring",
+        type: "select",
+        options: [
+          { label: "Recurring", value: "recurring" },
+          { label: "One-time", value: "one_time" },
+        ]
+      },
+      {
         key: "dateFilter",
         label: "Filter by date",
         type: "date"
@@ -211,6 +221,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
   const filterValues = {
     statusFilter,
     campaignFilter,
+    recurringFilter,
     dateFilter
   };
 
@@ -225,6 +236,9 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
       case "dateFilter":
         setDateFilter(value);
         break;
+      case "recurringFilter":
+        setRecurringFilter(value);
+        break;
     }
   };
 
@@ -238,10 +252,15 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                          (campaignName.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = statusFilter === 'all' || donation.paymentStatus === statusFilter;
     const matchesCampaign = campaignFilter === 'all' || donation.campaignId === campaignFilter;
+    const recurring = isRecurringDonation(donation);
+    const matchesRecurring =
+      recurringFilter === 'all' ||
+      (recurringFilter === 'recurring' && recurring) ||
+      (recurringFilter === 'one_time' && !recurring);
     const donationDate = parseDonationDate(donation.timestamp);
     const matchesDate =
       !dateFilter || (donationDate ? donationDate.toDateString() === dateFilter.toDateString() : false);
-    return matchesSearch && matchesStatus && matchesCampaign && matchesDate;
+    return matchesSearch && matchesStatus && matchesCampaign && matchesRecurring && matchesDate;
   }).map((donation) => ({
     ...donation,
     timestampTs: parseDonationDate(donation.timestamp)?.getTime() || 0,
@@ -293,7 +312,23 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
   };
 
   const handleExportDonations = () => {
-    exportToCsv(donations, "donations");
+    const rows = filteredDonations.map((donation) => ({
+      donorName: donation.donorName || "Anonymous",
+      donorEmail: donation.donorEmail || "",
+      campaign: getCampaignDisplayName(donation),
+      amount: donation.amount || 0,
+      currency: donation.currency || "",
+      paymentStatus: donation.paymentStatus || "",
+      isGiftAid: donation.isGiftAid ? "Yes" : "No",
+      isRecurring: isRecurringDonation(donation) ? "Yes" : "No",
+      recurringInterval: donation.recurringInterval || "",
+      subscriptionId: donation.subscriptionId || "",
+      invoiceId: donation.invoiceId || "",
+      transactionId: donation.stripePaymentIntentId || donation.transactionId || donation.id || "",
+      platform: donation.platform || "",
+      timestamp: donation.timestamp || "",
+    }));
+    exportToCsv(rows, "donations");
   };
 
   const handleViewDetails = (donation: FetchedDonation) => {
@@ -814,6 +849,27 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                   <p className="text-xs text-gray-700 font-mono mt-1 bg-gray-50 px-2 py-1 rounded border border-gray-200 inline-block">
                     {selectedDonation.stripePaymentIntentId || selectedDonation.transactionId || selectedDonation.id || "N/A"}
                   </p>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700">Subscription ID</Label>
+                    <p className="text-xs text-gray-700 font-mono mt-1 bg-gray-50 px-2 py-1 rounded border border-gray-200 inline-block break-all">
+                      {selectedDonation.subscriptionId || "N/A"}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-sm font-medium text-gray-700">Recurring Interval</Label>
+                      <p className="text-sm text-gray-900 mt-1 capitalize">{selectedDonation.recurringInterval || "N/A"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-gray-700">Invoice ID</Label>
+                      <p className="text-xs text-gray-700 font-mono mt-1 bg-gray-50 px-2 py-1 rounded border border-gray-200 inline-block break-all">
+                        {selectedDonation.invoiceId || "N/A"}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
