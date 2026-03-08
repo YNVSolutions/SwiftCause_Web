@@ -464,24 +464,40 @@ const handleSubscriptionCreated = async (subscription) => {
  * @return {Promise<void>}
  */
 const handleSubscriptionUpdated = async (subscription) => {
+  const stripeClient = ensureStripeInitialized();
+  let effectiveSubscription = subscription;
+
+  if (!(typeof subscription.current_period_end === "number" &&
+      Number.isFinite(subscription.current_period_end))) {
+    try {
+      effectiveSubscription = await stripeClient.subscriptions.retrieve(subscription.id);
+    } catch (error) {
+      console.warn(
+          "Failed to fetch full subscription for update event:",
+          subscription.id,
+          error.message,
+      );
+    }
+  }
+
   const updateFields = {};
-  if (typeof subscription.current_period_end === "number" &&
-      Number.isFinite(subscription.current_period_end)) {
+  if (typeof effectiveSubscription.current_period_end === "number" &&
+      Number.isFinite(effectiveSubscription.current_period_end)) {
     const nextPaymentAt = admin.firestore.Timestamp.fromDate(
-        new Date(subscription.current_period_end * 1000),
+        new Date(effectiveSubscription.current_period_end * 1000),
     );
     updateFields.currentPeriodEnd = nextPaymentAt;
     updateFields.nextPaymentAt = nextPaymentAt;
   } else {
     console.warn(
         "subscription.updated missing current_period_end, updating status only:",
-        subscription.id,
+        effectiveSubscription.id || subscription.id,
     );
   }
 
   const updated = await updateSubscriptionStatus(
-      subscription.id,
-      subscription.status || "active",
+      effectiveSubscription.id || subscription.id,
+      effectiveSubscription.status || subscription.status || "active",
       updateFields,
   );
 
