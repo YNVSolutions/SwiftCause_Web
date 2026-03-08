@@ -17,8 +17,8 @@ import {
   Download,
   Building2
 } from 'lucide-react';
-import { getSubscriptionsByOrganization, getSubscriptionStats } from '../../entities/subscription/api/subscriptionApi';
-import { Subscription } from '../../shared/types/subscription';
+import { getRecurringStats, getSubscriptionsByOrganization } from '../../entities/subscription/api/subscriptionApi';
+import { RecurringStatsResponse, Subscription } from '../../shared/types/subscription';
 import { formatCurrencyFromMajor } from '../../shared/lib/currencyFormatter';
 import { getSubscriptionDisplayInterval } from '../../entities/subscription/model/selectors';
 import { SortableTableHeader } from './components/SortableTableHeader';
@@ -42,9 +42,12 @@ interface SubscriptionStats {
   active: number;
   canceled: number;
   pastDue: number;
+  churnRatePercent: number;
+  recurringCashCollectedMinor: number;
   totalMonthlyRevenue: number;
   totalAnnualRevenue: number;
   averageAmount: number;
+  windowLabel: string;
 }
 
 export function SubscriptionManagement({
@@ -61,26 +64,46 @@ export function SubscriptionManagement({
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [intervalFilter, setIntervalFilter] = useState('all');
+  const [windowDays, setWindowDays] = useState('30');
+  const [trends, setTrends] = useState<RecurringStatsResponse['trends']>([]);
 
   const loadSubscriptions = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       
-      const [subs, statistics] = await Promise.all([
+      const days = Number(windowDays);
+      const to = new Date();
+      const from = new Date(to.getTime() - (days * 24 * 60 * 60 * 1000));
+
+      const [subs, recurring] = await Promise.all([
         getSubscriptionsByOrganization(organizationId),
-        getSubscriptionStats(organizationId)
+        getRecurringStats(organizationId, { from, to }),
       ]);
       
       setSubscriptions(subs);
-      setStats(statistics);
+      setTrends(recurring.trends);
+      setStats({
+        total: subs.length,
+        active: recurring.summary.activeSubscriptions,
+        canceled: recurring.summary.canceledSubscriptions,
+        pastDue: recurring.summary.pastDueCount,
+        churnRatePercent: recurring.summary.churnRatePercent,
+        recurringCashCollectedMinor: recurring.summary.recurringCashCollectedMinor,
+        totalMonthlyRevenue: recurring.summary.mrrMinor,
+        totalAnnualRevenue: recurring.summary.arrMinor,
+        averageAmount: recurring.summary.activeSubscriptions > 0
+          ? recurring.summary.mrrMinor / recurring.summary.activeSubscriptions
+          : 0,
+        windowLabel: `Last ${days} days`,
+      });
     } catch (err) {
       console.error('Error loading subscriptions:', err);
       setError('Failed to load subscriptions');
     } finally {
       setLoading(false);
     }
-  }, [organizationId]);
+  }, [organizationId, windowDays]);
 
   useEffect(() => {
     loadSubscriptions();
@@ -252,7 +275,7 @@ export function SubscriptionManagement({
           ) : (
             <>
               {stats && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
                   <Card className="rounded-3xl border border-gray-100 shadow-sm">
                     <CardHeader className="pb-2">
                       <CardDescription className="flex items-center gap-2">
@@ -310,6 +333,36 @@ export function SubscriptionManagement({
                       <p className="text-xs text-gray-500">per month</p>
                     </CardContent>
                   </Card>
+
+                  <Card className="rounded-3xl border border-gray-100 shadow-sm">
+                    <CardHeader className="pb-2">
+                      <CardDescription className="flex items-center gap-2">
+                        <TrendingUp className="w-4 h-4" />
+                        Churn
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">
+                        {stats.churnRatePercent.toFixed(2)}%
+                      </div>
+                      <p className="text-xs text-gray-500">{stats.windowLabel}</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="rounded-3xl border border-gray-100 shadow-sm">
+                    <CardHeader className="pb-2">
+                      <CardDescription className="flex items-center gap-2">
+                        <DollarSign className="w-4 h-4" />
+                        Cash Collected
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">
+                        {formatCurrencyFromMajor(stats.recurringCashCollectedMinor / 100)}
+                      </div>
+                      <p className="text-xs text-gray-500">{stats.windowLabel}</p>
+                    </CardContent>
+                  </Card>
                 </div>
               )}
 
@@ -319,7 +372,7 @@ export function SubscriptionManagement({
                   <CardDescription>Manage all recurring donations</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-3">
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
                       <SelectTrigger>
                         <SelectValue placeholder="Filter status" />
@@ -347,6 +400,18 @@ export function SubscriptionManagement({
                             {intervalLabel}
                           </SelectItem>
                         ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select value={windowDays} onValueChange={setWindowDays}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Analytics window" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="30">Last 30 days</SelectItem>
+                        <SelectItem value="90">Last 90 days</SelectItem>
+                        <SelectItem value="180">Last 180 days</SelectItem>
+                        <SelectItem value="365">Last 365 days</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -452,6 +517,41 @@ export function SubscriptionManagement({
                             <TableCell className="p-3 text-sm text-gray-500">
                               {formatDate(sub.startedAt)}
                             </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card className="rounded-3xl border border-gray-100 shadow-sm">
+                <CardHeader>
+                  <CardTitle>Recurring Trend ({stats?.windowLabel || 'Current window'})</CardTitle>
+                  <CardDescription>Monthly MRR and recurring cash trend</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {trends.length === 0 ? (
+                    <p className="text-sm text-gray-500">No trend data available for this window.</p>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Period</TableHead>
+                          <TableHead>MRR</TableHead>
+                          <TableHead>Cash Collected</TableHead>
+                          <TableHead>New Subscriptions</TableHead>
+                          <TableHead>Canceled Subscriptions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {trends.map((point) => (
+                          <TableRow key={point.period}>
+                            <TableCell>{point.period}</TableCell>
+                            <TableCell>{formatCurrencyFromMajor(point.mrrMinor / 100)}</TableCell>
+                            <TableCell>{formatCurrencyFromMajor(point.cashCollectedMinor / 100)}</TableCell>
+                            <TableCell>{point.newSubscriptions}</TableCell>
+                            <TableCell>{point.canceledSubscriptions}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
