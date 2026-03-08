@@ -15,11 +15,38 @@ const normalizeString = (value) => {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+const resolveDonationByReference = async (referenceId) => {
+  const donationsRef = admin.firestore().collection("donations");
+
+  // Fast path: donation doc id equals reference id.
+  const directDoc = await donationsRef.doc(referenceId).get();
+  if (directDoc.exists) return directDoc;
+
+  // Fallbacks for recurring flows where UI may pass subscription/invoice ids.
+  const lookups = [
+    ["transactionId", referenceId],
+    ["subscriptionId", referenceId],
+    ["invoiceId", referenceId],
+  ];
+
+  for (const [field, value] of lookups) {
+    const snapshot = await donationsRef
+        .where(field, "==", value)
+        .limit(1)
+        .get();
+
+    if (!snapshot.empty) {
+      return snapshot.docs[0];
+    }
+  }
+
+  return null;
+};
+
 const getDonationWithRetry = async (transactionId, attempts = 10, delayMs = 700) => {
   for (let attempt = 1; attempt <= attempts; attempt++) {
-    const donationRef = admin.firestore().collection("donations").doc(transactionId);
-    const donationSnap = await donationRef.get();
-    if (donationSnap.exists) {
+    const donationSnap = await resolveDonationByReference(transactionId);
+    if (donationSnap && donationSnap.exists) {
       return donationSnap;
     }
 
