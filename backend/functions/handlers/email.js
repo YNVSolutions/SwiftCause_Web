@@ -108,8 +108,13 @@ const sendDonationThankYouEmail = (req, res) => {
       }
 
       if (!donationData) {
+        console.warn("Receipt lookup unresolved", {
+          referenceId: transactionId,
+          isSubscriptionReference: transactionId.startsWith("sub_"),
+        });
         return res.status(409).send({
           error: "Donation is still processing. Please retry in a few seconds.",
+          code: "RECEIPT_LOOKUP_PENDING",
         });
       }
 
@@ -156,6 +161,7 @@ const sendDonationThankYouEmail = (req, res) => {
         transactionId,
         email,
         statusCode: emailResult?.statusCode || null,
+        source: donationSnap?.exists ? "donation" : "subscription_fallback",
       });
 
       return res.status(200).send({
