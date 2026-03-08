@@ -225,9 +225,14 @@ async function handleRecurringPayment(
   }
 
   if (result.success || result.subscriptionId) {
+    const preferredTransactionId =
+      getStringValue(result.paymentIntentId) ||
+      getStringValue(result.invoiceId) ||
+      result.subscriptionId;
+
     onPaymentComplete({
       success: true,
-      transactionId: result.subscriptionId,
+      transactionId: preferredTransactionId,
       subscriptionId: result.subscriptionId,
       customerId: result.customerId,
     });
