@@ -153,11 +153,17 @@ export function SubscriptionManagement({
 
   const toTimestamp = (date: DateLike) => {
     if (!date) return 0;
-    if (typeof date === 'object' && typeof date.seconds === 'number') {
+    if (date instanceof Date) {
+      return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+    }
+    if (typeof date === 'string') {
+      const value = new Date(date).getTime();
+      return Number.isNaN(value) ? 0 : value;
+    }
+    if (typeof date === 'object' && date !== null && 'seconds' in date && typeof date.seconds === 'number') {
       return date.seconds * 1000;
     }
-    const value = new Date(date).getTime();
-    return Number.isNaN(value) ? 0 : value;
+    return 0;
   };
 
   const tableData = useMemo(() => {
