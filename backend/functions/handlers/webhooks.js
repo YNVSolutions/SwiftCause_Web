@@ -5,7 +5,11 @@ const {
   updateSubscriptionStatus,
   getSubscriptionByStripeId,
 } = require("../entities/subscription");
-const {isEventProcessed, markEventProcessed} = require("../shared/firestore");
+const {
+  claimWebhookEvent,
+  markEventProcessed,
+  markEventFailed,
+} = require("../shared/firestore");
 
 const DEFAULT_GIFT_AID_DECLARATION_TEXT = "I confirm I have paid enough UK Income or Capital Gains Tax to cover all my Gift Aid donations in this tax year.";
 
@@ -199,75 +203,87 @@ const handlePaymentCompletedStripeWebhook = async (req, res) => {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  // Idempotency check
-  if (await isEventProcessed(event.id)) {
-    console.log("Event already processed:", event.id);
+  // Atomic idempotency claim
+  const claimed = await claimWebhookEvent(event.id, event.type, {
+    objectId: event.data?.object?.id || null,
+  });
+  if (!claimed) {
+    console.log("Event already claimed/processed:", event.id);
     return res.status(200).send("OK");
   }
 
-  if (event.type === "payment_intent.succeeded") {
-    const paymentIntent = event.data.object;
-    const metadata = paymentIntent.metadata || {};
-    const campaignId = toStringOrNull(metadata.campaignId);
-    let organizationId = toStringOrNull(metadata.organizationId);
-    let campaignTitleSnapshot = toStringOrNull(metadata.campaignTitle) || "Deleted Campaign";
-    let campaignExists = false;
+  try {
+    if (event.type === "payment_intent.succeeded") {
+      const paymentIntent = event.data.object;
+      const metadata = paymentIntent.metadata || {};
+      const campaignId = toStringOrNull(metadata.campaignId);
+      let organizationId = toStringOrNull(metadata.organizationId);
+      let campaignTitleSnapshot = toStringOrNull(metadata.campaignTitle) || "Deleted Campaign";
+      let campaignExists = false;
 
-    if (campaignId) {
-      const campaignRef = admin.firestore().collection("campaigns").doc(campaignId);
-      const campaignSnap = await campaignRef.get();
+      if (campaignId) {
+        const campaignRef = admin.firestore().collection("campaigns").doc(campaignId);
+        const campaignSnap = await campaignRef.get();
 
-      if (campaignSnap.exists) {
-        campaignExists = true;
-        const campaignData = campaignSnap.data() || {};
-        campaignTitleSnapshot =
-          toStringOrNull(campaignData.title) || campaignTitleSnapshot;
-        organizationId =
-          toStringOrNull(campaignData.organizationId) || organizationId;
-      } else {
-        console.warn("Campaign not found for payment intent:", paymentIntent.id, campaignId);
+        if (campaignSnap.exists) {
+          campaignExists = true;
+          const campaignData = campaignSnap.data() || {};
+          campaignTitleSnapshot =
+            toStringOrNull(campaignData.title) || campaignTitleSnapshot;
+          organizationId =
+            toStringOrNull(campaignData.organizationId) || organizationId;
+        } else {
+          console.warn("Campaign not found for payment intent:", paymentIntent.id, campaignId);
+        }
       }
+
+      // Use entity to create donation with recurring support
+      await createDonationDoc({
+        transactionId: paymentIntent.id,
+        campaignId: campaignId || null,
+        organizationId: organizationId || null,
+        amount: paymentIntent.amount,
+        currency: paymentIntent.currency,
+        donorName: toStringOrNull(metadata.donorName) || "Anonymous",
+        donorEmail: toStringOrNull(metadata.donorEmail),
+        donorPhone: toStringOrNull(metadata.donorPhone),
+        donorMessage: toStringOrNull(metadata.donorMessage),
+        isAnonymous: toBoolean(metadata.isAnonymous),
+        isGiftAid: toBoolean(metadata.isGiftAid),
+        isRecurring: toBoolean(metadata.isRecurring),
+        recurringInterval: toStringOrNull(metadata.recurringInterval),
+        kioskId: toStringOrNull(metadata.kioskId),
+        platform: toStringOrNull(metadata.platform) || "unknown",
+        metadata: {
+          campaignTitleSnapshot,
+          source: "stripe_webhook",
+        },
+      });
+
+      // Create Gift Aid declaration if needed
+      await createGiftAidDeclarationIfNeeded({
+        paymentIntent,
+        metadata,
+        campaignId,
+        campaignTitleSnapshot,
+        organizationId,
+      });
+
+      await markEventProcessed(event.id, {
+        paymentIntentId: paymentIntent.id,
+      });
+    } else {
+      await markEventProcessed(event.id, {
+        message: "Unhandled in payment endpoint",
+      });
     }
 
-    // Use entity to create donation with recurring support
-    await createDonationDoc({
-      transactionId: paymentIntent.id,
-      campaignId: campaignId || null,
-      organizationId: organizationId || null,
-      amount: paymentIntent.amount,
-      currency: paymentIntent.currency,
-      donorName: toStringOrNull(metadata.donorName) || "Anonymous",
-      donorEmail: toStringOrNull(metadata.donorEmail),
-      donorPhone: toStringOrNull(metadata.donorPhone),
-      donorMessage: toStringOrNull(metadata.donorMessage),
-      isAnonymous: toBoolean(metadata.isAnonymous),
-      isGiftAid: toBoolean(metadata.isGiftAid),
-      isRecurring: toBoolean(metadata.isRecurring),
-      recurringInterval: toStringOrNull(metadata.recurringInterval),
-      kioskId: toStringOrNull(metadata.kioskId),
-      platform: toStringOrNull(metadata.platform) || "unknown",
-      metadata: {
-        campaignTitleSnapshot,
-        source: "stripe_webhook",
-      },
-    });
-
-    // Create Gift Aid declaration if needed
-    await createGiftAidDeclarationIfNeeded({
-      paymentIntent,
-      metadata,
-      campaignId,
-      campaignTitleSnapshot,
-      organizationId,
-    });
-
-    // Mark event as processed
-    await markEventProcessed(event.id, event.type, {
-      paymentIntentId: paymentIntent.id,
-    });
+    res.status(200).send("OK");
+  } catch (error) {
+    console.error("Error processing payment webhook:", error);
+    await markEventFailed(event.id, error.message);
+    res.status(500).send("Webhook processing failed");
   }
-
-  res.status(200).send("OK");
 };
 
 /**
@@ -294,9 +310,12 @@ const handleSubscriptionWebhook = async (req, res) => {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  // Idempotency check
-  if (await isEventProcessed(event.id)) {
-    console.log("Event already processed:", event.id);
+  // Atomic idempotency claim
+  const claimed = await claimWebhookEvent(event.id, event.type, {
+    objectId: event.data?.object?.id || null,
+  });
+  if (!claimed) {
+    console.log("Event already claimed/processed:", event.id);
     return res.status(200).send("OK");
   }
 
@@ -327,13 +346,14 @@ const handleSubscriptionWebhook = async (req, res) => {
     }
 
     // Mark event as processed
-    await markEventProcessed(event.id, event.type, {
+    await markEventProcessed(event.id, {
       objectId: event.data.object.id,
     });
 
     res.status(200).send("OK");
   } catch (error) {
     console.error("Error processing webhook:", error);
+    await markEventFailed(event.id, error.message);
     res.status(500).send("Webhook processing failed");
   }
 };
@@ -386,7 +406,9 @@ const handleInvoicePaid = async (invoice) => {
   });
 
   await updateSubscriptionStatus(subscriptionId, "active", {
-    lastPaymentAt: admin.firestore.Timestamp.now(),
+    lastPaymentAt: admin.firestore.Timestamp.fromDate(
+        new Date((invoice.status_transitions?.paid_at || invoice.created) * 1000),
+    ),
   });
 
   console.log("Recurring donation recorded for invoice:", invoice.id);
@@ -458,7 +480,9 @@ const handleSubscriptionDeleted = async (subscription) => {
     null;
 
   await updateSubscriptionStatus(subscription.id, "canceled", {
-    canceledAt: admin.firestore.Timestamp.now(),
+    canceledAt: subscription.canceled_at ?
+      admin.firestore.Timestamp.fromDate(new Date(subscription.canceled_at * 1000)) :
+      admin.firestore.Timestamp.now(),
     cancelReason: cancelReason,
   });
 
