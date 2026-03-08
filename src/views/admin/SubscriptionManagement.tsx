@@ -5,6 +5,7 @@ import { Badge } from '../../shared/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../shared/ui/table';
 import { Alert, AlertDescription } from '../../shared/ui/alert';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../shared/ui/dialog';
 import { 
   RefreshCw, 
   Calendar, 
@@ -15,7 +16,8 @@ import {
   CheckCircle,
   AlertCircle,
   Download,
-  Building2
+  Building2,
+  Eye
 } from 'lucide-react';
 import { getRecurringStats, getSubscriptionsByOrganization } from '../../entities/subscription/api/subscriptionApi';
 import { RecurringStatsResponse, Subscription } from '../../shared/types/subscription';
@@ -66,6 +68,14 @@ export function SubscriptionManagement({
   const [intervalFilter, setIntervalFilter] = useState('all');
   const [windowDays, setWindowDays] = useState('30');
   const [trends, setTrends] = useState<RecurringStatsResponse['trends']>([]);
+  const [selectedSubscription, setSelectedSubscription] = useState<(Subscription & {
+    donorName: string;
+    donorEmail: string;
+    intervalLabel: string;
+    nextPayment: DateLike;
+    createdAtTs: number;
+    nextPaymentTs: number;
+  }) | null>(null);
 
   const loadSubscriptions = useCallback(async () => {
     try {
@@ -484,6 +494,7 @@ export function SubscriptionManagement({
                             Created
                           </SortableTableHeader>
                           <TableHead className="p-3">Started</TableHead>
+                          <TableHead className="p-3">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -516,6 +527,16 @@ export function SubscriptionManagement({
                             </TableCell>
                             <TableCell className="p-3 text-sm text-gray-500">
                               {formatDate(sub.startedAt)}
+                            </TableCell>
+                            <TableCell className="p-3">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setSelectedSubscription(sub)}
+                              >
+                                <Eye className="h-4 w-4 mr-2" />
+                                View
+                              </Button>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -563,6 +584,95 @@ export function SubscriptionManagement({
           )}
         </main>
       </div>
+
+      <Dialog open={!!selectedSubscription} onOpenChange={(open) => !open && setSelectedSubscription(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Subscription Details</DialogTitle>
+            <DialogDescription>
+              Full lifecycle and billing metadata for this recurring donor.
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedSubscription && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div className="space-y-1">
+                <p className="text-gray-500">Donor</p>
+                <p className="font-medium">{selectedSubscription.donorName}</p>
+                <p className="text-gray-600">{selectedSubscription.donorEmail || 'N/A'}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-gray-500">Status</p>
+                <div>{getStatusBadge(selectedSubscription.status)}</div>
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-gray-500">Amount</p>
+                <p className="font-medium">{formatCurrencyFromMajor(selectedSubscription.amount / 100)}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-gray-500">Interval</p>
+                <p className="font-medium">{selectedSubscription.intervalLabel}</p>
+              </div>
+
+              <div className="space-y-1 md:col-span-2">
+                <p className="text-gray-500">Stripe Subscription ID</p>
+                <p className="font-mono text-xs break-all">{selectedSubscription.stripeSubscriptionId}</p>
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-gray-500">Campaign ID</p>
+                <p className="font-mono text-xs break-all">{selectedSubscription.campaignId}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-gray-500">Customer ID</p>
+                <p className="font-mono text-xs break-all">{selectedSubscription.customerId}</p>
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-gray-500">Started At</p>
+                <p>{formatDate(selectedSubscription.startedAt)}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-gray-500">Created At</p>
+                <p>{formatDate(selectedSubscription.createdAt)}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-gray-500">Updated At</p>
+                <p>{formatDate(selectedSubscription.updatedAt)}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-gray-500">Current Period End</p>
+                <p>{formatDate(selectedSubscription.currentPeriodEnd)}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-gray-500">Next Payment At</p>
+                <p>{formatDate(selectedSubscription.nextPaymentAt || selectedSubscription.nextPayment)}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-gray-500">Last Payment At</p>
+                <p>{formatDate(selectedSubscription.lastPaymentAt)}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-gray-500">Canceled At</p>
+                <p>{formatDate(selectedSubscription.canceledAt)}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-gray-500">Cancel Reason</p>
+                <p>{selectedSubscription.cancelReason || 'N/A'}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-gray-500">Last Failed Invoice</p>
+                <p className="font-mono text-xs break-all">{selectedSubscription.lastFailedInvoice || 'N/A'}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-gray-500">Last Failed At</p>
+                <p>{formatDate(selectedSubscription.lastFailedAt)}</p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }
