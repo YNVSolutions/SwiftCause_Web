@@ -468,6 +468,7 @@ const handleInvoicePaid = async (invoice) => {
     donorPhone: subscriptionData.donorPhone ||
       subscriptionData.metadata?.donorPhone ||
       null,
+    isGiftAid: toBoolean(subscriptionData.metadata?.isGiftAid),
     isRecurring: true,
     recurringInterval: recurringInterval,
     subscriptionId: subscriptionId,
