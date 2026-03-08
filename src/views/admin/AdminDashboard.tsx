@@ -2276,6 +2276,84 @@ export function AdminDashboard({
           />
         </div>
 
+        {/* Recurring KPI Row */}
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 max-w-[1200px] mx-auto mb-8 transition-all duration-500 ease-in-out">
+          <KpiCard
+            title="Active Subs"
+            value={stats.recurring.activeSubscriptions}
+            icon={Users}
+            loading={loading}
+          />
+          <KpiCard
+            title="New Subs"
+            value={stats.recurring.newSubscriptions}
+            icon={ArrowUpRight}
+            loading={loading}
+          />
+          <KpiCard
+            title="Churn"
+            value={`${stats.recurring.churnRatePercent.toFixed(2)}%`}
+            icon={TrendingDown}
+            loading={loading}
+          />
+          <KpiCard
+            title="MRR"
+            value={formatGbpMajor(stats.recurring.mrrMinor / 100)}
+            icon={TrendingUp}
+            loading={loading}
+          />
+          <KpiCard
+            title="ARR"
+            value={formatGbpMajor(stats.recurring.arrMinor / 100)}
+            icon={BarChart3}
+            loading={loading}
+          />
+        </div>
+
+        {/* Recurring Trend */}
+        <Card className="bg-white rounded-xl border border-gray-100 shadow-sm mb-12 transition-all duration-500 ease-in-out">
+          <CardHeader className="p-6 border-b border-gray-100">
+            <CardTitle className="text-lg font-semibold text-gray-900 flex items-center">
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center mr-3">
+                <TrendingUp className="w-4 h-4" />
+              </div>
+              Recurring Trend
+            </CardTitle>
+            <CardDescription className="text-sm text-gray-500 mt-1 ml-11">
+              MRR and subscription lifecycle trend ({stats.recurring.windowLabel})
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-6">
+            {loading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            ) : stats.recurring.error ? (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                {stats.recurring.error}
+              </div>
+            ) : stats.recurring.trends.length === 0 ? (
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
+                No recurring trend data available yet.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {stats.recurring.trends.map((point) => (
+                  <div key={point.period} className="grid grid-cols-2 md:grid-cols-5 gap-3 items-center rounded-lg border border-gray-100 px-3 py-2">
+                    <p className="text-sm font-medium text-gray-800">{point.period}</p>
+                    <p className="text-sm text-gray-700">MRR: {formatGbpMajor(point.mrrMinor / 100)}</p>
+                    <p className="text-sm text-gray-700">Cash: {formatGbpMajor(point.cashCollectedMinor / 100)}</p>
+                    <p className="text-sm text-gray-700">New: {point.newSubscriptions}</p>
+                    <p className="text-sm text-gray-700">Canceled: {point.canceledSubscriptions}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Row 2: Revenue Growth Chart - Full Width */}
         <div className="mb-12 transition-all duration-500 ease-in-out">
           <RevenueGrowthChart
