@@ -144,7 +144,9 @@ export function SubscriptionManagement({
 
   const formatDate = (date: DateLike) => {
     if (!date) return 'N/A';
-    const d = date.seconds ? new Date(date.seconds * 1000) : new Date(date);
+    const d = typeof date === 'object' && date !== null && 'seconds' in date
+      ? new Date(date.seconds * 1000)
+      : new Date(date);
     if (Number.isNaN(d.getTime())) return 'N/A';
     return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
   };
