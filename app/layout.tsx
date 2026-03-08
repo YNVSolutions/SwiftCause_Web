@@ -1,20 +1,8 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
-import { Lexend } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/shared/lib/auth-provider'
 import { ToastProvider } from '@/shared/ui/ToastProvider'
 import { StripeProvider } from '@/shared/lib/stripe-provider'
-
-const inter = Inter({ 
-  subsets: ['latin'],
-  display: 'swap',
-})
-const lexend = Lexend({ 
-  subsets: ['latin'],
-  variable: '--font-lexend',
-  display: 'swap',
-})
 
 export const metadata: Metadata = {
   title: 'SwiftCause',
@@ -32,8 +20,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={lexend.variable}>
-      <body className={inter.className}>
+    <html lang="en" className="font-lexend">
+      <body className="font-sans">
         <AuthProvider>
           <ToastProvider>
             <StripeProvider>
