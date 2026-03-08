@@ -1,6 +1,10 @@
 import { collection, getDocs, DocumentData, query, where, orderBy } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 
+interface FirestoreErrorLike {
+  code?: string;
+}
+
 
 export async function fetchAllDonations(organizationId: string): Promise<DocumentData[]> {
   try {
@@ -15,14 +19,15 @@ export async function fetchAllDonations(organizationId: string): Promise<Documen
     let querySnapshot;
     try {
       querySnapshot = await getDocs(orderedQuery);
-    } catch (orderedErr: any) {
+    } catch (orderedErr: unknown) {
+      const err = orderedErr as FirestoreErrorLike;
       // If composite index is still building/missing, keep app functional via fallback query.
-      if (orderedErr?.code !== 'failed-precondition') throw orderedErr;
+      if (err?.code !== 'failed-precondition') throw orderedErr;
       querySnapshot = await getDocs(fallbackQuery);
     }
 
     if (querySnapshot.empty) {
-      console.log('No donations found.');
+      console.warn('No donations found.');
       return [];
     }
 
