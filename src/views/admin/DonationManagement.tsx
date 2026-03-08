@@ -18,16 +18,13 @@ import {
   Users,
   TrendingUp,
   Heart,
-  MapPin,
   Clock,
   CreditCard,
   CheckCircle,
   AlertCircle,
   Eye,
-  User,
   Target,
   Banknote,
-  CalendarDays,
   Building2,
   Gift
 } from 'lucide-react';
@@ -63,6 +60,7 @@ interface FetchedDonation extends Omit<Donation, 'timestamp'> {
   stripePaymentIntentId: string;
   transactionId?: string;
   timestamp: string;
+  timestampTs?: number;
   kioskId?: string;
 }
 
@@ -175,6 +173,14 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
     return 'Deleted Campaign';
   };
 
+  const isRecurringDonation = (donation: FetchedDonation) => {
+    if (donation.isRecurring) return true;
+    if (Boolean(donation.subscriptionId)) return true;
+    if (Boolean(donation.recurringInterval)) return true;
+    if (typeof donation.transactionId === 'string' && donation.transactionId.startsWith('sub_')) return true;
+    return false;
+  };
+
   // Configuration for AdminSearchFilterHeader
   const searchFilterConfig: AdminSearchFilterConfig = {
     filters: [
@@ -235,13 +241,17 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
     const donationDate = parseDonationDate(donation.timestamp);
     const matchesDate =
       !dateFilter || (donationDate ? donationDate.toDateString() === dateFilter.toDateString() : false);
-    
     return matchesSearch && matchesStatus && matchesCampaign && matchesDate;
-  });
+  }).map((donation) => ({
+    ...donation,
+    timestampTs: parseDonationDate(donation.timestamp)?.getTime() || 0,
+  }));
 
   // Use sorting hook
   const { sortedData: filteredDonations, sortKey, sortDirection, handleSort } = useTableSort({
-    data: filteredDonationsData
+    data: filteredDonationsData,
+    defaultSortKey: 'timestampTs',
+    defaultSortDirection: 'desc',
   });
 
   const getStatusBadge = (status: string) => {
@@ -483,7 +493,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                           Status
                         </SortableTableHeader>
                         <SortableTableHeader 
-                          sortKey="timestamp" 
+                          sortKey="timestampTs" 
                           currentSortKey={sortKey} 
                           currentSortDirection={sortDirection} 
                           onSort={handleSort}
@@ -524,8 +534,20 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                           </TableCell>
 
                           <TableCell className="p-3 align-middle">
-                            <p className="grid w-[120px] grid-cols-[20px_1fr] items-center gap-2 text-sm font-semibold text-gray-900 tabular-nums">
-                              <span className="h-5 w-5 inline-flex items-center justify-center">
+                            <div className="inline-flex items-center gap-2 text-sm font-semibold text-gray-900 tabular-nums">
+                              <span className="inline-flex w-6 flex-col items-start justify-center gap-1">
+                                {isRecurringDonation(donation) ? (
+                                  <span
+                                    className="inline-flex items-center rounded-md bg-sky-50 px-1.5 py-0.5 text-sky-700 ring-1 ring-sky-600/20"
+                                    title="Recurring donation"
+                                  >
+                                    <CreditCard className="h-3 w-3" />
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center rounded-md px-1.5 py-0.5 invisible">
+                                    <CreditCard className="h-3 w-3" />
+                                  </span>
+                                )}
                                 {donation.isGiftAid ? (
                                   <span
                                     className="inline-flex items-center rounded-md bg-purple-50 px-1.5 py-0.5 text-purple-700 ring-1 ring-purple-600/20"
@@ -534,13 +556,13 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                                     <Gift className="h-3 w-3" />
                                   </span>
                                 ) : (
-                                  <span className="h-3 w-3 opacity-0">
+                                  <span className="inline-flex items-center rounded-md px-1.5 py-0.5 invisible">
                                     <Gift className="h-3 w-3" />
                                   </span>
                                 )}
                               </span>
-                              <span className="text-left">{formatCurrency(donation.amount || 0)}</span>
-                            </p>
+                              <span>{formatCurrency(donation.amount || 0)}</span>
+                            </div>
                           </TableCell>
 
                           <TableCell className="p-3 align-middle">
@@ -615,81 +637,68 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                 return (
                   <Card 
                     key={donation.id} 
-                    className="overflow-hidden shadow-sm border border-slate-200 hover:shadow-md transition-shadow cursor-pointer rounded-3xl"
-                    onClick={() => handleViewDetails(donation)}
+                    className="overflow-hidden rounded-3xl border border-gray-100 shadow-sm"
                   >
-                    <div className="p-4 flex justify-between items-start border-b border-slate-100">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-[#064e3b]/10 flex items-center justify-center text-[#064e3b]">
-                          <User className="w-5 h-5" />
+                    <CardContent className="p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="font-semibold text-slate-900">
+                            {donation.donorName || 'Anonymous'}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {getCampaignDisplayName(donation)}
+                          </div>
+                          <div className="mt-2 flex items-center gap-2">
+                            {donation.isGiftAid && (
+                              <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                                <Gift className="h-3 w-3 mr-1" />
+                                Gift Aid
+                              </Badge>
+                            )}
+                            {isRecurringDonation(donation) && (
+                              <Badge variant="outline" className="bg-sky-50 text-sky-700 border-sky-200">
+                                <CreditCard className="h-3 w-3 mr-1" />
+                                Recurring
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        <div>{getStatusBadge(donation.paymentStatus)}</div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <p className="text-gray-500">Amount</p>
+                          <p className="font-semibold text-slate-900">{formatCurrency(donation.amount || 0)}</p>
                         </div>
                         <div>
-                          <div className="flex items-center gap-2">
-                            <h2 className="font-semibold text-lg leading-tight text-slate-900">
-                              {donation.donorName || 'Anonymous'}
-                            </h2>
-                          </div>
-                          <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Donor</span>
+                          <p className="text-gray-500">Date</p>
+                          <p className="text-slate-900">
+                            {donation.timestamp ? formatDonationDate(donation.timestamp, false) : "N/A"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500">Platform</p>
+                          <p className="text-slate-900 capitalize">{donation.platform || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500">Source</p>
+                          <p className="text-slate-900">{kiosk ? kiosk.name : 'Online'}</p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="ml-auto grid w-[140px] grid-cols-[20px_1fr] items-center gap-2 text-xl font-bold text-slate-900 tabular-nums">
-                          <span className="h-5 w-5 inline-flex items-center justify-center">
-                            {donation.isGiftAid ? (
-                              <span
-                                className="inline-flex items-center rounded-md bg-purple-50 px-1.5 py-0.5 text-purple-700 ring-1 ring-purple-600/20"
-                                title="Gift Aid donation"
-                              >
-                                <Gift className="h-3 w-3" />
-                              </span>
-                            ) : (
-                              <span className="h-3 w-3 opacity-0">
-                                <Gift className="h-3 w-3" />
-                              </span>
-                            )}
-                          </span>
-                          <span className="text-left">{formatCurrency(donation.amount || 0)}</span>
-                        </div>
-                        <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Amount</span>
-                      </div>
-                    </div>
-                    
-                    <div className="p-4 space-y-3">
-                      <div className="flex justify-between items-center">
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium text-slate-600">
-                            {getCampaignDisplayName(donation)}
-                          </span>
-                          <div className="flex gap-2 mt-1">
-                            <span className="bg-indigo-50 text-indigo-700 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide flex items-center gap-1">
-                              <MapPin className="w-3 h-3" />
-                              {kiosk ? kiosk.name : 'Online'}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          {getStatusBadge(donation.paymentStatus)}
-                        </div>
-                      </div>
-                      
-                      <div className="flex justify-between items-center pt-2 border-t border-slate-100">
-                        <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <CalendarDays className="w-4 h-4" />
-                          {donation.timestamp 
-                            ? formatDonationDate(donation.timestamp, false)
-                            : "N/A"}
-                        </div>
-                        <button 
-                          className="flex items-center gap-1 text-[#064e3b] text-sm font-semibold"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleViewDetails(donation);
-                          }}
+
+                      <div className="pt-2 border-t border-gray-100">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                          onClick={() => handleViewDetails(donation)}
                         >
-                          View Details
-                        </button>
+                          <Eye className="h-4 w-4 mr-2" />
+                          View
+                        </Button>
                       </div>
-                    </div>
+                    </CardContent>
                   </Card>
                 );
               })
@@ -774,6 +783,22 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                     {selectedDonation.isGiftAid ? (
                       <Badge className="bg-green-100 text-green-800 border-green-200">
                         <CheckCircle className="w-3 h-3 mr-1" />
+                        Yes
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-gray-100 text-gray-800 border-gray-200">
+                        No
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Recurring Donation</Label>
+                  <div className="mt-1">
+                    {isRecurringDonation(selectedDonation) ? (
+                      <Badge className="bg-sky-100 text-sky-800 border-sky-200">
+                        <CreditCard className="w-3 h-3 mr-1" />
                         Yes
                       </Badge>
                     ) : (
