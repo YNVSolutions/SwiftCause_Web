@@ -17,6 +17,10 @@ const createSubscriptionDoc = async (subscriptionData) => {
     currency = "usd",
     status,
     currentPeriodEnd,
+    startedAt = null,
+    lastPaymentAt = null,
+    nextPaymentAt = null,
+    cancelReason = null,
     metadata = {},
   } = subscriptionData;
 
@@ -39,6 +43,21 @@ const createSubscriptionDoc = async (subscriptionData) => {
     periodEndTimestamp = admin.firestore.Timestamp.now();
   }
 
+  const toTimestampOrNull = (value) => {
+    if (!value) return null;
+    if (typeof value === "number") {
+      return admin.firestore.Timestamp.fromMillis(value * 1000);
+    }
+    if (value instanceof Date) {
+      return admin.firestore.Timestamp.fromDate(value);
+    }
+    return null;
+  };
+
+  const startedAtTimestamp = toTimestampOrNull(startedAt);
+  const lastPaymentAtTimestamp = toTimestampOrNull(lastPaymentAt);
+  const nextPaymentAtTimestamp = toTimestampOrNull(nextPaymentAt);
+
   await subscriptionRef.set({
     stripeSubscriptionId,
     customerId,
@@ -52,6 +71,10 @@ const createSubscriptionDoc = async (subscriptionData) => {
     donorEmail: metadata.donorEmail || null,
     donorName: metadata.donorName || null,
     donorPhone: metadata.donorPhone || null,
+    startedAt: startedAtTimestamp,
+    lastPaymentAt: lastPaymentAtTimestamp,
+    nextPaymentAt: nextPaymentAtTimestamp || periodEndTimestamp,
+    cancelReason: cancelReason || null,
     currentPeriodEnd: periodEndTimestamp,
     createdAt: admin.firestore.Timestamp.now(),
     updatedAt: admin.firestore.Timestamp.now(),
