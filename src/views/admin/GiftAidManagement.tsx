@@ -108,7 +108,8 @@ export function GiftAidManagement({
 
   // Fetch Gift Aid declarations from Firebase
   useEffect(() => {
-    if (!userSession.user.organizationId) {
+    const organizationId = userSession.user.organizationId;
+    if (!organizationId) {
       setError("No organization ID found");
       setLoading(false);
       return;
@@ -119,7 +120,7 @@ export function GiftAidManagement({
         setLoading(true);
         setError(null);
 
-        const querySnapshot = await getGiftAidSnapshot(userSession.user.organizationId);
+        const querySnapshot = await getGiftAidSnapshot(organizationId);
         const declarations: GiftAidDeclaration[] = querySnapshot.docs
           .map((doc) => {
             const data = doc.data();
@@ -273,13 +274,14 @@ export function GiftAidManagement({
   };
 
   const handleRefresh = async () => {
-    if (!userSession.user.organizationId) return;
+    const organizationId = userSession.user.organizationId;
+    if (!organizationId) return;
 
     try {
       setLoading(true);
       setError(null);
 
-      const querySnapshot = await getGiftAidSnapshot(userSession.user.organizationId);
+      const querySnapshot = await getGiftAidSnapshot(organizationId);
       const declarations: GiftAidDeclaration[] = querySnapshot.docs
         .map((doc) => {
           const data = doc.data();
