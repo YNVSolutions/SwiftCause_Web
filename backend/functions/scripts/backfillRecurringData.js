@@ -14,6 +14,8 @@ const toStringOrNull = (value) => {
   return trimmed.length > 0 ? trimmed : null;
 };
 
+const toBoolean = (value) => value === true || value === "true" || value === "1";
+
 const deriveRecurringInterval = (subscription) => {
   if (!subscription) return null;
   if (subscription.interval === "year") return "yearly";
@@ -128,6 +130,7 @@ const backfillDonations = async (subscriptionsMap, stripeClient) => {
     const resolvedDonorPhone = toStringOrNull(donation.donorPhone) || toStringOrNull(subscription.donorPhone) || toStringOrNull(subscription.metadata?.donorPhone);
     const resolvedPlatform = toStringOrNull(donation.platform) || toStringOrNull(subscription.metadata?.platform);
     const resolvedCampaignTitle = toStringOrNull(donation.campaignTitleSnapshot) || toStringOrNull(subscription.metadata?.campaignTitle);
+    const resolvedGiftAid = toBoolean(subscription.metadata?.isGiftAid);
 
     if (donation.isRecurring !== true) updates.isRecurring = true;
     if (!toStringOrNull(donation.subscriptionId) && subscriptionId) updates.subscriptionId = subscriptionId;
@@ -140,6 +143,7 @@ const backfillDonations = async (subscriptionsMap, stripeClient) => {
     if (!toStringOrNull(donation.donorPhone) && resolvedDonorPhone) updates.donorPhone = resolvedDonorPhone;
     if (!toStringOrNull(donation.platform) && resolvedPlatform) updates.platform = resolvedPlatform;
     if (!toStringOrNull(donation.campaignTitleSnapshot) && resolvedCampaignTitle) updates.campaignTitleSnapshot = resolvedCampaignTitle;
+    if (donation.isGiftAid !== true && resolvedGiftAid) updates.isGiftAid = true;
 
     if (Object.keys(updates).length === 0) {
       skipped += 1;
