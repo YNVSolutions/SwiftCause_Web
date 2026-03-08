@@ -23,18 +23,18 @@ export interface Subscription {
   startedAt?: string | Date | { seconds: number; nanoseconds?: number } | null;
   lastPaymentAt?: string | Date | { seconds: number; nanoseconds?: number } | null;
   nextPaymentAt?: string | Date | { seconds: number; nanoseconds?: number } | null;
+  canceledAt?: string | Date | { seconds: number; nanoseconds?: number } | null;
   cancelReason?: string | null;
   currentPeriodEnd: string | Date | { seconds: number; nanoseconds?: number };
   createdAt: string | Date | { seconds: number; nanoseconds?: number };
   updatedAt: string | Date | { seconds: number; nanoseconds?: number };
-  canceledAt?: string | Date | { seconds: number; nanoseconds?: number };
   lastFailedInvoice?: string;
   lastFailedAt?: string | Date | { seconds: number; nanoseconds?: number };
   metadata?: {
     donorEmail?: string;
     donorName?: string;
     platform?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 
@@ -49,7 +49,7 @@ export interface CreateSubscriptionRequest {
     phone?: string;
   };
   paymentMethodId: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface CreateSubscriptionResponse {
@@ -59,4 +59,20 @@ export interface CreateSubscriptionResponse {
   success?: boolean;
   message?: string;
   requiresAction?: boolean;
+}
+
+export interface CancelSubscriptionRequest {
+  subscriptionId: string;
+  cancelImmediately?: boolean;
+  cancelReason?: string;
+}
+
+export interface CancelSubscriptionResponse {
+  success: boolean;
+  message: string;
+  subscription: {
+    id: string;
+    status: SubscriptionStatus;
+    canceledAt: number;
+  };
 }

@@ -396,20 +396,28 @@ const handleInvoicePaid = async (invoice) => {
     organizationId: subscriptionData.organizationId,
     amount: invoice.amount_paid,
     currency: invoice.currency,
-    donorEmail: subscriptionData.donorEmail || subscriptionData.metadata?.donorEmail || null,
-    donorName: subscriptionData.donorName || subscriptionData.metadata?.donorName || "Anonymous",
-    donorPhone: subscriptionData.donorPhone || subscriptionData.metadata?.donorPhone || null,
+    donorEmail: subscriptionData.donorEmail ||
+      subscriptionData.metadata?.donorEmail ||
+      null,
+    donorName: subscriptionData.donorName ||
+      subscriptionData.metadata?.donorName ||
+      "Anonymous",
+    donorPhone: subscriptionData.donorPhone ||
+      subscriptionData.metadata?.donorPhone ||
+      null,
     isRecurring: true,
     recurringInterval: recurringInterval,
     subscriptionId: subscriptionId,
     invoiceId: invoice.id,
     platform: subscriptionData.metadata?.platform || "web",
     metadata: {
-      campaignTitleSnapshot: subscriptionData.metadata?.campaignTitle || "Recurring Donation",
-      source: "stripe_webhook_recurring"
-    }
+      campaignTitleSnapshot:
+        subscriptionData.metadata?.campaignTitle || "Recurring Donation",
+      source: "stripe_webhook_recurring",
+    },
   });
 
+  // Update subscription analytics: lastPaymentAt
   await updateSubscriptionStatus(subscriptionId, "active", {
     lastPaymentAt: admin.firestore.Timestamp.fromDate(
         new Date((invoice.status_transitions?.paid_at || invoice.created) * 1000),
@@ -509,6 +517,7 @@ const handleSubscriptionUpdated = async (subscription) => {
   console.log("Subscription updated:", subscription.id, subscription.status);
 };
 
+
 /**
  * Handle customer.subscription.deleted
  * @param {object} subscription - Stripe subscription object
@@ -520,7 +529,8 @@ const handleSubscriptionDeleted = async (subscription) => {
     cancellationDetails.reason ||
     cancellationDetails.feedback ||
     cancellationDetails.comment ||
-    null;
+    subscription.metadata?.cancelReason ||
+    "unknown";
 
   const updated = await updateSubscriptionStatus(subscription.id, "canceled", {
     canceledAt: subscription.canceled_at ?

@@ -287,7 +287,7 @@ const cancelRecurringSubscription = (req, res) => {
           },
       );
 
-      // Update in Firestore
+      // Update in Firestore with cancel reason
       await admin
           .firestore()
           .collection("subscriptions")
@@ -295,6 +295,7 @@ const cancelRecurringSubscription = (req, res) => {
           .update({
             status: "canceled",
             canceledAt: admin.firestore.Timestamp.now(),
+            cancelReason: cancelReason || null,
             cancelReason: cancelReason || null,
             updatedAt: admin.firestore.Timestamp.now(),
           });

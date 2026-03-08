@@ -23,8 +23,13 @@ export function EmailConfirmationScreen({ transactionId, campaignName, onComplet
       await createThankYouMail(email, campaignName, transactionId);
       setEmailSent(true);
     } catch (err) {
-      console.error('Error sending receipt email:', err);
-      setError('There was an issue sending your receipt. Please try again.');
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      if (message.toLowerCase().includes('donation is still processing')) {
+        setError('Your donation is still being finalized. Please retry in a few seconds.');
+      } else {
+        console.error('Error sending receipt email:', err);
+        setError('There was an issue sending your receipt. Please try again.');
+      }
     } finally {
       setIsSending(false);
     }
