@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../shared/ui/card';
 import { Button } from '../../shared/ui/button';
 import { Badge } from '../../shared/ui/badge';
-import { Table } from '../../shared/ui/table';
+import { Input } from '../../shared/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../shared/ui/table';
 import { Alert, AlertDescription } from '../../shared/ui/alert';
 import { 
   RefreshCw, 
@@ -12,22 +14,42 @@ import {
   TrendingUp,
   XCircle,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Search,
+  Download
 } from 'lucide-react';
 import { getSubscriptionsByOrganization, getSubscriptionStats } from '../../entities/subscription/api/subscriptionApi';
 import { Subscription } from '../../shared/types/subscription';
 import { formatCurrencyFromMajor } from '../../shared/lib/currencyFormatter';
 import { getSubscriptionDisplayInterval } from '../../entities/subscription/model/selectors';
+import { SortableTableHeader } from './components/SortableTableHeader';
+import { useTableSort } from '../../shared/lib/hooks/useTableSort';
+import { exportToCsv } from '../../shared/utils/csvExport';
 
 interface SubscriptionManagementProps {
   organizationId: string;
 }
 
+type DateLike = string | Date | { seconds: number; nanoseconds?: number } | null | undefined;
+
+interface SubscriptionStats {
+  total: number;
+  active: number;
+  canceled: number;
+  pastDue: number;
+  totalMonthlyRevenue: number;
+  totalAnnualRevenue: number;
+  averageAmount: number;
+}
+
 export function SubscriptionManagement({ organizationId }: SubscriptionManagementProps) {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<SubscriptionStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [intervalFilter, setIntervalFilter] = useState('all');
 
   const loadSubscriptions = useCallback(async () => {
     try {
@@ -75,10 +97,85 @@ export function SubscriptionManagement({ organizationId }: SubscriptionManagemen
     );
   };
 
-  const formatDate = (date: any) => {
+  const formatDate = (date: DateLike) => {
     if (!date) return 'N/A';
     const d = date.seconds ? new Date(date.seconds * 1000) : new Date(date);
+    if (Number.isNaN(d.getTime())) return 'N/A';
     return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  };
+
+  const toTimestamp = (date: DateLike) => {
+    if (!date) return 0;
+    if (typeof date === 'object' && typeof date.seconds === 'number') {
+      return date.seconds * 1000;
+    }
+    const value = new Date(date).getTime();
+    return Number.isNaN(value) ? 0 : value;
+  };
+
+  const tableData = useMemo(() => {
+    return subscriptions.map((sub) => {
+      const donorName = sub.metadata?.donorName || 'Anonymous';
+      const donorEmail = sub.metadata?.donorEmail || '';
+      const intervalLabel = getSubscriptionDisplayInterval(sub.interval, sub.intervalCount);
+      const nextPayment = sub.nextPaymentAt || sub.currentPeriodEnd;
+
+      return {
+        ...sub,
+        donorName,
+        donorEmail,
+        intervalLabel,
+        nextPayment,
+        createdAtTs: toTimestamp(sub.createdAt),
+        nextPaymentTs: toTimestamp(nextPayment),
+      };
+    });
+  }, [subscriptions]);
+
+  const filteredSubscriptions = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+
+    return tableData.filter((sub) => {
+      const matchesSearch =
+        normalizedSearch.length === 0 ||
+        sub.donorName.toLowerCase().includes(normalizedSearch) ||
+        sub.donorEmail.toLowerCase().includes(normalizedSearch) ||
+        sub.stripeSubscriptionId.toLowerCase().includes(normalizedSearch);
+      const matchesStatus = statusFilter === 'all' || sub.status === statusFilter;
+      const matchesInterval = intervalFilter === 'all' || sub.intervalLabel === intervalFilter;
+
+      return matchesSearch && matchesStatus && matchesInterval;
+    });
+  }, [tableData, searchTerm, statusFilter, intervalFilter]);
+
+  const { sortedData, sortKey, sortDirection, handleSort } = useTableSort({
+    data: filteredSubscriptions,
+    defaultSortKey: 'createdAtTs',
+    defaultSortDirection: 'desc',
+  });
+
+  const intervalOptions = useMemo(() => {
+    const unique = Array.from(new Set(tableData.map((s) => s.intervalLabel)));
+    return unique.sort((a, b) => a.localeCompare(b));
+  }, [tableData]);
+
+  const handleExport = () => {
+    const rows = sortedData.map((sub) => ({
+      donorName: sub.donorName,
+      donorEmail: sub.donorEmail || 'N/A',
+      stripeSubscriptionId: sub.stripeSubscriptionId,
+      status: sub.status,
+      amountMinor: sub.amount,
+      amountDisplay: formatCurrencyFromMajor(sub.amount / 100),
+      interval: sub.intervalLabel,
+      nextPayment: formatDate(sub.nextPayment),
+      startedAt: formatDate(sub.startedAt),
+      createdAt: formatDate(sub.createdAt),
+      canceledAt: formatDate(sub.canceledAt),
+      cancelReason: sub.cancelReason || '',
+    }));
+
+    exportToCsv(rows, 'subscriptions');
   };
 
   if (loading) {
@@ -170,35 +267,135 @@ export function SubscriptionManagement({ organizationId }: SubscriptionManagemen
               <CardTitle>Recurring Subscriptions</CardTitle>
               <CardDescription>Manage all recurring donations</CardDescription>
             </div>
-            <Button onClick={loadSubscriptions} variant="outline" size="sm">
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Refresh
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button onClick={handleExport} variant="outline" size="sm" disabled={sortedData.length === 0}>
+                <Download className="w-4 h-4 mr-2" />
+                Export CSV
+              </Button>
+              <Button onClick={loadSubscriptions} variant="outline" size="sm">
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
-          {subscriptions.length === 0 ? (
+          <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="relative md:col-span-1">
+              <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Input
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Search donor, email, subscription ID..."
+                className="pl-9"
+              />
+            </div>
+
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="trialing">Trialing</SelectItem>
+                <SelectItem value="past_due">Past due</SelectItem>
+                <SelectItem value="unpaid">Unpaid</SelectItem>
+                <SelectItem value="incomplete">Incomplete</SelectItem>
+                <SelectItem value="incomplete_expired">Expired</SelectItem>
+                <SelectItem value="canceled">Canceled</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={intervalFilter} onValueChange={setIntervalFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter interval" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All intervals</SelectItem>
+                {intervalOptions.map((intervalLabel) => (
+                  <SelectItem key={intervalLabel} value={intervalLabel}>
+                    {intervalLabel}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="mb-3 text-sm text-gray-600">
+            Showing {sortedData.length} of {subscriptions.length} subscriptions
+          </div>
+
+          {sortedData.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <RefreshCw className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-              <p>No subscriptions found</p>
+              <p>No subscriptions match your current filters</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-3 font-medium">Donor</th>
-                    <th className="text-left p-3 font-medium">Amount</th>
-                    <th className="text-left p-3 font-medium">Interval</th>
-                    <th className="text-left p-3 font-medium">Status</th>
-                    <th className="text-left p-3 font-medium">Next Payment</th>
-                    <th className="text-left p-3 font-medium">Created</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {subscriptions.map((sub) => (
-                    <tr key={sub.id} className="border-b hover:bg-gray-50">
-                      <td className="p-3">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <SortableTableHeader
+                    sortKey="donorName"
+                    currentSortKey={sortKey}
+                    currentSortDirection={sortDirection}
+                    onSort={handleSort}
+                    className="p-3"
+                  >
+                    Donor
+                  </SortableTableHeader>
+                  <SortableTableHeader
+                    sortKey="amount"
+                    currentSortKey={sortKey}
+                    currentSortDirection={sortDirection}
+                    onSort={handleSort}
+                    className="p-3"
+                  >
+                    Amount
+                  </SortableTableHeader>
+                  <SortableTableHeader
+                    sortKey="intervalLabel"
+                    currentSortKey={sortKey}
+                    currentSortDirection={sortDirection}
+                    onSort={handleSort}
+                    className="p-3"
+                  >
+                    Interval
+                  </SortableTableHeader>
+                  <SortableTableHeader
+                    sortKey="status"
+                    currentSortKey={sortKey}
+                    currentSortDirection={sortDirection}
+                    onSort={handleSort}
+                    className="p-3"
+                  >
+                    Status
+                  </SortableTableHeader>
+                  <SortableTableHeader
+                    sortKey="nextPaymentTs"
+                    currentSortKey={sortKey}
+                    currentSortDirection={sortDirection}
+                    onSort={handleSort}
+                    className="p-3"
+                  >
+                    Next Payment
+                  </SortableTableHeader>
+                  <SortableTableHeader
+                    sortKey="createdAtTs"
+                    currentSortKey={sortKey}
+                    currentSortDirection={sortDirection}
+                    onSort={handleSort}
+                    className="p-3"
+                  >
+                    Created
+                  </SortableTableHeader>
+                  <TableHead className="p-3">Started</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sortedData.map((sub) => (
+                  <TableRow key={sub.id}>
+                    <TableCell className="p-3">
                         <div>
                           <div className="font-medium">
                             {sub.metadata?.donorName || 'Anonymous'}
@@ -207,27 +404,29 @@ export function SubscriptionManagement({ organizationId }: SubscriptionManagemen
                             {sub.metadata?.donorEmail || 'N/A'}
                           </div>
                         </div>
-                      </td>
-                      <td className="p-3 font-semibold">
+                      </TableCell>
+                      <TableCell className="p-3 font-semibold">
                         {formatCurrencyFromMajor(sub.amount / 100)}
-                      </td>
-                      <td className="p-3">
+                      </TableCell>
+                      <TableCell className="p-3">
                         <Badge variant="outline">
                           {getSubscriptionDisplayInterval(sub.interval, sub.intervalCount)}
                         </Badge>
-                      </td>
-                      <td className="p-3">{getStatusBadge(sub.status)}</td>
-                      <td className="p-3 text-sm">
-                        {sub.status === 'active' ? formatDate(sub.currentPeriodEnd) : 'N/A'}
-                      </td>
-                      <td className="p-3 text-sm text-gray-500">
+                      </TableCell>
+                      <TableCell className="p-3">{getStatusBadge(sub.status)}</TableCell>
+                      <TableCell className="p-3 text-sm">
+                        {sub.status === 'active' || sub.status === 'trialing' ? formatDate(sub.nextPayment) : 'N/A'}
+                      </TableCell>
+                      <TableCell className="p-3 text-sm text-gray-500">
                         {formatDate(sub.createdAt)}
-                      </td>
-                    </tr>
+                      </TableCell>
+                      <TableCell className="p-3 text-sm text-gray-500">
+                        {formatDate(sub.startedAt)}
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
-            </div>
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>
