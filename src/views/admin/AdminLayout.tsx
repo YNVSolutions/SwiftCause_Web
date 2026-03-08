@@ -48,6 +48,7 @@ const SCREEN_LABELS: Partial<Record<Screen, string>> = {
   "admin-campaigns": "Campaigns",
   "admin-kiosks": "Kiosks",
   "admin-donations": "Donations",
+  "admin-subscriptions": "Subscriptions",
   "admin-gift-aid": "Gift Aid Donations",
   "admin-users": "Users",
   "admin-bank-details": "Bank Details",
@@ -239,6 +240,37 @@ function AdminSidebar({
                 <div className={`relative w-full flex items-center ${isCollapsed ? 'justify-center px-4 py-4' : 'px-4 py-3.5'} rounded-xl opacity-50 cursor-not-allowed`}>
                   <Database className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} shrink-0 text-white/40`} strokeWidth={1.5} />
                   {!isCollapsed && <span className="ml-3 text-base font-medium text-white/40">Donations</span>}
+                </div>
+              </SidebarMenuItem>
+            )}
+
+            {/* Subscriptions */}
+            {hasPermission("view_donations") ? (
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={() => onNavigate("admin-subscriptions")}
+                  className={`relative w-full flex items-center ${isCollapsed ? 'justify-center px-4 py-4' : 'px-4 py-3.5'} rounded-xl text-left transition-all duration-200 group ${
+                    isActive("admin-subscriptions")
+                      ? "bg-[#0f5132] text-white font-medium shadow-lg"
+                      : "text-white/80 hover:text-white hover:bg-white/10"
+                  }`}
+                  title={isCollapsed ? "Subscriptions" : ""}
+                  aria-current={isActive("admin-subscriptions") ? "page" : undefined}
+                >
+                  {isActive("admin-subscriptions") && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white/30 rounded-r-full"></div>
+                  )}
+                  <CreditCard className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} shrink-0 ${
+                    isActive("admin-subscriptions") ? 'text-white' : ''
+                  }`} strokeWidth={1.5} />
+                  {!isCollapsed && <span className="ml-3 text-base font-medium">Subscriptions</span>}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ) : (
+              <SidebarMenuItem>
+                <div className={`relative w-full flex items-center ${isCollapsed ? 'justify-center px-4 py-4' : 'px-4 py-3.5'} rounded-xl opacity-50 cursor-not-allowed`}>
+                  <CreditCard className={`${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'} shrink-0 text-white/40`} strokeWidth={1.5} />
+                  {!isCollapsed && <span className="ml-3 text-base font-medium text-white/40">Subscriptions</span>}
                 </div>
               </SidebarMenuItem>
             )}

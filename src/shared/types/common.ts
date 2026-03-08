@@ -13,6 +13,7 @@ export type Screen =
   | "admin-campaigns"
   | "admin-kiosks"
   | "admin-donations"
+  | "admin-subscriptions"
   | "admin-gift-aid"
   | "admin-users"
   | "admin-bank-details"
