@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../shared/ui/table';
 import { Alert, AlertDescription } from '../../shared/ui/alert';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../shared/ui/dialog';
+import { Label } from '../../shared/ui/label';
 import { 
   RefreshCw, 
   Calendar, 
@@ -641,7 +642,7 @@ export function SubscriptionManagement({
       </div>
 
       <Dialog open={!!selectedSubscription} onOpenChange={(open) => !open && setSelectedSubscription(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Subscription Details</DialogTitle>
             <DialogDescription>
@@ -650,79 +651,67 @@ export function SubscriptionManagement({
           </DialogHeader>
 
           {selectedSubscription && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div className="space-y-1">
-                <p className="text-gray-500">Donor</p>
-                <p className="font-medium">{selectedSubscription.donorName}</p>
-                <p className="text-gray-600">{selectedSubscription.donorEmail || 'N/A'}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-gray-500">Status</p>
-                <div>{getStatusBadge(selectedSubscription.status)}</div>
+            <div className="grid gap-4 py-4">
+              <div>
+                <Label className="text-sm font-medium text-gray-700">Donor</Label>
+                <p className="text-sm text-gray-900 mt-1">{selectedSubscription.donorName}</p>
+                <p className="text-sm text-gray-500 break-all">{selectedSubscription.donorEmail || 'N/A'}</p>
               </div>
 
-              <div className="space-y-1">
-                <p className="text-gray-500">Amount</p>
-                <p className="font-medium">{formatCurrencyFromMajor(selectedSubscription.amount / 100)}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-gray-500">Interval</p>
-                <p className="font-medium">{selectedSubscription.intervalLabel}</p>
-              </div>
-
-              <div className="space-y-1 md:col-span-2">
-                <p className="text-gray-500">Stripe Subscription ID</p>
-                <p className="font-mono text-xs break-all">{selectedSubscription.stripeSubscriptionId}</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Subscription Amount</Label>
+                  <p className="text-sm font-semibold text-gray-900 mt-1">{formatCurrencyFromMajor(selectedSubscription.amount / 100)}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Status</Label>
+                  <div className="mt-1">{getStatusBadge(selectedSubscription.status)}</div>
+                </div>
               </div>
 
-              <div className="space-y-1">
-                <p className="text-gray-500">Campaign ID</p>
-                <p className="font-mono text-xs break-all">{selectedSubscription.campaignId}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-gray-500">Customer ID</p>
-                <p className="font-mono text-xs break-all">{selectedSubscription.customerId}</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Interval</Label>
+                  <p className="text-sm text-gray-900 mt-1">{selectedSubscription.intervalLabel}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Next Payment</Label>
+                  <p className="text-sm text-gray-900 mt-1">{formatDate(selectedSubscription.nextPaymentAt || selectedSubscription.nextPayment)}</p>
+                </div>
               </div>
 
-              <div className="space-y-1">
-                <p className="text-gray-500">Started At</p>
-                <p>{formatDate(selectedSubscription.startedAt)}</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Started At</Label>
+                  <p className="text-sm text-gray-900 mt-1">{formatDate(selectedSubscription.startedAt)}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Current Period End</Label>
+                  <p className="text-sm text-gray-900 mt-1">{formatDate(selectedSubscription.currentPeriodEnd)}</p>
+                </div>
               </div>
-              <div className="space-y-1">
-                <p className="text-gray-500">Created At</p>
-                <p>{formatDate(selectedSubscription.createdAt)}</p>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Created At</Label>
+                  <p className="text-sm text-gray-900 mt-1">{formatDate(selectedSubscription.createdAt)}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Updated At</Label>
+                  <p className="text-sm text-gray-900 mt-1">{formatDate(selectedSubscription.updatedAt)}</p>
+                </div>
               </div>
-              <div className="space-y-1">
-                <p className="text-gray-500">Updated At</p>
-                <p>{formatDate(selectedSubscription.updatedAt)}</p>
+
+              <div>
+                <Label className="text-sm font-medium text-gray-700">Cancel Reason</Label>
+                <p className="text-sm text-gray-900 mt-1">{selectedSubscription.cancelReason || 'N/A'}</p>
               </div>
-              <div className="space-y-1">
-                <p className="text-gray-500">Current Period End</p>
-                <p>{formatDate(selectedSubscription.currentPeriodEnd)}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-gray-500">Next Payment At</p>
-                <p>{formatDate(selectedSubscription.nextPaymentAt || selectedSubscription.nextPayment)}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-gray-500">Last Payment At</p>
-                <p>{formatDate(selectedSubscription.lastPaymentAt)}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-gray-500">Canceled At</p>
-                <p>{formatDate(selectedSubscription.canceledAt)}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-gray-500">Cancel Reason</p>
-                <p>{selectedSubscription.cancelReason || 'N/A'}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-gray-500">Last Failed Invoice</p>
-                <p className="font-mono text-xs break-all">{selectedSubscription.lastFailedInvoice || 'N/A'}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-gray-500">Last Failed At</p>
-                <p>{formatDate(selectedSubscription.lastFailedAt)}</p>
+
+              <div>
+                <Label className="text-sm font-medium text-gray-700">Stripe Subscription ID</Label>
+                <p className="text-xs text-gray-700 font-mono mt-1 bg-gray-50 px-2 py-1 rounded border border-gray-200 inline-block break-all">
+                  {selectedSubscription.stripeSubscriptionId}
+                </p>
               </div>
             </div>
           )}
