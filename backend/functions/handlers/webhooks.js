@@ -385,6 +385,10 @@ const handleInvoicePaid = async (invoice) => {
     }
   });
 
+  await updateSubscriptionStatus(subscriptionId, "active", {
+    lastPaymentAt: admin.firestore.Timestamp.now(),
+  });
+
   console.log("Recurring donation recorded for invoice:", invoice.id);
 };
 
@@ -428,10 +432,13 @@ const handleSubscriptionCreated = async (subscription) => {
  * @return {Promise<void>}
  */
 const handleSubscriptionUpdated = async (subscription) => {
+  const nextPaymentAt = admin.firestore.Timestamp.fromDate(
+      new Date(subscription.current_period_end * 1000),
+  );
+
   await updateSubscriptionStatus(subscription.id, subscription.status, {
-    currentPeriodEnd: admin.firestore.Timestamp.fromDate(
-        new Date(subscription.current_period_end * 1000),
-    ),
+    currentPeriodEnd: nextPaymentAt,
+    nextPaymentAt: nextPaymentAt,
   });
 
   console.log("Subscription updated:", subscription.id, subscription.status);
@@ -443,8 +450,16 @@ const handleSubscriptionUpdated = async (subscription) => {
  * @return {Promise<void>}
  */
 const handleSubscriptionDeleted = async (subscription) => {
+  const cancellationDetails = subscription.cancellation_details || {};
+  const cancelReason =
+    cancellationDetails.reason ||
+    cancellationDetails.feedback ||
+    cancellationDetails.comment ||
+    null;
+
   await updateSubscriptionStatus(subscription.id, "canceled", {
     canceledAt: admin.firestore.Timestamp.now(),
+    cancelReason: cancelReason,
   });
 
   console.log("Subscription canceled:", subscription.id);
