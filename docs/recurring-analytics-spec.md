@@ -33,18 +33,30 @@ This spec does not define UI design.
 - At-risk: `past_due`, `unpaid`, `incomplete`
 - Closed: `canceled`, `incomplete_expired`
 
+## Formula Notation
+- `S` = set of subscriptions for an organization.
+- `D` = set of donations for an organization.
+- `W = [from, to)` = selected analysis window.
+- `A0` = active subscription count at window start (`timestamp < from` and active-like status).
+- `A1` = active subscription count at window end (`timestamp < to` and active-like status).
+- `N` = new subscriptions in window.
+- `C` = canceled subscriptions in window.
+- `amt(s)` = subscription amount in minor units.
+- `mrr(s)` = normalized monthly amount for subscription `s`.
+- `pct(x)` = `x * 100`.
+
 ## KPI Definitions
 
 ### 1) Active Subscriptions
 - Definition: Count of subscriptions with status in active-like set.
 - Formula:
-  - `count(status in ["active", "trialing"])`
+  - `ActiveSubs = | { s in S : status(s) in ["active","trialing"] } |`
 - Source: `subscriptions`
 
 ### 2) New Subscriptions (Window)
 - Definition: Subscriptions started in selected window.
 - Formula:
-  - `count(startedAt in [from, to))`
+  - `N = | { s in S : startedAt(s) in W } |`
 - Source: `subscriptions.startedAt`
 - Fallback when `startedAt` missing:
   - use `createdAt`
@@ -52,30 +64,30 @@ This spec does not define UI design.
 ### 3) Canceled Subscriptions (Window)
 - Definition: Subscriptions canceled in selected window.
 - Formula:
-  - `count(canceledAt in [from, to))`
+  - `C = | { s in S : canceledAt(s) in W } |`
 - Source: `subscriptions.canceledAt`
 
 ### 4) Churn Rate (Window)
 - Definition: Percentage of subscriptions lost during the window.
 - Formula:
-  - `canceled_in_window / active_at_window_start`
+  - `ChurnRate = pct(C / A0)`
 - Return `0` if denominator is `0`.
 - Source: `subscriptions`
 
 ### 5) MRR (Monthly Recurring Revenue)
 - Definition: Normalized monthly run-rate from active subscriptions.
 - Formula per active subscription:
-  - if `interval = "month"` and `intervalCount = 1`: `amount`
-  - if `interval = "month"` and `intervalCount = 3`: `amount / 3`
-  - if `interval = "year"`: `amount / 12`
+  - if `interval = "month"` and `intervalCount = 1`: `mrr(s) = amt(s)`
+  - if `interval = "month"` and `intervalCount = 3`: `mrr(s) = amt(s) / 3`
+  - if `interval = "year"`: `mrr(s) = amt(s) / 12`
 - MRR:
-  - `sum(normalized_monthly_amount)`
+  - `MRR = sum( mrr(s) ) for s in S where status(s) in ["active","trialing"]`
 - Source: `subscriptions` where status in active-like set
 
 ### 6) ARR (Annual Recurring Revenue)
 - Definition: Annualized run-rate from active subscriptions.
 - Formula:
-  - `ARR = MRR * 12`
+  - `ARR = 12 * MRR`
 - Equivalent per subscription:
   - monthly: `amount * 12` (or `amount * 4` for quarterly)
   - yearly: `amount`
@@ -84,7 +96,7 @@ This spec does not define UI design.
 ### 7) Recurring Cash Collected (Window)
 - Definition: Real recurring cash successfully collected in selected window.
 - Formula:
-  - `sum(donation.amount)`
+  - `RecurringCash = sum( amount(d) ) for d in D where isRecurring(d)=true and paymentStatus(d)="success" and timestamp(d) in W`
 - Filter:
   - `donations.isRecurring = true`
   - `donations.paymentStatus = "success"`
@@ -94,7 +106,7 @@ This spec does not define UI design.
 ### 8) Past Due Count
 - Definition: Number of subscriptions currently in past-due state.
 - Formula:
-  - `count(status = "past_due")`
+  - `PastDueCount = | { s in S : status(s) = "past_due" } |`
 - Source: `subscriptions`
 
 ## Trend Series Definitions
