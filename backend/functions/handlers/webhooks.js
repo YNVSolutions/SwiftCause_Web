@@ -1,12 +1,20 @@
 const admin = require("firebase-admin");
-const {stripe, getWebhookSecrets, ensureStripeInitialized} = require("../services/stripe");
+const {
+  stripe,
+  getWebhookSecrets,
+  ensureStripeInitialized,
+  verifyWebhookSignatureWithAnySecret,
+} = require("../services/stripe");
 const {createDonationDoc} = require("../entities/donation");
 const {
   updateSubscriptionStatus,
   getSubscriptionByStripeId,
-  calculateNextPaymentAt,
 } = require("../entities/subscription");
-const {isEventProcessed, markEventProcessed} = require("../shared/firestore");
+const {
+  claimWebhookEvent,
+  markEventProcessed,
+  markEventFailed,
+} = require("../shared/firestore");
 
 const DEFAULT_GIFT_AID_DECLARATION_TEXT = "I confirm I have paid enough UK Income or Capital Gains Tax to cover all my Gift Aid donations in this tax year.";
 
@@ -128,7 +136,7 @@ const handleAccountUpdatedStripeWebhook = async (req, res) => {
     
     const sig = req.headers["stripe-signature"];
     const {account: endpointSecretAccount} = getWebhookSecrets();
-    event = stripeClient.webhooks.constructEvent(
+    event = verifyWebhookSignatureWithAnySecret(
         req.rawBody,
         sig,
         endpointSecretAccount,
@@ -190,7 +198,7 @@ const handlePaymentCompletedStripeWebhook = async (req, res) => {
     
     const sig = req.headers["stripe-signature"];
     const {payment: endpointSecretPayment} = getWebhookSecrets();
-    event = stripeClient.webhooks.constructEvent(
+    event = verifyWebhookSignatureWithAnySecret(
         req.rawBody,
         sig,
         endpointSecretPayment,
@@ -200,75 +208,87 @@ const handlePaymentCompletedStripeWebhook = async (req, res) => {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  // Idempotency check
-  if (await isEventProcessed(event.id)) {
-    console.log("Event already processed:", event.id);
+  // Atomic idempotency claim
+  const claimed = await claimWebhookEvent(event.id, event.type, {
+    objectId: event.data?.object?.id || null,
+  });
+  if (!claimed) {
+    console.log("Event already claimed/processed:", event.id);
     return res.status(200).send("OK");
   }
 
-  if (event.type === "payment_intent.succeeded") {
-    const paymentIntent = event.data.object;
-    const metadata = paymentIntent.metadata || {};
-    const campaignId = toStringOrNull(metadata.campaignId);
-    let organizationId = toStringOrNull(metadata.organizationId);
-    let campaignTitleSnapshot = toStringOrNull(metadata.campaignTitle) || "Deleted Campaign";
-    let campaignExists = false;
+  try {
+    if (event.type === "payment_intent.succeeded") {
+      const paymentIntent = event.data.object;
+      const metadata = paymentIntent.metadata || {};
+      const campaignId = toStringOrNull(metadata.campaignId);
+      let organizationId = toStringOrNull(metadata.organizationId);
+      let campaignTitleSnapshot = toStringOrNull(metadata.campaignTitle) || "Deleted Campaign";
+      let campaignExists = false;
 
-    if (campaignId) {
-      const campaignRef = admin.firestore().collection("campaigns").doc(campaignId);
-      const campaignSnap = await campaignRef.get();
+      if (campaignId) {
+        const campaignRef = admin.firestore().collection("campaigns").doc(campaignId);
+        const campaignSnap = await campaignRef.get();
 
-      if (campaignSnap.exists) {
-        campaignExists = true;
-        const campaignData = campaignSnap.data() || {};
-        campaignTitleSnapshot =
-          toStringOrNull(campaignData.title) || campaignTitleSnapshot;
-        organizationId =
-          toStringOrNull(campaignData.organizationId) || organizationId;
-      } else {
-        console.warn("Campaign not found for payment intent:", paymentIntent.id, campaignId);
+        if (campaignSnap.exists) {
+          campaignExists = true;
+          const campaignData = campaignSnap.data() || {};
+          campaignTitleSnapshot =
+            toStringOrNull(campaignData.title) || campaignTitleSnapshot;
+          organizationId =
+            toStringOrNull(campaignData.organizationId) || organizationId;
+        } else {
+          console.warn("Campaign not found for payment intent:", paymentIntent.id, campaignId);
+        }
       }
+
+      // Use entity to create donation with recurring support
+      await createDonationDoc({
+        transactionId: paymentIntent.id,
+        campaignId: campaignId || null,
+        organizationId: organizationId || null,
+        amount: paymentIntent.amount,
+        currency: paymentIntent.currency,
+        donorName: toStringOrNull(metadata.donorName) || "Anonymous",
+        donorEmail: toStringOrNull(metadata.donorEmail),
+        donorPhone: toStringOrNull(metadata.donorPhone),
+        donorMessage: toStringOrNull(metadata.donorMessage),
+        isAnonymous: toBoolean(metadata.isAnonymous),
+        isGiftAid: toBoolean(metadata.isGiftAid),
+        isRecurring: toBoolean(metadata.isRecurring),
+        recurringInterval: toStringOrNull(metadata.recurringInterval),
+        kioskId: toStringOrNull(metadata.kioskId),
+        platform: toStringOrNull(metadata.platform) || "unknown",
+        metadata: {
+          campaignTitleSnapshot,
+          source: "stripe_webhook",
+        },
+      });
+
+      // Create Gift Aid declaration if needed
+      await createGiftAidDeclarationIfNeeded({
+        paymentIntent,
+        metadata,
+        campaignId,
+        campaignTitleSnapshot,
+        organizationId,
+      });
+
+      await markEventProcessed(event.id, {
+        paymentIntentId: paymentIntent.id,
+      });
+    } else {
+      await markEventProcessed(event.id, {
+        message: "Unhandled in payment endpoint",
+      });
     }
 
-    // Use entity to create donation with recurring support
-    await createDonationDoc({
-      transactionId: paymentIntent.id,
-      campaignId: campaignId || null,
-      organizationId: organizationId || null,
-      amount: paymentIntent.amount,
-      currency: paymentIntent.currency,
-      donorName: toStringOrNull(metadata.donorName) || "Anonymous",
-      donorEmail: toStringOrNull(metadata.donorEmail),
-      donorPhone: toStringOrNull(metadata.donorPhone),
-      donorMessage: toStringOrNull(metadata.donorMessage),
-      isAnonymous: toBoolean(metadata.isAnonymous),
-      isGiftAid: toBoolean(metadata.isGiftAid),
-      isRecurring: toBoolean(metadata.isRecurring),
-      recurringInterval: toStringOrNull(metadata.recurringInterval),
-      kioskId: toStringOrNull(metadata.kioskId),
-      platform: toStringOrNull(metadata.platform) || "unknown",
-      metadata: {
-        campaignTitleSnapshot,
-        source: "stripe_webhook",
-      },
-    });
-
-    // Create Gift Aid declaration if needed
-    await createGiftAidDeclarationIfNeeded({
-      paymentIntent,
-      metadata,
-      campaignId,
-      campaignTitleSnapshot,
-      organizationId,
-    });
-
-    // Mark event as processed
-    await markEventProcessed(event.id, event.type, {
-      paymentIntentId: paymentIntent.id,
-    });
+    res.status(200).send("OK");
+  } catch (error) {
+    console.error("Error processing payment webhook:", error);
+    await markEventFailed(event.id, error.message);
+    res.status(500).send("Webhook processing failed");
   }
-
-  res.status(200).send("OK");
 };
 
 /**
@@ -285,7 +305,7 @@ const handleSubscriptionWebhook = async (req, res) => {
     const sig = req.headers["stripe-signature"];
     const {payment: endpointSecretPayment} = getWebhookSecrets();
 
-    event = stripeClient.webhooks.constructEvent(
+    event = verifyWebhookSignatureWithAnySecret(
         req.rawBody,
         sig,
         endpointSecretPayment,
@@ -295,9 +315,12 @@ const handleSubscriptionWebhook = async (req, res) => {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  // Idempotency check
-  if (await isEventProcessed(event.id)) {
-    console.log("Event already processed:", event.id);
+  // Atomic idempotency claim
+  const claimed = await claimWebhookEvent(event.id, event.type, {
+    objectId: event.data?.object?.id || null,
+  });
+  if (!claimed) {
+    console.log("Event already claimed/processed:", event.id);
     return res.status(200).send("OK");
   }
 
@@ -328,13 +351,14 @@ const handleSubscriptionWebhook = async (req, res) => {
     }
 
     // Mark event as processed
-    await markEventProcessed(event.id, event.type, {
+    await markEventProcessed(event.id, {
       objectId: event.data.object.id,
     });
 
     res.status(200).send("OK");
   } catch (error) {
     console.error("Error processing webhook:", error);
+    await markEventFailed(event.id, error.message);
     res.status(500).send("Webhook processing failed");
   }
 };
@@ -394,8 +418,10 @@ const handleInvoicePaid = async (invoice) => {
   });
 
   // Update subscription analytics: lastPaymentAt
-  await updateSubscriptionStatus(subscriptionId, subscriptionData.status, {
-    lastPaymentAt: admin.firestore.Timestamp.now(),
+  await updateSubscriptionStatus(subscriptionId, "active", {
+    lastPaymentAt: admin.firestore.Timestamp.fromDate(
+        new Date((invoice.status_transitions?.paid_at || invoice.created) * 1000),
+    ),
   });
 
   console.log("Recurring donation recorded for invoice:", invoice.id);
@@ -410,10 +436,15 @@ const handleInvoicePaymentFailed = async (invoice) => {
   const subscriptionId = invoice.subscription;
   if (!subscriptionId) return;
 
-  await updateSubscriptionStatus(subscriptionId, "past_due", {
+  const updated = await updateSubscriptionStatus(subscriptionId, "past_due", {
     lastFailedInvoice: invoice.id,
     lastFailedAt: admin.firestore.Timestamp.now(),
   });
+
+  if (!updated) {
+    console.warn("Skipping payment_failed update for missing subscription:", subscriptionId);
+    return;
+  }
 
   console.log("Subscription payment failed:", subscriptionId);
 };
@@ -441,19 +472,51 @@ const handleSubscriptionCreated = async (subscription) => {
  * @return {Promise<void>}
  */
 const handleSubscriptionUpdated = async (subscription) => {
-  const nextPaymentAt = calculateNextPaymentAt(
-      subscription.current_period_end,
-      subscription.items.data[0]?.plan?.interval || "month",
-      subscription.items.data[0]?.plan?.interval_count || 1,
+  const stripeClient = ensureStripeInitialized();
+  let effectiveSubscription = subscription;
+
+  if (!(typeof subscription.current_period_end === "number" &&
+      Number.isFinite(subscription.current_period_end))) {
+    try {
+      effectiveSubscription = await stripeClient.subscriptions.retrieve(subscription.id);
+    } catch (error) {
+      console.warn(
+          "Failed to fetch full subscription for update event:",
+          subscription.id,
+          error.message,
+      );
+    }
+  }
+
+  const updateFields = {};
+  if (typeof effectiveSubscription.current_period_end === "number" &&
+      Number.isFinite(effectiveSubscription.current_period_end)) {
+    const nextPaymentAt = admin.firestore.Timestamp.fromDate(
+        new Date(effectiveSubscription.current_period_end * 1000),
+    );
+    updateFields.currentPeriodEnd = nextPaymentAt;
+    updateFields.nextPaymentAt = nextPaymentAt;
+  } else {
+    console.warn(
+        "subscription.updated missing current_period_end, updating status only:",
+        effectiveSubscription.id || subscription.id,
+    );
+  }
+
+  const updated = await updateSubscriptionStatus(
+      effectiveSubscription.id || subscription.id,
+      effectiveSubscription.status || subscription.status || "active",
+      updateFields,
   );
 
-  await updateSubscriptionStatus(subscription.id, subscription.status, {
-    currentPeriodEnd: subscription.current_period_end,
-    nextPaymentAt: nextPaymentAt,
-  });
+  if (!updated) {
+    console.warn("Skipping subscription.updated for missing subscription:", subscription.id);
+    return;
+  }
 
   console.log("Subscription updated:", subscription.id, subscription.status);
 };
+
 
 /**
  * Handle customer.subscription.deleted
@@ -461,14 +524,25 @@ const handleSubscriptionUpdated = async (subscription) => {
  * @return {Promise<void>}
  */
 const handleSubscriptionDeleted = async (subscription) => {
-  const cancelReason = subscription.cancellation_details?.reason ||
+  const cancellationDetails = subscription.cancellation_details || {};
+  const cancelReason =
+    cancellationDetails.reason ||
+    cancellationDetails.feedback ||
+    cancellationDetails.comment ||
     subscription.metadata?.cancelReason ||
     "unknown";
 
-  await updateSubscriptionStatus(subscription.id, "canceled", {
-    canceledAt: admin.firestore.Timestamp.now(),
+  const updated = await updateSubscriptionStatus(subscription.id, "canceled", {
+    canceledAt: subscription.canceled_at ?
+      admin.firestore.Timestamp.fromDate(new Date(subscription.canceled_at * 1000)) :
+      admin.firestore.Timestamp.now(),
     cancelReason: cancelReason,
   });
+
+  if (!updated) {
+    console.warn("Skipping subscription.deleted for missing subscription:", subscription.id);
+    return;
+  }
 
   console.log("Subscription canceled:", subscription.id);
 };

@@ -55,6 +55,10 @@ const createSubscriptionDoc = async (subscriptionData) => {
     currency = "usd",
     status,
     currentPeriodEnd,
+    startedAt = null,
+    lastPaymentAt = null,
+    nextPaymentAt = null,
+    cancelReason = null,
     currentPeriodStart,
     metadata = {},
   } = subscriptionData;
@@ -66,9 +70,23 @@ const createSubscriptionDoc = async (subscriptionData) => {
 
   const now = admin.firestore.Timestamp.now();
   const periodEndTimestamp = toFirestoreTimestamp(currentPeriodEnd);
-  const startedAtTimestamp = currentPeriodStart ?
-    toFirestoreTimestamp(currentPeriodStart) :
-    now;
+
+  const toTimestampOrNull = (value) => {
+    if (!value) return null;
+    if (typeof value === "number") {
+      return admin.firestore.Timestamp.fromMillis(value * 1000);
+    }
+    if (value instanceof Date) {
+      return admin.firestore.Timestamp.fromDate(value);
+    }
+    return null;
+  };
+
+  const startedAtTimestamp = toTimestampOrNull(startedAt) ||
+    (currentPeriodStart ? toFirestoreTimestamp(currentPeriodStart) : now);
+  const lastPaymentAtTimestamp = toTimestampOrNull(lastPaymentAt);
+  const nextPaymentAtTimestamp = toTimestampOrNull(nextPaymentAt) ||
+    calculateNextPaymentAt(currentPeriodEnd, interval, intervalCount);
 
   await subscriptionRef.set({
     stripeSubscriptionId,
@@ -83,16 +101,12 @@ const createSubscriptionDoc = async (subscriptionData) => {
     donorEmail: metadata.donorEmail || null,
     donorName: metadata.donorName || null,
     donorPhone: metadata.donorPhone || null,
-    currentPeriodEnd: periodEndTimestamp,
     startedAt: startedAtTimestamp,
-    lastPaymentAt: null,
-    nextPaymentAt: calculateNextPaymentAt(
-        currentPeriodEnd,
-        interval,
-        intervalCount,
-    ),
+    lastPaymentAt: lastPaymentAtTimestamp,
+    nextPaymentAt: nextPaymentAtTimestamp,
+    cancelReason: cancelReason || null,
+    currentPeriodEnd: periodEndTimestamp,
     canceledAt: null,
-    cancelReason: null,
     createdAt: now,
     updatedAt: now,
     metadata: metadata,
@@ -107,7 +121,7 @@ const createSubscriptionDoc = async (subscriptionData) => {
  * @param {string} stripeSubscriptionId - Stripe subscription ID
  * @param {string} status - New status
  * @param {object} updates - Additional fields to update
- * @return {Promise<void>}
+ * @return {Promise<boolean>} True if subscription exists and was updated
  */
 const updateSubscriptionStatus = async (
     stripeSubscriptionId,
@@ -118,6 +132,12 @@ const updateSubscriptionStatus = async (
       .firestore()
       .collection("subscriptions")
       .doc(stripeSubscriptionId);
+
+  const existing = await subscriptionRef.get();
+  if (!existing.exists) {
+    console.warn("Subscription not found for status update:", stripeSubscriptionId);
+    return false;
+  }
 
   // Normalize timestamp fields in updates
   const normalizedUpdates = {...updates};
@@ -150,6 +170,7 @@ const updateSubscriptionStatus = async (
 
   await subscriptionRef.update(updateData);
   console.log("Subscription status updated:", stripeSubscriptionId, status);
+  return true;
 };
 
 /**

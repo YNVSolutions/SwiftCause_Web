@@ -22,6 +22,7 @@ const createRecurringSubscription = (req, res) => {
         campaignId,
         donor,
         paymentMethodId,
+        cancelReason,
         metadata = {},
       } = req.body;
 
@@ -187,7 +188,9 @@ const createRecurringSubscription = (req, res) => {
         currency: currency,
         status: subscription.status,
         currentPeriodEnd: subscription.current_period_end,
-        currentPeriodStart: subscription.current_period_start,
+        startedAt: subscription.start_date || subscription.current_period_start || null,
+        nextPaymentAt: subscription.current_period_end || null,
+        cancelReason: cancelReason || null,
         metadata: {
           donorEmail: donor.email,
           donorName: donor.name || "Anonymous",
@@ -254,11 +257,7 @@ const cancelRecurringSubscription = (req, res) => {
     try {
       const stripeClient = ensureStripeInitialized();
 
-      const {
-        subscriptionId,
-        cancelImmediately = false,
-        cancelReason = null,
-      } = req.body;
+      const {subscriptionId, cancelImmediately = false, cancelReason = null} = req.body;
 
       if (!subscriptionId) {
         return res.status(400).send({
@@ -296,7 +295,8 @@ const cancelRecurringSubscription = (req, res) => {
           .update({
             status: "canceled",
             canceledAt: admin.firestore.Timestamp.now(),
-            cancelReason: cancelReason || "user_requested",
+            cancelReason: cancelReason || null,
+            cancelReason: cancelReason || null,
             updatedAt: admin.firestore.Timestamp.now(),
           });
 

@@ -20,12 +20,12 @@ export interface Subscription {
   amount: number;
   currency: string;
   status: SubscriptionStatus;
-  currentPeriodEnd: string | Date | { seconds: number; nanoseconds?: number };
-  startedAt: string | Date | { seconds: number; nanoseconds?: number };
+  startedAt?: string | Date | { seconds: number; nanoseconds?: number } | null;
   lastPaymentAt?: string | Date | { seconds: number; nanoseconds?: number } | null;
   nextPaymentAt?: string | Date | { seconds: number; nanoseconds?: number } | null;
   canceledAt?: string | Date | { seconds: number; nanoseconds?: number } | null;
   cancelReason?: string | null;
+  currentPeriodEnd: string | Date | { seconds: number; nanoseconds?: number };
   createdAt: string | Date | { seconds: number; nanoseconds?: number };
   updatedAt: string | Date | { seconds: number; nanoseconds?: number };
   lastFailedInvoice?: string;

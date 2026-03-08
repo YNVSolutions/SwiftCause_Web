@@ -72,3 +72,4 @@ serviceAccountKey.json
 
 backend/serviceAccountKey.json
 
+.tmp-config/

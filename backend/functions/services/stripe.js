@@ -11,9 +11,16 @@ if (stripeSecretKey) {
   console.warn("STRIPE_SECRET_KEY not found. Stripe functionality will be disabled.");
 }
 
+const splitSecrets = (value) => {
+  if (!value || typeof value !== "string") return [];
+  return value.split(",")
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0);
+};
+
 const getWebhookSecrets = () => ({
-  account: process.env.STRIPE_WEBHOOK_SECRET_ACCOUNT,
-  payment: process.env.STRIPE_WEBHOOK_SECRET_PAYMENT,
+  account: splitSecrets(process.env.STRIPE_WEBHOOK_SECRET_ACCOUNT),
+  payment: splitSecrets(process.env.STRIPE_WEBHOOK_SECRET_PAYMENT),
 });
 
 // Helper to check if Stripe is initialized
@@ -116,6 +123,30 @@ const verifyWebhookSignature = (rawBody, signature, secret) => {
   return stripeClient.webhooks.constructEvent(rawBody, signature, secret);
 };
 
+/**
+ * Verify webhook signature using one or more possible secrets.
+ * @param {Buffer} rawBody - Raw request body
+ * @param {string} signature - Stripe signature header
+ * @param {string[]|string} secrets - Webhook secret(s)
+ * @return {object} Verified Stripe event
+ */
+const verifyWebhookSignatureWithAnySecret = (rawBody, signature, secrets) => {
+  const stripeClient = ensureStripeInitialized();
+  const secretList = Array.isArray(secrets) ? secrets : [secrets];
+  let lastError = null;
+
+  for (const secret of secretList) {
+    if (!secret) continue;
+    try {
+      return stripeClient.webhooks.constructEvent(rawBody, signature, secret);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError || new Error("No valid webhook secret configured");
+};
+
 module.exports = {
   stripe,
   getWebhookSecrets,
@@ -124,4 +155,5 @@ module.exports = {
   getRecurringPriceByInterval,
   createStripeSubscription,
   verifyWebhookSignature,
+  verifyWebhookSignatureWithAnySecret,
 };
