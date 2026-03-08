@@ -76,3 +76,35 @@ export interface CancelSubscriptionResponse {
     canceledAt: number;
   };
 }
+
+export interface RecurringStatsQuery {
+  from?: string | Date;
+  to?: string | Date;
+}
+
+export interface RecurringTrendPoint {
+  period: string; // YYYY-MM
+  mrrMinor: number;
+  cashCollectedMinor: number;
+  newSubscriptions: number;
+  canceledSubscriptions: number;
+}
+
+export interface RecurringStatsSummary {
+  activeSubscriptions: number;
+  newSubscriptions: number;
+  canceledSubscriptions: number;
+  churnRatePercent: number;
+  mrrMinor: number;
+  arrMinor: number;
+  recurringCashCollectedMinor: number;
+  pastDueCount: number;
+}
+
+export interface RecurringStatsResponse {
+  organizationId: string;
+  from: string;
+  to: string;
+  summary: RecurringStatsSummary;
+  trends: RecurringTrendPoint[];
+}
