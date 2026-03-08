@@ -428,10 +428,15 @@ const handleInvoicePaymentFailed = async (invoice) => {
   const subscriptionId = invoice.subscription;
   if (!subscriptionId) return;
 
-  await updateSubscriptionStatus(subscriptionId, "past_due", {
+  const updated = await updateSubscriptionStatus(subscriptionId, "past_due", {
     lastFailedInvoice: invoice.id,
     lastFailedAt: admin.firestore.Timestamp.now(),
   });
+
+  if (!updated) {
+    console.warn("Skipping payment_failed update for missing subscription:", subscriptionId);
+    return;
+  }
 
   console.log("Subscription payment failed:", subscriptionId);
 };
@@ -463,10 +468,15 @@ const handleSubscriptionUpdated = async (subscription) => {
       new Date(subscription.current_period_end * 1000),
   );
 
-  await updateSubscriptionStatus(subscription.id, subscription.status, {
+  const updated = await updateSubscriptionStatus(subscription.id, subscription.status, {
     currentPeriodEnd: nextPaymentAt,
     nextPaymentAt: nextPaymentAt,
   });
+
+  if (!updated) {
+    console.warn("Skipping subscription.updated for missing subscription:", subscription.id);
+    return;
+  }
 
   console.log("Subscription updated:", subscription.id, subscription.status);
 };
@@ -484,12 +494,17 @@ const handleSubscriptionDeleted = async (subscription) => {
     cancellationDetails.comment ||
     null;
 
-  await updateSubscriptionStatus(subscription.id, "canceled", {
+  const updated = await updateSubscriptionStatus(subscription.id, "canceled", {
     canceledAt: subscription.canceled_at ?
       admin.firestore.Timestamp.fromDate(new Date(subscription.canceled_at * 1000)) :
       admin.firestore.Timestamp.now(),
     cancelReason: cancelReason,
   });
+
+  if (!updated) {
+    console.warn("Skipping subscription.deleted for missing subscription:", subscription.id);
+    return;
+  }
 
   console.log("Subscription canceled:", subscription.id);
 };

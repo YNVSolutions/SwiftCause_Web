@@ -90,13 +90,19 @@ const createSubscriptionDoc = async (subscriptionData) => {
  * @param {string} stripeSubscriptionId - Stripe subscription ID
  * @param {string} status - New status
  * @param {object} updates - Additional fields to update
- * @return {Promise<void>}
+ * @return {Promise<boolean>} True if subscription exists and was updated
  */
 const updateSubscriptionStatus = async (stripeSubscriptionId, status, updates = {}) => {
   const subscriptionRef = admin
       .firestore()
       .collection("subscriptions")
       .doc(stripeSubscriptionId);
+
+  const existing = await subscriptionRef.get();
+  if (!existing.exists) {
+    console.warn("Subscription not found for status update:", stripeSubscriptionId);
+    return false;
+  }
 
   const updateData = {
     status,
@@ -106,6 +112,7 @@ const updateSubscriptionStatus = async (stripeSubscriptionId, status, updates = 
 
   await subscriptionRef.update(updateData);
   console.log("Subscription status updated:", stripeSubscriptionId, status);
+  return true;
 };
 
 /**
