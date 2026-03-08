@@ -464,14 +464,26 @@ const handleSubscriptionCreated = async (subscription) => {
  * @return {Promise<void>}
  */
 const handleSubscriptionUpdated = async (subscription) => {
-  const nextPaymentAt = admin.firestore.Timestamp.fromDate(
-      new Date(subscription.current_period_end * 1000),
-  );
+  const updateFields = {};
+  if (typeof subscription.current_period_end === "number" &&
+      Number.isFinite(subscription.current_period_end)) {
+    const nextPaymentAt = admin.firestore.Timestamp.fromDate(
+        new Date(subscription.current_period_end * 1000),
+    );
+    updateFields.currentPeriodEnd = nextPaymentAt;
+    updateFields.nextPaymentAt = nextPaymentAt;
+  } else {
+    console.warn(
+        "subscription.updated missing current_period_end, updating status only:",
+        subscription.id,
+    );
+  }
 
-  const updated = await updateSubscriptionStatus(subscription.id, subscription.status, {
-    currentPeriodEnd: nextPaymentAt,
-    nextPaymentAt: nextPaymentAt,
-  });
+  const updated = await updateSubscriptionStatus(
+      subscription.id,
+      subscription.status || "active",
+      updateFields,
+  );
 
   if (!updated) {
     console.warn("Skipping subscription.updated for missing subscription:", subscription.id);
