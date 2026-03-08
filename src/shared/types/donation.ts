@@ -42,6 +42,7 @@ export interface Donation {
   timestamp?: string;
   kioskId?: string;
   transactionId?: string;
+  paymentStatus?: "success" | "pending" | "failed" | string;
   isGiftAid?: boolean;
   giftAidAccepted?: boolean; // Explicit tracking of Gift Aid acceptance/decline
   giftAidDetails?: GiftAidDetails;
