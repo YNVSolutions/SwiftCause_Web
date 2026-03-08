@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 const admin = require("firebase-admin");
+const {ensureStripeInitialized} = require("../services/stripe");
 
 if (!admin.apps.length) {
   admin.initializeApp();
@@ -38,7 +39,50 @@ const loadSubscriptionsMap = async () => {
   return map;
 };
 
-const backfillDonations = async (subscriptionsMap) => {
+const resolveSubscriptionFromStripe = async (donation, stripeClient) => {
+  if (!stripeClient) return {subscriptionId: null, invoiceId: null};
+
+  try {
+    const existingInvoiceId = toStringOrNull(donation.invoiceId);
+    if (existingInvoiceId) {
+      const invoice = await stripeClient.invoices.retrieve(existingInvoiceId);
+      const invoiceSub = toStringOrNull(invoice.subscription);
+      return {
+        subscriptionId: invoiceSub,
+        invoiceId: existingInvoiceId,
+      };
+    }
+
+    const transactionId = toStringOrNull(donation.transactionId) || toStringOrNull(donation.id);
+    if (!transactionId) return {subscriptionId: null, invoiceId: null};
+
+    if (transactionId.startsWith("in_")) {
+      const invoice = await stripeClient.invoices.retrieve(transactionId);
+      return {
+        subscriptionId: toStringOrNull(invoice.subscription),
+        invoiceId: transactionId,
+      };
+    }
+
+    if (transactionId.startsWith("pi_")) {
+      const paymentIntent = await stripeClient.paymentIntents.retrieve(transactionId);
+      const invoiceId = toStringOrNull(paymentIntent.invoice);
+      if (!invoiceId) return {subscriptionId: null, invoiceId: null};
+
+      const invoice = await stripeClient.invoices.retrieve(invoiceId);
+      return {
+        subscriptionId: toStringOrNull(invoice.subscription),
+        invoiceId,
+      };
+    }
+  } catch (error) {
+    console.warn("Stripe lookup failed for donation:", donation.transactionId || donation.id, error.message);
+  }
+
+  return {subscriptionId: null, invoiceId: null};
+};
+
+const backfillDonations = async (subscriptionsMap, stripeClient) => {
   const donationsSnap = await db.collection("donations").get();
   let scanned = 0;
   let updated = 0;
@@ -57,8 +101,18 @@ const backfillDonations = async (subscriptionsMap) => {
       continue;
     }
 
-    const subscriptionId = toStringOrNull(donation.subscriptionId);
-    const subscription = subscriptionId ? subscriptionsMap.get(subscriptionId) : null;
+    let subscriptionId = toStringOrNull(donation.subscriptionId);
+    let resolvedInvoiceId = toStringOrNull(donation.invoiceId);
+    let subscription = subscriptionId ? subscriptionsMap.get(subscriptionId) : null;
+
+    if (!subscription) {
+      const recovered = await resolveSubscriptionFromStripe(donation, stripeClient);
+      if (recovered.subscriptionId) {
+        subscriptionId = recovered.subscriptionId;
+        resolvedInvoiceId = resolvedInvoiceId || recovered.invoiceId;
+        subscription = subscriptionsMap.get(subscriptionId) || null;
+      }
+    }
 
     if (!subscription) {
       unresolved += 1;
@@ -76,7 +130,8 @@ const backfillDonations = async (subscriptionsMap) => {
     const resolvedCampaignTitle = toStringOrNull(donation.campaignTitleSnapshot) || toStringOrNull(subscription.metadata?.campaignTitle);
 
     if (donation.isRecurring !== true) updates.isRecurring = true;
-    if (!toStringOrNull(donation.subscriptionId)) updates.subscriptionId = subscriptionId;
+    if (!toStringOrNull(donation.subscriptionId) && subscriptionId) updates.subscriptionId = subscriptionId;
+    if (!toStringOrNull(donation.invoiceId) && resolvedInvoiceId) updates.invoiceId = resolvedInvoiceId;
     if (!toStringOrNull(donation.recurringInterval) && resolvedInterval) updates.recurringInterval = resolvedInterval;
     if (!toStringOrNull(donation.campaignId) && resolvedCampaignId) updates.campaignId = resolvedCampaignId;
     if (!toStringOrNull(donation.organizationId) && resolvedOrganizationId) updates.organizationId = resolvedOrganizationId;
@@ -177,7 +232,15 @@ const run = async () => {
   const subscriptionsMap = await loadSubscriptionsMap();
   console.log(`Loaded subscriptions: ${subscriptionsMap.size}`);
 
-  const donationResult = await backfillDonations(subscriptionsMap);
+  let stripeClient = null;
+  try {
+    stripeClient = ensureStripeInitialized();
+    console.log("Stripe initialized for deep recurring backfill lookups.");
+  } catch (error) {
+    console.warn("Stripe not initialized. Backfill will skip Stripe-based recovery:", error.message);
+  }
+
+  const donationResult = await backfillDonations(subscriptionsMap, stripeClient);
   const giftAidResult = await backfillGiftAidDeclarations();
 
   console.log("Backfill complete.");
