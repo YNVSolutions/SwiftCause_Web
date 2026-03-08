@@ -4,11 +4,17 @@ import { Mail, Send, Home, CheckCircle } from 'lucide-react';
 
 interface EmailConfirmationScreenProps {
   transactionId?: string;
+  receiptReferenceId?: string;
   campaignName?: string;
   onComplete: () => void;
 }
 
-export function EmailConfirmationScreen({ transactionId, campaignName, onComplete }: EmailConfirmationScreenProps) {
+export function EmailConfirmationScreen({
+  transactionId,
+  receiptReferenceId,
+  campaignName,
+  onComplete,
+}: EmailConfirmationScreenProps) {
   const [email, setEmail] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
@@ -20,7 +26,7 @@ export function EmailConfirmationScreen({ transactionId, campaignName, onComplet
     setError(null);
 
     try {
-      await createThankYouMail(email, campaignName, transactionId);
+      await createThankYouMail(email, campaignName, receiptReferenceId || transactionId);
       setEmailSent(true);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';

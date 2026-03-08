@@ -36,6 +36,9 @@ function ResultContent() {
     if (paymentResult?.transactionId) {
       params.set('transactionId', paymentResult.transactionId);
     }
+    if (paymentResult?.subscriptionId) {
+      params.set('subscriptionId', paymentResult.subscriptionId);
+    }
     if (paymentResult?.campaignTitle) {
       params.set('campaignTitle', paymentResult.campaignTitle);
     }
