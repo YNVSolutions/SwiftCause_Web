@@ -58,6 +58,13 @@ const getDonationWithRetry = async (transactionId, attempts = 10, delayMs = 700)
   return null;
 };
 
+const getSubscriptionByReference = async (referenceId) => {
+  const subscriptionsRef = admin.firestore().collection("subscriptions");
+  const directDoc = await subscriptionsRef.doc(referenceId).get();
+  if (directDoc.exists) return directDoc;
+  return null;
+};
+
 /**
  * Send donation thank-you email via SendGrid (replaces Firestore mail queue).
  * Validates that the provided transactionId corresponds to an existing donation.
@@ -83,14 +90,29 @@ const sendDonationThankYouEmail = (req, res) => {
       }
 
       const donationSnap = await getDonationWithRetry(transactionId);
+      let donationData = donationSnap?.data() || null;
 
-      if (!donationSnap || !donationSnap.exists) {
+      // Recurring fallback: if donation isn't available yet, use subscription data.
+      if (!donationData && transactionId.startsWith("sub_")) {
+        const subscriptionSnap = await getSubscriptionByReference(transactionId);
+        if (subscriptionSnap && subscriptionSnap.exists) {
+          const subData = subscriptionSnap.data() || {};
+          donationData = {
+            organizationId: subData.organizationId || null,
+            donorName: subData.donorName || subData.metadata?.donorName || "Donor",
+            currency: subData.currency || "",
+            amount: typeof subData.amount === "number" ? subData.amount : null,
+            campaignTitleSnapshot: subData.metadata?.campaignTitle || null,
+          };
+        }
+      }
+
+      if (!donationData) {
         return res.status(409).send({
           error: "Donation is still processing. Please retry in a few seconds.",
         });
       }
 
-      const donationData = donationSnap.data() || {};
       const organizationId = normalizeString(donationData.organizationId) || "";
       const campaignName =
         normalizeString(req.body?.campaignName) ||
