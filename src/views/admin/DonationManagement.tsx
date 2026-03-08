@@ -434,80 +434,72 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                 </div>
               ) : filteredDonations.length > 0 ? (
                 <div className="overflow-hidden">
-                  <Table className="w-full table-fixed">
+                  <Table className="table-fixed">
                     <TableHeader>
-                      <TableRow className="bg-gray-100 border-b-2 border-gray-300 text-gray-700">
+                      <TableRow>
                         <SortableTableHeader 
                           sortKey="donorName" 
                           currentSortKey={sortKey} 
                           currentSortDirection={sortDirection} 
                           onSort={handleSort}
-                          className="w-[24%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
+                          className="p-3 w-[20%]"
                         >
-                          <div className="flex items-center justify-center gap-2">
-                            <User className="h-4 w-4 text-gray-500 shrink-0" />
-                            <span className="whitespace-nowrap">Donor</span>
-                          </div>
+                          Donor
                         </SortableTableHeader>
                         <SortableTableHeader 
                           sortKey="campaignId" 
                           currentSortKey={sortKey} 
                           currentSortDirection={sortDirection} 
                           onSort={handleSort}
-                          className="w-[21%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
+                          className="p-3 w-[20%]"
                         >
-                          <div className="flex items-center justify-center gap-2">
-                            <Target className="h-4 w-4 text-gray-500 shrink-0" />
-                            <span className="whitespace-nowrap">Campaign</span>
-                          </div>
+                          Campaign
                         </SortableTableHeader>
                         <SortableTableHeader 
                           sortKey="amount" 
                           currentSortKey={sortKey} 
                           currentSortDirection={sortDirection} 
                           onSort={handleSort}
-                          className="w-[14%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
+                          className="p-3 w-[14%]"
                         >
-                          <div className="flex items-center justify-center gap-2">
-                            <Banknote className="h-4 w-4 text-gray-500 shrink-0" />
-                            <span className="whitespace-nowrap">Amount</span>
-                          </div>
+                          Amount
                         </SortableTableHeader>
                         <SortableTableHeader 
                           sortKey="kioskId" 
                           currentSortKey={sortKey} 
                           currentSortDirection={sortDirection} 
                           onSort={handleSort}
-                          className="w-[13%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
+                          className="p-3 w-[12%]"
                         >
-                          <div className="flex items-center justify-center gap-2">
-                            <MapPin className="h-4 w-4 text-gray-500 shrink-0" />
-                            <span className="whitespace-nowrap">Kiosk</span>
-                          </div>
+                          Kiosk
                         </SortableTableHeader>
                         <SortableTableHeader 
                           sortKey="paymentStatus" 
                           currentSortKey={sortKey} 
                           currentSortDirection={sortDirection} 
                           onSort={handleSort}
-                          className="w-[12%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
+                          className="p-3 w-[12%]"
                         >
-                          <div className="flex items-center justify-center gap-2">
-                            <CheckCircle className="h-4 w-4 text-gray-500 shrink-0" />
-                            <span className="whitespace-nowrap">Status</span>
-                          </div>
+                          Status
                         </SortableTableHeader>
                         <SortableTableHeader 
                           sortKey="timestamp" 
                           currentSortKey={sortKey} 
                           currentSortDirection={sortDirection} 
                           onSort={handleSort}
-                          className="w-[14%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
+                          className="p-3 w-[12%]"
                         >
-                          <div className="flex items-center justify-center gap-2">
-                            <CalendarDays className="h-4 w-4 text-gray-500 shrink-0" />
-                            <span className="whitespace-nowrap">Date</span>
-                          </div>
+                          Date
+                        </SortableTableHeader>
+                        <SortableTableHeader
+                          sortable={false}
+                          sortKey="actions"
+                          currentSortKey={sortKey}
+                          currentSortDirection={sortDirection}
+                          onSort={handleSort}
+                          className="p-3 w-[10%]"
+                        >
+                          Actions
                         </SortableTableHeader>
                       </TableRow>
                     </TableHeader>
@@ -517,27 +509,22 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                       return (
                         <TableRow 
                           key={donation.id} 
-                          className="cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0 align-middle"
-                          onClick={() => handleViewDetails(donation)}
+                          className="hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0 align-middle"
                         >
-                          <TableCell className="px-4 py-4 text-center align-middle">
-                            <div className="flex items-center justify-center gap-2 min-w-0">
-                              <span className="text-sm font-medium text-gray-900 block truncate" title={donation.donorName || 'Anonymous'}>
-                                {donation.donorName || 'Anonymous'}
-                              </span>
-                            </div>
+                          <TableCell className="p-3 align-middle">
+                            <span className="text-sm font-medium text-gray-900 block truncate max-w-[220px]" title={donation.donorName || 'Anonymous'}>
+                              {donation.donorName || 'Anonymous'}
+                            </span>
                           </TableCell>
 
-                          <TableCell className="px-4 py-4 text-center align-middle">
-                            <div className="flex items-center justify-center min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate" title={getCampaignDisplayName(donation)}>
-                                {getCampaignDisplayName(donation)}
-                              </p>
-                            </div>
+                          <TableCell className="p-3 align-middle">
+                            <p className="text-sm font-medium text-gray-900 truncate max-w-[220px]" title={getCampaignDisplayName(donation)}>
+                              {getCampaignDisplayName(donation)}
+                            </p>
                           </TableCell>
 
-                          <TableCell className="px-4 py-4 text-center align-middle">
-                            <p className="mx-auto grid w-[120px] grid-cols-[20px_1fr] items-center gap-2 text-sm font-semibold text-gray-900 tabular-nums">
+                          <TableCell className="p-3 align-middle">
+                            <p className="grid w-[120px] grid-cols-[20px_1fr] items-center gap-2 text-sm font-semibold text-gray-900 tabular-nums">
                               <span className="h-5 w-5 inline-flex items-center justify-center">
                                 {donation.isGiftAid ? (
                                   <span
@@ -556,28 +543,36 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                             </p>
                           </TableCell>
 
-                          <TableCell className="px-4 py-4 text-center align-middle">
-                            <div className="flex items-center justify-center min-w-0">
-                              {kiosk ? (
-                                <span className="text-sm font-medium text-gray-900 block truncate" title={kiosk.name}>
-                                  {kiosk.name}
-                                </span>
-                              ) : (
-                                <span className="text-sm text-gray-500">Online</span>
-                              )}
-                            </div>
+                          <TableCell className="p-3 align-middle">
+                            {kiosk ? (
+                              <span className="text-sm font-medium text-gray-900 block truncate" title={kiosk.name}>
+                                {kiosk.name}
+                              </span>
+                            ) : (
+                              <span className="text-sm text-gray-500">Online</span>
+                            )}
                           </TableCell>
 
-                          <TableCell className="px-4 py-4 text-center align-middle">
-                            <div className="flex justify-center">{getStatusBadge(donation.paymentStatus)}</div>
+                          <TableCell className="p-3 align-middle">
+                            {getStatusBadge(donation.paymentStatus)}
                           </TableCell>
 
-                          <TableCell className="px-4 py-4 text-center align-middle">
+                          <TableCell className="p-3 align-middle">
                             <span className="text-sm text-gray-500">
                               {donation.timestamp
                                 ? formatDonationDate(donation.timestamp, true)
                                 : "N/A"}
                             </span>
+                          </TableCell>
+                          <TableCell className="p-3 align-middle">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewDetails(donation)}
+                            >
+                              <Eye className="h-4 w-4 mr-2" />
+                              View
+                            </Button>
                           </TableCell>
                         </TableRow>
                       );

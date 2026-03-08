@@ -464,68 +464,53 @@ export function GiftAidManagement({
         {/* Donations Table - Desktop */}
         <Card className="overflow-hidden hidden md:block">
           <CardContent className="p-0">
-            <Table className="w-full table-fixed">
+            <Table className="table-fixed">
                 <TableHeader>
-                  <TableRow className="bg-gray-100 border-b-2 border-gray-300 text-gray-700">
+                  <TableRow>
                     <SortableTableHeader 
                       sortKey="donorName" 
                       currentSortKey={sortKey} 
                       currentSortDirection={sortDirection} 
                       onSort={handleSort}
-                      className="w-[22%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
+                      className="p-3 w-[22%]"
                     >
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-gray-500 shrink-0" />
-                        <span className="whitespace-nowrap">Donor</span>
-                      </div>
+                      Donor
                     </SortableTableHeader>
                     <SortableTableHeader 
                       sortKey="campaignTitle" 
                       currentSortKey={sortKey} 
                       currentSortDirection={sortDirection} 
                       onSort={handleSort}
-                      className="w-[22%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
+                      className="p-3 w-[22%]"
                     >
-                      <div className="flex items-center gap-2">
-                        <Target className="h-4 w-4 text-gray-500 shrink-0" />
-                        <span className="whitespace-nowrap">Campaign</span>
-                      </div>
+                      Campaign
                     </SortableTableHeader>
                     <SortableTableHeader 
                       sortKey="amount" 
                       currentSortKey={sortKey} 
                       currentSortDirection={sortDirection} 
                       onSort={handleSort}
-                      className="w-[13%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
+                      className="p-3 w-[14%]"
                     >
-                      <div className="flex items-center justify-end gap-2">
-                        <Banknote className="h-4 w-4 text-gray-500 shrink-0" />
-                        <span className="whitespace-nowrap">Donation</span>
-                      </div>
+                      Donation
                     </SortableTableHeader>
                     <SortableTableHeader 
                       sortKey="giftAidAmount" 
                       currentSortKey={sortKey} 
                       currentSortDirection={sortDirection} 
                       onSort={handleSort}
-                      className="w-[13%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
+                      className="p-3 w-[14%]"
                     >
-                      <div className="flex items-center justify-end gap-2">
-                        <Gift className="h-4 w-4 text-[#064e3b] shrink-0" />
-                        <span className="whitespace-nowrap">Gift Aid</span>
-                      </div>
+                      Gift Aid
                     </SortableTableHeader>
                     <SortableTableHeader 
                       sortKey="donationDate" 
                       currentSortKey={sortKey} 
                       currentSortDirection={sortDirection} 
                       onSort={handleSort}
-                      className="w-[15%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
+                      className="p-3 w-[14%]"
                     >
-                      <div className="flex items-center gap-2">
-                        <CalendarDays className="h-4 w-4 text-gray-500 shrink-0" />
-                        <span className="whitespace-nowrap">Date</span>
-                      </div>
+                      Date
                     </SortableTableHeader>
                     <SortableTableHeader 
                       sortable={false}
@@ -533,12 +518,9 @@ export function GiftAidManagement({
                       currentSortKey={sortKey} 
                       currentSortDirection={sortDirection} 
                       onSort={handleSort}
-                      className="w-[10%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
+                      className="p-3 w-[14%]"
                     >
-                      <div className="flex items-center justify-center gap-2">
-                        <Eye className="h-4 w-4 text-gray-500 shrink-0" />
-                        <span className="whitespace-nowrap">Actions</span>
-                      </div>
+                      Actions
                     </SortableTableHeader>
                   </TableRow>
                 </TableHeader>
@@ -558,26 +540,25 @@ export function GiftAidManagement({
                     filteredDonations.map((donation) => (
                       <TableRow 
                         key={donation.id}
-                        className="cursor-pointer hover:bg-gray-50 transition-colors h-16"
-                        onClick={() => handleViewDetails(donation)}
+                        className="hover:bg-gray-50 transition-colors"
                       >
-                        <TableCell className="px-4 py-4 text-center">
-                          <p className="text-base text-gray-900 truncate max-w-[200px] mx-auto" title={`${donation.donorFirstName} ${donation.donorSurname}`.trim()}>
+                        <TableCell className="p-3">
+                          <p className="text-base text-gray-900 truncate max-w-[220px]" title={`${donation.donorFirstName} ${donation.donorSurname}`.trim()}>
                             {`${donation.donorFirstName} ${donation.donorSurname}`.trim()}
                           </p>
                         </TableCell>
-                        <TableCell className="px-4 py-4 text-center">
-                          <p className="text-base text-gray-800 truncate max-w-[260px] mx-auto" title={donation.campaignTitle}>
+                        <TableCell className="p-3">
+                          <p className="text-base text-gray-800 truncate max-w-[220px]" title={donation.campaignTitle}>
                             {donation.campaignTitle}
                           </p>
                         </TableCell>
-                        <TableCell className="px-4 py-4 text-center">
+                        <TableCell className="p-3">
                           <p className="text-base font-bold text-gray-900">{formatCurrency(donation.donationAmount || 0)}</p>
                         </TableCell>
-                        <TableCell className="px-4 py-4 text-center">
+                        <TableCell className="p-3">
                           <p className="text-base font-bold text-[#064e3b]">{formatCurrency(donation.giftAidAmount || 0)}</p>
                         </TableCell>
-                        <TableCell className="px-4 py-4 text-center">
+                        <TableCell className="p-3">
                           <p className="text-base text-gray-700">{donation.donationDate ? (() => {
                             const date = new Date(donation.donationDate);
                             return isNaN(date.getTime())
@@ -589,18 +570,19 @@ export function GiftAidManagement({
                                 });
                           })() : "N/A"}</p>
                         </TableCell>
-                        <TableCell className="px-4 py-4 text-center">
+                        <TableCell className="p-3">
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleViewDetails(donation);
                             }}
-                            className="h-8 w-8 p-0 hover:bg-indigo-100 hover:text-indigo-600 transition-colors mx-auto"
+                            className="mx-auto"
                             title="View donation details"
                           >
-                            <Eye className="h-4 w-4" />
+                            <Eye className="h-4 w-4 mr-2" />
+                            View
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -691,13 +673,13 @@ export function GiftAidManagement({
                         : "N/A"}
                     </div>
                     <button 
-                      className="flex items-center gap-1 text-[#064e3b] text-sm font-semibold"
+                      className="inline-flex items-center gap-1 text-[#064e3b] text-sm font-semibold"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleViewDetails(donation);
                       }}
                     >
-                      View Details
+                      View
                       <Eye className="w-4 h-4" />
                     </button>
                   </div>
@@ -723,10 +705,10 @@ export function GiftAidManagement({
 
         {/* Details Dialog */}
         <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
-          <DialogContent className="sm:max-w-[600px]">
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <Gift className="h-5 w-5 text-indigo-600" />
+                <Gift className="h-5 w-5 text-[#064e3b]" />
                 Gift Aid Donation Details
               </DialogTitle>
               <DialogDescription>
@@ -735,64 +717,69 @@ export function GiftAidManagement({
             </DialogHeader>
             
             {selectedDonation && (
-              <div className="grid gap-4 py-4">
-                <div>
-                  <Label className="text-sm font-medium text-gray-700">Donor Name</Label>
-                  <p className="text-sm text-gray-900 mt-1">{`${selectedDonation.donorFirstName} ${selectedDonation.donorSurname}`.trim()}</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div className="space-y-1">
+                  <p className="text-gray-500">Donor Name</p>
+                  <p className="font-medium">{`${selectedDonation.donorFirstName} ${selectedDonation.donorSurname}`.trim()}</p>
                 </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700">Donation Amount</Label>
-                    <p className="text-sm font-semibold text-gray-900 mt-1">{formatCurrency(selectedDonation.donationAmount || 0)}</p>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700">Gift Aid Amount</Label>
-                    <p className="text-sm font-semibold text-[#064e3b] mt-1">{formatCurrency(selectedDonation.giftAidAmount || 0)}</p>
-                  </div>
+
+                <div className="space-y-1">
+                  <p className="text-gray-500">Status</p>
+                  <div>{getStatusBadge(selectedDonation.giftAidStatus || "pending")}</div>
                 </div>
-                
-                <div>
-                  <Label className="text-sm font-medium text-gray-700">Campaign</Label>
-                  <p className="text-sm text-gray-900 mt-1">{selectedDonation.campaignTitle}</p>
+
+                <div className="space-y-1">
+                  <p className="text-gray-500">Donation Amount</p>
+                  <p className="font-medium">{formatCurrency(selectedDonation.donationAmount || 0)}</p>
                 </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700">Donation Date</Label>
-                    <p className="text-sm text-gray-900 mt-1">{selectedDonation.donationDate ? (() => {
-                      const date = new Date(selectedDonation.donationDate);
-                      return isNaN(date.getTime()) ? "Invalid Date" : date.toISOString().split('T')[0];
-                    })() : "N/A"}</p>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700">Tax Year</Label>
-                    <p className="text-sm text-gray-900 mt-1">{selectedDonation.taxYear}</p>
-                  </div>
+
+                <div className="space-y-1">
+                  <p className="text-gray-500">Gift Aid Amount</p>
+                  <p className="font-medium text-[#064e3b]">{formatCurrency(selectedDonation.giftAidAmount || 0)}</p>
                 </div>
-                
-                <div>
-                  <Label className="text-sm font-medium text-gray-700">Address</Label>
-                  <p className="text-sm text-gray-900 mt-1">{`${selectedDonation.donorHouseNumber}, ${selectedDonation.donorAddressLine1}, ${selectedDonation.donorTown}`}</p>
+
+                <div className="space-y-1 md:col-span-2">
+                  <p className="text-gray-500">Campaign</p>
+                  <p className="font-medium">{selectedDonation.campaignTitle || "N/A"}</p>
                 </div>
-                
-                <div>
-                  <Label className="text-sm font-medium text-gray-700">Postcode</Label>
-                  <p className="text-sm text-gray-900 mt-1">{selectedDonation.donorPostcode}</p>
+
+                <div className="space-y-1">
+                  <p className="text-gray-500">Donation Date</p>
+                  <p>{selectedDonation.donationDate ? (() => {
+                    const date = new Date(selectedDonation.donationDate);
+                    return isNaN(date.getTime())
+                      ? "Invalid Date"
+                      : date.toLocaleDateString("en-GB", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        });
+                  })() : "N/A"}</p>
                 </div>
-                
-                <div>
-                  <Label className="text-sm font-medium text-gray-700">Status</Label>
-                  <div className="mt-1">
-                    {getStatusBadge(selectedDonation.giftAidStatus || "pending")}
-                  </div>
+
+                <div className="space-y-1">
+                  <p className="text-gray-500">Tax Year</p>
+                  <p>{selectedDonation.taxYear || "N/A"}</p>
                 </div>
-                
-                <div>
-                  <Label className="text-sm font-medium text-gray-700">Transaction ID</Label>
-                  <p className="text-xs text-gray-700 font-mono mt-1 bg-[#064e3b]/10 px-2 py-1 rounded border border-[#064e3b]/20 inline-block">
-                    {selectedDonation.donationId}
-                  </p>
+
+                <div className="space-y-1 md:col-span-2">
+                  <p className="text-gray-500">Address</p>
+                  <p>{`${selectedDonation.donorHouseNumber || ""}, ${selectedDonation.donorAddressLine1 || ""}, ${selectedDonation.donorAddressLine2 || ""}, ${selectedDonation.donorTown || ""}, ${selectedDonation.donorPostcode || ""}`.replace(/^,\s*|,\s*$/g, "")}</p>
+                </div>
+
+                <div className="space-y-1 md:col-span-2">
+                  <p className="text-gray-500">Transaction ID</p>
+                  <p className="text-xs font-mono break-all">{selectedDonation.donationId || "N/A"}</p>
+                </div>
+
+                <div className="space-y-1 md:col-span-2">
+                  <p className="text-gray-500">Declaration Date</p>
+                  <p>{selectedDonation.declarationDate || "N/A"}</p>
+                </div>
+
+                <div className="space-y-1 md:col-span-2">
+                  <p className="text-gray-500">UK Taxpayer Confirmation</p>
+                  <p>{selectedDonation.ukTaxpayerConfirmation ? "Confirmed" : "Not confirmed"}</p>
                 </div>
               </div>
             )}
