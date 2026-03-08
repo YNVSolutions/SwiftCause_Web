@@ -1,12 +1,25 @@
-import { collection, getDocs, DocumentData, query, where } from 'firebase/firestore';
+import { collection, getDocs, DocumentData, query, where, orderBy } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 
 
 export async function fetchAllDonations(organizationId: string): Promise<DocumentData[]> {
   try {
     const donationsCollection = collection(db, 'donations');
-    const q = query(donationsCollection, where('organizationId', '==', organizationId));
-    const querySnapshot = await getDocs(q);
+    const orderedQuery = query(
+      donationsCollection,
+      where('organizationId', '==', organizationId),
+      orderBy('timestamp', 'desc'),
+    );
+    const fallbackQuery = query(donationsCollection, where('organizationId', '==', organizationId));
+
+    let querySnapshot;
+    try {
+      querySnapshot = await getDocs(orderedQuery);
+    } catch (orderedErr: any) {
+      // If composite index is still building/missing, keep app functional via fallback query.
+      if (orderedErr?.code !== 'failed-precondition') throw orderedErr;
+      querySnapshot = await getDocs(fallbackQuery);
+    }
 
     if (querySnapshot.empty) {
       console.log('No donations found.');
