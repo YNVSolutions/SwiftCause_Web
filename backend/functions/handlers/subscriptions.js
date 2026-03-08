@@ -215,6 +215,8 @@ const createRecurringSubscription = (req, res) => {
         return res.status(200).send({
           subscriptionId: subscription.id,
           customerId: customer.id,
+          invoiceId: latestInvoice.id || null,
+          paymentIntentId: paymentIntent.id || null,
           clientSecret: paymentIntent.client_secret,
           status: subscription.status,
           requiresAction: paymentIntent.status === "requires_action",
@@ -224,6 +226,8 @@ const createRecurringSubscription = (req, res) => {
           success: true,
           subscriptionId: subscription.id,
           customerId: customer.id,
+          invoiceId: latestInvoice.id || null,
+          paymentIntentId: latestInvoice.payment_intent?.id || null,
           message: "Subscription created and first payment completed",
           status: subscription.status,
         });
