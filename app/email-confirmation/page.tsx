@@ -11,15 +11,18 @@ function EmailConfirmationContent() {
   const searchParams = useSearchParams()
   const { userRole } = useAuth()
   const [transactionId, setTransactionId] = useState<string | null>(null)
+  const [receiptReferenceId, setReceiptReferenceId] = useState<string | null>(null)
   const [campaignTitle, setCampaignTitle] = useState<string>('')
 
   useEffect(() => {
     // Get transaction ID from URL params or sessionStorage
     if (searchParams) {
       const urlTransactionId = searchParams.get('transactionId')
+      const urlSubscriptionId = searchParams.get('subscriptionId')
       const urlCampaignTitle = searchParams.get('campaignTitle')
       if (urlTransactionId) {
         setTransactionId(urlTransactionId)
+        setReceiptReferenceId(urlSubscriptionId || urlTransactionId)
         if (urlCampaignTitle) {
           setCampaignTitle(urlCampaignTitle)
         }
@@ -35,6 +38,7 @@ function EmailConfirmationContent() {
     if (storedResult) {
       const result = JSON.parse(storedResult)
       setTransactionId(result.transactionId)
+      setReceiptReferenceId(result.subscriptionId || result.transactionId)
       if (result.campaignTitle) {
         setCampaignTitle(result.campaignTitle)
       }
@@ -62,6 +66,7 @@ function EmailConfirmationContent() {
   return (
     <EmailConfirmationScreen
       transactionId={transactionId}
+      receiptReferenceId={receiptReferenceId || undefined}
       campaignName={campaignTitle || undefined}
       onComplete={handleComplete}
     />

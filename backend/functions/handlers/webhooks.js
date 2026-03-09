@@ -222,9 +222,18 @@ const handlePaymentCompletedStripeWebhook = async (req, res) => {
       const paymentIntent = event.data.object;
       const metadata = paymentIntent.metadata || {};
       const campaignId = toStringOrNull(metadata.campaignId);
+      let resolvedCampaignId = campaignId;
       let organizationId = toStringOrNull(metadata.organizationId);
       let campaignTitleSnapshot = toStringOrNull(metadata.campaignTitle) || "Deleted Campaign";
       let campaignExists = false;
+      let resolvedIsRecurring = toBoolean(metadata.isRecurring);
+      let resolvedRecurringInterval = toStringOrNull(metadata.recurringInterval);
+      let resolvedSubscriptionId = toStringOrNull(metadata.subscriptionId);
+      let resolvedInvoiceId = toStringOrNull(paymentIntent.invoice);
+      let resolvedDonorName = toStringOrNull(metadata.donorName) || "Anonymous";
+      let resolvedDonorEmail = toStringOrNull(metadata.donorEmail);
+      let resolvedDonorPhone = toStringOrNull(metadata.donorPhone);
+      let resolvedPlatform = toStringOrNull(metadata.platform) || "unknown";
 
       if (campaignId) {
         const campaignRef = admin.firestore().collection("campaigns").doc(campaignId);
@@ -242,23 +251,77 @@ const handlePaymentCompletedStripeWebhook = async (req, res) => {
         }
       }
 
+      // Enrich recurring signals for subscription-driven payment intents.
+      // Some first-invoice payment_intent payloads don't carry recurring metadata directly.
+      if (resolvedInvoiceId) {
+        try {
+          const invoice = await stripeClient.invoices.retrieve(resolvedInvoiceId);
+          const stripeSubscriptionId = typeof invoice.subscription === "string" ?
+            invoice.subscription :
+            null;
+
+          if (stripeSubscriptionId) {
+            resolvedIsRecurring = true;
+            resolvedSubscriptionId = stripeSubscriptionId;
+
+            const subscriptionData = await getSubscriptionByStripeId(stripeSubscriptionId);
+            if (subscriptionData) {
+              resolvedRecurringInterval = subscriptionData.interval === "year" ?
+                "yearly" :
+                subscriptionData.intervalCount === 3 ?
+                  "quarterly" :
+                  "monthly";
+              resolvedCampaignId =
+                toStringOrNull(subscriptionData.campaignId) ||
+                resolvedCampaignId;
+
+              campaignTitleSnapshot =
+                toStringOrNull(subscriptionData.metadata?.campaignTitle) ||
+                campaignTitleSnapshot;
+              organizationId =
+                toStringOrNull(subscriptionData.organizationId) ||
+                organizationId;
+              resolvedDonorName =
+                toStringOrNull(subscriptionData.donorName) ||
+                toStringOrNull(subscriptionData.metadata?.donorName) ||
+                resolvedDonorName;
+              resolvedDonorEmail =
+                toStringOrNull(subscriptionData.donorEmail) ||
+                toStringOrNull(subscriptionData.metadata?.donorEmail) ||
+                resolvedDonorEmail;
+              resolvedDonorPhone =
+                toStringOrNull(subscriptionData.donorPhone) ||
+                toStringOrNull(subscriptionData.metadata?.donorPhone) ||
+                resolvedDonorPhone;
+              resolvedPlatform =
+                toStringOrNull(subscriptionData.metadata?.platform) ||
+                resolvedPlatform;
+            }
+          }
+        } catch (invoiceLookupError) {
+          console.warn("Unable to enrich recurring metadata for payment intent:", paymentIntent.id, invoiceLookupError.message);
+        }
+      }
+
       // Use entity to create donation with recurring support
       await createDonationDoc({
         transactionId: paymentIntent.id,
-        campaignId: campaignId || null,
+        campaignId: resolvedCampaignId || null,
         organizationId: organizationId || null,
         amount: paymentIntent.amount,
         currency: paymentIntent.currency,
-        donorName: toStringOrNull(metadata.donorName) || "Anonymous",
-        donorEmail: toStringOrNull(metadata.donorEmail),
-        donorPhone: toStringOrNull(metadata.donorPhone),
+        donorName: resolvedDonorName,
+        donorEmail: resolvedDonorEmail,
+        donorPhone: resolvedDonorPhone,
         donorMessage: toStringOrNull(metadata.donorMessage),
         isAnonymous: toBoolean(metadata.isAnonymous),
         isGiftAid: toBoolean(metadata.isGiftAid),
-        isRecurring: toBoolean(metadata.isRecurring),
-        recurringInterval: toStringOrNull(metadata.recurringInterval),
+        isRecurring: resolvedIsRecurring,
+        recurringInterval: resolvedRecurringInterval,
+        subscriptionId: resolvedSubscriptionId,
+        invoiceId: resolvedInvoiceId,
         kioskId: toStringOrNull(metadata.kioskId),
-        platform: toStringOrNull(metadata.platform) || "unknown",
+        platform: resolvedPlatform,
         metadata: {
           campaignTitleSnapshot,
           source: "stripe_webhook",
@@ -269,7 +332,7 @@ const handlePaymentCompletedStripeWebhook = async (req, res) => {
       await createGiftAidDeclarationIfNeeded({
         paymentIntent,
         metadata,
-        campaignId,
+        campaignId: resolvedCampaignId,
         campaignTitleSnapshot,
         organizationId,
       });
@@ -405,6 +468,7 @@ const handleInvoicePaid = async (invoice) => {
     donorPhone: subscriptionData.donorPhone ||
       subscriptionData.metadata?.donorPhone ||
       null,
+    isGiftAid: toBoolean(subscriptionData.metadata?.isGiftAid),
     isRecurring: true,
     recurringInterval: recurringInterval,
     subscriptionId: subscriptionId,
@@ -415,6 +479,20 @@ const handleInvoicePaid = async (invoice) => {
         subscriptionData.metadata?.campaignTitle || "Recurring Donation",
       source: "stripe_webhook_recurring",
     },
+  });
+
+  // Ensure Gift Aid declarations are also created for recurring payments when metadata includes Gift Aid details.
+  await createGiftAidDeclarationIfNeeded({
+    paymentIntent: {
+      id: invoice.payment_intent || invoice.id,
+      amount: invoice.amount_paid,
+      created: invoice.created,
+    },
+    metadata: subscriptionData.metadata || {},
+    campaignId: subscriptionData.campaignId,
+    campaignTitleSnapshot:
+      subscriptionData.metadata?.campaignTitle || "Recurring Donation",
+    organizationId: subscriptionData.organizationId,
   });
 
   // Update subscription analytics: lastPaymentAt

@@ -18,16 +18,13 @@ import {
   Users,
   TrendingUp,
   Heart,
-  MapPin,
   Clock,
   CreditCard,
   CheckCircle,
   AlertCircle,
   Eye,
-  User,
   Target,
   Banknote,
-  CalendarDays,
   Building2,
   Gift
 } from 'lucide-react';
@@ -63,6 +60,7 @@ interface FetchedDonation extends Omit<Donation, 'timestamp'> {
   stripePaymentIntentId: string;
   transactionId?: string;
   timestamp: string;
+  timestampTs?: number;
   kioskId?: string;
 }
 
@@ -109,6 +107,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [campaignFilter, setCampaignFilter] = useState('all');
+  const [recurringFilter, setRecurringFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
   const [ selectedDonation, setSelectedDonation] = useState<FetchedDonation | null>(null);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
@@ -175,6 +174,14 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
     return 'Deleted Campaign';
   };
 
+  const isRecurringDonation = (donation: FetchedDonation) => {
+    if (donation.isRecurring) return true;
+    if (Boolean(donation.subscriptionId)) return true;
+    if (Boolean(donation.recurringInterval)) return true;
+    if (typeof donation.transactionId === 'string' && donation.transactionId.startsWith('sub_')) return true;
+    return false;
+  };
+
   // Configuration for AdminSearchFilterHeader
   const searchFilterConfig: AdminSearchFilterConfig = {
     filters: [
@@ -195,6 +202,15 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
         options: campaigns.map(campaign => ({ label: campaign.title, value: campaign.id }))
       },
       {
+        key: "recurringFilter",
+        label: "Recurring",
+        type: "select",
+        options: [
+          { label: "Recurring", value: "recurring" },
+          { label: "One-time", value: "one_time" },
+        ]
+      },
+      {
         key: "dateFilter",
         label: "Filter by date",
         type: "date"
@@ -205,6 +221,7 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
   const filterValues = {
     statusFilter,
     campaignFilter,
+    recurringFilter,
     dateFilter
   };
 
@@ -219,6 +236,9 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
       case "dateFilter":
         setDateFilter(value);
         break;
+      case "recurringFilter":
+        setRecurringFilter(value);
+        break;
     }
   };
 
@@ -232,16 +252,25 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                          (campaignName.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = statusFilter === 'all' || donation.paymentStatus === statusFilter;
     const matchesCampaign = campaignFilter === 'all' || donation.campaignId === campaignFilter;
+    const recurring = isRecurringDonation(donation);
+    const matchesRecurring =
+      recurringFilter === 'all' ||
+      (recurringFilter === 'recurring' && recurring) ||
+      (recurringFilter === 'one_time' && !recurring);
     const donationDate = parseDonationDate(donation.timestamp);
     const matchesDate =
       !dateFilter || (donationDate ? donationDate.toDateString() === dateFilter.toDateString() : false);
-    
-    return matchesSearch && matchesStatus && matchesCampaign && matchesDate;
-  });
+    return matchesSearch && matchesStatus && matchesCampaign && matchesRecurring && matchesDate;
+  }).map((donation) => ({
+    ...donation,
+    timestampTs: parseDonationDate(donation.timestamp)?.getTime() || 0,
+  }));
 
   // Use sorting hook
   const { sortedData: filteredDonations, sortKey, sortDirection, handleSort } = useTableSort({
-    data: filteredDonationsData
+    data: filteredDonationsData,
+    defaultSortKey: 'timestampTs',
+    defaultSortDirection: 'desc',
   });
 
   const getStatusBadge = (status: string) => {
@@ -283,7 +312,23 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
   };
 
   const handleExportDonations = () => {
-    exportToCsv(donations, "donations");
+    const rows = filteredDonations.map((donation) => ({
+      donorName: donation.donorName || "Anonymous",
+      donorEmail: donation.donorEmail || "",
+      campaign: getCampaignDisplayName(donation),
+      amount: donation.amount || 0,
+      currency: donation.currency || "",
+      paymentStatus: donation.paymentStatus || "",
+      isGiftAid: donation.isGiftAid ? "Yes" : "No",
+      isRecurring: isRecurringDonation(donation) ? "Yes" : "No",
+      recurringInterval: donation.recurringInterval || "",
+      subscriptionId: donation.subscriptionId || "",
+      invoiceId: donation.invoiceId || "",
+      transactionId: donation.stripePaymentIntentId || donation.transactionId || donation.id || "",
+      platform: donation.platform || "",
+      timestamp: donation.timestamp || "",
+    }));
+    exportToCsv(rows, "donations");
   };
 
   const handleViewDetails = (donation: FetchedDonation) => {
@@ -434,80 +479,72 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                 </div>
               ) : filteredDonations.length > 0 ? (
                 <div className="overflow-hidden">
-                  <Table className="w-full table-fixed">
+                  <Table className="table-fixed">
                     <TableHeader>
-                      <TableRow className="bg-gray-100 border-b-2 border-gray-300 text-gray-700">
+                      <TableRow>
                         <SortableTableHeader 
                           sortKey="donorName" 
                           currentSortKey={sortKey} 
                           currentSortDirection={sortDirection} 
                           onSort={handleSort}
-                          className="w-[24%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
+                          className="p-3 w-[20%]"
                         >
-                          <div className="flex items-center justify-center gap-2">
-                            <User className="h-4 w-4 text-gray-500 shrink-0" />
-                            <span className="whitespace-nowrap">Donor</span>
-                          </div>
+                          Donor
                         </SortableTableHeader>
                         <SortableTableHeader 
                           sortKey="campaignId" 
                           currentSortKey={sortKey} 
                           currentSortDirection={sortDirection} 
                           onSort={handleSort}
-                          className="w-[21%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
+                          className="p-3 w-[20%]"
                         >
-                          <div className="flex items-center justify-center gap-2">
-                            <Target className="h-4 w-4 text-gray-500 shrink-0" />
-                            <span className="whitespace-nowrap">Campaign</span>
-                          </div>
+                          Campaign
                         </SortableTableHeader>
                         <SortableTableHeader 
                           sortKey="amount" 
                           currentSortKey={sortKey} 
                           currentSortDirection={sortDirection} 
                           onSort={handleSort}
-                          className="w-[14%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
+                          className="p-3 w-[14%]"
                         >
-                          <div className="flex items-center justify-center gap-2">
-                            <Banknote className="h-4 w-4 text-gray-500 shrink-0" />
-                            <span className="whitespace-nowrap">Amount</span>
-                          </div>
+                          Amount
                         </SortableTableHeader>
                         <SortableTableHeader 
                           sortKey="kioskId" 
                           currentSortKey={sortKey} 
                           currentSortDirection={sortDirection} 
                           onSort={handleSort}
-                          className="w-[13%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
+                          className="p-3 w-[12%]"
                         >
-                          <div className="flex items-center justify-center gap-2">
-                            <MapPin className="h-4 w-4 text-gray-500 shrink-0" />
-                            <span className="whitespace-nowrap">Kiosk</span>
-                          </div>
+                          Kiosk
                         </SortableTableHeader>
                         <SortableTableHeader 
                           sortKey="paymentStatus" 
                           currentSortKey={sortKey} 
                           currentSortDirection={sortDirection} 
                           onSort={handleSort}
-                          className="w-[12%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
+                          className="p-3 w-[12%]"
                         >
-                          <div className="flex items-center justify-center gap-2">
-                            <CheckCircle className="h-4 w-4 text-gray-500 shrink-0" />
-                            <span className="whitespace-nowrap">Status</span>
-                          </div>
+                          Status
                         </SortableTableHeader>
                         <SortableTableHeader 
-                          sortKey="timestamp" 
+                          sortKey="timestampTs" 
                           currentSortKey={sortKey} 
                           currentSortDirection={sortDirection} 
                           onSort={handleSort}
-                          className="w-[14%] px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wide text-center [&>div]:justify-center"
+                          className="p-3 w-[12%]"
                         >
-                          <div className="flex items-center justify-center gap-2">
-                            <CalendarDays className="h-4 w-4 text-gray-500 shrink-0" />
-                            <span className="whitespace-nowrap">Date</span>
-                          </div>
+                          Date
+                        </SortableTableHeader>
+                        <SortableTableHeader
+                          sortable={false}
+                          sortKey="actions"
+                          currentSortKey={sortKey}
+                          currentSortDirection={sortDirection}
+                          onSort={handleSort}
+                          className="p-3 w-[10%]"
+                        >
+                          Actions
                         </SortableTableHeader>
                       </TableRow>
                     </TableHeader>
@@ -517,28 +554,35 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                       return (
                         <TableRow 
                           key={donation.id} 
-                          className="cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0 align-middle"
-                          onClick={() => handleViewDetails(donation)}
+                          className="hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0 align-middle"
                         >
-                          <TableCell className="px-4 py-4 text-center align-middle">
-                            <div className="flex items-center justify-center gap-2 min-w-0">
-                              <span className="text-sm font-medium text-gray-900 block truncate" title={donation.donorName || 'Anonymous'}>
-                                {donation.donorName || 'Anonymous'}
-                              </span>
-                            </div>
+                          <TableCell className="p-3 align-middle">
+                            <span className="text-sm font-medium text-gray-900 block truncate max-w-[220px]" title={donation.donorName || 'Anonymous'}>
+                              {donation.donorName || 'Anonymous'}
+                            </span>
                           </TableCell>
 
-                          <TableCell className="px-4 py-4 text-center align-middle">
-                            <div className="flex items-center justify-center min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate" title={getCampaignDisplayName(donation)}>
-                                {getCampaignDisplayName(donation)}
-                              </p>
-                            </div>
+                          <TableCell className="p-3 align-middle">
+                            <p className="text-sm font-medium text-gray-900 truncate max-w-[220px]" title={getCampaignDisplayName(donation)}>
+                              {getCampaignDisplayName(donation)}
+                            </p>
                           </TableCell>
 
-                          <TableCell className="px-4 py-4 text-center align-middle">
-                            <p className="mx-auto grid w-[120px] grid-cols-[20px_1fr] items-center gap-2 text-sm font-semibold text-gray-900 tabular-nums">
-                              <span className="h-5 w-5 inline-flex items-center justify-center">
+                          <TableCell className="p-3 align-middle">
+                            <div className="inline-flex items-center gap-2 text-sm font-semibold text-gray-900 tabular-nums">
+                              <span className="inline-flex w-6 flex-col items-start justify-center gap-1">
+                                {isRecurringDonation(donation) ? (
+                                  <span
+                                    className="inline-flex items-center rounded-md bg-sky-50 px-1.5 py-0.5 text-sky-700 ring-1 ring-sky-600/20"
+                                    title="Recurring donation"
+                                  >
+                                    <CreditCard className="h-3 w-3" />
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center rounded-md px-1.5 py-0.5 invisible">
+                                    <CreditCard className="h-3 w-3" />
+                                  </span>
+                                )}
                                 {donation.isGiftAid ? (
                                   <span
                                     className="inline-flex items-center rounded-md bg-purple-50 px-1.5 py-0.5 text-purple-700 ring-1 ring-purple-600/20"
@@ -547,37 +591,45 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                                     <Gift className="h-3 w-3" />
                                   </span>
                                 ) : (
-                                  <span className="h-3 w-3 opacity-0">
+                                  <span className="inline-flex items-center rounded-md px-1.5 py-0.5 invisible">
                                     <Gift className="h-3 w-3" />
                                   </span>
                                 )}
                               </span>
-                              <span className="text-left">{formatCurrency(donation.amount || 0)}</span>
-                            </p>
-                          </TableCell>
-
-                          <TableCell className="px-4 py-4 text-center align-middle">
-                            <div className="flex items-center justify-center min-w-0">
-                              {kiosk ? (
-                                <span className="text-sm font-medium text-gray-900 block truncate" title={kiosk.name}>
-                                  {kiosk.name}
-                                </span>
-                              ) : (
-                                <span className="text-sm text-gray-500">Online</span>
-                              )}
+                              <span>{formatCurrency(donation.amount || 0)}</span>
                             </div>
                           </TableCell>
 
-                          <TableCell className="px-4 py-4 text-center align-middle">
-                            <div className="flex justify-center">{getStatusBadge(donation.paymentStatus)}</div>
+                          <TableCell className="p-3 align-middle">
+                            {kiosk ? (
+                              <span className="text-sm font-medium text-gray-900 block truncate" title={kiosk.name}>
+                                {kiosk.name}
+                              </span>
+                            ) : (
+                              <span className="text-sm text-gray-500">Online</span>
+                            )}
                           </TableCell>
 
-                          <TableCell className="px-4 py-4 text-center align-middle">
+                          <TableCell className="p-3 align-middle">
+                            {getStatusBadge(donation.paymentStatus)}
+                          </TableCell>
+
+                          <TableCell className="p-3 align-middle">
                             <span className="text-sm text-gray-500">
                               {donation.timestamp
                                 ? formatDonationDate(donation.timestamp, true)
                                 : "N/A"}
                             </span>
+                          </TableCell>
+                          <TableCell className="p-3 align-middle">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewDetails(donation)}
+                            >
+                              <Eye className="h-4 w-4 mr-2" />
+                              View
+                            </Button>
                           </TableCell>
                         </TableRow>
                       );
@@ -620,81 +672,68 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                 return (
                   <Card 
                     key={donation.id} 
-                    className="overflow-hidden shadow-sm border border-slate-200 hover:shadow-md transition-shadow cursor-pointer rounded-3xl"
-                    onClick={() => handleViewDetails(donation)}
+                    className="overflow-hidden rounded-3xl border border-gray-100 shadow-sm"
                   >
-                    <div className="p-4 flex justify-between items-start border-b border-slate-100">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-[#064e3b]/10 flex items-center justify-center text-[#064e3b]">
-                          <User className="w-5 h-5" />
+                    <CardContent className="p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="font-semibold text-slate-900">
+                            {donation.donorName || 'Anonymous'}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {getCampaignDisplayName(donation)}
+                          </div>
+                          <div className="mt-2 flex items-center gap-2">
+                            {donation.isGiftAid && (
+                              <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                                <Gift className="h-3 w-3 mr-1" />
+                                Gift Aid
+                              </Badge>
+                            )}
+                            {isRecurringDonation(donation) && (
+                              <Badge variant="outline" className="bg-sky-50 text-sky-700 border-sky-200">
+                                <CreditCard className="h-3 w-3 mr-1" />
+                                Recurring
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        <div>{getStatusBadge(donation.paymentStatus)}</div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <p className="text-gray-500">Amount</p>
+                          <p className="font-semibold text-slate-900">{formatCurrency(donation.amount || 0)}</p>
                         </div>
                         <div>
-                          <div className="flex items-center gap-2">
-                            <h2 className="font-semibold text-lg leading-tight text-slate-900">
-                              {donation.donorName || 'Anonymous'}
-                            </h2>
-                          </div>
-                          <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Donor</span>
+                          <p className="text-gray-500">Date</p>
+                          <p className="text-slate-900">
+                            {donation.timestamp ? formatDonationDate(donation.timestamp, false) : "N/A"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500">Platform</p>
+                          <p className="text-slate-900 capitalize">{donation.platform || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500">Source</p>
+                          <p className="text-slate-900">{kiosk ? kiosk.name : 'Online'}</p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="ml-auto grid w-[140px] grid-cols-[20px_1fr] items-center gap-2 text-xl font-bold text-slate-900 tabular-nums">
-                          <span className="h-5 w-5 inline-flex items-center justify-center">
-                            {donation.isGiftAid ? (
-                              <span
-                                className="inline-flex items-center rounded-md bg-purple-50 px-1.5 py-0.5 text-purple-700 ring-1 ring-purple-600/20"
-                                title="Gift Aid donation"
-                              >
-                                <Gift className="h-3 w-3" />
-                              </span>
-                            ) : (
-                              <span className="h-3 w-3 opacity-0">
-                                <Gift className="h-3 w-3" />
-                              </span>
-                            )}
-                          </span>
-                          <span className="text-left">{formatCurrency(donation.amount || 0)}</span>
-                        </div>
-                        <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Amount</span>
-                      </div>
-                    </div>
-                    
-                    <div className="p-4 space-y-3">
-                      <div className="flex justify-between items-center">
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium text-slate-600">
-                            {getCampaignDisplayName(donation)}
-                          </span>
-                          <div className="flex gap-2 mt-1">
-                            <span className="bg-indigo-50 text-indigo-700 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide flex items-center gap-1">
-                              <MapPin className="w-3 h-3" />
-                              {kiosk ? kiosk.name : 'Online'}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          {getStatusBadge(donation.paymentStatus)}
-                        </div>
-                      </div>
-                      
-                      <div className="flex justify-between items-center pt-2 border-t border-slate-100">
-                        <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <CalendarDays className="w-4 h-4" />
-                          {donation.timestamp 
-                            ? formatDonationDate(donation.timestamp, false)
-                            : "N/A"}
-                        </div>
-                        <button 
-                          className="flex items-center gap-1 text-[#064e3b] text-sm font-semibold"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleViewDetails(donation);
-                          }}
+
+                      <div className="pt-2 border-t border-gray-100">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                          onClick={() => handleViewDetails(donation)}
                         >
-                          View Details
-                        </button>
+                          <Eye className="h-4 w-4 mr-2" />
+                          View
+                        </Button>
                       </div>
-                    </div>
+                    </CardContent>
                   </Card>
                 );
               })
@@ -790,10 +829,47 @@ export function DonationManagement({ onNavigate, onLogout, userSession, hasPermi
                 </div>
 
                 <div>
+                  <Label className="text-sm font-medium text-gray-700">Recurring Donation</Label>
+                  <div className="mt-1">
+                    {isRecurringDonation(selectedDonation) ? (
+                      <Badge className="bg-sky-100 text-sky-800 border-sky-200">
+                        <CreditCard className="w-3 h-3 mr-1" />
+                        Yes
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-gray-100 text-gray-800 border-gray-200">
+                        No
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+
+                <div>
                   <Label className="text-sm font-medium text-gray-700">Transaction ID</Label>
                   <p className="text-xs text-gray-700 font-mono mt-1 bg-gray-50 px-2 py-1 rounded border border-gray-200 inline-block">
                     {selectedDonation.stripePaymentIntentId || selectedDonation.transactionId || selectedDonation.id || "N/A"}
                   </p>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700">Subscription ID</Label>
+                    <p className="text-xs text-gray-700 font-mono mt-1 bg-gray-50 px-2 py-1 rounded border border-gray-200 inline-block break-all">
+                      {selectedDonation.subscriptionId || "N/A"}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-sm font-medium text-gray-700">Recurring Interval</Label>
+                      <p className="text-sm text-gray-900 mt-1 capitalize">{selectedDonation.recurringInterval || "N/A"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-gray-700">Invoice ID</Label>
+                      <p className="text-xs text-gray-700 font-mono mt-1 bg-gray-50 px-2 py-1 rounded border border-gray-200 inline-block break-all">
+                        {selectedDonation.invoiceId || "N/A"}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

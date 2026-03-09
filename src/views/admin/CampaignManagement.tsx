@@ -103,7 +103,6 @@ import { useTableSort } from "../../shared/lib/hooks/useTableSort";
 import { CampaignForm, CampaignFormData } from "./components/CampaignForm";
 import { Campaign } from "../../shared/types";
 import { exportToCsv } from "../../shared/utils/csvExport";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "../../shared/ui/sheet";
 
 interface CampaignDialogProps {
   open: boolean;
@@ -1399,7 +1398,14 @@ const CampaignManagement = ({
 
   const handleOpenOverview = (campaign: Campaign) => {
     setSelectedCampaign(campaign);
-    setIsOverviewOpen(true);
+    setTimeout(() => {
+      setIsOverviewOpen(true);
+    }, 10);
+  };
+
+  const closeOverview = () => {
+    setIsOverviewOpen(false);
+    setTimeout(() => setSelectedCampaign(null), 500);
   };
 
   const handlePauseCampaign = async () => {
@@ -2703,80 +2709,82 @@ const CampaignManagement = ({
         </main>
       </div>
 
-      <Sheet open={isOverviewOpen} onOpenChange={setIsOverviewOpen}>
-      <SheetContent side="right" className="w-full sm:max-w-md md:max-w-lg gap-0 p-0 bg-[#F3F1EA]">
-          <div className="flex h-full flex-col">
-            <SheetHeader className="border-b border-gray-100 px-6 py-4 shadow-sm">
-              <SheetTitle className="text-lg font-semibold text-gray-900">
-                Campaign Overview
-              </SheetTitle>
-            </SheetHeader>
+      {(selectedCampaign || isOverviewOpen) && (
+        <>
+          <div
+            className={`fixed inset-0 bg-black/50 z-40 transition-opacity duration-500 ${
+              isOverviewOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+            }`}
+            onClick={closeOverview}
+          />
 
-            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
-              <div className="rounded-2xl border border-gray-100 bg-gray-50/60 p-3">
-                <ImageWithFallback
-                  src={selectedCampaign?.coverImageUrl}
-                  alt={selectedCampaign?.title || "Campaign cover"}
-                  className="h-52 w-full rounded-xl object-cover bg-gray-100"
-                  fallbackSrc="/campaign-fallback.svg"
-                />
+          <div
+            className={`fixed right-0 top-0 h-full w-full sm:max-w-md md:max-w-lg shadow-2xl z-50 transform transition-all duration-500 ease-in-out overflow-hidden bg-[#F3F1EA] ${
+              isOverviewOpen ? "translate-x-0" : "translate-x-full"
+            }`}
+          >
+            <div className="flex h-full flex-col">
+              <div className="border-b border-gray-100 px-6 py-4 shadow-sm flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-900">Campaign Overview</h2>
+                <Button variant="ghost" size="icon" onClick={closeOverview} aria-label="Close overview">
+                  <X className="h-5 w-5" />
+                </Button>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge
-                  className={`text-xs px-2 py-1 rounded-full inline-flex items-center gap-1 ${getStatusColor(
-                    selectedCampaign?.status ?? "inactive"
-                  )}`}
-                >
-                  <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                  {selectedCampaign?.status ?? "Inactive"}
-                </Badge>
-                <Badge variant="secondary" className="text-xs uppercase tracking-wide">
-                  {selectedCampaign?.category || "Uncategorized"}
-                </Badge>
-              </div>
-
-              <div>
-                <h3 className="text-xl font-semibold text-gray-900">
-                  {selectedCampaign?.title || "Untitled campaign"}
-                </h3>
-                <p className="mt-2 text-sm text-gray-600 leading-relaxed">
-                  {selectedCampaign?.description ||
-                    "No description available for this campaign yet."}
-                </p>
-              </div>
-            </div>
-
-            <div className="border-t border-gray-100 px-6 py-4 space-y-4">
-              <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-                <div className="flex items-center justify-between text-sm font-medium text-gray-700">
-                  <span>Fundraising Progress</span>
-                  <span>
-                    {selectedCampaign?.goal
-                      ? Math.min(
-                          ((Number(selectedCampaign?.raised || 0) / 100) /
-                            Number(selectedCampaign.goal)) *
-                            100,
-                          100
-                        ).toFixed(0)
-                      : 0}
-                    %
-                  </span>
+              <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+                <div className="rounded-2xl border border-gray-100 bg-gray-50/60 p-3">
+                  <ImageWithFallback
+                    src={selectedCampaign?.coverImageUrl}
+                    alt={selectedCampaign?.title || "Campaign cover"}
+                    className="h-52 w-full rounded-xl object-cover bg-gray-100"
+                    fallbackSrc="/campaign-fallback.svg"
+                  />
                 </div>
-                <div className="mt-3 h-2 w-full rounded-full bg-gray-100 overflow-hidden">
-                  <div
-                    className={`h-full ${getProgressColor(
-                      selectedCampaign?.goal
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge
+                    className={`text-xs px-2 py-1 rounded-full inline-flex items-center gap-1 ${getStatusColor(
+                      selectedCampaign?.status ?? "inactive"
+                    )}`}
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                    {selectedCampaign?.status ?? "Inactive"}
+                  </Badge>
+                  <Badge variant="secondary" className="text-xs uppercase tracking-wide">
+                    {selectedCampaign?.category || "Uncategorized"}
+                  </Badge>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    {selectedCampaign?.title || "Untitled campaign"}
+                  </h3>
+                  <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+                    {selectedCampaign?.description ||
+                      "No description available for this campaign yet."}
+                  </p>
+                </div>
+              </div>
+
+              <div className="border-t border-gray-100 px-6 py-4 space-y-4">
+                <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+                  <div className="flex items-center justify-between text-sm font-medium text-gray-700">
+                    <span>Fundraising Progress</span>
+                    <span>
+                      {selectedCampaign?.goal
                         ? Math.min(
                             ((Number(selectedCampaign?.raised || 0) / 100) /
                               Number(selectedCampaign.goal)) *
                               100,
                             100
-                          )
-                        : 0
-                    )}`}
-                    style={{
-                      width: `${
+                          ).toFixed(0)
+                        : 0}
+                      %
+                    </span>
+                  </div>
+                  <div className="mt-3 h-2 w-full rounded-full bg-gray-100 overflow-hidden">
+                    <div
+                      className={`h-full ${getProgressColor(
                         selectedCampaign?.goal
                           ? Math.min(
                               ((Number(selectedCampaign?.raised || 0) / 100) /
@@ -2785,73 +2793,85 @@ const CampaignManagement = ({
                               100
                             )
                           : 0
-                      }%`,
-                    }}
-                  />
-                </div>
-                <div className="mt-3 grid grid-cols-2 gap-4 text-sm text-gray-500">
-                  <div>
-                    <div className="text-xs uppercase tracking-wide">Raised</div>
-                    <div className="text-base font-semibold text-gray-900">
-                      {formatCurrency(Number(selectedCampaign?.raised || 0))}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-xs uppercase tracking-wide">Goal</div>
-                    <div className="text-base font-semibold text-gray-900">
-                      {formatCurrencyFromMajor(Number(selectedCampaign?.goal || 0))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="text-xs text-gray-500">
-                Donors:{" "}
-                <span className="font-semibold text-gray-900">
-                  {Number(selectedCampaign?.donationCount || 0).toLocaleString()}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {hasPermission('edit_campaign') && (
-                  <>
-                    <Button
-                      variant="outline"
-                      className="h-11 rounded-full"
-                      onClick={() => {
-                        if (!selectedCampaign) return;
-                        handleEditClick(selectedCampaign);
-                        setIsOverviewOpen(false);
+                      )}`}
+                      style={{
+                        width: `${
+                          selectedCampaign?.goal
+                            ? Math.min(
+                                ((Number(selectedCampaign?.raised || 0) / 100) /
+                                  Number(selectedCampaign.goal)) *
+                                  100,
+                                100
+                              )
+                            : 0
+                        }%`,
                       }}
-                    >
-                      Edit Details
-                    </Button>
-                    {(() => {
-                      const status = (selectedCampaign?.status ?? "").toString().toLowerCase();
-                      const isCompleted = status === "completed";
-                      const isPaused = status === "paused";
+                    />
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-4 text-sm text-gray-500">
+                    <div>
+                      <div className="text-xs uppercase tracking-wide">Raised</div>
+                      <div className="text-base font-semibold text-gray-900">
+                        {formatCurrency(Number(selectedCampaign?.raised || 0))}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs uppercase tracking-wide">Goal</div>
+                      <div className="text-base font-semibold text-gray-900">
+                        {formatCurrencyFromMajor(Number(selectedCampaign?.goal || 0))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-                      return (
-                        <Button
-                          className={`h-11 rounded-full text-white ${
-                            isPaused
-                              ? "bg-emerald-700 hover:bg-emerald-800"
-                              : "bg-red-500 hover:bg-red-600"
-                          }`}
-                          onClick={isPaused ? handleResumeCampaign : handlePauseCampaign}
-                          disabled={!selectedCampaign || isCompleted}
-                        >
-                          {isPaused ? "Continue Donations" : "Pause Donations"}
-                        </Button>
-                      );
-                    })()}
-                  </>
-                )}
+                <div className="text-xs text-gray-500">
+                  Donors:{" "}
+                  <span className="font-semibold text-gray-900">
+                    {Number(selectedCampaign?.donationCount || 0).toLocaleString()}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {hasPermission('edit_campaign') && (
+                    <>
+                      <Button
+                        variant="outline"
+                        className="h-11 rounded-full"
+                        onClick={() => {
+                          if (!selectedCampaign) return;
+                          handleEditClick(selectedCampaign);
+                          closeOverview();
+                        }}
+                      >
+                        Edit Details
+                      </Button>
+                      {(() => {
+                        const status = (selectedCampaign?.status ?? "").toString().toLowerCase();
+                        const isCompleted = status === "completed";
+                        const isPaused = status === "paused";
+
+                        return (
+                          <Button
+                            className={`h-11 rounded-full text-white ${
+                              isPaused
+                                ? "bg-emerald-700 hover:bg-emerald-800"
+                                : "bg-red-500 hover:bg-red-600"
+                            }`}
+                            onClick={isPaused ? handleResumeCampaign : handlePauseCampaign}
+                            disabled={!selectedCampaign || isCompleted}
+                          >
+                            {isPaused ? "Continue Donations" : "Pause Donations"}
+                          </Button>
+                        );
+                      })()}
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </SheetContent>
-      </Sheet>
+        </>
+      )}
       {/* Dialogs remain after main content */}
       <CampaignDialog open={isEditDialogOpen} onOpenChange={open => { setIsEditDialogOpen(open); if(!open) setEditingCampaign(null); }} campaign={editingCampaign} organizationId={userSession.user.organizationId || ""} onSave={handleSave} />
       <CampaignDialog 

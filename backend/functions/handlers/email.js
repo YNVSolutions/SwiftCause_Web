@@ -15,11 +15,38 @@ const normalizeString = (value) => {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+const resolveDonationByReference = async (referenceId) => {
+  const donationsRef = admin.firestore().collection("donations");
+
+  // Fast path: donation doc id equals reference id.
+  const directDoc = await donationsRef.doc(referenceId).get();
+  if (directDoc.exists) return directDoc;
+
+  // Fallbacks for recurring flows where UI may pass subscription/invoice ids.
+  const lookups = [
+    ["transactionId", referenceId],
+    ["subscriptionId", referenceId],
+    ["invoiceId", referenceId],
+  ];
+
+  for (const [field, value] of lookups) {
+    const snapshot = await donationsRef
+        .where(field, "==", value)
+        .limit(1)
+        .get();
+
+    if (!snapshot.empty) {
+      return snapshot.docs[0];
+    }
+  }
+
+  return null;
+};
+
 const getDonationWithRetry = async (transactionId, attempts = 10, delayMs = 700) => {
   for (let attempt = 1; attempt <= attempts; attempt++) {
-    const donationRef = admin.firestore().collection("donations").doc(transactionId);
-    const donationSnap = await donationRef.get();
-    if (donationSnap.exists) {
+    const donationSnap = await resolveDonationByReference(transactionId);
+    if (donationSnap && donationSnap.exists) {
       return donationSnap;
     }
 
@@ -28,6 +55,13 @@ const getDonationWithRetry = async (transactionId, attempts = 10, delayMs = 700)
     }
   }
 
+  return null;
+};
+
+const getSubscriptionByReference = async (referenceId) => {
+  const subscriptionsRef = admin.firestore().collection("subscriptions");
+  const directDoc = await subscriptionsRef.doc(referenceId).get();
+  if (directDoc.exists) return directDoc;
   return null;
 };
 
@@ -56,14 +90,34 @@ const sendDonationThankYouEmail = (req, res) => {
       }
 
       const donationSnap = await getDonationWithRetry(transactionId);
+      let donationData = donationSnap?.data() || null;
 
-      if (!donationSnap || !donationSnap.exists) {
+      // Recurring fallback: if donation isn't available yet, use subscription data.
+      if (!donationData && transactionId.startsWith("sub_")) {
+        const subscriptionSnap = await getSubscriptionByReference(transactionId);
+        if (subscriptionSnap && subscriptionSnap.exists) {
+          const subData = subscriptionSnap.data() || {};
+          donationData = {
+            organizationId: subData.organizationId || null,
+            donorName: subData.donorName || subData.metadata?.donorName || "Donor",
+            currency: subData.currency || "",
+            amount: typeof subData.amount === "number" ? subData.amount : null,
+            campaignTitleSnapshot: subData.metadata?.campaignTitle || null,
+          };
+        }
+      }
+
+      if (!donationData) {
+        console.warn("Receipt lookup unresolved", {
+          referenceId: transactionId,
+          isSubscriptionReference: transactionId.startsWith("sub_"),
+        });
         return res.status(409).send({
           error: "Donation is still processing. Please retry in a few seconds.",
+          code: "RECEIPT_LOOKUP_PENDING",
         });
       }
 
-      const donationData = donationSnap.data() || {};
       const organizationId = normalizeString(donationData.organizationId) || "";
       const campaignName =
         normalizeString(req.body?.campaignName) ||
@@ -107,6 +161,7 @@ const sendDonationThankYouEmail = (req, res) => {
         transactionId,
         email,
         statusCode: emailResult?.statusCode || null,
+        source: donationSnap?.exists ? "donation" : "subscription_fallback",
       });
 
       return res.status(200).send({

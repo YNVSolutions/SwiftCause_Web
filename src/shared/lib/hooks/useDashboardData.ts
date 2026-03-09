@@ -5,6 +5,7 @@ import { collection, query, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Campaign } from '../../types';
 import { Kiosk, Donation } from '../../types';
+import { getRecurringStats } from '../../../entities/subscription/api/subscriptionApi';
 
 const toErrorDetails = (error: unknown) => {
   if (error instanceof Error) {
@@ -35,6 +36,22 @@ interface DashboardStats {
   heatmapData: Array<{ day: string; hour: number; value: number; donations: number }>;
   categoryData: Array<{ name: string; value: number; percentage: number; color: string }>;
   topCampaigns: Array<{ id: string; name: string; raised: number; goal: number; percentage: number; donationCount: number }>;
+  recurring: {
+    activeSubscriptions: number;
+    newSubscriptions: number;
+    churnRatePercent: number;
+    mrrMinor: number;
+    arrMinor: number;
+    trends: Array<{
+      period: string;
+      mrrMinor: number;
+      cashCollectedMinor: number;
+      newSubscriptions: number;
+      canceledSubscriptions: number;
+    }>;
+    windowLabel: string;
+    error?: string;
+  };
 }
 
 type FirestoreTimestamp = { seconds: number; nanoseconds: number };
@@ -74,6 +91,15 @@ export function useDashboardData(organizationId?: string) {
     heatmapData: [],
     categoryData: [],
     topCampaigns: [],
+    recurring: {
+      activeSubscriptions: 0,
+      newSubscriptions: 0,
+      churnRatePercent: 0,
+      mrrMinor: 0,
+      arrMinor: 0,
+      trends: [],
+      windowLabel: 'Last 30 days',
+    },
   });
   const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
@@ -96,10 +122,17 @@ export function useDashboardData(organizationId?: string) {
     setError(null);
 
     try {
-      const [campaignsData, kiosksData, recentDonationsData] = await Promise.all([
+      const recurringTo = new Date();
+      const recurringFrom = new Date(recurringTo.getTime() - (30 * 24 * 60 * 60 * 1000));
+
+      const [campaignsData, kiosksData, recentDonationsData, recurringResult] = await Promise.all([
         getCampaigns(organizationId) as Promise<Campaign[]>,
         getKiosks(organizationId) as Promise<Kiosk[]>,
-        getRecentDonations(10, organizationId) as Promise<Donation[]>
+        getRecentDonations(10, organizationId) as Promise<Donation[]>,
+        getRecurringStats(organizationId, { from: recurringFrom, to: recurringTo }).catch((err) => {
+          console.error("Failed to fetch recurring stats for dashboard:", err);
+          return null;
+        }),
       ]);
 
       const totalRaised = campaignsData.reduce((acc, campaign: Campaign) => acc + (Number(campaign.raised) || 0), 0);
@@ -505,7 +538,25 @@ export function useDashboardData(organizationId?: string) {
         monthlyRevenue,
         heatmapData,
         categoryData,
-        topCampaigns
+        topCampaigns,
+        recurring: recurringResult ? {
+          activeSubscriptions: recurringResult.summary.activeSubscriptions,
+          newSubscriptions: recurringResult.summary.newSubscriptions,
+          churnRatePercent: recurringResult.summary.churnRatePercent,
+          mrrMinor: recurringResult.summary.mrrMinor,
+          arrMinor: recurringResult.summary.arrMinor,
+          trends: recurringResult.trends,
+          windowLabel: 'Last 30 days',
+        } : {
+          activeSubscriptions: 0,
+          newSubscriptions: 0,
+          churnRatePercent: 0,
+          mrrMinor: 0,
+          arrMinor: 0,
+          trends: [],
+          windowLabel: 'Last 30 days',
+          error: 'Recurring stats unavailable',
+        },
       });
 
       const formattedActivities = recentDonationsData.map((donation: Donation): Activity => {
