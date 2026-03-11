@@ -125,6 +125,35 @@ sequenceDiagram
   WH->>FS: update subscription status + analytics
 ```
 
+## 4.1 Stripe Event -> Firestore Write Matrix (Single vs Recurring)
+
+| Stripe/Event Source | Donation Type | Firestore Collections Written | Notes |
+|---|---|---|---|
+| `createKioskPaymentIntent` (HTTP function) | One-time (kiosk) | none (direct donation write is not done here) | Creates Stripe PaymentIntent only; donation persistence happens via webhook. |
+| `payment_intent.succeeded` -> `handlePaymentCompletedStripeWebhook` | One-time and recurring first-charge fallback | `webhook_events`, `donations`, `giftAidDeclarations` (conditional), `campaigns` (aggregates via donation entity) | Primary source of truth for successful payment persistence. |
+| `createRecurringSubscription` (HTTP function) | Recurring | `subscriptions` always; `donations` + `giftAidDeclarations` only if first invoice is already paid/succeeded | Contains a safety-net donation write when first payment is immediately successful. |
+| `invoice.paid` -> `handleSubscriptionWebhook` | Recurring renewals (and possibly first invoice depending on timing) | `webhook_events`, `donations`, `giftAidDeclarations` (conditional), `subscriptions` (status/lastPaymentAt), `campaigns` (aggregates via donation entity) | Normal recurring cycle donation writer. |
+| `invoice.payment_failed` -> `handleSubscriptionWebhook` | Recurring | `webhook_events`, `subscriptions` | Marks subscription as `past_due`, stores failure metadata. |
+| `customer.subscription.updated` -> `handleSubscriptionWebhook` | Recurring | `webhook_events`, `subscriptions` | Updates subscription status and next period timestamps. |
+| `customer.subscription.deleted` -> `handleSubscriptionWebhook` | Recurring | `webhook_events`, `subscriptions` | Marks subscription canceled and stores cancellation reason/time. |
+
+## 4.2 Collections Updated and What Changes
+
+| Collection | Updated By | Key Fields Written/Updated |
+|---|---|---|
+| `donations` | `createDonationDoc` from webhooks (and recurring safety-net path) | donor fields, amount/currency, recurring flags, `subscriptionId`, `invoiceId`, payment metadata, timestamps |
+| `campaigns` | inside `createDonationDoc` | `raised += amount`, `donationCount += 1`, `lastUpdated` |
+| `subscriptions` | `createSubscriptionDoc`, `updateSubscriptionStatus` | interval, amount, status, donor metadata, period dates, `lastPaymentAt`, cancel fields |
+| `giftAidDeclarations` | `createGiftAidDeclarationIfNeeded` / `createGiftAidDeclarationFromMetadata` | donor declaration fields, donation linkage, amount/tax-year fields |
+| `webhook_events` | `claimWebhookEvent`, `markEventProcessed`, `markEventFailed` | webhook idempotency lock, processing state, retry attempt metadata |
+
+## 4.3 Idempotency and Duplicate Protection
+
+- `webhook_events` provides event-level idempotency for webhook handlers.
+- `donations` uses `transactionId` as document ID for write idempotency.
+- If a donation already exists, missing fields are enriched instead of creating duplicates.
+- Gift Aid declaration creation checks existing document by donation/payment ID before writing.
+
 ## 5. Data + State Map
 
 ## 5.1 In-Memory/UI State
