@@ -9,6 +9,7 @@ interface GiftAidPageProps {
   amount: number;
   isCustomAmount: boolean;
   currency: string;
+  initialDonorName?: string;
   onAcceptGiftAid: (details: GiftAidDetails) => void;
   onDeclineGiftAid: (amount: number) => void;
   onBack: () => void;
@@ -19,6 +20,7 @@ export const GiftAidPage: React.FC<GiftAidPageProps> = ({
   amount,
   isCustomAmount,
   currency,
+  initialDonorName = '',
   onAcceptGiftAid,
   onDeclineGiftAid,
   onBack,
@@ -98,6 +100,7 @@ export const GiftAidPage: React.FC<GiftAidPageProps> = ({
                   currency={currency}
                   campaignTitle={campaign.title}
                   organizationId={campaign.organizationId || ''}
+                  initialFullName={initialDonorName}
                   onSubmit={handleDetailsSubmit}
                   onBack={handleBackFromDetails}
                 />
