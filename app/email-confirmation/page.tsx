@@ -13,8 +13,14 @@ function EmailConfirmationContent() {
   const [transactionId, setTransactionId] = useState<string | null>(null)
   const [receiptReferenceId, setReceiptReferenceId] = useState<string | null>(null)
   const [campaignTitle, setCampaignTitle] = useState<string>('')
+  const [donorEmail, setDonorEmail] = useState<string>('')
 
   useEffect(() => {
+    // Restore persisted donor email (survives payment redirect)
+    const storedEmail = sessionStorage.getItem('donorEmail')
+    if (storedEmail) {
+      setDonorEmail(storedEmail)
+    }
     // Get transaction ID from URL params or sessionStorage
     if (searchParams) {
       const urlTransactionId = searchParams.get('transactionId')
@@ -49,6 +55,8 @@ function EmailConfirmationContent() {
     // Clear stored data
     sessionStorage.removeItem('donation')
     sessionStorage.removeItem('paymentResult')
+    sessionStorage.removeItem('donorEmail')
+    sessionStorage.removeItem('donorName')
     
     if (userRole === 'admin' || userRole === 'super_admin' || userRole === 'manager' || userRole === 'operator' || userRole === 'viewer') {
       router.push('/admin')
@@ -68,6 +76,7 @@ function EmailConfirmationContent() {
       transactionId={transactionId}
       receiptReferenceId={receiptReferenceId || undefined}
       campaignName={campaignTitle || undefined}
+      initialEmail={donorEmail}
       onComplete={handleComplete}
     />
   )

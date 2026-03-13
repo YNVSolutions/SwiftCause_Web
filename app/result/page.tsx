@@ -50,6 +50,8 @@ function ResultContent() {
     // Clear stored data
     sessionStorage.removeItem('donation')
     sessionStorage.removeItem('paymentResult')
+    sessionStorage.removeItem('donorEmail')
+    sessionStorage.removeItem('donorName')
     
     if (userRole === 'admin' || userRole === 'super_admin' || userRole === 'manager' || userRole === 'operator' || userRole === 'viewer') {
       router.push('/admin')

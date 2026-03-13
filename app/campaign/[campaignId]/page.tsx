@@ -201,6 +201,7 @@ export default function CampaignPage({
         amount={initialAmount || 0}
         isCustomAmount={isCustomAmount || !initialAmount}
         currency={currentKioskSession?.organizationCurrency || 'GBP'}
+        initialDonorName={sessionStorage.getItem('donorName') || ''}
         onAcceptGiftAid={handleAcceptGiftAid}
         onDeclineGiftAid={handleDeclineGiftAid}
         onBack={handleBackFromGiftAid}

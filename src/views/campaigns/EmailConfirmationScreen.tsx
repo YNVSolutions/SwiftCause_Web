@@ -6,6 +6,7 @@ interface EmailConfirmationScreenProps {
   transactionId?: string;
   receiptReferenceId?: string;
   campaignName?: string;
+  initialEmail?: string;
   onComplete: () => void;
 }
 
@@ -13,9 +14,10 @@ export function EmailConfirmationScreen({
   transactionId,
   receiptReferenceId,
   campaignName,
+  initialEmail = '',
   onComplete,
 }: EmailConfirmationScreenProps) {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(initialEmail);
   const [isSending, setIsSending] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [error, setError] = useState<string | null>(null);

@@ -9,6 +9,7 @@ interface GiftAidDetailsPanelProps {
   currency: string;
   campaignTitle: string;
   organizationId: string;
+  initialFullName?: string;
   onSubmit: (details: GiftAidDetails) => void;
   onBack: () => void;
 }
@@ -18,9 +19,10 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
   currency,
   campaignTitle,
   organizationId,
+  initialFullName = '',
   onSubmit,
 }) => {
-  const [fullName, setFullName] = useState('');
+  const [fullName, setFullName] = useState(initialFullName);
   const [houseNumber, setHouseNumber] = useState('');
   const [addressLine1, setAddressLine1] = useState('');
   const [addressLine2, setAddressLine2] = useState('');
