@@ -157,6 +157,7 @@ export function CampaignForm({
         setImagePreview(campaignData.coverImageUrl);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, editingCampaign?.id]);
 
   useEffect(() => {
