@@ -137,26 +137,27 @@ export function CampaignForm({
     }
   }, [open, setActiveSection]);
 
-  // Sync gallery previews with campaignData when dialog opens or campaign changes
+  // Reset transient image state when dialog opens or campaign changes
   useEffect(() => {
-    if (open && editingCampaign) {
-      // Load existing gallery images as previews
-      if (campaignData.galleryImages && campaignData.galleryImages.length > 0) {
-        setGalleryPreviews([]);
-        setSelectedGalleryFiles([]);
-      }
-      // Load existing cover image preview
+    if (!open) return;
+
+    // Clear unsaved selections
+    setSelectedImageFile(null);
+    setSelectedGalleryFiles([]);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (galleryInputRef.current) galleryInputRef.current.value = '';
+
+    // Always reset previews first
+    setImagePreview(null);
+    setGalleryPreviews([]);
+
+    if (editingCampaign) {
+      // Only load the saved cover image
       if (campaignData.coverImageUrl) {
         setImagePreview(campaignData.coverImageUrl);
       }
-    } else if (open && !editingCampaign) {
-      // Clear for new campaign
-      setGalleryPreviews([]);
-      setSelectedGalleryFiles([]);
-      setImagePreview(null); // ✅ Clear cover image preview
-      setSelectedImageFile(null); // ✅ Clear selected file
     }
-  }, [open, editingCampaign, campaignData.galleryImages, campaignData.coverImageUrl]);
+  }, [open, editingCampaign?.id]);
 
   useEffect(() => {
     if (open && organizationId) {
