@@ -24,17 +24,17 @@ interface AdminLoginProps {
 	onResendVerification?: () => Promise<boolean>;
 }
 
-export function AdminLogin({ 
-	email, 
-	password, 
-	error, 
-	emailError, 
-	passwordError, 
-	loading, 
-	onEmailChange, 
-	onPasswordChange, 
-	onEmailBlur, 
-	onPasswordBlur, 
+export function AdminLogin({
+	email,
+	password,
+	error,
+	emailError,
+	passwordError,
+	loading,
+	onEmailChange,
+	onPasswordChange,
+	onEmailBlur,
+	onPasswordBlur,
 	onSubmit,
 	variant = 'classic',
 	buttonLabel,
@@ -88,12 +88,19 @@ export function AdminLogin({
 					error={passwordError}
 				/>
 
+				<div className="flex justify-end">
+					<a
+						href="/forgot-password"
+						className="text-sm font-medium text-[#064e3b] transition hover:text-[#0f5132] hover:underline"
+					>
+						Forgot password?
+					</a>
+				</div>
+
 				{needsVerification && onResendVerification && (
 					<div className="text-sm text-slate-600">
 						{resendSuccess ? (
-							<p className="text-green-700">
-								✓ Verification email sent! Check your inbox.
-							</p>
+							<p className="text-green-700">Verification email sent. Check your inbox.</p>
 						) : (
 							<p>
 								Didn't receive the email?{' '}
