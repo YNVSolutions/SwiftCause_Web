@@ -5,6 +5,9 @@ import {
   onAuthStateChanged,
   sendEmailVerification,
   applyActionCode,
+  sendPasswordResetEmail as firebaseSendPasswordResetEmail,
+  verifyPasswordResetCode as firebaseVerifyPasswordResetCode,
+  confirmPasswordReset as firebaseConfirmPasswordReset,
   User as FirebaseAuthUser
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
@@ -38,6 +41,11 @@ const getVerificationBaseUrl = (): string => {
 
   return 'http://localhost';
 };
+
+const getPasswordResetActionSettings = () => ({
+  handleCodeInApp: true,
+  url: new URL('/login?source=password-reset', getVerificationBaseUrl()).toString(),
+});
 
 const buildVerificationActionSettings = async (uid: string) => {
   const token = createVerificationToken();
@@ -400,5 +408,33 @@ export const authApi = {
     if (!response.ok) {
       throw new Error(responseData.error || 'Failed to complete email verification.');
     }
+  },
+
+  async sendPasswordResetEmail(email: string): Promise<void> {
+    const actionCodeSettings = getPasswordResetActionSettings();
+
+    try {
+      await firebaseSendPasswordResetEmail(auth, email, actionCodeSettings);
+    } catch (error) {
+      if (!hasFirebaseAuthCode(error, 'auth/unauthorized-continue-uri')) {
+        throw error;
+      }
+
+      console.error('Password reset continue URL rejected by Firebase Auth', {
+        runtimeOrigin: typeof window !== 'undefined' ? window.location.origin : null,
+        continueUrl: actionCodeSettings.url,
+        code: error.code,
+      });
+
+      await firebaseSendPasswordResetEmail(auth, email);
+    }
+  },
+
+  async verifyPasswordResetCode(code: string): Promise<string> {
+    return firebaseVerifyPasswordResetCode(auth, code);
+  },
+
+  async confirmPasswordReset(code: string, newPassword: string): Promise<void> {
+    await firebaseConfirmPasswordReset(auth, code, newPassword);
   }
 };
