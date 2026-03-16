@@ -9,6 +9,9 @@ interface ProfessionalPasswordFieldProps {
   onBlur?: () => void;
   error?: string | null;
   id?: string;
+  label?: string;
+  placeholder?: string;
+  autoComplete?: string;
 }
 
 export function ProfessionalPasswordField({ 
@@ -16,7 +19,10 @@ export function ProfessionalPasswordField({
   onChange, 
   onBlur, 
   error, 
-  id = 'password' 
+  id = 'password',
+  label = 'Password',
+  placeholder = 'Enter your password',
+  autoComplete = 'current-password',
 }: ProfessionalPasswordFieldProps) {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -27,7 +33,7 @@ export function ProfessionalPasswordField({
         className="flex items-center space-x-2 text-sm font-medium text-[#2f4f43]"
       >
         <Shield className="h-4 w-4" />
-        <span>Password</span>
+        <span>{label}</span>
       </Label>
       
       <div className="relative w-full">
@@ -39,12 +45,13 @@ export function ProfessionalPasswordField({
           <Input
             id={id}
             type={showPassword ? 'text' : 'password'}
-            placeholder="Enter your password"
+            placeholder={placeholder}
             value={value}
             onChange={onChange}
             onBlur={() => {
               onBlur?.();
             }}
+            autoComplete={autoComplete}
             className="h-12 px-4 pr-12 bg-transparent text-sm text-[#1f2937] placeholder:text-[#9aa09b] outline-none border-0 focus-visible:ring-0 focus-visible:border-transparent w-full"
           />
           

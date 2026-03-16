@@ -53,6 +53,11 @@ export function LoginForm({ onLogin }: LoginFormProps) {
               required
             />
           </div>
+          <div className="flex justify-end">
+            <a href="/forgot-password" className="text-sm font-medium text-[#064e3b] hover:underline">
+              Forgot password?
+            </a>
+          </div>
           {error && (
             <div className="text-red-500 text-sm">{error}</div>
           )}

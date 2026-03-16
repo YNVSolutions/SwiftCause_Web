@@ -40,12 +40,14 @@ const {
 const {verifySignupRecaptcha} = require("./handlers/signup");
 const {kioskLogin} = require("./handlers/kiosk");
 const {completeEmailVerification} = require("./handlers/verification");
+const {logAuthEvent} = require("./handlers/auth");
 
 // Export all functions (backwards compatible)
 exports.createUser = functions.https.onRequest(createUser);
 exports.updateUser = functions.https.onRequest(updateUser);
 exports.deleteUser = functions.https.onRequest(deleteUser);
 exports.completeEmailVerification = functions.https.onRequest(completeEmailVerification);
+exports.logAuthEvent = functions.https.onRequest(logAuthEvent);
 exports.sendContactConfirmationEmail = onRequest(
     {secrets: [sendgridApiKey, sendgridFromEmail, sendgridFromName]},
     sendContactConfirmationEmail,
