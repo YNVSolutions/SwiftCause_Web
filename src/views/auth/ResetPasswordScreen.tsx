@@ -25,24 +25,34 @@ export function ResetPasswordScreen({
 }: ResetPasswordScreenProps) {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [localError, setLocalError] = useState('')
+  const [passwordError, setPasswordError] = useState('')
+  const [confirmPasswordError, setConfirmPasswordError] = useState('')
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
 
     if (password.length < 8) {
-      setLocalError('Use at least 8 characters for your new password.')
+      setPasswordError('Use at least 8 characters for your new password.')
+      setConfirmPasswordError('')
       return
     }
 
     if (password !== confirmPassword) {
-      setLocalError('Passwords do not match.')
+      setPasswordError('')
+      setConfirmPasswordError('Passwords do not match.')
       return
     }
 
-    setLocalError('')
+    setPasswordError('')
+    setConfirmPasswordError('')
     await onSubmit(password)
   }
+
+  const isSubmitDisabled =
+    loading ||
+    password.length < 8 ||
+    confirmPassword.length === 0 ||
+    password !== confirmPassword
 
   return (
     <div className="min-h-screen bg-[#fcf9f1] px-4 py-10 sm:px-6 sm:py-12">
@@ -73,14 +83,32 @@ export function ResetPasswordScreen({
                 <ProfessionalPasswordField
                   id="new-password"
                   value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  error={localError || undefined}
+                  onChange={(event) => {
+                    setPassword(event.target.value)
+                    if (passwordError) {
+                      setPasswordError('')
+                    }
+                    if (confirmPasswordError) {
+                      setConfirmPasswordError('')
+                    }
+                  }}
+                  error={passwordError || undefined}
+                  autoComplete="new-password"
                 />
 
                 <ProfessionalPasswordField
                   id="confirm-password"
                   value={confirmPassword}
-                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  onChange={(event) => {
+                    setConfirmPassword(event.target.value)
+                    if (confirmPasswordError) {
+                      setConfirmPasswordError('')
+                    }
+                  }}
+                  error={confirmPasswordError || undefined}
+                  label="Confirm password"
+                  placeholder="Confirm your password"
+                  autoComplete="new-password"
                 />
 
                 {errorMessage && (
@@ -92,7 +120,7 @@ export function ResetPasswordScreen({
                 <MagneticButton
                   type="submit"
                   loading={loading}
-                  disabled={loading}
+                  disabled={isSubmitDisabled}
                   className="h-12 w-full text-base font-semibold"
                 >
                   {!loading && 'Update password'}
