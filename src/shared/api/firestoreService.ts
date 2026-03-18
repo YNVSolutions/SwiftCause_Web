@@ -326,14 +326,18 @@ export async function storeGiftAidDeclaration(giftAidData: GiftAidDetails, trans
     firstName: giftAidData.firstName,
     surname: giftAidData.surname,
     houseNumber: giftAidData.houseNumber || '',
-    address: giftAidData.address || '',
+    addressLine1: giftAidData.addressLine1 || '',
+    addressLine2: giftAidData.addressLine2 || '',
     town: giftAidData.town || '',
     postcode: giftAidData.postcode,
     
     // Declaration Requirements
     giftAidConsent: giftAidData.giftAidConsent,
     ukTaxpayerConfirmation: giftAidData.ukTaxpayerConfirmation,
+    dataProcessingConsent: giftAidData.dataProcessingConsent ?? false,
+    homeAddressConfirmed: giftAidData.homeAddressConfirmed ?? false,
     declarationText: giftAidData.declarationText,
+    declarationTextVersion: giftAidData.declarationTextVersion || 'unknown',
     declarationDate: new Date(giftAidData.declarationDate),
     
     // Donation Details
