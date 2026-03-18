@@ -65,8 +65,7 @@ export default function PaymentPage({ params }: { params: Promise<{ campaignId: 
     // Store payment result
     sessionStorage.setItem('paymentResult', JSON.stringify(enrichedResult))
     
-    // Gift Aid declarations are created by the Stripe webhook (source of truth).
-    // Do not create them from the client to avoid duplicate declarations.
+    // Gift Aid declaration is captured before payment; webhook links donation outcome.
     if (enrichedResult.success && enrichedResult.transactionId) {
       try {
         const completeGiftAidData = sessionStorage.getItem('completeGiftAidData');
