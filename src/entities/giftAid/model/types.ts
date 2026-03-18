@@ -1,3 +1,9 @@
+import {
+  GiftAidDeclarationStatus,
+  GiftAidHmrcClaimStatus,
+  GiftAidOperationalStatus,
+} from './contract';
+
 /**
  * HMRC-compliant Gift Aid Declaration interface
  * 
@@ -11,7 +17,7 @@ export interface GiftAidDeclaration {
   id: string;
   
   // MANDATORY: Linking field - enforces 1:1 relationship with donation
-  donationId: string;
+  donationId: string | null;
   
   // MANDATORY: Full donor identity (HMRC requirement)
   donorFirstName: string;
@@ -23,11 +29,19 @@ export interface GiftAidDeclaration {
   donorAddressLine2?: string; // Optional additional address line
   donorTown: string;
   donorPostcode: string;
+  donorEmail?: string;
+  donorEmailNormalized?: string;
   
   // MANDATORY: Declaration details (HMRC requirement)
   declarationText: string; // Verbatim HMRC-compliant declaration
+  declarationTextVersion?: string; // Tracks wording revision donor agreed to
   declarationDate: string; // ISO date when declaration was made
+  giftAidConsent?: boolean; // Explicit donor opt-in to Gift Aid
   ukTaxpayerConfirmation: boolean; // Explicit UK taxpayer confirmation
+  dataProcessingConsent?: boolean; // Explicit consent for data processing
+  homeAddressConfirmed?: boolean; // Donor confirmed this is home address
+  declarationIpAddress?: string; // Audit requirement
+  declarationUserAgent?: string; // Audit requirement
   
   // MANDATORY: Financial details (HMRC requirement - amounts in pence)
   donationAmount: number; // Original donation amount in pence (minor currency units)
@@ -43,7 +57,15 @@ export interface GiftAidDeclaration {
   taxYear: string; // Format: "2025-26"
   
   // MANDATORY: Status tracking
-  giftAidStatus: 'pending' | 'claimed' | 'rejected';
+  giftAidStatus: GiftAidDeclarationStatus;
+  hmrcClaimStatus?: GiftAidHmrcClaimStatus;
+  operationalStatus?: GiftAidOperationalStatus;
+  exportedAt?: string | null;
+  exportBatchId?: string | null;
+  exportActorId?: string | null;
+  charitySubmittedReference?: string | null;
+  paidConfirmed?: boolean;
+  paidConfirmedAt?: string | null;
   
   // MANDATORY: Audit trail (compliance requirement)
   createdAt: string; // ISO timestamp when record was created
@@ -68,11 +90,15 @@ export interface GiftAidDetails {
   addressLine2?: string;
   town: string;
   postcode: string;
+  donorEmail?: string;
   
   // Declaration Requirements
   giftAidConsent: boolean;
   ukTaxpayerConfirmation: boolean;
+  dataProcessingConsent?: boolean;
+  homeAddressConfirmed?: boolean;
   declarationText: string;
+  declarationTextVersion?: string;
   declarationDate: string;
   
   // Donation Context

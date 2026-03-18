@@ -4,14 +4,19 @@ export interface GiftAidDetails {
   firstName: string;
   surname: string;
   houseNumber: string;
-  address?: string; // Optional additional address line
+  addressLine1: string;
+  addressLine2?: string;
   town: string;
   postcode: string;
+  donorEmail?: string;
   
   // 2. Declaration Requirements
   giftAidConsent: boolean; // Explicit agreement to Gift Aid treatment
   ukTaxpayerConfirmation: boolean; // Confirmation of UK taxpayer status
+  dataProcessingConsent?: boolean; // GDPR consent for Gift Aid processing
+  homeAddressConfirmed?: boolean; // Donor confirms this is home address
   declarationText: string; // HMRC-compliant declaration wording
+  declarationTextVersion?: string; // Legal text revision donor accepted
   declarationDate: string; // ISO date when declaration was made
   
   // 3. Donation Details
@@ -19,6 +24,7 @@ export interface GiftAidDetails {
   donationDate: string; // ISO date of donation
   organizationId: string;
   donationId: string; // Default empty string
+  declarationId?: string; // Canonical declaration-first linkage key
   
   // 4. Audit Trail (for compliance)
   timestamp: string; // ISO timestamp when record was created
@@ -46,6 +52,7 @@ export interface Donation {
   isGiftAid?: boolean;
   giftAidAccepted?: boolean; // Explicit tracking of Gift Aid acceptance/decline
   giftAidDetails?: GiftAidDetails;
+  giftAidDeclarationId?: string;
   organizationId?: string;
 }
 
