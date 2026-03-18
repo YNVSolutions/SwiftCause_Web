@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { User, MapPin, ArrowRight, Check, CheckCircle } from 'lucide-react';
 import { formatCurrencyFromMajor } from '@/shared/lib/currencyFormatter';
 import { GiftAidDetails } from '@/entities/giftAid/model/types';
@@ -61,7 +61,7 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
   const totalWithGiftAid = amount + giftAidAmount;
   const declarationText = getHmrcDeclarationText(campaignTitle);
 
-  const loadReusableGiftAidProfile = async (emailInput: string) => {
+  const loadReusableGiftAidProfile = useCallback(async (emailInput: string) => {
     const normalizedEmail = emailInput.trim().toLowerCase();
     if (!normalizedEmail || normalizedEmail === lastLookupEmail) {
       return;
@@ -91,14 +91,14 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
     } finally {
       setPrefillLoading(false);
     }
-  };
+  }, [initialFullName, lastLookupEmail]);
 
   useEffect(() => {
     if (!enableAutoLookup) return;
     if (initialDonorEmail.trim()) {
       void loadReusableGiftAidProfile(initialDonorEmail);
     }
-  }, [initialDonorEmail, enableAutoLookup]);
+  }, [initialDonorEmail, enableAutoLookup, loadReusableGiftAidProfile]);
 
   const formatAmount = (amt: number) => formatCurrencyFromMajor(amt, currency);
 
