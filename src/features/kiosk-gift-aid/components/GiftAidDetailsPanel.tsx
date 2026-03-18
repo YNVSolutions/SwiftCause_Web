@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { User, MapPin, ArrowRight, Check, CheckCircle } from 'lucide-react';
 import { formatCurrencyFromMajor } from '@/shared/lib/currencyFormatter';
 import { GiftAidDetails } from '@/entities/giftAid/model/types';
-import { HMRC_DECLARATION_TEXT } from '@/shared/config/constants';
+import { giftAidApi } from '@/entities/giftAid/api';
+import {
+  HMRC_DECLARATION_TEXT_VERSION,
+  getHmrcDeclarationText,
+} from '@/shared/config/constants';
 
 interface GiftAidDetailsPanelProps {
   amount: number;
@@ -10,6 +14,9 @@ interface GiftAidDetailsPanelProps {
   campaignTitle: string;
   organizationId: string;
   initialFullName?: string;
+  initialDonorEmail?: string;
+  collectDonorEmail?: boolean;
+  enableAutoLookup?: boolean;
   onSubmit: (details: GiftAidDetails) => void;
   onBack: () => void;
 }
@@ -20,9 +27,13 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
   campaignTitle,
   organizationId,
   initialFullName = '',
+  initialDonorEmail = '',
+  collectDonorEmail = true,
+  enableAutoLookup = true,
   onSubmit,
 }) => {
   const [fullName, setFullName] = useState(initialFullName);
+  const [donorEmail, setDonorEmail] = useState(initialDonorEmail);
   const [houseNumber, setHouseNumber] = useState('');
   const [addressLine1, setAddressLine1] = useState('');
   const [addressLine2, setAddressLine2] = useState('');
@@ -30,10 +41,15 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
   const [postcode, setPostcode] = useState('');
   
   const [declarationAccepted, setDeclarationAccepted] = useState(false);
+  const [usingSavedConsent, setUsingSavedConsent] = useState(false);
+  const [savedConsentDate, setSavedConsentDate] = useState<string | null>(null);
+  const [lastLookupEmail, setLastLookupEmail] = useState('');
+  const [prefillLoading, setPrefillLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   
   const [errors, setErrors] = useState<{
     fullName?: string;
+    donorEmail?: string;
     houseNumber?: string;
     addressLine1?: string;
     town?: string;
@@ -43,6 +59,46 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
 
   const giftAidAmount = amount * 0.25;
   const totalWithGiftAid = amount + giftAidAmount;
+  const declarationText = getHmrcDeclarationText(campaignTitle);
+
+  const loadReusableGiftAidProfile = async (emailInput: string) => {
+    const normalizedEmail = emailInput.trim().toLowerCase();
+    if (!normalizedEmail || normalizedEmail === lastLookupEmail) {
+      return;
+    }
+
+    try {
+      setPrefillLoading(true);
+      setLastLookupEmail(normalizedEmail);
+      const profile = await giftAidApi.getReusableGiftAidProfileByEmail(normalizedEmail);
+      if (!profile) {
+        return;
+      }
+
+      const mergedName = `${profile.firstName} ${profile.surname}`.trim();
+      setFullName(mergedName || initialFullName);
+      setHouseNumber(profile.houseNumber || '');
+      setAddressLine1(profile.addressLine1 || '');
+      setAddressLine2(profile.addressLine2 || '');
+      setTown(profile.town || '');
+      setPostcode(profile.postcode || '');
+      setDonorEmail(profile.donorEmail || normalizedEmail);
+      setDeclarationAccepted(true);
+      setUsingSavedConsent(true);
+      setSavedConsentDate(profile.declarationDate || null);
+    } catch (error) {
+      console.error('Unable to fetch reusable Gift Aid profile:', error);
+    } finally {
+      setPrefillLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!enableAutoLookup) return;
+    if (initialDonorEmail.trim()) {
+      void loadReusableGiftAidProfile(initialDonorEmail);
+    }
+  }, [initialDonorEmail, enableAutoLookup]);
 
   const formatAmount = (amt: number) => formatCurrencyFromMajor(amt, currency);
 
@@ -57,6 +113,14 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
       const nameParts = fullName.trim().split(' ').filter((part) => part.length > 0);
       if (nameParts.length < 2) {
         newErrors.fullName = 'Please enter both first name and surname';
+      }
+    }
+
+    if (collectDonorEmail || donorEmail.trim()) {
+      if (!donorEmail.trim()) {
+        newErrors.donorEmail = 'Email is required';
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(donorEmail.trim())) {
+        newErrors.donorEmail = 'Please enter a valid email address';
       }
     }
 
@@ -77,7 +141,7 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
       }
     }
 
-    if (!declarationAccepted) {
+    if (!declarationAccepted && !usingSavedConsent) {
       newErrors.consent = 'You must accept the Gift Aid declaration to proceed';
     }
 
@@ -110,9 +174,11 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
       addressLine2: addressLine2.trim() || undefined,
       town: town.trim(),
       postcode: normalizedPostcode,
-      giftAidConsent: declarationAccepted,
-      ukTaxpayerConfirmation: declarationAccepted,
-      declarationText: HMRC_DECLARATION_TEXT,
+      donorEmail: donorEmail.trim() || undefined,
+      giftAidConsent: usingSavedConsent ? true : declarationAccepted,
+      ukTaxpayerConfirmation: usingSavedConsent ? true : declarationAccepted,
+      declarationText,
+      declarationTextVersion: HMRC_DECLARATION_TEXT_VERSION,
       declarationDate: currentDate,
       donationAmount: Math.round(amount * 100), // Convert GBP pounds to pence for HMRC compliance
       donationDate: currentDate,
@@ -156,6 +222,18 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
             <p className="font-medium text-slate-900 mt-1 tracking-[-0.01em] text-[14px] sm:text-[15px] leading-[1.3]">{campaignTitle}</p>
           </div>
 
+          {prefillLoading && (
+            <div className="mb-3 p-3 bg-[#EEF7F2] border border-[#BFE2CF] rounded-[14px] text-[#0E8F5A] text-[12px] sm:text-[13px]">
+              Checking for your saved Gift Aid details...
+            </div>
+          )}
+
+          {usingSavedConsent && !prefillLoading && (
+            <div className="mb-3 p-3 bg-[#EEF7F2] border border-[#BFE2CF] rounded-[14px] text-[#0E8F5A] text-[12px] sm:text-[13px]">
+              Using your saved Gift Aid details and future-consent{savedConsentDate ? ` from ${new Date(savedConsentDate).toLocaleDateString('en-GB')}` : ''}.
+            </div>
+          )}
+
           <div className="space-y-2.5">
             {/* Section 1: Donor details */}
             <div className="space-y-2">
@@ -185,6 +263,38 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
               />
               {errors.fullName && <p className="text-red-500 text-[12px] sm:text-[14px] mt-0.5 font-normal">{errors.fullName}</p>}
             </div>
+
+            {collectDonorEmail && (
+            <div className="space-y-1">
+              <label className="block text-[12px] sm:text-[14px] font-medium text-slate-600">
+                Email Address *
+              </label>
+              <input
+                type="email"
+                value={donorEmail}
+                onChange={(e) => {
+                  setDonorEmail(e.target.value);
+                  setLastLookupEmail('');
+                  if (usingSavedConsent) {
+                    setUsingSavedConsent(false);
+                    setSavedConsentDate(null);
+                    setDeclarationAccepted(false);
+                  }
+                  if (errors.donorEmail) setErrors((prev) => ({ ...prev, donorEmail: undefined }));
+                }}
+                onBlur={() => {
+                  void loadReusableGiftAidProfile(donorEmail);
+                }}
+                className={`w-full h-10 px-4 rounded-[14px] border text-[14px] sm:text-[15px] font-normal focus:outline-none transition-all bg-white ${
+                  errors.donorEmail
+                    ? 'border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-100'
+                    : 'border-slate-200 focus:border-[#0E8F5A] focus:ring-2 focus:ring-[#0E8F5A]/10'
+                }`}
+                placeholder="e.g. your@email.com"
+              />
+              {errors.donorEmail && <p className="text-red-500 text-[12px] sm:text-[14px] mt-0.5 font-normal">{errors.donorEmail}</p>}
+            </div>
+            )}
 
             {/* House Number and Address Line 1 - side by side */}
             <div className="grid grid-cols-2 gap-3">
@@ -318,30 +428,31 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
             {/* Declaration */}
             <div
               onClick={() => {
+                if (usingSavedConsent) return;
                 setDeclarationAccepted(!declarationAccepted);
                 if (errors.consent) setErrors((prev) => ({ ...prev, consent: undefined }));
               }}
-              className={`flex items-start p-3 sm:p-4 rounded-xl cursor-pointer transition-all ${
+              className={`flex items-start p-3 sm:p-4 rounded-xl transition-all ${
+                usingSavedConsent ? 'bg-[#EEF7F2] border border-[#BFE2CF]' :
                 errors.consent
-                  ? 'border-2 border-red-400 bg-red-50'
+                  ? 'border-2 border-red-400 bg-red-50 cursor-pointer'
                   : declarationAccepted
-                    ? 'bg-slate-100/80 border border-[rgba(15,23,42,0.08)]'
-                    : 'bg-slate-100/80 border border-[rgba(15,23,42,0.08)] hover:bg-slate-100'
+                    ? 'bg-slate-100/80 border border-[rgba(15,23,42,0.08)] cursor-pointer'
+                    : 'bg-slate-100/80 border border-[rgba(15,23,42,0.08)] hover:bg-slate-100 cursor-pointer'
               }`}
             >
-              {/* Custom Checkbox */}
               <div
                 className={`w-5 h-5 rounded-full border-2 shrink-0 flex items-center justify-center transition-all mt-0.5 ${
-                  declarationAccepted
+                  declarationAccepted || usingSavedConsent
                     ? 'bg-[#0E8F5A] border-[#0E8F5A]'
                     : 'bg-white border-gray-300'
                 }`}
               >
-                {declarationAccepted && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                {(declarationAccepted || usingSavedConsent) && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
               </div>
               <div className="ml-3 sm:ml-4 flex-1">
                 <span className="text-[13px] sm:text-[14px] text-slate-700 leading-[1.55] block font-normal">
-                  {HMRC_DECLARATION_TEXT}
+                  {declarationText}
                 </span>
               </div>
             </div>
@@ -354,7 +465,7 @@ export const GiftAidDetailsPanel: React.FC<GiftAidDetailsPanelProps> = ({
         <div className="mt-3 sm:mt-4 space-y-2 sticky bottom-0 z-10 bg-[#FFFCF9] pt-2">
           <button
             type="submit"
-            disabled={submitting || !declarationAccepted}
+            disabled={submitting || (!declarationAccepted && !usingSavedConsent)}
             className="w-full h-11 sm:h-12 rounded-[16px] font-semibold text-[15px] sm:text-[16px] text-white transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center bg-[#0E8F5A] hover:brightness-[1.02] active:brightness-[0.98] shadow-[0_10px_24px_rgba(14,143,90,0.28)] tracking-[0.005em]"
           >
             {submitting ? 'Processing...' : 'Continue to Payment'}

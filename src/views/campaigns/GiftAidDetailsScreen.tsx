@@ -3,12 +3,16 @@ import { Button } from '../../shared/ui/button';
 import { Input } from '../../shared/ui/input';
 import { Label } from '../../shared/ui/label';
 import { Checkbox } from '../../shared/ui/checkbox';
-import { Card, CardContent, CardHeader, CardTitle } from '../../shared/ui/card';
+import { Card, CardContent, CardHeader } from '../../shared/ui/card';
 import { NavigationHeader } from '../../shared/ui/NavigationHeader';
 import { User, MapPin, ArrowRight } from 'lucide-react';
 import { Campaign } from '../../shared/types';
 import { GiftAidDetails } from '../../entities/giftAid/model/types';
 import { formatCurrencyFromMajor } from '../../shared/lib/currencyFormatter';
+import {
+  HMRC_DECLARATION_TEXT_VERSION,
+  getHmrcDeclarationText,
+} from '../../shared/config/constants';
 
 interface GiftAidDetailsScreenProps {
   campaign: Campaign;
@@ -31,17 +35,27 @@ export function GiftAidDetailsScreen({
   
   // Donor Information
   const [fullName, setFullName] = useState('');
+  const [houseNumber, setHouseNumber] = useState('');
+  const [addressLine1, setAddressLine1] = useState('');
+  const [addressLine2, setAddressLine2] = useState('');
+  const [town, setTown] = useState('');
   const [postcode, setPostcode] = useState('');
   
   // Declaration Requirements
   const [giftAidConsent, setGiftAidConsent] = useState(true);
   const [ukTaxpayerConfirmation, setUkTaxpayerConfirmation] = useState(true);
+  const [dataProcessingConsent, setDataProcessingConsent] = useState(true);
+  const [homeAddressConfirmed, setHomeAddressConfirmed] = useState(false);
   
   const [errors, setErrors] = useState<{
     fullName?: string;
+    addressLine1?: string;
+    town?: string;
     postcode?: string;
     consent?: string;
     taxpayer?: string;
+    dataProcessing?: string;
+    homeAddress?: string;
   }>({});
 
   // Show loading screen briefly when component mounts
@@ -55,6 +69,7 @@ export function GiftAidDetailsScreen({
 
   const giftAidAmount = amount * 0.25;
   const totalWithGiftAid = amount + giftAidAmount;
+  const declarationText = getHmrcDeclarationText(campaign.title);
 
   // Show loading screen when initially loading
   if (isInitialLoading) {
@@ -97,9 +112,13 @@ export function GiftAidDetailsScreen({
   const validateForm = () => {
     const newErrors: {
       fullName?: string;
+      addressLine1?: string;
+      town?: string;
       postcode?: string;
       consent?: string;
       taxpayer?: string;
+      dataProcessing?: string;
+      homeAddress?: string;
     } = {};
 
     if (!fullName.trim()) {
@@ -111,6 +130,14 @@ export function GiftAidDetailsScreen({
       if (nameParts.length < 2) {
         newErrors.fullName = 'Please enter both first name and surname';
       }
+    }
+
+    if (!addressLine1.trim()) {
+      newErrors.addressLine1 = 'Address line 1 is required';
+    }
+
+    if (!town.trim()) {
+      newErrors.town = 'Town/City is required';
     }
 
     if (!postcode.trim()) {
@@ -125,6 +152,14 @@ export function GiftAidDetailsScreen({
 
     if (!ukTaxpayerConfirmation) {
       newErrors.taxpayer = 'You must confirm UK taxpayer status to proceed';
+    }
+
+    if (!dataProcessingConsent) {
+      newErrors.dataProcessing = 'You must agree to Gift Aid data processing';
+    }
+
+    if (!homeAddressConfirmed) {
+      newErrors.homeAddress = 'Please confirm this is your home address';
     }
 
     setErrors(newErrors);
@@ -152,15 +187,19 @@ export function GiftAidDetailsScreen({
           // Donor Information
           firstName: firstName,
           surname: surname,
-          houseNumber: '', // Default to empty string
-          addressLine1: '', // Default to empty string
-          town: '', // Default to empty string
+          houseNumber: houseNumber.trim(),
+          addressLine1: addressLine1.trim(),
+          addressLine2: addressLine2.trim() || undefined,
+          town: town.trim(),
           postcode: postcode.trim().toUpperCase(),
           
           // Declaration Requirements
           giftAidConsent,
           ukTaxpayerConfirmation,
-          declarationText: "I confirm that I am a UK taxpayer and understand that if I pay less Income Tax and/or Capital Gains Tax in the current tax year than the amount of Gift Aid claimed on all my donations, it is my responsibility to pay any difference.",
+          dataProcessingConsent,
+          homeAddressConfirmed,
+          declarationText,
+          declarationTextVersion: HMRC_DECLARATION_TEXT_VERSION,
           declarationDate: currentDate,
           
           // Donation Details
@@ -249,7 +288,75 @@ export function GiftAidDetailsScreen({
                     <MapPin className="w-5 h-5 mr-2 text-gray-500" />
                     UK Address Verification
                   </h3>
-                  
+
+                  <div className="space-y-2">
+                    <Label htmlFor="houseNumber" className="text-base font-medium text-gray-700">
+                      House Number / Name
+                    </Label>
+                    <Input
+                      id="houseNumber"
+                      type="text"
+                      value={houseNumber}
+                      onChange={(e) => setHouseNumber(e.target.value)}
+                      className="h-14 text-lg bg-[#FCFCFA] border-gray-300 focus:border-[#0E8F5A]"
+                      placeholder="e.g. 42"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="addressLine1" className="text-base font-medium text-gray-700">
+                      Address Line 1 *
+                    </Label>
+                    <Input
+                      id="addressLine1"
+                      type="text"
+                      value={addressLine1}
+                      onChange={(e) => {
+                        setAddressLine1(e.target.value);
+                        if (errors.addressLine1) setErrors(prev => ({ ...prev, addressLine1: undefined }));
+                      }}
+                      className={`h-14 text-lg bg-[#FCFCFA] ${errors.addressLine1 ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-[#0E8F5A]'}`}
+                      placeholder="e.g. High Street"
+                    />
+                    {errors.addressLine1 && (
+                      <p className="text-red-500 text-sm mt-1">{errors.addressLine1}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="addressLine2" className="text-base font-medium text-gray-700">
+                      Address Line 2 (Optional)
+                    </Label>
+                    <Input
+                      id="addressLine2"
+                      type="text"
+                      value={addressLine2}
+                      onChange={(e) => setAddressLine2(e.target.value)}
+                      className="h-14 text-lg bg-[#FCFCFA] border-gray-300 focus:border-[#0E8F5A]"
+                      placeholder="e.g. Apartment, suite, unit"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="town" className="text-base font-medium text-gray-700">
+                      Town / City *
+                    </Label>
+                    <Input
+                      id="town"
+                      type="text"
+                      value={town}
+                      onChange={(e) => {
+                        setTown(e.target.value);
+                        if (errors.town) setErrors(prev => ({ ...prev, town: undefined }));
+                      }}
+                      className={`h-14 text-lg bg-[#FCFCFA] ${errors.town ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-[#0E8F5A]'}`}
+                      placeholder="e.g. London"
+                    />
+                    {errors.town && (
+                      <p className="text-red-500 text-sm mt-1">{errors.town}</p>
+                    )}
+                  </div>
+
                   {/* UK Postcode */}
                   <div className="space-y-2">
                     <Label htmlFor="postcode" className="text-base font-medium text-gray-700">
@@ -273,6 +380,26 @@ export function GiftAidDetailsScreen({
                     <p className="text-gray-500 text-sm">
                       We need your UK postcode to verify your taxpayer status for Gift Aid
                     </p>
+                  </div>
+
+                  <div className={`bg-gray-50 border rounded-lg p-4 ${errors.homeAddress ? 'border-red-500' : 'border-gray-200'}`}>
+                    <div className="flex items-start space-x-3">
+                      <Checkbox
+                        id="homeAddressConfirmed"
+                        checked={homeAddressConfirmed}
+                        onCheckedChange={(checked) => {
+                          setHomeAddressConfirmed(!!checked);
+                          if (errors.homeAddress) setErrors(prev => ({ ...prev, homeAddress: undefined }));
+                        }}
+                        className="mt-1"
+                      />
+                      <Label htmlFor="homeAddressConfirmed" className="text-sm text-gray-700 leading-relaxed cursor-pointer">
+                        I confirm this is my home address (not work or delivery address).
+                      </Label>
+                    </div>
+                    {errors.homeAddress && (
+                      <p className="text-red-500 text-sm mt-2 ml-8">{errors.homeAddress}</p>
+                    )}
                   </div>
                 </div>
 
@@ -336,12 +463,38 @@ export function GiftAidDetailsScreen({
                       <p className="text-red-500 text-sm mt-2 ml-8">{errors.consent}</p>
                     )}
                   </div>
+
+                  <div className={`bg-purple-50 border rounded-lg p-4 ${errors.dataProcessing ? 'border-red-500' : 'border-purple-200'}`}>
+                    <div className="flex items-start space-x-3">
+                      <Checkbox
+                        id="dataProcessingConsent"
+                        checked={dataProcessingConsent}
+                        onCheckedChange={(checked) => {
+                          setDataProcessingConsent(!!checked);
+                          if (errors.dataProcessing) setErrors(prev => ({ ...prev, dataProcessing: undefined }));
+                        }}
+                        className="mt-1"
+                      />
+                      <div className="flex-1">
+                        <Label
+                          htmlFor="dataProcessingConsent"
+                          className="text-sm text-gray-700 leading-relaxed cursor-pointer"
+                        >
+                          <span className="font-semibold text-gray-900 block mb-1">Data Processing Consent</span>
+                          I agree to my data being used to process this Gift Aid claim.
+                        </Label>
+                      </div>
+                    </div>
+                    {errors.dataProcessing && (
+                      <p className="text-red-500 text-sm mt-2 ml-8">{errors.dataProcessing}</p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Submit Button */}
                 <Button
                   type="submit"
-                  disabled={!giftAidConsent || !ukTaxpayerConfirmation || isSubmitting}
+                  disabled={!giftAidConsent || !ukTaxpayerConfirmation || !dataProcessingConsent || !homeAddressConfirmed || isSubmitting}
                   className="w-full h-16 bg-green-600 hover:bg-green-700 text-white font-bold text-lg rounded-xl transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? (
