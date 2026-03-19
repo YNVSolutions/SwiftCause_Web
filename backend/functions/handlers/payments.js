@@ -10,6 +10,21 @@ const ALLOWED_ORIGINS = new Set([
   "https://swiftcause--swiftcause-prod.europe-west4.hosted.app",
   "https://swiftcause.com"
 ]);
+
+const logOnboardingLinkAccess = (level, payload) => {
+  const logPayload = {
+    action_type: "create_onboarding_link",
+    timestamp: new Date().toISOString(),
+    ...payload,
+  };
+
+  if (level === "warn") {
+    console.warn("Stripe onboarding link access denied", logPayload);
+    return;
+  }
+
+  console.info("Stripe onboarding link privileged access", logPayload);
+};
 /**
  * Create Stripe onboarding link for organization
  * @param {object} req - Express request object
@@ -22,17 +37,71 @@ const createOnboardingLink = (req, res) => {
       const stripeClient = ensureStripeInitialized();
       
       // Verify authentication
-      await verifyAuth(req);
+      const auth = await verifyAuth(req);
 
-      const {orgId} = req.body;
-      if (!orgId) {
+      const requestedOrgId = typeof req.body?.orgId === "string" ?
+        req.body.orgId.trim() :
+        "";
+      if (!requestedOrgId) {
         return res.status(400).send({error: "Missing orgId"});
+      }
+
+      const callerDoc = await admin
+          .firestore()
+          .collection("users")
+          .doc(auth.uid)
+          .get();
+
+      if (!callerDoc.exists) {
+        logOnboardingLinkAccess("warn", {
+          actor_uid: auth.uid,
+          requested_org_id: requestedOrgId,
+          denial_reason: "caller_profile_not_found",
+        });
+        return res.status(403).send({error: "Caller is not a valid user"});
+      }
+
+      const callerData = callerDoc.data() || {};
+      const callerRole = typeof callerData.role === "string" ?
+        callerData.role :
+        "";
+      const callerOrgId = typeof callerData.organizationId === "string" ?
+        callerData.organizationId.trim() :
+        "";
+      const callerPermissions = Array.isArray(callerData.permissions) ?
+        callerData.permissions :
+        [];
+      const isPrivilegedCaller =
+        callerRole === "super_admin" ||
+        callerPermissions.includes("system_admin");
+
+      if (!isPrivilegedCaller && callerOrgId !== requestedOrgId) {
+        logOnboardingLinkAccess("warn", {
+          actor_uid: auth.uid,
+          requested_org_id: requestedOrgId,
+          caller_org_id: callerOrgId || null,
+          caller_role: callerRole || null,
+          denial_reason: "cross_organization_access_denied",
+        });
+        return res.status(403).send({
+          error: "You can only create onboarding links for your organization",
+        });
+      }
+
+      if (isPrivilegedCaller) {
+        logOnboardingLinkAccess("info", {
+          actor_uid: auth.uid,
+          requested_org_id: requestedOrgId,
+          caller_org_id: callerOrgId || null,
+          caller_role: callerRole || null,
+          privileged_override: callerOrgId !== requestedOrgId,
+        });
       }
 
       const orgDoc = await admin
           .firestore()
           .collection("organizations")
-          .doc(orgId)
+          .doc(requestedOrgId)
           .get();
       if (!orgDoc.exists) {
         return res.status(404).send({error: "Organization not found"});
