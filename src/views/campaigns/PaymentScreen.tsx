@@ -80,28 +80,25 @@ export function PaymentScreen({ campaign, donation, isProcessing, error, handleP
       recurringInterval: donation.recurringInterval,
       isGiftAid: isGiftAid,
       giftAidAccepted: donation.giftAidAccepted || false, // Include explicit Gift Aid acceptance status
+      giftAidDeclarationId: donation.giftAidDeclarationId || giftAidDetails?.declarationId || null,
       kioskId: donation.kioskId || null,
       // Add donor information
-      donorEmail: donation.donorEmail || (isGiftAid && giftAidDetails ? `${giftAidDetails.firstName.toLowerCase()}.${giftAidDetails.surname.toLowerCase()}@example.com` : ''),
+      donorEmail: donation.donorEmail || '',
       donorName: isGiftAid && giftAidDetails ? `${giftAidDetails.firstName} ${giftAidDetails.surname}` : (donation.donorName || ""),
       donorPhone: donation.donorPhone || null,
       ...(isGiftAid && giftAidDetails ? {
-        // Legacy Gift Aid fields (keeping for backward compatibility)
-        giftAidName: `${giftAidDetails.firstName} ${giftAidDetails.surname}`,
-        giftAidPostcode: giftAidDetails.postcode,
+        // Operational tracking metadata only (no full declaration payload in metadata)
         giftAidAmount: giftAidAmount.toString(),
         totalImpact: totalImpact.toString(),
-        
-        // Essential Gift Aid Data (split into multiple fields to stay under 500 char limit)
-        giftAidFirstName: giftAidDetails.firstName,
-        giftAidSurname: giftAidDetails.surname,
         giftAidConsent: giftAidDetails.giftAidConsent.toString(),
         giftAidTaxpayer: giftAidDetails.ukTaxpayerConfirmation.toString(),
+        giftAidDataProcessingConsent: String(giftAidDetails.dataProcessingConsent ?? false),
+        giftAidHomeAddressConfirmed: String(giftAidDetails.homeAddressConfirmed ?? false),
+        giftAidDeclarationTextVersion: giftAidDetails.declarationTextVersion || 'unknown',
         giftAidDeclarationDate: giftAidDetails.declarationDate,
         giftAidDonationDate: giftAidDetails.donationDate,
         giftAidTaxYear: giftAidDetails.taxYear,
-        giftAidOrganizationId: giftAidDetails.organizationId,
-        giftAidTimestamp: giftAidDetails.timestamp
+        giftAidOrganizationId: giftAidDetails.organizationId
       } : {})
     };
     await handlePaymentSubmit(donation.amount, metadata, organizationCurrency || 'GBP'); 

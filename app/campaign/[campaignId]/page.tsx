@@ -8,6 +8,7 @@ import { getCampaignById } from '@/shared/api/firestoreService';
 import { isCampaignActiveForKioskDonation } from '@/shared/lib/campaignStatus';
 import { CampaignDetailsContainer } from '@/features/kiosk-campaign-details';
 import { GiftAidPage } from '@/features/kiosk-gift-aid';
+import { submitGiftAidDeclaration } from '@/entities/giftAid/lib';
 import { KioskLoading } from '@/shared/ui/KioskLoading';
 
 export default function CampaignPage({
@@ -126,23 +127,46 @@ export default function CampaignPage({
   };
 
   // Gift Aid accepted - save details and go to payment
-  const handleAcceptGiftAid = (details: GiftAidDetails) => {
-    const donation = {
-      campaignId: campaign?.id,
-      amount: details.donationAmount,
-      isGiftAid: true,
-      giftAidAccepted: true, // Explicitly set to true when accepted
-      isRecurring: isRecurringSelection,
-      recurringInterval: isRecurringSelection ? recurringIntervalParam : undefined,
-      giftAidDetails: details,
-      kioskId: currentKioskSession?.kioskId,
-      donorName: `${details.firstName} ${details.surname}`,
-      donorEmail: sessionStorage.getItem('donorEmail') || '', // Get from sessionStorage for recurring
-    };
-    sessionStorage.setItem('donation', JSON.stringify(donation));
-    sessionStorage.setItem('giftAidData', JSON.stringify(details));
-    sessionStorage.setItem('paymentBackPath', `${window.location.pathname}${window.location.search}`);
-    router.push(`/payment/${campaignId}`);
+  const handleAcceptGiftAid = async (details: GiftAidDetails) => {
+    if (!campaign) {
+      setError('Campaign not loaded. Please try again.');
+      return;
+    }
+
+    try {
+      const declarationId = await submitGiftAidDeclaration(
+        details,
+        campaign.id,
+        campaign.title
+      );
+
+      const donation = {
+        campaignId: campaign.id,
+        amount: details.donationAmount,
+        isGiftAid: true,
+        giftAidAccepted: true,
+        isRecurring: isRecurringSelection,
+        recurringInterval: isRecurringSelection ? recurringIntervalParam : undefined,
+        giftAidDetails: {
+          ...details,
+          declarationId,
+        },
+        giftAidDeclarationId: declarationId,
+        kioskId: currentKioskSession?.kioskId,
+        donorName: `${details.firstName} ${details.surname}`,
+        donorEmail: details.donorEmail || sessionStorage.getItem('donorEmail') || '',
+      };
+      sessionStorage.setItem('donation', JSON.stringify(donation));
+      if (donation.donorEmail) {
+        sessionStorage.setItem('donorEmail', donation.donorEmail);
+      }
+      sessionStorage.setItem('giftAidData', JSON.stringify({ ...details, declarationId }));
+      sessionStorage.setItem('paymentBackPath', `${window.location.pathname}${window.location.search}`);
+      router.push(`/payment/${campaignId}`);
+    } catch (submitError) {
+      console.error('Failed to submit Gift Aid declaration before payment:', submitError);
+      window.alert('We could not save your Gift Aid declaration. Please try again.');
+    }
   };
 
   // Gift Aid declined - save donation and go to payment
@@ -196,16 +220,17 @@ export default function CampaignPage({
     }
 
     return (
-      <GiftAidPage
-        campaign={campaign}
-        amount={initialAmount || 0}
-        isCustomAmount={isCustomAmount || !initialAmount}
-        currency={currentKioskSession?.organizationCurrency || 'GBP'}
-        initialDonorName={sessionStorage.getItem('donorName') || ''}
-        onAcceptGiftAid={handleAcceptGiftAid}
-        onDeclineGiftAid={handleDeclineGiftAid}
-        onBack={handleBackFromGiftAid}
-      />
+        <GiftAidPage
+          campaign={campaign}
+          amount={initialAmount || 0}
+          isCustomAmount={isCustomAmount || !initialAmount}
+          currency={currentKioskSession?.organizationCurrency || 'GBP'}
+          initialDonorName={sessionStorage.getItem('donorName') || ''}
+          initialDonorEmail={sessionStorage.getItem('donorEmail') || ''}
+          onAcceptGiftAid={handleAcceptGiftAid}
+          onDeclineGiftAid={handleDeclineGiftAid}
+          onBack={handleBackFromGiftAid}
+        />
     );
   }
 

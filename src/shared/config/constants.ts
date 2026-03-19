@@ -330,3 +330,9 @@ export const PASSWORD_REQUIREMENTS = {
 // HMRC-compliant Gift Aid declaration text
 // LEGAL REQUIREMENT - DO NOT MODIFY WITHOUT COMPLIANCE REVIEW
 export const HMRC_DECLARATION_TEXT = "I confirm that I am a UK taxpayer and understand that if I pay less Income Tax and/or Capital Gains Tax in the current tax year than the amount of Gift Aid claimed on all my donations, it is my responsibility to pay any difference." as const;
+export const HMRC_DECLARATION_TEXT_VERSION = "hmrc-ch3-2026-03" as const;
+
+export function getHmrcDeclarationText(charityName: string): string {
+  const resolvedCharityName = charityName.trim() || "This Charity";
+  return `${resolvedCharityName}: I want to Gift Aid my donation and any donations I make in the future or have made in the past four years to ${resolvedCharityName}. I am a UK taxpayer and understand that if I pay less Income Tax and/or Capital Gains Tax than the amount of Gift Aid claimed on all my donations in that tax year, it is my responsibility to pay any difference.`;
+}

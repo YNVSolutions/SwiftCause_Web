@@ -1,6 +1,25 @@
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { addDoc, collection, doc, setDoc, getDoc, getDocs, limit, query, where } from 'firebase/firestore';
 import { db } from '../../../shared/lib/firebase';
 import { GiftAidDeclaration } from '../model';
+
+const stripUndefinedFields = <T extends Record<string, unknown>>(input: T): Partial<T> =>
+  Object.fromEntries(
+    Object.entries(input).filter(([, value]) => value !== undefined)
+  ) as Partial<T>;
+
+const normalizeEmail = (email: string): string => email.trim().toLowerCase();
+
+export interface ReusableGiftAidProfile {
+  firstName: string;
+  surname: string;
+  houseNumber: string;
+  addressLine1: string;
+  addressLine2?: string;
+  town: string;
+  postcode: string;
+  donorEmail: string;
+  declarationDate?: string;
+}
 
 /**
  * HMRC-compliant Gift Aid API
@@ -33,6 +52,9 @@ export const giftAidApi = {
   async createGiftAidDeclaration(data: Omit<GiftAidDeclaration, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
     try {
       const { donationId } = data;
+      if (!donationId) {
+        throw new Error('donationId is required for createGiftAidDeclaration.');
+      }
       
       // GUARANTEE: Use donationId as document ID to enforce 1:1 mapping
       const docRef = doc(db, 'giftAidDeclarations', donationId);
@@ -57,6 +79,103 @@ export const giftAidApi = {
       return donationId;
     } catch (error) {
       console.error('Error creating Gift Aid declaration:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Create pending Gift Aid declaration before payment (canonical declaration-first flow).
+   *
+   * @param data - Gift Aid declaration data before donation linkage
+   * @returns Promise<string> - Newly created declaration document ID
+   */
+  async createPendingGiftAidDeclaration(
+    data: Omit<GiftAidDeclaration, 'id' | 'createdAt' | 'updatedAt' | 'donationId'>
+  ): Promise<string> {
+    try {
+      const now = new Date().toISOString();
+      const declarationRef = collection(db, 'giftAidDeclarations');
+      const donorEmailNormalized =
+        typeof data.donorEmail === 'string' && data.donorEmail.trim().length > 0
+          ? normalizeEmail(data.donorEmail)
+          : undefined;
+      const docRef = await addDoc(declarationRef, {
+        ...stripUndefinedFields(data),
+        donorEmailNormalized,
+        donationId: null,
+        operationalStatus: 'captured',
+        exportedAt: null,
+        exportBatchId: null,
+        exportActorId: null,
+        charitySubmittedReference: null,
+        paidConfirmed: false,
+        paidConfirmedAt: null,
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      await setDoc(doc(db, 'giftAidDeclarations', docRef.id), { id: docRef.id }, { merge: true });
+      return docRef.id;
+    } catch (error) {
+      console.error('Error creating pending Gift Aid declaration:', error);
+      throw error;
+    }
+  },
+
+  async getReusableGiftAidProfileByEmail(email: string): Promise<ReusableGiftAidProfile | null> {
+    try {
+      const normalizedEmail = normalizeEmail(email);
+      if (!normalizedEmail) {
+        return null;
+      }
+
+      const declarationsRef = collection(db, 'giftAidDeclarations');
+      const q = query(
+        declarationsRef,
+        where('donorEmailNormalized', '==', normalizedEmail),
+        limit(10)
+      );
+      const snapshot = await getDocs(q);
+
+      const candidates = snapshot.docs
+        .map((docSnap) => docSnap.data() as Partial<GiftAidDeclaration>)
+        .filter((declaration) => {
+          const hasRequiredAddress =
+            typeof declaration.donorAddressLine1 === 'string' &&
+            declaration.donorAddressLine1.trim().length > 0 &&
+            typeof declaration.donorTown === 'string' &&
+            declaration.donorTown.trim().length > 0 &&
+            typeof declaration.donorPostcode === 'string' &&
+            declaration.donorPostcode.trim().length > 0;
+
+          return declaration.giftAidConsent === true &&
+            declaration.ukTaxpayerConfirmation === true &&
+            hasRequiredAddress;
+        })
+        .sort((a, b) => {
+          const aDate = Date.parse(a.declarationDate || a.updatedAt || a.createdAt || '');
+          const bDate = Date.parse(b.declarationDate || b.updatedAt || b.createdAt || '');
+          return (Number.isFinite(bDate) ? bDate : 0) - (Number.isFinite(aDate) ? aDate : 0);
+        });
+
+      const latest = candidates[0];
+      if (!latest) {
+        return null;
+      }
+
+      return {
+        firstName: latest.donorFirstName || '',
+        surname: latest.donorSurname || '',
+        houseNumber: latest.donorHouseNumber || '',
+        addressLine1: latest.donorAddressLine1 || '',
+        addressLine2: latest.donorAddressLine2 || '',
+        town: latest.donorTown || '',
+        postcode: latest.donorPostcode || '',
+        donorEmail: latest.donorEmail || normalizedEmail,
+        declarationDate: latest.declarationDate,
+      };
+    } catch (error) {
+      console.error('Error fetching reusable Gift Aid profile by email:', error);
       throw error;
     }
   },
@@ -118,6 +237,37 @@ export const giftAidApi = {
       await setDoc(docRef, updateData, { merge: true });
     } catch (error) {
       console.error('Error updating Gift Aid declaration:', error);
+      throw error;
+    }
+  },
+
+  async markDeclarationExported(declarationId: string, exportBatchId: string, exportActorId: string): Promise<void> {
+    try {
+      const docRef = doc(db, 'giftAidDeclarations', declarationId);
+      await setDoc(docRef, {
+        operationalStatus: 'exported',
+        exportedAt: new Date().toISOString(),
+        exportBatchId,
+        exportActorId,
+        updatedAt: new Date().toISOString(),
+      }, { merge: true });
+    } catch (error) {
+      console.error('Error marking Gift Aid declaration as exported:', error);
+      throw error;
+    }
+  },
+
+  async markDeclarationPaidConfirmed(declarationId: string, charitySubmittedReference?: string): Promise<void> {
+    try {
+      const docRef = doc(db, 'giftAidDeclarations', declarationId);
+      await setDoc(docRef, {
+        paidConfirmed: true,
+        paidConfirmedAt: new Date().toISOString(),
+        charitySubmittedReference: charitySubmittedReference || null,
+        updatedAt: new Date().toISOString(),
+      }, { merge: true });
+    } catch (error) {
+      console.error('Error marking Gift Aid declaration as paid-confirmed:', error);
       throw error;
     }
   }

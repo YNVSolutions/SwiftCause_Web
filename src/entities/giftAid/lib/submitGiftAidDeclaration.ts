@@ -1,10 +1,10 @@
 import { giftAidApi } from '../api';
 import { GiftAidDetails, GiftAidDeclaration } from '../model/types';
+import { GIFT_AID_DECLARATION_TEXT_VERSION } from '../model';
 import { getCampaignById } from '../../../shared/api/firestoreService';
 
 export async function submitGiftAidDeclaration(
   giftAidDetails: GiftAidDetails,
-  donationId: string,
   campaignId: string,
   campaignTitle: string
 ): Promise<string> {
@@ -19,7 +19,7 @@ export async function submitGiftAidDeclaration(
     throw new Error(`Failed to validate Gift Aid eligibility for campaign ${campaignId}: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 
-  const mappedDeclaration: Omit<GiftAidDeclaration, 'id' | 'createdAt' | 'updatedAt'> = {
+  const mappedDeclaration: Omit<GiftAidDeclaration, 'id' | 'createdAt' | 'updatedAt' | 'donationId'> = {
     donorFirstName: giftAidDetails.firstName,
     donorSurname: giftAidDetails.surname,
     donorHouseNumber: giftAidDetails.houseNumber || '',
@@ -27,10 +27,16 @@ export async function submitGiftAidDeclaration(
     donorAddressLine2: giftAidDetails.addressLine2 || '',
     donorTown: giftAidDetails.town,
     donorPostcode: giftAidDetails.postcode,
+    donorEmail: giftAidDetails.donorEmail?.trim() || undefined,
     
     declarationText: giftAidDetails.declarationText,
+    declarationTextVersion: giftAidDetails.declarationTextVersion || GIFT_AID_DECLARATION_TEXT_VERSION,
     declarationDate: giftAidDetails.declarationDate,
+    giftAidConsent: giftAidDetails.giftAidConsent,
     ukTaxpayerConfirmation: giftAidDetails.ukTaxpayerConfirmation,
+    dataProcessingConsent: giftAidDetails.dataProcessingConsent ?? false,
+    homeAddressConfirmed: giftAidDetails.homeAddressConfirmed ?? false,
+    declarationUserAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
     
     donationAmount: giftAidDetails.donationAmount,
     giftAidAmount: Math.round(giftAidDetails.donationAmount * 0.25),
@@ -42,9 +48,9 @@ export async function submitGiftAidDeclaration(
     campaignTitle: campaignTitle,
     organizationId: giftAidDetails.organizationId,
     
-    donationId: donationId,
-    giftAidStatus: 'pending'
+    giftAidStatus: 'pending',
+    hmrcClaimStatus: 'pending',
   };
 
-  return await giftAidApi.createGiftAidDeclaration(mappedDeclaration);
+  return await giftAidApi.createPendingGiftAidDeclaration(mappedDeclaration);
 }
