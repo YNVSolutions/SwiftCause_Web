@@ -216,11 +216,10 @@ This project uses Tailwind CSS v4.0 for styling. The configuration is already se
 
 ## ©️ License
 
-This project is distributed under the license found in the `LICENCE` file.
+This project is distributed under the license found in the `LICENSE` file.
 
 ## 👥 Contributors
 
 <a href="https://github.com/YNVSolutions/SwiftCause_Web/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=YNVSolutions/SwiftCause_Web" />
 </a>
-
