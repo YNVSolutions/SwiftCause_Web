@@ -1,4 +1,4 @@
-import { CheckCircle, XCircle, Mail, Home, RefreshCw, ArrowLeft } from 'lucide-react';
+import { CheckCircle, XCircle, Mail, Home, RefreshCw } from 'lucide-react';
 import { PaymentResult } from '../../shared/types';
 
 interface ResultScreenProps {
@@ -8,7 +8,12 @@ interface ResultScreenProps {
   onRetry?: () => void;
 }
 
-export function ResultScreen({ result, onEmailConfirmation, onReturnToStart, onRetry }: ResultScreenProps) {
+export function ResultScreen({
+  result,
+  onEmailConfirmation,
+  onReturnToStart,
+  onRetry,
+}: ResultScreenProps) {
   if (result.success) {
     return (
       <div className="min-h-screen flex flex-col bg-linear-to-b from-green-50 via-white to-emerald-50/70 relative overflow-hidden">
@@ -70,7 +75,9 @@ export function ResultScreen({ result, onEmailConfirmation, onReturnToStart, onR
                 {result.transactionId && (
                   <div className="mb-6 p-4 bg-green-50/70 border border-green-100 rounded-2xl text-center">
                     <p className="text-sm text-green-700 mb-1">Transaction ID</p>
-                    <p className="font-mono text-sm text-[#0A0A0A] break-all">{result.transactionId}</p>
+                    <p className="font-mono text-sm text-[#0A0A0A] break-all">
+                      {result.transactionId}
+                    </p>
                   </div>
                 )}
 
@@ -78,14 +85,17 @@ export function ResultScreen({ result, onEmailConfirmation, onReturnToStart, onR
                 {result.customerId && (
                   <div className="mb-6 p-4 bg-blue-50/70 border border-blue-100 rounded-2xl text-center">
                     <p className="text-sm text-blue-700 mb-1">Customer ID</p>
-                    <p className="font-mono text-sm text-[#0A0A0A] break-all">{result.customerId}</p>
+                    <p className="font-mono text-sm text-[#0A0A0A] break-all">
+                      {result.customerId}
+                    </p>
                   </div>
                 )}
 
                 {/* Message */}
                 <div className="text-center mb-8">
                   <p className="text-gray-600 leading-relaxed">
-                    Your generosity is making a real difference. A receipt has been generated and you can optionally send it to your email.
+                    Your generosity is making a real difference. A receipt has been generated and
+                    you can optionally send it to your email.
                   </p>
                 </div>
 
@@ -112,9 +122,7 @@ export function ResultScreen({ result, onEmailConfirmation, onReturnToStart, onR
 
                 {/* Footer Message */}
                 <div className="mt-8 text-center">
-                  <p className="text-sm text-gray-500">
-                    Thank you for using our donation kiosk.
-                  </p>
+                  <p className="text-sm text-gray-500">Thank you for using our donation kiosk.</p>
                 </div>
               </div>
             </div>
@@ -155,7 +163,9 @@ export function ResultScreen({ result, onEmailConfirmation, onReturnToStart, onR
 
               {/* Common Reasons */}
               <div className="mb-8">
-                <p className="text-gray-600 text-center mb-4">Common reasons for payment failure:</p>
+                <p className="text-gray-600 text-center mb-4">
+                  Common reasons for payment failure:
+                </p>
                 <ul className="text-gray-500 text-sm space-y-2">
                   <li className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 bg-gray-400 rounded-full" />
