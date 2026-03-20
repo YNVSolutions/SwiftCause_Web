@@ -129,7 +129,7 @@ export function generateGiftAidCSV(declarations: GiftAidDeclaration[]): string {
       escapeCsvValue(normalizedDate), // YYYY-MM-DD format
       escapeCsvValue(hmrcTaxYear), // HMRC format: YYYY-YY
       escapeCsvValue(declaration.campaignTitle),
-      escapeCsvValue(declaration.donationId)
+      escapeCsvValue(declaration.donationId || '')
     ];
     
     validRows.push(row);

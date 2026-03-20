@@ -1,5 +1,7 @@
 # SwiftCause Web - Feature-Sliced Design (FSD) Architecture
 
+For a visual overview of the current codebase, see [../ARCHITECTURE_DIAGRAMS.md](../ARCHITECTURE_DIAGRAMS.md).
+
 
 ## 1\. Introduction
 
@@ -134,4 +136,3 @@ import { useCampaigns } from '@/entities/campaign/model/useCampaigns';
 // ✅ GOOD: Importing from the public API
 import { useCampaigns } from '@/entities/campaign';
 ```
-

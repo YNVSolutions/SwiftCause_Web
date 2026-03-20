@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Screen, AdminSession, Permission } from "../../shared/types";
 import { GiftAidDeclaration } from "../../entities/giftAid/model/types";
+import { giftAidApi } from "../../entities/giftAid/api";
 import { AdminLayout } from "./AdminLayout";
 import { db } from "../../shared/lib/firebase";
 import {
@@ -70,6 +71,46 @@ interface GiftAidManagementProps {
   hasPermission: (permission: Permission) => boolean;
 }
 
+type GiftAidDocSnapshot = {
+  id: string;
+  data: () => Record<string, unknown>;
+};
+
+const mapGiftAidDeclaration = (doc: GiftAidDocSnapshot): GiftAidDeclaration => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    donationId: data.donationId,
+    donorFirstName: data.donorFirstName,
+    donorSurname: data.donorSurname,
+    donorHouseNumber: data.donorHouseNumber,
+    donorAddressLine1: data.donorAddressLine1,
+    donorAddressLine2: data.donorAddressLine2,
+    donorTown: data.donorTown,
+    donorPostcode: data.donorPostcode,
+    declarationText: data.declarationText,
+    declarationDate: data.declarationDate,
+    ukTaxpayerConfirmation: data.ukTaxpayerConfirmation,
+    donationAmount: data.donationAmount,
+    giftAidAmount: data.giftAidAmount,
+    campaignId: data.campaignId,
+    campaignTitle: data.campaignTitle,
+    organizationId: data.organizationId,
+    donationDate: data.donationDate,
+    taxYear: data.taxYear,
+    giftAidStatus: data.giftAidStatus,
+    operationalStatus: data.operationalStatus || "captured",
+    exportedAt: data.exportedAt || null,
+    exportBatchId: data.exportBatchId || null,
+    exportActorId: data.exportActorId || null,
+    charitySubmittedReference: data.charitySubmittedReference || null,
+    paidConfirmed: data.paidConfirmed || false,
+    paidConfirmedAt: data.paidConfirmedAt || null,
+    createdAt: data.createdAt,
+    updatedAt: data.updatedAt,
+  } as GiftAidDeclaration;
+};
+
 
 
 export function GiftAidManagement({
@@ -85,6 +126,10 @@ export function GiftAidManagement({
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedDonation, setSelectedDonation] = useState<GiftAidDeclaration | null>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isUpdatingPaid, setIsUpdatingPaid] = useState(false);
+  const [charitySubmittedReference, setCharitySubmittedReference] = useState("");
+  const [unresolvedReconciliationCount, setUnresolvedReconciliationCount] = useState(0);
 
   const getGiftAidSnapshot = useCallback(async (organizationId: string) => {
     const giftAidRef = collection(db, "giftAidDeclarations");
@@ -106,6 +151,17 @@ export function GiftAidManagement({
     }
   }, []);
 
+  const getUnresolvedReconciliationCount = useCallback(async (organizationId: string) => {
+    const issuesRef = collection(db, "giftAidReconciliationIssues");
+    const issuesQuery = query(
+      issuesRef,
+      where("organizationId", "==", organizationId),
+      where("resolved", "==", false)
+    );
+    const snapshot = await getDocs(issuesQuery);
+    return snapshot.size;
+  }, []);
+
   // Fetch Gift Aid declarations from Firebase
   useEffect(() => {
     const organizationId = userSession.user.organizationId;
@@ -122,34 +178,7 @@ export function GiftAidManagement({
 
         const querySnapshot = await getGiftAidSnapshot(organizationId);
         const declarations: GiftAidDeclaration[] = querySnapshot.docs
-          .map((doc) => {
-            const data = doc.data();
-            
-            return {
-              id: doc.id,
-              donationId: data.donationId,
-              donorFirstName: data.donorFirstName,
-              donorSurname: data.donorSurname,
-              donorHouseNumber: data.donorHouseNumber,
-              donorAddressLine1: data.donorAddressLine1,
-              donorAddressLine2: data.donorAddressLine2,
-              donorTown: data.donorTown,
-              donorPostcode: data.donorPostcode,
-              declarationText: data.declarationText,
-              declarationDate: data.declarationDate,
-              ukTaxpayerConfirmation: data.ukTaxpayerConfirmation,
-              donationAmount: data.donationAmount,
-              giftAidAmount: data.giftAidAmount,
-              campaignId: data.campaignId,
-              campaignTitle: data.campaignTitle,
-              organizationId: data.organizationId,
-              donationDate: data.donationDate,
-              taxYear: data.taxYear,
-              giftAidStatus: data.giftAidStatus,
-              createdAt: data.createdAt,
-              updatedAt: data.updatedAt,
-            } as GiftAidDeclaration;
-          })
+          .map(mapGiftAidDeclaration)
           .sort((a, b) => {
             // Sort by donation date, newest first
             const dateA = a.donationDate ? new Date(a.donationDate).getTime() : 0;
@@ -158,6 +187,8 @@ export function GiftAidManagement({
           });
 
         setGiftAidDonations(declarations);
+        const unresolvedCount = await getUnresolvedReconciliationCount(organizationId);
+        setUnresolvedReconciliationCount(unresolvedCount);
         setError(null);
       } catch (err: any) {
         console.error("Error fetching Gift Aid declarations:", err);
@@ -181,7 +212,7 @@ export function GiftAidManagement({
     };
 
     fetchGiftAidDeclarations();
-  }, [getGiftAidSnapshot, userSession.user.organizationId]);
+  }, [getGiftAidSnapshot, getUnresolvedReconciliationCount, userSession.user.organizationId]);
 
   // Configuration for AdminSearchFilterHeader
   const searchFilterConfig: AdminSearchFilterConfig = {
@@ -191,9 +222,8 @@ export function GiftAidManagement({
         label: "Status",
         type: "select",
         options: [
-          { label: "Pending", value: "pending" },
-          { label: "Claimed", value: "claimed" },
-          { label: "Rejected", value: "rejected" }
+          { label: "Captured", value: "captured" },
+          { label: "Exported", value: "exported" }
         ]
       }
     ]
@@ -216,7 +246,7 @@ export function GiftAidManagement({
       donorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (donation.campaignTitle || "").toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesStatus = statusFilter === "all" || donation.giftAidStatus === statusFilter;
+    const matchesStatus = statusFilter === "all" || donation.operationalStatus === statusFilter;
     
     return matchesSearch && matchesStatus;
   }).map((donation) => ({
@@ -231,14 +261,15 @@ export function GiftAidManagement({
     defaultSortDirection: 'desc',
   });
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, paidConfirmed?: boolean) => {
+    if (paidConfirmed) {
+      return <Badge variant="outline" className="bg-[#064e3b]/10 text-[#064e3b] border-[#064e3b]/20"><CheckCircle className="w-3 h-3 mr-1" />Paid Confirmed</Badge>;
+    }
     switch (status) {
-      case "pending":
-        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200"><Clock className="w-3 h-3 mr-1" />Pending</Badge>;
-      case "claimed":
-        return <Badge variant="outline" className="bg-[#064e3b]/10 text-[#064e3b] border-[#064e3b]/20"><CheckCircle className="w-3 h-3 mr-1" />Claimed</Badge>;
-      case "rejected":
-        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200"><AlertCircle className="w-3 h-3 mr-1" />Rejected</Badge>;
+      case "captured":
+        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200"><Clock className="w-3 h-3 mr-1" />Captured</Badge>;
+      case "exported":
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200"><Download className="w-3 h-3 mr-1" />Exported</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
@@ -254,10 +285,16 @@ export function GiftAidManagement({
 
   const handleViewDetails = (donation: GiftAidDeclaration) => {
     setSelectedDonation(donation);
+    setCharitySubmittedReference(donation.charitySubmittedReference || "");
     setShowDetailsDialog(true);
   };
 
-  const handleExportData = () => {
+  const handleExportData = async () => {
+    if (filteredDonations.length === 0) return;
+
+    setIsExporting(true);
+    setError(null);
+
     // Use HMRC-compliant CSV generation
     const csvContent = generateGiftAidCSV(filteredDonations);
     
@@ -271,6 +308,77 @@ export function GiftAidManagement({
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    const exportBatchId = `exp_${Date.now()}`;
+    const exportActorId = userSession.user.id;
+
+    try {
+      await Promise.all(
+        filteredDonations.map((donation) =>
+          giftAidApi.markDeclarationExported(donation.id, exportBatchId, exportActorId)
+        )
+      );
+      setGiftAidDonations((prev) =>
+        prev.map((donation) =>
+          filteredDonations.some((d) => d.id === donation.id)
+            ? {
+                ...donation,
+                operationalStatus: "exported",
+                exportedAt: new Date().toISOString(),
+                exportBatchId,
+                exportActorId,
+              }
+            : donation
+        )
+      );
+    } catch (exportError) {
+      console.error("Failed to mark declarations as exported:", exportError);
+      setError("CSV downloaded, but failed to update export tracking on some declarations.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleMarkPaidConfirmed = async () => {
+    if (!selectedDonation) return;
+
+    setIsUpdatingPaid(true);
+    setError(null);
+    try {
+      await giftAidApi.markDeclarationPaidConfirmed(
+        selectedDonation.id,
+        charitySubmittedReference.trim() || undefined
+      );
+      const paidConfirmedAt = new Date().toISOString();
+      setGiftAidDonations((prev) =>
+        prev.map((donation) =>
+          donation.id === selectedDonation.id
+            ? {
+                ...donation,
+                paidConfirmed: true,
+                paidConfirmedAt,
+                charitySubmittedReference: charitySubmittedReference.trim() || null,
+              }
+            : donation
+        )
+      );
+      setSelectedDonation((prev) =>
+        prev
+          ? {
+              ...prev,
+              paidConfirmed: true,
+              paidConfirmedAt,
+              charitySubmittedReference: charitySubmittedReference.trim() || null,
+            }
+          : prev
+      );
+    } catch (markError) {
+      console.error("Failed to mark declaration as paid confirmed:", markError);
+      setError("Failed to mark declaration as paid confirmed.");
+    } finally {
+      setIsUpdatingPaid(false);
+    }
   };
 
   const handleRefresh = async () => {
@@ -283,34 +391,7 @@ export function GiftAidManagement({
 
       const querySnapshot = await getGiftAidSnapshot(organizationId);
       const declarations: GiftAidDeclaration[] = querySnapshot.docs
-        .map((doc) => {
-          const data = doc.data();
-          
-          return {
-            id: doc.id,
-            donationId: data.donationId,
-            donorFirstName: data.donorFirstName,
-            donorSurname: data.donorSurname,
-            donorHouseNumber: data.donorHouseNumber,
-            donorAddressLine1: data.donorAddressLine1,
-            donorAddressLine2: data.donorAddressLine2,
-            donorTown: data.donorTown,
-            donorPostcode: data.donorPostcode,
-            declarationText: data.declarationText,
-            declarationDate: data.declarationDate,
-            ukTaxpayerConfirmation: data.ukTaxpayerConfirmation,
-            donationAmount: data.donationAmount,
-            giftAidAmount: data.giftAidAmount,
-            campaignId: data.campaignId,
-            campaignTitle: data.campaignTitle,
-            organizationId: data.organizationId,
-            donationDate: data.donationDate,
-            taxYear: data.taxYear,
-            giftAidStatus: data.giftAidStatus,
-            createdAt: data.createdAt,
-            updatedAt: data.updatedAt,
-          } as GiftAidDeclaration;
-        })
+        .map(mapGiftAidDeclaration)
         .sort((a, b) => {
           // Sort by donation date, newest first
           const dateA = a.donationDate ? new Date(a.donationDate).getTime() : 0;
@@ -319,6 +400,8 @@ export function GiftAidManagement({
         });
 
       setGiftAidDonations(declarations);
+      const unresolvedCount = await getUnresolvedReconciliationCount(organizationId);
+      setUnresolvedReconciliationCount(unresolvedCount);
     } catch (err) {
       console.error("Error refreshing Gift Aid declarations:", err);
       setError("Failed to refresh Gift Aid declarations");
@@ -386,9 +469,10 @@ export function GiftAidManagement({
           size="sm"
           className="rounded-2xl border-[#064e3b] bg-transparent text-[#064e3b] hover:bg-emerald-50 hover:border-emerald-600 hover:shadow-md hover:shadow-emerald-900/10 hover:scale-105 transition-all duration-300 px-5"
           onClick={handleExportData}
+          disabled={isExporting || filteredDonations.length === 0}
         >
           <Download className="h-4 w-4 sm:hidden" />
-          <span className="hidden sm:inline">Export</span>
+          <span className="hidden sm:inline">{isExporting ? "Exporting..." : "Export & Track"}</span>
         </Button>
       )}
     >
@@ -406,7 +490,7 @@ export function GiftAidManagement({
         )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6">
           <Card>
             <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
@@ -450,6 +534,22 @@ export function GiftAidManagement({
                 </div>
                 <div className="h-10 w-10 sm:h-12 sm:w-12 bg-indigo-100 rounded-lg flex items-center justify-center">
                   <Gift className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Reconciliation Issues</p>
+                  <p className="text-xl sm:text-2xl font-bold text-red-600">
+                    {loading ? "..." : unresolvedReconciliationCount}
+                  </p>
+                </div>
+                <div className="h-10 w-10 sm:h-12 sm:w-12 bg-red-100 rounded-lg flex items-center justify-center">
+                  <AlertCircle className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
                 </div>
               </div>
             </CardContent>
@@ -658,7 +758,7 @@ export function GiftAidManagement({
                         </Badge>
                       </div>
                     </div>
-                    <div>{getStatusBadge(donation.giftAidStatus)}</div>
+                    <div>{getStatusBadge(donation.operationalStatus || "captured", donation.paidConfirmed)}</div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3 text-sm">
@@ -742,7 +842,7 @@ export function GiftAidManagement({
                   </div>
                   <div>
                     <Label className="text-sm font-medium text-gray-700">Status</Label>
-                    <div className="mt-1">{getStatusBadge(selectedDonation.giftAidStatus || "pending")}</div>
+                    <div className="mt-1">{getStatusBadge(selectedDonation.operationalStatus || "captured", selectedDonation.paidConfirmed)}</div>
                   </div>
                 </div>
 
@@ -797,10 +897,37 @@ export function GiftAidManagement({
                   <Label className="text-sm font-medium text-gray-700">UK Taxpayer Confirmation</Label>
                   <p className="text-sm text-gray-900 mt-1">{selectedDonation.ukTaxpayerConfirmation ? "Confirmed" : "Not confirmed"}</p>
                 </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700">Operational Status</Label>
+                    <div className="mt-1">{getStatusBadge(selectedDonation.operationalStatus || "captured", selectedDonation.paidConfirmed)}</div>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700">Exported At</Label>
+                    <p className="text-sm text-gray-900 mt-1">{selectedDonation.exportedAt || "Not exported"}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Charity Submitted Reference (Optional)</Label>
+                  <Input
+                    value={charitySubmittedReference}
+                    onChange={(e) => setCharitySubmittedReference(e.target.value)}
+                    placeholder="e.g. HMRC-REF-2026-001"
+                    className="mt-1"
+                  />
+                </div>
               </div>
             )}
             
             <div className="flex justify-end gap-2">
+              <Button
+                onClick={handleMarkPaidConfirmed}
+                disabled={!selectedDonation || isUpdatingPaid || selectedDonation?.paidConfirmed}
+              >
+                {selectedDonation?.paidConfirmed ? "Paid Confirmed" : (isUpdatingPaid ? "Saving..." : "Mark Paid Confirmed")}
+              </Button>
               <Button variant="outline" onClick={() => setShowDetailsDialog(false)}>
                 Close
               </Button>

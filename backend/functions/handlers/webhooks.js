@@ -15,6 +15,12 @@ const {
   markEventProcessed,
   markEventFailed,
 } = require("../shared/firestore");
+const {
+  GIFT_AID_DECLARATION_TEXT_VERSION,
+  GIFT_AID_DECLARATION_STATUS,
+  GIFT_AID_HMRC_CLAIM_STATUS,
+  GIFT_AID_OPERATIONAL_STATUS,
+} = require("../shared/giftAidContract");
 
 const DEFAULT_GIFT_AID_DECLARATION_TEXT = "I confirm I have paid enough UK Income or Capital Gains Tax to cover all my Gift Aid donations in this tax year.";
 
@@ -24,6 +30,11 @@ const toStringOrNull = (value) => {
   if (typeof value !== "string") return null;
   const normalized = value.trim();
   return normalized.length > 0 ? normalized : null;
+};
+
+const normalizeEmail = (value) => {
+  const email = toStringOrNull(value);
+  return email ? email.toLowerCase() : null;
 };
 
 const parseIsoDate = (value) => {
@@ -54,6 +65,51 @@ const getTaxYear = (dateValue) => {
   return `${startYear}-${endYearShort}`;
 };
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const isRetryableFirestoreError = (error) => {
+  const code = error?.code;
+  return code === 4 || // DEADLINE_EXCEEDED
+    code === 8 || // RESOURCE_EXHAUSTED
+    code === 10 || // ABORTED
+    code === 13 || // INTERNAL
+    code === 14; // UNAVAILABLE
+};
+
+const withRetries = async (fn, contextLabel, maxAttempts = 3) => {
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      return await fn();
+    } catch (error) {
+      const shouldRetry = isRetryableFirestoreError(error) && attempt < maxAttempts;
+      if (!shouldRetry) {
+        throw error;
+      }
+      console.warn(`${contextLabel} failed on attempt ${attempt}; retrying`, error?.message || error);
+      await sleep(150 * attempt);
+    }
+  }
+  throw new Error(`${contextLabel} exhausted retries`);
+};
+
+const writeGiftAidReconciliationIssue = async ({
+  paymentIntentId,
+  declarationId,
+  organizationId,
+  reason,
+  metadata,
+}) => {
+  await admin.firestore().collection("giftAidReconciliationIssues").add({
+    paymentIntentId: paymentIntentId || null,
+    declarationId: declarationId || null,
+    organizationId: organizationId || null,
+    reason,
+    metadata: metadata || {},
+    resolved: false,
+    createdAt: admin.firestore.Timestamp.now(),
+  });
+};
+
 const createGiftAidDeclarationIfNeeded = async ({
   paymentIntent,
   metadata,
@@ -63,10 +119,96 @@ const createGiftAidDeclarationIfNeeded = async ({
 }) => {
   const isGiftAid = toBoolean(metadata.isGiftAid);
   if (!isGiftAid) return;
+  if (!Number.isInteger(paymentIntent.amount) || paymentIntent.amount <= 0) {
+    throw new Error(`Invalid payment amount for Gift Aid declaration: ${paymentIntent.amount}`);
+  }
 
   const donationId = paymentIntent.id;
+  const now = new Date().toISOString();
+  const declarationId =
+    toStringOrNull(metadata.giftAidDeclarationId) ||
+    toStringOrNull(metadata.declarationId);
+
+  if (declarationId) {
+    const declarationRef =
+      admin.firestore().collection("giftAidDeclarations").doc(declarationId);
+    const declarationSnap = await withRetries(
+        () => declarationRef.get(),
+        "giftAidDeclaration lookup",
+    );
+
+    if (declarationSnap.exists) {
+      const existingDonationId = toStringOrNull(declarationSnap.data()?.donationId);
+      if (existingDonationId && existingDonationId !== donationId) {
+        await writeGiftAidReconciliationIssue({
+          paymentIntentId: donationId,
+          declarationId,
+          organizationId:
+            toStringOrNull(organizationId) ||
+            toStringOrNull(metadata.giftAidOrganizationId) ||
+            toStringOrNull(metadata.organizationId) ||
+            null,
+          reason: "declaration_already_linked_to_other_donation",
+          metadata: {
+            existingDonationId,
+            incomingDonationId: donationId,
+          },
+        });
+        throw new Error(
+            `Gift Aid declaration ${declarationId} is already linked to donation ${existingDonationId}`,
+        );
+      }
+
+      await withRetries(
+          () => declarationRef.set({
+        donationId,
+        donationAmount: paymentIntent.amount,
+        giftAidAmount: Math.round(paymentIntent.amount * 0.25),
+        campaignId: campaignId || null,
+        campaignTitle: campaignTitleSnapshot || "Deleted Campaign",
+        organizationId:
+          toStringOrNull(organizationId) ||
+          toStringOrNull(metadata.giftAidOrganizationId) ||
+          toStringOrNull(metadata.organizationId) ||
+          null,
+        giftAidStatus: GIFT_AID_DECLARATION_STATUS.ACTIVE,
+        hmrcClaimStatus: GIFT_AID_HMRC_CLAIM_STATUS.PENDING,
+        operationalStatus: GIFT_AID_OPERATIONAL_STATUS.CAPTURED,
+        donorEmail: toStringOrNull(metadata.donorEmail) || null,
+        donorEmailNormalized: normalizeEmail(metadata.donorEmail),
+        updatedAt: now,
+      }, {merge: true}),
+          "giftAidDeclaration linkage update",
+      );
+      return;
+    }
+
+    await writeGiftAidReconciliationIssue({
+      paymentIntentId: donationId,
+      declarationId,
+      organizationId:
+        toStringOrNull(organizationId) ||
+        toStringOrNull(metadata.giftAidOrganizationId) ||
+        toStringOrNull(metadata.organizationId) ||
+        null,
+      reason: "declaration_id_missing_fallback_created",
+      metadata: {
+        campaignId: campaignId || null,
+        organizationId:
+          toStringOrNull(organizationId) ||
+          toStringOrNull(metadata.giftAidOrganizationId) ||
+          toStringOrNull(metadata.organizationId) ||
+          null,
+      },
+    });
+    console.warn("Gift Aid declarationId from metadata not found, falling back:", declarationId);
+  }
+
   const giftAidRef = admin.firestore().collection("giftAidDeclarations").doc(donationId);
-  const existingGiftAid = await giftAidRef.get();
+  const existingGiftAid = await withRetries(
+      () => giftAidRef.get(),
+      "giftAid fallback declaration lookup",
+  );
 
   if (existingGiftAid.exists) {
     return;
@@ -81,7 +223,6 @@ const createGiftAidDeclarationIfNeeded = async ({
 
   const donationDate = getDonationDateFromPaymentIntent(paymentIntent, metadata);
   const declarationDate = parseIsoDate(metadata.giftAidDeclarationDate) || donationDate;
-  const now = new Date().toISOString();
   const resolvedOrganizationId =
     toStringOrNull(organizationId) ||
     toStringOrNull(metadata.giftAidOrganizationId) ||
@@ -98,11 +239,19 @@ const createGiftAidDeclarationIfNeeded = async ({
     donorAddressLine2: toStringOrNull(metadata.giftAidAddressLine2) || "",
     donorTown: toStringOrNull(metadata.giftAidTown) || "",
     donorPostcode: toStringOrNull(metadata.giftAidPostcode) || "",
+    donorEmail: toStringOrNull(metadata.donorEmail) || null,
+    donorEmailNormalized: normalizeEmail(metadata.donorEmail),
     declarationText:
       toStringOrNull(metadata.giftAidDeclarationText) ||
       DEFAULT_GIFT_AID_DECLARATION_TEXT,
+    declarationTextVersion:
+      toStringOrNull(metadata.giftAidDeclarationTextVersion) ||
+      GIFT_AID_DECLARATION_TEXT_VERSION,
     declarationDate,
+    giftAidConsent: toBoolean(metadata.giftAidConsent),
     ukTaxpayerConfirmation: toBoolean(metadata.giftAidTaxpayer),
+    dataProcessingConsent: toBoolean(metadata.giftAidDataProcessingConsent),
+    homeAddressConfirmed: toBoolean(metadata.giftAidHomeAddressConfirmed),
     donationAmount: paymentIntent.amount,
     giftAidAmount: Math.round(paymentIntent.amount * 0.25),
     campaignId: campaignId || null,
@@ -113,12 +262,17 @@ const createGiftAidDeclarationIfNeeded = async ({
       toStringOrNull(metadata.giftAidTaxYear) ||
       getTaxYear(donationDate) ||
       "unknown",
-    giftAidStatus: "pending",
+    giftAidStatus: GIFT_AID_DECLARATION_STATUS.PENDING,
+    hmrcClaimStatus: GIFT_AID_HMRC_CLAIM_STATUS.PENDING,
+    operationalStatus: GIFT_AID_OPERATIONAL_STATUS.CAPTURED,
     createdAt: now,
     updatedAt: now,
   };
 
-  await giftAidRef.set(giftAidData);
+  await withRetries(
+      () => giftAidRef.set(giftAidData),
+      "giftAid fallback declaration create",
+  );
 };
 
 /**
@@ -349,7 +503,8 @@ const handlePaymentCompletedStripeWebhook = async (req, res) => {
     res.status(200).send("OK");
   } catch (error) {
     console.error("Error processing payment webhook:", error);
-    await markEventFailed(event.id, error.message);
+    const message = error instanceof Error ? error.message : "unknown";
+    await markEventFailed(event.id, message);
     res.status(500).send("Webhook processing failed");
   }
 };
@@ -421,7 +576,8 @@ const handleSubscriptionWebhook = async (req, res) => {
     res.status(200).send("OK");
   } catch (error) {
     console.error("Error processing webhook:", error);
-    await markEventFailed(event.id, error.message);
+    const message = error instanceof Error ? error.message : "unknown";
+    await markEventFailed(event.id, message);
     res.status(500).send("Webhook processing failed");
   }
 };

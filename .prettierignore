@@ -1,0 +1,7 @@
+.next
+.next-dev
+coverage
+dist
+node_modules
+release-artifacts
+package-lock.json

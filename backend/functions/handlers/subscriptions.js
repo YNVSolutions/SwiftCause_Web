@@ -15,6 +15,11 @@ const toStringOrNull = (value) => {
   return trimmed.length > 0 ? trimmed : null;
 };
 
+const normalizeEmail = (value) => {
+  const email = toStringOrNull(value);
+  return email ? email.toLowerCase() : null;
+};
+
 const getTaxYear = (dateValue) => {
   const date = new Date(dateValue);
   if (Number.isNaN(date.getTime())) return null;
@@ -36,6 +41,45 @@ const createGiftAidDeclarationFromMetadata = async ({
 }) => {
   if (!toBoolean(metadata.isGiftAid)) return;
 
+  const declarationId =
+    toStringOrNull(metadata.giftAidDeclarationId) ||
+    toStringOrNull(metadata.declarationId);
+  const now = new Date().toISOString();
+
+  if (declarationId) {
+    const declarationRef = admin.firestore().collection("giftAidDeclarations").doc(declarationId);
+    const declarationSnap = await declarationRef.get();
+
+    if (declarationSnap.exists) {
+      const existingDonationId = toStringOrNull(declarationSnap.data()?.donationId);
+      if (existingDonationId && existingDonationId !== donationId) {
+        console.warn(
+            "Gift Aid declaration already linked to a different donation; skipping relink:",
+            declarationId,
+            existingDonationId,
+            donationId,
+        );
+        return;
+      }
+
+      await declarationRef.set({
+        donationId,
+        donationAmount: amountMinor,
+        giftAidAmount: Math.round(amountMinor * 0.25),
+        campaignId: campaignId || null,
+        campaignTitle: campaignTitle || "Recurring Donation",
+        organizationId: organizationId || null,
+        giftAidStatus: "active",
+        hmrcClaimStatus: "pending",
+        operationalStatus: "captured",
+        donorEmail: toStringOrNull(metadata.donorEmail) || null,
+        donorEmailNormalized: normalizeEmail(metadata.donorEmail),
+        updatedAt: now,
+      }, {merge: true});
+      return;
+    }
+  }
+
   const ref = admin.firestore().collection("giftAidDeclarations").doc(donationId);
   const existing = await ref.get();
   if (existing.exists) return;
@@ -56,9 +100,15 @@ const createGiftAidDeclarationFromMetadata = async ({
     donorAddressLine2: toStringOrNull(metadata.giftAidAddressLine2) || "",
     donorTown: toStringOrNull(metadata.giftAidTown) || "",
     donorPostcode: toStringOrNull(metadata.giftAidPostcode) || "",
+    donorEmail: toStringOrNull(metadata.donorEmail) || null,
+    donorEmailNormalized: normalizeEmail(metadata.donorEmail),
     declarationText: toStringOrNull(metadata.giftAidDeclarationText) || DEFAULT_GIFT_AID_DECLARATION_TEXT,
+    declarationTextVersion: toStringOrNull(metadata.giftAidDeclarationTextVersion) || "hmrc-ch3-2026-03",
     declarationDate,
+    giftAidConsent: toBoolean(metadata.giftAidConsent),
     ukTaxpayerConfirmation: toBoolean(metadata.giftAidTaxpayer),
+    dataProcessingConsent: toBoolean(metadata.giftAidDataProcessingConsent),
+    homeAddressConfirmed: toBoolean(metadata.giftAidHomeAddressConfirmed),
     donationAmount: amountMinor,
     giftAidAmount: Math.round(amountMinor * 0.25),
     campaignId: campaignId || null,
@@ -67,8 +117,10 @@ const createGiftAidDeclarationFromMetadata = async ({
     donationDate: donationDateIso,
     taxYear: toStringOrNull(metadata.giftAidTaxYear) || getTaxYear(donationDateIso) || "unknown",
     giftAidStatus: "pending",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    hmrcClaimStatus: "pending",
+    operationalStatus: "captured",
+    createdAt: now,
+    updatedAt: now,
   });
 };
 
@@ -264,6 +316,7 @@ const createRecurringSubscription = (req, res) => {
           donorPhone: donor.phone || null,
           campaignTitle: campaignData.title,
           platform: metadata.platform || "web",
+          ...metadata,
         },
       });
 
