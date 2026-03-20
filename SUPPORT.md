@@ -16,6 +16,12 @@ Use GitHub Discussions for:
 
 This should be the default place for most support questions.
 
+### Discord
+
+Use Discord for community discussion and quick support when you want a more conversational back-and-forth.
+
+- Invite link: https://discord.gg/CqCvVPRkht
+
 ### Issue Tracker
 
 Use GitHub Issues only for:
