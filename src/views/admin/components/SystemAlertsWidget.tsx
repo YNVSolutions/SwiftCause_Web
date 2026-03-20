@@ -1,18 +1,9 @@
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../shared/ui/card";
-import { Badge } from "../../../shared/ui/badge";
-import { Button } from "../../../shared/ui/button";
-import {
-  AlertCircle,
-  CheckCircle,
-  Info,
-  AlertTriangle,
-  ArrowRight,
-  Shield,
-} from "lucide-react";
-import { SystemAlert, AlertSeverity } from "../../../shared/lib/hooks/useSystemAlerts";
-import { Screen } from "../../../shared/types";
-import { Skeleton } from "../../../shared/ui/skeleton";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '../../../shared/ui/card';
+import { AlertCircle, CheckCircle, Info, AlertTriangle, ArrowRight, Shield } from 'lucide-react';
+import { SystemAlert, AlertSeverity } from '../../../shared/lib/hooks/useSystemAlerts';
+import { Screen } from '../../../shared/types';
+import { Skeleton } from '../../../shared/ui/skeleton';
 
 interface SystemAlertsWidgetProps {
   alerts: SystemAlert[];
@@ -20,47 +11,43 @@ interface SystemAlertsWidgetProps {
   onNavigate: (screen: Screen) => void;
 }
 
-export function SystemAlertsWidget({
-  alerts,
-  loading,
-  onNavigate,
-}: SystemAlertsWidgetProps) {
+export function SystemAlertsWidget({ alerts, loading, onNavigate }: SystemAlertsWidgetProps) {
   const getSeverityConfig = (severity: AlertSeverity) => {
     switch (severity) {
-      case "critical":
+      case 'critical':
         return {
           icon: AlertCircle,
-          iconColor: "text-red-600",
-          bgColor: "bg-red-50/50",
-          borderColor: "border-l-4 border-red-500",
+          iconColor: 'text-red-600',
+          bgColor: 'bg-red-50/50',
+          borderColor: 'border-l-4 border-red-500',
         };
-      case "warning":
+      case 'warning':
         return {
           icon: AlertTriangle,
-          iconColor: "text-yellow-600",
-          bgColor: "bg-yellow-50/50",
-          borderColor: "border-l-4 border-yellow-500",
+          iconColor: 'text-yellow-600',
+          bgColor: 'bg-yellow-50/50',
+          borderColor: 'border-l-4 border-yellow-500',
         };
-      case "info":
+      case 'info':
         return {
           icon: Info,
-          iconColor: "text-blue-600",
-          bgColor: "bg-blue-50/50",
-          borderColor: "border-l-4 border-blue-500",
+          iconColor: 'text-blue-600',
+          bgColor: 'bg-blue-50/50',
+          borderColor: 'border-l-4 border-blue-500',
         };
-      case "success":
+      case 'success':
         return {
           icon: CheckCircle,
-          iconColor: "text-green-600",
-          bgColor: "bg-green-50/50",
-          borderColor: "border-l-4 border-green-500",
+          iconColor: 'text-green-600',
+          bgColor: 'bg-green-50/50',
+          borderColor: 'border-l-4 border-green-500',
         };
       default:
         return {
           icon: Info,
-          iconColor: "text-gray-600",
-          bgColor: "bg-gray-50/50",
-          borderColor: "border-l-4 border-gray-500",
+          iconColor: 'text-gray-600',
+          bgColor: 'bg-gray-50/50',
+          borderColor: 'border-l-4 border-gray-500',
         };
     }
   };
@@ -93,16 +80,11 @@ export function SystemAlertsWidget({
   }
 
   // Group alerts by severity for better organization
-  const criticalAlerts = alerts.filter((a) => a.severity === "critical");
-  const warningAlerts = alerts.filter((a) => a.severity === "warning");
-  const infoAlerts = alerts.filter((a) => a.severity === "info");
-  const successAlerts = alerts.filter((a) => a.severity === "success");
-  const sortedAlerts = [
-    ...criticalAlerts,
-    ...warningAlerts,
-    ...infoAlerts,
-    ...successAlerts,
-  ];
+  const criticalAlerts = alerts.filter((a) => a.severity === 'critical');
+  const warningAlerts = alerts.filter((a) => a.severity === 'warning');
+  const infoAlerts = alerts.filter((a) => a.severity === 'info');
+  const successAlerts = alerts.filter((a) => a.severity === 'success');
+  const sortedAlerts = [...criticalAlerts, ...warningAlerts, ...infoAlerts, ...successAlerts];
 
   return (
     <Card className="bg-white rounded-xl border border-gray-200 shadow-sm">
@@ -123,7 +105,10 @@ export function SystemAlertsWidget({
       </CardHeader>
       <CardContent className="p-0">
         {alerts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center px-4 text-center" style={{ minHeight: '320px' }}>
+          <div
+            className="flex flex-col items-center justify-center px-4 text-center"
+            style={{ minHeight: '320px' }}
+          >
             <CheckCircle className="h-12 w-12 text-green-500 mb-3" />
             <p className="text-sm sm:text-base font-medium text-gray-900 mb-1">
               All systems operational
@@ -153,12 +138,8 @@ export function SystemAlertsWidget({
                       <Icon className="h-5 w-5" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-semibold text-gray-900 mb-1">
-                        {alert.title}
-                      </h4>
-                      <p className="text-sm text-gray-800 mb-1">
-                        {alert.message}
-                      </p>
+                      <h4 className="text-sm font-semibold text-gray-900 mb-1">{alert.title}</h4>
+                      <p className="text-sm text-gray-800 mb-1">{alert.message}</p>
                       <p className="text-xs text-gray-400 mt-1">
                         {alert.timestamp ? new Date(alert.timestamp).toLocaleString() : 'Just now'}
                       </p>
@@ -185,4 +166,3 @@ export function SystemAlertsWidget({
     </Card>
   );
 }
-

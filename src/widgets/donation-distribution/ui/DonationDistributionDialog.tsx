@@ -28,8 +28,6 @@ export const DonationDistributionDialog: React.FC<DonationDistributionDialogProp
   if (!isOpen) return null;
 
   const summary = calculateDistributionSummary(data, totalRaised);
-  
-  const maxCount = Math.max(...summary.ranges.map((r) => r.count));
 
   // Sort ranges based on selected criteria
   const sortedRanges = [...summary.ranges].sort((a, b) => {
@@ -86,7 +84,10 @@ export const DonationDistributionDialog: React.FC<DonationDistributionDialogProp
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div
+          className="flex-1 overflow-y-auto p-6 scrollbar-hide"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
           <div className="space-y-6">
             {/* Summary Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -97,10 +98,10 @@ export const DonationDistributionDialog: React.FC<DonationDistributionDialogProp
                   </div>
                   <span className="text-sm font-medium text-gray-700">Total Donations</span>
                 </div>
-                <p className="text-3xl font-bold text-gray-900 mb-1">{summary.totalDonations.toLocaleString()}</p>
-                <p className="text-sm text-gray-600">
-                  {formatCurrency(totalRaised)} raised
+                <p className="text-3xl font-bold text-gray-900 mb-1">
+                  {summary.totalDonations.toLocaleString()}
                 </p>
+                <p className="text-sm text-gray-600">{formatCurrency(totalRaised)} raised</p>
               </div>
 
               <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
@@ -112,7 +113,8 @@ export const DonationDistributionDialog: React.FC<DonationDistributionDialogProp
                 </div>
                 <p className="text-3xl font-bold text-gray-900 mb-1">{summary.mostPopularRange}</p>
                 <p className="text-sm text-gray-600">
-                  {summary.mostPopularCount} donations ({Math.round((summary.mostPopularCount / summary.totalDonations) * 100)}%)
+                  {summary.mostPopularCount} donations (
+                  {Math.round((summary.mostPopularCount / summary.totalDonations) * 100)}%)
                 </p>
               </div>
 
@@ -126,9 +128,7 @@ export const DonationDistributionDialog: React.FC<DonationDistributionDialogProp
                 <p className="text-3xl font-bold text-gray-900 mb-1">
                   {formatCurrency(Math.round(summary.averageDonation))}
                 </p>
-                <p className="text-sm text-gray-600">
-                  per transaction
-                </p>
+                <p className="text-sm text-gray-600">per transaction</p>
               </div>
             </div>
 
@@ -144,14 +144,14 @@ export const DonationDistributionDialog: React.FC<DonationDistributionDialogProp
                   Sort by: {getSortLabel()}
                 </button>
               </div>
-              
+
               <div className="relative">
                 <div className="flex items-end justify-between gap-3 h-80 px-2">
                   {sortedRanges.map((range, index) => {
                     // Calculate height in pixels relative to the 320px (h-80) container
                     const chartHeight = 320; // h-80 = 320px
                     const heightInPixels = (range.percentage / 100) * chartHeight;
-                    
+
                     const estimatedTotal = estimateRangeTotal(range.range, range.count);
                     const isHovered = hoveredBar === index;
 
@@ -177,7 +177,9 @@ export const DonationDistributionDialog: React.FC<DonationDistributionDialogProp
                               </div>
                               <div className="flex justify-between gap-4">
                                 <span className="text-gray-300">Est. Total:</span>
-                                <span className="font-medium">{formatCurrency(Math.round(estimatedTotal))}</span>
+                                <span className="font-medium">
+                                  {formatCurrency(Math.round(estimatedTotal))}
+                                </span>
                               </div>
                             </div>
                             <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1">
@@ -191,10 +193,13 @@ export const DonationDistributionDialog: React.FC<DonationDistributionDialogProp
                           className={`w-full rounded-t-lg transition-all duration-300 cursor-pointer relative overflow-hidden ${
                             isHovered ? 'opacity-100 scale-105' : 'opacity-90'
                           } ${range.color} ${isHovered ? getHoverColor(range.color) : ''}`}
-                          style={{ height: `${heightInPixels}px`, minHeight: range.count > 0 ? '4px' : '0px' }}
+                          style={{
+                            height: `${heightInPixels}px`,
+                            minHeight: range.count > 0 ? '4px' : '0px',
+                          }}
                         >
                           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
-                          
+
                           {range.count > 0 && heightInPixels > 30 && (
                             <div className="absolute top-3 left-1/2 -translate-x-1/2 text-white font-bold text-sm">
                               {range.count}
@@ -204,12 +209,8 @@ export const DonationDistributionDialog: React.FC<DonationDistributionDialogProp
 
                         {/* Range label */}
                         <div className="mt-3 text-center">
-                          <div className="text-sm font-semibold text-gray-700">
-                            {range.range}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            {range.percentage}%
-                          </div>
+                          <div className="text-sm font-semibold text-gray-700">{range.range}</div>
+                          <div className="text-xs text-gray-500 mt-1">{range.percentage}%</div>
                         </div>
                       </div>
                     );
@@ -252,11 +253,16 @@ export const DonationDistributionDialog: React.FC<DonationDistributionDialogProp
                     {sortedRanges.map((range, index) => {
                       const estimatedTotal = estimateRangeTotal(range.range, range.count);
                       return (
-                        <tr key={`${range.range}-${index}`} className="hover:bg-gray-50 transition-colors">
+                        <tr
+                          key={`${range.range}-${index}`}
+                          className="hover:bg-gray-50 transition-colors"
+                        >
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center gap-3">
                               <div className={`w-3 h-3 rounded ${range.color}`} />
-                              <span className="text-sm font-medium text-gray-900">{range.range}</span>
+                              <span className="text-sm font-medium text-gray-900">
+                                {range.range}
+                              </span>
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold text-gray-900">

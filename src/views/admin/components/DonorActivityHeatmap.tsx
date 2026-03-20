@@ -15,13 +15,6 @@ interface DonorActivityHeatmapProps {
   className?: string;
 }
 
-// Responsive grid constants
-const GRID_COLS = 24;
-const CELL_SIZE_MOBILE = 10; // Smaller cells for mobile
-const CELL_SIZE_DESKTOP = 14;
-const GAP_MOBILE = 3; // Smaller gap for mobile
-const GAP_DESKTOP = 6;
-
 // Enterprise-grade legend colors - softer, more muted
 const LEGEND_COLORS = [
   'bg-gray-50 border-gray-100',
@@ -32,10 +25,14 @@ const LEGEND_COLORS = [
 ];
 
 const getCellClass = (intensity: number): string => {
-  if (intensity === 0) return 'bg-gray-50 border border-gray-100 hover:bg-gray-100 transition-colors';
-  if (intensity <= 0.25) return 'bg-emerald-50 border border-emerald-100 hover:bg-emerald-100 transition-colors';
-  if (intensity <= 0.5) return 'bg-emerald-100 border border-emerald-200 hover:bg-emerald-200 transition-colors';
-  if (intensity <= 0.75) return 'bg-emerald-300 border border-emerald-400 hover:bg-emerald-400 transition-colors';
+  if (intensity === 0)
+    return 'bg-gray-50 border border-gray-100 hover:bg-gray-100 transition-colors';
+  if (intensity <= 0.25)
+    return 'bg-emerald-50 border border-emerald-100 hover:bg-emerald-100 transition-colors';
+  if (intensity <= 0.5)
+    return 'bg-emerald-100 border border-emerald-200 hover:bg-emerald-200 transition-colors';
+  if (intensity <= 0.75)
+    return 'bg-emerald-300 border border-emerald-400 hover:bg-emerald-400 transition-colors';
   return 'bg-emerald-500 border border-emerald-600 hover:bg-emerald-600 transition-colors';
 };
 
@@ -67,31 +64,31 @@ export const DonorActivityHeatmap: React.FC<DonorActivityHeatmapProps> = ({
   // Pre-initialize the complete 7×24 grid with zeros
   const initializeGrid = (): Map<string, { count: number; intensity: number }> => {
     const grid = new Map<string, { count: number; intensity: number }>();
-    
-    days.forEach(day => {
-      hours.forEach(hour => {
+
+    days.forEach((day) => {
+      hours.forEach((hour) => {
         const key = `${day}-${hour}`;
         grid.set(key, { count: 0, intensity: 0 });
       });
     });
-    
+
     return grid;
   };
 
   // Process incoming data and populate grid
   const processGridData = (): Map<string, { count: number; intensity: number }> => {
     const grid = initializeGrid();
-    
+
     // Find max count for normalization
     let maxCount = 0;
-    data.forEach(item => {
+    data.forEach((item) => {
       if (item.donations > maxCount) {
         maxCount = item.donations;
       }
     });
-    
+
     // Populate grid with actual data
-    data.forEach(item => {
+    data.forEach((item) => {
       const key = `${item.day}-${item.hour}`;
       if (grid.has(key)) {
         const count = item.donations || 0;
@@ -99,7 +96,7 @@ export const DonorActivityHeatmap: React.FC<DonorActivityHeatmapProps> = ({
         grid.set(key, { count, intensity });
       }
     });
-    
+
     return grid;
   };
 
@@ -123,16 +120,13 @@ export const DonorActivityHeatmap: React.FC<DonorActivityHeatmapProps> = ({
               <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
                 Weekly engagement patterns by hour and day
               </p>
-              
+
               {/* Enterprise Legend - Aligned right on desktop, below on mobile */}
               <div className="flex items-center gap-2 text-sm text-gray-500">
                 <span className="text-xs font-medium text-gray-400">LOW</span>
                 <div className="flex gap-1">
                   {LEGEND_COLORS.map((color, index) => (
-                    <div
-                      key={index}
-                      className={`w-3 h-3 rounded-[2px] ${color}`}
-                    />
+                    <div key={index} className={`w-3 h-3 rounded-[2px] ${color}`} />
                   ))}
                 </div>
                 <span className="text-xs font-medium text-gray-400">HIGH</span>
@@ -148,7 +142,7 @@ export const DonorActivityHeatmap: React.FC<DonorActivityHeatmapProps> = ({
                 <div className="w-8 sm:w-12 flex-shrink-0"></div>
                 <div className="flex-1">
                   <div className="grid grid-cols-24 gap-[3px] sm:gap-[6px]">
-                    {hours.map(hour => (
+                    {hours.map((hour) => (
                       <div
                         key={hour}
                         className="text-[9px] sm:text-[10px] text-gray-400 text-center font-medium"
@@ -159,7 +153,7 @@ export const DonorActivityHeatmap: React.FC<DonorActivityHeatmapProps> = ({
                   </div>
                 </div>
               </div>
-              
+
               {/* Responsive Grid: 7 rows × 24 columns */}
               {days.map((day) => (
                 <div key={day} className="flex items-center mb-1">
@@ -167,14 +161,14 @@ export const DonorActivityHeatmap: React.FC<DonorActivityHeatmapProps> = ({
                   <div className="w-8 sm:w-12 flex-shrink-0 text-[10px] sm:text-xs font-medium text-gray-500">
                     {day.toUpperCase()}
                   </div>
-                  
+
                   {/* Hour cells - Responsive grid */}
                   <div className="flex-1">
                     <div className="grid grid-cols-24 gap-[3px] sm:gap-[6px]">
-                      {hours.map(hour => {
+                      {hours.map((hour) => {
                         const cellData = getCellData(day, hour);
                         const { count, intensity } = cellData;
-                        
+
                         return (
                           <div
                             key={`${day}-${hour}`}
