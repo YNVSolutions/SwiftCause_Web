@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Badge } from '../../shared/ui/badge';
+import { Card, CardContent } from '../../shared/ui/card';
 import { Progress } from '../../shared/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shared/ui/tabs';
 import { formatCurrency, formatCurrencyFromMajor } from '../../shared/lib/currencyFormatter';
-import {
+import { 
   BarChart3,
   TrendingUp,
   Users,
@@ -15,16 +16,20 @@ import {
   Zap,
   Activity,
   CheckCircle,
+  AlertCircle,
   Smartphone,
   Monitor,
   CreditCard,
   QrCode,
   Globe,
+  Calendar,
   ArrowUp,
   ArrowDown,
   Wifi,
+  WifiOff,
+  Settings,
   Eye,
-  PieChart,
+  PieChart
 } from 'lucide-react';
 
 interface LiveDonation {
@@ -68,7 +73,7 @@ export function EnterprisePlatformShowcase() {
       campaignTitle: 'Clean Water Initiative',
       kioskLocation: 'Downtown Mall',
       timestamp: '2 minutes ago',
-      isRecurring: false,
+      isRecurring: false
     },
     {
       id: '2',
@@ -76,7 +81,7 @@ export function EnterprisePlatformShowcase() {
       campaignTitle: 'Education Fund',
       kioskLocation: 'Community Center',
       timestamp: '5 minutes ago',
-      isRecurring: true,
+      isRecurring: true
     },
     {
       id: '3',
@@ -84,8 +89,8 @@ export function EnterprisePlatformShowcase() {
       campaignTitle: 'Healthcare Support',
       kioskLocation: 'Hospital Lobby',
       timestamp: '8 minutes ago',
-      isRecurring: false,
-    },
+      isRecurring: false
+    }
   ]);
 
   const [campaignMetrics] = useState<CampaignMetrics[]>([
@@ -97,7 +102,7 @@ export function EnterprisePlatformShowcase() {
       progress: 63,
       donorCount: 284,
       trend: 'up',
-      trendPercentage: 23,
+      trendPercentage: 23
     },
     {
       id: '2',
@@ -107,7 +112,7 @@ export function EnterprisePlatformShowcase() {
       progress: 64,
       donorCount: 156,
       trend: 'up',
-      trendPercentage: 15,
+      trendPercentage: 15
     },
     {
       id: '3',
@@ -117,8 +122,8 @@ export function EnterprisePlatformShowcase() {
       progress: 75,
       donorCount: 92,
       trend: 'stable',
-      trendPercentage: 3,
-    },
+      trendPercentage: 3
+    }
   ]);
 
   const [kioskStatuses] = useState<KioskStatus[]>([
@@ -129,7 +134,7 @@ export function EnterprisePlatformShowcase() {
       status: 'online',
       todayDonations: 23,
       todayAmount: 2840,
-      lastActive: '2 min ago',
+      lastActive: '2 min ago'
     },
     {
       id: '2',
@@ -138,7 +143,7 @@ export function EnterprisePlatformShowcase() {
       status: 'online',
       todayDonations: 18,
       todayAmount: 1950,
-      lastActive: '1 min ago',
+      lastActive: '1 min ago'
     },
     {
       id: '3',
@@ -147,7 +152,7 @@ export function EnterprisePlatformShowcase() {
       status: 'maintenance',
       todayDonations: 0,
       todayAmount: 0,
-      lastActive: '2 hours ago',
+      lastActive: '2 hours ago'
     },
     {
       id: '4',
@@ -156,8 +161,8 @@ export function EnterprisePlatformShowcase() {
       status: 'online',
       todayDonations: 31,
       todayAmount: 4120,
-      lastActive: '30 sec ago',
-    },
+      lastActive: '30 sec ago'
+    }
   ]);
 
   // Auto-rotate tabs every 5 seconds
@@ -166,7 +171,7 @@ export function EnterprisePlatformShowcase() {
 
     const tabs = ['analytics', 'campaigns', 'kiosks', 'insights'];
     const interval = setInterval(() => {
-      setActiveTab((current) => {
+      setActiveTab(current => {
         const currentIndex = tabs.indexOf(current);
         const nextIndex = (currentIndex + 1) % tabs.length;
         return tabs[nextIndex];
@@ -182,21 +187,14 @@ export function EnterprisePlatformShowcase() {
       const newDonation: LiveDonation = {
         id: Date.now().toString(),
         amount: Math.floor(Math.random() * 500) + 25,
-        campaignTitle: [
-          'Clean Water Initiative',
-          'Education Fund',
-          'Healthcare Support',
-          'Emergency Relief',
-        ][Math.floor(Math.random() * 4)],
-        kioskLocation: ['Downtown Mall', 'Community Center', 'Hospital Lobby', 'University Campus'][
-          Math.floor(Math.random() * 4)
-        ],
+        campaignTitle: ['Clean Water Initiative', 'Education Fund', 'Healthcare Support', 'Emergency Relief'][Math.floor(Math.random() * 4)],
+        kioskLocation: ['Downtown Mall', 'Community Center', 'Hospital Lobby', 'University Campus'][Math.floor(Math.random() * 4)],
         timestamp: 'Just now',
-        isRecurring: Math.random() > 0.7,
+        isRecurring: Math.random() > 0.7
       };
 
-      setLiveDonations((prev) => [newDonation, ...prev.slice(0, 4)]);
-      setAnimationStep((prev) => prev + 1);
+      setLiveDonations(prev => [newDonation, ...prev.slice(0, 4)]);
+      setAnimationStep(prev => prev + 1);
     }, 3000);
 
     return () => clearInterval(interval);
@@ -210,24 +208,16 @@ export function EnterprisePlatformShowcase() {
 
   const totalDonationsToday = kioskStatuses.reduce((sum, kiosk) => sum + kiosk.todayDonations, 0);
   const totalAmountToday = kioskStatuses.reduce((sum, kiosk) => sum + kiosk.todayAmount, 0);
-  const onlineKiosks = kioskStatuses.filter((k) => k.status === 'online').length;
+  const onlineKiosks = kioskStatuses.filter(k => k.status === 'online').length;
 
   return (
     <div className="w-full">
       <Tabs value={activeTab} onValueChange={handleTabClick} className="w-full">
         <TabsList className="grid w-full grid-cols-4 mb-4 bg-white/70 backdrop-blur-sm border border-gray-200/50">
-          <TabsTrigger value="analytics" className="text-xs font-medium">
-            Live Analytics
-          </TabsTrigger>
-          <TabsTrigger value="campaigns" className="text-xs font-medium">
-            Campaigns
-          </TabsTrigger>
-          <TabsTrigger value="kiosks" className="text-xs font-medium">
-            Kiosks
-          </TabsTrigger>
-          <TabsTrigger value="insights" className="text-xs font-medium">
-            Insights
-          </TabsTrigger>
+          <TabsTrigger value="analytics" className="text-xs font-medium">Live Analytics</TabsTrigger>
+          <TabsTrigger value="campaigns" className="text-xs font-medium">Campaigns</TabsTrigger>
+          <TabsTrigger value="kiosks" className="text-xs font-medium">Kiosks</TabsTrigger>
+          <TabsTrigger value="insights" className="text-xs font-medium">Insights</TabsTrigger>
         </TabsList>
 
         {/* Live Analytics Tab */}
@@ -242,7 +232,7 @@ export function EnterprisePlatformShowcase() {
               Live
             </Badge>
           </div>
-
+          
           {/* Key Metrics */}
           <div className="grid grid-cols-2 gap-3 mb-4">
             <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
@@ -253,12 +243,10 @@ export function EnterprisePlatformShowcase() {
                   <span>+12%</span>
                 </div>
               </div>
-              <div className="text-2xl font-bold text-green-900">
-                {formatCurrency(totalAmountToday)}
-              </div>
+              <div className="text-2xl font-bold text-green-900">{formatCurrency(totalAmountToday)}</div>
               <div className="text-xs text-green-700">Today's Donations</div>
             </div>
-
+            
             <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4">
               <div className="flex items-center justify-between mb-2">
                 <Users className="w-5 h-5 text-blue-600" />
@@ -271,54 +259,44 @@ export function EnterprisePlatformShowcase() {
               <div className="text-xs text-blue-700">Transactions</div>
             </div>
           </div>
-
+          
           {/* Live Donations Feed */}
           <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 border border-gray-200">
             <div className="flex items-center space-x-2 mb-3">
               <Heart className="w-4 h-4 text-red-500 animate-pulse" />
               <span className="text-sm font-semibold text-gray-900">Live Donations</span>
             </div>
-
+            
             <div className="space-y-2 max-h-32 overflow-hidden">
               {liveDonations.slice(0, 3).map((donation, index) => (
-                <div
+                <div 
                   key={donation.id}
                   className={`flex items-center justify-between p-2 rounded-lg transition-all duration-500 ${
-                    index === 0
-                      ? 'bg-green-100 border border-green-200 scale-105'
-                      : 'bg-white border border-gray-100'
+                    index === 0 ? 'bg-green-100 border border-green-200 scale-105' : 'bg-white border border-gray-100'
                   }`}
                 >
                   <div className="flex items-center space-x-3">
-                    <div
-                      className={`w-2 h-2 rounded-full ${donation.isRecurring ? 'bg-purple-500' : 'bg-green-500'}`}
-                    />
+                    <div className={`w-2 h-2 rounded-full ${donation.isRecurring ? 'bg-purple-500' : 'bg-green-500'}`} />
                     <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {formatCurrency(donation.amount)}
-                      </div>
+                      <div className="text-sm font-medium text-gray-900">{formatCurrency(donation.amount)}</div>
                       <div className="text-xs text-gray-600">{donation.campaignTitle}</div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-xs font-medium text-gray-700">
-                      {donation.kioskLocation}
-                    </div>
+                    <div className="text-xs font-medium text-gray-700">{donation.kioskLocation}</div>
                     <div className="text-xs text-gray-500">{donation.timestamp}</div>
                   </div>
                 </div>
               ))}
             </div>
           </div>
-
+          
           {/* System Status */}
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-white border border-gray-200 rounded-lg p-3">
               <div className="flex items-center space-x-2">
                 <Wifi className="w-4 h-4 text-green-600" />
-                <span className="text-xs font-medium text-gray-700">
-                  {onlineKiosks}/4 Kiosks Online
-                </span>
+                <span className="text-xs font-medium text-gray-700">{onlineKiosks}/4 Kiosks Online</span>
               </div>
             </div>
             <div className="bg-white border border-gray-200 rounded-lg p-3">
@@ -342,15 +320,13 @@ export function EnterprisePlatformShowcase() {
               Live Data
             </Badge>
           </div>
-
+          
           <div className="space-y-3">
             {campaignMetrics.map((campaign, index) => (
-              <div
+              <div 
                 key={campaign.id}
                 className={`bg-gradient-to-r from-white to-gray-50 border rounded-xl p-4 transition-all duration-500 ${
-                  animationStep % campaignMetrics.length === index
-                    ? 'border-purple-300 shadow-lg scale-105'
-                    : 'border-gray-200'
+                  animationStep % campaignMetrics.length === index ? 'border-purple-300 shadow-lg scale-105' : 'border-gray-200'
                 }`}
               >
                 <div className="flex items-center justify-between mb-3">
@@ -370,21 +346,16 @@ export function EnterprisePlatformShowcase() {
                       ) : (
                         <div className="w-3 h-3" />
                       )}
-                      <span
-                        className={`${
-                          campaign.trend === 'up'
-                            ? 'text-green-600'
-                            : campaign.trend === 'down'
-                              ? 'text-red-600'
-                              : 'text-gray-600'
-                        }`}
-                      >
+                      <span className={`${
+                        campaign.trend === 'up' ? 'text-green-600' :
+                        campaign.trend === 'down' ? 'text-red-600' : 'text-gray-600'
+                      }`}>
                         {campaign.trend === 'stable' ? 'Stable' : `${campaign.trendPercentage}%`}
                       </span>
                     </div>
                   </div>
                 </div>
-
+                
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-gray-600">
@@ -413,31 +384,24 @@ export function EnterprisePlatformShowcase() {
               Monitoring
             </Badge>
           </div>
-
+          
           <div className="space-y-2">
             {kioskStatuses.map((kiosk, index) => (
-              <div
+              <div 
                 key={kiosk.id}
                 className={`flex items-center justify-between p-3 rounded-lg border transition-all duration-500 ${
-                  animationStep % kioskStatuses.length === index
-                    ? 'bg-blue-50 border-blue-300 scale-105'
-                    : kiosk.status === 'online'
-                      ? 'bg-green-50 border-green-200'
-                      : kiosk.status === 'maintenance'
-                        ? 'bg-orange-50 border-orange-200'
-                        : 'bg-red-50 border-red-200'
+                  animationStep % kioskStatuses.length === index ? 'bg-blue-50 border-blue-300 scale-105' :
+                  kiosk.status === 'online' ? 'bg-green-50 border-green-200' :
+                  kiosk.status === 'maintenance' ? 'bg-orange-50 border-orange-200' :
+                  'bg-red-50 border-red-200'
                 }`}
               >
                 <div className="flex items-center space-x-3">
-                  <div
-                    className={`w-3 h-3 rounded-full ${
-                      kiosk.status === 'online'
-                        ? 'bg-green-500 animate-pulse'
-                        : kiosk.status === 'maintenance'
-                          ? 'bg-orange-500'
-                          : 'bg-red-500'
-                    }`}
-                  />
+                  <div className={`w-3 h-3 rounded-full ${
+                    kiosk.status === 'online' ? 'bg-green-500 animate-pulse' :
+                    kiosk.status === 'maintenance' ? 'bg-orange-500' :
+                    'bg-red-500'
+                  }`} />
                   <div>
                     <div className="font-medium text-sm text-gray-900">{kiosk.name}</div>
                     <div className="text-xs text-gray-600 flex items-center space-x-1">
@@ -446,7 +410,7 @@ export function EnterprisePlatformShowcase() {
                     </div>
                   </div>
                 </div>
-
+                
                 <div className="text-right">
                   <div className="text-sm font-bold text-gray-900">
                     {formatCurrency(kiosk.todayAmount)}
@@ -462,7 +426,7 @@ export function EnterprisePlatformShowcase() {
               </div>
             ))}
           </div>
-
+          
           {/* Network Summary */}
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-3">
             <div className="grid grid-cols-3 gap-4 text-center">
@@ -471,9 +435,7 @@ export function EnterprisePlatformShowcase() {
                 <div className="text-xs text-blue-700">Online</div>
               </div>
               <div>
-                <div className="text-lg font-bold text-green-900">
-                  {formatCurrency(totalAmountToday)}
-                </div>
+                <div className="text-lg font-bold text-green-900">{formatCurrency(totalAmountToday)}</div>
                 <div className="text-xs text-green-700">Today</div>
               </div>
               <div>
@@ -496,7 +458,7 @@ export function EnterprisePlatformShowcase() {
               AI Powered
             </Badge>
           </div>
-
+          
           {/* Payment Methods */}
           <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-200 rounded-xl p-4">
             <div className="text-sm font-semibold text-gray-900 mb-3">Payment Distribution</div>
@@ -509,7 +471,7 @@ export function EnterprisePlatformShowcase() {
                 <span className="text-sm font-bold text-gray-900">67%</span>
               </div>
               <Progress value={67} className="h-2" />
-
+              
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <Smartphone className="w-4 h-4 text-green-600" />
@@ -518,7 +480,7 @@ export function EnterprisePlatformShowcase() {
                 <span className="text-sm font-bold text-gray-900">28%</span>
               </div>
               <Progress value={28} className="h-2" />
-
+              
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <QrCode className="w-4 h-4 text-purple-600" />
@@ -529,7 +491,7 @@ export function EnterprisePlatformShowcase() {
               <Progress value={5} className="h-2" />
             </div>
           </div>
-
+          
           {/* Key Insights */}
           <div className="space-y-2">
             <div className="bg-white border border-gray-200 rounded-lg p-3">
@@ -537,29 +499,23 @@ export function EnterprisePlatformShowcase() {
                 <Zap className="w-4 h-4 text-yellow-500" />
                 <span className="text-sm font-medium text-gray-900">Peak Hours</span>
               </div>
-              <div className="text-xs text-gray-600">
-                Most donations occur between 2-4 PM (+34% vs average)
-              </div>
+              <div className="text-xs text-gray-600">Most donations occur between 2-4 PM (+34% vs average)</div>
             </div>
-
+            
             <div className="bg-white border border-gray-200 rounded-lg p-3">
               <div className="flex items-center space-x-2 mb-1">
                 <Heart className="w-4 h-4 text-red-500" />
                 <span className="text-sm font-medium text-gray-900">Recurring Impact</span>
               </div>
-              <div className="text-xs text-gray-600">
-                23% of donors set up recurring donations, generating 47% more value
-              </div>
+              <div className="text-xs text-gray-600">23% of donors set up recurring donations, generating 47% more value</div>
             </div>
-
+            
             <div className="bg-white border border-gray-200 rounded-lg p-3">
               <div className="flex items-center space-x-2 mb-1">
                 <Globe className="w-4 h-4 text-blue-500" />
                 <span className="text-sm font-medium text-gray-900">Location Performance</span>
               </div>
-              <div className="text-xs text-gray-600">
-                University Campus kiosk has highest average donation ({formatCurrency(13300)})
-              </div>
+              <div className="text-xs text-gray-600">University Campus kiosk has highest average donation ({formatCurrency(13300)})</div>
             </div>
           </div>
         </TabsContent>

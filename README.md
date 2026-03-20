@@ -3,7 +3,9 @@
 
   <h1>SwiftCause</h1>
 
-  <p>A modern donation platform for UK-based nonprofits.</p>
+  <p>
+    A modern, scalable donation platform for UK-based nonprofits.
+  </p>
 
   <p>
     <a href="https://swift-cause-web.vercel.app"><img src="https://img.shields.io/badge/deployment-Vercel-black.svg?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel Deployment"></a>
@@ -12,201 +14,213 @@
     <img src="https://img.shields.io/badge/firebase-%23FFCA28.svg?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase">
     <img src="https://img.shields.io/badge/stripe-%23626CD9.svg?style=for-the-badge&logo=stripe&logoColor=white" alt="Stripe">
   </p>
+
 </div>
 
 ---
 
-## Key Features
+## ✨ Key Features
 
-- Nonprofit campaign management with admin tooling
-- Stripe-powered one-time and recurring donations
-- Gift Aid declaration support
-- Kiosk donation flows for in-person fundraising
-- Analytics, campaign reporting, and user management
+Based on the project structure, SwiftCause includes:
 
-## Live Demo
+* **Nonprofit Campaign Management:** A full admin dashboard to create, edit, and manage fundraising campaigns.
+* **Secure Payments:** Integration with Stripe for secure and reliable donation processing.
+* **Analytics Dashboard:** A rich dashboard for visualizing donation data, device performance, and user metrics.
+* **Kiosk Device Management:** Support for managing physical kiosk devices for in-person donations.
+* **User & Auth Management:** Robust authentication and user management for admins and donors.
 
-The project is deployed at [SwiftCause](https://swiftcause--swiftcause-app.us-east4.hosted.app/).
+## 🚀 Live Demo
 
-## Contributor Quick Start
+A live version of the project is deployed: [**SwiftCause**](https://swiftcause--swiftcause-app.us-east4.hosted.app/)
+
+## 🛠️ Tech Stack
+
+This project uses a modern architecture with a Next.js frontend and a Firebase backend.
+
+| Area | Technology | Badge |
+| :--- | :--- | :--- |
+| **Framework** | Next.js | ![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white) |
+| **Frontend** | React 19 | ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB) |
+| **Language** | TypeScript | ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white) |
+| **Styling** | Tailwind CSS 4 | ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-%231572B6.svg?style=for-the-badge&logo=tailwindcss&logoColor=white) |
+| **UI Components** | Radix UI | ![Radix UI](https://img.shields.io/badge/Radix_UI-161618?logo=radix-ui&logoColor=white) |
+| **Icons** | Lucide React | ![Lucide](https://img.shields.io/badge/Lucide-222222?logo=lucide&logoColor=white) |
+| **Charts** | Recharts | ![Recharts](https://img.shields.io/badge/Recharts-232F3E?logo=recharts&logoColor=white) |
+| **Notifications** | Sonner | ![Sonner](https://img.shields.io/badge/Sonner-87CEEB?logo=sonner&logoColor=white) |
+| **Backend** | Firebase 11 | ![Firebase](https://img.shields.io/badge/Firebase-FFCA28?logo=firebase&logoColor=black) |
+| **Payments** | Stripe | ![Stripe](https://img.shields.io/badge/Stripe-626CD9?logo=stripe&logoColor=white) |
+| **CI/CD** | GitHub Actions | ![GitHub Actions](https://img.shields.io/badge/github%20actions-%232671E5.svg?style=for-the-badge&logo=githubactions&logoColor=white) |
+
+
+
+## 🏛️ Architecture
+
+This project implements **Feature-Sliced Design (FSD)**, a scalable and modular architectural methodology for frontend applications.
+
+The code is organized into a clear hierarchy of layers, which enforces a one-way dependency rule (`app` → `pages` → `widgets` → `features` → `entities` → `shared`). This structure improves code organization, reusability, and makes the codebase easier to maintain and scale.
+
+For a detailed explanation of the FSD structure and its implementation in this project, please read the full [**Architecture Documentation**](docs/FSD_ARCHITECTURE.md).
+
+## 🏁 Getting Started
+
+Follow these instructions to set up and run the project on your local machine.
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) v20 or later for the frontend
-- Node.js v22 for Firebase Functions compatibility
-- [npm](https://www.npmjs.com/)
-- [Firebase CLI](https://firebase.google.com/docs/cli)
+You must have the following tools installed:
+* [Node.js](https://nodejs.org/) (v18 or later recommended)
+* [npm](https://www.npmjs.com/) or [pnpm](https://pnpm.io/) package manager
+* [Firebase CLI](https://firebase.google.com/docs/cli) (for backend functions)
 
-### 1. Install dependencies
+You will also need accounts and API keys for:
+* Firebase account and API keys
+* Stripe account and publishable key
 
-```bash
-npm install
-cd backend/functions
-npm install
-cd ../..
-```
+### Environment Setup
 
-### 2. Create `.env.local`
+This project requires environment variables for its services.
 
-```bash
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
-NEXT_PUBLIC_FIREBASE_API_KEY=...
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=...
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
-NEXT_PUBLIC_FIREBASE_APP_ID=...
-NEXT_PUBLIC_RECAPTCHA_SITE_KEY=...
-```
+1.  Create a `.env.local` file in the root directory.
+2.  Copy the contents of `.env.example` (if available) or add the following keys. You must get these values from your service provider dashboards (Firebase, Stripe).
 
-These values are client-side configuration. Do not commit server secrets, Firebase admin credentials, Stripe secret keys, or reCAPTCHA secret keys.
+    ```bash
+    # Stripe
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=YOUR_STRIPE_PUBLISHABLE_KEY
 
-### 3. Run the Firebase emulator
+    # Firebase
+    NEXT_PUBLIC_FIREBASE_API_KEY=YOUR_FIREBASE_API_KEY
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=YOUR_FIREBASE_AUTH_DOMAIN
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID=YOUR_FIREBASE_PROJECT_ID
+    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=YOUR_FIREBASE_STORAGE_BUCKET
+    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=YOUR_FIREBASE_MESSAGING_SENDER_ID
+    NEXT_PUBLIC_FIREBASE_APP_ID=YOUR_FIREBASE_APP_ID
+    ```
 
-From `backend`:
+### Installation
 
-```bash
-firebase emulators:start
-```
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/YNVSolutions/SwiftCause_Web.git
+    cd SwiftCause_Web
+    ```
 
-If you only want the Functions emulator:
+2.  **Install Dependencies:**
+    ```bash
+    npm install
+    ```
+    *or if using pnpm:*
+    ```bash
+    pnpm install
+    ```
 
-```bash
-cd backend/functions
-npm run serve
-```
+3.  **Set up environment variables:**
+    Create a `.env.local` file in the root directory and add your Firebase and Stripe credentials as shown in the [Environment Setup](#environment-setup) section.
 
-### 4. Run the frontend
+### Running Locally
 
-From the repository root:
+Start the development server:
 
 ```bash
 npm run dev
 ```
+*or if using pnpm:*
+```bash
+pnpm dev
+```
 
-The app will be available at `http://localhost:3000`.
+The application will be available at `http://localhost:3000`.
 
-### 5. Run contributor checks
-
-From the repository root:
+**Note:** If you're using Firebase Cloud Functions for the backend, you may need to run the Firebase emulator in a separate terminal:
 
 ```bash
-npm run lint
-npm run format:check
-npm run build
-npm run test:run
+cd backend/functions
+npm install
+cd ../..
+firebase emulators:start
 ```
 
-Note:
 
-- `npm run test:run` now runs the Vitest suite with coverage.
-- The repository still has a backlog of pre-existing lint and formatting issues outside the latest tooling additions.
+## 🤝 Contributing
 
-## Product Flows
+Contributions are welcome! If you'd like to help improve SwiftCause, please follow these steps:
 
-For contributor-facing product behavior, start with these docs:
+1.  Fork the repository.
+2.  Create a new branch (`git checkout -b feature/your-feature-name`).
+3.  Make your changes, adhering to the [FSD Architecture](docs/FSD_ARCHITECTURE.md).
+4.  Commit your changes (`git commit -m 'Add some feature'`).
+5.  Push to the branch (`git push origin feature/your-feature-name`).
+6.  Open a Pull Request.
 
-- [Authentication Flow](./docs/AUTHENTICATION_FLOW.md)
-- [Donation Flow](./docs/DONATION_FLOW.md)
-- [Admin Flow](./docs/ADMIN_FLOW.md)
-- [Gift Aid Flow](./docs/GIFTAID_FLOW.md)
+## Visual Studio Code 
 
-High-level flow overview:
+You would need to have the latest version of [VS Code](https://code.visualstudio.com) installed.
 
-- Authentication: signup, login, email verification, forgot password, reset password
-- Donation: campaign selection, donor details, payment, recurring donations, result screens
-- Admin: dashboard access, campaign management, user management, kiosk management, Stripe onboarding
-- Gift Aid: donor declaration capture, storage, admin review, and export/reporting workflows
+For Next.js debugging in VS Code, you can use the built-in Node.js debugger. Add the block below to your `launch.json` file inside the `.vscode` folder in your app's root directory.
 
-## Architecture
-
-SwiftCause uses a Next.js App Router frontend with Feature-Sliced Design modules under `src/`, plus Firebase Functions under `backend/functions`.
-
-Start here:
-
-- [Architecture Diagrams](./docs/ARCHITECTURE_DIAGRAMS.md)
-- [FSD Architecture](./docs/FSD/FSD_ARCHITECTURE.md)
-- [Project Workflow](./docs/PROJECT_WORKFLOW.md)
-
-## Project Structure
-
-```text
-app/                 Next.js route entrypoints and layouts
-src/views/           Route-level screen composition
-src/widgets/         Composite UI blocks
-src/features/        User workflows and feature logic
-src/entities/        Domain entities and related UI/model code
-src/shared/          Shared UI, config, API helpers, and utilities
-backend/functions/   Firebase Cloud Functions and webhook handlers
-docs/                Contributor and architecture documentation
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Next.js: debug server-side",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/next/dist/bin/next",
+      "args": ["dev"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Next.js: debug client-side",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}"
+    },
+    {
+      "name": "Next.js: debug full stack",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/next/dist/bin/next",
+      "args": ["dev"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"],
+      "serverReadyAction": {
+        "pattern": "- Local:.+(https?://.+)",
+        "uriFormat": "%s",
+        "action": "debugWithChrome"
+      }
+    }
+  ]
+}
 ```
 
-## Tech Stack
+Start debugging in VS Code by pressing `F5` or by clicking the green debug icon. You can now write code, set breakpoints, make changes to the code, and debug your newly modified code—all from your editor.
 
-| Area      | Technology                                   |
-| :-------- | :------------------------------------------- |
-| Framework | Next.js 16                                   |
-| Frontend  | React 19                                     |
-| Language  | TypeScript                                   |
-| Styling   | Tailwind CSS 4                               |
-| Backend   | Firebase                                     |
-| Payments  | Stripe                                       |
-| Tooling   | ESLint, Prettier, Vitest, Husky, lint-staged |
 
-## Development Workflow
+## Supported Browsers
 
-1. Branch from `main`.
-2. Keep changes focused.
-3. Run local checks before opening a PR.
-4. Use Conventional Commits.
-5. Open a PR with the repository template.
+By default, the generated project uses the latest version of React 19 and Next.js 16.
 
-The pre-commit hook runs `lint-staged` on changed files only.
+You can refer [to the React documentation](https://react.dev/learn) for more information about supported browsers.
 
-## Contributing
+## Styling with Tailwind CSS
 
-Use these contributor docs:
+This project uses Tailwind CSS v4.0 for styling. The configuration is already set up in `tailwind.config.js` with custom colors, border radius, and other design tokens.
 
-- [CONTRIBUTING.md](./CONTRIBUTING.md)
-- [ROADMAP.md](./ROADMAP.md)
-- [CHANGELOG.md](./CHANGELOG.md)
-- [SUPPORT.md](./SUPPORT.md)
+**Developer Recommendations:**
+* Use [Prettier](https://prettier.io/) for code formatting.
+* Install the [Tailwind CSS IntelliSense](https://marketplace.visualstudio.com/items?itemName=bradlc.vscode-tailwindcss) extension for VS Code.
+* Install the [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) extension for VS Code for better code quality.
+* Before starting work, please create and/or assign an issue to yourself.
 
-## Visual Studio Code
+## ©️ License
 
-Recommended extensions are tracked in:
+This project is distributed under the license found in the `LICENCE` file.
 
-- [`.vscode/extensions.json`](./.vscode/extensions.json)
-
-Workspace settings are tracked in:
-
-- [`.vscode/settings.json`](./.vscode/settings.json)
-
-For debugging Next.js in VS Code, use the built-in Node.js and browser debuggers through your local `launch.json`.
-
-## Troubleshooting
-
-### PowerShell blocks `npm` or `npx`
-
-If PowerShell script execution blocks `npm` or `npx`, use `npm.cmd` or `npx.cmd` instead.
-
-### Firebase emulator issues
-
-- Run `firebase login` first
-- Make sure you are targeting the correct Firebase project
-- Confirm `backend/firebase.json` exists and Functions dependencies are installed
-
-### Build and test expectations
-
-- `npm run build` is important because it catches production and type issues that unit tests do not
-- Some payment and webhook flows still depend on external Stripe test configuration even in local development
-
-## License
-
-This project is distributed under the license found in the [LICENSE](./LICENSE) file.
-
-## Contributors
+## 👥 Contributors
 
 <a href="https://github.com/YNVSolutions/SwiftCause_Web/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=YNVSolutions/SwiftCause_Web" alt="Contributors">
+  <img src="https://contrib.rocks/image?repo=YNVSolutions/SwiftCause_Web" />
 </a>
+

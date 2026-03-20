@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { db } from '../firebase';
-import { Organization } from '../../types';
+import { useState, useEffect } from "react";
+import { doc, onSnapshot, DocumentData } from "firebase/firestore";
+import { db } from "../firebase";
+import { Organization } from "../../types";
 
 export interface StripeAccountInfo {
   accountId: string;
@@ -24,7 +24,7 @@ export const useOrganization = (organizationId: string | null) => {
     setLoading(true);
     setError(null);
 
-    const orgRef = doc(db, 'organizations', organizationId);
+    const orgRef = doc(db, "organizations", organizationId);
 
     const unsubscribe = onSnapshot(
       orgRef,
@@ -33,15 +33,15 @@ export const useOrganization = (organizationId: string | null) => {
           setOrganization({ id: docSnap.id, ...docSnap.data() } as Organization);
         } else {
           setOrganization(null);
-          setError('Organization not found.');
+          setError("Organization not found.");
         }
         setLoading(false);
       },
       (e) => {
-        console.error('Error fetching organization:', e);
-        setError('Failed to load organization data.');
+        console.error("Error fetching organization:", e);
+        setError("Failed to load organization data.");
         setLoading(false);
-      },
+      }
     );
 
     return () => unsubscribe();

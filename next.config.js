@@ -1,5 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Ensure turbopack resolves the correct workspace root.
+  // This avoids selecting an unrelated lockfile from a parent directory.
+  turbopack: {
+    root: __dirname,
+  },
   images: {
     remotePatterns: [
       {

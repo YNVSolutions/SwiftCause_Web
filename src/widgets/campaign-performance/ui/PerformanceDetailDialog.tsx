@@ -1,22 +1,18 @@
 import React from 'react';
-import {
-  X,
-  TrendingUp,
-  Target,
-  Trophy,
-  CheckCircle2,
-  AlertCircle,
+import { 
+  X, 
+  TrendingUp, 
+  Target, 
+  Trophy, 
+  CheckCircle2, 
+  AlertCircle, 
   Info,
   Percent,
-  DollarSign,
+  DollarSign
 } from 'lucide-react';
 import { FundraisingEfficiencyGauge } from './FundraisingEfficiencyGauge';
 import { Campaign } from '../../../shared/types';
-import {
-  calculatePerformanceMetrics,
-  calculateCampaignCompletion,
-  isCampaignWon,
-} from '../lib/calculateMetrics';
+import { calculatePerformanceMetrics, calculateCampaignCompletion, isCampaignWon } from '../lib/calculateMetrics';
 import { formatCurrency, formatCurrencyFromMajor } from '../../../shared/lib/currencyFormatter';
 
 interface PerformanceDetailDialogProps {
@@ -30,10 +26,11 @@ interface PerformanceDetailDialogProps {
   };
 }
 
-export const PerformanceDetailDialog: React.FC<PerformanceDetailDialogProps> = ({
-  isOpen,
-  onClose,
+export const PerformanceDetailDialog: React.FC<PerformanceDetailDialogProps> = ({ 
+  isOpen, 
+  onClose, 
   campaigns,
+  stats
 }) => {
   if (!isOpen) return null;
 
@@ -43,8 +40,8 @@ export const PerformanceDetailDialog: React.FC<PerformanceDetailDialogProps> = (
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-12">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-slate-950/60 backdrop-blur-xl animate-in fade-in duration-300"
+      <div 
+        className="absolute inset-0 bg-slate-950/60 backdrop-blur-xl animate-in fade-in duration-300" 
         onClick={onClose}
       />
 
@@ -60,7 +57,7 @@ export const PerformanceDetailDialog: React.FC<PerformanceDetailDialogProps> = (
               Fundraising Analysis
             </h2>
           </div>
-          <button
+          <button 
             onClick={onClose}
             className="p-4 bg-slate-50 text-slate-400 hover:text-slate-950 hover:bg-slate-100 rounded-3xl transition-all"
           >
@@ -77,7 +74,7 @@ export const PerformanceDetailDialog: React.FC<PerformanceDetailDialogProps> = (
                 <div className="scale-125 mb-6 origin-top">
                   <FundraisingEfficiencyGauge value={metrics.efficiencyRating} />
                 </div>
-
+                
                 <div className="w-full space-y-3 mt-6">
                   <div className="flex justify-between items-center p-5 bg-slate-50 rounded-2xl">
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
@@ -158,10 +155,10 @@ export const PerformanceDetailDialog: React.FC<PerformanceDetailDialogProps> = (
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
                     Won Campaigns
                   </p>
-                  <h3 className="text-2xl font-black text-slate-950">
-                    {metrics.wonCampaigns.length}
-                  </h3>
-                  <p className="text-[9px] font-bold text-emerald-600 mt-1">Goal fully reached</p>
+                  <h3 className="text-2xl font-black text-slate-950">{metrics.wonCampaigns.length}</h3>
+                  <p className="text-[9px] font-bold text-emerald-600 mt-1">
+                    Goal fully reached
+                  </p>
                 </div>
 
                 <div className="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm">
@@ -171,10 +168,10 @@ export const PerformanceDetailDialog: React.FC<PerformanceDetailDialogProps> = (
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
                     Active Pursuit
                   </p>
-                  <h3 className="text-2xl font-black text-slate-950">
-                    {metrics.activeCampaigns.length}
-                  </h3>
-                  <p className="text-[9px] font-bold text-indigo-600 mt-1">In progress funding</p>
+                  <h3 className="text-2xl font-black text-slate-950">{metrics.activeCampaigns.length}</h3>
+                  <p className="text-[9px] font-bold text-indigo-600 mt-1">
+                    In progress funding
+                  </p>
                 </div>
               </div>
 
@@ -191,21 +188,21 @@ export const PerformanceDetailDialog: React.FC<PerformanceDetailDialogProps> = (
                       <p className="text-sm font-medium">No campaigns yet</p>
                     </div>
                   ) : (
-                    campaigns.map((c) => {
+                    campaigns.map(c => {
                       const isWon = isCampaignWon(c.raised || 0, c.goal || 0);
                       const pct = calculateCampaignCompletion(c.raised || 0, c.goal || 0);
                       return (
-                        <div
-                          key={c.id}
+                        <div 
+                          key={c.id} 
                           className="flex items-center justify-between p-4 hover:bg-slate-50 rounded-2xl transition-all group"
                         >
                           <div className="flex items-center gap-4 flex-1 min-w-0">
                             {c.coverImageUrl ? (
                               <div className="w-10 h-10 rounded-xl overflow-hidden shadow-sm flex-shrink-0">
-                                <img
-                                  src={c.coverImageUrl}
+                                <img 
+                                  src={c.coverImageUrl} 
                                   alt={c.title}
-                                  className="w-full h-full object-cover"
+                                  className="w-full h-full object-cover" 
                                 />
                               </div>
                             ) : (
@@ -218,22 +215,19 @@ export const PerformanceDetailDialog: React.FC<PerformanceDetailDialogProps> = (
                                 {c.title}
                               </p>
                               <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                                {formatCurrency(c.raised || 0)} /{' '}
-                                {formatCurrencyFromMajor(c.goal || 0)}
+                                {formatCurrency(c.raised || 0)} / {formatCurrencyFromMajor(c.goal || 0)}
                               </p>
                             </div>
                           </div>
                           <div className="flex items-center gap-4 flex-shrink-0">
                             <div className="text-right">
-                              <p
-                                className={`text-xs font-black ${isWon ? 'text-emerald-500' : 'text-slate-900'}`}
-                              >
+                              <p className={`text-xs font-black ${isWon ? 'text-emerald-500' : 'text-slate-900'}`}>
                                 {pct}%
                               </p>
                               <div className="w-16 bg-slate-100 h-1 rounded-full mt-1 overflow-hidden">
-                                <div
-                                  className={`h-full rounded-full ${isWon ? 'bg-emerald-500' : 'bg-indigo-600'}`}
-                                  style={{ width: `${Math.min(100, pct)}%` }}
+                                <div 
+                                  className={`h-full rounded-full ${isWon ? 'bg-emerald-500' : 'bg-indigo-600'}`} 
+                                  style={{ width: `${Math.min(100, pct)}%` }} 
                                 />
                               </div>
                             </div>

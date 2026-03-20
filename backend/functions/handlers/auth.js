@@ -4,6 +4,9 @@ const cors = require("../middleware/cors");
 const ALLOWED_EVENT_TYPES = new Set([
   "password_reset_request",
   "password_reset_confirm",
+  "password_change_request",
+  "password_rotation_status",
+  "password_rotation_completed",
 ]);
 
 const ALLOWED_STATUSES = new Set([
@@ -13,6 +16,9 @@ const ALLOWED_STATUSES = new Set([
   "failed",
   "completed",
   "invalid_link",
+  "due",
+  "grace",
+  "expired",
 ]);
 
 const normalizeString = (value, maxLength = 500) => {

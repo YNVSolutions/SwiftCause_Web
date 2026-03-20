@@ -3,7 +3,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../..
 import { Skeleton } from '../../../shared/ui/skeleton';
 import { Badge } from '../../../shared/ui/badge';
 import { Button } from '../../../shared/ui/button';
-import { Bell, AlertCircle, CheckCircle, Info, X, Monitor, Wifi, WifiOff } from 'lucide-react';
+import { 
+  Bell, 
+  AlertCircle, 
+  CheckCircle, 
+  Info, 
+  X,
+  Monitor,
+  Wifi,
+  WifiOff
+} from 'lucide-react';
 
 interface Alert {
   id: string;
@@ -33,9 +42,9 @@ const getAlertIcon = (type: string) => {
   }
 };
 
-const getAlertStyles = (type: string) => {
-  const baseStyles = 'border-l-4 transition-all duration-200 hover:shadow-md';
-
+const getAlertStyles = (type: string, priority: string) => {
+  const baseStyles = "border-l-4 transition-all duration-200 hover:shadow-md";
+  
   switch (type) {
     case 'warning':
       return `${baseStyles} border-l-yellow-500 bg-yellow-50 hover:bg-yellow-100`;
@@ -124,12 +133,19 @@ export const AlertsSection: React.FC<AlertsSectionProps> = ({
         {alerts.length > 0 ? (
           <div className="space-y-2 max-h-52 overflow-y-auto">
             {alerts.map((alert) => (
-              <div key={alert.id} className={`p-2.5 rounded-lg ${getAlertStyles(alert.type)}`}>
+              <div
+                key={alert.id}
+                className={`p-2.5 rounded-lg ${getAlertStyles(alert.type, alert.priority)}`}
+              >
                 <div className="flex items-start gap-2.5">
-                  <div className="flex-shrink-0 mt-0.5">{getAlertIcon(alert.type)}</div>
+                  <div className="flex-shrink-0 mt-0.5">
+                    {getAlertIcon(alert.type)}
+                  </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
-                      <p className="text-sm text-gray-900 break-words flex-1">{alert.message}</p>
+                      <p className="text-sm text-gray-900 break-words flex-1">
+                        {alert.message}
+                      </p>
                       <div className="flex items-center gap-2 flex-shrink-0">
                         {getPriorityBadge(alert.priority)}
                         {onDismissAlert && (
@@ -144,7 +160,7 @@ export const AlertsSection: React.FC<AlertsSectionProps> = ({
                         )}
                       </div>
                     </div>
-
+                    
                     {/* Additional context for kiosk alerts */}
                     {alert.message.includes('offline') && (
                       <div className="flex items-center gap-2 mt-1.5 text-xs text-gray-600">
@@ -164,8 +180,7 @@ export const AlertsSection: React.FC<AlertsSectionProps> = ({
             </div>
             <p className="text-sm font-medium mb-1">All Systems Operational</p>
             <p className="text-xs text-gray-600 mb-3">
-              No alerts or notifications at this time. Your kiosks and campaigns are running
-              smoothly.
+              No alerts or notifications at this time. Your kiosks and campaigns are running smoothly.
             </p>
             <div className="flex items-center justify-center gap-3 text-xs text-gray-500">
               <div className="flex items-center gap-1">

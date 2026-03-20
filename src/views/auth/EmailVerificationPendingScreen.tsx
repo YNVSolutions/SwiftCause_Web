@@ -1,13 +1,14 @@
-'use client';
+'use client'
 
-import React, { useState } from 'react';
-import { Mail, ArrowLeft, RefreshCw } from 'lucide-react';
-import Image from 'next/image';
+import React, { useState } from 'react'
+import { Button } from '@/shared/ui/button'
+import { Mail, ArrowLeft, RefreshCw } from 'lucide-react'
+import Image from 'next/image'
 
 interface EmailVerificationPendingScreenProps {
-  email: string;
-  onResendEmail: () => Promise<void>;
-  onBackToLogin: () => void;
+  email: string
+  onResendEmail: () => Promise<void>
+  onBackToLogin: () => void
 }
 
 export const EmailVerificationPendingScreen: React.FC<EmailVerificationPendingScreenProps> = ({
@@ -15,39 +16,39 @@ export const EmailVerificationPendingScreen: React.FC<EmailVerificationPendingSc
   onResendEmail,
   onBackToLogin,
 }) => {
-  const [isResending, setIsResending] = useState(false);
-  const [resendSuccess, setResendSuccess] = useState(false);
-  const [resendError, setResendError] = useState<string | null>(null);
-  const [cooldown, setCooldown] = useState(0);
+  const [isResending, setIsResending] = useState(false)
+  const [resendSuccess, setResendSuccess] = useState(false)
+  const [resendError, setResendError] = useState<string | null>(null)
+  const [cooldown, setCooldown] = useState(0)
 
   const handleResend = async () => {
-    if (cooldown > 0) return;
+    if (cooldown > 0) return
 
-    setIsResending(true);
-    setResendError(null);
-    setResendSuccess(false);
+    setIsResending(true)
+    setResendError(null)
+    setResendSuccess(false)
 
     try {
-      await onResendEmail();
-      setResendSuccess(true);
-
+      await onResendEmail()
+      setResendSuccess(true)
+      
       // Start 60 second cooldown
-      setCooldown(60);
+      setCooldown(60)
       const interval = setInterval(() => {
         setCooldown((prev) => {
           if (prev <= 1) {
-            clearInterval(interval);
-            return 0;
+            clearInterval(interval)
+            return 0
           }
-          return prev - 1;
-        });
-      }, 1000);
+          return prev - 1
+        })
+      }, 1000)
     } catch (error) {
-      setResendError(error instanceof Error ? error.message : 'Failed to resend email');
+      setResendError(error instanceof Error ? error.message : 'Failed to resend email')
     } finally {
-      setIsResending(false);
+      setIsResending(false)
     }
-  };
+  }
 
   return (
     <div className="min-h-screen bg-[#fcf9f1] flex items-center justify-center p-4">
@@ -60,16 +61,8 @@ export const EmailVerificationPendingScreen: React.FC<EmailVerificationPendingSc
       <div className="w-full max-w-lg relative z-10">
         {/* Logo */}
         <div className="flex items-center justify-center gap-3 mb-8">
-          <Image
-            src="/logo.png"
-            alt="SwiftCause logo"
-            width={48}
-            height={48}
-            className="rounded-xl"
-          />
-          <span className="font-bold text-2xl tracking-tight text-[#064e3b] uppercase">
-            SwiftCause
-          </span>
+          <Image src="/logo.png" alt="SwiftCause logo" width={48} height={48} className="rounded-xl" />
+          <span className="font-bold text-2xl tracking-tight text-[#064e3b] uppercase">SwiftCause</span>
         </div>
 
         {/* Card */}
@@ -82,7 +75,9 @@ export const EmailVerificationPendingScreen: React.FC<EmailVerificationPendingSc
           </div>
 
           {/* Title */}
-          <h1 className="text-3xl font-bold text-center text-[#0a2e16] mb-3">Verify Your Email</h1>
+          <h1 className="text-3xl font-bold text-center text-[#0a2e16] mb-3">
+            Verify Your Email
+          </h1>
 
           {/* Description */}
           <p className="text-center text-slate-600 text-lg mb-6">
@@ -91,7 +86,9 @@ export const EmailVerificationPendingScreen: React.FC<EmailVerificationPendingSc
 
           {/* Email Display */}
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6">
-            <p className="text-center font-semibold text-[#0a2e16] break-all">{email}</p>
+            <p className="text-center font-semibold text-[#0a2e16] break-all">
+              {email}
+            </p>
           </div>
 
           {/* Instructions */}
@@ -114,7 +111,9 @@ export const EmailVerificationPendingScreen: React.FC<EmailVerificationPendingSc
           {/* Error Message */}
           {resendError && (
             <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
-              <p className="text-sm text-red-700 text-center font-medium">{resendError}</p>
+              <p className="text-sm text-red-700 text-center font-medium">
+                {resendError}
+              </p>
             </div>
           )}
 
@@ -159,7 +158,9 @@ export const EmailVerificationPendingScreen: React.FC<EmailVerificationPendingSc
             Try logging in
           </button>
         </p>
+
+        
       </div>
     </div>
-  );
-};
+  )
+}

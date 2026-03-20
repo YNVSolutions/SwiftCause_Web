@@ -1,53 +1,61 @@
-'use client';
+'use client'
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Toast, ToastHost } from './Toast';
+import React, { createContext, useContext, useState, ReactNode } from 'react'
+import { Toast, ToastHost } from './Toast'
 
-type ToastVariant = 'success' | 'error' | 'warning' | 'info';
+type ToastVariant = 'success' | 'error' | 'warning' | 'info'
 
 interface ToastContextType {
-  showToast: (message: string, variant?: ToastVariant, durationMs?: number) => void;
+  showToast: (message: string, variant?: ToastVariant, durationMs?: number) => void
 }
 
-const ToastContext = createContext<ToastContextType | undefined>(undefined);
+const ToastContext = createContext<ToastContextType | undefined>(undefined)
 
 export const useToast = () => {
-  const context = useContext(ToastContext);
+  const context = useContext(ToastContext)
   if (context === undefined) {
-    throw new Error('useToast must be used within a ToastProvider');
+    throw new Error('useToast must be used within a ToastProvider')
   }
-  return context;
-};
+  return context
+}
 
 interface ToastProviderProps {
-  children: ReactNode;
+  children: ReactNode
 }
 
 export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
-  const [isToastVisible, setIsToastVisible] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
-  const [toastVariant, setToastVariant] = useState<ToastVariant>('info');
+  const [isToastVisible, setIsToastVisible] = useState(false)
+  const [toastMessage, setToastMessage] = useState('')
+  const [toastVariant, setToastVariant] = useState<ToastVariant>('info')
 
-  const showToast = (message: string, variant: ToastVariant = 'info') => {
-    setToastMessage(message);
-    setToastVariant(variant);
-    setIsToastVisible(true);
-  };
+  const showToast = (
+    message: string,
+    variant: ToastVariant = 'info',
+    durationMs = 2500
+  ) => {
+    setToastMessage(message)
+    setToastVariant(variant)
+    setIsToastVisible(true)
+  }
 
   const value: ToastContextType = {
     showToast,
-  };
+  }
 
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <ToastHost visible={isToastVisible} onClose={() => setIsToastVisible(false)} align="top">
-        <Toast
-          message={toastMessage}
-          variant={toastVariant}
-          onClose={() => setIsToastVisible(false)}
+      <ToastHost 
+        visible={isToastVisible} 
+        onClose={() => setIsToastVisible(false)} 
+        align="top"
+      >
+        <Toast 
+          message={toastMessage} 
+          variant={toastVariant} 
+          onClose={() => setIsToastVisible(false)} 
         />
       </ToastHost>
     </ToastContext.Provider>
-  );
-};
+  )
+}

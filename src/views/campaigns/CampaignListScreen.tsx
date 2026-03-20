@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { NavigationHeader } from '../../shared/ui/NavigationHeader';
 import { Campaign, KioskSession } from '../../shared/types';
 import { Button } from '../../shared/ui/button';
-import { formatCurrencyFromMajor } from '../../shared/lib/currencyFormatter';
 import { ChevronLeft } from 'lucide-react';
+import { updateKiosk } from '../../shared/api';
+import { formatCurrency, formatCurrencyFromMajor } from '../../shared/lib/currencyFormatter';
 
 interface CampaignListScreenProps {
   campaigns: Campaign[];
@@ -32,10 +33,13 @@ export function CampaignListScreen({
   onViewDetails,
   isDefaultCampaign,
   onLogout,
+  refreshCampaigns,
   layoutMode,
   autoRotateCampaigns,
   rotationInterval,
+  refreshCurrentKioskSession,
 }: CampaignListScreenProps) {
+
   const [page, setPage] = useState(1);
   const [isLoadingPayment, setIsLoadingPayment] = useState(false);
   const campaignsPerPage =
@@ -54,6 +58,22 @@ export function CampaignListScreen({
       setPage(totalPages);
     }
   }, [page, totalPages]);
+
+  const handleRefresh = async () => {
+    await refreshCampaigns();
+    await refreshCurrentKioskSession();
+  };
+
+  const handleLayoutChange = async (newLayout: 'grid' | 'list' | 'carousel') => {
+    if (kioskSession && kioskSession.kioskId) {
+      try {
+        await updateKiosk(kioskSession.kioskId, { settings: { ...kioskSession.settings, displayMode: newLayout } });
+        await refreshCurrentKioskSession(); // Refresh kiosk session to get updated settings
+      } catch (e) {
+        console.error("Failed to update kiosk display mode:", e);
+      }
+    }
+  };
 
   const handleSelectCampaign = async (campaign: Campaign, amount?: number) => {
     setIsLoadingPayment(true);
@@ -171,18 +191,8 @@ export function CampaignListScreen({
         {campaigns.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <div className="text-gray-400 mb-4">
-              <svg
-                className="mx-auto h-12 w-12 text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                />
+              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No Campaigns Available</h3>
@@ -205,7 +215,7 @@ export function CampaignListScreen({
           />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {currentCampaigns.map((campaign) => (
+            {currentCampaigns.map(campaign => (
               <div key={campaign.id} className="bg-white rounded-2xl overflow-hidden shadow-lg">
                 {/* Campaign Image */}
                 <div className="relative h-48 overflow-hidden rounded-t-2xl">
@@ -217,10 +227,10 @@ export function CampaignListScreen({
                   {/* Progress Bar Overlay */}
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-4">
                     <div className="w-full bg-white/30 rounded-full h-2">
-                      <div
+                      <div 
                         className="bg-white h-2 rounded-full transition-all duration-300"
-                        style={{
-                          width: `${Math.min(((campaign.raised || 0) / 100 / (campaign.goal || 1)) * 100, 100)}%`,
+                        style={{ 
+                          width: `${Math.min((((campaign.raised || 0) / 100) / (campaign.goal || 1)) * 100, 100)}%` 
                         }}
                       />
                     </div>
@@ -229,9 +239,7 @@ export function CampaignListScreen({
 
                 {/* Campaign Info */}
                 <div className="p-6">
-                  <h2 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
-                    {campaign.title}
-                  </h2>
+                  <h2 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">{campaign.title}</h2>
                   <p className="text-gray-600 mb-6 line-clamp-3">{campaign.description}</p>
 
                   {/* Donation Amount Buttons */}
@@ -245,15 +253,11 @@ export function CampaignListScreen({
                           disabled={isLoadingPayment}
                           className="h-10 bg-gray-100 hover:bg-gray-200 text-blue-600 font-semibold rounded-xl border-0 transition-all duration-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          💙{' '}
-                          {formatCurrencyFromMajor(
-                            amount,
-                            kioskSession?.organizationCurrency || 'GBP',
-                          )}
+                          💙 {formatCurrencyFromMajor(amount, kioskSession?.organizationCurrency || 'GBP')}
                         </Button>
                       ))}
                     </div>
-
+                    
                     {/* Custom Amount Button */}
                     <Button
                       onClick={() => handleSelectCampaign(campaign)}
@@ -310,7 +314,7 @@ const CampaignCarousel = ({
   campaigns,
   onSelectCampaign,
   kioskSession,
-  isLoadingPayment,
+  isLoadingPayment
 }: CampaignCarouselProps) => {
   if (campaigns.length === 0) {
     return null;
@@ -331,10 +335,10 @@ const CampaignCarousel = ({
               {/* Progress Bar Overlay */}
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-6">
                 <div className="w-full bg-white/30 rounded-full h-3">
-                  <div
+                  <div 
                     className="bg-white h-3 rounded-full transition-all duration-300"
-                    style={{
-                      width: `${Math.min(((campaign.raised || 0) / 100 / (campaign.goal || 1)) * 100, 100)}%`,
+                    style={{ 
+                      width: `${Math.min((((campaign.raised || 0) / 100) / (campaign.goal || 1)) * 100, 100)}%` 
                     }}
                   />
                 </div>
@@ -343,9 +347,7 @@ const CampaignCarousel = ({
 
             {/* Campaign Info */}
             <div className="p-6 md:p-8">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                {campaign.title}
-              </h2>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{campaign.title}</h2>
               <p className="text-gray-600 mb-8 text-lg">{campaign.description}</p>
 
               {/* Donation Amount Buttons */}
@@ -359,12 +361,11 @@ const CampaignCarousel = ({
                       disabled={isLoadingPayment}
                       className="h-14 bg-gray-100 hover:bg-gray-200 text-blue-600 font-semibold rounded-xl border-0 transition-all duration-200 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      💙{' '}
-                      {formatCurrencyFromMajor(amount, kioskSession?.organizationCurrency || 'GBP')}
+                      💙 {formatCurrencyFromMajor(amount, kioskSession?.organizationCurrency || 'GBP')}
                     </Button>
                   ))}
                 </div>
-
+                
                 {/* Custom Amount Button */}
                 <Button
                   onClick={() => onSelectCampaign(campaign)}

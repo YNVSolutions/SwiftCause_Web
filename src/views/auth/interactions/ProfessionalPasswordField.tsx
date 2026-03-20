@@ -7,6 +7,7 @@ interface ProfessionalPasswordFieldProps {
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onBlur?: () => void;
+  onFocus?: () => void;
   error?: string | null;
   id?: string;
   label?: string;
@@ -18,6 +19,7 @@ export function ProfessionalPasswordField({
   value, 
   onChange, 
   onBlur, 
+  onFocus,
   error, 
   id = 'password',
   label = 'Password',
@@ -48,6 +50,9 @@ export function ProfessionalPasswordField({
             placeholder={placeholder}
             value={value}
             onChange={onChange}
+            onFocus={() => {
+              onFocus?.();
+            }}
             onBlur={() => {
               onBlur?.();
             }}
