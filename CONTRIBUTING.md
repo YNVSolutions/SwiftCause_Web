@@ -136,7 +136,7 @@ SwiftCause follows Feature-Sliced Design. Read [docs/FSD_ARCHITECTURE.md](docs/F
 Example:
 
 ```ts
-import { CampaignCard } from '@/entities/campaign'
+import { CampaignCard } from '@/entities/campaign';
 ```
 
 Avoid importing from deep internal paths unless the slice intentionally exposes them.
@@ -163,6 +163,7 @@ Avoid importing from deep internal paths unless the slice intentionally exposes 
 ### General Quality
 
 - Run linting before opening a PR.
+- Run formatting checks or format touched files before opening a PR.
 - Do not commit generated build output such as `.next/` or `dist/`.
 - Keep commits and pull requests scoped to one concern where practical.
 - Update documentation when behavior, setup, or contributor workflow changes.
@@ -175,14 +176,15 @@ Run these commands from the repository root unless noted otherwise.
 
 ```bash
 npm run lint
+npm run format:check
 npm run build
 npm run test:run
 ```
 
-Current note:
+Notes:
 
-- `npm run test:run` is currently a placeholder and does not execute a real test suite yet.
-- `npm run build` is still important because it catches type and production build issues.
+- `npm run test:run` executes the Vitest suite with coverage reporting.
+- `npm run build` is still important because it catches type and production build issues beyond the unit test suite.
 
 ### Firebase Functions
 

@@ -23,11 +23,11 @@
 
 Based on the project structure, SwiftCause includes:
 
-* **Nonprofit Campaign Management:** A full admin dashboard to create, edit, and manage fundraising campaigns.
-* **Secure Payments:** Integration with Stripe for secure and reliable donation processing.
-* **Analytics Dashboard:** A rich dashboard for visualizing donation data, device performance, and user metrics.
-* **Kiosk Device Management:** Support for managing physical kiosk devices for in-person donations.
-* **User & Auth Management:** Robust authentication and user management for admins and donors.
+- **Nonprofit Campaign Management:** A full admin dashboard to create, edit, and manage fundraising campaigns.
+- **Secure Payments:** Integration with Stripe for secure and reliable donation processing.
+- **Analytics Dashboard:** A rich dashboard for visualizing donation data, device performance, and user metrics.
+- **Kiosk Device Management:** Support for managing physical kiosk devices for in-person donations.
+- **User & Auth Management:** Robust authentication and user management for admins and donors.
 
 ## 🚀 Live Demo
 
@@ -37,21 +37,19 @@ A live version of the project is deployed: [**SwiftCause**](https://swiftcause--
 
 This project uses a modern architecture with a Next.js frontend and a Firebase backend.
 
-| Area | Technology | Badge |
-| :--- | :--- | :--- |
-| **Framework** | Next.js | ![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white) |
-| **Frontend** | React 19 | ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB) |
-| **Language** | TypeScript | ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white) |
-| **Styling** | Tailwind CSS 4 | ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-%231572B6.svg?style=for-the-badge&logo=tailwindcss&logoColor=white) |
-| **UI Components** | Radix UI | ![Radix UI](https://img.shields.io/badge/Radix_UI-161618?logo=radix-ui&logoColor=white) |
-| **Icons** | Lucide React | ![Lucide](https://img.shields.io/badge/Lucide-222222?logo=lucide&logoColor=white) |
-| **Charts** | Recharts | ![Recharts](https://img.shields.io/badge/Recharts-232F3E?logo=recharts&logoColor=white) |
-| **Notifications** | Sonner | ![Sonner](https://img.shields.io/badge/Sonner-87CEEB?logo=sonner&logoColor=white) |
-| **Backend** | Firebase 11 | ![Firebase](https://img.shields.io/badge/Firebase-FFCA28?logo=firebase&logoColor=black) |
-| **Payments** | Stripe | ![Stripe](https://img.shields.io/badge/Stripe-626CD9?logo=stripe&logoColor=white) |
-| **CI/CD** | GitHub Actions | ![GitHub Actions](https://img.shields.io/badge/github%20actions-%232671E5.svg?style=for-the-badge&logo=githubactions&logoColor=white) |
-
-
+| Area              | Technology     | Badge                                                                                                                                 |
+| :---------------- | :------------- | :------------------------------------------------------------------------------------------------------------------------------------ |
+| **Framework**     | Next.js        | ![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white)                              |
+| **Frontend**      | React 19       | ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)                         |
+| **Language**      | TypeScript     | ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)                                         |
+| **Styling**       | Tailwind CSS 4 | ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-%231572B6.svg?style=for-the-badge&logo=tailwindcss&logoColor=white)         |
+| **UI Components** | Radix UI       | ![Radix UI](https://img.shields.io/badge/Radix_UI-161618?logo=radix-ui&logoColor=white)                                               |
+| **Icons**         | Lucide React   | ![Lucide](https://img.shields.io/badge/Lucide-222222?logo=lucide&logoColor=white)                                                     |
+| **Charts**        | Recharts       | ![Recharts](https://img.shields.io/badge/Recharts-232F3E?logo=recharts&logoColor=white)                                               |
+| **Notifications** | Sonner         | ![Sonner](https://img.shields.io/badge/Sonner-87CEEB?logo=sonner&logoColor=white)                                                     |
+| **Backend**       | Firebase 11    | ![Firebase](https://img.shields.io/badge/Firebase-FFCA28?logo=firebase&logoColor=black)                                               |
+| **Payments**      | Stripe         | ![Stripe](https://img.shields.io/badge/Stripe-626CD9?logo=stripe&logoColor=white)                                                     |
+| **CI/CD**         | GitHub Actions | ![GitHub Actions](https://img.shields.io/badge/github%20actions-%232671E5.svg?style=for-the-badge&logo=githubactions&logoColor=white) |
 
 ## 🏛️ Architecture
 
@@ -68,13 +66,15 @@ Follow these instructions to set up and run the project on your local machine.
 ### Prerequisites
 
 You must have the following tools installed:
-* [Node.js](https://nodejs.org/) (v18 or later recommended)
-* [npm](https://www.npmjs.com/) or [pnpm](https://pnpm.io/) package manager
-* [Firebase CLI](https://firebase.google.com/docs/cli) (for backend functions)
+
+- [Node.js](https://nodejs.org/) (v20 or later for the frontend; Firebase Functions use Node.js 22)
+- [npm](https://www.npmjs.com/) or [pnpm](https://pnpm.io/) package manager
+- [Firebase CLI](https://firebase.google.com/docs/cli) (for backend functions)
 
 You will also need accounts and API keys for:
-* Firebase account and API keys
-* Stripe account and publishable key
+
+- Firebase account and API keys
+- Stripe account and publishable key
 
 ### Environment Setup
 
@@ -99,16 +99,20 @@ This project requires environment variables for its services.
 ### Installation
 
 1.  **Clone the repository:**
+
     ```bash
     git clone https://github.com/YNVSolutions/SwiftCause_Web.git
     cd SwiftCause_Web
     ```
 
 2.  **Install Dependencies:**
+
     ```bash
     npm install
     ```
-    *or if using pnpm:*
+
+    _or if using pnpm:_
+
     ```bash
     pnpm install
     ```
@@ -123,7 +127,9 @@ Start the development server:
 ```bash
 npm run dev
 ```
-*or if using pnpm:*
+
+_or if using pnpm:_
+
 ```bash
 pnpm dev
 ```
@@ -139,7 +145,6 @@ cd ../..
 firebase emulators:start
 ```
 
-
 ## 🤝 Contributing
 
 Contributions are welcome! If you'd like to help improve SwiftCause, please follow these steps:
@@ -151,7 +156,7 @@ Contributions are welcome! If you'd like to help improve SwiftCause, please foll
 5.  Push to the branch (`git push origin feature/your-feature-name`).
 6.  Open a Pull Request.
 
-## Visual Studio Code 
+## Visual Studio Code
 
 You would need to have the latest version of [VS Code](https://code.visualstudio.com) installed.
 
@@ -197,7 +202,6 @@ For Next.js debugging in VS Code, you can use the built-in Node.js debugger. Add
 
 Start debugging in VS Code by pressing `F5` or by clicking the green debug icon. You can now write code, set breakpoints, make changes to the code, and debug your newly modified code—all from your editor.
 
-
 ## Supported Browsers
 
 By default, the generated project uses the latest version of React 19 and Next.js 16.
@@ -209,10 +213,11 @@ You can refer [to the React documentation](https://react.dev/learn) for more inf
 This project uses Tailwind CSS v4.0 for styling. The configuration is already set up in `tailwind.config.js` with custom colors, border radius, and other design tokens.
 
 **Developer Recommendations:**
-* Use [Prettier](https://prettier.io/) for code formatting.
-* Install the [Tailwind CSS IntelliSense](https://marketplace.visualstudio.com/items?itemName=bradlc.vscode-tailwindcss) extension for VS Code.
-* Install the [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) extension for VS Code for better code quality.
-* Before starting work, please create and/or assign an issue to yourself.
+
+- Use [Prettier](https://prettier.io/) for code formatting.
+- Install the [Tailwind CSS IntelliSense](https://marketplace.visualstudio.com/items?itemName=bradlc.vscode-tailwindcss) extension for VS Code.
+- Install the [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) extension for VS Code for better code quality.
+- Before starting work, please create and/or assign an issue to yourself.
 
 ## ©️ License
 
