@@ -1,0 +1,124 @@
+name: Release Automation
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Generate Release And Changelog
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout default branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+
+      - name: Fetch tags
+        run: git fetch --force --tags origin
+
+      - name: Compute release metadata
+        id: meta
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#v}"
+          RELEASE_DATE="$(date -u +%F)"
+          PREVIOUS_TAG="$(git tag --sort=-version:refname | grep '^v' | grep -vx "${TAG}" | head -n 1 || true)"
+
+          if [ -n "${PREVIOUS_TAG}" ]; then
+            RANGE="${PREVIOUS_TAG}..${TAG}"
+          else
+            RANGE="${TAG}"
+          fi
+
+          echo "tag=${TAG}" >> "${GITHUB_OUTPUT}"
+          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
+          echo "release_date=${RELEASE_DATE}" >> "${GITHUB_OUTPUT}"
+          echo "previous_tag=${PREVIOUS_TAG}" >> "${GITHUB_OUTPUT}"
+          echo "range=${RANGE}" >> "${GITHUB_OUTPUT}"
+
+      - name: Generate release notes
+        shell: bash
+        run: |
+          RANGE="${{ steps.meta.outputs.range }}"
+          TAG="${{ steps.meta.outputs.tag }}"
+          VERSION="${{ steps.meta.outputs.version }}"
+          RELEASE_DATE="${{ steps.meta.outputs.release_date }}"
+          PREVIOUS_TAG="${{ steps.meta.outputs.previous_tag }}"
+
+          if git log --no-merges --pretty=format:'- %s (%h)' "${RANGE}" | grep -q .; then
+            git log --no-merges --pretty=format:'- %s (%h)' "${RANGE}" > changes.tmp
+          else
+            echo "- Initial release." > changes.tmp
+          fi
+
+          {
+            echo "## [${VERSION}] - ${RELEASE_DATE}"
+            echo
+            echo "### Changed"
+            echo
+            cat changes.tmp
+          } > changelog_entry.md
+
+          {
+            echo "# ${TAG}"
+            echo
+            if [ -n "${PREVIOUS_TAG}" ]; then
+              echo "Changes since ${PREVIOUS_TAG}."
+            else
+              echo "Initial tagged release."
+            fi
+            echo
+            cat changes.tmp
+          } > release_notes.md
+
+      - name: Update CHANGELOG.md
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          changelog = Path("CHANGELOG.md")
+          entry = Path("changelog_entry.md").read_text(encoding="utf-8").strip()
+          content = changelog.read_text(encoding="utf-8")
+          marker = "## [Unreleased]"
+
+          if entry in content:
+              raise SystemExit(0)
+
+          if marker not in content:
+              raise SystemExit("CHANGELOG.md is missing the '## [Unreleased]' section.")
+
+          updated = content.replace(marker, f"{marker}\n\n{entry}", 1)
+          changelog.write_text(updated + ("\n" if not updated.endswith("\n") else ""), encoding="utf-8")
+          PY
+
+      - name: Commit changelog update
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+
+          if git diff --cached --quiet; then
+            echo "No changelog changes to commit."
+            exit 0
+          fi
+
+          git commit -m "docs(changelog): update for ${{ steps.meta.outputs.tag }} [skip ci]"
+          git push origin HEAD:${{ github.event.repository.default_branch }}
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: ${{ steps.meta.outputs.tag }}
+          body_path: release_notes.md
+          prerelease: ${{ contains(github.ref_name, '-') }}
