@@ -1,175 +1,255 @@
 # Contributing to SwiftCause
 
-First off, thank you for considering contributing to SwiftCause! We're excited to have your help in building a modern, scalable donation platform. Every contribution, from a bug report to a new feature, is valuable.
+Thank you for contributing to SwiftCause. This guide explains how to set up the project locally, what standards to follow, and what to include when you open a pull request.
 
-Please take a moment to review this document to make the contribution process easy and effective for everyone involved.
+## How To Contribute
 
-## How Can I Contribute?
+### Report Bugs
 
-### Reporting Bugs
+If you find a bug, [open an issue](https://github.com/YNVSolutions/SwiftCause_Web/issues/new) and include:
 
-If you find a bug, please [open an issue](https://github.com/YNVSolutions/SwiftCause_Web/issues/new) and provide the following:
+- A short, specific title
+- Clear reproduction steps
+- Expected behavior
+- Actual behavior
+- Your environment details such as browser, OS, and route
 
-* **A clear title** that describes the issue.
-* **Steps to reproduce** the bug.
-* **What you expected to happen** versus what actually happened.
-* **Your environment**: Browser, OS, etc.
+### Suggest Features
 
-### Suggesting Enhancements or New Features
+Before proposing a new feature:
 
-We'd love to hear your ideas! To suggest an enhancement:
+1. Check existing issues and roadmap items first.
+2. Open a feature request with the problem, proposed solution, and any constraints.
 
-1.  **Check existing issues** to see if your idea has already been discussed.
-2.  If not, [open a new issue](https://github.com/YNVSolutions/SwiftCause_Web/issues/new) to start a discussion. Please be as detailed as possible about the feature and *why* it would be valuable.
+### Submit Pull Requests
 
-### Submitting a Pull Request
-
-If you're ready to write code, that's fantastic! Here’s how to get set up and submit your work.
+Pull requests should stay focused. If a change mixes refactoring, product behavior, and tooling work, split it unless the pieces are tightly coupled.
 
 ## Prerequisites
 
-Before you begin, you'll need the following installed on your local machine:
-* [Node.js](https://nodejs.org/) (v18 or later is recommended; our backend functions use v22)
-* [npm](https://www.npmjs.com/) or [pnpm](https://pnpm.io/)
-* [Firebase CLI](https://firebase.google.com/docs/cli) (for running backend functions)
+Install the following locally:
 
-You will also need:
-* A **Firebase** account to get API keys.
-* A **Stripe** account to get a publishable API key.
+- [Node.js](https://nodejs.org/) v20 or later for the frontend
+- Node.js v22 for Firebase Functions compatibility
+- [npm](https://www.npmjs.com/)
+- [Firebase CLI](https://firebase.google.com/docs/cli)
+
+You will also need access to:
+
+- A Firebase project for client configuration and emulator usage
+- Stripe test credentials for payment-related work
 
 ## Local Development Setup
 
-This project is a Next.js app with a separate backend for Firebase Functions. You'll need to run both.
+### 1. Fork And Clone
 
-1.  **Fork & Clone**
-    * Fork the repository to your own GitHub account.
-    * Clone your fork locally:
-        ```bash
-        git clone https://github.com/YNVSolutions/SwiftCause_Web.git
-        cd SwiftCause_Web
-        ```
+```bash
+git clone https://github.com/YNVSolutions/SwiftCause_Web.git
+cd SwiftCause_Web
+```
 
-2.  **Install Frontend Dependencies**
-    * Install the dependencies from the root directory.
-        ```bash
-        npm install
-        ```
-    * **Note:** Our `package.json` has specific `overrides` for React 19. If you encounter peer dependency issues, you might need to use `npm install --legacy-peer-deps` as seen in our CI workflow.
+### 2. Install Frontend Dependencies
 
-3.  **Set Up Environment Variables**
-    * Create a `.env.local` file in the root of the project.
-    * Copy the following keys into it and add your keys from your Firebase and Stripe dashboards:
-        ```bash
-        # Stripe
-        NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+```bash
+npm install
+```
 
-        # Firebase
-        NEXT_PUBLIC_FIREBASE_API_KEY=...
-        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
-        NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
-        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=...
-        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
-        NEXT_PUBLIC_FIREBASE_APP_ID=...
-        ```
+If you hit peer dependency conflicts, retry with:
 
-4.  **Set Up Backend Functions**
-    * The Firebase functions have their own `package.json`.
-    * Navigate to the functions directory and install its dependencies:
-        ```bash
-        cd backend/functions
-        npm install
-        cd ../..  # Return to the root
-        ```
+```bash
+npm install --legacy-peer-deps
+```
 
-5.  **Run the Project**
-    * You'll need two terminals open.
+### 3. Configure Frontend Environment Variables
 
-    * **Terminal 1 (Backend):** Start the Firebase emulators for the backend:
-        ```bash
-        firebase emulators:start
-        ```
+Create `.env.local` in the repository root:
 
-    * **Terminal 2 (Frontend):** Run the Next.js development server:
-        ```bash
-        npm run dev
-        ```
+```bash
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+NEXT_PUBLIC_FIREBASE_API_KEY=...
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=...
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
+NEXT_PUBLIC_FIREBASE_APP_ID=...
+NEXT_PUBLIC_RECAPTCHA_SITE_KEY=...
+```
 
-    * Open `http://localhost:3000` in your browser to see the app.
+These are client-side values. Do not commit server secrets, Firebase admin credentials, Stripe secret keys, or reCAPTCHA secret keys.
 
-## Our Architectural Philosophy: Feature-Sliced Design (FSD)
+### 4. Install Firebase Functions Dependencies
 
-**This is the most important rule.** All contributions **must** adhere to our Feature-Sliced Design (FSD) architecture.
+```bash
+cd backend/functions
+npm install
+cd ../..
+```
 
-Before writing any code, please read our **[Architecture Documentation](docs/FSD_ARCHITECTURE.md)**.
+## Firebase Emulator Setup
 
-### The Golden Rules
+SwiftCause uses a separate Firebase backend under [backend](./backend). The Firebase config lives in [backend/firebase.json](./backend/firebase.json), and the Functions project lives in [backend/functions](./backend/functions).
 
-1.  **Layered Imports:** You must follow the one-way dependency rule. Lower layers **cannot** import from higher layers.
-    * `app` → `pages` → `widgets` → `features` → `entities` → `shared`
-    * For example, a file in `entities` can **never** import from `features` or `widgets`.
+### Start The Functions Emulator
 
-2.  **Public API (Barrel Exports):** Every slice (e.g., `entities/campaign`) must have an `index.ts` file that exports its public API. You **must** import from this file, not from internal files.
+Open a terminal in `backend` and run:
 
-    * **✅ GOOD:**
-        ```typescript
-        import { CampaignCard } from '@/entities/campaign';
-        ```
+```bash
+firebase emulators:start
+```
 
-    * **❌ BAD:**
-        ```typescript
-        import { CampaignCard } from '@/entities/campaign/ui/CampaignCard';
-        ```
+If you only want the Functions emulator, you can run:
 
-Our ESLint configuration is set up to enforce these rules.
+```bash
+cd backend/functions
+npm run serve
+```
 
-## Submitting Your Contribution
+### Recommended Local Workflow
 
-1.  **Create a Branch:**
-    * Start from the `main` branch.
-    * Create a new branch for your feature or bugfix:
-        ```bash
-        git checkout -b feature/my-new-feature
-        # or
-        git checkout -b fix/correct-payment-bug
-        ```
+Use two terminals:
 
-2.  **Make Your Changes:**
-    * Write your code, following the FSD architecture.
-    * Add or update documentation as needed.
+- Terminal 1:
+  Run the Firebase emulator from `backend`
+- Terminal 2:
+  Run the Next.js app from the repository root with `npm run dev`
 
-3.  **Lint & Format:**
-    * Before committing, run the linter and auto-fix any issues:
-        ```bash
-        npm run lint
-        ```
-    * We also use Prettier for formatting, which your editor should be configured to run on save.
+Then open `http://localhost:3000`.
 
-4.  **Commit Your Changes:**
-    * We recommend using [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) for clear and descriptive commit messages.
-        ```bash
-        git commit -m "feat(campaign): Add new donation button to CampaignCard"
-        # or
-        git commit -m "fix(auth): Resolve issue with admin login redirect"
-        ```
+### Emulator Notes
 
-5.  **Push to Your Fork:**
-    * Push your new branch to your fork:
-        ```bash
-        git push origin feature/my-new-feature
-        ```
+- Log in to Firebase CLI first with `firebase login` if needed.
+- Make sure you are targeting the correct Firebase project before testing emulator-dependent flows.
+- Payment and webhook flows may still depend on external Stripe test configuration even when Functions run locally.
+- If you add new environment requirements for Functions, document them in your pull request.
 
-6.  **Open a Pull Request:**
-    * Go to the SwiftCause repository on GitHub and open a new Pull Request.
-    * Provide a clear title and description. If your PR fixes an existing issue, link to it using `Closes #123`.
-    * A project maintainer will review your code.
+## Architecture And Code Organization
+
+SwiftCause follows Feature-Sliced Design. Read [docs/FSD_ARCHITECTURE.md](docs/FSD_ARCHITECTURE.md) before making structural changes.
+
+### Core Rules
+
+1. Follow one-way layer dependencies:
+   `app -> pages -> widgets -> features -> entities -> shared`
+2. Import through each slice's public API, typically its `index.ts`.
+3. Keep shared utilities generic. Domain logic should stay in the appropriate feature or entity slice.
+
+Example:
+
+```ts
+import { CampaignCard } from '@/entities/campaign'
+```
+
+Avoid importing from deep internal paths unless the slice intentionally exposes them.
 
 ## Coding Standards
 
-* **ESLint:** We use ESLint for code quality. Our CI will fail if the linting step doesn't pass.
-* **TypeScript:** This is a TypeScript-first project. Avoid `any` as much as possible and use the types defined in the `shared/types` and entity layers.
-* **VS Code Extensions:** For the best developer experience, we highly recommend installing:
-    * [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
-    * [Tailwind CSS IntelliSense](https://marketplace.visualstudio.com/items?itemName=bradlc.vscode-tailwindcss)
-    * [Prettier - Code formatter](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
+### TypeScript
 
-Thank you for your contribution!
+- Prefer explicit, narrow types over `any`.
+- Reuse existing shared and domain types before adding new duplicates.
+- Keep API contracts and UI state types aligned with the real backend behavior.
+
+### React And Next.js
+
+- Follow existing patterns in the touched area instead of mixing architectural styles.
+- Keep components focused. Move cross-cutting logic into hooks, services, or slice-level utilities when needed.
+- Avoid introducing client-side secrets or security assumptions in frontend code.
+
+### Styling And UI
+
+- Reuse the existing design system, components, and Tailwind conventions already present in the repo.
+- Keep responsive behavior and accessibility in mind for form, donation, and admin flows.
+
+### General Quality
+
+- Run linting before opening a PR.
+- Do not commit generated build output such as `.next/` or `dist/`.
+- Keep commits and pull requests scoped to one concern where practical.
+- Update documentation when behavior, setup, or contributor workflow changes.
+
+## Running Checks And Tests
+
+Run these commands from the repository root unless noted otherwise.
+
+### Frontend
+
+```bash
+npm run lint
+npm run build
+npm run test:run
+```
+
+Current note:
+
+- `npm run test:run` is currently a placeholder and does not execute a real test suite yet.
+- `npm run build` is still important because it catches type and production build issues.
+
+### Firebase Functions
+
+Run these from `backend/functions`:
+
+```bash
+npm run lint
+```
+
+If your change affects Cloud Functions behavior, test it against the local emulator before opening the PR.
+
+## Commit Message Conventions
+
+Use [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
+
+Preferred format:
+
+```text
+type(scope): short description
+```
+
+Examples:
+
+```text
+feat(auth): add forgot password confirmation flow
+fix(payments): validate org ownership before onboarding
+docs(contributing): add firebase emulator setup
+chore(ci): tighten workflow checks
+```
+
+Common types:
+
+- `feat`: new functionality
+- `fix`: bug fix
+- `docs`: documentation only
+- `refactor`: code restructuring without behavior change
+- `test`: test additions or updates
+- `chore`: maintenance or tooling work
+- `ci`: CI or workflow changes
+
+Keep subject lines imperative and concise.
+
+## Pull Request Expectations
+
+Before opening a PR:
+
+1. Branch from `main`.
+2. Run the relevant checks locally.
+3. Update docs if setup or behavior changed.
+4. Confirm no secrets, generated files, or local artifacts were added.
+
+When opening the PR:
+
+- Explain what changed and why.
+- List the checks you ran.
+- Include screenshots or recordings for UI changes.
+- Link related issues with `Closes #123` when applicable.
+- Call out risks, migrations, or environment changes explicitly.
+
+## Recommended Tooling
+
+For VS Code, these extensions are useful:
+
+- ESLint
+- Tailwind CSS IntelliSense
+- Prettier
+
+## Questions
+
+If anything in this guide is unclear, open a question issue or start from [ROADMAP.md](ROADMAP.md) and existing GitHub issues to find the right place to contribute.
