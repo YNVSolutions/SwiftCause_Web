@@ -552,7 +552,7 @@ export function KioskCampaignAssignmentDialog({
                             </span>
                             <span className="text-blue-400">•</span>
                             <span>
-                              {Math.round((campaign.raised / campaign.goal) * 100)}% funded
+                              {Math.round(((campaign.raised / 100) / campaign.goal) * 100)}% funded
                             </span>
                           </div>
                         </div>
@@ -631,7 +631,7 @@ export function KioskCampaignAssignmentDialog({
                               </span>
                               <span className="text-gray-400">•</span>
                               <span>
-                                {Math.round((campaign.raised / campaign.goal) * 100)}% funded
+                                {Math.round(((campaign.raised / 100) / campaign.goal) * 100)}% funded
                               </span>
                             </div>
                           </div>
@@ -699,7 +699,7 @@ export function KioskCampaignAssignmentDialog({
                             </span>
                             <span className="text-green-400">•</span>
                             <span>
-                              {Math.round((campaign.raised / campaign.goal) * 100)}% funded
+                              {Math.round(((campaign.raised / 100) / campaign.goal) * 100)}% funded
                             </span>
                           </div>
                         </div>

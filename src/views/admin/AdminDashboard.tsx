@@ -102,6 +102,7 @@ import { useCampaignManagement } from "../../shared/lib/hooks/useCampaignManagem
 import { auth } from "../../shared/lib/firebase";
 import { 
   syncKiosksForCampaign, 
+  syncCampaignsForKiosk,
   normalizeAssignments 
 } from "../../shared/lib/sync/campaignKioskSync";
 import { DEFAULT_CAMPAIGN_CONFIG } from "../../shared/config";
@@ -612,6 +613,14 @@ export function AdminDashboard({
         updatedAt: new Date(),
       });
       
+      // Sync the campaign side so campaign.assignedKiosks stays consistent
+      const oldAssignedCampaigns = campaignCreation.assignedCampaignIds;
+      try {
+        await syncCampaignsForKiosk(kioskCreation.createdId, updatedAssignedCampaigns, oldAssignedCampaigns);
+      } catch (syncError) {
+        console.error("Kiosk-campaign sync failed after link (kiosk was updated):", syncError);
+      }
+      
       // Update local state
       setCampaignCreation(prev => ({ ...prev, assignedCampaignIds: updatedAssignedCampaigns }));
     } catch (error) {
@@ -651,6 +660,15 @@ export function AdminDashboard({
         updatedAt: new Date(),
       };
       const docRef = await addDoc(collection(db, 'kiosks'), newKioskData);
+      
+      // Sync campaign side so each assigned campaign knows about this new kiosk
+      if (kioskCreation.formData.assignedCampaigns.length > 0) {
+        try {
+          await syncCampaignsForKiosk(docRef.id, kioskCreation.formData.assignedCampaigns, []);
+        } catch (syncError) {
+          console.error("Kiosk-campaign sync failed after kiosk create (kiosk was saved):", syncError);
+        }
+      }
       
       // Add the new kiosk to the list
       setKioskCreation(prev => ({ 
@@ -868,8 +886,6 @@ export function AdminDashboard({
         
         // Move to next step only when creating new
         setOnboardingFlow(prev => ({ ...prev, showCampaignForm: false, showKioskForm: true }));
-        
-        console.log("Campaign created successfully with ID:", newCampaign.id);
       }
       
       // Reset form and close dialog
@@ -1599,7 +1615,6 @@ export function AdminDashboard({
                 onSubmit={handleCampaignFormSubmit}
                 onSaveDraft={() => {
                   // Handle save draft functionality if needed
-                  console.log('Save draft clicked');
                 }}
                 onCancel={() => {
                   // Clear hook state when canceling
@@ -1727,6 +1742,13 @@ export function AdminDashboard({
                                     assignedKiosks: [],
                                     updatedAt: new Date()
                                   });
+                                  // Sync kiosk side — remove this campaign from all previously assigned kiosks
+                                  const oldKioskIds = kioskCreation.allKiosks.map(k => k.id);
+                                  try {
+                                    await syncKiosksForCampaign(campaignCreation.selectedCampaignInTour.id, [], oldKioskIds);
+                                  } catch (syncError) {
+                                    console.error("Kiosk sync failed after global unassign (campaign was updated):", syncError);
+                                  }
                                 } catch (error) {
                                   console.error("Error updating campaign:", error);
                                 }
@@ -1749,6 +1771,13 @@ export function AdminDashboard({
                                     assignedKiosks: allKioskIds,
                                     updatedAt: new Date()
                                   });
+                                  // Sync kiosk side — add this campaign to all kiosks
+                                  const oldKioskIds = kioskCreation.assignedKioskIds;
+                                  try {
+                                    await syncKiosksForCampaign(campaignCreation.selectedCampaignInTour.id, allKioskIds, oldKioskIds);
+                                  } catch (syncError) {
+                                    console.error("Kiosk sync failed after global assign (campaign was updated):", syncError);
+                                  }
                                 } catch (error) {
                                   console.error("Error updating campaign:", error);
                                 }
@@ -1817,6 +1846,12 @@ export function AdminDashboard({
                                               isGlobal: newAssignedIds.length === kioskCreation.allKiosks.length,
                                               updatedAt: new Date()
                                             });
+                                            // Sync kiosk side — remove this campaign from the unassigned kiosk
+                                            try {
+                                              await syncKiosksForCampaign(campaignCreation.selectedCampaignInTour.id, newAssignedIds, kioskCreation.assignedKioskIds);
+                                            } catch (syncError) {
+                                              console.error("Kiosk sync failed after unassign (campaign was updated):", syncError);
+                                            }
                                           } catch (error) {
                                             console.error("Error updating campaign:", error);
                                           }
@@ -1839,6 +1874,12 @@ export function AdminDashboard({
                                               isGlobal: newAssignedIds.length === kioskCreation.allKiosks.length,
                                               updatedAt: new Date()
                                             });
+                                            // Sync kiosk side — add this campaign to the newly assigned kiosk
+                                            try {
+                                              await syncKiosksForCampaign(campaignCreation.selectedCampaignInTour.id, newAssignedIds, kioskCreation.assignedKioskIds);
+                                            } catch (syncError) {
+                                              console.error("Kiosk sync failed after assign (campaign was updated):", syncError);
+                                            }
                                           } catch (error) {
                                             console.error("Error updating campaign:", error);
                                           }
@@ -1910,7 +1951,6 @@ export function AdminDashboard({
                                 });
                                 
                                 await Promise.all(updatePromises);
-                                console.log(`Campaign ${campaignCreation.selectedCampaignInTour.id} assigned to ${kioskCreation.assignedKioskIds.length} kiosk(s)`);
                               } catch (error) {
                                 console.error("Error assigning campaign to kiosks:", error);
                                 showToast("Failed to assign campaign to kiosks. Please try again.", "error", 4000);
@@ -2372,7 +2412,6 @@ export function AdminDashboard({
               loading={loading}
               onDismissAlert={(alertId) => {
                 // Handle alert dismissal - could add to local storage or API call
-                console.log('Dismissing alert:', alertId);
               }}
             />
           </div>

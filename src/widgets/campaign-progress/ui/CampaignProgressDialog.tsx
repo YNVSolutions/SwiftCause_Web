@@ -305,7 +305,7 @@ export const CampaignProgressDialog: React.FC<CampaignProgressDialogProps> = ({
                     {campaign.status !== 'completed' && (
                       <div className="mt-3 pt-3 border-t border-gray-100">
                         <div className="text-xs text-gray-600">
-                          Remaining: <span className="font-medium text-gray-900">{formatGbpMajor(campaign.goal - campaign.raised)}</span>
+                          Remaining: <span className="font-medium text-gray-900">{formatGbpMajor(campaign.goal - (campaign.raised / 100))}</span>
                         </div>
                       </div>
                     )}

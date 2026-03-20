@@ -32,7 +32,7 @@ export function CampaignCard({
 
   const getProgressPercentage = (raised: number, goal: number) => {
     if (!raised) return 0;
-    return Math.min((raised / goal) * 100, 100);
+    return Math.min(((raised / 100) / goal) * 100, 100);
   };
 
   if (variant === 'compact') {

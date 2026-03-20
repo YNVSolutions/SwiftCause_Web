@@ -104,9 +104,9 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
     : ['monthly', 'quarterly', 'yearly']) as ('monthly' | 'quarterly' | 'yearly')[];
   const fallbackImage = campaign.coverImageUrl || '/campaign-fallback.svg';
 
-  // Calculate progress
+  // Calculate progress — raised is in pence (minor units), goal is in pounds (major units)
   const progress =
-    campaign.goal > 0 ? Math.min(((campaign.raised || 0) / campaign.goal) * 100, 100) : 0;
+    campaign.goal > 0 ? Math.min((((campaign.raised || 0) / 100) / campaign.goal) * 100, 100) : 0;
 
   // Format amount without decimals
   const formatAmount = (amount: number) => formatCurrency(amount, currency);
