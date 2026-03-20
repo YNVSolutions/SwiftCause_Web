@@ -75,7 +75,7 @@ export function CampaignScreen({
   const config = campaign.configuration;
 
   const getProgressPercentage = (raised: number, goal: number) => {
-    return Math.min((raised / goal) * 100, 100);
+    return Math.min(((raised / 100) / goal) * 100, 100);
   };
 
   const getCurrentAmount = () => {

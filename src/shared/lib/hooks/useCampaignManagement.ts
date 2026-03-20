@@ -59,7 +59,7 @@ export function mapFormDataToDatabase(formData: any) {
 }
 
 export function useCampaignManagement(organizationId?: string) {
-  const { campaigns, updateWithImage, create, createWithImage, loading, error, remove } = useCampaigns(organizationId);
+  const { campaigns, updateWithImage, create, createWithImage, loading, error, remove, refresh } = useCampaigns(organizationId);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -343,6 +343,7 @@ export function useCampaignManagement(organizationId?: string) {
     createWithImage,
     uploadFile,
     remove,
+    refresh,
     saveCampaign, // New centralized save function
   };
 }

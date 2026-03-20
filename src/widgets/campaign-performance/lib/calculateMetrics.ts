@@ -21,25 +21,25 @@ export function calculatePerformanceMetrics(campaigns: Campaign[]): PerformanceM
   const aggregateGoal = campaigns.reduce((sum, c) => sum + (c.goal || 0), 0);
   const aggregateRaised = campaigns.reduce((sum, c) => sum + (c.raised || 0), 0);
   
-  // Filter campaigns by status
-  const wonCampaigns = campaigns.filter(c => (c.raised || 0) >= (c.goal || 1));
-  const activeCampaigns = campaigns.filter(c => (c.raised || 0) < (c.goal || 1));
+  // Filter campaigns by status — raised is pence, goal is pounds
+  const wonCampaigns = campaigns.filter(c => ((c.raised || 0) / 100) >= (c.goal || 1));
+  const activeCampaigns = campaigns.filter(c => ((c.raised || 0) / 100) < (c.goal || 1));
   
   // Win Rate: percentage of campaigns that reached their goal
   const winRate = campaigns.length > 0 
     ? Math.round((wonCampaigns.length / campaigns.length) * 100) 
     : 0;
   
-  // Overall Funding Percentage: total raised / total goals
+  // Overall Funding Percentage: total raised (pence) / total goals (pounds)
   const overallFundingPct = aggregateGoal > 0 
-    ? Math.round((aggregateRaised / aggregateGoal) * 100) 
+    ? Math.round(((aggregateRaised / 100) / aggregateGoal) * 100) 
     : 0;
   
   // Average Campaign Completion Rate: average of all campaign percentages
   const avgCompletionRate = campaigns.length > 0
     ? Math.round(
         campaigns.reduce((sum, c) => {
-          const pct = (c.goal || 0) > 0 ? ((c.raised || 0) / (c.goal || 1)) * 100 : 0;
+          const pct = (c.goal || 0) > 0 ? (((c.raised || 0) / 100) / (c.goal || 1)) * 100 : 0;
           return sum + pct;
         }, 0) / campaigns.length
       )
@@ -68,7 +68,7 @@ export function calculatePerformanceMetrics(campaigns: Campaign[]): PerformanceM
  */
 export function calculateCampaignCompletion(raised: number, goal: number): number {
   if (goal <= 0) return 0;
-  return Math.round((raised / goal) * 100);
+  return Math.round(((raised / 100) / goal) * 100);
 }
 
 /**
@@ -78,5 +78,5 @@ export function calculateCampaignCompletion(raised: number, goal: number): numbe
  * @returns True if campaign reached goal
  */
 export function isCampaignWon(raised: number, goal: number): boolean {
-  return raised >= goal && goal > 0;
+  return (raised / 100) >= goal && goal > 0;
 }

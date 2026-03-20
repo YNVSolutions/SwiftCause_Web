@@ -1,6 +1,7 @@
 import { collection, query, where, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, orderBy } from 'firebase/firestore';
 import { db } from '../../../shared/lib/firebase';
 import { Kiosk } from '../model';
+import { removeKioskFromAllCampaigns } from '../../../shared/lib/sync/campaignKioskSync';
 
 export const kioskApi = {
   // Get all kiosks
@@ -85,7 +86,15 @@ export const kioskApi = {
   // Delete kiosk
   async deleteKiosk(id: string): Promise<void> {
     try {
+      // Fetch the kiosk to get its assigned campaigns before deleting
       const docRef = doc(db, 'kiosks', id);
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        const assignedCampaigns: string[] = snap.data().assignedCampaigns || [];
+        if (assignedCampaigns.length > 0) {
+          await removeKioskFromAllCampaigns(id, assignedCampaigns);
+        }
+      }
       await deleteDoc(docRef);
     } catch (error) {
       console.error('Error deleting kiosk:', error);

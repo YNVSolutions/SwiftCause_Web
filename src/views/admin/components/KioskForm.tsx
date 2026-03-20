@@ -447,7 +447,7 @@ export function KioskForm({
                       ) : (
                         <div className="space-y-3">
                           {assignedCampaigns.map(campaign => {
-                            const fundingPercentage = Math.round((campaign.raised / campaign.goal) * 100);
+                            const fundingPercentage = Math.round(((campaign.raised / 100) / campaign.goal) * 100);
                             
                             return (
                               <div key={campaign.id} className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-4 bg-white border border-gray-200 rounded-lg">
@@ -516,7 +516,7 @@ export function KioskForm({
                     <div className="max-h-64 sm:max-h-80 overflow-y-auto">
                       <div className="space-y-3">
                         {unassignedCampaigns.map(campaign => {
-                            const fundingPercentage = Math.round((campaign.raised / campaign.goal) * 100);
+                            const fundingPercentage = Math.round(((campaign.raised / 100) / campaign.goal) * 100);
                             
                             return (
                               <div key={campaign.id} className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-4 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors">

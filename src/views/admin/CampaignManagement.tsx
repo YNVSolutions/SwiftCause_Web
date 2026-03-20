@@ -1301,7 +1301,7 @@ const CampaignManagement = ({
   const [errorDialogOpen, setErrorDialogOpen] = useState(false);
   const [errorDialogMessage, setErrorDialogMessage] = useState("");
 
-  const { campaigns, updateWithImage, createWithImage, remove, loading, uploadFile } =
+  const { campaigns, updateWithImage, createWithImage, remove, loading, uploadFile, refresh } =
     useCampaignManagement(userSession.user.organizationId || "");
 
   const { organization, loading: orgLoading } = useOrganization(
@@ -1540,20 +1540,28 @@ const CampaignManagement = ({
         const newCampaign = await createWithImage(finalDataToSave);
         savedCampaignId = newCampaign.id;
         
-        await syncKiosksForCampaign(
-          newCampaign.id,
-          normalizeAssignments(data.assignedKiosks),
-          []
-        );
+        try {
+          await syncKiosksForCampaign(
+            newCampaign.id,
+            normalizeAssignments(data.assignedKiosks),
+            []
+          );
+        } catch (syncError) {
+          console.error("Kiosk sync failed after campaign create (campaign was saved):", syncError);
+        }
       } else if (campaignId) {
         await updateWithImage(campaignId, finalDataToSave);
         
         const oldAssignedKiosks = normalizeAssignments(editingCampaign?.assignedKiosks);
-        await syncKiosksForCampaign(
-          campaignId,
-          normalizeAssignments(data.assignedKiosks),
-          oldAssignedKiosks
-        );
+        try {
+          await syncKiosksForCampaign(
+            campaignId,
+            normalizeAssignments(data.assignedKiosks),
+            oldAssignedKiosks
+          );
+        } catch (syncError) {
+          console.error("Kiosk sync failed after campaign update (campaign was saved):", syncError);
+        }
       }
     } catch (error) {
       console.error(
@@ -1655,9 +1663,14 @@ const CampaignManagement = ({
       const finalDataToSave = removeUndefined(dataToSave);
       const newCampaign = await createWithImage(finalDataToSave);
       
-      await syncKiosksForCampaign(newCampaign.id, normalizeAssignments(newCampaignFormData.assignedKiosks), []);
+      try {
+        await syncKiosksForCampaign(newCampaign.id, normalizeAssignments(newCampaignFormData.assignedKiosks), []);
+      } catch (syncError) {
+        console.error("Kiosk sync failed after campaign create (campaign was saved):", syncError);
+      }
       
       // Reset form and close
+      refresh();
       setIsNewCampaignFormOpen(false);
       setSelectedNewCampaignImageFile(null);
       setSelectedNewCampaignGalleryFiles([]);
@@ -1799,9 +1812,14 @@ const CampaignManagement = ({
       const finalDataToSave = removeUndefined(dataToSave);
       const newCampaign = await createWithImage(finalDataToSave);
       
-      await syncKiosksForCampaign(newCampaign.id, normalizeAssignments(newCampaignFormData.assignedKiosks), []);
+      try {
+        await syncKiosksForCampaign(newCampaign.id, normalizeAssignments(newCampaignFormData.assignedKiosks), []);
+      } catch (syncError) {
+        console.error("Kiosk sync failed after draft create (campaign was saved):", syncError);
+      }
       
       // Reset form and close
+      refresh();
       setIsNewCampaignFormOpen(false);
       setSelectedNewCampaignImageFile(null);
       setSelectedNewCampaignGalleryFiles([]);
@@ -1905,13 +1923,18 @@ const CampaignManagement = ({
       const finalDataToSave = removeUndefined(dataToSave);
       await updateWithImage(editingCampaignForNewForm.id, finalDataToSave);
       
-      await syncKiosksForCampaign(
-        editingCampaignForNewForm.id,
-        normalizeAssignments(editCampaignFormData.assignedKiosks),
-        normalizeAssignments(editingCampaignForNewForm.assignedKiosks)
-      );
+      try {
+        await syncKiosksForCampaign(
+          editingCampaignForNewForm.id,
+          normalizeAssignments(editCampaignFormData.assignedKiosks),
+          normalizeAssignments(editingCampaignForNewForm.assignedKiosks)
+        );
+      } catch (syncError) {
+        console.error("Kiosk sync failed after draft update (campaign was saved):", syncError);
+      }
       
       // Reset form and close
+      refresh();
       setIsEditCampaignFormOpen(false);
       setEditingCampaignForNewForm(null);
       setSelectedEditCampaignImageFile(null);
@@ -2030,14 +2053,18 @@ const CampaignManagement = ({
       const finalDataToSave = removeUndefined(dataToSave);
       await updateWithImage(editingCampaignForNewForm.id, finalDataToSave);
     
-      await syncKiosksForCampaign(
-        editingCampaignForNewForm.id,
-        normalizeAssignments(editCampaignFormData.assignedKiosks),
-        normalizeAssignments(editingCampaignForNewForm.assignedKiosks)
-      );
-      
+      try {
+        await syncKiosksForCampaign(
+          editingCampaignForNewForm.id,
+          normalizeAssignments(editCampaignFormData.assignedKiosks),
+          normalizeAssignments(editingCampaignForNewForm.assignedKiosks)
+        );
+      } catch (syncError) {
+        console.error("Kiosk sync failed after campaign update (campaign was saved):", syncError);
+      }
   
       // Reset form and close
+      refresh();
       setIsEditCampaignFormOpen(false);
       setEditingCampaignForNewForm(null);
       setSelectedEditCampaignImageFile(null);

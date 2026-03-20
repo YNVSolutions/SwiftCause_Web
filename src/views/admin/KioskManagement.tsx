@@ -197,7 +197,6 @@ export function KioskManagement({ onNavigate, onLogout, userSession, hasPermissi
 
       if (editingKiosk) {
         const updatedKioskData = {
-          ...editingKiosk,
           name: newKiosk.name,
           location: newKiosk.location,
           accessCode: newKiosk.accessCode,
