@@ -1,18 +1,14 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Only protect /admin routes
+  // Only protect /admin routes (also enforced by matcher below)
   if (pathname.startsWith('/admin')) {
     // Note: In a production environment, you would verify the Firebase Auth token here
     // For now, we rely on client-side checks in the auth provider and admin pages
-    // This middleware serves as an additional layer of protection
-    
-    // You can add server-side token verification here if needed
-    // For example, checking cookies or Authorization headers
-    
+    // This proxy serves as an additional layer of protection
     return NextResponse.next()
   }
 
@@ -20,5 +16,6 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*']
+  matcher: ['/admin/:path*'],
 }
+

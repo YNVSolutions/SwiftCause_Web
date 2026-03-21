@@ -10,10 +10,15 @@ import {
   AdminSession,
   SignupFormData,
   Permission,
+  PasswordRotationStatus,
 } from '@/shared/types'
 import { createUserWithEmailAndPassword } from 'firebase/auth'
 import { setDoc } from 'firebase/firestore'
 import { getFirestore } from 'firebase/firestore'
+import {
+  evaluatePasswordRotationStatus,
+  getRotationScheduleFrom,
+} from '@/features/auth-by-email/lib/passwordRotationPolicy'
 
 const auth = getAuth()
 const firestore = getFirestore()
@@ -109,6 +114,8 @@ interface AuthContextType {
   refreshCurrentKioskSession: (kioskIdToRefresh?: string) => Promise<void>
   handleOrganizationSwitch: (organizationId: string) => void
   resendVerificationEmail: (email: string) => Promise<void>
+  passwordRotationStatus: PasswordRotationStatus
+  isPasswordRotationExpired: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -130,6 +137,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [currentKioskSession, setCurrentKioskSession] = useState<KioskSession | null>(null)
   const [currentAdminSession, setCurrentAdminSession] = useState<AdminSession | null>(null)
   const [isLoadingAuth, setIsLoadingAuth] = useState(true)
+  const [passwordRotationStatus, setPasswordRotationStatus] =
+    useState<PasswordRotationStatus>('ok')
 
   // Define refreshCurrentKioskSession function first
   const refreshCurrentKioskSession = async (kioskIdToRefresh?: string) => {
@@ -229,6 +238,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }
 
           const userData = rawUserData as User
+          const evaluatedRotationStatus = evaluatePasswordRotationStatus({
+            passwordLastChangedAt: userData.passwordLastChangedAt,
+            passwordRotationDueAt: userData.passwordRotationDueAt,
+            passwordRotationGraceEndsAt: userData.passwordRotationGraceEndsAt,
+            passwordRotationStatus: userData.passwordRotationStatus,
+          })
+          setPasswordRotationStatus(evaluatedRotationStatus)
+
+          // Initialize schedule for legacy users with missing metadata.
+          if (!userData.passwordRotationDueAt || !userData.passwordRotationGraceEndsAt) {
+            try {
+              const fallbackBase = userData.createdAt ? new Date(userData.createdAt) : new Date()
+              const schedule = getRotationScheduleFrom(fallbackBase)
+              await updateDoc(userDocRef, schedule)
+            } catch (error) {
+              console.error('Error initializing password rotation schedule:', error)
+            }
+          }
           
           // Fetch organization name if organizationId exists
           let organizationName: string | undefined = undefined
@@ -265,12 +292,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setUserRole(null)
           setCurrentKioskSession(null)
           setCurrentAdminSession(null)
+          setPasswordRotationStatus('ok')
         }
       } else {
         // No Firebase user, clear all sessions
         setUserRole(null)
         setCurrentKioskSession(null)
         setCurrentAdminSession(null)
+        setPasswordRotationStatus('ok')
       }
       setIsLoadingAuth(false)
     })
@@ -304,6 +333,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUserRole(null)
     setCurrentKioskSession(null)
     setCurrentAdminSession(null)
+    setPasswordRotationStatus('ok')
   }
 
   const handleSignup = async (signupData: SignupFormData): Promise<string> => {
@@ -368,6 +398,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       await setDoc(doc(firestore, 'users', userId), userData)
+      const rotationSchedule = getRotationScheduleFrom(new Date())
+      await updateDoc(doc(firestore, 'users', userId), rotationSchedule)
 
       await setDoc(doc(firestore, 'organizations', signupData.organizationId), {
         name: signupData.organizationName,
@@ -461,6 +493,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     refreshCurrentKioskSession,
     handleOrganizationSwitch,
     resendVerificationEmail,
+    passwordRotationStatus,
+    isPasswordRotationExpired: passwordRotationStatus === 'expired',
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

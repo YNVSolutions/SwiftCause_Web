@@ -31,6 +31,8 @@ export type UserRole =
   | "viewer"
   | "kiosk";
 
+export type PasswordRotationStatus = "ok" | "due" | "grace" | "expired";
+
 export type Permission =
   | "view_dashboard"
   | "view_campaigns"
@@ -63,6 +65,10 @@ export interface User {
   organizationId?: string;
   organizationName?: string;
   photoURL?: string;
+  passwordLastChangedAt?: string;
+  passwordRotationDueAt?: string;
+  passwordRotationGraceEndsAt?: string;
+  passwordRotationStatus?: PasswordRotationStatus;
 }
 
 export interface Organization {

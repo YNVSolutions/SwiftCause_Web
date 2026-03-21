@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { Screen, AdminSession, Permission } from "../../shared/types";
 import { Avatar, AvatarFallback, AvatarImage } from "../../shared/ui/avatar";
 import { Button } from "../../shared/ui/button";
@@ -38,6 +39,7 @@ import {
   CreditCard,
   Loader2,
   AlertCircle,
+  KeyRound,
 } from "lucide-react";
 import { auth, db } from "../../shared/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
@@ -1065,6 +1067,17 @@ export function AdminLayout({
                     </div>
                   </div>
                 </div>
+              </div>
+
+              <div className="mb-4">
+                <Link
+                  href="/change-password"
+                  onClick={() => setShowUserProfile(false)}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-50 text-[#064e3b] rounded-xl hover:bg-emerald-100 transition-colors font-medium text-sm border border-emerald-200 shadow-sm"
+                >
+                  <KeyRound className="w-4 h-4" />
+                  Change Password
+                </Link>
               </div>
 
               <div className="mb-4">

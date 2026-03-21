@@ -44,6 +44,7 @@ export const KioskHeader: React.FC<KioskHeaderProps> = ({
   logoAlt = 'SwiftCause',
   brandPrimary = 'Swift',
   brandAccent = 'Cause',
+  accentColor = '#0DA573',
   actionButton,
   actionPosition = 'right',
   hideBrand = false,
@@ -272,19 +273,17 @@ export const KioskHeader: React.FC<KioskHeaderProps> = ({
             }
           }
         `}</style>
-        <div
-          className={`${heroWidth === 'wide' ? 'max-w-[92%]' : 'max-w-5/6'} mx-auto px-6 lg:px-12 xl:px-16 py-3`}
-        >
-          <div
-            className={`kiosk-hero-shell${compact ? ' compact' : ''}${heroSize === 'tall' ? ' tall' : ''}${isInlineTitle ? ' inline-title' : ''}`}
-          >
+        <div className={`${heroWidth === 'wide' ? 'max-w-[92%]' : 'max-w-5/6'} mx-auto px-6 lg:px-12 xl:px-16 py-3`}>
+          <div className={`kiosk-hero-shell${compact ? ' compact' : ''}${heroSize === 'tall' ? ' tall' : ''}${isInlineTitle ? ' inline-title' : ''}`}>
             <div className="kiosk-hero-border" />
             <div className={`kiosk-hero-content ${compact ? '' : 'px-5 py-3 sm:px-6 sm:py-4'}`}>
               {isInlineTitle ? (
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-4">
                     {actionPosition === 'left' && actionButton ? (
-                      <div className="shrink-0">{actionButton}</div>
+                      <div className="shrink-0">
+                        {actionButton}
+                      </div>
                     ) : null}
                     <div>
                       {hasTitle ? (
@@ -297,7 +296,9 @@ export const KioskHeader: React.FC<KioskHeaderProps> = ({
                   </div>
                   {actionPosition === 'right' ? (
                     actionButton ? (
-                      <div className="shrink-0">{actionButton}</div>
+                      <div className="shrink-0">
+                        {actionButton}
+                      </div>
                     ) : (
                       <div className="w-11 h-11" />
                     )
@@ -309,7 +310,9 @@ export const KioskHeader: React.FC<KioskHeaderProps> = ({
                 <>
                   <div className="flex items-center justify-between gap-4">
                     {actionPosition === 'left' && actionButton ? (
-                      <div className="shrink-0 self-start sm:self-center">{actionButton}</div>
+                      <div className="shrink-0 self-start sm:self-center">
+                        {actionButton}
+                      </div>
                     ) : null}
                     {!hideBrand ? (
                       <div className="kiosk-brand">
@@ -328,7 +331,9 @@ export const KioskHeader: React.FC<KioskHeaderProps> = ({
                     )}
                     {actionPosition === 'right' ? (
                       actionButton ? (
-                        <div className="shrink-0 self-start sm:self-center">{actionButton}</div>
+                        <div className="shrink-0 self-start sm:self-center">
+                          {actionButton}
+                        </div>
                       ) : (
                         <div className="w-11 h-11" />
                       )
@@ -336,7 +341,7 @@ export const KioskHeader: React.FC<KioskHeaderProps> = ({
                       <div className="w-11 h-11" />
                     )}
                   </div>
-                  {hasTitle || hasSubtitle ? (
+                  {(hasTitle || hasSubtitle) ? (
                     <div className={hasTitle ? 'mt-3' : 'mt-2'}>
                       {hasTitle ? (
                         <h1 className="kiosk-hero-title text-transparent bg-clip-text bg-linear-to-r from-green-700 via-emerald-600 to-green-500">
@@ -351,18 +356,10 @@ export const KioskHeader: React.FC<KioskHeaderProps> = ({
                     <svg className="kiosk-story-heart" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M12 21s-6.7-4.1-9.2-7.6C.7 10.8 2 7.2 5.5 6.2c2-.6 3.7.2 4.9 1.6 1.2-1.4 2.9-2.2 4.9-1.6 3.5 1 4.8 4.6 2.7 7.2C18.7 16.9 12 21 12 21z" />
                     </svg>
-                    <svg
-                      className="kiosk-story-heart second"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
+                    <svg className="kiosk-story-heart second" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M12 21s-6.7-4.1-9.2-7.6C.7 10.8 2 7.2 5.5 6.2c2-.6 3.7.2 4.9 1.6 1.2-1.4 2.9-2.2 4.9-1.6 3.5 1 4.8 4.6 2.7 7.2C18.7 16.9 12 21 12 21z" />
                     </svg>
-                    <svg
-                      className="kiosk-story-heart third"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
+                    <svg className="kiosk-story-heart third" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M12 21s-6.7-4.1-9.2-7.6C.7 10.8 2 7.2 5.5 6.2c2-.6 3.7.2 4.9 1.6 1.2-1.4 2.9-2.2 4.9-1.6 3.5 1 4.8 4.6 2.7 7.2C18.7 16.9 12 21 12 21z" />
                     </svg>
                   </div>

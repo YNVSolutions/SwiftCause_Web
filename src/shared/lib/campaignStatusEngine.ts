@@ -29,7 +29,7 @@ type FirestoreTimestampLike = {
 };
 
 function parseCampaignDate(
-  value: Campaign['startDate'] | Campaign['endDate'] | undefined,
+  value: Campaign['startDate'] | Campaign['endDate'] | undefined
 ): Date | null {
   if (!value) return null;
 
@@ -62,6 +62,12 @@ function startOfDay(date: Date): Date {
   return day;
 }
 
+function endOfDay(date: Date): Date {
+  const day = new Date(date);
+  day.setHours(23, 59, 59, 999);
+  return day;
+}
+
 function toEndDateKey(endDate: Campaign['endDate']): string | null {
   const parsed = parseCampaignDate(endDate);
   return parsed ? parsed.toISOString() : null;
@@ -78,7 +84,7 @@ function reconcileCampaignStatus(
     | 'autoCompletedGoal'
     | 'autoPausedEndDate'
   >,
-  now: Date,
+  now: Date
 ): CampaignStatusResolution {
   const status = campaign.status;
 
@@ -116,7 +122,7 @@ export function applyCampaignStatusEvent(
     | 'autoCompletedGoal'
     | 'autoPausedEndDate'
   >,
-  event: CampaignLifecycleEvent,
+  event: CampaignLifecycleEvent
 ): CampaignStatusResolution {
   switch (event.type) {
     case 'MANUAL_STATUS_SET': {
