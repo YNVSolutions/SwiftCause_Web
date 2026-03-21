@@ -1,12 +1,13 @@
+
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Loader } from '@/shared/ui/Loader'
 import { useAuth } from '@/shared/lib/auth-provider'
 import { ChangePasswordScreen } from '../../src/views/auth/ChangePasswordScreen'
 
-export default function ChangePasswordPage() {
+function ChangePasswordContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { userRole, isLoadingAuth, passwordRotationStatus } = useAuth()
@@ -34,6 +35,14 @@ export default function ChangePasswordPage() {
       reason={searchParams.get('reason') ?? undefined}
       rotationStatus={passwordRotationStatus}
     />
+  )
+}
+
+export default function ChangePasswordPage() {
+  return (
+    <Suspense fallback={<Loader />}>
+      <ChangePasswordContent />
+    </Suspense>
   )
 }
 
